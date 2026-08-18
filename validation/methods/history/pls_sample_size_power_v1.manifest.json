@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-14T00:00:00Z",
+    "manifest_path": "validation/methods/history/pls_sample_size_power_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.sample_size_power",
+    "label": "PLS-SEM Sample Size and Power Analysis",
+    "method_version": "pls_sample_size_power_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
+  "claim": {
+    "supported_scope": "Prospective Monte Carlo power and conservative grid selection for exactly two ordinary reflective constructs joined by one predictor-to-outcome path, with 3-10 declared loadings per block, standard-Gaussian exogenous latent, structural disturbance, and indicator errors, standardized path-weighted PLS-PM, no missingness, and a two-sided case-bootstrap normal-reference path test.",
+    "estimand": "The probability that a preregistered supported PLS inferential procedure rejects its null under a specified effect, sample size, model, and data-generating design.",
+    "assumptions": [
+      "The single path, population coefficient, two loading vectors, standard-Gaussian distributions, no-missingness policy, significance level, and case-bootstrap normal-reference procedure are explicitly specified.",
+      "Power applies only to the simulated design grid and inferential procedure shown in the result.",
+      "Indexed random streams and a fixed stopping rule make repeated calculations reproducible."
+    ],
+    "exclusions": [
+      "The inverse-square-root and ten-times heuristics are not presented as general power guarantees.",
+      "Formative, higher-order, interaction, multigroup, nonlinear, mixture, endogeneity, weighted, clustered, ordinal, matrix-only, and every missing-data design are excluded.",
+      "A recommended sample size is not a guarantee of model convergence, external validity, or adequate data quality."
+    ],
+    "warnings": [
+      "Power is conditional on the declared data-generating assumptions and target test.",
+      "Rows remain unsmoothed; interpolation or extrapolation outside the explicit sample-size grid is not supported.",
+      "Archive validation proves structural, accounting, identity, and deterministic-summary integrity from the stored replicate ledger and rejects isolated mutations.",
+      "It does not replay generated data, PLS estimates, or bootstrap fits and does not authenticate a coordinated rewrite of target estimates, p values, rejection flags, outcome digest, derived power rows, grid decision, and outer archive checksum."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "monte_carlo_power",
+        "expression": "power_hat(n, theta) = sum_r I(p_r <= alpha) / R",
+        "variables": ["power_hat", "n", "theta", "p_r", "alpha", "R"],
+        "source_reference_id": "muthen_muthen_2002"
+      },
+      {
+        "id": "minimum_sample_size",
+        "expression": "n_min = min{n in N_grid : lower_confidence_bound(power_hat(n)) >= target_power}",
+        "variables": ["n_min", "N_grid", "power_hat", "target_power"],
+        "source_reference_id": "muthen_muthen_2002"
+      }
+    ],
+    "references": [
+      {
+        "id": "muthen_muthen_2002",
+        "kind": "primary_paper",
+        "citation": "Muthen and Muthen (2002), How to Use a Monte Carlo Study to Decide on Sample Size and Determine Power",
+        "locator": "https://doi.org/10.1207/S15328007SEM0904_8",
+        "independence_group": "primary_monte_carlo_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "planned_independent_python_simulator",
+        "kind": "independent_python",
+        "citation": "Independent NumPy implementation of the exact two-construct Gaussian generator, PLS estimator, case bootstrap, Wilson interval, and grid decision",
+        "locator": "validation/pls_sample_size_power_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "id": "planned_published_fixture",
+        "kind": "published_fixture",
+        "citation": "Frozen method specification with the complete supported design, inference, decision, workload, and failure contracts",
+        "locator": "docs/methods/PLS_SAMPLE_SIZE_POWER_V1.md",
+        "independence_group": "published_fixture",
+        "runtime_policy": "no_runtime_dependency"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "null_calibration",
+        "purpose": "type_i_error",
+        "design": "Population path exactly zero in the two-construct reflective standard-Gaussian single-path/no-missing design, using only preregistered loading vectors and explicit sample-size points.",
+        "seed_policy": "Frozen indexed streams shared only by scenario identity, never execution order or worker count.",
+        "metrics": ["type_i_error", "binomial_confidence_interval", "convergence_rate"],
+        "acceptance_rule": "At alpha 0.05 the preregistered confidence interval must contain 0.05, its upper bound must not exceed 0.065, and supported-scope convergence must be at least 0.99."
+      },
+      {
+        "id": "power_recovery",
+        "purpose": "power",
+        "design": "Known nonzero population path in the same exact two-construct reflective standard-Gaussian single-path/no-missing design, evaluated at a preregistered strictly increasing sample-size grid and declared loading vectors.",
+        "seed_policy": "Independent frozen domain-separated indexed streams for every (sample_size, replicate_index) pair; no common-random-number nesting across candidate sample sizes.",
+        "metrics": ["achieved_power", "confidence_interval", "minimum_sample_size", "monotonicity_violations"],
+        "acceptance_rule": "The selected minimum sample size must be conservative against an independently generated validation run and must meet the target-power lower confidence bound."
+      },
+      {
+        "id": "failure_envelope",
+        "purpose": "failure_behavior",
+        "design": "Adjacent invalid requests: fewer than three indicators, out-of-range loadings or path, duplicate/non-increasing grid points, infeasible Wilson precision, unsupported model branches, and workloads above the desktop caps. Missing-data generation is blocked rather than simulated.",
+        "seed_policy": "Frozen indexed streams with all failed replicates retained in denominators and diagnostics.",
+        "metrics": ["failure_rate", "inadmissible_rate", "reported_denominator"],
+        "acceptance_rule": "No failed replicate may be silently discarded; unsupported designs must be blocked before simulation."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "grid_extension_invariance",
+        "category": "metamorphic",
+        "case": "A larger candidate sample-size point is appended without changing the scenario, seed, or existing grid points.",
+        "expected_behavior": "Every existing indexed stream and outcome remains byte-identical; only the appended sample-size rows and the recipe-bound decision envelope may be added."
+      },
+      {
+        "id": "unsupported_model_family",
+        "category": "unsupported_scope",
+        "case": "The requested model contains an unqualified interaction, mixture, higher-order, or multigroup shape.",
+        "expected_behavior": "The setup is blocked before execution with the exact unsupported feature identified."
+      },
+      {
+        "id": "non_increasing_grid",
+        "category": "data_pathology",
+        "case": "Candidate sample sizes are duplicated, decreasing, or outside 30-5000.",
+        "expected_behavior": "The setup is blocked before any dataset is generated; values are never reordered or deduplicated silently."
+      },
+      {
+        "id": "seed_worker_invariance",
+        "category": "determinism",
+        "case": "The same design is executed with different supported worker counts.",
+        "expected_behavior": "Replicate plans, outcomes, aggregate power, and selected sample size are exactly equal."
+      },
+      {
+        "id": "power_archive_tamper",
+        "category": "tamper",
+        "case": "The design grid, seed, replicate count, achieved-power row, or method identity is altered after execution.",
+        "expected_behavior": "Strict project validation rejects the archive rather than displaying the changed recommendation."
+      }
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_sample_size_power_v1",
+      "tamper_tests": [
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose stable capability identity differs from its recipe."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a result relabeled as another power-analysis version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a data-based design whose saved dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any modified archive entry whose checksum no longer matches."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicated keys, unknown fields, non-finite values, inconsistent grids, or invalid denominators."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret heuristic or preview output as a current simulation-based power result."
+        }
+      ],
+      "legacy_policy": "No heuristic or preview sample-size artifact qualifies as simulation-based v1 evidence."
+    },
+    "native": {
+      "setup_controls": [
+        "Target structural path or supported test",
+        "Effect-size design",
+        "Sample-size grid",
+        "Target power and alpha",
+        "Replicates and seed",
+        "Two ordered loading vectors and the fixed standard-Gaussian/no-missing design"
+      ],
+      "applicability_blockers": [
+        "Unsupported model shape",
+        "Incomplete data-generating assumptions",
+        "Invalid or non-increasing sample-size grid",
+        "Unachievable precision for the requested replicate count"
+      ],
+      "result_surfaces": [
+        "Power curve and confidence intervals",
+        "Conservative minimum sample size",
+        "Convergence and failure accounting",
+        "Assumption and exclusion summary",
+        "Run provenance"
+      ],
+      "gui_cli_parity_rule": "For the same design, seed, method version, and settings, GUI and CLI replicate plans and analytical payloads must be exactly equal apart from operational timestamps.",
+      "accessibility_rules": [
+        "The power curve has an equivalent accessible data table.",
+        "Assumptions, failures, and the sample-size recommendation are available without color or pointer interaction."
+      ]
+    },
+    "export": {
+      "formats": ["csv", "xlsx"],
+      "tables": [
+        "Power by sample size",
+        "Simulation failures",
+        "Design assumptions",
+        "Run provenance"
+      ],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": [
+        "docs/methods/PLS_SAMPLE_SIZE_POWER_V1.md"
+      ],
+      "independent_reference": [
+        "validation/pls_sample_size_power_reference.py",
+        "validation/pls_sample_size_power_reference.R"
+      ],
+      "simulation_report": [
+        "validation/pls_sample_size_power_simulation.py"
+      ],
+      "boundary_report": [
+        "validation/pls_sample_size_power_boundary_gate.py"
+      ],
+      "persistence_report": [
+        "validation/pls_sample_size_power_persistence_gate.py"
+      ],
+      "frontend_report": [
+        "src/native/nativePlsSampleSizePower.test.ts"
+      ],
+      "export_report": [
+        "validation/pls_sample_size_power_export_gate.py"
+      ],
+      "method_audit": [
+        "validation/pls_sample_size_power_method_promotion_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_pls_sample_size_power_native_acceptance.ps1"
+      ]
+    },
+    "evidence": {
+      "engine_only": [],
+      "archive_qualified": [],
+      "native_qualified": [],
+      "release_qualified": []
+    }
+  }
+}

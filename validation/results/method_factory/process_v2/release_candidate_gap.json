@@ -1,0 +1,30 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "current_candidate_desktop": {
+    "mtime_ns": 1787043137771136600,
+    "path": "target/release/quickpls-desktop.exe",
+    "sha256": "2b2f28e947f1b8224e96cb084bba5544ee97f8bc9ce679a430c4f7716fb1d7fe",
+    "size": 49972224
+  },
+  "exact_current_desktop_binding": false,
+  "feature_id": "qpls3.standalone.process",
+  "generated_at_utc": "2026-08-18T08:54:45.111555Z",
+  "highest_current_factory_state": "engine_only",
+  "kind": "quickpls_method_factory_release_candidate_gap",
+  "legacy_packaged_report": {
+    "path": "validation/results/process_v2_packaged_acceptance.json",
+    "sha256": "4b5885d60d3437484459fc3f455c32b6163d906b521787186ec35d0160096732",
+    "size": 55435
+  },
+  "legacy_report_passed": true,
+  "legacy_tested_desktop": {
+    "path": "target/release/quickpls-desktop.exe",
+    "sha256": "2ed0b60e209f5544094aa2b37ed24f07e2412b8f60602d619f0eed37639f0c05",
+    "size": 49972224
+  },
+  "method_version": "regression_process_v2",
+  "passed": false,
+  "release_qualification_blocker": "Dedicated packaged acceptance has not been rerun against the exact current release executable.",
+  "required_runtime_command": "powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v247_process_v2_native_acceptance.ps1",
+  "schema_version": 1
+}

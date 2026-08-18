@@ -289,8 +289,8 @@ def recipe_payload(fingerprint: str, *, workers: int, samples: int) -> dict[str,
         },
         "metadata": {
             "status": (
-                "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope"
-                if samples else "candidate_regression_process_v2_bounded_scope"
+                "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope"
+                if samples else "validated_regression_process_v2_bounded_scope"
             ),
             "fixture": "process_v2_reference",
         },
@@ -314,7 +314,10 @@ def run_quickpls(
     result_path = temporary / f"process-v2-w{workers}.result.json"
     recipe_path.write_text(json.dumps(recipe, indent=2), encoding="utf-8")
     completed = run(
-        [str(CLI), "run", str(recipe_path), "--data", str(FIXTURE), "--output", str(result_path)]
+        [
+            str(CLI), "run", str(recipe_path), "--data", str(FIXTURE),
+            "--output", str(result_path), "--allow-experimental",
+        ]
     )
     require_success(completed, f"PROCESS v2 workers={workers}")
     return recipe, json.loads(result_path.read_text(encoding="utf-8"))
@@ -1836,8 +1839,7 @@ def main() -> int:
             and process["model"] == "graph" and estimation["method_version"] == METHOD_VERSION
             and provenance.get("method_version") == f"{METHOD_VERSION}+{BOOTSTRAP_METHOD_VERSION}"
             and recipe.get("metadata", {}).get("status")
-            == "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope"
-            and "validated" not in recipe.get("metadata", {}).get("status", "")
+            == "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope"
         ),
         "global_listwise_sample_and_profiles": graph["complete_cases"] == len(columns[OUTCOME]) and graph["omitted_cases"] == total_rows - len(columns[OUTCOME]),
         "equation_order_terms_hc3_fit": point_delta <= EXACT_TOLERANCE,
@@ -1936,7 +1938,7 @@ def main() -> int:
             "python_reference_replicates": INDEPENDENT_REPLICATES,
             "workers_compared": list(WORKERS),
             "capacity": {"top_level_predictors_maximum": 8, "controls_maximum": 1, "equation_non_intercept_terms_maximum": 50},
-            "recipe_status": "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope",
+            "recipe_status": "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope",
         },
         "point_reference": {"maximum_absolute_difference": point_delta, "reference": independent},
         "point_metamorphic": metamorphic,

@@ -1,0 +1,425 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-15T17:45:49.712Z",
+  "harness": "Chromium production preview; one warm-up plus five measured runs",
+  "editResponseScope": "Browser pointermove event to the first fully painted frame with a moved node; Playwright protocol time is excluded and total gesture time remains recorded separately.",
+  "archiveReopenMeasured": false,
+  "reopenScope": "Deterministic fixture reload only; this is not saved-project archive reopen evidence.",
+  "profiles": [
+    {
+      "profile": {
+        "id": "applied_diagram",
+        "token": "large",
+        "constructs": 20,
+        "indicators": 80,
+        "openMs": 2000,
+        "editP95Ms": 100,
+        "minimumFps": 45
+      },
+      "warmup": {
+        "openMs": 232,
+        "selectionMs": 202.7,
+        "editResponseMs": 96.4,
+        "gestureCommitMs": 243.2,
+        "preflightMs": 3.9,
+        "panZoomFps": 64,
+        "fixtureReloadMs": 249.1,
+        "observed": {
+          "constructs": 20,
+          "indicators": 80
+        },
+        "reopened": {
+          "constructs": 20,
+          "indicators": 80
+        },
+        "preflight": {
+          "canRun": false,
+          "ready": 7,
+          "blockers": 1,
+          "warnings": 0
+        },
+        "interactions": {
+          "selectionChanged": true,
+          "dragChanged": true,
+          "panChanged": true,
+          "zoomChanged": true,
+          "preflightPresent": true,
+          "fixtureReloaded": true
+        }
+      },
+      "samples": [
+        {
+          "openMs": 223.4,
+          "selectionMs": 111.3,
+          "editResponseMs": 64.5,
+          "gestureCommitMs": 187.7,
+          "preflightMs": 1.2,
+          "panZoomFps": 64,
+          "fixtureReloadMs": 150.6,
+          "observed": {
+            "constructs": 20,
+            "indicators": 80
+          },
+          "reopened": {
+            "constructs": 20,
+            "indicators": 80
+          },
+          "preflight": {
+            "canRun": false,
+            "ready": 7,
+            "blockers": 1,
+            "warnings": 0
+          },
+          "interactions": {
+            "selectionChanged": true,
+            "dragChanged": true,
+            "panChanged": true,
+            "zoomChanged": true,
+            "preflightPresent": true,
+            "fixtureReloaded": true
+          }
+        },
+        {
+          "openMs": 140.3,
+          "selectionMs": 90,
+          "editResponseMs": 48.5,
+          "gestureCommitMs": 175.7,
+          "preflightMs": 1,
+          "panZoomFps": 64,
+          "fixtureReloadMs": 112.3,
+          "observed": {
+            "constructs": 20,
+            "indicators": 80
+          },
+          "reopened": {
+            "constructs": 20,
+            "indicators": 80
+          },
+          "preflight": {
+            "canRun": false,
+            "ready": 7,
+            "blockers": 1,
+            "warnings": 0
+          },
+          "interactions": {
+            "selectionChanged": true,
+            "dragChanged": true,
+            "panChanged": true,
+            "zoomChanged": true,
+            "preflightPresent": true,
+            "fixtureReloaded": true
+          }
+        },
+        {
+          "openMs": 223.4,
+          "selectionMs": 104.2,
+          "editResponseMs": 48,
+          "gestureCommitMs": 175.7,
+          "preflightMs": 2.6,
+          "panZoomFps": 64,
+          "fixtureReloadMs": 192.3,
+          "observed": {
+            "constructs": 20,
+            "indicators": 80
+          },
+          "reopened": {
+            "constructs": 20,
+            "indicators": 80
+          },
+          "preflight": {
+            "canRun": false,
+            "ready": 7,
+            "blockers": 1,
+            "warnings": 0
+          },
+          "interactions": {
+            "selectionChanged": true,
+            "dragChanged": true,
+            "panChanged": true,
+            "zoomChanged": true,
+            "preflightPresent": true,
+            "fixtureReloaded": true
+          }
+        },
+        {
+          "openMs": 181.9,
+          "selectionMs": 81.9,
+          "editResponseMs": 48,
+          "gestureCommitMs": 175.4,
+          "preflightMs": 1.1,
+          "panZoomFps": 64,
+          "fixtureReloadMs": 110.3,
+          "observed": {
+            "constructs": 20,
+            "indicators": 80
+          },
+          "reopened": {
+            "constructs": 20,
+            "indicators": 80
+          },
+          "preflight": {
+            "canRun": false,
+            "ready": 7,
+            "blockers": 1,
+            "warnings": 0
+          },
+          "interactions": {
+            "selectionChanged": true,
+            "dragChanged": true,
+            "panChanged": true,
+            "zoomChanged": true,
+            "preflightPresent": true,
+            "fixtureReloaded": true
+          }
+        },
+        {
+          "openMs": 196.1,
+          "selectionMs": 90,
+          "editResponseMs": 64.3,
+          "gestureCommitMs": 189.1,
+          "preflightMs": 1.8,
+          "panZoomFps": 64,
+          "fixtureReloadMs": 141.8,
+          "observed": {
+            "constructs": 20,
+            "indicators": 80
+          },
+          "reopened": {
+            "constructs": 20,
+            "indicators": 80
+          },
+          "preflight": {
+            "canRun": false,
+            "ready": 7,
+            "blockers": 1,
+            "warnings": 0
+          },
+          "interactions": {
+            "selectionChanged": true,
+            "dragChanged": true,
+            "panChanged": true,
+            "zoomChanged": true,
+            "preflightPresent": true,
+            "fixtureReloaded": true
+          }
+        }
+      ],
+      "aggregates": {
+        "openP95Ms": 223.4,
+        "editResponseP95Ms": 64.46,
+        "minimumPanZoomFps": 64
+      },
+      "interactionsPassed": true,
+      "budgetsPassed": true,
+      "passed": true
+    },
+    {
+      "profile": {
+        "id": "stress_diagram",
+        "token": "large-stress",
+        "constructs": 100,
+        "indicators": 300,
+        "openMs": 10000,
+        "editP95Ms": 250,
+        "minimumFps": 30
+      },
+      "warmup": {
+        "openMs": 930.1,
+        "selectionMs": 223.2,
+        "editResponseMs": 64.1,
+        "gestureCommitMs": 224.1,
+        "preflightMs": 1.3,
+        "panZoomFps": 64,
+        "fixtureReloadMs": 649.4,
+        "observed": {
+          "constructs": 100,
+          "indicators": 300
+        },
+        "reopened": {
+          "constructs": 100,
+          "indicators": 300
+        },
+        "preflight": {
+          "canRun": false,
+          "ready": 7,
+          "blockers": 1,
+          "warnings": 0
+        },
+        "interactions": {
+          "selectionChanged": true,
+          "dragChanged": true,
+          "panChanged": true,
+          "zoomChanged": true,
+          "preflightPresent": true,
+          "fixtureReloaded": true
+        }
+      },
+      "samples": [
+        {
+          "openMs": 598.6,
+          "selectionMs": 254.7,
+          "editResponseMs": 78.4,
+          "gestureCommitMs": 250.1,
+          "preflightMs": 1.3,
+          "panZoomFps": 64,
+          "fixtureReloadMs": 682.8,
+          "observed": {
+            "constructs": 100,
+            "indicators": 300
+          },
+          "reopened": {
+            "constructs": 100,
+            "indicators": 300
+          },
+          "preflight": {
+            "canRun": false,
+            "ready": 7,
+            "blockers": 1,
+            "warnings": 0
+          },
+          "interactions": {
+            "selectionChanged": true,
+            "dragChanged": true,
+            "panChanged": true,
+            "zoomChanged": true,
+            "preflightPresent": true,
+            "fixtureReloaded": true
+          }
+        },
+        {
+          "openMs": 651.7,
+          "selectionMs": 152,
+          "editResponseMs": 81.2,
+          "gestureCommitMs": 268.6,
+          "preflightMs": 1.1,
+          "panZoomFps": 64,
+          "fixtureReloadMs": 575.8,
+          "observed": {
+            "constructs": 100,
+            "indicators": 300
+          },
+          "reopened": {
+            "constructs": 100,
+            "indicators": 300
+          },
+          "preflight": {
+            "canRun": false,
+            "ready": 7,
+            "blockers": 1,
+            "warnings": 0
+          },
+          "interactions": {
+            "selectionChanged": true,
+            "dragChanged": true,
+            "panChanged": true,
+            "zoomChanged": true,
+            "preflightPresent": true,
+            "fixtureReloaded": true
+          }
+        },
+        {
+          "openMs": 671.5,
+          "selectionMs": 174.8,
+          "editResponseMs": 64.5,
+          "gestureCommitMs": 236.8,
+          "preflightMs": 1.2,
+          "panZoomFps": 64,
+          "fixtureReloadMs": 546.6,
+          "observed": {
+            "constructs": 100,
+            "indicators": 300
+          },
+          "reopened": {
+            "constructs": 100,
+            "indicators": 300
+          },
+          "preflight": {
+            "canRun": false,
+            "ready": 7,
+            "blockers": 1,
+            "warnings": 0
+          },
+          "interactions": {
+            "selectionChanged": true,
+            "dragChanged": true,
+            "panChanged": true,
+            "zoomChanged": true,
+            "preflightPresent": true,
+            "fixtureReloaded": true
+          }
+        },
+        {
+          "openMs": 702.7,
+          "selectionMs": 195.6,
+          "editResponseMs": 62.4,
+          "gestureCommitMs": 240.4,
+          "preflightMs": 2.6,
+          "panZoomFps": 64,
+          "fixtureReloadMs": 601.6,
+          "observed": {
+            "constructs": 100,
+            "indicators": 300
+          },
+          "reopened": {
+            "constructs": 100,
+            "indicators": 300
+          },
+          "preflight": {
+            "canRun": false,
+            "ready": 7,
+            "blockers": 1,
+            "warnings": 0
+          },
+          "interactions": {
+            "selectionChanged": true,
+            "dragChanged": true,
+            "panChanged": true,
+            "zoomChanged": true,
+            "preflightPresent": true,
+            "fixtureReloaded": true
+          }
+        },
+        {
+          "openMs": 481.7,
+          "selectionMs": 163.8,
+          "editResponseMs": 64.4,
+          "gestureCommitMs": 258.6,
+          "preflightMs": 1.1,
+          "panZoomFps": 64,
+          "fixtureReloadMs": 648.7,
+          "observed": {
+            "constructs": 100,
+            "indicators": 300
+          },
+          "reopened": {
+            "constructs": 100,
+            "indicators": 300
+          },
+          "preflight": {
+            "canRun": false,
+            "ready": 7,
+            "blockers": 1,
+            "warnings": 0
+          },
+          "interactions": {
+            "selectionChanged": true,
+            "dragChanged": true,
+            "panChanged": true,
+            "zoomChanged": true,
+            "preflightPresent": true,
+            "fixtureReloaded": true
+          }
+        }
+      ],
+      "aggregates": {
+        "openP95Ms": 696.46,
+        "editResponseP95Ms": 80.64,
+        "minimumPanZoomFps": 64
+      },
+      "interactionsPassed": true,
+      "budgetsPassed": true,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

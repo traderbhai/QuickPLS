@@ -84,16 +84,21 @@ def test_canonical_tetrads_preserve_signed_algebra_under_indicator_reorder() -> 
     assert canonical_tetrads(baseline) == canonical_tetrads(reordered)
 
 
-def test_current_manifest_is_staged_for_exact_release_qualification() -> None:
+def test_release_contract_is_staged_and_runtime_evidence_is_fail_closed_until_refreshed() -> None:
     report = validate_manifest(MANIFEST_PATH, MANIFEST_PATH.parents[2])
-    packaged = MANIFEST_PATH.parents[1] / "results" / "method_factory" / "cta_pls_v1" / "packaged_acceptance.identity.json"
-    audit = MANIFEST_PATH.parents[1] / "results" / "method_factory" / "cta_pls_v1" / "method_audit.identity.json"
-    if packaged.is_file() and audit.is_file():
-        assert report["passed"], json.dumps(report, indent=2)
-        assert report["derived_state"] == "release_qualified"
-    else:
-        assert not report["passed"]
-        assert report["derived_state"] in {"absent", "native_qualified"}
-        assert any("evidence file is missing" in error or "mismatch" in error for error in report["errors"])
     assert report["declared_state"] == "release_qualified"
     assert report["target_state"] == "release_qualified"
+    if report["passed"]:
+        assert report["derived_state"] == "release_qualified"
+    else:
+        assert report["derived_state"] != "release_qualified"
+        assert any("source_artifacts" in error for error in report["errors"])
+
+    contract = validate_manifest(MANIFEST_PATH, MANIFEST_PATH.parents[2], verify_evidence=False)
+    assert contract["passed"], json.dumps(contract, indent=2)
+    assert contract["derived_state"] == "release_qualified"
+
+
+def test_factory_runs_cta_pls_through_the_standard_cli_path() -> None:
+    source = (VALIDATION / "cta_pls_v1_factory_common.py").read_text(encoding="utf-8")
+    assert '"--allow-experimental"' not in source

@@ -6,7 +6,9 @@ import type {
   MeasurementMode,
   NativeAnalysisMethodConfig,
   PathEdgeData,
+  PlsBootstrapTestTail,
 } from "../types";
+import { semModelV4ExecutionBlockers } from "../domain/semModelV4Authoring";
 import {
   NATIVE_PREDICTION_METHOD_LABEL,
   nativeCalculationModeForSettings,
@@ -33,6 +35,9 @@ export type NativeAnalysisRecipeKind =
   | "pls_algorithm"
   | "pls_bootstrap"
   | "pls_permutation"
+  | "pls_posthoc_technical_minimum_sample_size"
+  | "plsc_bootstrap"
+  | "plsc_permutation"
   | NativeAdvancedAnalysisMethod;
 
 export type NativeRecipeScopeStatus = "validated" | "experimental";
@@ -49,8 +54,12 @@ export interface NativeAnalysisRecipeDescriptor {
 export const NATIVE_ANALYSIS_RECIPE_DESCRIPTORS = [
   { kind: "pls_algorithm", engineMethod: "pls_pm", family: "PLS-SEM", label: "PLS-SEM Algorithm", scopeStatus: "validated", scopeMetadata: "validated_v1_0_supported_pls_scope" },
   { kind: "pls_bootstrap", engineMethod: "pls_pm", family: "PLS-SEM", label: "PLS-SEM Bootstrapping", scopeStatus: "validated", scopeMetadata: "validated_v1_0_supported_pls_scope" },
-  { kind: "pls_permutation", engineMethod: "pls_pm", family: "Inference", label: "Structural Path Randomization", scopeStatus: "experimental", scopeMetadata: "candidate_freedman_lane_path_randomization_scope" },
+  { kind: "pls_permutation", engineMethod: "pls_pm", family: "Inference", label: "Structural Path Randomization", scopeStatus: "validated", scopeMetadata: "candidate_freedman_lane_path_randomization_scope" },
+  { kind: "pls_posthoc_technical_minimum_sample_size", engineMethod: "pls_pm", family: "Inference", label: "Post-hoc Technical Minimum Sample Size", scopeStatus: "validated", scopeMetadata: "standard_posthoc_technical_minimum_sample_size_v2" },
+  { kind: "pls_sample_size_power", engineMethod: "pls_sample_size_power", family: "PLS-SEM", label: "PLS-SEM Sample Size and Power", scopeStatus: "validated", scopeMetadata: "supported_pls_sample_size_power_v2_bounded_prospective_scope" },
   { kind: "plsc", engineMethod: "plsc", family: "PLS-SEM", label: "Consistent PLS", scopeStatus: "validated", scopeMetadata: "validated_v1_2_1_plsc_bounded_scope" },
+  { kind: "plsc_bootstrap", engineMethod: "plsc", family: "Inference", label: "PLSc Consistent Bootstrapping", scopeStatus: "validated", scopeMetadata: "validated_plsc_bootstrap_v1_bounded_scope" },
+  { kind: "plsc_permutation", engineMethod: "plsc", family: "Inference", label: "PLSc Consistent Permutation", scopeStatus: "experimental", scopeMetadata: "internal_plsc_permutation_v1_bounded_scope" },
   { kind: "wpls", engineMethod: "wpls", family: "PLS-SEM", label: "Weighted PLS", scopeStatus: "validated", scopeMetadata: "validated_v1_2_1_wpls_bounded_scope" },
   { kind: "cca", engineMethod: "cca", family: "Assessment", label: "CCA composite residual diagnostics", scopeStatus: "validated", scopeMetadata: "validated_v1_2_3_cca_bounded_scope" },
   { kind: "cta_pls", engineMethod: "cta_pls", family: "PLS-SEM", label: "Confirmatory Tetrad Analysis", scopeStatus: "validated", scopeMetadata: "validated_v1_2_3_cta_pls_bounded_scope" },
@@ -58,7 +67,7 @@ export const NATIVE_ANALYSIS_RECIPE_DESCRIPTORS = [
   { kind: "nonlinear_effects", engineMethod: "nonlinear_effects", family: "PLS-SEM", label: "Nonlinear Effects", scopeStatus: "validated", scopeMetadata: "validated_v1_2_3_nonlinear_effects_bounded_scope" },
   { kind: "moderated_mediation", engineMethod: "moderated_mediation", family: "PLS-SEM", label: "Moderated Mediation", scopeStatus: "validated", scopeMetadata: "validated_v1_2_3_moderated_mediation_bounded_scope" },
   { kind: "predict", engineMethod: "predict", family: "Prediction", label: NATIVE_PREDICTION_METHOD_LABEL, scopeStatus: "validated", scopeMetadata: "validated_plspredict_indicator_v2_and_cvpat_indicator_benchmarks_v2_bounded_scope" },
-  { kind: "mga", engineMethod: "mga", family: "Groups", label: "MICOM and Two-Group Permutation MGA", scopeStatus: "validated", scopeMetadata: "validated_micom_v2_and_permutation_mga_v2_bounded_scope" },
+  { kind: "mga", engineMethod: "mga", family: "Groups", label: "MICOM and Two-Group Permutation MGA", scopeStatus: "validated", scopeMetadata: "validated_micom_v4_and_permutation_mga_v4_fixed_plan_scope" },
   { kind: "ipma", engineMethod: "ipma", family: "Assessment", label: "Importance-Performance Map Analysis", scopeStatus: "validated", scopeMetadata: "validated_v1_2_1_ipma_bounded_scope" },
   { kind: "cbsem", engineMethod: "cbsem", family: "CB-SEM", label: "CB-SEM / CFA", scopeStatus: "validated", scopeMetadata: "validated_v1_2_4_cbsem_single_group_bounded_scope" },
   { kind: "pca", engineMethod: "pca", family: "Components", label: "Principal Component Analysis", scopeStatus: "validated", scopeMetadata: "validated_pca_v1_bounded_scope" },
@@ -94,6 +103,18 @@ export const NATIVE_ANALYSIS_RECIPE_BOUNDS = {
   pcaComponents: { minimum: 1, maximum: 50 },
   ncaPermutationSamples: { minimum: 1, maximum: 10_000 },
 } as const;
+
+export const NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS = {
+  bootstrapSamples: { minimum: 500, maximum: 10_000 },
+  workers: { minimum: 1, maximum: 12 },
+  completeCases: { minimum: 1, maximum: 180 },
+  modeledVariables: { minimum: 1, maximum: 9 },
+  freeParameterRows: { minimum: 1, maximum: 18 },
+  optimizerDimensions: { minimum: 1, maximum: 18 },
+} as const;
+
+/** BCa uses the same frozen Labs workload envelope as analytic studentization. */
+export const NATIVE_CBSEM_BCA_CAPS = NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS;
 
 export interface NativeRecipeConstruct {
   id: string;
@@ -144,6 +165,7 @@ export interface NativeRecipeSettings {
   tolerance: number;
   max_iterations: number;
   bootstrap_samples: number;
+  bootstrap_test_tail?: Exclude<PlsBootstrapTestTail, "two_sided">;
   studentized_inner_samples: number;
   permutation_samples: number;
   seed: number;
@@ -179,11 +201,13 @@ export interface NativeAnalysisRecipeBuildInput {
 
 export class NativeAnalysisRecipeBuildError extends Error {
   readonly field: string;
+  readonly code: string | null;
 
-  constructor(field: string, message: string) {
+  constructor(field: string, message: string, code: string | null = null) {
     super(message);
     this.name = "NativeAnalysisRecipeBuildError";
     this.field = field;
+    this.code = code;
   }
 }
 
@@ -195,6 +219,8 @@ export function nativeAnalysisRecipeDescriptor(kind: NativeAnalysisRecipeKind): 
 
 export function nativeAnalysisRecipeKindForSettings(settings: Readonly<AnalysisUiSettings>): NativeAnalysisRecipeKind {
   if (settings.method === "permutation") return "pls_permutation";
+  if (settings.method === "plsc" && settings.bootstrapSamples > 0) return "plsc_bootstrap";
+  if (settings.method === "plsc" && settings.permutationSamples > 0) return "plsc_permutation";
   if (settings.method !== "pls_pm" && settings.method !== "bootstrap") return settings.method;
   return nativeAnalysisRecipeKindForCalculationMode(nativeCalculationModeForSettings(settings));
 }
@@ -212,18 +238,29 @@ export function buildNativeAnalysisRecipe(input: NativeAnalysisRecipeBuildInput)
   const kind = input.kind ?? nativeAnalysisRecipeKindForSettings(input.settings);
   const descriptor = nativeAnalysisRecipeDescriptor(kind);
   validateIdentity(input);
+  const semModelV4Blocker = semModelV4ExecutionBlockers(input.edges, input.nodes)[0];
+  if (semModelV4Blocker) throw new NativeAnalysisRecipeBuildError(
+    "model",
+    `${semModelV4Blocker.message} ${semModelV4Blocker.corrective_action}`,
+    semModelV4Blocker.code,
+  );
 
   const settings = buildSettings(kind, descriptor.engineMethod, input.settings);
   const methodConfig = buildMethodConfig(kind, input.settings);
   const metadata = buildMetadata(descriptor.scopeMetadata, methodConfig);
   const model = buildNativeRecipeModel(input.modelId, input.projectName, input.nodes, input.edges);
+  if (kind === "pls_sample_size_power" && methodConfig.kind === "pls_sample_size_power") validatePlsPowerModel(model, methodConfig);
   if (kind === "cca") validateCcaModel(model);
   if (kind === "cta_pls") validateCtaPlsModel(model);
+  if (kind === "endogeneity") validateEndogeneityModel(model);
   if (kind === "ipma" && methodConfig.kind === "ipma") validateIpmaModel(model, methodConfig.targets[0], input.nodes, input.edges);
-  if (kind === "cbsem" && methodConfig.kind === "cbsem") validateCbsemModel(model, methodConfig.model_type);
+  if (kind === "cbsem" && methodConfig.kind === "cbsem") validateCbsemModel(model, methodConfig);
   if (kind === "gsca") validateGscaModel(model, input.edges);
+  if (methodConfig.kind === "plsc_permutation") {
+    validatePlscPermutationModel(model, methodConfig.group_column);
+  }
   if (
-    methodConfig.kind === "mga"
+    (methodConfig.kind === "mga" || methodConfig.kind === "micom")
     && model.constructs.some((construct) => construct.indicators.includes(methodConfig.group_column))
   ) {
     fail("groupColumn", "The two-group MGA grouping variable cannot also be assigned as a model indicator.");
@@ -246,16 +283,22 @@ function buildSettings(
   method: NativeEngineAnalysisMethod,
   source: Readonly<AnalysisUiSettings>,
 ): NativeRecipeSettings {
-  const weightingScheme = kind === "nca" || kind === "pca" || kind === "regression" || kind === "cbsem" || kind === "gsca" ? "path" : (source.weightingScheme ?? "path");
+  const weightingScheme = kind === "nca" || kind === "pca" || kind === "regression" || kind === "cbsem" || kind === "gsca" || kind === "pls_sample_size_power" ? "path" : (source.weightingScheme ?? "path");
   const tolerance = kind === "gsca" ? 1e-7 : (source.tolerance ?? 1e-7);
   const maxIterations = kind === "gsca" ? 3_000 : (source.maxIterations ?? 3_000);
   const regressionBootstrap = kind === "regression" && source.regressionBootstrap === true;
-  const workers = kind === "regression" && !regressionBootstrap ? 1 : source.workers;
+  const cbsemBootstrap = kind === "cbsem" && (source.cbsemBootstrapSamples ?? 0) > 0;
+  const workers = (kind === "regression" && !regressionBootstrap) || (kind === "cbsem" && !cbsemBootstrap)
+    ? 1
+    : source.workers;
   const preprocessing = kind === "nca" || kind === "regression"
     ? "unstandardized"
-    : kind === "pca" || kind === "cbsem" || kind === "gsca"
+    : kind === "pca" || kind === "cbsem" || kind === "gsca" || kind === "pls_sample_size_power"
       ? "standardized"
       : (source.preprocessing ?? "standardized");
+  const bootstrapTestTail = source.bootstrapTestTail ?? "two_sided";
+  const cbsemBootstrapTestTail = source.cbsemBootstrapTestTail ?? "two_sided";
+  const cbsemBootstrapInterval = source.cbsemBootstrapInterval ?? "percentile_type7";
 
   assertEnum("weightingScheme", weightingScheme, ["path", "factor", "pca"] as const);
   assertNumberInRange("tolerance", tolerance, NATIVE_ANALYSIS_RECIPE_BOUNDS.tolerance.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.tolerance.maximum);
@@ -264,21 +307,53 @@ function buildSettings(
   assertIntegerInRange("workers", workers, NATIVE_ANALYSIS_RECIPE_BOUNDS.workers.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.workers.maximum);
   assertNumberInRange("confidenceLevel", source.confidenceLevel, NATIVE_ANALYSIS_RECIPE_BOUNDS.confidenceLevel.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.confidenceLevel.maximum);
   assertEnum("preprocessing", preprocessing, ["standardized", "mean_centered", "unstandardized"] as const);
+  assertEnum("bootstrapTestTail", bootstrapTestTail, ["two_sided", "one_sided_greater", "one_sided_less"] as const);
+  if (bootstrapTestTail !== "two_sided" && kind !== "pls_bootstrap") {
+    fail("bootstrapTestTail", "A one-sided bootstrap test requires the general PLS bootstrap calculation.");
+  }
+  assertEnum("cbsemBootstrapTestTail", cbsemBootstrapTestTail, ["two_sided", "one_sided_greater", "one_sided_less"] as const);
+  assertEnum("cbsemBootstrapInterval", cbsemBootstrapInterval, ["percentile_type7", "analytic_studentized_type7", "bca_type7"] as const);
+  if (cbsemBootstrapInterval !== "percentile_type7" && !cbsemBootstrap) {
+    fail("cbsemBootstrapInterval", "Analytic studentized and BCa CB-SEM intervals require exact full-refit case bootstrapping.");
+  }
+  if (cbsemBootstrapInterval === "analytic_studentized_type7" || cbsemBootstrapInterval === "bca_type7") {
+    const intervalLabel = cbsemBootstrapInterval === "analytic_studentized_type7" ? "Analytic studentized" : "BCa Type 7";
+    if ((source.cbsemModelType ?? "sem") !== "cfa") {
+      fail("cbsemBootstrapInterval", `${intervalLabel} CB-SEM intervals are available only for confirmatory factor analysis.`);
+    }
+    if (cbsemBootstrapTestTail !== "two_sided") {
+      fail("cbsemBootstrapTestTail", `${intervalLabel} intervals use the fixed two-sided exact CFA contract.`);
+    }
+    if (workers > NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS.workers.maximum) {
+      fail("workers", `${intervalLabel} exact CFA supports at most ${NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS.workers.maximum} workers.`);
+    }
+  }
+  if (cbsemBootstrapTestTail !== "two_sided" && !cbsemBootstrap) {
+    fail("cbsemBootstrapTestTail", "A one-sided CB-SEM test requires exact full-refit case bootstrapping.");
+  }
+  if (cbsemBootstrapTestTail !== "two_sided" && (source.cbsemModelType ?? "sem") !== "cfa") {
+    fail("cbsemBootstrapTestTail", "A one-sided CB-SEM test is available only for the exact CFA case-bootstrap workflow.");
+  }
 
-  if (["plsc", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation"].includes(kind) && weightingScheme === "pca") {
-    fail("weightingScheme", `${nativeAnalysisRecipeDescriptor(kind).label} requires path or factor weighting in its validated scope.`);
+  if (kind === "pls_sample_size_power") {
+    assertNumberInRange("tolerance", tolerance, 1e-10, 1e-3);
+    assertIntegerInRange("maxIterations", maxIterations, 100, 10_000);
+  }
+
+  if (["plsc", "plsc_bootstrap", "plsc_permutation", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation"].includes(kind) && weightingScheme === "pca") {
+    fail("weightingScheme", `${nativeAnalysisRecipeDescriptor(kind).label} requires path or factor weighting for this setup.`);
   }
   if (kind === "wpls" && preprocessing !== "standardized") {
-    fail("preprocessing", "Weighted PLS requires standardized preprocessing in its validated scope.");
+    fail("preprocessing", "Weighted PLS requires standardized preprocessing.");
   }
   if (kind === "cca" && preprocessing !== "standardized") {
-    fail("preprocessing", "CCA composite residual diagnostics require standardized preprocessing in the validated scope.");
+    fail("preprocessing", "CCA composite residual diagnostics require standardized preprocessing.");
   }
   if (kind === "ipma" && weightingScheme !== "path") {
-    fail("weightingScheme", "Importance-Performance Map Analysis requires path weighting in the validated native scope.");
+    fail("weightingScheme", "Importance-Performance Map Analysis requires path weighting.");
   }
   if (kind === "ipma" && preprocessing !== "standardized") {
-    fail("preprocessing", "Importance-Performance Map Analysis requires standardized preprocessing in the validated native scope.");
+    fail("preprocessing", "Importance-Performance Map Analysis requires standardized preprocessing.");
   }
 
   let bootstrapSamples = 0;
@@ -289,7 +364,38 @@ function buildSettings(
     bootstrapSamples = normalized.bootstrapSamples;
     studentizedInnerSamples = normalized.studentizedInnerSamples;
     permutationSamples = normalized.permutationSamples;
-    if (kind === "pls_bootstrap") validateBootstrapPlan(bootstrapSamples, studentizedInnerSamples);
+    if (kind === "pls_bootstrap" || kind === "pls_posthoc_technical_minimum_sample_size") {
+      validateBootstrapPlan(bootstrapSamples, studentizedInnerSamples);
+    }
+    if (kind === "pls_posthoc_technical_minimum_sample_size" && studentizedInnerSamples !== 0) {
+      fail(
+        "studentizedInnerSamples",
+        "Post-hoc technical minimum sample size v2 requires the linked case-bootstrap normal-reference two-sided plan; studentized inference is not contracted.",
+      );
+    }
+  } else if (kind === "plsc_bootstrap") {
+    bootstrapSamples = source.bootstrapSamples;
+    assertIntegerInRange("bootstrapSamples", bootstrapSamples, 1_000, 10_000);
+    if (source.studentizedInnerSamples !== 0 || source.permutationSamples !== 0) {
+      fail("bootstrapSamples", "PLSc consistent bootstrapping cannot be combined with studentized or permutation inference in this setup.");
+    }
+  } else if (kind === "plsc_permutation") {
+    permutationSamples = source.permutationSamples;
+    assertIntegerInRange(
+      "permutationSamples",
+      permutationSamples,
+      NATIVE_ANALYSIS_RECIPE_BOUNDS.permutationSamples.minimum,
+      NATIVE_ANALYSIS_RECIPE_BOUNDS.permutationSamples.maximum,
+    );
+    if (source.bootstrapSamples !== 0 || source.studentizedInnerSamples !== 0) {
+      fail("permutationSamples", "PLSc consistent permutation cannot be combined with bootstrap or studentized inference in this setup.");
+    }
+    if (source.confidenceLevel !== 0.95) {
+      fail("confidenceLevel", "PLSc consistent permutation v1 uses a fixed two-tailed 0.05 significance level.");
+    }
+    if (preprocessing !== "standardized") {
+      fail("preprocessing", "PLSc consistent permutation v1 requires standardized preprocessing.");
+    }
   } else if (regressionBootstrap) {
     bootstrapSamples = source.bootstrapSamples;
     assertIntegerInRange(
@@ -302,7 +408,7 @@ function buildSettings(
       fail("bootstrapSamples", "Regression case-resampling cannot be combined with studentized or permutation settings.");
     }
     if (source.confidenceLevel !== 0.95) {
-      fail("confidenceLevel", "The qualified regression bootstrap slice uses fixed two-sided 95% inference.");
+      fail("confidenceLevel", "Regression bootstrap uses fixed two-sided 95% inference.");
     }
   }
 
@@ -316,10 +422,11 @@ function buildSettings(
     tolerance,
     max_iterations: maxIterations,
     bootstrap_samples: bootstrapSamples,
+    ...(bootstrapTestTail === "two_sided" ? {} : { bootstrap_test_tail: bootstrapTestTail }),
     studentized_inner_samples: studentizedInnerSamples,
     permutation_samples: permutationSamples,
     seed: source.seed,
-    workers: kind === "cbsem" || kind === "gsca" ? 1 : workers,
+    workers: kind === "gsca" ? 1 : workers,
     confidence_level: source.confidenceLevel,
     preprocessing,
     missing_data: "listwise_deletion",
@@ -338,10 +445,10 @@ function validateGscaModel(model: NativeRecipeModel, edges: readonly Edge[]) {
     fail("model", "Every GSCA construct requires at least one observed indicator.");
   }
   if (model.controls.length || model.interactions.length || model.higher_order_constructs.length) {
-    fail("model", "The bounded GSCA scope does not support controls, interactions, or higher-order constructs.");
+    fail("model", "GSCA does not support controls, interactions, or higher-order constructs.");
   }
   if (edges.some((edge) => (edge.data as PathEdgeData | undefined)?.role === "covariance")) {
-    fail("model", "The bounded GSCA scope does not support covariance paths.");
+    fail("model", "GSCA does not support covariance paths.");
   }
   const connected = new Set(model.paths.flatMap((path) => [path.source, path.target]));
   if (model.constructs.some((construct) => !connected.has(construct.id))) {
@@ -377,12 +484,14 @@ function buildMetadata(
     ? "preview_fimix_pls_v1_bounded_score_space_diagnostic"
     : methodConfig.kind === "predict" && methodConfig.pls_pos
       ? "preview_pls_pos_v1_bounded_score_space_diagnostic"
+      : methodConfig.kind === "cbsem" && methodConfig.bootstrap_v2
+        ? "candidate_cbsem_bootstrap_v2_unqualified_bounded_scope"
       : methodConfig.kind !== "regression"
     ? scopeMetadata
     : methodConfig.model.type === "process"
       ? methodConfig.bootstrap
-        ? "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope"
-        : "candidate_regression_process_v2_bounded_scope"
+        ? "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope"
+        : "validated_regression_process_v2_bounded_scope"
     : methodConfig.bootstrap
       ? "validated_regression_bootstrap_v1_bounded_scope"
       : methodConfig.model.type === "logistic"
@@ -399,6 +508,8 @@ function buildMethodConfig(
     case "pls_algorithm":
     case "pls_bootstrap":
     case "pls_permutation":
+    case "pls_posthoc_technical_minimum_sample_size":
+    case "pls_sample_size_power":
     case "plsc":
     case "wpls":
     case "cca":
@@ -407,7 +518,42 @@ function buildMethodConfig(
     case "nonlinear_effects":
     case "moderated_mediation":
     case "gsca":
+      if (kind === "pls_sample_size_power") return plsPowerMethodConfig(settings);
+      if (kind === "pls_posthoc_technical_minimum_sample_size") {
+        const identity = {
+          kind,
+          capability_cell: {
+            registry_schema_version: 2,
+            capability_id: "smartpls.pls_power_analysis",
+            cell_id: "qpls3.pls.posthoc_technical_minimum_sample_size",
+            capability_version: "pls_posthoc_technical_minimum_sample_size_v2",
+          },
+          method_version: "inverse_square_root_posthoc_v2",
+        } as const;
+        return settings.bootstrapSamples > 0
+          ? {
+              ...identity,
+              base_analysis: "pls_bootstrap",
+              inference: "case_bootstrap_normal_reference_two_sided",
+            }
+          : {
+              ...identity,
+              base_analysis: "pls_algorithm",
+              inference: "point_estimate_only",
+            };
+      }
       return { kind };
+    case "plsc_bootstrap":
+      return { kind: "plsc" };
+    case "plsc_permutation": {
+      const groups = plscPermutationGroups(settings);
+      return {
+        kind,
+        group_column: groups.groupColumn,
+        group_a: groups.groupA,
+        group_b: groups.groupB,
+      };
+    }
     case "predict": {
       const values = predictionMetadata(settings);
       const segmentation = values.segment_starts === undefined
@@ -426,7 +572,7 @@ function buildMethodConfig(
     case "mga": {
       const values = mgaMetadata(settings);
       return {
-        kind,
+        kind: "mga",
         group_column: values.mga_group_column,
         group_a: values.mga_group_a,
         group_b: values.mga_group_b,
@@ -439,13 +585,27 @@ function buildMethodConfig(
       return { kind, targets: [requiredSingleTarget(settings.ipmaTargets)] };
     case "cbsem": {
       const values = cbsemMetadata(settings);
+      const bootstrapSamples = Number(values.cbsem_bootstrap_samples);
+      // Retained for deterministic schema-3 project migration and historical readers.
+      // New desktop bootstrap controls live in the Recipe-v4 Exact CB-SEM workspace.
+      const testTail = settings.cbsemBootstrapTestTail ?? "two_sided";
+      const interval = settings.cbsemBootstrapInterval ?? "percentile_type7";
       return {
         kind,
         model_type: values.cbsem_model_type as "cfa" | "sem",
         estimator: "ml",
         input: "raw",
         mean_structure: false,
-        bootstrap_samples: 0,
+        bootstrap_samples: bootstrapSamples,
+        ...(bootstrapSamples > 0
+          ? {
+              bootstrap_v2: {
+                algorithm: "case_resampling_full_ml",
+                interval,
+                ...(testTail === "two_sided" ? {} : { test_tail: testTail }),
+              } as const,
+            }
+          : {}),
       };
     }
     case "pca": {
@@ -513,6 +673,112 @@ function buildMethodConfig(
   }
 }
 
+function plsPowerMethodConfig(
+  settings: Readonly<AnalysisUiSettings>,
+): Extract<NativeAnalysisMethodConfig, { kind: "pls_sample_size_power" }> {
+  const scenarioIdentity = requiredText("plsPowerScenarioIdentity", settings.plsPowerScenarioIdentity);
+  const predictorConstruct = requiredText("plsPowerPredictorConstruct", settings.plsPowerPredictorConstruct);
+  const outcomeConstruct = requiredText("plsPowerOutcomeConstruct", settings.plsPowerOutcomeConstruct);
+  if (predictorConstruct === outcomeConstruct) {
+    fail("plsPowerOutcomeConstruct", "Power-analysis predictor and outcome constructs must differ.");
+  }
+  const parseNumbers = (field: string, value: string | null | undefined) => {
+    const tokens = requiredText(field, value).split(/[;,\s]+/).filter(Boolean);
+    const numbers = tokens.map(Number);
+    if (numbers.some((number) => !Number.isFinite(number))) fail(field, `${field} must contain finite numbers.`);
+    return numbers;
+  };
+  const predictorLoadings = parseNumbers("plsPowerPredictorLoadings", settings.plsPowerPredictorLoadings);
+  const outcomeLoadings = parseNumbers("plsPowerOutcomeLoadings", settings.plsPowerOutcomeLoadings);
+  for (const [field, loadings] of [
+    ["plsPowerPredictorLoadings", predictorLoadings],
+    ["plsPowerOutcomeLoadings", outcomeLoadings],
+  ] as const) {
+    if (loadings.length < 3 || loadings.length > 10 || loadings.some((loading) => loading < 0.5 || loading > 0.95)) {
+      fail(field, `${field} requires 3 to 10 loadings from 0.50 through 0.95.`);
+    }
+  }
+  const populationPath = settings.plsPowerPopulationPath;
+  assertNumberInRange("plsPowerPopulationPath", populationPath ?? Number.NaN, -0.8, 0.8);
+  const sampleSizeGrid = parseNumbers("plsPowerSampleSizeGrid", settings.plsPowerSampleSizeGrid);
+  if (
+    sampleSizeGrid.length < 2
+    || sampleSizeGrid.length > 16
+    || sampleSizeGrid.some((value) => !Number.isSafeInteger(value) || value < 30 || value > 5_000)
+    || sampleSizeGrid.some((value, index) => index > 0 && value <= sampleSizeGrid[index - 1])
+  ) {
+    fail("plsPowerSampleSizeGrid", "Enter 2 to 16 unique, strictly increasing sample sizes from 30 through 5000.");
+  }
+  const alpha = settings.plsPowerAlpha ?? 0.05;
+  const targetPower = settings.plsPowerTargetPower ?? 0.80;
+  const monteCarloReplicates = settings.plsPowerMonteCarloReplicates ?? 250;
+  const bootstrapReplicates = settings.plsPowerBootstrapReplicates ?? 199;
+  assertNumberInRange("plsPowerAlpha", alpha, 0.001, 0.10);
+  assertNumberInRange("plsPowerTargetPower", targetPower, 0.50, 0.99);
+  assertIntegerInRange("plsPowerMonteCarloReplicates", monteCarloReplicates, 100, 10_000);
+  assertIntegerInRange("plsPowerBootstrapReplicates", bootstrapReplicates, 99, 1_999);
+  if (bootstrapReplicates % 2 === 0) fail("plsPowerBootstrapReplicates", "Power-analysis bootstrap replicates must be odd.");
+  const estimatedFits = sampleSizeGrid.length * monteCarloReplicates * (1 + bootstrapReplicates);
+  const estimatedCaseFits = sampleSizeGrid.reduce(
+    (total, sampleSize) => total + sampleSize * monteCarloReplicates * (1 + bootstrapReplicates),
+    0,
+  );
+  if (estimatedFits > 250_000 || estimatedCaseFits > 100_000_000) {
+    fail("plsPowerSampleSizeGrid", "Power-analysis plan exceeds 250,000 PLS fits or 100,000,000 fitted rows; reduce the grid or replicate counts.");
+  }
+  return {
+    kind: "pls_sample_size_power",
+    scenario_identity: scenarioIdentity,
+    predictor_construct: predictorConstruct,
+    outcome_construct: outcomeConstruct,
+    predictor_indicator_loadings: predictorLoadings,
+    outcome_indicator_loadings: outcomeLoadings,
+    population_path: populationPath!,
+    exogenous_distribution: "standard_normal",
+    structural_disturbance_distribution: "standard_normal",
+    indicator_error_distribution: "standard_normal",
+    missing_data: "none",
+    inference: "case_bootstrap_null_centered_two_sided_plus_one",
+    sample_size_grid: sampleSizeGrid,
+    alpha,
+    target_power: targetPower,
+    interval_confidence_level: settings.confidenceLevel,
+    monte_carlo_replicates: monteCarloReplicates,
+    bootstrap_replicates: bootstrapReplicates,
+  };
+}
+
+function validatePlsPowerModel(
+  model: NativeRecipeModel,
+  config: Extract<NativeAnalysisMethodConfig, { kind: "pls_sample_size_power" }>,
+) {
+  const targetPath = model.paths.filter((path) => (
+    path.source === config.predictor_construct && path.target === config.outcome_construct
+  ));
+  const predictor = model.constructs.find((construct) => construct.id === config.predictor_construct);
+  const outcome = model.constructs.find((construct) => construct.id === config.outcome_construct);
+  if (
+    model.constructs.length !== 2
+    || model.paths.length !== 1
+    || targetPath.length !== 1
+    || model.controls.length
+    || model.interactions.length
+    || model.higher_order_constructs.length
+  ) {
+    fail("model", "Power v2 requires exactly two constructs and the selected predictor-to-outcome path, without controls, interactions, or higher-order constructs.");
+  }
+  if (
+    !predictor
+    || !outcome
+    || predictor.mode !== "reflective"
+    || outcome.mode !== "reflective"
+    || predictor.indicators.length !== config.predictor_indicator_loadings.length
+    || outcome.indicators.length !== config.outcome_indicator_loadings.length
+  ) {
+    fail("model", "Power v2 loading assumptions must map one-to-one to two reflective construct measurement blocks.");
+  }
+}
+
 function predictionMetadata(settings: Readonly<AnalysisUiSettings>): Record<string, string> {
   const requested = methodTokens(settings.groupMethods, ["pls_pos", "fimix"]);
   if (!requested.length) return {};
@@ -547,8 +813,8 @@ function mgaMetadata(settings: Readonly<AnalysisUiSettings>): Record<string, str
   const samples = settings.groupPermutationSamples ?? NATIVE_ANALYSIS_RECIPE_BOUNDS.groupPermutationSamples.default;
   assertIntegerInRange("groupPermutationSamples", samples, NATIVE_ANALYSIS_RECIPE_BOUNDS.groupPermutationSamples.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.groupPermutationSamples.maximum);
   const methods = methodTokens(settings.groupMethods, ["micom", "mga_permutation"]);
-  if (methods.length !== 2 || !methods.includes("micom") || !methods.includes("mga_permutation")) {
-    fail("groupMethods", "The validated native group workflow requires MICOM and two-group permutation MGA together.");
+  if (methods.length !== 2 || methods[0] !== "micom" || methods[1] !== "mga_permutation") {
+    fail("groupMethods", "The combined group workflow requires both MICOM and two-group permutation MGA.");
   }
   if (settings.micomConfiguralConfirmed !== true) {
     fail("micomConfiguralConfirmed", "Confirm MICOM configural invariance before starting the group analysis.");
@@ -563,25 +829,58 @@ function mgaMetadata(settings: Readonly<AnalysisUiSettings>): Record<string, str
   };
 }
 
+function plscPermutationGroups(settings: Readonly<AnalysisUiSettings>): {
+  groupColumn: string;
+  groupA: string;
+  groupB: string;
+} {
+  const groupColumn = requiredText("groupColumn", settings.groupColumn);
+  const groupA = requiredText("groupAValue", settings.groupAValue);
+  const groupB = requiredText("groupBValue", settings.groupBValue);
+  if (groupA === groupB) fail("groupBValue", "Group A and Group B must use different observed values.");
+  return { groupColumn, groupA, groupB };
+}
+
+function validatePlscPermutationModel(model: NativeRecipeModel, groupColumn: string | undefined) {
+  if (!groupColumn) fail("groupColumn", "Choose the observed column that defines the two PLSc groups.");
+  if (model.constructs.length < 2 || model.paths.length === 0) {
+    fail("model", "PLSc consistent permutation requires at least two constructs and one recursive structural path.");
+  }
+  if (model.constructs.some((construct) => construct.mode !== "reflective" || construct.indicators.length < 2)) {
+    fail("model", "PLSc consistent permutation requires reflective constructs with at least two indicators each.");
+  }
+  if (model.controls.length || model.interactions.length || model.higher_order_constructs.length) {
+    fail("model", "PLSc consistent permutation v1 does not support controls, interactions, or higher-order constructs.");
+  }
+  if (model.constructs.some((construct) => construct.indicators.includes(groupColumn))) {
+    fail("groupColumn", "The PLSc group column cannot also be assigned as a model indicator.");
+  }
+}
+
 function cbsemMetadata(settings: Readonly<AnalysisUiSettings>): Record<string, string> {
   const modelType = settings.cbsemModelType ?? "sem";
   assertEnum("cbsemModelType", modelType, ["cfa", "sem"] as const);
+  const bootstrapInterval = settings.cbsemBootstrapInterval ?? "percentile_type7";
+  assertEnum("cbsemBootstrapInterval", bootstrapInterval, ["percentile_type7", "analytic_studentized_type7", "bca_type7"] as const);
 
   // Rust currently ignores this UI field. Rejecting the non-default variant is
   // safer than serializing a setting that would not change the calculation.
   if (settings.cbsemStandardization && settings.cbsemStandardization !== "std_all") {
-    fail("cbsemStandardization", "The validated native CB-SEM scope does not implement selectable standardization.");
+    fail("cbsemStandardization", "CB-SEM does not implement selectable standardization.");
   }
   if (settings.cbsemMeanStructure) {
-    fail("cbsemMeanStructure", "The validated native CB-SEM scope does not estimate a selectable mean structure.");
+    fail("cbsemMeanStructure", "CB-SEM does not estimate a selectable mean structure.");
   }
   if (optionalText(settings.cbsemGroupColumn)) {
-    fail("cbsemGroupColumn", "CB-SEM multigroup/invariance remains outside the validated native single-group scope.");
+    fail("cbsemGroupColumn", "This CB-SEM calculation supports one group only; multigroup and invariance analysis are unavailable.");
   }
   const bootstrapSamples = settings.cbsemBootstrapSamples ?? 0;
   assertIntegerInRange("cbsemBootstrapSamples", bootstrapSamples, NATIVE_ANALYSIS_RECIPE_BOUNDS.cbsemBootstrapSamples.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.cbsemBootstrapSamples.maximum);
-  if (bootstrapSamples > 0) {
-    fail("cbsemBootstrapSamples", "CB-SEM bootstrap remains outside the validated native single-group scope.");
+  if (bootstrapSamples > 0 && bootstrapSamples < 500) {
+    fail("cbsemBootstrapSamples", "CB-SEM bootstrap v2 requires 500 to 10,000 full-ML case-resampling replicates.");
+  }
+  if (bootstrapSamples > 0 && settings.confidenceLevel !== 0.95) {
+    fail("confidenceLevel", "CB-SEM bootstrap v2 uses a fixed two-sided 95% interval.");
   }
 
   return {
@@ -589,10 +888,15 @@ function cbsemMetadata(settings: Readonly<AnalysisUiSettings>): Record<string, s
     cbsem_estimator: "ml",
     cbsem_input: "raw",
     cbsem_mean_structure: "false",
+    cbsem_bootstrap_samples: String(bootstrapSamples),
   };
 }
 
-function validateCbsemModel(model: NativeRecipeModel, modelType: string | undefined) {
+function validateCbsemModel(
+  model: NativeRecipeModel,
+  config: Extract<NativeAnalysisMethodConfig, { kind: "cbsem" }>,
+) {
+  const modelType = config.model_type;
   if (modelType !== "cfa" && modelType !== "sem") {
     fail("cbsemModelType", "Choose confirmatory factor analysis or structural equation modeling.");
   }
@@ -601,20 +905,30 @@ function validateCbsemModel(model: NativeRecipeModel, modelType: string | undefi
   }
   const nonReflective = model.constructs.filter((construct) => construct.mode !== "reflective");
   if (nonReflective.length) {
-    fail("model", "The bounded native CB-SEM / CFA scope supports reflective constructs only.");
+    fail("model", "CB-SEM / CFA supports reflective constructs only.");
   }
   const underspecified = model.constructs.filter((construct) => construct.indicators.length < 2);
   if (underspecified.length) {
     fail("model", "Each CB-SEM / CFA latent factor requires at least two observed indicators.");
   }
   if (model.controls.length || model.interactions.length || model.higher_order_constructs.length) {
-    fail("model", "The bounded native CB-SEM / CFA scope does not support controls, interactions, or higher-order constructs.");
+    fail("model", "CB-SEM / CFA does not support controls, interactions, or higher-order constructs.");
   }
   if (modelType === "cfa" && model.paths.length) {
     fail("cbsemModelType", "Confirmatory factor analysis does not accept structural paths.");
   }
   if (modelType === "sem" && !model.paths.length) {
     fail("cbsemModelType", "Structural equation modeling requires at least one recursive latent path.");
+  }
+  if (config.bootstrap_v2?.interval === "analytic_studentized_type7" || config.bootstrap_v2?.interval === "bca_type7") {
+    const modeledVariables = new Set(model.constructs.flatMap((construct) => construct.indicators)).size;
+    if (modeledVariables > NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS.modeledVariables.maximum) {
+      const intervalLabel = config.bootstrap_v2.interval === "analytic_studentized_type7" ? "Analytic studentized" : "BCa Type 7";
+      fail(
+        "model",
+        `${intervalLabel} exact CFA supports at most ${NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS.modeledVariables.maximum} modeled observed variables.`,
+      );
+    }
   }
 }
 
@@ -633,7 +947,7 @@ function pcaMetadata(settings: Readonly<AnalysisUiSettings>): Record<string, str
   }
   const selectedVariables = variables.split(",");
   if (selectedVariables.length > 50) {
-    fail("pcaVariables", "Standalone PCA supports at most 50 selected variables in the validated native scope.");
+    fail("pcaVariables", "Standalone PCA supports at most 50 selected variables.");
   }
   const metadata: Record<string, string> = {
     pca_variables: variables,
@@ -673,7 +987,7 @@ function regressionMetadata(settings: Readonly<AnalysisUiSettings>): Record<stri
   };
 
   if (regressionType === "ols" && settings.robustSe && settings.robustSe !== "hc3") {
-    fail("robustSe", "The validated native OLS scope computes HC3 standard errors; the selected alternative is not implemented.");
+    fail("robustSe", "OLS computes HC3 standard errors; the selected alternative is not implemented.");
   }
   if (settings.regressionBootstrap === true) {
     const selectedTermCount = predictors.split(",").length + (controls?.split(",").length ?? 0);
@@ -780,10 +1094,10 @@ function validateCcaModel(model: NativeRecipeModel) {
     fail("model", "CCA composite residual diagnostics require at least one structural path.");
   }
   if (model.controls.length > 0) {
-    fail("model", "CCA composite residual diagnostics do not support control paths in the validated scope.");
+    fail("model", "CCA composite residual diagnostics do not support control paths.");
   }
   if (model.interactions.length > 0 || model.higher_order_constructs.length > 0) {
-    fail("model", "CCA composite residual diagnostics do not support interaction or higher-order constructs in the validated scope.");
+    fail("model", "CCA composite residual diagnostics do not support interaction or higher-order constructs.");
   }
 }
 
@@ -792,10 +1106,19 @@ function validateCtaPlsModel(model: NativeRecipeModel) {
     fail("model", "CTA-PLS requires at least one ordinary construct with four or more indicators.");
   }
   if (model.controls.length > 0) {
-    fail("model", "CTA-PLS does not support control paths in the bounded native descriptive scope.");
+    fail("model", "CTA-PLS descriptive diagnostics do not support control paths.");
   }
   if (model.interactions.length > 0 || model.higher_order_constructs.length > 0) {
-    fail("model", "CTA-PLS does not support interaction or higher-order constructs in the bounded native descriptive scope.");
+    fail("model", "CTA-PLS descriptive diagnostics do not support interaction or higher-order constructs.");
+  }
+}
+
+function validateEndogeneityModel(model: NativeRecipeModel) {
+  if (model.constructs.length < 2 || model.paths.length === 0) {
+    fail("model", "Gaussian-copula endogeneity diagnostics require at least two constructs and one structural path.");
+  }
+  if (model.controls.length > 0 || model.interactions.length > 0 || model.higher_order_constructs.length > 0) {
+    fail("model", "The Gaussian-copula diagnostic does not support control paths, interactions, or higher-order constructs.");
   }
 }
 
@@ -812,7 +1135,7 @@ function validateIpmaModel(
     fail("ipmaTargets", "Importance-Performance Map Analysis requires an endogenous target with at least one incoming structural path.");
   }
   if (model.interactions.length > 0 || model.higher_order_constructs.length > 0) {
-    fail("model", "Importance-Performance Map Analysis does not support interaction or higher-order constructs in the validated native scope.");
+    fail("model", "Importance-Performance Map Analysis does not support interaction or higher-order constructs.");
   }
 }
 
@@ -824,12 +1147,15 @@ function validateBootstrapPlan(bootstrapSamples: number, studentizedInnerSamples
   if (bootstrapSamples < 999) fail("bootstrapSamples", "Studentized bootstrap requires at least 999 primary bootstrap samples.");
 }
 
-function isPrimaryKind(kind: NativeAnalysisRecipeKind): kind is "pls_algorithm" | "pls_bootstrap" | "pls_permutation" {
-  return kind === "pls_algorithm" || kind === "pls_bootstrap" || kind === "pls_permutation";
+function isPrimaryKind(kind: NativeAnalysisRecipeKind): kind is "pls_algorithm" | "pls_bootstrap" | "pls_permutation" | "pls_posthoc_technical_minimum_sample_size" {
+  return kind === "pls_algorithm"
+    || kind === "pls_bootstrap"
+    || kind === "pls_permutation"
+    || kind === "pls_posthoc_technical_minimum_sample_size";
 }
 
-function calculationModeForKind(kind: "pls_algorithm" | "pls_bootstrap" | "pls_permutation"): NativeCalculationMode {
-  if (kind === "pls_bootstrap") return "bootstrap";
+function calculationModeForKind(kind: "pls_algorithm" | "pls_bootstrap" | "pls_permutation" | "pls_posthoc_technical_minimum_sample_size"): NativeCalculationMode {
+  if (kind === "pls_bootstrap" || kind === "pls_posthoc_technical_minimum_sample_size") return "bootstrap";
   if (kind === "pls_permutation") return "permutation";
   return "pls";
 }

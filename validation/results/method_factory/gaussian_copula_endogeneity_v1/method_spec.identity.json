@@ -1,0 +1,67 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "document": "docs/methods/PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md",
+    "does_not_claim_release_qualification": true,
+    "passed": true,
+    "required_contract_fragments": {
+      "PCA weighting": true,
+      "`gaussian_copula_endogeneity_v1`": true,
+      "absolute sample skewness": true,
+      "bootstrap": true,
+      "diagnostic, not proof of causality": true,
+      "packaged desktop acceptance": true,
+      "rankit inverse-normal": true,
+      "same-run": true
+    }
+  },
+  "feature_id": "qpls3.pls.gaussian_copula_endogeneity",
+  "generated_at_utc": "2026-08-14T06:51:40.616175Z",
+  "method_version": "gaussian_copula_endogeneity_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md",
+      "sha256": "9a1fd307b73fecbb953d4b1bcda26d00927b0fa304882cb053a3e8b9d541c06b",
+      "size": 2721
+    },
+    {
+      "path": "validation/endogeneity_factory_common.py",
+      "sha256": "9ca62fb82ec04b4056d5c138a99e28c1dd5bf00a2c2c12ffa53b49b26bcd85e9",
+      "size": 14111
+    },
+    {
+      "path": "validation/endogeneity_frontend_gate.py",
+      "sha256": "e9cf4a1b148dee8e588249b2a5b8f2223ca87843dcf58b1f688187c5c455806d",
+      "size": 10256
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/gaussian_copula_endogeneity_v1.manifest.json",
+      "sha256": "50e1445c9c8d7131eea334405e5454424982371154ac5d2774e83a5b6fc57320",
+      "size": 14698
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_endogeneity_factory.py",
+      "sha256": "1b2dbb224abd159e0f9179071f67a52dde6b23f227195b75d67cdcd24a203c92",
+      "size": 4689
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    }
+  ]
+}

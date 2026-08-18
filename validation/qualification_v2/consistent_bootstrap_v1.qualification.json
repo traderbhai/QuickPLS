@@ -1,0 +1,1104 @@
+{
+  "comparison_contract": {
+    "outputs": [
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "plsc_parameter_estimates",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "bootstrap_means",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "bootstrap_biases",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "bootstrap_standard_errors",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "normal_reference_t_statistics",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "normal_reference_two_sided_p_values",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "percentile_lower_bounds",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "percentile_upper_bounds",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "bca_bias_corrections",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "bca_accelerations",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "bca_lower_bounds",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "bca_upper_bounds",
+        "rationale": "Canonical PLSc values and interval arithmetic must agree with independently maintained full-refit references after the same indexed sample and sign alignment; tolerances are tighter than the source estimator acceptance boundary.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "output_id": "bca_unavailable_reasons",
+        "rationale": "Identifiers, counts, availability, reason codes, ordered ledger rows, provenance, and digests are deterministic contract values and permit no numerical tolerance.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "requested_usable_failed_counts",
+        "rationale": "Identifiers, counts, availability, reason codes, ordered ledger rows, provenance, and digests are deterministic contract values and permit no numerical tolerance.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "replicate_ledger",
+        "rationale": "Identifiers, counts, availability, reason codes, ordered ledger rows, provenance, and digests are deterministic contract values and permit no numerical tolerance.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "failed_replicate_reasons",
+        "rationale": "Identifiers, counts, availability, reason codes, ordered ledger rows, provenance, and digests are deterministic contract values and permit no numerical tolerance.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "failed_jackknife_reasons",
+        "rationale": "Identifiers, counts, availability, reason codes, ordered ledger rows, provenance, and digests are deterministic contract values and permit no numerical tolerance.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "method_plan_provenance",
+        "rationale": "Identifiers, counts, availability, reason codes, ordered ledger rows, provenance, and digests are deterministic contract values and permit no numerical tolerance.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "parameter_value_digests",
+        "rationale": "Identifiers, counts, availability, reason codes, ordered ledger rows, provenance, and digests are deterministic contract values and permit no numerical tolerance.",
+        "rule": "exact"
+      }
+    ]
+  },
+  "evidence_contract": {
+    "receipt_contract": {
+      "hardware_fingerprint_required": true,
+      "hash_algorithm": "sha256",
+      "identity_fields": [
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "build_fingerprint"
+      ],
+      "scenario_set_hash_required": true,
+      "source_descriptors_required": true
+    },
+    "receipts": [],
+    "required_roles": [
+      "method_contract",
+      "kernel_execution",
+      "oracle_independence",
+      "generative_recovery",
+      "adversarial_boundaries",
+      "archive_persistence",
+      "cross_format_export",
+      "frontend_contract",
+      "packaged_windows_e2e",
+      "performance_scale"
+    ]
+  },
+  "identity": {
+    "capability_cell": {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "capability_version": "plsc_bootstrap_v1",
+      "cell_id": "qpls3.inference.consistent_bootstrap",
+      "registry_schema_version": 2
+    },
+    "execution_kind": "stochastic",
+    "method_version": "plsc_bootstrap_v1",
+    "potentially_long_running": true,
+    "qualification_id": "qpls3.inference.consistent_bootstrap.qualification_v2",
+    "spec_frozen_at_utc": "2026-08-14T16:30:00Z"
+  },
+  "migration": {
+    "source_kind": "qualification_v1_manifest",
+    "source_manifest_path": "validation/methods/consistent_bootstrap_v1.manifest.json",
+    "source_schema_version": 1,
+    "status": "compatibility_only",
+    "unresolved_items": [
+      "coverage.selectable_test_direction_missing",
+      "coverage.selectable_interval_family_missing",
+      "coverage.complete_measurement_assessment_inference_missing",
+      "coverage.broader_plsc_model_shapes_and_defaults_missing",
+      "evidence.full_plsc_independent_oracle_missing",
+      "evidence.second_independently_maintained_full_plsc_oracle_missing",
+      "evidence.preregistered_bias_coverage_and_failure_simulation_not_run",
+      "evidence.adversarial_and_metamorphic_matrix_not_run",
+      "evidence.archive_and_cross_format_readback_receipts_missing",
+      "evidence.packaged_windows_accessibility_matrix_not_run",
+      "evidence.performance_scale_and_soak_not_run",
+      "evidence.independent_scientific_review_not_recorded",
+      "persistence.successful_replicate_vectors_not_replayable_from_archive",
+      "method.minimum_usable_fraction_requires_independent_justification"
+    ]
+  },
+  "operational_contract": {
+    "archive": {
+      "corruption_cases": [
+        "feature_identity",
+        "method_version",
+        "dataset_fingerprint",
+        "checksum",
+        "duplicate_entry",
+        "malformed_payload",
+        "legacy_reinterpretation",
+        "interrupted_save"
+      ],
+      "current_schema_version": 5,
+      "future_schema_policy": "verified_read_only",
+      "readable_schema_versions": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "writable_schema_versions": [
+        5
+      ]
+    },
+    "cancellation": {
+      "archive_unchanged": true,
+      "maximum_latency_seconds": 1.0,
+      "no_partial_committed_result": true,
+      "no_partial_visible_result": true,
+      "phases": [
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "validate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "estimate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "resample"
+        },
+        {
+          "applicability": "not_applicable",
+          "not_applicable_reason": "PLSc consistent bootstrapping does not execute a competing-model comparison phase.",
+          "phase": "compare"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "export"
+        }
+      ],
+      "required_for_potentially_long_operations": true,
+      "same_settings_retry": true
+    },
+    "export": {
+      "canonical_projection_id": "canonical_result_document_v2_plsc_consistent_bootstrap",
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf",
+        "png"
+      ],
+      "provenance_required": true,
+      "same_run_required": true,
+      "semantic_readback_formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf"
+      ],
+      "validation_witness_excluded": true
+    },
+    "performance": {
+      "baseline_policy": {
+        "maximum_memory_regression_percent": 20.0,
+        "maximum_runtime_regression_percent": 20.0,
+        "measured_runs": 5,
+        "statistic": "median",
+        "warmup_runs": 1
+      },
+      "budgets": [
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 120.0,
+          "maximum_peak_working_set_bytes": 536870912,
+          "maximum_result_bytes": 16777216,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 900.0,
+          "maximum_peak_working_set_bytes": 4294967296,
+          "maximum_result_bytes": 268435456,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 3600.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 1073741824,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "compound_stress"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 120.0,
+          "maximum_peak_working_set_bytes": 1073741824,
+          "maximum_result_bytes": 16777216,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 900.0,
+          "maximum_peak_working_set_bytes": 8589934592,
+          "maximum_result_bytes": 268435456,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 3600.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 1073741824,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "compound_stress"
+        }
+      ],
+      "hardware_classes": [
+        {
+          "architecture": "x86_64",
+          "id": "standard",
+          "minimum_logical_cores": 6,
+          "minimum_memory_gib": 16,
+          "notes": "Product-finalization standard reference class.",
+          "os_family": "windows"
+        },
+        {
+          "architecture": "x86_64",
+          "id": "workstation",
+          "minimum_logical_cores": 12,
+          "minimum_memory_gib": 32,
+          "notes": "Product-finalization workstation reference class.",
+          "os_family": "windows"
+        }
+      ]
+    },
+    "windows": {
+      "accessible_tables_required": true,
+      "display_scale_percent": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "keyboard_only_required": true,
+      "offline_required": true,
+      "package_kinds": [
+        "installed",
+        "portable"
+      ],
+      "real_pointer_required": true,
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ]
+    }
+  },
+  "scenario_contract": {
+    "axes": [
+      {
+        "id": "model_topology",
+        "label": "Recursive PLSc topology",
+        "values": [
+          {
+            "description": "Two reflective constructs with one directed path.",
+            "id": "two_construct_chain"
+          },
+          {
+            "description": "At least six reflective constructs with branching and serial/parallel indirect effects.",
+            "id": "recursive_mediation_branch"
+          }
+        ]
+      },
+      {
+        "id": "measurement_model",
+        "label": "Reflective measurement blocks",
+        "values": [
+          {
+            "description": "Every block has the supported two-indicator minimum.",
+            "id": "reflective_two_item"
+          },
+          {
+            "description": "Reflective blocks contain two through eight indicators with mixed reliability.",
+            "id": "reflective_mixed_block_sizes"
+          }
+        ]
+      },
+      {
+        "id": "data_distribution",
+        "label": "Population distribution and orientation",
+        "values": [
+          {
+            "description": "Gaussian common factors with admissible reliabilities and positive anchors.",
+            "id": "gaussian_well_conditioned"
+          },
+          {
+            "description": "Skewed and heavy-tailed observations with sign-reversed indicators and near-admissible corrections.",
+            "id": "skewed_heavy_tail_mixed_sign"
+          }
+        ]
+      },
+      {
+        "id": "missingness",
+        "label": "Missing-data condition",
+        "values": [
+          {
+            "description": "No missing observations.",
+            "id": "complete"
+          },
+          {
+            "description": "Five percent MCAR cells under the frozen model-wide listwise policy.",
+            "id": "listwise_mcar_five_percent"
+          }
+        ]
+      },
+      {
+        "id": "input_type",
+        "label": "Input representation",
+        "values": [
+          {
+            "description": "Supported row-level numeric observations.",
+            "id": "raw_rows"
+          },
+          {
+            "description": "Covariance or correlation input must return the exact not-applicable diagnostic.",
+            "id": "summary_matrix_rejection"
+          }
+        ]
+      },
+      {
+        "id": "workload",
+        "label": "Refit admissibility",
+        "values": [
+          {
+            "description": "All primary and delete-one PLSc refits are admissible.",
+            "id": "all_refits_usable"
+          },
+          {
+            "description": "Some primary or delete-one refits fail and remain in the fixed ledger without retry.",
+            "id": "inadmissible_refits_retained"
+          }
+        ]
+      },
+      {
+        "id": "workers",
+        "label": "Worker scheduling",
+        "values": [
+          {
+            "description": "Serial reference execution.",
+            "id": "one_worker"
+          },
+          {
+            "description": "Parallel execution on the available reference-hardware workers.",
+            "id": "reference_parallel_workers"
+          }
+        ]
+      }
+    ],
+    "complexity_profiles": [
+      {
+        "applicability": "required",
+        "description": "Minimum executable PLSc model plus separate hand-checkable arithmetic microcases.",
+        "id": "micro_exact",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 2,
+          "groups": 1,
+          "indicators": 4,
+          "resamples": 1000,
+          "rows": 20
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Typical applied reflective PLSc model with final-report bootstrap size.",
+        "id": "applied",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 6,
+          "groups": 1,
+          "indicators": 24,
+          "resamples": 5000,
+          "rows": 500
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Large routine model used for determinism, result-size, and cancellation evidence.",
+        "id": "large",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 20,
+          "groups": 1,
+          "indicators": 80,
+          "resamples": 5000,
+          "rows": 5000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Separate maximum row, indicator, construct, and resample axes.",
+        "id": "maximum_axis",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 100,
+          "groups": 1,
+          "indicators": 300,
+          "resamples": 10000,
+          "rows": 100000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Combined high-dimensional full-refit PLSc bootstrap workload.",
+        "id": "compound_stress",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 50,
+          "groups": 1,
+          "indicators": 150,
+          "resamples": 10000,
+          "rows": 20000
+        }
+      }
+    ],
+    "mandatory_combinations": [
+      {
+        "coverage": "pairwise",
+        "id": "applied_pairwise_matrix",
+        "profile_id": "applied",
+        "purpose": "Cover every pair of values across the seven mandatory axes.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned",
+            "skewed_heavy_tail_mixed_sign"
+          ],
+          "input_type": [
+            "raw_rows",
+            "summary_matrix_rejection"
+          ],
+          "measurement_model": [
+            "reflective_two_item",
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete",
+            "listwise_mcar_five_percent"
+          ],
+          "model_topology": [
+            "two_construct_chain",
+            "recursive_mediation_branch"
+          ],
+          "workers": [
+            "one_worker",
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "all_refits_usable",
+            "inadmissible_refits_retained"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "micro_exact_ledger_and_intervals",
+        "profile_id": "micro_exact",
+        "purpose": "Check canonical identities, exact counts, sample and parameter digests, Type-7 endpoints, normal-reference values, and symmetric BCa arithmetic.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_two_item"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "two_construct_chain"
+          ],
+          "workers": [
+            "one_worker"
+          ],
+          "workload": [
+            "all_refits_usable",
+            "inadmissible_refits_retained"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "large_worker_and_failure_invariance",
+        "profile_id": "large",
+        "purpose": "Require the same ordered ledger, failures, digests, and analytical payload under serial and parallel scheduling.",
+        "selections": {
+          "data_distribution": [
+            "skewed_heavy_tail_mixed_sign"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "listwise_mcar_five_percent"
+          ],
+          "model_topology": [
+            "recursive_mediation_branch"
+          ],
+          "workers": [
+            "one_worker",
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "inadmissible_refits_retained"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_rows",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise only the declared maximum rows axis while the other dimensions remain controlled at applied values.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "recursive_mediation_branch"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "all_refits_usable"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_indicators",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise only the declared maximum indicators axis while the other dimensions remain controlled at applied values.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "recursive_mediation_branch"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "all_refits_usable"
+          ]
+        },
+        "stressed_dimensions": [
+          "indicators"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_constructs",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise only the declared maximum constructs axis while the other dimensions remain controlled at applied values.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "recursive_mediation_branch"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "all_refits_usable"
+          ]
+        },
+        "stressed_dimensions": [
+          "constructs"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_resamples",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise only the declared maximum resamples axis while the other dimensions remain controlled at applied values.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "recursive_mediation_branch"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "all_refits_usable"
+          ]
+        },
+        "stressed_dimensions": [
+          "resamples"
+        ]
+      },
+      {
+        "coverage": "compound",
+        "id": "compound_full_refit_cancellation_and_archive",
+        "profile_id": "compound_stress",
+        "purpose": "Combine high row, indicator, construct, and resample counts with failure accounting, cancellation, archive, and export checks.",
+        "selections": {
+          "data_distribution": [
+            "skewed_heavy_tail_mixed_sign"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "listwise_mcar_five_percent"
+          ],
+          "model_topology": [
+            "recursive_mediation_branch"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "inadmissible_refits_retained"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows",
+          "indicators",
+          "constructs",
+          "resamples"
+        ]
+      }
+    ],
+    "monte_carlo_policy": {
+      "confidence_level": 0.95,
+      "failed_fits_in_denominator": true,
+      "maximum_half_width": 0.01
+    }
+  },
+  "schema_version": 2,
+  "scientific_contract": {
+    "data_predicates": [
+      {
+        "diagnostic_code": "plsc_bootstrap.raw_rows_required",
+        "expression": "Input is raw row-level numeric data; covariance and correlation matrices are rejected for empirical case resampling.",
+        "id": "raw_numeric_rows_required",
+        "on_violation": "not_applicable"
+      },
+      {
+        "diagnostic_code": "plsc_bootstrap.insufficient_complete_cases",
+        "expression": "The bounded listwise policy leaves enough finite complete rows for the point estimate, every primary resample, and every required delete-one refit.",
+        "id": "complete_case_support",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "plsc_bootstrap.unsupported_settings",
+        "expression": "Bootstrap replicates are 1000 through 10000, confidence is finite strictly between zero and one, workers are supported, and studentized and permutation counts are zero.",
+        "id": "supported_resampling_settings",
+        "on_violation": "error"
+      }
+    ],
+    "estimands": [
+      {
+        "definition": "For every canonical rho_A, corrected construct correlation, loading, weight, path, direct/indirect/total effect, and corrected R-squared parameter, re-estimate plsc_v2 on each accepted indexed empirical case resample after deterministic sign alignment.",
+        "id": "plsc_parameter_resampling_distribution",
+        "label": "Full-refit PLSc bootstrap parameter distribution",
+        "output_ids": [
+          "plsc_parameter_estimates",
+          "bootstrap_means",
+          "bootstrap_biases",
+          "bootstrap_standard_errors"
+        ],
+        "unit": "parameter-specific standardized PLSc scale"
+      },
+      {
+        "definition": "Use successful full-refit PLSc replicates to calculate the sample bootstrap standard error, two-sided standard-normal reference probability, and Type-7 percentile endpoints at the requested confidence level.",
+        "id": "large_sample_and_percentile_inference",
+        "label": "Normal-reference diagnostics and percentile intervals",
+        "output_ids": [
+          "normal_reference_t_statistics",
+          "normal_reference_two_sided_p_values",
+          "percentile_lower_bounds",
+          "percentile_upper_bounds"
+        ],
+        "unit": "parameter scale, test statistic, and probability"
+      },
+      {
+        "definition": "Use midrank bias correction and full delete-one plsc_v2 acceleration; any required delete-one failure makes BCa unavailable without changing percentile inference.",
+        "id": "conditional_bca_inference",
+        "label": "Conditional full-refit BCa intervals",
+        "output_ids": [
+          "bca_bias_corrections",
+          "bca_accelerations",
+          "bca_lower_bounds",
+          "bca_upper_bounds",
+          "bca_unavailable_reasons"
+        ],
+        "unit": "parameter scale and explicit availability state"
+      },
+      {
+        "definition": "Bind every requested replicate to its deterministic sample-index digest and success or typed failure outcome, with no retry or replacement and exact method, estimator, seed, operation, and count provenance.",
+        "id": "deterministic_execution_accounting",
+        "label": "Indexed execution and failure accounting",
+        "output_ids": [
+          "requested_usable_failed_counts",
+          "replicate_ledger",
+          "failed_replicate_reasons",
+          "failed_jackknife_reasons",
+          "method_plan_provenance",
+          "parameter_value_digests"
+        ],
+        "unit": "counts, identities, reason codes, and SHA-256 digests"
+      }
+    ],
+    "model_predicates": [
+      {
+        "diagnostic_code": "plsc_bootstrap.unsupported_model",
+        "expression": "Every construct is reflective with at least two uniquely bound indicators and the recursive graph satisfies the exact plsc_v2 path-or-factor-weighting contract.",
+        "id": "bounded_reflective_plsc_model",
+        "on_violation": "not_applicable"
+      },
+      {
+        "diagnostic_code": "plsc_bootstrap.unsupported_extension",
+        "expression": "Interactions, higher-order constructs, case weights, group inference, PCA weighting, and matrix-only estimation are absent.",
+        "id": "no_generated_or_grouped_extensions",
+        "on_violation": "not_applicable"
+      },
+      {
+        "diagnostic_code": "plsc_bootstrap.invalid_point_estimate",
+        "expression": "The linked point estimate is converged plsc_v2 and has finite, admissible rho_A and attenuation-corrected parameters with the complete canonical identity set.",
+        "id": "converged_admissible_plsc_point",
+        "on_violation": "error"
+      }
+    ],
+    "oracle_exception": null,
+    "oracles": [
+      {
+        "citation": "Dijkstra and Henseler (2015), Consistent and Asymptotically Normal PLS Estimators for Linear Structural Equations, DOI 10.1016/j.csda.2014.07.008; and Consistent Partial Least Squares Path Modeling, DOI 10.25300/MISQ/2015/39.2.02.",
+        "covered_estimand_ids": [
+          "plsc_parameter_resampling_distribution"
+        ],
+        "id": "dijkstra_henseler_2015_plsc",
+        "implementation": null,
+        "independence_group": "primary_plsc_method",
+        "kind": "primary_literature",
+        "locator": "docs/methods/CONSISTENT_BOOTSTRAP_V1.md",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Efron (1987), Better Bootstrap Confidence Intervals, JASA 82(397), and Efron and Tibshirani (1993), An Introduction to the Bootstrap.",
+        "covered_estimand_ids": [
+          "plsc_parameter_resampling_distribution",
+          "large_sample_and_percentile_inference",
+          "conditional_bca_inference",
+          "deterministic_execution_accounting"
+        ],
+        "id": "efron_tibshirani_bootstrap",
+        "implementation": null,
+        "independence_group": "primary_bootstrap_method",
+        "kind": "primary_literature",
+        "locator": "docs/methods/CONSISTENT_BOOTSTRAP_V1_QUALIFICATION.md",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Required future independently maintained Python implementation of the complete indexed full-refit PLSc bootstrap; this oracle has not been supplied or executed.",
+        "covered_estimand_ids": [
+          "plsc_parameter_resampling_distribution",
+          "large_sample_and_percentile_inference",
+          "conditional_bca_inference",
+          "deterministic_execution_accounting"
+        ],
+        "id": "required_independent_python_full_plsc_reference",
+        "implementation": {
+          "maintainer": "Independent Python oracle owner unassigned",
+          "name": "Required independent Python full-refit PLSc bootstrap oracle",
+          "version": "required_contract_v1_not_supplied"
+        },
+        "independence_group": "required_independent_python_full_plsc_oracle",
+        "kind": "independent_implementation",
+        "locator": "validation/oracles/consistent_bootstrap_v1_full_plsc_reference.py",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "Required future independently maintained R implementation of the complete indexed full-refit PLSc bootstrap; this oracle has not been supplied or executed.",
+        "covered_estimand_ids": [
+          "plsc_parameter_resampling_distribution",
+          "large_sample_and_percentile_inference",
+          "conditional_bca_inference",
+          "deterministic_execution_accounting"
+        ],
+        "id": "required_independent_r_full_plsc_reference",
+        "implementation": {
+          "maintainer": "Independent R oracle owner unassigned",
+          "name": "Required independent R full-refit PLSc bootstrap oracle",
+          "version": "required_contract_v1_not_supplied"
+        },
+        "independence_group": "required_independent_r_full_plsc_oracle",
+        "kind": "independent_implementation",
+        "locator": "validation/oracles/consistent_bootstrap_v1_full_plsc_reference.R",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "Transparent Python standard-library microreference for ledger hashing, Type-7, normal-reference, and BCa arithmetic; it does not implement or qualify the PLSc estimator.",
+        "covered_estimand_ids": [
+          "large_sample_and_percentile_inference",
+          "conditional_bca_inference",
+          "deterministic_execution_accounting"
+        ],
+        "id": "transparent_python_arithmetic_microreference",
+        "implementation": null,
+        "independence_group": "python_standard_library_arithmetic_microreference",
+        "kind": "hand_calculation",
+        "locator": "validation/consistent_bootstrap_v1_reference.py",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "Transparent base-R microreference for sample standard error, Type-7, standard-normal probability, and BCa arithmetic; it does not implement or qualify the PLSc estimator.",
+        "covered_estimand_ids": [
+          "large_sample_and_percentile_inference",
+          "conditional_bca_inference"
+        ],
+        "id": "transparent_r_arithmetic_microreference",
+        "implementation": null,
+        "independence_group": "base_r_arithmetic_microreference",
+        "kind": "hand_calculation",
+        "locator": "validation/consistent_bootstrap_v1_reference.R",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "preprocessing": [
+      {
+        "applies_to": [
+          "raw_numeric_rows"
+        ],
+        "id": "model_wide_complete_cases",
+        "operation": "Resolve the model indicator set and retain the same finite model-wide complete rows used by the bounded plsc_v2 point estimator.",
+        "order": 0,
+        "parameters": {
+          "missing_to_zero": false,
+          "policy": "listwise_deletion",
+          "row_identity_preserved": true
+        }
+      },
+      {
+        "applies_to": [
+          "complete_case_sampling_frame"
+        ],
+        "id": "indexed_empirical_case_resampling",
+        "operation": "For each fixed replicate index, sample the complete-case frame with replacement using the domain-separated plsc_consistent_bootstrap_v1 stream.",
+        "order": 1,
+        "parameters": {
+          "operation": "plsc_consistent_bootstrap_v1",
+          "replicate_range": "1000..=10000",
+          "retry_policy": "no_retry_no_replacement_fixed_indexed_draws_v1"
+        }
+      },
+      {
+        "applies_to": [
+          "each_primary_and_delete_one_sample"
+        ],
+        "id": "full_plsc_v2_refit_and_orientation",
+        "operation": "Re-estimate all plsc_v2 weights, rho_A corrections, corrected correlations, loadings, structural coefficients, effects, and R-squared values, then align construct orientation to the original solution.",
+        "order": 2,
+        "parameters": {
+          "estimator": "plsc_v2",
+          "ordinary_pls_estimates_reused": false,
+          "orientation": "original_construct_score_covariance"
+        }
+      },
+      {
+        "applies_to": [
+          "refit_results"
+        ],
+        "id": "canonical_parameter_and_failure_projection",
+        "operation": "Extract the exact canonical PLSc parameter manifest, reject identity drift or nonfinite values, and retain every failed refit under one stable reason code.",
+        "order": 3,
+        "parameters": {
+          "failure_replacement": false,
+          "minimum_usable_fraction": 0.9,
+          "parameter_digest": "sha256_archive_stable_13_significant_digits_v1"
+        }
+      },
+      {
+        "applies_to": [
+          "canonical_parameter_distributions"
+        ],
+        "id": "percentile_normal_and_conditional_bca_summary",
+        "operation": "Summarize successful primary refits with sample standard errors, Type-7 percentiles, two-sided normal-reference diagnostics, and conditional full-refit BCa intervals.",
+        "order": 4,
+        "parameters": {
+          "bca_bias": "midrank",
+          "bca_delete_one": "full_plsc_v2",
+          "quantile": "type7",
+          "test": "two_sided_standard_normal_reference"
+        }
+      }
+    ]
+  }
+}

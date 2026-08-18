@@ -1,0 +1,293 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem_exact_cfa_interval_coverage_v1_manifest.schema.json",
+  "title": "QuickPLS exact-CFA interval coverage manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "status", "source_binding", "schema_binding", "binary_binding", "scientific_runtime", "seed_contract", "digest_contract", "arithmetic_kernel_contract", "dgps", "stages", "ledger_contract", "coverage_contract", "failure_summary_contract", "worker_replay_contract", "cancellation_contract", "external_reference_contract", "retention_contract", "qualification_boundary"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "cbsem_exact_cfa_interval_coverage_manifest_v1"},
+    "status": {"const": "predeclared_validation_only_coverage_program_product_qualification_blocked"},
+    "source_binding": {"$ref": "#/$defs/sourceBinding"},
+    "schema_binding": {"$ref": "#/$defs/schemaBinding"},
+    "binary_binding": {"$ref": "#/$defs/binaryBinding"},
+    "scientific_runtime": {"$ref": "#/$defs/scientificRuntime"},
+    "seed_contract": {"$ref": "#/$defs/seedContract"},
+    "digest_contract": {"$ref": "#/$defs/digestContract"},
+    "arithmetic_kernel_contract": {"$ref": "#/$defs/arithmeticKernelContract"},
+    "dgps": {
+      "type": "array",
+      "prefixItems": [{"$ref": "#/$defs/dgpA"}, {"$ref": "#/$defs/dgpB"}],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "stages": {
+      "type": "array",
+      "prefixItems": [
+        {"$ref": "#/$defs/stageConformance"},
+        {"$ref": "#/$defs/stagePilot"},
+        {"$ref": "#/$defs/stageFinal"},
+        {"$ref": "#/$defs/stageConfirmation"}
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "ledger_contract": {"$ref": "#/$defs/ledgerContract"},
+    "coverage_contract": {"$ref": "#/$defs/coverageContract"},
+    "failure_summary_contract": {"$ref": "#/$defs/failureSummaryContract"},
+    "worker_replay_contract": {"$ref": "#/$defs/replayContract"},
+    "cancellation_contract": {"$ref": "#/$defs/cancellationContract"},
+    "external_reference_contract": {"$ref": "#/$defs/externalReferenceContract"},
+    "retention_contract": {"$ref": "#/$defs/retentionContract"},
+    "qualification_boundary": {"$ref": "#/$defs/qualificationBoundary"}
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sourceBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["runner_path", "runner_sha256", "oracle_path", "oracle_sha256", "rust_example_path", "rust_example_sha256", "rust_kernel_path", "rust_kernel_sha256", "estimation_contract_path", "estimation_contract_sha256", "resampling_cargo_path", "resampling_cargo_sha256", "cargo_lock_path", "cargo_lock_sha256", "focused_test_path", "focused_test_sha256"],
+      "properties": {
+        "runner_path": {"const": "validation/cbsem_exact_cfa_interval_coverage_v1.py"},
+        "runner_sha256": {"$ref": "#/$defs/sha"},
+        "oracle_path": {"const": "validation/cbsem_exact_cfa_interval_coverage_v1_oracle.py"},
+        "oracle_sha256": {"$ref": "#/$defs/sha"},
+        "rust_example_path": {"const": "crates/qpls-resampling/examples/cbsem_exact_cfa_interval_coverage_v1.rs"},
+        "rust_example_sha256": {"$ref": "#/$defs/sha"},
+        "rust_kernel_path": {"const": "crates/qpls-resampling/src/cbsem_exact_bootstrap.rs"},
+        "rust_kernel_sha256": {"$ref": "#/$defs/sha"},
+        "estimation_contract_path": {"const": "crates/qpls-estimation/src/cbsem_bootstrap_contract.rs"},
+        "estimation_contract_sha256": {"$ref": "#/$defs/sha"},
+        "resampling_cargo_path": {"const": "crates/qpls-resampling/Cargo.toml"},
+        "resampling_cargo_sha256": {"$ref": "#/$defs/sha"},
+        "cargo_lock_path": {"const": "Cargo.lock"},
+        "cargo_lock_sha256": {"$ref": "#/$defs/sha"},
+        "focused_test_path": {"const": "validation/test_cbsem_exact_cfa_interval_coverage_v1.py"},
+        "focused_test_sha256": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "schemaBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["manifest_schema_path", "manifest_schema_sha256", "case_schema_path", "case_schema_sha256", "report_schema_path", "report_schema_sha256"],
+      "properties": {
+        "manifest_schema_path": {"const": "validation/cbsem_exact_cfa_interval_coverage_v1_manifest.schema.json"},
+        "manifest_schema_sha256": {"$ref": "#/$defs/sha"},
+        "case_schema_path": {"const": "validation/cbsem_exact_cfa_interval_coverage_v1_case.schema.json"},
+        "case_schema_sha256": {"$ref": "#/$defs/sha"},
+        "report_schema_path": {"const": "validation/cbsem_exact_cfa_interval_coverage_v1_report.schema.json"},
+        "report_schema_sha256": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "binaryBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "policy"],
+      "properties": {
+        "path": {"const": "target/release/examples/cbsem_exact_cfa_interval_coverage_v1.exe"},
+        "sha256": {"oneOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]},
+        "policy": {"const": "build_release_from_bound_rust_source_then_freeze_sha256_before_execute_v1"}
+      }
+    },
+    "scientificRuntime": {
+      "type": "object", "additionalProperties": false,
+      "required": ["python", "numpy", "scipy"],
+      "properties": {
+        "python": {"const": "3.13.1"},
+        "numpy": {"const": "1.26.4"},
+        "scipy": {"const": "1.15.2"}
+      }
+    },
+    "seedContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["data_master_seed", "bootstrap_master_seed", "oracle_master_seed", "derivation", "domain", "fields", "derivation_stage_by_planned_stage", "data_generator", "covariance_factorization"],
+      "properties": {
+        "data_master_seed": {"const": 2026081701},
+        "bootstrap_master_seed": {"const": 2026081702},
+        "oracle_master_seed": {"const": 2026081703},
+        "derivation": {"const": "sha256_domain_v1_first_u64_little_endian"},
+        "domain": {"const": "quickpls_cbsem_exact_cfa_interval_coverage_v1_nul"},
+        "fields": {"const": ["master_seed", "dgp_id", "stage", "dataset_index", "purpose"]},
+        "derivation_stage_by_planned_stage": {
+          "const": {"conformance": "conformance", "pilot": "pilot", "final": "final", "paired_confirmation": "final"}
+        },
+        "data_generator": {"const": "numpy_generator_pcg64dxsm_standard_normal_v1"},
+        "covariance_factorization": {"const": "numpy_cholesky_population_covariance_v1"}
+      }
+    },
+    "digestContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scientific_result_digest_method", "base_point_result_digest_method", "schedule_authentication_method", "compact_evidence_digest_method", "compact_evidence_fields", "compact_method_order", "compact_parameter_order", "coverage_authentication"],
+      "properties": {
+        "scientific_result_digest_method": {"const": "sha256_typed_json_tree_v1"},
+        "base_point_result_digest_method": {"const": "sha256_typed_json_tree_v1"},
+        "schedule_authentication_method": {"const": "bound_rust_exact_schedule_and_source_verifier_v1"},
+        "compact_evidence_digest_method": {"const": "sha256_typed_json_tree_v1"},
+        "compact_evidence_fields": {"const": ["scientific_result_sha256", "data_sha256", "source_dataset_fingerprint", "ledger", "methods"]},
+        "compact_method_order": {"const": ["percentile", "studentized", "bca"]},
+        "compact_parameter_order": {"const": "frozen_dgp_parameter_truth_order_v1"},
+        "coverage_authentication": {"const": "excluded_from_compact_evidence_and_rederived_by_aggregator_v1"}
+      }
+    },
+    "arithmeticKernelContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["percentile_engine_mean_operation", "percentile_mean_validation_method", "percentile_bias_binding_method", "binary64_unit_roundoff", "gamma_formula", "absolute_sum_method", "mean_bound_formula", "bias_bound_formula", "arithmetic_preconditions", "bca_method_version", "bca_bias_correction_method", "bca_acceleration_method", "bca_adjusted_probability_method", "bca_inverse_normal_kernel", "bca_final_normal_cdf_kernel", "bca_quantile_method"],
+      "properties": {
+        "percentile_engine_mean_operation": {"const": "ordered_left_to_right_binary64_sum_then_binary64_divide_by_usable_count_v1"},
+        "percentile_mean_validation_method": {"const": "math_fsum_reference_higham_gamma_b_minus_1_outward_binary64_v1"},
+        "percentile_bias_binding_method": {"const": "observed_mean_minus_point_binary64_bit_exact_v1"},
+        "binary64_unit_roundoff": {"const": 1.1102230246251565e-16},
+        "gamma_formula": {"const": "gamma_(B-1)=((B-1)*u)/(1-(B-1)*u)_v1"},
+        "absolute_sum_method": {"const": "nextafter_math_fsum_absolute_values_toward_positive_infinity_v1"},
+        "mean_bound_formula": {"const": "outward_gamma_times_A_over_B_plus_ulp_observed_mean_plus_ulp_reference_mean_v1"},
+        "bias_bound_formula": {"const": "outward_mean_bound_plus_ulp_observed_bias_plus_ulp_reference_bias_v1"},
+        "arithmetic_preconditions": {"const": "authenticated_order_and_usable_B_finite_no_intermediate_overflow_gamma_domain_v1"},
+        "bca_method_version": {"const": "cbsem_exact_case_bootstrap_bca_interval_v1"},
+        "bca_bias_correction_method": {"const": "midrank_less_plus_half_ties_no_clamp_v1"},
+        "bca_acceleration_method": {"const": "complete_delete_one_jackknife_neumaier_mean_squares_cubes_acceleration_v2"},
+        "bca_adjusted_probability_method": {"const": "efron_bca_statrs_inverse_normal_libm_erfc_cdf_adjustment_v2"},
+        "bca_inverse_normal_kernel": {"const": "statrs_0_18_inverse_cdf_v1"},
+        "bca_final_normal_cdf_kernel": {"const": "half_libm_0_2_16_erfc_negative_argument_over_sqrt_2_v1"},
+        "bca_quantile_method": {"const": "percentile_type7_v1"}
+      }
+    },
+    "truthRow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["parameter_id", "target", "true_value"],
+      "properties": {
+        "parameter_id": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "true_value": {"type": "number"}
+      }
+    },
+    "dgpA": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dgp_id", "sample_size", "observed_columns", "loading_matrix", "factor_covariance", "residual_variances", "parameter_truth", "fixture_sha256"],
+      "properties": {
+        "dgp_id": {"const": "dgp_a_one_factor_n150"},
+        "sample_size": {"const": 150},
+        "observed_columns": {"const": ["a1", "a2", "a3"]},
+        "loading_matrix": {"const": [[1.0], [0.78], [0.64]]},
+        "factor_covariance": {"const": [[1.35]]},
+        "residual_variances": {"const": [0.42, 0.58, 0.73]},
+        "parameter_truth": {"type": "array", "items": {"$ref": "#/$defs/truthRow"}, "minItems": 6, "maxItems": 6},
+        "fixture_sha256": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "dgpB": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dgp_id", "sample_size", "observed_columns", "loading_matrix", "factor_covariance", "residual_variances", "parameter_truth", "fixture_sha256"],
+      "properties": {
+        "dgp_id": {"const": "dgp_b_two_factor_n300"},
+        "sample_size": {"const": 300},
+        "observed_columns": {"const": ["b1", "b2", "b3", "b4", "b5", "b6"]},
+        "loading_matrix": {"const": [[1.0, 0.0], [0.78, 0.0], [0.64, 0.0], [0.0, 1.0], [0.0, 0.7], [0.0, 1.15]]},
+        "factor_covariance": {"const": [[1.35, 0.45], [0.45, 2.1]]},
+        "residual_variances": {"const": [0.42, 0.58, 0.73, 0.5, 0.9, 2.0]},
+        "parameter_truth": {"type": "array", "items": {"$ref": "#/$defs/truthRow"}, "minItems": 13, "maxItems": 13},
+        "fixture_sha256": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "stageBase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["stage", "datasets_per_dgp", "replicates", "workers", "datasets_per_shard", "executable", "per_dataset_timeout_seconds", "evidence_role"],
+      "properties": {
+        "stage": {"type": "string"}, "datasets_per_dgp": {"type": "integer", "minimum": 1},
+        "replicates": {"type": "integer", "minimum": 1}, "workers": {"type": "integer", "minimum": 1},
+        "datasets_per_shard": {"type": "integer", "minimum": 1}, "executable": {"type": "boolean"},
+        "per_dataset_timeout_seconds": {"type": "integer", "minimum": 1}, "evidence_role": {"type": "string", "minLength": 1}
+      }
+    },
+    "stageConformance": {"allOf": [{"$ref": "#/$defs/stageBase"}, {"properties": {"stage": {"const": "conformance"}, "datasets_per_dgp": {"const": 1}, "replicates": {"const": 500}, "workers": {"const": 12}, "datasets_per_shard": {"const": 1}, "executable": {"const": true}, "per_dataset_timeout_seconds": {"const": 900}, "evidence_role": {"const": "ledger_conformance_only_insufficient_usable_no_coverage"}}}]},
+    "stagePilot": {"allOf": [{"$ref": "#/$defs/stageBase"}, {"properties": {"stage": {"const": "pilot"}, "datasets_per_dgp": {"const": 20}, "replicates": {"const": 5000}, "workers": {"const": 12}, "datasets_per_shard": {"const": 5}, "executable": {"const": true}, "per_dataset_timeout_seconds": {"const": 1800}, "evidence_role": {"const": "descriptive_pilot_no_qualification_decision"}}}]},
+    "stageFinal": {"allOf": [{"$ref": "#/$defs/stageBase"}, {"properties": {"stage": {"const": "final"}, "datasets_per_dgp": {"const": 3200}, "replicates": {"const": 5000}, "workers": {"const": 12}, "datasets_per_shard": {"const": 100}, "executable": {"const": false}, "per_dataset_timeout_seconds": {"const": 1800}, "evidence_role": {"const": "predeclared_final_plan_32_shards_per_dgp_not_staged_for_execution"}}}]},
+    "stageConfirmation": {"allOf": [{"$ref": "#/$defs/stageBase"}, {"properties": {"stage": {"const": "paired_confirmation"}, "datasets_per_dgp": {"const": 20}, "replicates": {"const": 10000}, "workers": {"const": 12}, "datasets_per_shard": {"const": 20}, "executable": {"const": false}, "per_dataset_timeout_seconds": {"const": 3600}, "evidence_role": {"const": "paired_first_20_final_datasets_sensitivity_only_not_independent_coverage"}}}]},
+    "ledgerContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bootstrap_draw_policy", "retry_policy", "max_attempts_per_replicate", "conformance_expected_base_reason", "known_point_failure_kinds", "known_standard_error_unavailable_reasons", "delete_one_policy", "failure_rate_inference_unit"],
+      "properties": {
+        "bootstrap_draw_policy": {"const": "one_shared_exact_base_ledger_for_percentile_studentized_and_bca_v1"},
+        "retry_policy": {"const": "no_retry_fixed_preplanned_primary_draws_v1"},
+        "max_attempts_per_replicate": {"const": 1},
+        "conformance_expected_base_reason": {"const": "insufficient_usable_refits"},
+        "known_point_failure_kinds": {"const": ["moment_matrix_not_positive_definite", "non_convergence", "inadmissible_solution", "numerical_failure"]},
+        "known_standard_error_unavailable_reasons": {"const": ["singular_information", "information_not_positive_definite", "invalid_information_variance_or_standard_error", "derivative_unavailable", "numerical_information_failure"]},
+        "delete_one_policy": {"const": "exactly_n_single_omission_refits_no_retry_v1"},
+        "failure_rate_inference_unit": {"const": "generated_dataset_not_inner_bootstrap_draw"}
+      }
+    },
+    "coverageContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["methods", "primary_cell_count", "availability_cell_count", "confidence_level", "ordinary_confidence_level", "family_confidence_level", "unconditional_rule", "conditional_rule", "binomial_endpoint_kernel", "ordinary_interval", "ordinary_two_sided_tail", "simultaneous_interval", "simultaneous_two_sided_tail", "maximum_ordinary_cp95_half_width", "simultaneous_acceptance_lower", "simultaneous_acceptance_upper", "availability_interval", "availability_one_sided_tail", "minimum_availability_lower_bound", "endpoint_relative_tolerance", "pilot_decision_policy"],
+      "properties": {
+        "methods": {"const": ["percentile", "studentized", "bca"]}, "primary_cell_count": {"const": 57}, "availability_cell_count": {"const": 6},
+        "confidence_level": {"const": 0.95}, "ordinary_confidence_level": {"const": 0.95}, "family_confidence_level": {"const": 0.95},
+        "unconditional_rule": {"const": "all_requested_datasets_denominator_unavailable_interval_counts_not_covered_v1"},
+        "conditional_rule": {"const": "available_intervals_only_denominator_v1"},
+        "binomial_endpoint_kernel": {"const": "scipy_beta_seed_exact_integer_binomial_tail_certified_tight_binary64_v2"},
+        "ordinary_interval": {"const": "clopper_pearson_two_sided_exact_certified_outward_binary64_v2"},
+        "ordinary_two_sided_tail": {"const": {"numerator": 1, "denominator": 40}},
+        "simultaneous_interval": {"const": "bonferroni_57_cell_clopper_pearson_two_sided_exact_certified_outward_binary64_v2"},
+        "simultaneous_two_sided_tail": {"const": {"numerator": 1, "denominator": 2280}},
+        "maximum_ordinary_cp95_half_width": {"const": 0.01}, "simultaneous_acceptance_lower": {"const": 0.925}, "simultaneous_acceptance_upper": {"const": 0.975},
+        "availability_interval": {"const": "bonferroni_6_cell_clopper_pearson_one_sided_lower_exact_certified_outward_binary64_v2"},
+        "availability_one_sided_tail": {"const": {"numerator": 1, "denominator": 120}},
+        "minimum_availability_lower_bound": {"const": 0.99},
+        "endpoint_relative_tolerance": {"const": 1e-12}, "pilot_decision_policy": {"const": "descriptive_only_never_qualification"}
+      }
+    },
+    "failureSummaryContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["independent_cluster_unit", "descriptive_quantile_method", "descriptive_probabilities", "cluster_bootstrap_method", "cluster_bootstrap_generator", "cluster_bootstrap_resamples", "cluster_bootstrap_confidence_level", "aggregate_seed_dataset_index_by_metric", "seed_master", "runner_oracle_endpoint_tolerance", "inner_bootstrap_draws_are_never_binomial_trials"],
+      "properties": {
+        "independent_cluster_unit": {"const": "generated_dataset"},
+        "descriptive_quantile_method": {"const": "type7_over_dataset_level_failure_fractions_v1"},
+        "descriptive_probabilities": {"const": [0.05, 0.5, 0.95]},
+        "cluster_bootstrap_method": {"const": "fixed_seed_dataset_resample_percentile_mean_v1"},
+        "cluster_bootstrap_generator": {"const": "numpy_generator_pcg64dxsm_v1"},
+        "cluster_bootstrap_resamples": {"const": 10000},
+        "cluster_bootstrap_confidence_level": {"const": 0.95},
+        "aggregate_seed_dataset_index_by_metric": {"const": {"point": 4294967293, "standard_error": 4294967294, "delete_one": 4294967295}},
+        "seed_master": {"const": "oracle_master_seed"},
+        "runner_oracle_endpoint_tolerance": {"const": 1e-12},
+        "inner_bootstrap_draws_are_never_binomial_trials": {"const": true}
+      }
+    },
+    "replayContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["datasets_per_dgp", "primary_workers", "replay_workers", "acceptance"],
+      "properties": {"datasets_per_dgp": {"const": 1}, "primary_workers": {"const": 12}, "replay_workers": {"const": 1}, "acceptance": {"const": "bit_identical_scientific_result_sha256"}}
+    },
+    "cancellationContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dataset_index", "phase_by_dgp", "cancel_after_completed", "maximum_terminal_latency_seconds", "maximum_orphan_processes", "timeout_seconds"],
+      "properties": {
+        "dataset_index": {"const": 0},
+        "phase_by_dgp": {"const": {"dgp_a_one_factor_n150": "bootstrap", "dgp_b_two_factor_n300": "jackknife"}},
+        "cancel_after_completed": {"const": 10}, "maximum_terminal_latency_seconds": {"const": 1.0}, "maximum_orphan_processes": {"const": 0}, "timeout_seconds": {"const": 900}
+      }
+    },
+    "externalReferenceContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["authority", "datasets_per_dgp", "point_relative_tolerance", "standard_error_relative_tolerance", "status"],
+      "properties": {
+        "authority": {"const": "lavaan_validation_only_never_product_dependency"}, "datasets_per_dgp": {"const": 10},
+        "point_relative_tolerance": {"const": 1e-6}, "standard_error_relative_tolerance": {"const": 1e-4},
+        "status": {"const": "planned_not_implemented_in_this_pilot_harness"}
+      }
+    },
+    "retentionContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["full_audit_results_per_shard", "retain_all_integrity_failures", "compact_receipts_for_other_datasets", "append_only_outputs"],
+      "properties": {"full_audit_results_per_shard": {"const": 1}, "retain_all_integrity_failures": {"const": true}, "compact_receipts_for_other_datasets": {"const": true}, "append_only_outputs": {"const": true}}
+    },
+    "qualificationBoundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "missing_evidence"],
+      "properties": {
+        "status": {"const": "blocked_not_product_qualification"},
+        "missing_evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true}
+      }
+    }
+  }
+}

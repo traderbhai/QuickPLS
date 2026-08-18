@@ -48,7 +48,7 @@ describe("analysisReadiness", () => {
       actionLabel: "Open data",
       actionView: "data",
     });
-    expect(readiness.blockers[0].detail).toContain("design/preview");
+    expect(readiness.blockers[0].detail).toContain("design or preview");
     expect(readiness.blockers[0].detail).toContain("reproducible fingerprint");
   });
 

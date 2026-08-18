@@ -1,0 +1,2 @@
+   Compiling quickpls-desktop v2.46.0 (D:\QuickPLS\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 49s

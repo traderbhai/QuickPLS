@@ -96,13 +96,18 @@
     ]
   },
   "feature_id": "qpls3.inference.bootstrap",
-  "generated_at_utc": "2026-08-13T19:26:32.598240Z",
+  "generated_at_utc": "2026-08-18T14:16:16.988371Z",
   "method_version": "indexed_resampling_v4",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
   "role": "method_audit",
   "schema_version": 1,
   "source_artifacts": [
+    {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
     {
       "path": "validation/method_promotion_manifest.py",
       "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
@@ -115,8 +120,13 @@
     },
     {
       "path": "validation/methods/pls_bootstrap_v4.manifest.json",
-      "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
-      "size": 15803
+      "sha256": "f43015dbd38e34448b9b1cdb5cfc67f1f42fc0e4a606bcd2409679b36a8174ee",
+      "size": 19827
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
     },
     {
       "path": "validation/pls_bootstrap_v4_factory_audit.py",
@@ -130,48 +140,48 @@
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/boundary_report.identity.json",
-      "sha256": "ca4eab721de1ab2b6092c0f692b6a43643b2c09e8b0a186947a4b79deb4c9cca",
-      "size": 76320
+      "sha256": "43b1376ba73f07d5a70931f253f3999687fd07e7fb5aad5a81363ac412852f41",
+      "size": 77336
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/export_report.identity.json",
-      "sha256": "7cd0262073ef533ccb8c602be6fb17490a625d19bed69f808e6b56420a6bf598",
+      "sha256": "1a3bd2896231a77c45112c2db66b7c8d2bb50b294715097b81c461ed0bd8584d",
       "size": 2976
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/frontend_report.identity.json",
-      "sha256": "909d4a96e6c8e80830f6eb1435c3ee8826d4756dc1a6aa84d945af8060e2ed83",
-      "size": 3192
+      "sha256": "78b456ad4da182c5c91c3a05b695c562df87ebe946774ab0193ca543f2949230",
+      "size": 3191
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/independent_reference.identity.json",
-      "sha256": "7528c6253e2470b57c403aa59281a9cbd5c4ca72330474dcd66fb3ec40aa928a",
-      "size": 8580
+      "sha256": "44bd7c10e206f10af15abd6110bcdef9dabb8cafff784a6c807578b00fc4e0c1",
+      "size": 8608
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/method_spec.identity.json",
-      "sha256": "68e2ed37f7843579cd975620042b6e27f552cca28d96e61f7584a70ac719c859",
+      "sha256": "e73da49360634bcbe1e629773f99b9683698dd9ca28a88ec9775c76ea4bf78a7",
       "size": 3289
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/packaged_acceptance.identity.json",
-      "sha256": "3ea59a2fc9b721edfb3ca46059518563c299870d5f4f394174e22bffe5f5da3b",
-      "size": 63135
+      "sha256": "977fd3a1df8a3e7a43f1174519ad0e1f70ba62aa624b2ff8511a15a68965a88a",
+      "size": 85805
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/persistence_report.identity.json",
-      "sha256": "11af5810ffe48caa12cf9bba8b5f8a967cd9d34618b90721a78119b352425eec",
-      "size": 17100
+      "sha256": "65550d0be86f61871ed438aada4eb7b1f6b62b2fb2a347dea7039aedf3c8061d",
+      "size": 17689
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/simulation_report.identity.json",
-      "sha256": "e2d4835b5f67a2c94710964122e10abfa216f3a288cd03f1f74dc07257770c97",
+      "sha256": "36f5cc197063336e2b4ec700ab7942fa05d6f279f90e5be7a457809b7975d436",
       "size": 20258
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pls_bootstrap_v4_factory_evidence.py",

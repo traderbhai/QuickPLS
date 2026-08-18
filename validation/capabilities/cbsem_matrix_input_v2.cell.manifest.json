@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.cbsem",
+  "execution_context": "internal_recipe_v4_compiled_cbsem_moment_input",
+  "feature": {
+    "id": "qpls3.cbsem.ml.matrix_input",
+    "label": "CB-SEM compiled moment input",
+    "method_version": "cbsem_ml_compiled_moment_input_v2",
+    "analytical_method_version": "cbsem_ml_exact_parameter_table_v3",
+    "method_kind": "iterative_maximum_likelihood"
+  },
+  "coverage_state": "partial",
+  "evidence_state": "absent",
+  "surface": "labs",
+  "availability": "internal_labs_only",
+  "distinct_from_cell_id": "qpls3.cbsem.ml",
+  "method_contract": "docs/methods/CBSEM_MATRIX_INPUT_V2.md",
+  "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem/",
+  "implemented_contracts": [
+    "bounded raw, covariance, and explicitly scaled correlation inputs",
+    "deterministic CompiledCbsemPlanV2 and SemModelV4 identity binding",
+    "cancellable Recipe V4 execution with stable parameter identities",
+    "native canonical result projection and schema-6 append/readback",
+    "transparent NumPy/SciPy work oracle"
+  ],
+  "remaining_qualification": [
+    "The QualificationSpec V2 receipt list is empty and evidence state remains absent.",
+    "A frozen current-product numerical comparison and a second maintained external SEM implementation or approved oracle exception are missing.",
+    "Standard GUI, CLI, semantic export readback, packaged Windows, performance, soak, and independent scientific-review qualification are missing."
+  ]
+}

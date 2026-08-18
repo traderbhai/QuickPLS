@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "record_type": "quickpls_signed_candidate_lifecycle_placeholder",
+  "template_only": true,
+  "eligible_for_release_evidence": false,
+  "target_release": "3.0.0-beta",
+  "candidate_id": null,
+  "candidate_manifest": null,
+  "final_lifecycle_report": null,
+  "signing_identity_id": null,
+  "performed_at": null,
+  "passed": null,
+  "environment": {
+    "windows_version": null,
+    "install_scope": null,
+    "network_disconnected": null
+  },
+  "phases": [
+    { "id": "clean_offline_install", "passed": null, "evidence_record_id": null },
+    { "id": "portable_launch", "passed": null, "evidence_record_id": null },
+    { "id": "same_version_reinstall", "passed": null, "evidence_record_id": null },
+    { "id": "supported_upgrade", "passed": null, "evidence_record_id": null },
+    { "id": "interrupted_update_recovery", "passed": null, "evidence_record_id": null },
+    { "id": "signature_failure_rejected", "passed": null, "evidence_record_id": null },
+    { "id": "rollback", "passed": null, "evidence_record_id": null },
+    { "id": "offline_full_installer_recovery", "passed": null, "evidence_record_id": null },
+    { "id": "uninstall_cleanup", "passed": null, "evidence_record_id": null },
+    { "id": "archive_save_reopen", "passed": null, "evidence_record_id": null }
+  ],
+  "activation_rule": "Replace this placeholder only with exact artifact descriptors accepted by validation/quickpls_external_beta.py"
+}

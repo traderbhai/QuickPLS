@@ -1,0 +1,206 @@
+{
+  "blockers": [
+    "registered_matrix_input_cell_evidence_absent",
+    "migration_status_compatibility_only",
+    "no_frozen_current_product_numerical_comparison",
+    "second_maintained_external_sem_reference_unavailable",
+    "qualification_sized_generative_campaign_missing",
+    "product_adversarial_execution_envelope_missing",
+    "archive_export_frontend_packaged_windows_performance_soak_and_scientific_review_missing"
+  ],
+  "candidate_receipt_descriptors": [],
+  "capability_id": "smartpls.cbsem",
+  "cell_id": "qpls3.cbsem.ml.matrix_input",
+  "manifest_mutated": false,
+  "method_version": "cbsem_ml_compiled_moment_input_v2",
+  "promotion_allowed": false,
+  "qualification_id": "qpls3.cbsem.ml.matrix_input.qualification_v2",
+  "qualification_ready": false,
+  "qualification_spec_receipts_mutated": false,
+  "registry_mutated": false,
+  "report_kind": "cbsem_matrix_input_v2_qualification_factory_audit",
+  "role_matrix": [
+    {
+      "candidate_receipt_emitted": false,
+      "role": "method_contract",
+      "status": "work_evidence_only",
+      "work_evidence": {
+        "qualification_ready": false,
+        "spec_schema_and_semantics_passed": true
+      }
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "role": "kernel_execution",
+      "status": "blocked",
+      "work_evidence": {
+        "exists": false,
+        "reason": "immutable_product_execution_envelope_missing"
+      }
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "role": "oracle_independence",
+      "status": "work_evidence_only",
+      "work_evidence": {
+        "blockers": [
+          "no_frozen_current_product_result_is_compared_by_this_validation_only_oracle",
+          "no_second_maintained_external_sem_implementation_is_available_locally",
+          "small_seeded_recovery_matrix_is_not_a_monte_carlo_qualification_campaign",
+          "archive_export_frontend_packaged_windows_performance_and_scientific_review_roles_are_open"
+        ],
+        "current": true,
+        "exists": true,
+        "passed_work_checks": true,
+        "path": "validation/results/method_factory/cbsem_matrix_input_v2/work/independent_oracle.json",
+        "qualification_role_satisfied": false,
+        "receipt_eligible": false,
+        "sha256": "b03275f6bfb9100f8dced37441cc8fa76d1caa3b2b78557a2d08aa91e3964f13"
+      }
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "role": "generative_recovery",
+      "status": "work_evidence_only",
+      "work_evidence": {
+        "blockers": [
+          "no_frozen_current_product_result_is_compared_by_this_validation_only_oracle",
+          "no_second_maintained_external_sem_implementation_is_available_locally",
+          "small_seeded_recovery_matrix_is_not_a_monte_carlo_qualification_campaign",
+          "archive_export_frontend_packaged_windows_performance_and_scientific_review_roles_are_open"
+        ],
+        "current": true,
+        "exists": true,
+        "passed_work_checks": true,
+        "path": "validation/results/method_factory/cbsem_matrix_input_v2/work/independent_oracle.json",
+        "qualification_role_satisfied": false,
+        "receipt_eligible": false,
+        "sha256": "b03275f6bfb9100f8dced37441cc8fa76d1caa3b2b78557a2d08aa91e3964f13"
+      }
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "role": "adversarial_boundaries",
+      "status": "work_evidence_only",
+      "work_evidence": {
+        "blockers": [
+          "no_frozen_current_product_result_is_compared_by_this_validation_only_oracle",
+          "no_second_maintained_external_sem_implementation_is_available_locally",
+          "small_seeded_recovery_matrix_is_not_a_monte_carlo_qualification_campaign",
+          "archive_export_frontend_packaged_windows_performance_and_scientific_review_roles_are_open"
+        ],
+        "current": true,
+        "exists": true,
+        "passed_work_checks": true,
+        "path": "validation/results/method_factory/cbsem_matrix_input_v2/work/independent_oracle.json",
+        "qualification_role_satisfied": false,
+        "receipt_eligible": false,
+        "sha256": "b03275f6bfb9100f8dced37441cc8fa76d1caa3b2b78557a2d08aa91e3964f13"
+      }
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "role": "archive_persistence",
+      "status": "blocked",
+      "work_evidence": {
+        "exists": false,
+        "reason": "immutable_product_execution_envelope_missing"
+      }
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "role": "cross_format_export",
+      "status": "blocked",
+      "work_evidence": {
+        "exists": false,
+        "reason": "immutable_product_execution_envelope_missing"
+      }
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "role": "frontend_contract",
+      "status": "blocked",
+      "work_evidence": {
+        "exists": false,
+        "reason": "immutable_product_execution_envelope_missing"
+      }
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "role": "packaged_windows_e2e",
+      "status": "blocked",
+      "work_evidence": {
+        "exists": false,
+        "reason": "immutable_product_execution_envelope_missing"
+      }
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "role": "performance_scale",
+      "status": "blocked",
+      "work_evidence": {
+        "exists": false,
+        "reason": "immutable_product_execution_envelope_missing"
+      }
+    }
+  ],
+  "scenario_set_sha256": "b60fc53fdca569a5a1865f77bfec593ce32589e2f19f424825e9f8534ce02232",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/CBSEM_MATRIX_INPUT_V2.md",
+      "sha256": "f9cf3254b18286b3501f35ae3cddd9d977ed27f0b3e4d2d3c86f48f3e3fa23dc",
+      "size_bytes": 13956
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.json",
+      "sha256": "686f91755a6e1b4fd912f134b2dcb0dc6115db85629442d0a053c5aa70192d58",
+      "size_bytes": 306715
+    },
+    {
+      "path": "validation/capabilities/cbsem_matrix_input_v2.cell.manifest.json",
+      "sha256": "4bb6edd17eda42dccbf58f7d213dcbbc52fcf25ad8bc7db2a24d96a8376fc0e3",
+      "size_bytes": 1584
+    },
+    {
+      "path": "validation/cbsem_matrix_input_v2_oracle.py",
+      "sha256": "03f749afbeaa47201214016acea52e75326d0be81537117b5696582fa84f6e9e",
+      "size_bytes": 30960
+    },
+    {
+      "path": "validation/cbsem_matrix_input_v2_qualification_factory.py",
+      "sha256": "4ff139216987b24ec94824c102b403cad6e88ef4e279967d007e3cdef47413c1",
+      "size_bytes": 33379
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/cbsem_matrix_input_v2.qualification.json",
+      "sha256": "ef58cc3947386dec374698a08157ead22b1f01206e6e6d74bdf64c325a9e7658",
+      "size_bytes": 32048
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/test_cbsem_matrix_input_v2_oracle.py",
+      "sha256": "d8a9d24c3595f9ffbe55734421a4ee2babf8cec61c29e40d335eea49893f5759",
+      "size_bytes": 5875
+    },
+    {
+      "path": "validation/test_cbsem_matrix_input_v2_qualification_factory.py",
+      "sha256": "0fc8cb8f36d793fcb8587ab65d1cd809444ba1e704fca0031950c39f9bd4a4a4",
+      "size_bytes": 6545
+    }
+  ],
+  "source_set_sha256": "1e7a4049fe5d1eb7bcda3304c97a71e8d35decdba5da1e5b5280996899c9a885",
+  "spec_migration_status": "compatibility_only",
+  "spec_passed": true,
+  "spec_path": "validation/qualification_v2/cbsem_matrix_input_v2.qualification.json",
+  "spec_qualification_ready": false
+}

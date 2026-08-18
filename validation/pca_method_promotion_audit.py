@@ -334,7 +334,7 @@ def native_browser_check():
             report.get("passed") is True
             and len(rows) == 3
             and all(row.get("selectedMethod") == "Principal Component Analysis" for row in rows)
-            and all(row.get("catalogCount") == 15 for row in rows)
+            and all(row.get("catalogCount") == 16 for row in rows)
             and all(row.get("fixture") == {"variables": 5, "models": 0} for row in rows)
             and all(row.get("noModelBlocker") is True for row in rows)
         ),
@@ -459,7 +459,7 @@ def main():
         "method_spec": (ROOT / "docs/methods/PCA_V1.md").exists(),
         "known_differences": (ROOT / "docs/KNOWN_DIFFERENCES.md").exists(),
         "method_compatibility_updated": "Standalone PCA | Validated for documented model-free PCA scope" in (ROOT / "docs/METHOD_COMPATIBILITY.md").read_text(encoding="utf-8"),
-        "native_workbench_lists_fifteen_workflows": "fifteen calculation-catalog workflows" in native_docs,
+        "native_workbench_lists_sixteen_workflows": "sixteen calculation-catalog workflows" in native_docs,
         "native_backlog_no_longer_lists_pca": "CB-SEM/CFA, PCA, GSCA" not in native_docs,
     }
     report = {

@@ -36,11 +36,12 @@ describe("native dataset version navigation", () => {
     expect(nativeDatasetVersionItems([dataset("root")], [record("missing", null, "recode")])).toEqual([
       expect.objectContaining({ dataset: expect.objectContaining({ id: "root" }), record: null }),
     ]);
-    const operations: Array<DatasetVersionRecord["operation"] | null> = ["import", "metadata", "recode", null];
+    const operations: Array<DatasetVersionRecord["operation"] | null> = ["import", "metadata", "recode", "transform", null];
     expect(operations.map(nativeDatasetOperationLabel)).toEqual([
       "Imported",
       "Metadata",
       "Recoded",
+      "Derived",
       "Dataset",
     ]);
   });

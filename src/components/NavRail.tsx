@@ -8,14 +8,14 @@ const workflowItems: RailItem[] = [
   { view: "welcome", label: "Home", tooltip: "Project start, recent projects, demo, and recovery", Icon: Home },
   { view: "data", label: "Data", tooltip: "Import, inspect, metadata, and missing values", Icon: Database },
   { view: "models", label: "Model", tooltip: "SEM diagram designer", Icon: Network },
-  { view: "analyses", label: "Setup", tooltip: "Method selection, validation, and readiness", Icon: ClipboardCheck },
+  { view: "analyses", label: "Setup", tooltip: "Method selection, requirements, and readiness", Icon: ClipboardCheck },
   { view: "run", label: "Run", tooltip: "Execute analysis and monitor jobs", Icon: Play },
   { view: "runs", label: "Results", tooltip: "Review saved runs and tables", Icon: PlayCircle },
   { view: "reports", label: "Report", tooltip: "Export figures, tables, and reproducibility report", Icon: FileText },
 ];
 
 const utilityItems: RailItem[] = [
-  { view: "trust", label: "Trust", tooltip: "Validation evidence, method scope, and known limitations", Icon: ShieldCheck },
+  { view: "trust", label: "Methods", tooltip: "Requirements, references, and known limitations", Icon: ShieldCheck },
   { view: "settings", label: "Settings", tooltip: "Desktop preferences, density, precision, and offline behavior", Icon: Settings },
 ];
 

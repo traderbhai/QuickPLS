@@ -1,0 +1,234 @@
+{
+    "schema_version":  1,
+    "kind":  "quickpls_v247_gsca_scoped_native_acceptance_receipt",
+    "passed":  true,
+    "supervisor_started_at_utc":  "2026-08-16T13:52:14.7143363Z",
+    "completed_at_utc":  "2026-08-16T13:52:39.8537669Z",
+    "scope":  "gsca",
+    "feature_id":  "qpls3.gsca.als",
+    "method_version":  "gsca_als_v2",
+    "report":  {
+                   "path":  "validation/results/v247_tauri_native_acceptance_gsca.json",
+                   "size":  51648,
+                   "sha256":  "27c8b3bbbae4fda503ede5f79c716fbd5ff8570380e2650d82a80cbbaff50814"
+               },
+    "executable":  {
+                       "path":  "target/release/quickpls-desktop.exe",
+                       "size":  49808384,
+                       "sha256":  "cb0b6ab479acd07167d02b01c2c70ca78e756c6391cdb3af419df114ddfb1ba3"
+                   },
+    "export":  {
+                   "path":  "validation/results/v247-native-gsca-20260816-192214816.xlsx",
+                   "size":  11435,
+                   "sha256":  "cee830242a0acbcc99f02efc2add1a1f6c5959ddf916ae0b64e506f2ddd08c95"
+               },
+    "project_archive":  {
+                            "path":  "validation/results/v247-native-gsca-1786888338818-65424.qpls",
+                            "size":  19847,
+                            "sha256":  "94240f339c7df63db1687ecf08ec141c609e3fffe4f89bb9d021cdc82b4c09a7"
+                        },
+    "screenshots":  [
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/12-tauri-native-launcher-1440x900.png",
+                            "size":  57995,
+                            "sha256":  "59402e1b7a01ce0885c0333d074731909714194dd67fbc199d75822ea05de11e"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/12-tauri-native-sample-corporate_reputation-1536x794.png",
+                            "size":  167468,
+                            "sha256":  "3ab5165fcc3c2656f445433b09608215d5db40f51b115d15cd7bf04d82621566"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/12-tauri-native-sample-simple_pls-1536x794.png",
+                            "size":  141786,
+                            "sha256":  "dd8087bec36623a2260ab20d0ed681d97708387b05e7b220351f5d3be31e34de"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/12-tauri-native-sample-mediation-1536x794.png",
+                            "size":  134495,
+                            "sha256":  "f97e544537d9d7adb24c6065fc0f6a80de0dcd37129c4a2f3ee407612b5666ca"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/13-tauri-native-model-1440x900.png",
+                            "size":  167468,
+                            "sha256":  "971e7bafdc8e3e2c987fcab3044d9ddb368f12bbfb1ad09283aa480326b66e28"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/14-tauri-native-data-1440x900.png",
+                            "size":  107551,
+                            "sha256":  "278b9ab74d39998cbb96fbbe65cbc6d199fd1923f59b4a7e491c2f4645fd39da"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/15-tauri-native-recode-dialog-1440x900.png",
+                            "size":  126997,
+                            "sha256":  "bfc862210a97f70f5d3ce91ba4649ab6e799ff0b4192ffae8afdcf0dbea2c2c0"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/16-tauri-native-data-version-1440x900.png",
+                            "size":  123218,
+                            "sha256":  "6f17f8e184d21fd85313978255af1b728bf94e1807d314b35e413f208cbfdffa"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/140-tauri-native-gsca-fixture-data-1536x794.png",
+                            "size":  293756,
+                            "sha256":  "e237f9db00cb255e325b1faff82e1d84bbf1a1b5dc63d1a03f4ef70d864349d6"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/140a-tauri-native-gsca-invalid-setup-1536x794.png",
+                            "size":  195735,
+                            "sha256":  "2fa871678b92b431285a914e9753689b467cab368dfdebd4e6f59635c68e8f31"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/141-tauri-native-gsca-model-1536x794.png",
+                            "size":  174070,
+                            "sha256":  "061005501ff35f65d8cd50bc0d71d45ada5aa9a3de2ed10ae18e834cb9c95138"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/142-tauri-native-gsca-dialog-1536x794.png",
+                            "size":  189647,
+                            "sha256":  "cf7f54e251cd5cb5a7b474da1cf68d7d4d697d2ae5f0eec0813fd9b393299149"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/143-tauri-native-gsca-running-1536x794.png",
+                            "size":  154480,
+                            "sha256":  "cfa3d4d200b5ae083088152ac25673174a0f394fe01b60028945a2d4257fd1de"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/144-tauri-native-gsca-results-1536x794.png",
+                            "size":  108225,
+                            "sha256":  "835cdceb0a78ff8593549d1d301d88dc4ef16ad84208bc95ae4c7da4606e3965"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/145-tauri-native-gsca-export-1536x794.png",
+                            "size":  136580,
+                            "sha256":  "9ff06cd21c374f4312bfbc138b044df92ea3a2dbd5515595e485e23e67d88fc6"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/146-tauri-native-gsca-reopened-1536x794.png",
+                            "size":  99734,
+                            "sha256":  "b36cb4b781917b98cfcb3437f8aba6a8f7fce1edc60f45a73fb001fda9118802"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/146v-tauri-native-gsca-packaged-viewport-1024x700.png",
+                            "size":  73336,
+                            "sha256":  "213dfbf6d9673754bc5b5b067c8a90e56967380859ec1a00d09dcae84a7d4d96"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/146v-tauri-native-gsca-packaged-viewport-1280x720.png",
+                            "size":  69120,
+                            "sha256":  "7025849503145be6fa2288e2a8c879285db240f302e077ff1761996abbbbe1ec"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/146v-tauri-native-gsca-packaged-viewport-1440x900.png",
+                            "size":  71268,
+                            "sha256":  "d71af0528bf7617227156f3fb5311c9895beec6dbd3bc315c42f70e374c7de54"
+                        }
+                    ],
+    "checks":  29,
+    "unique_checks":  29,
+    "check_ids":  [
+                      "bundledSampleGallery",
+                      "calculationCommands",
+                      "ccaFixtureProvisioning",
+                      "fixtureProvisioning",
+                      "gscaDialog",
+                      "gscaExport",
+                      "gscaFixture",
+                      "gscaFixtureProvisioning",
+                      "gscaFunctionalOffline",
+                      "gscaInitialModelCreation",
+                      "gscaInvalidSetup",
+                      "gscaModel",
+                      "gscaPackagedViewports",
+                      "gscaProgress",
+                      "gscaResult",
+                      "gscaSaveReopen",
+                      "ipmaFixtureProvisioning",
+                      "mediationFixtureProvisioning",
+                      "mgaFixtureProvisioning",
+                      "mgaReferenceFixture",
+                      "moderationFixtureProvisioning",
+                      "ncaFixtureProvisioning",
+                      "ncaReferenceFixture",
+                      "recentProjectsRestored",
+                      "recodeCompleted",
+                      "recodeDialog",
+                      "runtime",
+                      "runtimePreflight",
+                      "sample"
+                  ],
+    "failures":  0,
+    "console_errors":  0,
+    "runtime":  "tauri-webview2-cdp",
+    "cdp_endpoint":  "http://127.0.0.1:9222",
+    "cdp_loopback_only":  true,
+    "functional_offline":  {
+                               "passed":  true,
+                               "analyticalWorkflowRequiresInternet":  false,
+                               "strictZeroProcessEgressClaimed":  false,
+                               "platformBackgroundEgressOutsidePageRequestScope":  true,
+                               "observedRequestCount":  52,
+                               "externalRequestCount":  0,
+                               "origins":  [
+                                               "http://ipc.localhost",
+                                               "http://tauri.localhost"
+                                           ],
+                               "externalRequests":  [
+
+                                                    ]
+                           },
+    "observed_process_tree":  [
+                                  {
+                                      "process_id":  21688,
+                                      "parent_process_id":  26180,
+                                      "name":  "quickpls-desktop.exe",
+                                      "executable_path":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                                      "creation_date":  "08/16/2026 19:22:16"
+                                  },
+                                  {
+                                      "process_id":  51268,
+                                      "parent_process_id":  21688,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/16/2026 19:22:16"
+                                  },
+                                  {
+                                      "process_id":  37980,
+                                      "parent_process_id":  51268,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/16/2026 19:22:16"
+                                  },
+                                  {
+                                      "process_id":  34488,
+                                      "parent_process_id":  51268,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/16/2026 19:22:17"
+                                  },
+                                  {
+                                      "process_id":  59900,
+                                      "parent_process_id":  51268,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/16/2026 19:22:17"
+                                  },
+                                  {
+                                      "process_id":  39700,
+                                      "parent_process_id":  51268,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/16/2026 19:22:17"
+                                  },
+                                  {
+                                      "process_id":  43824,
+                                      "parent_process_id":  51268,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/16/2026 19:22:17"
+                                  }
+                              ],
+    "graceful_process_cleanup_verified":  true,
+    "forced_process_cleanup_used":  false,
+    "orphan_processes":  0
+}

@@ -35,23 +35,31 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Frontend full typecheck (source and tests)
+        run: npm run typecheck:full
+
       - name: Frontend tests
         run: npm test -- --run
 
       - name: Frontend build
-        run: npm run build
+        run: npm run build:bundle
 
       - name: QuickPLS 3 competitor foundation tests
         run: >-
           python -m unittest
           validation.test_quickpls_3_competitor_contracts
           validation.test_method_promotion_contracts
+          validation.test_frontend_build_acceleration
           validation.test_quickpls_3_release_readiness
           validation.test_package_release_artifacts
           validation.test_quickpls_release_foundation
           validation.test_webview2_offline_containment
           validation.test_quickpls_3_operational_foundation
           validation.test_quickpls_supply_chain_evidence
+          validation.test_release_evidence_bundle
+          validation.test_quickpls_security_scans
+          validation.test_quickpls_3_competitor_program_cli
+          validation.test_release_workflow_contract
           validation.test_quickpls_external_beta
           validation.test_quickpls_signed_candidate
           validation.test_parity_ledger

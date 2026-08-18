@@ -1,0 +1,94 @@
+{
+  "created_at": "2026-07-19T00:00:00Z",
+  "dataset_fingerprint": "v2:7b2ab3ea28de55d758c422431030d57a74106bba7cfa9d159a03612efc39d28f",
+  "id": "00000000-0000-0000-0000-000000000059",
+  "metadata": {
+    "fixture": "moderation_reference",
+    "validation_recipe_migration": "schema_v2_fixture_to_explicit_schema_v3_copy"
+  },
+  "method_config": {
+    "kind": "pls_algorithm"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x"
+        ],
+        "mode": "reflective",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "m",
+        "indicators": [
+          "m"
+        ],
+        "mode": "reflective",
+        "name": "M",
+        "short_name": "M"
+      },
+      {
+        "id": "xm",
+        "indicators": [],
+        "mode": "formative",
+        "name": "X by M",
+        "short_name": "XM"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "00000000-0000-0000-0000-000000000060",
+    "interactions": [
+      {
+        "id": "x_by_m_to_y",
+        "method": "two_stage_product_score",
+        "moderator": "m",
+        "outcome": "y",
+        "predictor": "x",
+        "product_construct": "xm"
+      }
+    ],
+    "name": "moderation_simulation_null_17",
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "m",
+        "target": "y"
+      },
+      {
+        "source": "xm",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 3000,
+    "method": "pls_pm",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260719,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-07,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

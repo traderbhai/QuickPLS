@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem-exact-case-bootstrap-studentized-benchmark-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "status", "source_binding", "case", "warmup_runs", "measured_runs", "aggregates", "representative_metrics", "worker_invariance", "cancellation", "cap_decision"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "cbsem_exact_case_bootstrap_studentized_benchmark_v1" },
+    "status": { "const": "measurement_only_no_caps_or_promotion" },
+    "source_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["binary", "binary_sha256", "rust_example", "rust_example_sha256", "schema", "fixture"],
+      "properties": {
+        "binary": { "$ref": "#/$defs/nonEmptyString" },
+        "binary_sha256": { "$ref": "#/$defs/sha256" },
+        "rust_example": { "const": "crates/qpls-resampling/examples/cbsem_exact_case_bootstrap_studentized_benchmark.rs" },
+        "rust_example_sha256": { "$ref": "#/$defs/sha256" },
+        "schema": { "const": "validation/cbsem_exact_case_bootstrap_studentized_benchmark_v1.schema.json" },
+        "fixture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["data_path", "data_sha256", "recipe_path", "recipe_sha256", "fixture_scope"],
+          "properties": {
+            "data_path": { "const": "validation/results/v07_cbsem.csv" },
+            "data_sha256": { "$ref": "#/$defs/sha256" },
+            "recipe_path": { "const": "validation/results/v07_cfa.recipe.json" },
+            "recipe_sha256": { "$ref": "#/$defs/sha256" },
+            "fixture_scope": { "const": "existing_v07_cfa_rows_truncated_and_first_factor_blocks_selected_v1" }
+          }
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "required": ["n_complete_cases", "factor_blocks", "free_parameters", "requested_replicates", "workers", "seed"],
+      "properties": {
+        "n_complete_cases": { "type": "integer", "minimum": 10 },
+        "factor_blocks": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "free_parameters": { "type": "integer", "minimum": 1 },
+        "requested_replicates": { "type": "integer", "minimum": 500, "maximum": 10000 },
+        "workers": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "seed": { "type": "integer", "minimum": 0 },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["n_complete_cases", "v_observed_variables", "p_free_parameter_rows", "d_optimizer_dimensions", "d_status", "d_note"],
+          "properties": {
+            "n_complete_cases": { "type": "integer", "minimum": 10 },
+            "v_observed_variables": { "type": "integer", "minimum": 1 },
+            "p_free_parameter_rows": { "type": "integer", "minimum": 1 },
+            "d_optimizer_dimensions": { "type": "null" },
+            "d_status": { "const": "unavailable_not_exposed_by_public_s1_s2_api" },
+            "d_note": { "$ref": "#/$defs/nonEmptyString" }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "warmup_runs": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/$defs/run" } },
+    "measured_runs": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/$defs/run" } },
+    "aggregates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["median_elapsed_seconds", "p95_elapsed_seconds", "median_working_set_bytes", "p95_working_set_bytes", "p95_result_bytes"],
+      "properties": {
+        "median_elapsed_seconds": { "type": "number", "minimum": 0 },
+        "p95_elapsed_seconds": { "type": "number", "minimum": 0 },
+        "median_working_set_bytes": { "type": "number", "minimum": 0 },
+        "p95_working_set_bytes": { "type": "number", "minimum": 0 },
+        "p95_result_bytes": { "type": "number", "minimum": 0 }
+      }
+    },
+    "representative_metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["successful_point_refits", "failed_point_refits", "analytic_se_unavailable_refits", "analytic_se_unavailable_rate_among_point_successes", "studentized_usable_refits", "studentized_usable_rate_among_point_successes", "base_json_bytes", "studentized_sidecar_json_bytes", "combined_s2_json_bytes", "canonical_v11_json_bytes", "text_export_v11_bytes", "unavailable_size_reason"],
+      "properties": {
+        "successful_point_refits": { "type": "integer", "minimum": 0 },
+        "failed_point_refits": { "type": "integer", "minimum": 0 },
+        "analytic_se_unavailable_refits": { "type": "integer", "minimum": 0 },
+        "analytic_se_unavailable_rate_among_point_successes": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "studentized_usable_refits": { "type": "integer", "minimum": 0 },
+        "studentized_usable_rate_among_point_successes": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "base_json_bytes": { "type": "integer", "minimum": 1 },
+        "studentized_sidecar_json_bytes": { "type": "integer", "minimum": 1 },
+        "combined_s2_json_bytes": { "type": "integer", "minimum": 1 },
+        "canonical_v11_json_bytes": { "type": "null" },
+        "text_export_v11_bytes": { "type": "null" },
+        "unavailable_size_reason": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "worker_invariance": {
+      "type": "object",
+      "required": ["primary_workers", "comparison_workers", "scientific_result_sha256", "comparison_elapsed_seconds", "exact_match"],
+      "properties": {
+        "primary_workers": { "type": "integer", "minimum": 1 },
+        "comparison_workers": { "type": "integer", "minimum": 1 },
+        "scientific_result_sha256": { "$ref": "#/$defs/sha256" },
+        "comparison_elapsed_seconds": { "type": "number", "minimum": 0 },
+        "exact_match": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "cancellation": {
+      "type": "object",
+      "required": ["trigger_after_completed_refits", "terminal_latency_seconds", "process_elapsed_seconds", "typed_terminal_status"],
+      "properties": {
+        "trigger_after_completed_refits": { "type": "integer", "minimum": 1 },
+        "terminal_latency_seconds": { "type": "number", "minimum": 0 },
+        "process_elapsed_seconds": { "type": "number", "minimum": 0 },
+        "typed_terminal_status": { "const": "cancelled_as_requested" }
+      },
+      "additionalProperties": false
+    },
+    "cap_decision": {
+      "type": "object",
+      "required": ["status", "reason"],
+      "properties": {
+        "status": { "const": "not_evaluated" },
+        "reason": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "run": {
+      "type": "object",
+      "required": ["phase", "index", "exit_code", "elapsed_seconds", "peak_working_set_bytes", "result_bytes", "progress_values", "orphan_processes", "scientific_result_sha256"],
+      "properties": {
+        "phase": { "enum": ["warmup", "measured"] },
+        "index": { "type": "integer", "minimum": 0 },
+        "exit_code": { "const": 0 },
+        "elapsed_seconds": { "type": "number", "minimum": 0 },
+        "peak_working_set_bytes": { "type": "integer", "minimum": 0 },
+        "result_bytes": { "type": "integer", "minimum": 1 },
+        "progress_values": { "type": "array" },
+        "orphan_processes": { "const": 0 },
+        "scientific_result_sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

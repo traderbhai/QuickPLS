@@ -25,6 +25,7 @@ regex = "1.13"
 rust_xlsxwriter.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 uuid.workspace = true

@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "kit_id": "quickpls_3_external_beta_operations_v1",
+  "program_status": "planned",
+  "operating_mode": "preparation_only",
+  "canonical_contract": "validation/quickpls_external_beta.json",
+  "evidence_policy": {
+    "fabricated_evidence_prohibited": true,
+    "template_values_are_evidence": false,
+    "repository_may_store_direct_identifiers": false,
+    "repository_may_store_raw_participant_data": false,
+    "beta_ready": false
+  },
+  "privacy_policy": {
+    "pseudonym_scope": "single_beta_program_only",
+    "direct_identifier_mapping_location": "external_access_controlled_system",
+    "consent_record_location": "external_access_controlled_system",
+    "deletion_request_route": "privacy@quickpls.org",
+    "deletion_completion_must_be_recorded_externally": true
+  },
+  "journey_ids": [
+    "import_data",
+    "author_model",
+    "calculate",
+    "interpret",
+    "export",
+    "save_reopen"
+  ],
+  "templates": [
+    {
+      "role": "participant_record",
+      "path": "validation/beta_kit/templates/participant_record.template.json"
+    },
+    {
+      "role": "workflow_observation",
+      "path": "validation/beta_kit/templates/workflow_observation.template.json"
+    },
+    {
+      "role": "privacy_request",
+      "path": "validation/beta_kit/templates/privacy_request.template.json"
+    },
+    {
+      "role": "defect_register",
+      "path": "validation/beta_kit/templates/defect_register.template.json"
+    },
+    {
+      "role": "scientific_discrepancy_register",
+      "path": "validation/beta_kit/templates/scientific_discrepancy_register.template.json"
+    },
+    {
+      "role": "signed_candidate_lifecycle",
+      "path": "validation/beta_kit/templates/signed_candidate_lifecycle.template.json"
+    },
+    {
+      "role": "exit_decision",
+      "path": "validation/beta_kit/templates/exit_decision.template.json"
+    }
+  ],
+  "external_gates": [
+    {
+      "id": "approved_signing_identity",
+      "status": "pending_external",
+      "required_evidence": "Approved certificate identity and protected signer custody record"
+    },
+    {
+      "id": "signed_beta_candidate",
+      "status": "pending_external",
+      "required_evidence": "Exact Authenticode-signed and timestamped beta candidate manifest"
+    },
+    {
+      "id": "windows_lifecycle_entry_gate",
+      "status": "pending_external",
+      "required_evidence": "Clean Windows install, upgrade, recovery, uninstall, and offline launch results"
+    },
+    {
+      "id": "independent_entry_reviews",
+      "status": "pending_external",
+      "required_evidence": "Scientific, security, privacy, legal, license, trademark, comparative-claims, and EULA dispositions"
+    },
+    {
+      "id": "support_operations",
+      "status": "pending_external",
+      "required_evidence": "Named primary and backup support coverage with exercised escalation routes"
+    },
+    {
+      "id": "real_beta_cohort",
+      "status": "pending_external",
+      "required_evidence": "15-25 consented pseudonymous participants across at least five institutions"
+    },
+    {
+      "id": "real_workflow_evidence",
+      "status": "pending_external",
+      "required_evidence": "At least 30 privacy-safe real workflows scored against all six journeys"
+    },
+    {
+      "id": "beta_findings_disposition",
+      "status": "pending_external",
+      "required_evidence": "P0/P1 closure, zero reproducible data loss or corruption, and material discrepancy dispositions"
+    },
+    {
+      "id": "post_beta_signed_lifecycle",
+      "status": "pending_external",
+      "required_evidence": "Lifecycle rerun on the exact final signed candidate after the last beta activity or fix"
+    },
+    {
+      "id": "independent_exit_approval",
+      "status": "pending_external",
+      "required_evidence": "Dated approval record binding the final lifecycle report and candidate hashes"
+    }
+  ]
+}

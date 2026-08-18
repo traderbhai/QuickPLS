@@ -14,10 +14,10 @@
         "src/native/nativeResults.test.ts",
         "src/native/NativeCalculationDialog.test.ts"
       ],
-      "duration_seconds": 5.702,
+      "duration_seconds": 9.41,
       "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  4 passed (4)\n      Tests  114 passed (114)\n   Start at  00:30:53\n   Duration  2.04s (transform 1.88s, setup 0ms, import 3.72s, tests 461ms, environment 1ms)\n\n"
+      "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  4 passed (4)\n      Tests  148 passed (148)\n   Start at  07:55:17\n   Duration  4.11s (transform 4.01s, setup 0ms, import 7.49s, tests 1.36s, environment 1ms)\n\n"
     },
     "gui_runtime_claimed": false,
     "passed": true,
@@ -30,7 +30,7 @@
     ]
   },
   "feature_id": "qpls3.inference.bootstrap",
-  "generated_at_utc": "2026-08-13T19:00:55.442400Z",
+  "generated_at_utc": "2026-08-18T02:25:22.115364Z",
   "method_version": "indexed_resampling_v4",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -39,18 +39,18 @@
   "source_artifacts": [
     {
       "path": "package-lock.json",
-      "sha256": "950ad806828fcc72af996f571f32b0bf837072664a31aea61dbceeaa79a2eed1",
-      "size": 94576
+      "sha256": "065d6ca621abf68ce5fca8c28258890d54396e80516922d6114b928ef2d92280",
+      "size": 94575
     },
     {
       "path": "package.json",
-      "sha256": "5338e2c69f2d15a2a1d39d60178b6e774707a95c0228c68b8975fb10db345702",
-      "size": 65788
+      "sha256": "40efbe8c8a3055f3e5623fb74349f8151856210c4c5c8aa546ab604bad7f81ab",
+      "size": 69044
     },
     {
       "path": "src/native/nativeResults.test.ts",
-      "sha256": "de86e071dd0948df07b15b9a5c0505bef3c29440fe2ef58679b7e0d5794eeade",
-      "size": 120937
+      "sha256": "3476f90afc93fcb4882e3cbb84bdc487be9d398b04472fe302ef009d1201c268",
+      "size": 173105
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -64,8 +64,8 @@
     },
     {
       "path": "validation/methods/pls_bootstrap_v4.manifest.json",
-      "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
-      "size": 15803
+      "sha256": "f43015dbd38e34448b9b1cdb5cfc67f1f42fc0e4a606bcd2409679b36a8174ee",
+      "size": 19827
     },
     {
       "path": "validation/pls_bootstrap_v4_factory_common.py",
@@ -79,8 +79,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pls_bootstrap_v4_factory_evidence.py",

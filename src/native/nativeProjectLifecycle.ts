@@ -15,6 +15,30 @@ import type {
 } from "../types";
 import { buildNativeRecipeModel } from "./nativeAnalysisRecipe";
 
+export type NativeLegacyProjectOperation =
+  | "schema5_save"
+  | "schema5_autosave"
+  | "calculation"
+  | "legacy_graph_serialization";
+
+export interface NativeLegacyProjectOperationGate {
+  standardSemModelV4OperationBlocker: (operation: NativeLegacyProjectOperation) => string | null;
+}
+
+/**
+ * Central fail-closed gate for workflows that still derive scientific content
+ * from the legacy canvas graph. The operation-specific check explains the user
+ * action while the serialization check prevents an accidental graph fallback.
+ */
+export function nativeLegacyProjectOperationBlocker(
+  gate: NativeLegacyProjectOperationGate,
+  operation: Exclude<NativeLegacyProjectOperation, "legacy_graph_serialization">,
+) {
+  const operationBlocker = gate.standardSemModelV4OperationBlocker(operation);
+  const serializationBlocker = gate.standardSemModelV4OperationBlocker("legacy_graph_serialization");
+  return operationBlocker ?? serializationBlocker;
+}
+
 export interface NativeProjectSignatureInput {
   dataset: Dataset;
   datasetCatalog: Dataset[];
@@ -31,6 +55,25 @@ export interface NativeProjectSignatureInput {
   diagramOverlaySettings: DiagramOverlaySettings;
   publicationDiagramSettings: PublicationDiagramSettings;
   diagramLayout: DiagramLayoutState;
+}
+
+export interface NativeStandardAuthorityDirtyState {
+  /** A strict SemModelV4 authority, rather than the projected graph, owns science. */
+  active: boolean;
+  /** Compares canonical document/layout state with its validated persistence anchor. */
+  dirty: boolean;
+  /** Native activation or validated save-copy work must not be discarded mid-flight. */
+  operationPending: boolean;
+}
+
+export function nativeSchema6BoundWorkspaceReplacementBlocker(
+  sourceBound: boolean,
+  dirty: boolean,
+): string | null {
+  if (!sourceBound) return null;
+  return dirty
+    ? "Save a validated new copy, then use Close Standard project in Experimental Labs"
+    : "Use Close Standard project in Experimental Labs to release the schema-6 source binding";
 }
 
 function persistedDatasetSignature(dataset: Dataset) {
@@ -80,12 +123,15 @@ function persistedEdgeSignature(edge: Edge) {
 
 function persistedPresentationNodeSignature(node: Node<ConstructData>) {
   const { data: _scientificContent, ...persisted } = persistedNodeSignature(node);
-  return persisted;
+  return { ...persisted, semModelV4: node.data?.semModelV4 ?? null };
 }
 
 function persistedPresentationEdgeSignature(edge: Edge) {
   const { data: _scientificContent, ...persisted } = persistedEdgeSignature(edge);
-  return persisted;
+  const data = edge.data && typeof edge.data === "object" && !Array.isArray(edge.data)
+    ? edge.data as Record<string, unknown>
+    : null;
+  return { ...persisted, semModelV4: data?.semModelV4 ?? null };
 }
 
 function persistedModelPresentationSignature(presentation: NativeModelPresentation) {
@@ -100,7 +146,8 @@ function persistedModelPresentationSignature(presentation: NativeModelPresentati
  * Builds a stable, inexpensive representation of the state persisted with a project.
  * Transient React Flow state such as selection, hover, measured dimensions, and drag
  * flags is intentionally excluded. The live canvas is folded into its canonical model
- * and presentation, so changing the active Explorer selection alone never marks the
+ * and presentation; versioned SemModelV4 authoring intent remains part of the saved
+ * signature. Changing the active Explorer selection alone never marks the
  * project dirty while edits to any model or saved report still do.
  */
 export function nativeProjectSignature(input: NativeProjectSignatureInput) {
@@ -135,6 +182,7 @@ export function nativeProjectSignature(input: NativeProjectSignatureInput) {
       summary: version.summary,
       sourceColumn: version.sourceColumn,
       targetColumn: version.targetColumn,
+      transformation: version.transformation ?? null,
     })),
     projectModels: [...projectModels].sort((left, right) => left.id.localeCompare(right.id)),
     modelPresentations: Object.fromEntries(Object.entries(modelPresentations)
@@ -197,6 +245,9 @@ export function hasUnsavedNativeProjectChanges(
   hasOpenProject: boolean,
   cleanSignature: string | null,
   currentSignature: string,
+  standardAuthority?: NativeStandardAuthorityDirtyState,
 ) {
+  if (standardAuthority?.operationPending) return true;
+  if (standardAuthority?.active) return hasOpenProject && standardAuthority.dirty;
   return hasOpenProject && cleanSignature !== null && cleanSignature !== currentSignature;
 }

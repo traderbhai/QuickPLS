@@ -1,0 +1,14 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "current_manifest_passes": true,
+  "feature_id": "qpls3.standalone.ols",
+  "generated_at_utc": "2026-08-13T21:13:56.893534Z",
+  "highest_current_factory_state": "native_qualified",
+  "kind": "quickpls_method_factory_release_candidate_gap",
+  "method_version": "regression_ols_v1",
+  "passed": false,
+  "release_evidence_count": 0,
+  "release_qualification_blocker": "Dedicated packaged OLS acceptance and a non-circular final audit are not present for the current frozen desktop build.",
+  "required_runtime_command": "powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v247_ols_native_acceptance.ps1",
+  "schema_version": 1
+}

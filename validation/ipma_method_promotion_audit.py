@@ -19,7 +19,7 @@ from second_batch_promotion_common import ROOT, audit_method
 RESULTS = ROOT / "validation" / "results"
 METHOD_VERSION = "ipma_v1"
 PERFORMANCE_SCALE = "min_max_0_100_from_standardized_scores_v1"
-PROVENANCE_METHOD_VERSION = "pls_pm_v1+ipma_v1+pls_mediation_v1+pls_assessment_v7"
+PROVENANCE_METHOD_VERSION = "pls_pm_v1+ipma_v1+pls_mediation_v1+pls_assessment_v8"
 EXPECTED_PREDECESSORS = ["x", "z", "m"]
 EXPECTED_INDICATORS = ["x1", "z1", "m1"]
 

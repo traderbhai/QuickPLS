@@ -50,7 +50,7 @@
         "observed_pairing_count": 3,
         "observed_used_observations": 40,
         "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_four_vanishing_small.quickpls.json",
-        "output_sha256": "166ec7eafe5d25ae71fe9a035eac1bfceea823a18069858669b2d9442d60c8b2",
+        "output_sha256": "269775b12c5b0fb8571a9b497f6f2f720f1889374a0f417ab4c77a564e1925c8",
         "passed": true,
         "population_shape": "single_factor_vanishing",
         "preprocessing": "standardized",
@@ -77,7 +77,7 @@
         "observed_pairing_count": 3,
         "observed_used_observations": 80,
         "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_four_nonvanishing.quickpls.json",
-        "output_sha256": "f6723cc76d764262a339733cb36525efc2d8f3260b44878ef8f7c17e5f847ec2",
+        "output_sha256": "8c59570c568487ca4ca53cacac331b343c78a256638f0df35a378fbd69914e09",
         "passed": true,
         "population_shape": "correlated_residual_nonvanishing",
         "preprocessing": "standardized",
@@ -104,7 +104,7 @@
         "observed_pairing_count": 15,
         "observed_used_observations": 120,
         "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_five_mean_centered.quickpls.json",
-        "output_sha256": "c5a14ea5b96577dd9fa44ec2e69083c4dde7ccb4102a2faa7ad979003c549d25",
+        "output_sha256": "8e9b8693f6575e8f5de3ca1c0c0f925867842dd1502786042b2e35aa42735656",
         "passed": true,
         "population_shape": "single_factor_vanishing",
         "preprocessing": "mean_centered",
@@ -131,7 +131,7 @@
         "observed_pairing_count": 45,
         "observed_used_observations": 180,
         "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_six_nongaussian.quickpls.json",
-        "output_sha256": "3f4caa282327490f7dc17a1dc91e5603b0611441f0f6688abb7395a5e912719d",
+        "output_sha256": "83d46f7fde1b00701480e2b3b8c1b1649855dc5d0b26777a8e16d4f176f1fb23",
         "passed": true,
         "population_shape": "bounded_nongaussian_single_factor",
         "preprocessing": "standardized",
@@ -158,7 +158,7 @@
         "observed_pairing_count": 15,
         "observed_used_observations": 92,
         "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_five_listwise_missing.quickpls.json",
-        "output_sha256": "ee6ece03b12c585fcc76614c91412084c6384a367b151e93bf95244196121873",
+        "output_sha256": "ed8321b54037e983b9093921ac961cad85e984604966c3d951bcb2da201dae43",
         "passed": true,
         "population_shape": "single_factor_vanishing",
         "preprocessing": "standardized",
@@ -185,7 +185,7 @@
         "observed_pairing_count": 6,
         "observed_used_observations": 140,
         "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_two_eligible_blocks.quickpls.json",
-        "output_sha256": "b25cb557eb616aacd1aacbf088b2547fc2466f086d8fa73781f1d66ffdb6c221",
+        "output_sha256": "951f11b0669a2bf51ea205045338ea5f87f0a0863fe6a4a4d65e0438f6472d0f",
         "passed": true,
         "population_shape": "mixed_block_tetrads",
         "preprocessing": "mean_centered",
@@ -198,7 +198,7 @@
     "tolerance": 1e-06
   },
   "feature_id": "qpls3.assessment.cta_pls",
-  "generated_at_utc": "2026-08-13T18:53:52.275476Z",
+  "generated_at_utc": "2026-08-18T03:09:52.798339Z",
   "method_version": "cta_pls_tetrad_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -207,28 +207,28 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-cli/src/main.rs",
-      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
-      "size": 216983
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
     },
     {
       "path": "crates/qpls-core/src/contract.rs",
-      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
-      "size": 107095
+      "sha256": "51c235a9173d3f9c84e5bfe4c0ce6280268ee26b882e2a41dd01be889a7cdfb5",
+      "size": 144508
     },
     {
       "path": "crates/qpls-core/src/validation.rs",
-      "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
-      "size": 177352
+      "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+      "size": 227427
     },
     {
       "path": "crates/qpls-estimation/src/pls.rs",
-      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-      "size": 639198
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
     },
     {
       "path": "crates/qpls-runner/src/lib.rs",
-      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
-      "size": 49349
+      "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+      "size": 100140
     },
     {
       "path": "validation/cta_pls_simulation.py",
@@ -237,8 +237,8 @@
     },
     {
       "path": "validation/cta_pls_v1_factory_common.py",
-      "sha256": "726ee52650510f685e5ebdf1f90c06800e46dd021cef9d720c38a8bf5cf64294",
-      "size": 12502
+      "sha256": "51836b0c6e998a8d08cbb8354a0bc28a84081d5dc66ec025ce45433db24735b5",
+      "size": 12466
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -247,8 +247,8 @@
     },
     {
       "path": "validation/methods/cta_pls_v1.manifest.json",
-      "sha256": "9c185db215ed40fd30d77557a9e8448d109f6e3f1acf015d25e47fd4bc62257e",
-      "size": 14741
+      "sha256": "1d8f257e075e438e7cb06bff1af48e5fc6228f760666b1f7311e19672a4b0c30",
+      "size": 15892
     },
     {
       "path": "validation/methods/method_promotion_manifest.schema.json",
@@ -257,13 +257,13 @@
     },
     {
       "path": "validation/test_cta_pls_v1_factory_evidence.py",
-      "sha256": "a7455099f23dd1f38ee9db7a856dd0f9cacf2070941a95502c39e92a189e969c",
-      "size": 3720
+      "sha256": "c95ee712b27250024b4aded553fe6af8afdb17da2db212f34c556b1d8c2ece29",
+      "size": 3770
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     }
   ]
 }

@@ -17,10 +17,9 @@
             "--data",
             "validation/fixtures/corporate_reputation.csv",
             "--output",
-            "validation/results/method_factory/plsc_v2/work/factory_boundary_inadmissible_correlation.quickpls.json",
-            "--allow-experimental"
+            "validation/results/method_factory/plsc_v2/work/factory_boundary_inadmissible_correlation.quickpls.json"
           ],
-          "duration_seconds": 0.046,
+          "duration_seconds": 0.136,
           "returncode": 1,
           "stderr_tail": "Error: PLS estimation failed: numerical failure: invalid PLSc rho_A for construct 'like': 1.5389388194769444\n",
           "stdout_tail": ""
@@ -50,6 +49,28 @@
       },
       "unsupported_scope": {
         "cases": {
+          "bootstrap_samples_below_minimum": {
+            "diagnostic_observed": true,
+            "execution": {
+              "command": [
+                "D:\\QuickPLS\\target\\debug\\qpls.exe",
+                "run",
+                "validation/results/method_factory/plsc_v2/work/factory_boundary_bootstrap_samples_below_minimum.recipe.json",
+                "--data",
+                "validation/results/method_factory/plsc_v2/work/boundary_baseline.csv",
+                "--output",
+                "validation/results/method_factory/plsc_v2/work/factory_boundary_bootstrap_samples_below_minimum.quickpls.json"
+              ],
+              "duration_seconds": 0.104,
+              "returncode": 1,
+              "stderr_tail": "Error: plsc.consistent_bootstrap_samples: PLSc consistent bootstrapping requires 1000 to 10000 full-reestimation case-bootstrap replicates\n",
+              "stdout_tail": ""
+            },
+            "expected_code": "plsc.consistent_bootstrap_samples",
+            "passed": true,
+            "recipe": "validation/results/method_factory/plsc_v2/work/factory_boundary_bootstrap_samples_below_minimum.recipe.json",
+            "result_not_written": true
+          },
           "formative": {
             "diagnostic_observed": true,
             "execution": {
@@ -60,10 +81,9 @@
                 "--data",
                 "validation/results/method_factory/plsc_v2/work/boundary_baseline.csv",
                 "--output",
-                "validation/results/method_factory/plsc_v2/work/factory_boundary_formative.quickpls.json",
-                "--allow-experimental"
+                "validation/results/method_factory/plsc_v2/work/factory_boundary_formative.quickpls.json"
               ],
-              "duration_seconds": 0.045,
+              "duration_seconds": 0.11,
               "returncode": 1,
               "stderr_tail": "Error: plsc.reflective_only: PLSc is limited to reflective constructs in the documented validated scope\n",
               "stdout_tail": ""
@@ -83,10 +103,9 @@
                 "--data",
                 "validation/results/method_factory/plsc_v2/work/boundary_baseline.csv",
                 "--output",
-                "validation/results/method_factory/plsc_v2/work/factory_boundary_pca_weighting.quickpls.json",
-                "--allow-experimental"
+                "validation/results/method_factory/plsc_v2/work/factory_boundary_pca_weighting.quickpls.json"
               ],
-              "duration_seconds": 0.044,
+              "duration_seconds": 0.129,
               "returncode": 1,
               "stderr_tail": "Error: plsc.pca_unsupported: PLSc requires path or factor weighting in the documented validated scope\n",
               "stdout_tail": ""
@@ -94,29 +113,6 @@
             "expected_code": "plsc.pca_unsupported",
             "passed": true,
             "recipe": "validation/results/method_factory/plsc_v2/work/factory_boundary_pca_weighting.recipe.json",
-            "result_not_written": true
-          },
-          "resampling": {
-            "diagnostic_observed": true,
-            "execution": {
-              "command": [
-                "D:\\QuickPLS\\target\\debug\\qpls.exe",
-                "run",
-                "validation/results/method_factory/plsc_v2/work/factory_boundary_resampling.recipe.json",
-                "--data",
-                "validation/results/method_factory/plsc_v2/work/boundary_baseline.csv",
-                "--output",
-                "validation/results/method_factory/plsc_v2/work/factory_boundary_resampling.quickpls.json",
-                "--allow-experimental"
-              ],
-              "duration_seconds": 0.044,
-              "returncode": 1,
-              "stderr_tail": "Error: plsc.resampling_unsupported: PLSc bootstrap, studentized bootstrap, and permutation inference are outside the documented validated scope\n",
-              "stdout_tail": ""
-            },
-            "expected_code": "plsc.resampling_unsupported",
-            "passed": true,
-            "recipe": "validation/results/method_factory/plsc_v2/work/factory_boundary_resampling.recipe.json",
             "result_not_written": true
           },
           "single_indicator": {
@@ -129,10 +125,9 @@
                 "--data",
                 "validation/results/method_factory/plsc_v2/work/boundary_baseline.csv",
                 "--output",
-                "validation/results/method_factory/plsc_v2/work/factory_boundary_single_indicator.quickpls.json",
-                "--allow-experimental"
+                "validation/results/method_factory/plsc_v2/work/factory_boundary_single_indicator.quickpls.json"
               ],
-              "duration_seconds": 0.048,
+              "duration_seconds": 0.065,
               "returncode": 1,
               "stderr_tail": "Error: plsc.minimum_indicators: PLSc requires at least two indicators per construct in the documented validated scope\n",
               "stdout_tail": ""
@@ -148,7 +143,7 @@
     }
   },
   "feature_id": "qpls3.pls.consistent",
-  "generated_at_utc": "2026-08-13T19:01:08.169059Z",
+  "generated_at_utc": "2026-08-17T23:26:09.346145Z",
   "method_version": "plsc_v2",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -157,13 +152,13 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-core/src/validation.rs",
-      "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
-      "size": 177352
+      "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+      "size": 227427
     },
     {
       "path": "crates/qpls-estimation/src/pls.rs",
-      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-      "size": 639198
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
     },
     {
       "path": "validation/fixtures/corporate_reputation.csv",
@@ -187,8 +182,8 @@
     },
     {
       "path": "validation/methods/plsc_v2.manifest.json",
-      "sha256": "6390cc9e9b1fc2844d8688700e5f554c9d4efda579e89b9f64b1740ce11d54e8",
-      "size": 15346
+      "sha256": "e4f51f683105859673e217b366726fb9659f37c09f624bb80407f889a63ab00d",
+      "size": 17680
     },
     {
       "path": "validation/plsc_unsupported_guard.py",
@@ -197,13 +192,13 @@
     },
     {
       "path": "validation/plsc_v2_boundary_gate.py",
-      "sha256": "811940d555c100f24391904c0f73a146f4478422f6d59eb1b53a458aa2edcdbf",
-      "size": 9364
+      "sha256": "4be3c25ff12960b844a5c8d28d376bc8fb980979f3936da8c1f59fb03ec0c9be",
+      "size": 9412
     },
     {
       "path": "validation/plsc_v2_factory_common.py",
-      "sha256": "e8df9baab689e4bdab8c648cdfed9433162c9172e009565cfeed5da5b932522d",
-      "size": 13718
+      "sha256": "c84fc5a36c08b6e80d35cc43eea4cc135e46e4556e737aefdcdb10474c841786",
+      "size": 13682
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/boundary_baseline.csv",
@@ -212,8 +207,8 @@
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_boundary_baseline.quickpls.json",
-      "sha256": "0d4a2299a8de85310ce79e8dcaba79a864b525cc968564c42a9509fb26ef86ae",
-      "size": 29760
+      "sha256": "bdd3a8658929f9f549bf31bec33d5707bc2153b5b47f1a0e98ed9aa3f46439d1",
+      "size": 35736
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_boundary_baseline.recipe.json",
@@ -221,9 +216,14 @@
       "size": 1482
     },
     {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_boundary_bootstrap_samples_below_minimum.recipe.json",
+      "sha256": "c2baf22cd775b2206ef132cdbaecfe5d33818e64f50a6fe364ce6f2d9334bdcf",
+      "size": 1484
+    },
+    {
       "path": "validation/results/method_factory/plsc_v2/work/factory_boundary_constructs_indicators_reordered.quickpls.json",
-      "sha256": "5aa4be40e1541d96b7f82c6fbab9344e106832016ed178b45fc7640706f99ad8",
-      "size": 29781
+      "sha256": "235233ca086467b830c2e6990e762e21a1177a135c6512944c769688f8620d56",
+      "size": 35753
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_boundary_constructs_indicators_reordered.recipe.json",
@@ -247,18 +247,13 @@
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_boundary_repeat.quickpls.json",
-      "sha256": "adffef1e03312a251abf7aeeb18c3da52f1a5c53ca54a0cfa800fd3629a04d31",
-      "size": 29760
+      "sha256": "bcd0ba9b6f1353ecce8c84db8a010573d2b83ccd6fbcd098bd415b6f72b8df50",
+      "size": 35736
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_boundary_repeat.recipe.json",
       "sha256": "efd816eb3f18de5f346f7d5df955194c233f6c6016a3599f786bc88d963a6daa",
       "size": 1482
-    },
-    {
-      "path": "validation/results/method_factory/plsc_v2/work/factory_boundary_resampling.recipe.json",
-      "sha256": "6d84db89018186ba1010653fe2fcda5f9f4ff9abaa8e5c2210c3c371a32fde69",
-      "size": 1484
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_boundary_single_indicator.recipe.json",
@@ -267,13 +262,13 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_plsc_v2_factory_evidence.py",
-      "sha256": "9d8249925d07ff3abf79eecea85a2dd32f9b13ad7d395f795c3229b77a7958c8",
-      "size": 3844
+      "sha256": "6e11bd652e864af3b5bc674389e718ffd18d516afd850bc842cbfa4c207af7ed",
+      "size": 4030
     }
   ]
 }

@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/pls-model-comparison-v1-qualification-work.json",
+  "title": "QuickPLS PLS model-comparison v1 fail-closed work artifacts",
+  "oneOf": [
+    { "$ref": "#/$defs/oracleWork" },
+    { "$ref": "#/$defs/factoryAudit" }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nonEmpty": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![A-Za-z]:)(?![/\\\\])(?!.*(?:^|[/\\\\])\\.\\.(?:[/\\\\]|$))[^\\\\]+$"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version"
+      ],
+      "properties": {
+        "qualification_id": { "const": "qpls3.comparison.pls_models.qualification_v2" },
+        "capability_id": { "const": "smartpls.pls_model_comparison" },
+        "cell_id": { "const": "qpls3.comparison.pls_models" },
+        "method_version": { "const": "pls_model_comparison_v1" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size_bytes", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/repositoryPath" },
+        "size_bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "booleanChecks": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "boolean" }
+    },
+    "workDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "descriptor_id",
+        "role",
+        "stage",
+        "status",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "required_check_ids",
+        "required_artifact_classes",
+        "current_artifacts",
+        "blockers",
+        "candidate_receipt_emitted",
+        "qualification_ready",
+        "promotion_allowed"
+      ],
+      "properties": {
+        "descriptor_id": { "$ref": "#/$defs/nonEmpty" },
+        "role": { "$ref": "#/$defs/nonEmpty" },
+        "stage": { "$ref": "#/$defs/nonEmpty" },
+        "status": { "enum": ["work_evidence_only", "blocked"] },
+        "source_set_sha256": { "$ref": "#/$defs/sha256" },
+        "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+        "required_check_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmpty" }
+        },
+        "required_artifact_classes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmpty" }
+        },
+        "current_artifacts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/artifact" }
+        },
+        "blockers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmpty" }
+        },
+        "candidate_receipt_emitted": { "const": false },
+        "qualification_ready": { "const": false },
+        "promotion_allowed": { "const": false }
+      }
+    },
+    "roleMatrixRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "status", "candidate_receipt_emitted", "qualification_ready"],
+      "properties": {
+        "role": { "$ref": "#/$defs/nonEmpty" },
+        "status": { "enum": ["work_evidence_only", "blocked"] },
+        "candidate_receipt_emitted": { "const": false },
+        "qualification_ready": { "const": false }
+      }
+    },
+    "oracleWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "report_kind",
+        "work_id",
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "source_artifacts",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "oracle_source",
+        "oracle_test_source",
+        "imports",
+        "oracle_result",
+        "oracle_result_sha256",
+        "checks",
+        "passed_work_checks",
+        "work_evidence_only",
+        "qualification_role_satisfied",
+        "receipt_eligible",
+        "qualification_ready",
+        "promotion_allowed",
+        "blockers"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "report_kind": { "const": "pls_model_comparison_v1_independent_oracle_work" },
+        "work_id": { "const": "pls_model_comparison_v1.oracle_micro_work.v1" },
+        "qualification_id": { "const": "qpls3.comparison.pls_models.qualification_v2" },
+        "capability_id": { "const": "smartpls.pls_model_comparison" },
+        "cell_id": { "const": "qpls3.comparison.pls_models" },
+        "method_version": { "const": "pls_model_comparison_v1" },
+        "source_artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/artifact" }
+        },
+        "source_set_sha256": { "$ref": "#/$defs/sha256" },
+        "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+        "oracle_source": { "$ref": "#/$defs/artifact" },
+        "oracle_test_source": { "$ref": "#/$defs/artifact" },
+        "imports": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmpty" }
+        },
+        "oracle_result": { "type": "object", "minProperties": 5 },
+        "oracle_result_sha256": { "$ref": "#/$defs/sha256" },
+        "checks": { "$ref": "#/$defs/booleanChecks" },
+        "passed_work_checks": { "const": true },
+        "work_evidence_only": { "const": true },
+        "qualification_role_satisfied": { "const": false },
+        "receipt_eligible": { "const": false },
+        "qualification_ready": { "const": false },
+        "promotion_allowed": { "const": false },
+        "blockers": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmpty" }
+        }
+      }
+    },
+    "factoryAudit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "report_kind",
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "spec_frozen_at_utc",
+        "spec_descriptor",
+        "oracle_work_report_descriptor",
+        "source_artifacts",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "checks",
+        "passed",
+        "role_matrix",
+        "work_descriptors",
+        "candidate_receipt_descriptors",
+        "attached_receipt_count",
+        "registry_mutated",
+        "manifest_mutated",
+        "qualification_spec_receipts_mutated",
+        "scientific_review_satisfied",
+        "qualification_ready",
+        "promotion_allowed",
+        "remaining_blockers",
+        "note"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "report_kind": { "const": "pls_model_comparison_v1_qualification_factory_audit" },
+        "qualification_id": { "const": "qpls3.comparison.pls_models.qualification_v2" },
+        "capability_id": { "const": "smartpls.pls_model_comparison" },
+        "cell_id": { "const": "qpls3.comparison.pls_models" },
+        "method_version": { "const": "pls_model_comparison_v1" },
+        "spec_frozen_at_utc": { "type": "string", "format": "date-time" },
+        "spec_descriptor": { "$ref": "#/$defs/artifact" },
+        "oracle_work_report_descriptor": { "$ref": "#/$defs/artifact" },
+        "source_artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/artifact" }
+        },
+        "source_set_sha256": { "$ref": "#/$defs/sha256" },
+        "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+        "checks": { "$ref": "#/$defs/booleanChecks" },
+        "passed": { "const": true },
+        "role_matrix": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "items": { "$ref": "#/$defs/roleMatrixRow" }
+        },
+        "work_descriptors": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "items": { "$ref": "#/$defs/workDescriptor" }
+        },
+        "candidate_receipt_descriptors": { "type": "array", "maxItems": 0 },
+        "attached_receipt_count": { "const": 0 },
+        "registry_mutated": { "const": false },
+        "manifest_mutated": { "const": false },
+        "qualification_spec_receipts_mutated": { "const": false },
+        "scientific_review_satisfied": { "const": false },
+        "qualification_ready": { "const": false },
+        "promotion_allowed": { "const": false },
+        "remaining_blockers": {
+          "type": "array",
+          "minItems": 14,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmpty" }
+        },
+        "note": { "$ref": "#/$defs/nonEmpty" }
+      }
+    }
+  }
+}

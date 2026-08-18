@@ -1,0 +1,123 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "checks": {
+      "applicability_matches_saved_skewness": true,
+      "archive_checksum_tamper_rejected": true,
+      "coefficient_and_t_consistency_required": true,
+      "dataset_fingerprint_mismatch_rejected": true,
+      "duplicate_path_diagnostics_rejected": true,
+      "exact_nested_method_version_required": true,
+      "exact_transform_identity_required": true,
+      "legacy_provenance_reinterpretation_rejected": true,
+      "malformed_uncertainty_rejected": true,
+      "resampling_reinterpretation_rejected": true,
+      "typed_result_round_trip": true
+    },
+    "executions": [
+      {
+        "execution": {
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "qpls-project",
+            "tests::runner_generated_endogeneity_appends_round_trips_and_rejects_contract_tampering",
+            "--",
+            "--exact"
+          ],
+          "duration_seconds": 3.799,
+          "returncode": 0,
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.10s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_endogeneity_appends_round_trips_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.24s\n\n"
+        },
+        "passed": true,
+        "test": "tests::runner_generated_endogeneity_appends_round_trips_and_rejects_contract_tampering"
+      },
+      {
+        "execution": {
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "qpls-project",
+            "tests::changed_payload_is_rejected_by_its_manifest_checksum",
+            "--",
+            "--exact"
+          ],
+          "duration_seconds": 2.472,
+          "returncode": 0,
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.06s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::changed_payload_is_rejected_by_its_manifest_checksum ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.07s\n\n"
+        },
+        "passed": true,
+        "test": "tests::changed_payload_is_rejected_by_its_manifest_checksum"
+      }
+    ],
+    "passed": true
+  },
+  "feature_id": "qpls3.pls.gaussian_copula_endogeneity",
+  "generated_at_utc": "2026-08-14T06:52:55.287757Z",
+  "method_version": "gaussian_copula_endogeneity_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "persistence_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+      "size": 114179
+    },
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "53f89d6d381d7c33b1e5f029d978e030a46a28d7d4bd47a2e17dc5b83bcbb387",
+      "size": 719445
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "0a3f76ad19f897ff2db63be729a92087d8d1cad6b926e4c6908294cdb62e97e0",
+      "size": 54934
+    },
+    {
+      "path": "validation/endogeneity_factory_common.py",
+      "sha256": "9ca62fb82ec04b4056d5c138a99e28c1dd5bf00a2c2c12ffa53b49b26bcd85e9",
+      "size": 14111
+    },
+    {
+      "path": "validation/endogeneity_persistence_gate.py",
+      "sha256": "2658b6fc3fdfe89937ca9f5e6b97459559886a64169ae21d7cfd6ef2df88a986",
+      "size": 2942
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/gaussian_copula_endogeneity_v1.manifest.json",
+      "sha256": "50e1445c9c8d7131eea334405e5454424982371154ac5d2774e83a5b6fc57320",
+      "size": 14698
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_endogeneity_factory.py",
+      "sha256": "1b2dbb224abd159e0f9179071f67a52dde6b23f227195b75d67cdcd24a203c92",
+      "size": 4689
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    }
+  ]
+}

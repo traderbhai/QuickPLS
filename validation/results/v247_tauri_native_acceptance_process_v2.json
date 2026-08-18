@@ -5,13 +5,13 @@
   "bootstrap_method_version": "regression_process_bootstrap_v1",
   "catalogue_snapshot_date": "2026-08-12",
   "passed": true,
-  "generatedAt": "2026-08-13T16:09:54.766Z",
+  "generatedAt": "2026-08-18T14:04:15.023Z",
   "endpoint": "http://127.0.0.1:9222",
   "runtime": "tauri-webview2-cdp",
   "focusedRun": {
     "scope": "process_v2",
     "priorGeneratedAt": null,
-    "completedAt": "2026-08-13T16:11:53.386Z"
+    "completedAt": "2026-08-18T14:13:11.257Z"
   },
   "checks": {
     "runtimePreflight": {
@@ -45,7 +45,8 @@
         "shellVisible": true,
         "tauriRuntime": true
       },
-      "sameOrigin": true
+      "sameOrigin": true,
+      "experimentalLabsPreferenceRestored": true
     },
     "processV2ReferenceFixture": {
       "path": "D:\\QuickPLS\\validation\\results\\process_v2_native_reference.csv",
@@ -107,11 +108,12 @@
     },
     "processV2FixtureProvisioning": {
       "sourceCsv": "D:\\QuickPLS\\validation\\results\\process_v2_native_reference.csv",
-      "project": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-1786637394764-61924.qpls",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-1787061855019-24928.qpls",
       "projectName": "Native Graph-Defined PROCESS v2 Acceptance",
       "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
-      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-process-v2-1786637394764-61924.qpls",
-      "stderr": ""
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-process-v2-1787061855019-24928.qpls",
+      "stderr": "",
+      "importAttempts": 1
     },
     "runtime": {
       "title": "QuickPLS",
@@ -184,14 +186,14 @@
           "terminalTransitionAllowed": false
         }
       },
-      "cancelledMessage": "Cancelled0%0%Calculation cancelled.Calculation log (5)9:40:13 pmCalculation cancelled.9:40:12 pmCancellation requested.9:40:12 pmNative calculation job started.9:40:12 pmFrontend readiness checks passed.9:40:12 pmGraph-Defined Path Analysis with Bootstrap requested."
+      "cancelledMessage": "Cancelled0%0%Calculation cancelled.Calculation log (5)7:34:39 pmCalculation cancelled.7:34:39 pmCancellation requested.7:34:39 pmNative calculation job started.7:34:39 pmFrontend readiness checks passed.7:34:39 pmGraph-Defined Path Analysis with Bootstrap requested."
     },
     "processV2CancelledRetrySetup": {
       "passed": true,
       "readOnly": true,
       "exactFrozenSetupMatch": true,
       "snapshot": {
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "regressionType": "process",
         "outcome": "Y",
@@ -279,7 +281,7 @@
         "graphDefinedWithoutNumberedTemplates": true
       },
       "frozenSetup": {
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "regressionType": "process",
         "outcome": "Y",
@@ -383,7 +385,7 @@
       "workers": 2,
       "seed": 20260812,
       "contract": {
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "regressionType": "process",
         "outcome": "Y",
@@ -531,7 +533,7 @@
       "noNaFabrication": true,
       "referenceEffectColumnsExact": true,
       "referenceConditionRowsExact": true,
-      "candidatePromotionWarningsExact": true,
+      "promotionPendingWarningAbsent": true,
       "curveWarningDisclosureExact": true,
       "accessibleNonColorPlotSemantics": true,
       "plotAccessibility": {
@@ -602,7 +604,7 @@
             "Property",
             "Value"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "Method version",
@@ -658,7 +660,7 @@
             "To",
             "Moderation"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "X->M1",
@@ -724,7 +726,7 @@
             "95% CI lower",
             "95% CI upper"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "M1",
@@ -1064,7 +1066,7 @@
             "BIC",
             "RMSE"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "M1",
@@ -1127,7 +1129,7 @@
             "Estimate",
             "Reference condition"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "direct:X->Y",
@@ -1181,7 +1183,7 @@
             "Moderator probe(s)",
             "Estimate"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "indirect:X->M3->Y@W=minus_1sd",
@@ -1224,7 +1226,7 @@
             "Moderator",
             "Estimate"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "index:X->M3->Y:X->M3:W",
@@ -1255,7 +1257,7 @@
             "95% CI lower",
             "95% CI upper"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "slope:moderation:X->M3@W@W=minus_1sd",
@@ -1393,7 +1395,7 @@
             "95% CI lower",
             "95% CI upper"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass. Exact engine-persisted plot points; no chart values are reconstructed by the exporter.",
+          "warning": "Exact engine-persisted plot points; no chart values are reconstructed by the exporter.",
           "values": [
             [
               "plot:moderation:X->M3@W",
@@ -4434,7 +4436,7 @@
             "Roots",
             "Reason"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "moderation:X->M3@W",
@@ -4521,7 +4523,7 @@
             "95% CI lower",
             "95% CI upper"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass. Exact engine-persisted Johnson-Neyman curve points; bootstrap validation witnesses are never exported.",
+          "warning": "Exact engine-persisted Johnson-Neyman curve points; internal bootstrap refit diagnostics are not exported.",
           "values": [
             [
               "moderation:X->M3@W",
@@ -7864,7 +7866,7 @@
             "Property",
             "Value"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass. PROCESS bootstrap v1 uses deterministic indexed complete-case resampling with replacement; percentile intervals are primary and BCa intervals require every delete-one fit. PROCESS bootstrap ratio tests use the original effect divided by its bootstrap standard error with a fixed two-sided standard-normal reference.",
+          "warning": "PROCESS bootstrap v1 uses deterministic indexed complete-case resampling with replacement; percentile intervals are primary and BCa intervals require every delete-one fit. PROCESS bootstrap ratio tests use the original effect divided by its bootstrap standard error with a fixed two-sided standard-normal reference.",
           "values": [
             [
               "Method version",
@@ -7927,7 +7929,7 @@
             "Reason code",
             "Message"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "",
@@ -7951,7 +7953,7 @@
             "Percentile upper",
             "Usable"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "direct:X->Y",
@@ -8278,7 +8280,7 @@
             "BCa upper",
             "Reason"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "direct:X->Y",
@@ -8504,7 +8506,7 @@
             "Item",
             "Disclosure"
           ],
-          "warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
+          "warning": "",
           "values": [
             [
               "Implementation",
@@ -8515,7 +8517,7 @@
               "PROCESS v2 uses raw listwise-complete OLS equations with HC3 covariance and fixed two-sided 95% Student-t inference; unsupported shapes are rejected."
             ],
             [
-              "Supported scope",
+              "Requirements",
               "Graph-defined observed-variable path analysis with raw listwise-complete OLS equations, HC3 covariance, fixed two-sided 95% Student-t inference, parallel and serial mediation, continuous or exact 0/1 moderation, mixed two-moderator interactions, first- or second-stage moderated mediation, simple slopes, and Johnson-Neyman regions where applicable. This release supports up to 8 selected predictors in graph-role order and one control entered in every equation; the 50-term ceiling is an equation-design safety bound. Continuous product participants are centered within each equation sample. Numbered macros, binary outcomes, weights, clusters, custom alpha or tails, studentized intervals, multiple moderated stages on one indirect path, and three-way interactions on mediated paths are excluded."
             ],
             [
@@ -8531,20 +8533,20 @@
       "passed": true,
       "nativeXlsx": {
         "attempted": true,
-        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx",
         "helper": {
           "ready": {
             "event": "ready",
             "mainWindow": {
               "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-              "handle": 13240468,
-              "pid": 9284,
+              "handle": 3605060,
+              "pid": 29224,
               "title": "QuickPLS"
             },
             "passed": true,
             "phase": "main_window_binding",
             "resultsRoot": "D:\\QuickPLS\\validation\\results",
-            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx"
           },
           "completion": {
             "boundControls": {
@@ -8553,23 +8555,23 @@
             },
             "dialog": {
               "className": "#32770",
-              "directOwner": 13240468,
-              "handle": 18942166,
-              "pid": 9284,
-              "rootOwner": 13240468,
+              "directOwner": 3605060,
+              "handle": 3277930,
+              "pid": 29224,
+              "rootOwner": 3605060,
               "title": "Save As"
             },
             "event": "complete",
             "mainWindow": {
               "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-              "handle": 13240468,
-              "pid": 9284,
+              "handle": 3605060,
+              "pid": 29224,
               "title": "QuickPLS"
             },
             "passed": true,
             "phase": "xlsx_creation_and_readback",
             "saveSubmission": {
-              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx",
               "filenameBefore": "quickpls-result-tables",
               "filenameVerified": true,
               "saveButtonEnabled": true,
@@ -8578,17 +8580,17 @@
                 {
                   "attempt": 1,
                   "settledReads": [
-                    "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
-                    "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
+                    "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx"
                   ]
                 }
               ],
               "submissionMethod": "BM_CLICK",
-              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx"
             },
-            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx",
             "workbook": {
-              "path": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx",
               "requiredSharedStrings": [
                 "Graph-Defined Path Analysis with Bootstrap",
                 "regression_process_v2",
@@ -8601,9 +8603,8 @@
                 "Estimate",
                 "Reference condition",
                 "Continuous moderators are evaluated at their original complete-sample raw means (coded 0); binary moderators are evaluated at 0.",
-                "experimental",
-                "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
-                "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass. Exact engine-persisted Johnson-Neyman curve points; bootstrap validation witnesses are never exported."
+                "validated",
+                "Exact engine-persisted Johnson-Neyman curve points; internal bootstrap refit diagnostics are not exported."
               ],
               "requiredSheets": [
                 "Model summary",
@@ -8624,7 +8625,7 @@
                 "Scope and provenance",
                 "Run provenance"
               ],
-              "sha256": "d2c0fac1a74efa13530885b4ae80cf8b3830b560123a5de277820fe718e9185a",
+              "sha256": "0b8b0dd189b22d035d40aed01e43c9766a761c71d390a6513e4475c75c68c38f",
               "sheetNames": [
                 "Model summary",
                 "Directed paths",
@@ -8644,7 +8645,7 @@
                 "Scope and provenance",
                 "Run provenance"
               ],
-              "size": 55317
+              "size": 55201
             },
             "transport": {
               "exitCode": 0,
@@ -8655,14 +8656,14 @@
                   "event": "ready",
                   "mainWindow": {
                     "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-                    "handle": 13240468,
-                    "pid": 9284,
+                    "handle": 3605060,
+                    "pid": 29224,
                     "title": "QuickPLS"
                   },
                   "passed": true,
                   "phase": "main_window_binding",
                   "resultsRoot": "D:\\QuickPLS\\validation\\results",
-                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx"
                 },
                 {
                   "boundControls": {
@@ -8671,23 +8672,23 @@
                   },
                   "dialog": {
                     "className": "#32770",
-                    "directOwner": 13240468,
-                    "handle": 18942166,
-                    "pid": 9284,
-                    "rootOwner": 13240468,
+                    "directOwner": 3605060,
+                    "handle": 3277930,
+                    "pid": 29224,
+                    "rootOwner": 3605060,
                     "title": "Save As"
                   },
                   "event": "complete",
                   "mainWindow": {
                     "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-                    "handle": 13240468,
-                    "pid": 9284,
+                    "handle": 3605060,
+                    "pid": 29224,
                     "title": "QuickPLS"
                   },
                   "passed": true,
                   "phase": "xlsx_creation_and_readback",
                   "saveSubmission": {
-                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx",
                     "filenameBefore": "quickpls-result-tables",
                     "filenameVerified": true,
                     "saveButtonEnabled": true,
@@ -8696,17 +8697,17 @@
                       {
                         "attempt": 1,
                         "settledReads": [
-                          "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
-                          "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
+                          "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx"
                         ]
                       }
                     ],
                     "submissionMethod": "BM_CLICK",
-                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx"
                   },
-                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx",
                   "workbook": {
-                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260818-193412166.xlsx",
                     "requiredSharedStrings": [
                       "Graph-Defined Path Analysis with Bootstrap",
                       "regression_process_v2",
@@ -8719,9 +8720,8 @@
                       "Estimate",
                       "Reference condition",
                       "Continuous moderators are evaluated at their original complete-sample raw means (coded 0); binary moderators are evaluated at 0.",
-                      "experimental",
-                      "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
-                      "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass. Exact engine-persisted Johnson-Neyman curve points; bootstrap validation witnesses are never exported."
+                      "validated",
+                      "Exact engine-persisted Johnson-Neyman curve points; internal bootstrap refit diagnostics are not exported."
                     ],
                     "requiredSheets": [
                       "Model summary",
@@ -8742,7 +8742,7 @@
                       "Scope and provenance",
                       "Run provenance"
                     ],
-                    "sha256": "d2c0fac1a74efa13530885b4ae80cf8b3830b560123a5de277820fe718e9185a",
+                    "sha256": "0b8b0dd189b22d035d40aed01e43c9766a761c71d390a6513e4475c75c68c38f",
                     "sheetNames": [
                       "Model summary",
                       "Directed paths",
@@ -8762,7 +8762,7 @@
                       "Scope and provenance",
                       "Run provenance"
                     ],
-                    "size": 55317
+                    "size": 55201
                   }
                 }
               ],
@@ -8770,9 +8770,9 @@
             }
           }
         },
-        "appFeedback": "Saved v247-native-process-v2-20260813-213951987.xlsx.",
+        "appFeedback": "Saved v247-native-process-v2-20260818-193412166.xlsx.",
         "file": {
-          "size": 55317,
+          "size": 55201,
           "isFile": true
         },
         "workbookSheets": [
@@ -8806,9 +8806,9 @@
           ],
           "reference_effect_rows": 6,
           "reference_condition": "Continuous moderators are evaluated at their original complete-sample raw means (coded 0); binary moderators are evaluated at 0.",
-          "candidate_status": "experimental",
-          "promotion_pending_warning": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
-          "curve_warning_disclosure": "Exact engine-persisted Johnson-Neyman curve points; bootstrap validation witnesses are never exported.",
+          "result_status": "validated",
+          "promotion_pending_warning_absent": true,
+          "curve_warning_disclosure": "Exact engine-persisted Johnson-Neyman curve points; internal bootstrap refit diagnostics are not exported.",
           "curve_warning_disclosure_exact": true,
           "required_shared_strings_verified": true
         },
@@ -8908,23 +8908,23 @@
     },
     "processV2ResourceResetClone": {
       "passed": true,
-      "originalPath": "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
-      "resetPath": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
+      "originalPath": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
+      "resetPath": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls",
       "distinctPath": true,
       "originalArchive": {
-        "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
-        "size": 2317816,
-        "sha256": "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a"
+        "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
+        "size": 2317966,
+        "sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e"
       },
       "resetArchive": {
-        "path": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
-        "size": 2317816,
-        "sha256": "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a"
+        "path": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls",
+        "size": 2317966,
+        "sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e"
       },
       "identity": {
-        "resultId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
-        "recipeId": "e1db2325-9a63-49f3-b580-d9b1b460bd26",
-        "runId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
+        "resultId": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
+        "recipeId": "de6d26d3-1767-4eaf-ac45-497a24194d7f",
+        "runId": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
         "resultCount": 1,
         "recipeCount": 1,
         "witnessCount": 1
@@ -8934,140 +8934,140 @@
         "completedResultCount": 1,
         "witnessCount": 1,
         "completedRunIds": [
-          "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+          "edd1fd08-6b44-4fc1-8299-3a94b086369e"
         ],
         "witnessRunIds": [
-          "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+          "edd1fd08-6b44-4fc1-8299-3a94b086369e"
         ],
         "recipeIds": [
-          "e1db2325-9a63-49f3-b580-d9b1b460bd26"
+          "de6d26d3-1767-4eaf-ac45-497a24194d7f"
         ],
         "recipeCount": 1,
         "workspaceRunIds": [
-          "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+          "edd1fd08-6b44-4fc1-8299-3a94b086369e"
         ],
-        "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+        "selectedRunId": "edd1fd08-6b44-4fc1-8299-3a94b086369e"
       },
       "sidecarsBeforeCopy": {
-        "prefix": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
+        "prefix": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls",
         "coversEverySiblingPrefix": true,
         "present": [],
         "artifacts": []
       },
       "sidecarsAfterCopy": {
-        "prefix": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
+        "prefix": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls",
         "coversEverySiblingPrefix": true,
         "present": [],
         "artifacts": []
       },
       "sidecarsBeforeOpen": {
-        "prefix": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
+        "prefix": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls",
         "coversEverySiblingPrefix": true,
         "present": [],
         "artifacts": []
       },
       "settledAutosave": {
-        "prefix": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
+        "prefix": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls",
         "coversEverySiblingPrefix": true,
         "present": [
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave.identity.json"
         ],
         "artifacts": [
           {
-            "path": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
-            "size": 2311374,
-            "sha256": "aeeebeba631ef4be4bd5bdd7281a0d32b69822c5a3471771ed5fddbf99f1c3e5"
+            "path": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave",
+            "size": 2317967,
+            "sha256": "de8c6a7a601d0e142168f181ed220d20f9035d4f337649f84e69a14436ef2354"
           },
           {
-            "path": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json",
+            "path": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave.identity.json",
             "size": 108,
-            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
+            "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
           }
         ],
         "required": [
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave.identity.json"
         ],
         "allowed": [
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.bak",
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave.bak",
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave.identity.json"
         ],
         "missing": [],
         "forbidden": [],
         "exactAllowedIdentity": true,
-        "autosavePath": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
+        "autosavePath": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave",
         "logicalState": {
           "manifestValid": true,
           "completedResultCount": 1,
           "witnessCount": 1,
           "completedRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
           "witnessRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
           "recipeIds": [
-            "e1db2325-9a63-49f3-b580-d9b1b460bd26"
+            "de6d26d3-1767-4eaf-ac45-497a24194d7f"
           ],
           "recipeCount": 1,
           "workspaceRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
-          "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+          "selectedRunId": "edd1fd08-6b44-4fc1-8299-3a94b086369e"
         }
       },
       "autosaveAfterCheckpoint": {
-        "prefix": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
+        "prefix": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls",
         "coversEverySiblingPrefix": true,
         "present": [
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave.identity.json"
         ],
         "artifacts": [
           {
-            "path": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
-            "size": 2311374,
-            "sha256": "aeeebeba631ef4be4bd5bdd7281a0d32b69822c5a3471771ed5fddbf99f1c3e5"
+            "path": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave",
+            "size": 2317967,
+            "sha256": "de8c6a7a601d0e142168f181ed220d20f9035d4f337649f84e69a14436ef2354"
           },
           {
-            "path": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json",
+            "path": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave.identity.json",
             "size": 108,
-            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
+            "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
           }
         ],
         "required": [
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave.identity.json"
         ],
         "allowed": [
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.bak",
-          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave.bak",
+          "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave.identity.json"
         ],
         "missing": [],
         "forbidden": [],
         "exactAllowedIdentity": true,
-        "autosavePath": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
+        "autosavePath": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls.autosave",
         "logicalState": {
           "manifestValid": true,
           "completedResultCount": 1,
           "witnessCount": 1,
           "completedRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
           "witnessRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
           "recipeIds": [
-            "e1db2325-9a63-49f3-b580-d9b1b460bd26"
+            "de6d26d3-1767-4eaf-ac45-497a24194d7f"
           ],
           "recipeCount": 1,
           "workspaceRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
-          "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+          "selectedRunId": "edd1fd08-6b44-4fc1-8299-3a94b086369e"
         }
       },
       "recoveryDisclosureAbsent": true,
@@ -9089,7 +9089,7 @@
         "process_bootstrap_bca",
         "process_scope"
       ],
-      "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
+      "selectedRunId": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
       "selectedTableId": "process_model_summary"
     },
     "processV2WitnessBoundary": {
@@ -9130,217 +9130,217 @@
         "bootstrapInference": 24
       },
       "settledAutosave": {
-        "prefix": "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
+        "prefix": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
         "coversEverySiblingPrefix": true,
         "present": [
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json"
         ],
         "artifacts": [
           {
-            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-            "size": 2311374,
-            "sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+            "size": 2317967,
+            "sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
             "size": 108,
-            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
+            "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-            "size": 12709,
-            "sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+            "size": 12707,
+            "sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json",
             "size": 108,
-            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
+            "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
           }
         ],
         "required": [
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json"
         ],
         "allowed": [
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.bak",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json"
         ],
         "missing": [],
         "forbidden": [],
         "exactAllowedIdentity": true,
-        "autosavePath": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+        "autosavePath": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
         "logicalState": {
           "manifestValid": true,
           "completedResultCount": 1,
           "witnessCount": 1,
           "completedRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
           "witnessRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
           "recipeIds": [
-            "e1db2325-9a63-49f3-b580-d9b1b460bd26"
+            "de6d26d3-1767-4eaf-ac45-497a24194d7f"
           ],
           "recipeCount": 1,
           "workspaceRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
-          "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+          "selectedRunId": "edd1fd08-6b44-4fc1-8299-3a94b086369e"
         },
         "capturedArtifacts": [
           {
-            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-            "source_size": 2311374,
-            "source_sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+            "source_size": 2317967,
+            "source_sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-0.bin",
-              "size": 2311374,
-              "sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-0.bin",
+              "size": 2317967,
+              "sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
             "source_size": 108,
-            "source_sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
+            "source_sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-1.bin",
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-1.bin",
               "size": 108,
-              "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
+              "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-            "source_size": 12709,
-            "source_sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+            "source_size": 12707,
+            "source_sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-2.bin",
-              "size": 12709,
-              "sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-2.bin",
+              "size": 12707,
+              "sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json",
             "source_size": 108,
-            "source_sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
+            "source_sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-3.bin",
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-3.bin",
               "size": 108,
-              "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
+              "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
             }
           }
         ]
       },
       "autosaveAfterCheckpoint": {
-        "prefix": "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
+        "prefix": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
         "coversEverySiblingPrefix": true,
         "present": [
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json"
         ],
         "artifacts": [
           {
-            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-            "size": 2311374,
-            "sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+            "size": 2317967,
+            "sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
             "size": 108,
-            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
+            "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-            "size": 12709,
-            "sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+            "size": 12707,
+            "sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json",
             "size": 108,
-            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
+            "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
           }
         ],
         "required": [
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json"
         ],
         "allowed": [
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.bak",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json"
         ],
         "missing": [],
         "forbidden": [],
         "exactAllowedIdentity": true,
-        "autosavePath": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+        "autosavePath": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
         "logicalState": {
           "manifestValid": true,
           "completedResultCount": 1,
           "witnessCount": 1,
           "completedRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
           "witnessRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
           "recipeIds": [
-            "e1db2325-9a63-49f3-b580-d9b1b460bd26"
+            "de6d26d3-1767-4eaf-ac45-497a24194d7f"
           ],
           "recipeCount": 1,
           "workspaceRunIds": [
-            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
           ],
-          "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+          "selectedRunId": "edd1fd08-6b44-4fc1-8299-3a94b086369e"
         },
         "capturedArtifacts": [
           {
-            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-            "source_size": 2311374,
-            "source_sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+            "source_size": 2317967,
+            "source_sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-0.bin",
-              "size": 2311374,
-              "sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-0.bin",
+              "size": 2317967,
+              "sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
             "source_size": 108,
-            "source_sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
+            "source_sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-1.bin",
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-1.bin",
               "size": 108,
-              "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
+              "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-            "source_size": 12709,
-            "source_sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+            "source_size": 12707,
+            "source_sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-2.bin",
-              "size": 12709,
-              "sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-2.bin",
+              "size": 12707,
+              "sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json",
             "source_size": 108,
-            "source_sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
+            "source_sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-3.bin",
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-3.bin",
               "size": 108,
-              "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
+              "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
             }
           }
         ]
@@ -9350,8 +9350,8 @@
           "schemaVersion": 5,
           "engineVersion": "2.46.0",
           "checksumAlgorithm": "sha256",
-          "declaredProjectChecksum": "30c961ac4f100440032efd148f29477bab0d1ece8484d6bcd9b86c2a60635d30",
-          "calculatedProjectChecksum": "30c961ac4f100440032efd148f29477bab0d1ece8484d6bcd9b86c2a60635d30",
+          "declaredProjectChecksum": "7e1af96fbfab21018e5c22b3cab1752cbaf376051ee98ca4204ca59844925166",
+          "calculatedProjectChecksum": "7e1af96fbfab21018e5c22b3cab1752cbaf376051ee98ca4204ca59844925166",
           "projectChecksumMatches": true
         },
         "resultStatus": "completed",
@@ -9447,16 +9447,16 @@
           "jackknifeIndexPartitionExact": true
         },
         "identity": {
-          "resultId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
-          "recipeId": "e1db2325-9a63-49f3-b580-d9b1b460bd26",
-          "runId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
+          "resultId": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
+          "recipeId": "de6d26d3-1767-4eaf-ac45-497a24194d7f",
+          "runId": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
           "resultCount": 1,
           "recipeCount": 1,
           "witnessCount": 1
         },
         "recipe": {
           "schemaVersion": 3,
-          "status": "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope",
+          "status": "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope",
           "settings": {
             "method": "regression",
             "weighting_scheme": "path",
@@ -9572,23 +9572,23 @@
     "processV2RepeatedCompletion": {
       "passed": true,
       "activeLifecycleCaptured": true,
-      "priorRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
-      "repeatedRunId": "57414f8f-0a75-4572-aafe-775e58db3388",
+      "priorRunId": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
+      "repeatedRunId": "a0d09b32-aa17-4167-9bd0-38540354fcbd",
       "completedRunIdsBefore": [
-        "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+        "edd1fd08-6b44-4fc1-8299-3a94b086369e"
       ],
       "completedRunIdsAfter": [
-        "57414f8f-0a75-4572-aafe-775e58db3388",
-        "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+        "a0d09b32-aa17-4167-9bd0-38540354fcbd",
+        "edd1fd08-6b44-4fc1-8299-3a94b086369e"
       ],
       "addedRunIds": [
-        "57414f8f-0a75-4572-aafe-775e58db3388"
+        "a0d09b32-aa17-4167-9bd0-38540354fcbd"
       ],
       "completedRunCountBefore": 1,
       "completedRunCount": 2,
       "uniqueCompletedRunCount": 2,
-      "autoSelectedRunId": "57414f8f-0a75-4572-aafe-775e58db3388",
-      "explicitlySelectedRunId": "57414f8f-0a75-4572-aafe-775e58db3388",
+      "autoSelectedRunId": "a0d09b32-aa17-4167-9bd0-38540354fcbd",
+      "explicitlySelectedRunId": "a0d09b32-aa17-4167-9bd0-38540354fcbd",
       "initialSelectedTable": "process_model_summary"
     },
     "recentProjectsRestored": true
@@ -9604,6 +9604,58 @@
     "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\187-tauri-native-process-v2-export-1536x794.png",
     "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\188-tauri-native-process-v2-reopened-1536x794.png",
     "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\189-tauri-native-process-v2-repeated-running-1536x794.png"
+  ],
+  "screenshotArtifacts": [
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/180-tauri-native-process-v2-fixture-data-1536x794.png",
+      "size": 289690,
+      "sha256": "f092fcc2602b8c57e19d319e59a6e40c102873fab035e46bea2e907324c0ca2a"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/181-tauri-native-process-v2-cancellation-dialog-1536x794.png",
+      "size": 315109,
+      "sha256": "15f1fab3a8bb35af1cc1b38d666e19bcd2bc40576102f16cb320cb0a01fc9b4d"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/182-tauri-native-process-v2-cancellation-running-1536x794.png",
+      "size": 232672,
+      "sha256": "22a3640bd66499d6a0dd8fabdd64f136ec5a5e78d63720e4d8fc5a1c6a658d47"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/183-tauri-native-process-v2-cancelled-1536x794.png",
+      "size": 289545,
+      "sha256": "a036f47c807ed54fe5ed89d3694f765af6f753091cb621873957b2bab60caa12"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/184-tauri-native-process-v2-dialog-1536x794.png",
+      "size": 289545,
+      "sha256": "a036f47c807ed54fe5ed89d3694f765af6f753091cb621873957b2bab60caa12"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/185-tauri-native-process-v2-running-1536x794.png",
+      "size": 232661,
+      "sha256": "71184753242ade87a02ba62f4d3e8a5e763253110e5422a2245652f6da3ff3d3"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/186-tauri-native-process-v2-results-1536x794.png",
+      "size": 212788,
+      "sha256": "299446a4de83370ea0b26a4e6342b8ca615d6cd9e126202dd060e6b56cde5763"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/187-tauri-native-process-v2-export-1536x794.png",
+      "size": 219631,
+      "sha256": "e564332ea97e4451dbd904293f5dd53d8bd38b13e3c1867cc67a5f12bd1d8d8b"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/188-tauri-native-process-v2-reopened-1536x794.png",
+      "size": 211526,
+      "sha256": "cc92ab7f4f16e262734dbd4c5ae191d6778e77f8670a022d984d90e94bb557e0"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/189-tauri-native-process-v2-repeated-running-1536x794.png",
+      "size": 232672,
+      "sha256": "22a3640bd66499d6a0dd8fabdd64f136ec5a5e78d63720e4d8fc5a1c6a658d47"
+    }
   ],
   "consoleErrors": [],
   "failures": []

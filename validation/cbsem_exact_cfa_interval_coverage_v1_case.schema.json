@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem_exact_cfa_interval_coverage_v1_case.schema.json",
+  "title": "QuickPLS exact-CFA interval coverage shard case v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "status", "qualification_status", "manifest_sha256", "binary_sha256", "shard", "environment", "dataset_receipts", "worker_replay", "cancellation", "retained_full_audit_results", "retention_policy"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "cbsem_exact_cfa_interval_coverage_shard_case_v1"},
+    "status": {"enum": ["accepted_validation_shard", "rejected_validation_shard"]},
+    "qualification_status": {"const": "blocked_not_product_qualification"},
+    "manifest_sha256": {"$ref": "#/$defs/sha"},
+    "binary_sha256": {"$ref": "#/$defs/sha"},
+    "shard": {"$ref": "#/$defs/shard"},
+    "environment": {"$ref": "#/$defs/environment"},
+    "dataset_receipts": {"type": "array", "items": {"$ref": "#/$defs/datasetReceipt"}, "minItems": 1, "maxItems": 100},
+    "worker_replay": {"oneOf": [{"$ref": "#/$defs/replay"}, {"type": "null"}]},
+    "cancellation": {"oneOf": [{"$ref": "#/$defs/cancellation"}, {"type": "null"}]},
+    "retained_full_audit_results": {"type": "array", "items": {"$ref": "#/$defs/retained"}, "minItems": 1},
+    "retention_policy": {"$ref": "#/$defs/retention"}
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "finite": {"type": "number"},
+    "nullableFinite": {"oneOf": [{"$ref": "#/$defs/finite"}, {"type": "null"}]},
+    "shard": {
+      "type": "object", "additionalProperties": false,
+      "required": ["shard_id", "stage", "dgp_id", "shard_ordinal", "dataset_indices", "replicates", "workers", "executable"],
+      "properties": {
+        "shard_id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+        "stage": {"enum": ["conformance", "pilot"]},
+        "dgp_id": {"enum": ["dgp_a_one_factor_n150", "dgp_b_two_factor_n300"]},
+        "shard_ordinal": {"type": "integer", "minimum": 0},
+        "dataset_indices": {"type": "array", "items": {"type": "integer", "minimum": 0}, "minItems": 1, "maxItems": 100, "uniqueItems": true},
+        "replicates": {"enum": [500, 5000]}, "workers": {"const": 12}, "executable": {"const": true}
+      }
+    },
+    "environment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["os", "os_release", "architecture", "logical_cores", "python", "numpy", "scipy"],
+      "properties": {
+        "os": {"type": "string"}, "os_release": {"type": "string"}, "architecture": {"type": "string"},
+        "logical_cores": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]},
+        "python": {"type": "string"}, "numpy": {"type": "string"}, "scipy": {"type": "string"}
+      }
+    },
+    "seeds": {
+      "type": "object", "additionalProperties": false,
+      "required": ["data", "bootstrap", "oracle"],
+      "properties": {"data": {"type": "integer", "minimum": 0}, "bootstrap": {"type": "integer", "minimum": 0}, "oracle": {"type": "integer", "minimum": 0}}
+    },
+    "pointCountMap": {
+      "type": "object", "additionalProperties": false,
+      "required": ["inadmissible_solution", "moment_matrix_not_positive_definite", "non_convergence", "numerical_failure"],
+      "properties": {
+        "inadmissible_solution": {"type": "integer", "minimum": 0},
+        "moment_matrix_not_positive_definite": {"type": "integer", "minimum": 0},
+        "non_convergence": {"type": "integer", "minimum": 0},
+        "numerical_failure": {"type": "integer", "minimum": 0}
+      }
+    },
+    "seCountMap": {
+      "type": "object", "additionalProperties": false,
+      "required": ["derivative_unavailable", "information_not_positive_definite", "invalid_information_variance_or_standard_error", "numerical_information_failure", "singular_information"],
+      "properties": {
+        "derivative_unavailable": {"type": "integer", "minimum": 0},
+        "information_not_positive_definite": {"type": "integer", "minimum": 0},
+        "invalid_information_variance_or_standard_error": {"type": "integer", "minimum": 0},
+        "numerical_information_failure": {"type": "integer", "minimum": 0},
+        "singular_information": {"type": "integer", "minimum": 0}
+      }
+    },
+    "ledger": {
+      "type": "object", "additionalProperties": false,
+      "required": ["requested_replicates", "point_successes", "point_failures", "point_failure_counts_by_kind", "studentized_usable", "standard_error_unavailable", "standard_error_unavailable_counts_by_reason", "delete_one_successes", "delete_one_failures", "delete_one_failure_counts_by_kind", "failure_rate_inference_unit"],
+      "properties": {
+        "requested_replicates": {"enum": [500, 5000]}, "point_successes": {"type": "integer", "minimum": 0}, "point_failures": {"type": "integer", "minimum": 0},
+        "point_failure_counts_by_kind": {"$ref": "#/$defs/pointCountMap"}, "studentized_usable": {"type": "integer", "minimum": 0},
+        "standard_error_unavailable": {"type": "integer", "minimum": 0}, "standard_error_unavailable_counts_by_reason": {"$ref": "#/$defs/seCountMap"},
+        "delete_one_successes": {"type": "integer", "minimum": 0}, "delete_one_failures": {"type": "integer", "minimum": 0},
+        "delete_one_failure_counts_by_kind": {"$ref": "#/$defs/pointCountMap"},
+        "failure_rate_inference_unit": {"const": "dataset_not_bootstrap_replicate"}
+      }
+    },
+    "parameterOutcome": {
+      "type": "object", "additionalProperties": false,
+      "required": ["parameter_id", "available", "interval_lower", "interval_upper", "covered_unconditional", "covered_conditional"],
+      "properties": {
+        "parameter_id": {"type": "string", "minLength": 1}, "available": {"type": "boolean"},
+        "interval_lower": {"$ref": "#/$defs/nullableFinite"}, "interval_upper": {"$ref": "#/$defs/nullableFinite"},
+        "covered_unconditional": {"oneOf": [{"type": "boolean"}, {"type": "null"}]},
+        "covered_conditional": {"oneOf": [{"type": "boolean"}, {"type": "null"}]}
+      }
+    },
+    "method": {
+      "type": "object", "additionalProperties": false,
+      "required": ["method", "available", "parameters"],
+      "properties": {
+        "method": {"enum": ["percentile", "studentized", "bca"]}, "available": {"type": "boolean"},
+        "parameters": {"type": "array", "items": {"$ref": "#/$defs/parameterOutcome"}, "minItems": 1, "maxItems": 13}
+      }
+    },
+    "oracle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "status", "parameter_count", "requested_replicates", "point_successes", "point_failures", "studentized_usable", "delete_one_successes", "delete_one_failures", "base_inference_available", "studentized_inference_available", "bca_inference_available", "endpoint_checks", "arithmetic_checks", "endpoint_relative_tolerance", "percentile_mean_validation_method", "percentile_bias_binding_method", "bca_acceleration_method", "bca_adjusted_probability_method", "reasons"],
+      "properties": {
+        "schema_version": {"const": 1}, "kind": {"const": "cbsem_exact_cfa_interval_coverage_oracle_receipt_v1"}, "status": {"enum": ["accepted", "rejected"]},
+        "parameter_count": {"enum": [6, 13]}, "requested_replicates": {"enum": [500, 5000]},
+        "point_successes": {"type": "integer", "minimum": 0}, "point_failures": {"type": "integer", "minimum": 0}, "studentized_usable": {"type": "integer", "minimum": 0},
+        "delete_one_successes": {"type": "integer", "minimum": 0}, "delete_one_failures": {"type": "integer", "minimum": 0},
+        "base_inference_available": {"type": "boolean"}, "studentized_inference_available": {"type": "boolean"}, "bca_inference_available": {"type": "boolean"},
+        "endpoint_checks": {"type": "integer", "minimum": 0}, "arithmetic_checks": {"type": "integer", "minimum": 0}, "endpoint_relative_tolerance": {"const": 1e-12},
+        "percentile_mean_validation_method": {"const": "math_fsum_reference_higham_gamma_b_minus_1_outward_binary64_v1"},
+        "percentile_bias_binding_method": {"const": "observed_mean_minus_point_binary64_bit_exact_v1"},
+        "bca_acceleration_method": {"const": "complete_delete_one_jackknife_neumaier_mean_squares_cubes_acceleration_v2"},
+        "bca_adjusted_probability_method": {"const": "efron_bca_statrs_inverse_normal_libm_erfc_cdf_adjustment_v2"},
+        "reasons": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "datasetReceipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dataset_index", "status", "manifest_sha256", "dgp_id", "stage", "seeds", "data_sha256", "scientific_result_sha256", "digest_authentication", "integrity_reasons", "coverage_evaluated", "ledger", "methods", "oracle"],
+      "properties": {
+        "dataset_index": {"type": "integer", "minimum": 0}, "status": {"enum": ["accepted", "rejected"]}, "manifest_sha256": {"$ref": "#/$defs/sha"},
+        "dgp_id": {"enum": ["dgp_a_one_factor_n150", "dgp_b_two_factor_n300"]}, "stage": {"enum": ["conformance", "pilot"]},
+        "seeds": {"$ref": "#/$defs/seeds"}, "data_sha256": {"$ref": "#/$defs/sha"},
+        "scientific_result_sha256": {"oneOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]},
+        "digest_authentication": {"oneOf": [{"$ref": "#/$defs/digestAuthentication"}, {"type": "null"}]},
+        "integrity_reasons": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "coverage_evaluated": {"type": "boolean"}, "ledger": {"oneOf": [{"$ref": "#/$defs/ledger"}, {"type": "null"}]},
+        "methods": {"type": "array", "items": {"$ref": "#/$defs/method"}, "maxItems": 3},
+        "oracle": {"oneOf": [{"$ref": "#/$defs/oracle"}, {"type": "null"}]}
+      }
+    },
+    "replay": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "dataset_index", "primary_workers", "replay_workers", "primary_scientific_result_sha256", "replay_scientific_result_sha256", "digest_authentication", "reasons"],
+      "properties": {
+        "status": {"enum": ["accepted", "rejected"]}, "dataset_index": {"type": "integer", "minimum": 0}, "primary_workers": {"const": 12}, "replay_workers": {"const": 1},
+        "primary_scientific_result_sha256": {"oneOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]}, "replay_scientific_result_sha256": {"oneOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]},
+        "digest_authentication": {"oneOf": [{"$ref": "#/$defs/digestAuthentication"}, {"type": "null"}]},
+        "reasons": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "cancellation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "dgp_id", "dataset_index", "phase", "bootstrap_seed", "data_sha256", "terminal_latency_seconds", "maximum_terminal_latency_seconds", "orphan_processes", "maximum_orphan_processes", "reasons"],
+      "properties": {
+        "status": {"enum": ["accepted", "rejected"]}, "dgp_id": {"enum": ["dgp_a_one_factor_n150", "dgp_b_two_factor_n300"]}, "dataset_index": {"const": 0}, "phase": {"enum": ["bootstrap", "jackknife"]},
+        "bootstrap_seed": {"type": "integer", "minimum": 0}, "data_sha256": {"$ref": "#/$defs/sha"}, "terminal_latency_seconds": {"$ref": "#/$defs/nullableFinite"},
+        "maximum_terminal_latency_seconds": {"const": 1.0}, "orphan_processes": {"type": "integer", "minimum": 0}, "maximum_orphan_processes": {"const": 0}, "reasons": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "retained": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_kind", "dataset_index", "path", "sha256"],
+      "properties": {"artifact_kind": {"enum": ["dataset", "worker_replay", "cancellation_bootstrap", "cancellation_jackknife"]}, "dataset_index": {"type": "integer", "minimum": 0}, "path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha"}}
+    },
+    "digestAuthentication": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "status", "method", "document_typed_sha256", "scientific_result_sha256", "compact_evidence_typed_sha256", "data_sha256", "source_dataset_fingerprint", "checks", "reasons"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "kind": {"const": "cbsem_exact_cfa_interval_coverage_digest_verification_receipt_v1"},
+        "status": {"enum": ["accepted", "rejected"]},
+        "method": {"const": "bound_rust_exact_schedule_and_source_verifier_v1"},
+        "document_typed_sha256": {"$ref": "#/$defs/sha"},
+        "scientific_result_sha256": {"$ref": "#/$defs/sha"},
+        "compact_evidence_typed_sha256": {"$ref": "#/$defs/sha"},
+        "data_sha256": {"$ref": "#/$defs/sha"},
+        "source_dataset_fingerprint": {"$ref": "#/$defs/sha"},
+        "checks": {
+          "type": "object", "additionalProperties": false,
+          "required": ["scientific_result", "base_point_result", "source_dataset_fingerprint", "compiler_analytical_identity", "plan", "model_scientific_identity", "outer_recipe_analytical_identity", "complete_case_universe", "original_sampling_positions", "original_source_rows", "bootstrap_schedule_positions", "bootstrap_source_rows", "delete_one_sampling_positions", "delete_one_source_rows"],
+          "properties": {
+            "scientific_result": {"const": 1}, "base_point_result": {"const": 1}, "source_dataset_fingerprint": {"const": 1},
+            "compiler_analytical_identity": {"const": 1}, "plan": {"const": 1}, "model_scientific_identity": {"const": 1}, "outer_recipe_analytical_identity": {"const": 1},
+            "complete_case_universe": {"const": 1}, "original_sampling_positions": {"const": 1}, "original_source_rows": {"const": 1},
+            "bootstrap_schedule_positions": {"enum": [500, 5000]}, "bootstrap_source_rows": {"enum": [500, 5000]},
+            "delete_one_sampling_positions": {"enum": [150, 300]}, "delete_one_source_rows": {"enum": [150, 300]}
+          }
+        },
+        "reasons": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "retention": {
+      "type": "object", "additionalProperties": false,
+      "required": ["full_audit_results_per_shard", "retain_all_integrity_failures", "compact_receipts_for_other_datasets", "append_only_outputs"],
+      "properties": {"full_audit_results_per_shard": {"const": 1}, "retain_all_integrity_failures": {"const": true}, "compact_receipts_for_other_datasets": {"const": true}, "append_only_outputs": {"const": true}}
+    }
+  }
+}

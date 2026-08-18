@@ -1,0 +1,126 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "final_release_audit": {
+      "actual_packaged_viewport_matrix": true,
+      "bounded_claim": "One endogenous target with predecessor-only PLS total-effect importance and observed-range construct and indicator performance on a fixed 0-100 scale.",
+      "bounded_packaged_workflow": true,
+      "exact_required_check_receipt": true,
+      "excluded_scope": [
+        "Conditional IPMA, multiple simultaneous targets, theoretical-range correction, and cIPMA are excluded.",
+        "Case-weighted, interaction, and higher-order models are excluded.",
+        "Disconnected constructs and the target itself are excluded from the predecessor map."
+      ],
+      "invalid_setup_no_state_mutation": true,
+      "packaged_artifact": {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/ipma_v1/packaged_acceptance.identity.json"
+      },
+      "packaged_identity_passes": true,
+      "passed": true,
+      "prior_factory_native": true,
+      "release_evidence_contract_passes": true,
+      "required_cancellation_retry": true,
+      "same_run_archive": true,
+      "source_receipt_and_cli_current": true,
+      "verified_prior_artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/ipma_v1/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/ipma_v1/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/ipma_v1/native_stage.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ]
+    }
+  },
+  "feature_id": "qpls3.assessment.ipma",
+  "generated_at_utc": "2026-08-18T14:16:05.744937Z",
+  "method_version": "ipma_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
+    {
+      "path": "validation/ipma_v1_packaged_acceptance.py",
+      "sha256": "6f843496e41467707a9faf04b717e7c3e43c6ff708bfc772eb86a910f6eee725",
+      "size": 250
+    },
+    {
+      "path": "validation/ipma_v1_release_audit.py",
+      "sha256": "7664ba18ddeda5cea4eba49427f28cd59e26b3c50cab06d2a530085436694cb7",
+      "size": 268
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/ipma_v1.manifest.json",
+      "sha256": "e547af5a60b270f6c34e0c61a3cefb9e12064c4a5ae45500ac3c2c25b60fa627",
+      "size": 14129
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
+    },
+    {
+      "path": "validation/phase2_release_packaged_common.py",
+      "sha256": "ac2e758e49d380ce66d8b5987b0d76e1752fb4bf6ad5e6e65f16b1e4e5b15775",
+      "size": 70975
+    },
+    {
+      "path": "validation/results/method_factory/ipma_v1/packaged_acceptance.identity.json",
+      "sha256": "bdfb03244173a1f4ad3c61b8d93bfb18356e88dc649f5bbdfe2f120f69631807",
+      "size": 35526
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase2_release_packaged_common.py",
+      "sha256": "e50a98a98d0f3e5f29373801eaa5ec0b0352d8cdeb7d8cc6c71a5b67b87af92d",
+      "size": 38027
+    }
+  ]
+}

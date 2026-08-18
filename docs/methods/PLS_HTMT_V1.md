@@ -1,6 +1,6 @@
 # HTMT and HTMT+ Specification v1
 
-Status: frozen for experimental `pls_assessment_v6` and retained by current `pls_assessment_v7`. Neither variant is validated or publication-ready.
+Status: frozen for the current experimental assessment contract. Point estimates and complete-bootstrap inference remain outside Standard until the capability-specific qualification gates pass.
 
 ## Definitions
 
@@ -28,7 +28,32 @@ HTMT+ is invariant to individual indicator sign reversal. It is not mathematical
 - Original HTMT with a nonpositive/effectively-zero signed within-block mean uses `htmt.original_nonpositive_monotrait_mean`.
 - A zero cross-block numerator with a valid denominator is available and equals zero.
 - Correlations use deterministic recipe indicator order. Nonfinite correlations are an assessment error, not a null cell.
-- No `.85` or `.90` cutoff is enforced; thresholds are interpretation choices.
+- No cutoff is embedded in the point-estimate matrix. Complete-bootstrap inference separately reports the documented `.90` decision below.
+
+## Complete-bootstrap inference
+
+The complete ordinary PLS bootstrap calculates both exact HTMT artifacts on
+every preplanned indexed case resample. It reports a bias-corrected percentile
+interval (BC, not BCa) using Type-7 interpolation. For the documented HTMT
+inference workflow, `alpha = .05` is one-tailed upper; the displayed interval
+is the equivalent 90% two-sided interval. The documented `.90` decision is
+established only when the bias-corrected upper bound is strictly below `0.90`.
+This decision is reported explicitly and does not prevent a researcher from
+justifying a stricter context-specific criterion.
+
+The inference contract retains:
+
+- the requested, usable, globally failed, and pair-unavailable replicate counts;
+- exact pair-unavailable replicate indices and reason codes;
+- a SHA-256 digest of every contributing primary replicate index in strict index order;
+- a no-retry/no-replacement policy for failed preplanned draws;
+- typed unavailable cells when fewer than 90% of planned draws are usable;
+- a typed numerical-unavailability reason instead of aborting an otherwise usable run.
+
+The general PLS bootstrap settings still need an explicit one-tailed versus
+two-tailed recipe field. This v1 HTMT inference contract deliberately freezes
+the documented one-tailed `.05` workflow and must not be relabelled as a
+configurable two-tailed HTMT test.
 
 Use `tol = 64*f64::EPSILON`. A denominator component `<= tol` is unavailable. Correlation roundoff within `tol` of `[-1,1]` is canonicalized; a material value outside that range is a numerical error.
 

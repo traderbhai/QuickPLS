@@ -39,11 +39,11 @@ export default function NativeModerationDialog({
     ? moderatorId
     : moderators[0]?.id ?? "";
   const blocker = existingInteraction
-    ? "The validated desktop scope supports one two-way moderating effect per model. Remove the existing interaction before creating another."
+    ? "Create only one two-way moderating effect per model. Remove the existing interaction before creating another."
     : invokedForSelectedRelationship && !relationship
       ? "The selected item is not an eligible measured structural relationship. Select a standard predictor-to-outcome path."
       : edges.some((edge) => (edge.data as { role?: string } | undefined)?.role === "control")
-        ? "Remove or convert control paths before creating a moderating effect in the validated desktop scope."
+        ? "Remove or convert control paths before creating a moderating effect; this workflow does not accept control paths."
       : relationships.length === 0
       ? "Create and select a structural path before adding a moderating effect."
       : moderators.length === 0

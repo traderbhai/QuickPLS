@@ -62,13 +62,13 @@ export function nativeHigherOrderCreationBlocker(
   edges: readonly Edge[],
 ): string | null {
   if (nodes.some((node) => node.data.semantic === "interaction")) {
-    return "Remove the moderating-effect interaction before creating a higher-order construct in the bounded desktop scope.";
+    return "Remove the moderating-effect interaction before creating a higher-order construct; this workflow does not combine both features.";
   }
   if (nodes.some((node) => node.data.semantic === "higher_order")) {
-    return "The bounded desktop scope supports one disjoint two-stage higher-order construct per model.";
+    return "Create exactly one disjoint two-stage higher-order construct per model.";
   }
   if (edges.some((edge) => edgeRole(edge) === "control")) {
-    return "Remove or convert control paths before creating a higher-order construct in the bounded desktop scope.";
+    return "Remove or convert control paths before creating a higher-order construct; this workflow does not accept control paths.";
   }
   const eligible = nativeHigherOrderComponentOptions(nodes, edges).filter((option) => option.eligible);
   return eligible.length < 2
@@ -93,7 +93,7 @@ export function nativeHigherOrderDraftProblems(
   if (shortName.length > 12) problems.push("The short name must contain at most 12 characters.");
   if (new Set(components).size !== components.length) problems.push("Choose each lower-order component only once.");
   if (components.length < 2) problems.push("Choose at least two lower-order components.");
-  if (components.some((component) => !eligibleIds.has(component))) problems.push("One or more selected components are not eligible for the bounded disjoint two-stage scope.");
+  if (components.some((component) => !eligibleIds.has(component))) problems.push("One or more selected components are not eligible for disjoint two-stage estimation.");
   const normalizedName = name.normalize("NFKC").toLowerCase();
   const normalizedShortName = shortName.normalize("NFKC").toLowerCase();
   if (nodes.some((node) => node.data.label.trim().normalize("NFKC").toLowerCase() === normalizedName)) {
@@ -120,15 +120,15 @@ export function nativeHigherOrderScopeProblems(
   const higherOrderNodes = nodes.filter((node) => node.data.semantic === "higher_order");
   if (higherOrderNodes.length === 0) return [];
   const problems: string[] = [];
-  if (higherOrderNodes.length !== 1) problems.push("The bounded desktop scope supports exactly one higher-order construct per model");
-  if (nodes.some((node) => node.data.semantic === "interaction")) problems.push("Higher-order constructs cannot be combined with a moderating effect in the bounded desktop scope");
-  if (edges.some((edge) => edgeRole(edge) === "control")) problems.push("Higher-order constructs cannot be combined with control paths in the bounded desktop scope");
+  if (higherOrderNodes.length !== 1) problems.push("Create exactly one higher-order construct per model");
+  if (nodes.some((node) => node.data.semantic === "interaction")) problems.push("Higher-order constructs cannot be combined with a moderating effect in this workflow");
+  if (edges.some((edge) => edgeRole(edge) === "control")) problems.push("Higher-order constructs cannot be combined with control paths in this workflow");
   if (settings.method !== "pls_pm" || settings.bootstrapSamples > 0 || settings.studentizedInnerSamples > 0 || settings.permutationSamples > 0) {
-    problems.push("Run the bounded higher-order workflow with PLS-SEM Algorithm only; HOC resampling inference is not yet exposed");
+    problems.push("Run the higher-order workflow with PLS-SEM Algorithm only; HOC resampling inference is outside this point-estimate workflow");
   }
-  if ((settings.weightingScheme ?? "path") !== "path") problems.push("The bounded higher-order workflow requires path weighting");
-  if ((settings.preprocessing ?? "standardized") !== "standardized") problems.push("The bounded higher-order workflow requires standardized result data");
-  if (settings.caseWeightColumn?.trim()) problems.push("The bounded higher-order workflow does not support case weights");
+  if ((settings.weightingScheme ?? "path") !== "path") problems.push("The higher-order workflow requires path weighting");
+  if ((settings.preprocessing ?? "standardized") !== "standardized") problems.push("The higher-order workflow requires standardized result data");
+  if (settings.caseWeightColumn?.trim()) problems.push("The higher-order workflow does not support case weights");
 
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const structuralEdges = edges.filter(isNativeStructuralEdge);
@@ -150,15 +150,15 @@ export function nativeHigherOrderScopeProblems(
       problems.push("Every lower-order component must be an ordinary measured reflective construct");
     }
     if (structuralEdges.some((edge) => componentIds.has(edge.source) || componentIds.has(edge.target))) {
-      problems.push("Lower-order components must remain measurement-only in the bounded disjoint two-stage model");
+      problems.push("Lower-order components must remain measurement-only in the disjoint two-stage model");
     }
     if (structuralEdges.some((edge) => edge.target === node.id)) {
-      problems.push("The bounded native slice supports the higher-order construct as an exogenous predictor, not as a structural outcome");
+      problems.push("Use the higher-order construct as an exogenous predictor, not as a structural outcome");
     }
     const outgoing = structuralEdges.filter((edge) => edge.source === node.id);
     if (outgoing.length === 0) problems.push("Connect the higher-order construct to at least one measured outcome before calculation");
     if (structuralEdges.length !== 1 || outgoing.length !== 1) {
-      problems.push("The bounded native slice supports exactly one HOC-to-outcome structural path and no other structural relationships");
+      problems.push("Use exactly one higher-order-construct-to-outcome path and no other structural relationships");
     }
     if (outgoing.some((edge) => componentIds.has(edge.target) || byId.get(edge.target)?.data.semantic || !byId.get(edge.target)?.data.indicators.length)) {
       problems.push("Higher-order structural paths must target ordinary measured constructs outside the component set");

@@ -134,7 +134,7 @@ export function workflowCoachMessage(input: {
       id: readiness.canRun ? "setup-ready-run" : "setup-needs-work",
       title: readiness.canRun ? "Setup is ready for calculation" : "Setup is not ready yet",
       detail: readiness.canRun
-        ? "The selected method has the required data, model, and settings. Run now or review method scope before calculation."
+        ? "The selected method has the required data, model, and settings. Run now or review Method Details before calculation."
         : blocker?.detail ?? readiness.summary,
       status: readiness.canRun ? "ready" : "blocked",
       primary: { label: readiness.canRun ? "Run Now" : coachLabel(blocker?.actionLabel ?? "Resolve Blocker"), view: readiness.canRun ? "run" : blocker?.actionView, event: readiness.canRun ? "quickpls:run-analysis" : undefined },
@@ -158,9 +158,9 @@ export function workflowCoachMessage(input: {
   if (view === "runs") {
     return {
       id: completedRuns.length ? "results-review" : "results-empty",
-      title: completedRuns.length ? "Review completed run evidence" : "No completed run yet",
+      title: completedRuns.length ? "Review completed results" : "No completed run yet",
       detail: completedRuns.length
-        ? "Use Results to inspect findings, tables, warnings, scope confidence, and row-level interpretation."
+        ? "Use Results to inspect findings, tables, warnings, analysis details, and row-level interpretation."
         : readiness.canRun ? "Run the selected method to unlock result tables and interpretation." : blocker?.detail ?? readiness.summary,
       status: completedRuns.length ? "ready" : readiness.canRun ? "review" : "blocked",
       primary: completedRuns.length ? { label: "Prepare Report", view: "reports" } : readiness.canRun ? { label: "Run Method", event: "quickpls:run-analysis" } : { label: coachLabel(blocker?.actionLabel ?? "Open Setup"), view: blocker?.actionView ?? "analyses" },
@@ -184,8 +184,8 @@ export function workflowCoachMessage(input: {
   if (view === "trust") {
     return {
       id: "trust-scope",
-      title: "Check method scope before making claims",
-      detail: "Trust Center collects validation scope, known limitations, offline behavior, and artifact evidence.",
+      title: "Review Method Details before reporting",
+      detail: "Methods & References lists requirements, assumptions, known limitations, and offline behavior.",
       status: "info",
       primary: { label: "Open Setup", view: "analyses" },
       secondary: { label: "Open Results", view: "runs" },
@@ -206,7 +206,7 @@ export function workflowCoachMessage(input: {
   return {
     id: "workflow-continue",
     title: "Continue the research workflow",
-    detail: "Move from data to model, setup, run, results, and report with scope-aware checks.",
+    detail: "Move from data to model, setup, run, results, and report with requirement-aware checks.",
     status: "info",
     primary: { label: "Open Setup", view: "analyses" },
   };

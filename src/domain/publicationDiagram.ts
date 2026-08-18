@@ -43,7 +43,7 @@ export function publicationDiagramSvg(nodes: Array<Node<ConstructData>>, edges: 
   const warning = run && options.showValidationWatermark
     ? `<text x="${PADDING}" y="${height - 15}" class="warning">${escapeXml(nativeStructuralPathRandomizationProjection(run)
       ? NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING
-      : "Validated for documented QuickPLS supported scope; unsupported shapes remain blocked.")}</text>`
+      : "Supported for the model, data, and settings recorded in Run Details; incompatible model shapes remain blocked.")}</text>`
     : "";
   const provenance = run && options.showRunProvenance
     ? `<text x="${width - PADDING}" y="${height - 15}" text-anchor="end" class="caption">Run ${escapeXml(run.id)} | ${escapeXml(run.createdAt)}</text>`

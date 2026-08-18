@@ -8,7 +8,7 @@ export function completedSamplePlsRun(): AnalysisRun {
     createdAt: "2026-07-19T12:00:00.000Z",
     seed: 20260718,
     status: "completed",
-    warnings: ["Validated for the documented QuickPLS supported scope; unsupported shapes remain blocked or explicitly marked."],
+    warnings: ["Supported for the documented model and data requirements; incompatible shapes remain blocked or explicitly marked."],
     fingerprint: "v11-smoke",
     result: {
       method_version: "pls_pm_v1+v11_smoke_fixture",

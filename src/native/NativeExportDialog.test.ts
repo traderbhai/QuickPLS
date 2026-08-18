@@ -111,7 +111,7 @@ describe("NativeExportDialog export scope", () => {
     });
   });
 
-  it("keeps candidate Structural Path Randomization model exports visibly scoped", () => {
+  it("keeps scoped Standard Structural Path Randomization model exports visibly bounded", () => {
     vi.stubGlobal("window", {});
     const run = completedStructuralPathRandomizationRun();
     const markup = renderToStaticMarkup(createElement(NativeExportDialog, {
@@ -123,6 +123,7 @@ describe("NativeExportDialog export scope", () => {
     expect(nativeExportScope(run).includeModelDiagram).toBe(true);
     expect(markup).toContain("Model diagram");
     expect(svg).toContain(NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING);
+    expect(svg).not.toMatch(/Experimental|Limited scope/i);
     expect(svg).not.toContain("Validated for documented QuickPLS supported scope");
   });
 

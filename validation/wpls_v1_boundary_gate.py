@@ -90,7 +90,7 @@ def run_boundaries() -> dict[str, Any]:
     baseline = _run("factory_boundary_baseline", baseline_csv)
 
     invalid_runs: dict[str, Any] = {}
-    for label, value in (("zero", 0.0), ("negative", -0.75)):
+    for label, value in (("zero", 0.0), ("negative", -0.75), ("nonfinite", float("inf"))):
         invalid_rows = [dict(row) for row in rows]
         invalid_rows[5]["case_wt"] = value
         path = WORK_ROOT / f"boundary_weight_{label}.csv"
@@ -102,9 +102,39 @@ def run_boundaries() -> dict[str, Any]:
             "no_partial_result": run["passed"],
             "diagnostic": diagnostic[-1200:],
         }
+    missing_index = 5
+    missing_weight_rows = [dict(row) for row in rows]
+    missing_weight_rows[missing_index]["case_wt"] = None
+    missing_weight_csv = WORK_ROOT / "boundary_weight_missing.csv"
+    _write_fixture(missing_weight_csv, missing_weight_rows)
+    missing_weight = _run("factory_boundary_weight_missing", missing_weight_csv)
+
+    dropped_weight_rows = [row for index, row in enumerate(rows) if index != missing_index]
+    dropped_weight_csv = WORK_ROOT / "boundary_weight_missing_row_dropped.csv"
+    _write_fixture(dropped_weight_csv, dropped_weight_rows)
+    dropped_weight = _run("factory_boundary_weight_missing_row_dropped", dropped_weight_csv)
+    missing_weight_equivalence = _mapped_errors(missing_weight, dropped_weight)
+    missing_weight_listwise = {
+        "passed": (
+            missing_weight["passed"]
+            and dropped_weight["passed"]
+            and missing_weight_equivalence["passed"]
+            and missing_weight["estimation"]["used_observations"] == len(rows) - 1
+            and missing_weight["estimation"]["omitted_observations"] == 1
+            and missing_weight["wpls"] == dropped_weight["wpls"]
+        ),
+        "used_observations": missing_weight["estimation"]["used_observations"],
+        "omitted_observations": missing_weight["estimation"]["omitted_observations"],
+        "exact_weight_metadata_match": missing_weight["wpls"] == dropped_weight["wpls"],
+        "explicit_row_drop_equivalence": missing_weight_equivalence,
+    }
     data_pathology = {
-        "passed": all(row["passed"] for row in invalid_runs.values()),
-        "invalid_weights": invalid_runs,
+        "passed": (
+            all(row["passed"] for row in invalid_runs.values())
+            and missing_weight_listwise["passed"]
+        ),
+        "invalid_retained_weights": invalid_runs,
+        "missing_weight_listwise": missing_weight_listwise,
     }
 
     missing_column = _run(
@@ -227,6 +257,7 @@ def main() -> int:
             "validation/wpls_v1_persistence_gate.py",
             "crates/qpls-core/src/validation.rs",
             "crates/qpls-estimation/src/pls.rs",
+            "crates/qpls-assessment/src/lib.rs",
             "crates/qpls-project/src/lib.rs",
         ],
     )

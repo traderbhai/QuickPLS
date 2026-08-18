@@ -1,0 +1,166 @@
+{
+  "admission_policy": "identity_report_requires_separate_manifest_admission_and_review",
+  "blockers": [
+    "csv_xlsx_html_semantic_readback_not_executed_by_this_source_audit",
+    "same_run_gui_cli_export_readback_not_executed",
+    "svg_pdf_png_export_and_semantic_readback_not_implemented"
+  ],
+  "capability_id": "smartpls.htmt",
+  "catalogue_snapshot_date": "2026-08-12",
+  "cell_id": "qpls3.assessment.htmt",
+  "checks": {
+    "focused_execution": {
+      "npx_available": true,
+      "passed": true,
+      "typescript": {
+        "execution": {
+          "command": [
+            "C:\\Program Files\\nodejs\\npx.CMD",
+            "tsc",
+            "-b",
+            "--pretty",
+            "false"
+          ],
+          "duration_seconds": 19.725,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": ""
+        },
+        "passed": true
+      },
+      "vitest": {
+        "execution": {
+          "command": [
+            "C:\\Program Files\\nodejs\\npx.CMD",
+            "vitest",
+            "run",
+            "src/native/nativeHtmt.test.ts",
+            "--reporter=dot"
+          ],
+          "duration_seconds": 5.003,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\u00c2\u00b7\u00c2\u00b7\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  22:47:01\n   Duration  1.22s (transform 508ms, setup 0ms, import 795ms, tests 19ms, environment 0ms)\n\n"
+        },
+        "passed": true
+      }
+    },
+    "source_contract": {
+      "checks": {
+        "bc_not_bca_label_present": true,
+        "bootstrap_tables_present": true,
+        "cli_decision_validation_present": true,
+        "cli_digest_validation_present": true,
+        "cli_inference_export_present": true,
+        "cli_point_export_present": true,
+        "dedicated_native_test_present": true,
+        "digest_column_present": true,
+        "duplicate_pair_index_rejected": true,
+        "explicit_decision_present": true,
+        "labs_warning_present": true,
+        "one_tailed_label_present": true,
+        "point_tables_present": true
+      },
+      "passed": true
+    }
+  },
+  "declared_manifest_state": "absent",
+  "feature_id": "qpls3.assessment.htmt",
+  "generated_at_utc": "2026-08-14T17:17:22.694781Z",
+  "manifest_sha256": "58b1977b129a7be7b0b55b24e7fbd736850daa6899c820b21e798463dcada6aa",
+  "method_version": "ringle_et_al_htmt_plus_v1",
+  "passed": true,
+  "qualification_evidence": false,
+  "qualification_id": "qpls3.assessment.htmt.qualification_v2",
+  "qualification_ready": false,
+  "qualification_spec_sha256": "42c84a28ec9ab2ea45a273a74f967ed60be98f6131294ba048ead8464f6e6151",
+  "report_kind": "quickpls_htmt_qualification_identity_report",
+  "role": "export_report",
+  "scenario_set_sha256": "b99c7bfa0b50e4a6d5d8f6615a734c490494f7eb68592ba61fe0de4e7eb0abdb",
+  "schema_version": 2,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "45582666c547c12ba6576fedcfb1c98b4f387874473fe205b6308b3148fcd32b",
+      "size_bytes": 304152
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "b14348c5803c5a8e7a97a88979fdd7bdb798317c876d676ee497c0102d1f2d59",
+      "size_bytes": 19431
+    },
+    {
+      "path": "src/native/nativeExportTables.ts",
+      "sha256": "9ccb818b3ba4bfbce58acfde63f5f2ebfe94ad5470167c12b4b8926436cc61ee",
+      "size_bytes": 28851
+    },
+    {
+      "path": "src/native/nativeHtmt.test.ts",
+      "sha256": "db82a5748b467ebe0a97e387272ed744117316f6c1397144c127b061ad6287ee",
+      "size_bytes": 7467
+    },
+    {
+      "path": "src/native/nativeResults.ts",
+      "sha256": "2ac20b5622788cda603a7e0a9bdf652c03aa02c90a45a07b3daf9527c7e64c05",
+      "size_bytes": 275037
+    },
+    {
+      "path": "src/types.ts",
+      "sha256": "266118d8d8b314453f72b000eeb4bafd241f5c15318ecc87b3871b40cdef7539",
+      "size_bytes": 68639
+    },
+    {
+      "path": "validation/htmt_native_export_audit.py",
+      "sha256": "b8acb39b14726b91cb292daf4308948bdade958e53ed39a24957687c46cb6828",
+      "size_bytes": 5340
+    },
+    {
+      "path": "validation/htmt_plus_v1_factory_common.py",
+      "sha256": "1c08afa6230f67707d0ed09be93c1cd734f0db7f9f43c222f662a6d86b65c194",
+      "size_bytes": 13629
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size_bytes": 34283
+    },
+    {
+      "path": "validation/methods/htmt_plus_v1.manifest.json",
+      "sha256": "58b1977b129a7be7b0b55b24e7fbd736850daa6899c820b21e798463dcada6aa",
+      "size_bytes": 11390
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size_bytes": 15836
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/htmt_plus_v1.qualification.json",
+      "sha256": "42c84a28ec9ab2ea45a273a74f967ed60be98f6131294ba048ead8464f6e6151",
+      "size_bytes": 33223
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/test_htmt_qualification_v2.py",
+      "sha256": "dd9d6e5ff360ff60f16d5e8520c94bf5a03d909173954d5f9720ddfee14452bb",
+      "size_bytes": 7091
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size_bytes": 21334
+    }
+  ],
+  "source_set_sha256": "f6be7e776604eb21980b0e95f2b9cf9ac35b3d5f6242999eea84cf9ab3f92c71",
+  "spec_frozen_at_utc": "2026-08-14T16:00:00Z",
+  "stage": "persistence_export"
+}

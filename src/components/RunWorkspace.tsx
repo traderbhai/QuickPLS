@@ -39,18 +39,18 @@ function monitorPercent(status: RunMonitorStatus, completed: number, total: numb
 }
 
 function stepState(step: string, monitor: RunMonitorStatus, readinessCanRun: boolean) {
-  if (!readinessCanRun) return step === "Validate data" ? "blocked" : "pending";
-  if (monitor === "failed") return step === "Validate data" || step === "Run engine" ? "failed" : "pending";
+  if (!readinessCanRun) return step === "Check data" ? "blocked" : "pending";
+  if (monitor === "failed") return step === "Check data" || step === "Run engine" ? "failed" : "pending";
   if (monitor === "cancelled") return step === "Run engine" ? "cancelled" : "done";
   if (monitor === "completed") return "done";
-  if (monitor === "queued") return step === "Validate data" ? "active" : "pending";
-  if (monitor === "validating") return step === "Validate data" ? "active" : "pending";
+  if (monitor === "queued") return step === "Check data" ? "active" : "pending";
+  if (monitor === "validating") return step === "Check data" ? "active" : "pending";
   if (monitor === "running" || monitor === "cancelling") {
-    if (step === "Validate data" || step === "Prepare recipe") return "done";
+    if (step === "Check data" || step === "Prepare recipe") return "done";
     if (step === "Run engine") return "active";
     return "pending";
   }
-  return readinessCanRun ? (step === "Validate data" ? "ready" : "pending") : "pending";
+  return readinessCanRun ? (step === "Check data" ? "ready" : "pending") : "pending";
 }
 
 function StepIcon({ state }: { state: string }) {
@@ -85,7 +85,7 @@ export function RunWorkspace() {
   const progress = monitorPercent(runMonitor.status, runMonitor.completedUnits, runMonitor.totalUnits, readiness.canRun);
   const latestRun = runs[0] ?? null;
   const procedureSteps = [
-    { label: "Validate data", detail: dataset.fingerprint ? "Dataset fingerprint is available." : "Import the dataset into the desktop project." },
+    { label: "Check data", detail: dataset.fingerprint ? "Dataset fingerprint is available." : "Import the dataset into the desktop project." },
     { label: "Prepare recipe", detail: `${plural(nodes.length, "construct")} and ${plural(structuralEdges.length, "structural path")} will be serialized.` },
     { label: "Run engine", detail: "Execute the selected QuickPLS estimator offline." },
     { label: "Commit result", detail: "Save the run with provenance, warnings, and immutable recipe." },
@@ -108,7 +108,7 @@ export function RunWorkspace() {
       id: "ready-fallback",
       timestamp: new Date().toISOString(),
       phase: readiness.canRun ? "Ready" : "Blocked",
-      message: readiness.canRun ? "Ready to validate and launch the selected method." : blocker?.detail ?? readiness.summary,
+      message: readiness.canRun ? "Ready to check and launch the selected method." : blocker?.detail ?? readiness.summary,
       tone: readiness.canRun ? "success" : "warning",
     }];
 
@@ -191,7 +191,7 @@ export function RunWorkspace() {
       <Panel title="Run settings" description="Immutable summary" className="run-v227-settings-panel">
         <dl className="run-v227-setting-grid">
           <div><dt>Method</dt><dd>{method?.name ?? settings.method}</dd></div>
-          <div><dt>Scope</dt><dd>{methodStatus === "validated" ? "Validated documented scope" : methodStatus === "experimental" ? "Experimental / watermarked" : "Unsupported"}</dd></div>
+          <div><dt>Availability</dt><dd>{methodStatus === "validated" ? "Supported for the listed requirements" : methodStatus === "experimental" ? "Experimental" : "Not available"}</dd></div>
           <div><dt>Seed</dt><dd>{settings.seed}</dd></div>
           <div><dt>Workers</dt><dd>{plural(settings.workers, "worker")}</dd></div>
           <div><dt>Data fingerprint</dt><dd><Fingerprint size={13} />{shortHash(dataset.fingerprint)}</dd></div>

@@ -36,7 +36,7 @@
         "observations": 180,
         "outer_weight_error": 2.220446049250313e-16,
         "output": "validation/results/method_factory/wpls_v1/work/factory_simulation_uniform_path.quickpls.json",
-        "output_sha256": "d9158b9cbfe08a73fa22ad9ed6b2b03faf0a4396a7484eacfd762a2a40e7d93e",
+        "output_sha256": "67627a20ffd06ce2a9650f92b20c6cc548f01ae4226ccac6ac3654f605fa2760",
         "passed": true,
         "path_error": 4.440892098500626e-16,
         "quickpls_iterations": 3,
@@ -61,7 +61,7 @@
         "observations": 240,
         "outer_weight_error": 2.7755575615628914e-16,
         "output": "validation/results/method_factory/wpls_v1/work/factory_simulation_moderate_path.quickpls.json",
-        "output_sha256": "33745d4e94d3c226cd1d4d0005b4892a3f4864ff53abe7111e51a661e569d5ce",
+        "output_sha256": "ca07c47453ca80347d96f8caaf0bf5d33f6e370235e88ffa77fb491509a4f56c",
         "passed": true,
         "path_error": 2.220446049250313e-16,
         "quickpls_iterations": 3,
@@ -86,7 +86,7 @@
         "observations": 280,
         "outer_weight_error": 2.220446049250313e-16,
         "output": "validation/results/method_factory/wpls_v1/work/factory_simulation_strong_factor.quickpls.json",
-        "output_sha256": "1bad530ba7cd95019d3e2a1e41555e8facb0c8ebdb5f4ae60d63568662bd8828",
+        "output_sha256": "5ec5ce169c50526b3cd7d650836c818b913b084add286252891b2a9c401aed78",
         "passed": true,
         "path_error": 4.440892098500626e-16,
         "quickpls_iterations": 4,
@@ -111,7 +111,7 @@
         "observations": 260,
         "outer_weight_error": 5.551115123125783e-16,
         "output": "validation/results/method_factory/wpls_v1/work/factory_simulation_listwise_missing.quickpls.json",
-        "output_sha256": "aed847c2c9e8aa8bd7c7d893e182f8b8ab08751e79c6ac0b8ab7d63253521cdb",
+        "output_sha256": "4935f37314fc8182062d73e0d79a0fddc507871f8f84da05f9be389b2e2083bf",
         "passed": true,
         "path_error": 2.220446049250313e-16,
         "quickpls_iterations": 3,
@@ -136,7 +136,7 @@
         "observations": 320,
         "outer_weight_error": 2.220446049250313e-16,
         "output": "validation/results/method_factory/wpls_v1/work/factory_simulation_nongaussian_factor.quickpls.json",
-        "output_sha256": "3e0c528c4b4dd6db24600da5ecb8e4c00673e2fdc66b4919479ab4091deffdde",
+        "output_sha256": "0e240733b611128e4f7095dd487b2e4bf4d5b00da1016c6d5360409214220094",
         "passed": true,
         "path_error": 4.440892098500626e-16,
         "quickpls_iterations": 3,
@@ -149,7 +149,7 @@
     ]
   },
   "feature_id": "qpls3.pls.weighted",
-  "generated_at_utc": "2026-08-13T19:01:22.919822Z",
+  "generated_at_utc": "2026-08-17T21:54:51.992092Z",
   "method_version": "wpls_case_weighted_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -158,8 +158,8 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-estimation/src/pls.rs",
-      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-      "size": 639198
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -173,28 +173,28 @@
     },
     {
       "path": "validation/methods/wpls_v1.manifest.json",
-      "sha256": "3daca54776596694059dab1bb9ee9f732d910b69e481feea817f780ba6ef4d42",
-      "size": 15256
+      "sha256": "6c8a6b2fa9c212941161f4783ea9b0006284ae41d3eb9a33c70b40f16c757266",
+      "size": 17100
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_wpls_v1_factory_evidence.py",
-      "sha256": "5080160efdf8190400f7a946cb7c25ea297182faf7577b4a386420dab3be6884",
-      "size": 4238
+      "sha256": "1efb7101f150d398b0fcbe97af81c8a0359bc1c1d074e2f6f4188b163daf25ff",
+      "size": 4306
     },
     {
       "path": "validation/wpls_reference.py",
-      "sha256": "44cd7eca6b17bdeab236749002f647849adbbb18f9656a82ba5509fe98e8af92",
+      "sha256": "cc2811eaf20c4d3861f12da421249d4d81485a50662b31bb89d78e7a5259f8ab",
       "size": 13821
     },
     {
       "path": "validation/wpls_v1_factory_common.py",
-      "sha256": "c4e3afed2f83563f3667b1ac2d03d8a9e9d6aab35253a1fb339218581f2390ad",
-      "size": 14019
+      "sha256": "fe2894e8f858fd0c563bebadd615ca5ffd2942c1d6173ccd0f926ea4682a9ea1",
+      "size": 14106
     },
     {
       "path": "validation/wpls_v1_simulation.py",

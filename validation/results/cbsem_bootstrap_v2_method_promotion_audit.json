@@ -1,0 +1,33 @@
+{
+  "kind": "cbsem_bootstrap_v2_method_promotion_audit_v1",
+  "passed": false,
+  "feature_id": "qpls3.cbsem.bootstrap",
+  "method_version": "cbsem_bootstrap_v2",
+  "declared_state": "absent",
+  "checks": {
+    "executable_engine_contract_present": true,
+    "structural_archive_contract_present": true,
+    "native_candidate_contract_present": true,
+    "semantic_replay_authentication_qualified": false,
+    "all_required_evidence_passed": false,
+    "manifest_state_is_promotable": false
+  },
+  "evidence": {
+    "reference": false,
+    "simulation": false,
+    "boundary": true,
+    "persistence": false,
+    "frontend": false,
+    "packaged": false
+  },
+  "blockers": [
+    "coordinated_witness_semantic_rewrite_not_replayed",
+    "reference_evidence_absent_or_failed",
+    "simulation_evidence_absent_or_failed",
+    "persistence_evidence_absent_or_failed",
+    "frontend_evidence_absent_or_failed",
+    "packaged_evidence_absent_or_failed",
+    "manifest_declared_state_absent"
+  ],
+  "note": "Structural archive validation does not replay archived ML fits. Missing semantic replay authentication, or any missing, malformed, stale, or failed qualification evidence, keeps the audit false."
+}

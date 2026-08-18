@@ -27,7 +27,7 @@
     }
   },
   "feature_id": "qpls3.pls.consistent",
-  "generated_at_utc": "2026-08-13T19:01:02.401221Z",
+  "generated_at_utc": "2026-08-17T23:25:58.511373Z",
   "method_version": "plsc_v2",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -61,13 +61,13 @@
     },
     {
       "path": "validation/methods/plsc_v2.manifest.json",
-      "sha256": "6390cc9e9b1fc2844d8688700e5f554c9d4efda579e89b9f64b1740ce11d54e8",
-      "size": 15346
+      "sha256": "e4f51f683105859673e217b366726fb9659f37c09f624bb80407f889a63ab00d",
+      "size": 17680
     },
     {
       "path": "validation/plsc_v2_factory_common.py",
-      "sha256": "e8df9baab689e4bdab8c648cdfed9433162c9172e009565cfeed5da5b932522d",
-      "size": 13718
+      "sha256": "c84fc5a36c08b6e80d35cc43eea4cc135e46e4556e737aefdcdb10474c841786",
+      "size": 13682
     },
     {
       "path": "validation/plsc_v2_factory_evidence.py",
@@ -76,13 +76,13 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_plsc_v2_factory_evidence.py",
-      "sha256": "9d8249925d07ff3abf79eecea85a2dd32f9b13ad7d395f795c3229b77a7958c8",
-      "size": 3844
+      "sha256": "6e11bd652e864af3b5bc674389e718ffd18d516afd850bc842cbfa4c207af7ed",
+      "size": 4030
     }
   ]
 }

@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem_exact_two_group_configural_metric_manifest_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "status",
+    "source_bindings",
+    "fixture_contract",
+    "scientific_contract",
+    "acceptance_tolerances",
+    "execution_contract",
+    "qualification_boundary"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "cbsem_exact_two_group_configural_metric_engine_reference_manifest_v1" },
+    "status": { "const": "predeclared_engine_reference_program_product_qualification_blocked" },
+    "source_bindings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source_binding" },
+      "minItems": 8,
+      "maxItems": 8
+    },
+    "fixture_contract": { "$ref": "#/$defs/fixture_contract" },
+    "scientific_contract": { "$ref": "#/$defs/scientific_contract" },
+    "acceptance_tolerances": { "$ref": "#/$defs/tolerances" },
+    "execution_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["append_only_report", "explicit_execute_required", "engine_timeout_seconds", "lavaan_unavailable_policy"],
+      "properties": {
+        "append_only_report": { "const": true },
+        "explicit_execute_required": { "const": true },
+        "engine_timeout_seconds": { "const": 120 },
+        "lavaan_unavailable_policy": { "const": "allowed_for_engine_reference_only_and_blocks_external_cross_implementation_claim" }
+      }
+    },
+    "qualification_boundary": { "$ref": "#/$defs/qualification_boundary" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "path", "sha256"],
+      "properties": {
+        "role": {
+          "enum": [
+            "primary_raw_fixture",
+            "label_swap_raw_fixture",
+            "independent_python_oracle",
+            "independent_lavaan_script",
+            "rust_validation_example",
+            "quarantined_engine_source",
+            "manifest_schema",
+            "report_schema"
+          ]
+        },
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "dgp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generation", "seed", "factor_correlation", "marker_loadings", "nonmarker_loadings", "residual_standard_deviations", "deliberate_noninvariance"],
+      "properties": {
+        "generation": { "const": "frozen_xorshift32_box_muller_raw_rows_v1" },
+        "seed": { "const": 539363350 },
+        "factor_correlation": { "const": 0.35 },
+        "marker_loadings": { "const": { "x1": 1.0, "y1": 1.0 } },
+        "nonmarker_loadings": {
+          "const": {
+            "A": { "x2": 0.82, "x3": 0.71, "y2": 0.78, "y3": 0.66 },
+            "B": { "x2": 0.82, "x3": 0.38, "y2": 0.78, "y3": 0.66 }
+          }
+        },
+        "residual_standard_deviations": {
+          "const": { "x1": 0.55, "x2": 0.60, "x3": 0.65, "y1": 0.58, "y2": 0.62, "y3": 0.68 }
+        },
+        "deliberate_noninvariance": { "const": "group_B_x3_loading_0.38_vs_group_A_0.71" }
+      }
+    },
+    "fixture_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary_path", "primary_sha256", "label_swap_path", "label_swap_sha256", "group_sample_sizes", "observed_variable_order", "dgp"],
+      "properties": {
+        "primary_path": { "const": "validation/fixtures/cbsem_exact_two_group_configural_metric_v1.csv" },
+        "primary_sha256": { "$ref": "#/$defs/sha256" },
+        "label_swap_path": { "const": "validation/fixtures/cbsem_exact_two_group_configural_metric_v1_label_swap.csv" },
+        "label_swap_sha256": { "$ref": "#/$defs/sha256" },
+        "group_sample_sizes": { "const": { "A": 180, "B": 220 } },
+        "observed_variable_order": { "const": ["x1", "x2", "x3", "y1", "y2", "y3"] },
+        "dgp": { "$ref": "#/$defs/dgp" }
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["configural_free_dimensions", "configural_degrees_of_freedom", "metric_free_dimensions", "metric_degrees_of_freedom", "delta_degrees_of_freedom"],
+      "properties": {
+        "configural_free_dimensions": { "const": 26 },
+        "configural_degrees_of_freedom": { "const": 16 },
+        "metric_free_dimensions": { "const": 22 },
+        "metric_degrees_of_freedom": { "const": 20 },
+        "delta_degrees_of_freedom": { "const": 4 }
+      }
+    },
+    "scientific_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "estimator", "objective", "covariance_denominator", "missing_data", "mean_structure", "fixed_x", "identification", "metric_constraint", "expected_dimensions", "lavaan_contract"],
+      "properties": {
+        "model": { "const": "two_correlated_factors_three_reflective_indicators_each" },
+        "estimator": { "const": "ordinary_maximum_likelihood" },
+        "objective": { "const": "sum_over_groups_Ng_times_Fml_group_with_total_objective_divided_by_total_N" },
+        "covariance_denominator": { "const": "maximum_likelihood_n" },
+        "missing_data": { "const": "listwise_deletion" },
+        "mean_structure": { "const": false },
+        "fixed_x": { "const": false },
+        "identification": { "const": "first_loading_per_factor_fixed_to_one_in_each_group" },
+        "metric_constraint": { "const": "four_corresponding_nonmarker_loadings_equal_across_groups" },
+        "expected_dimensions": { "$ref": "#/$defs/dimensions" },
+        "lavaan_contract": {
+          "const": {
+            "estimator": "ML",
+            "missing": "listwise",
+            "meanstructure": false,
+            "fixed_x": false,
+            "std_lv": false,
+            "marker_identification": true,
+            "configural_group_equal": [],
+            "metric_group_equal": ["loadings"]
+          }
+        }
+      }
+    },
+    "tolerances": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["moment_absolute", "parameter_absolute", "implied_covariance_absolute", "objective_absolute", "chi_square_absolute", "p_value_absolute", "label_swap_absolute", "lavaan_chi_square_absolute"],
+      "properties": {
+        "moment_absolute": { "const": 1e-12 },
+        "parameter_absolute": { "const": 0.0001 },
+        "implied_covariance_absolute": { "const": 0.0001 },
+        "objective_absolute": { "const": 1e-7 },
+        "chi_square_absolute": { "const": 0.000001 },
+        "p_value_absolute": { "const": 1e-9 },
+        "label_swap_absolute": { "const": 1e-7 },
+        "lavaan_chi_square_absolute": { "const": 0.001 }
+      }
+    },
+    "qualification_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence_role", "forbidden_claims", "missing_evidence"],
+      "properties": {
+        "status": { "const": "blocked_not_product_qualification" },
+        "evidence_role": { "const": "quarantined_engine_reference_only" },
+        "forbidden_claims": { "const": ["product_support", "runner_support", "project_persistence", "canonical_export_support", "release_qualification"] },
+        "missing_evidence": { "const": ["executed_lavaan_reference_on_available_host", "broader_group_and_model_axes", "canonical_and_text_export_contracts", "project_roundtrip", "runner_and_native_integration", "scientific_review"] }
+      }
+    }
+  }
+}

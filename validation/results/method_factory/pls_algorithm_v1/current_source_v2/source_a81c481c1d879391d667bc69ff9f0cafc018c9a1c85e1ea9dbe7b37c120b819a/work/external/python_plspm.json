@@ -1,0 +1,121 @@
+{
+  "engine": "python-plspm-0.5.7",
+  "input": "validation/fixtures/simple_reflective.csv",
+  "variants": [
+    {
+      "mode": "A",
+      "outer": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9864954295126468,
+          "weight": 0.5729374323515964
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9846982365244145,
+          "weight": 0.5384847224570246
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9954396945354063,
+          "weight": 0.5434885884281606
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9956564446247307,
+          "weight": 0.5568537255547974
+        }
+      ],
+      "paths": [
+        {
+          "source": "x",
+          "target": "y",
+          "value": 0.983378918793432
+        }
+      ],
+      "scheme": "PATH",
+      "variant": "PATH_MODE_A"
+    },
+    {
+      "mode": "B",
+      "outer": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9999970317992685,
+          "weight": 1.087889264658513
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9436661698250831,
+          "weight": 0.008010332114513978
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9936768730011872,
+          "weight": 0.4447445281144774
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9970934813431538,
+          "weight": 0.6554177469386552
+        }
+      ],
+      "paths": [
+        {
+          "source": "x",
+          "target": "y",
+          "value": 0.9984476221341336
+        }
+      ],
+      "scheme": "PATH",
+      "variant": "MODE_B"
+    },
+    {
+      "mode": "A",
+      "outer": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9864954295126468,
+          "weight": 0.5729374323515964
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9846982365244145,
+          "weight": 0.5384847224570246
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9954396945354063,
+          "weight": 0.5434885884281606
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9956564446247307,
+          "weight": 0.5568537255547973
+        }
+      ],
+      "paths": [
+        {
+          "source": "x",
+          "target": "y",
+          "value": 0.9833789187934319
+        }
+      ],
+      "scheme": "FACTORIAL",
+      "variant": "FACTOR"
+    }
+  ],
+  "weight_note": "plspm outer weights use a different normalization than QuickPLS/cSEM; compare path coefficients and loadings."
+}

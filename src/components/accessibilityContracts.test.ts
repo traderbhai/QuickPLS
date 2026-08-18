@@ -56,6 +56,7 @@ describe("desktop accessibility contracts", () => {
   it("keeps model commands in the native shell instead of duplicating them inside the canvas", () => {
     const canvas = read("src/components/ModelCanvas.tsx");
     const native = read("src/native/NativeDesktopApp.tsx");
+    const inspector = read("src/native/NativeModelInspector.tsx");
     const canvasStyles = read("src/native/nativeCanvas.css");
     const latent = read("src/components/LatentNode.tsx");
 
@@ -72,8 +73,8 @@ describe("desktop accessibility contracts", () => {
     expect(canvas).not.toContain('className="diagram-context-menu"');
     expect(canvas).not.toContain("window.prompt(");
     expect(native).toContain('case "model.edit-selection"');
-    expect(native).toContain('id="nd-model-construct-name"');
-    expect(native).toContain('id="nd-model-path-label"');
+    expect(inspector).toContain('id="nd-model-construct-name"');
+    expect(inspector).toContain('id="nd-model-path-label"');
     expect(canvasStyles).not.toContain(".canvas-toolbar");
     expect(canvasStyles).not.toContain(".diagram-help");
     expect(canvasStyles).not.toContain(".diagram-context-menu");
@@ -128,4 +129,3 @@ describe("desktop accessibility contracts", () => {
     expect(styles).toContain(".status-readiness-pill.blocked");
   });
 });
-

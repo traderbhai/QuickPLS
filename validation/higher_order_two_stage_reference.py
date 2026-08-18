@@ -272,8 +272,10 @@ def main():
         "baseline_hoc_to_y_abs": baseline_hoc_to_y,
         "permuted_component_hoc_to_y_abs": broken_hoc_to_y,
         "permuted_component_drop_ratio": broken_hoc_to_y / baseline_hoc_to_y,
-        "experimental_warning_present": any(
-            "Two-stage higher-order constructs are experimental" in warning
+        "point_only_scope_warning_present": any(
+            "Disjoint two-stage higher-order estimation" in warning
+            and "point-only" in warning
+            and "does not include HOC resampling inference" in warning
             for warning in base["warnings"]
         ),
         "assessment_hoc_present": "hoc" in base["assessment_constructs"],
@@ -286,7 +288,7 @@ def main():
         and checks["component_reorder_max_delta"] <= TOLERANCE
         and checks["baseline_hoc_to_y_abs"] >= 0.80
         and checks["permuted_component_drop_ratio"] <= 0.90
-        and checks["experimental_warning_present"]
+        and checks["point_only_scope_warning_present"]
         and checks["assessment_hoc_present"]
     )
     report = {

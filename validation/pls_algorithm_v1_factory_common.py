@@ -243,6 +243,21 @@ def _fingerprint(csv_path: Path, name: str) -> tuple[str, dict[str, Any]]:
     }
 
 
+def pls_cli_run_command(recipe: Path, csv_path: Path, output: Path) -> list[str]:
+    """Return the exact debug-only command used to rebuild scoped PLS evidence."""
+
+    return [
+        str(CLI),
+        "run",
+        repository_path(recipe),
+        "--data",
+        repository_path(csv_path),
+        "--output",
+        repository_path(output),
+        "--allow-internal-qualification",
+    ]
+
+
 def run_pls(
     *,
     name: str,
@@ -298,15 +313,7 @@ def run_pls(
         encoding="utf-8",
     )
     completed, execution = run_command(
-        [
-            str(CLI),
-            "run",
-            repository_path(recipe),
-            "--data",
-            repository_path(csv_path),
-            "--output",
-            repository_path(output),
-        ],
+        pls_cli_run_command(recipe, csv_path, output),
         timeout=600,
     )
     if not expect_success:

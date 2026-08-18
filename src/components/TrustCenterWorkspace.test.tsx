@@ -10,14 +10,16 @@ describe("TrustCenterWorkspace method truth", () => {
     vi.stubGlobal("window", {});
   });
 
-  it("renders Structural Path Randomization as experimental candidate scope", () => {
+  it("uses the scoped Standard Registry V2 contract", () => {
     const html = renderToStaticMarkup(<TrustCenterWorkspace />);
     vi.unstubAllGlobals();
 
     expect(html).toContain("Freedman-Lane permutation");
-    expect(html).toContain("experimental");
-    expect(html).toContain("Scope transparency");
+    expect(html).toMatch(/Freedman-Lane permutation<\/td><td>PLS-SEM<\/td><td>Supported/);
+    expect(html).toContain('<span class="status-text validated ui-status-badge">Supported setup</span>');
+    expect(html).toContain("Method guidance");
     expect(html).toContain("docs/methods/PERMUTATION_ENGINE_V1.md");
-    expect(html).not.toContain("Freedman-Lane permutation</td><td>PLS-SEM</td><td>Validated scope");
+    expect(html).not.toMatch(/Freedman-Lane permutation<\/td><td>PLS-SEM<\/td><td>(Experimental|Limited scope)/i);
+    expect(html).not.toMatch(/validation evidence|promotion evidence/i);
   });
 });

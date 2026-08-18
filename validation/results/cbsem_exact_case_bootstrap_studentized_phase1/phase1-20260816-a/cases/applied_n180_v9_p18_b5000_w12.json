@@ -1,0 +1,76 @@
+{
+  "acceptance_reasons": [
+    "known_fixture_analytic_se_unavailable",
+    "known_fixture_point_refit_failure",
+    "point_success_count_differs_from_requested_replicates",
+    "probe_warmup_measured_scientific_digest_drift_or_incomplete_run_set",
+    "studentized_usable_count_differs_from_requested_replicates"
+  ],
+  "aggregates": null,
+  "cap_decision": "blocked_missing_optimizer_dimension",
+  "case": {
+    "cancel_after": null,
+    "case_id": "applied_n180_v9_p18_b5000_w12",
+    "depends_on": [],
+    "factors": 3,
+    "maximum_p95_elapsed_seconds": 38.14902059733868,
+    "mode": "full",
+    "order": 1,
+    "replicates": 5000,
+    "rows": 180,
+    "survivor_policy": "one_probe_then_one_warmup_five_measured_if_probe_survives",
+    "workers": 12
+  },
+  "dimensions": {
+    "d_note": "Equality-constrained free parameter rows may differ from optimizer dimensions, so D is not inferred from P.",
+    "d_optimizer_dimensions": null,
+    "d_status": "unavailable_not_exposed_by_public_s1_s2_api",
+    "n_complete_cases": 180,
+    "p_free_parameter_rows": 18,
+    "v_observed_variables": 9
+  },
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase1_case_v1",
+  "manifest_sha256": "75913af943717a6dd784cb4a3f49a2412dcbc1038517ba63440df88a895066ca",
+  "measured_runs": [],
+  "phase0_report_sha256": "37c489462887485b102252c7074b3be8a7fa9d302535bb011b558d6e0de5479e",
+  "probe": {
+    "elapsed_seconds": 17.74218069994822,
+    "exit_code": 0,
+    "index": 0,
+    "orphan_processes": 0,
+    "peak_working_set_bytes": 41553920,
+    "phase": "probe",
+    "progress_values": [],
+    "result_bytes": 9585524,
+    "scientific_result_sha256": "a7a8653b1ecc908fb119b4ddef216708f2ee22899d85635b93010bbf1117edff"
+  },
+  "representative_metrics": {
+    "analytic_se_unavailable_rate_among_point_successes": 0.0012016823552974164,
+    "analytic_se_unavailable_refits": 6,
+    "base_json_bytes": 3362610,
+    "canonical_v11_json_bytes": null,
+    "combined_s2_json_bytes": 5957963,
+    "failed_point_refits": 7,
+    "studentized_sidecar_json_bytes": 2595329,
+    "studentized_usable_rate_among_point_successes": 0.9987983176447026,
+    "studentized_usable_refits": 4987,
+    "successful_point_refits": 4993,
+    "text_export_v11_bytes": null,
+    "unavailable_size_reason": "v11 canonical and export builders are not yet an execution authority; this run does not project guessed bytes"
+  },
+  "runtime_acceptance": {
+    "derivation": {
+      "baseline_p95_elapsed_seconds": 3.8149020597338676,
+      "baseline_replicates": 1000,
+      "baseline_workers": 12,
+      "formula": "phase0_same_n_v_p_w_p95_seconds_times_target_b_over_baseline_b_times_safety_factor",
+      "safety_factor": 2.0
+    },
+    "maximum_p95_elapsed_seconds": 38.14902059733868,
+    "observed_p95_elapsed_seconds": null
+  },
+  "schema_version": 1,
+  "scientific_result_sha256": "a7a8653b1ecc908fb119b4ddef216708f2ee22899d85635b93010bbf1117edff",
+  "status": "rejected",
+  "warmup_runs": []
+}

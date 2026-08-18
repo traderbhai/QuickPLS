@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "document_type": "quickpls_security_scan_dispositions",
+  "policy": {
+    "npm_block_severities": [
+      "high",
+      "critical"
+    ],
+    "python_block_known_vulnerabilities": true,
+    "rust_block_known_vulnerabilities": true,
+    "rust_block_unsound_warnings": true,
+    "secret_findings_allowed": false,
+    "license_inventory_review_required": true
+  },
+  "rust_advisory_dispositions": [
+    {
+      "id": "RUSTSEC-2024-0370",
+      "kind": "unmaintained",
+      "status": "tracked_nonblocking",
+      "scope": "Transitive proc-macro build dependency; no known vulnerability is reported. Replace through upstream dependency updates when available.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0411",
+      "kind": "unmaintained",
+      "status": "target_excluded",
+      "scope": "GTK3 Linux backend dependency; QuickPLS 3 commercial target is Windows x64 and the package is not built into the Windows candidate.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0412",
+      "kind": "unmaintained",
+      "status": "target_excluded",
+      "scope": "GTK3 Linux backend dependency; not part of the Windows x64 candidate.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0413",
+      "kind": "unmaintained",
+      "status": "target_excluded",
+      "scope": "ATK Linux accessibility backend dependency; not part of the Windows x64 candidate.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0414",
+      "kind": "unmaintained",
+      "status": "target_excluded",
+      "scope": "GTK3 X11 backend dependency; not part of the Windows x64 candidate.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0415",
+      "kind": "unmaintained",
+      "status": "target_excluded",
+      "scope": "GTK3 Linux backend dependency; not part of the Windows x64 candidate.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0416",
+      "kind": "unmaintained",
+      "status": "target_excluded",
+      "scope": "ATK Linux FFI dependency; not part of the Windows x64 candidate.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0417",
+      "kind": "unmaintained",
+      "status": "target_excluded",
+      "scope": "GTK3 X11 backend dependency; not part of the Windows x64 candidate.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0418",
+      "kind": "unmaintained",
+      "status": "target_excluded",
+      "scope": "GTK3 Linux FFI dependency; not part of the Windows x64 candidate.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0419",
+      "kind": "unmaintained",
+      "status": "target_excluded",
+      "scope": "GTK3 Linux proc-macro dependency; not part of the Windows x64 candidate.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0420",
+      "kind": "unmaintained",
+      "status": "target_excluded",
+      "scope": "GTK3 Linux FFI dependency; not part of the Windows x64 candidate.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0436",
+      "kind": "unmaintained",
+      "status": "tracked_nonblocking",
+      "scope": "Transitive macro dependency with no reported vulnerability; replacement is upstream-controlled.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2025-0075",
+      "kind": "unmaintained",
+      "status": "tracked_nonblocking",
+      "scope": "Transitive Unicode parser dependency with no reported vulnerability; track upstream removal.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2025-0080",
+      "kind": "unmaintained",
+      "status": "tracked_nonblocking",
+      "scope": "Transitive Unicode parser dependency with no reported vulnerability; track upstream removal.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2025-0081",
+      "kind": "unmaintained",
+      "status": "tracked_nonblocking",
+      "scope": "Transitive Unicode parser dependency with no reported vulnerability; track upstream removal.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2025-0098",
+      "kind": "unmaintained",
+      "status": "tracked_nonblocking",
+      "scope": "Transitive Unicode parser dependency with no reported vulnerability; track upstream removal.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2025-0100",
+      "kind": "unmaintained",
+      "status": "tracked_nonblocking",
+      "scope": "Transitive Unicode parser dependency with no reported vulnerability; track upstream removal.",
+      "owner": "release_engineering",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    },
+    {
+      "id": "RUSTSEC-2024-0429",
+      "kind": "unsound",
+      "status": "target_excluded",
+      "scope": "Affected glib VariantStrIter functions are in the GTK3 Linux dependency graph. The commercial Windows x64 candidate uses WebView2 and does not build this target-specific package.",
+      "owner": "security_reviewer",
+      "reviewed_at": "2026-08-14",
+      "expires_at": "2027-02-14"
+    }
+  ],
+  "release_claim": {
+    "commercial_ready": false,
+    "reason": "These dispositions govern automated scans but do not replace exact-candidate security, legal, signing, or release-manager review."
+  }
+}

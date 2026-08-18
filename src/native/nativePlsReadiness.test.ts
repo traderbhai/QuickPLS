@@ -1,6 +1,7 @@
 import type { Edge, Node } from "@xyflow/react";
 import { describe, expect, it } from "vitest";
 import type { AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset } from "../types";
+import { nativeAnalysisSettingsForWorkbenchKind } from "./nativeAnalysisCatalog";
 import { nativePlsReadiness } from "./nativePlsReadiness";
 
 const numericMetadata = (name: string): ColumnMetadata => ({
@@ -80,7 +81,7 @@ describe("nativePlsReadiness", () => {
     expect(result.warnings).toEqual([]);
   });
 
-  it("accepts only the bounded reflective CFA and recursive CB-SEM ML shapes", () => {
+  it("accepts bounded point-only ML and routes every archived CB-SEM bootstrap setting to the exact workspace", () => {
     const semSettings: AnalysisUiSettings = {
       ...settings,
       method: "cbsem",
@@ -106,12 +107,33 @@ describe("nativePlsReadiness", () => {
     expect(cfaWithPath.canRun).toBe(false);
     expect(cfaWithPath.blockers.find((item) => item.id === "calculation")?.detail).toContain("measurement-only model");
 
+    for (const cbsemBootstrapInterval of [
+      "percentile_type7",
+      "analytic_studentized_type7",
+      "bca_type7",
+    ] as const) {
+      const archivedBootstrap = readiness({
+        settings: {
+          ...semSettings,
+          cbsemModelType: "cfa",
+          cbsemBootstrapSamples: 1_000,
+          cbsemBootstrapInterval,
+          workers: 4,
+        },
+        edges: [],
+      });
+      expect(archivedBootstrap.canRun).toBe(false);
+      expect(archivedBootstrap.blockers.find((item) => item.id === "calculation")?.detail)
+        .toContain("Run current exact CFA bootstrap from the Exact CB-SEM model tab");
+    }
+
     const invalidScope = readiness({
       settings: { ...semSettings, workers: 2, cbsemMeanStructure: true, bootstrapSamples: 999 },
       nodes: [{ ...nodes[0], data: { ...nodes[0].data, mode: "formative" } }, nodes[1]],
     });
     expect(invalidScope.canRun).toBe(false);
-    expect(invalidScope.blockers.find((item) => item.id === "calculation")?.detail).toMatch(/reflective factors.*one deterministic worker.*without bootstrap/s);
+    expect(invalidScope.blockers.find((item) => item.id === "calculation")?.detail)
+      .toMatch(/reflective factors.*Point-only CB-SEM \/ CFA uses one deterministic worker.*CB-SEM bootstrap v2 cannot be combined with generic PLS bootstrap/s);
   });
 
   it("accepts the bounded mixed-block GSCA ALS scope and blocks unsupported model/settings shapes", () => {
@@ -148,6 +170,61 @@ describe("nativePlsReadiness", () => {
     });
     expect(unsupported.canRun).toBe(false);
     expect(unsupported.blockers.find((item) => item.id === "calculation")?.detail).toMatch(/isolated.*control paths.*3,000.*1e-7.*one deterministic worker.*inference/s);
+  });
+
+  it("admits bounded Standard PLSc bootstrapping while keeping point PLSc and permutation separate", () => {
+    const pointSettings = nativeAnalysisSettingsForWorkbenchKind(settings, "plsc");
+    const point = readiness({
+      settings: pointSettings,
+    });
+    expect(point.canRun).toBe(true);
+    expect(point.items.find((item) => item.id === "calculation")?.detail)
+      .toBe("Consistent PLS correction is selected for reflective constructs with at least two indicators each.");
+
+    for (const bootstrapSamples of [1_000, 5_000, 10_000]) {
+      const bootstrapSettings = nativeAnalysisSettingsForWorkbenchKind({
+        ...settings,
+        weightingScheme: "factor",
+        bootstrapSamples,
+        workers: 4,
+      }, "plsc_bootstrap");
+      const bootstrap = readiness({
+        settings: bootstrapSettings,
+      });
+      expect(bootstrap.canRun, `${bootstrapSamples} PLSc bootstrap samples`).toBe(true);
+      expect(bootstrap.blockers).toEqual([]);
+      expect(bootstrap.items.find((item) => item.id === "calculation")?.detail)
+        .toContain("Full-refit consistent PLS bootstrapping is selected");
+      expect(bootstrap.items.find((item) => item.id === "calculation")?.detail)
+        .toContain("Point PLSc is re-estimated for every primary and delete-one sample");
+    }
+
+    const consistentPermutation = readiness({
+      settings: { ...settings, method: "plsc", permutationSamples: 999 },
+    });
+    expect(consistentPermutation.canRun).toBe(false);
+    expect(consistentPermutation.blockers.find((item) => item.id === "calculation")?.detail)
+      .toContain("PLSc consistent permutation is not available in the Standard calculation workflow");
+  });
+
+  it("blocks PLSc bootstrap settings outside the frozen bounded contract", () => {
+    const invalidSettings: Array<[string, AnalysisUiSettings, string]> = [
+      ["too few samples", { ...settings, method: "plsc", bootstrapSamples: 999 }, "1,000 to 10,000 whole-number"],
+      ["fractional samples", { ...settings, method: "plsc", bootstrapSamples: 1_000.5 }, "1,000 to 10,000 whole-number"],
+      ["too many samples", { ...settings, method: "plsc", bootstrapSamples: 10_001 }, "1,000 to 10,000 whole-number"],
+      ["studentized inference", { ...settings, method: "plsc", bootstrapSamples: 1_000, studentizedInnerSamples: 99 }, "does not support studentized intervals"],
+      ["permutation combination", { ...settings, method: "plsc", bootstrapSamples: 1_000, permutationSamples: 999 }, "consistent permutation is not available"],
+      ["one-sided inference", { ...settings, method: "plsc", bootstrapSamples: 1_000, bootstrapTestTail: "one_sided_greater" }, "fixed two-sided inference"],
+      ["invalid workers", { ...settings, method: "plsc", bootstrapSamples: 1_000, workers: 65 }, "1 to 64 PLSc bootstrap workers"],
+      ["invalid seed", { ...settings, method: "plsc", bootstrapSamples: 1_000, seed: -1 }, "whole-number PLSc bootstrap seed"],
+      ["invalid confidence", { ...settings, method: "plsc", bootstrapSamples: 1_000, confidenceLevel: 0.799 }, "confidence level from 80% through 99.9%"],
+    ];
+
+    for (const [label, invalid, expected] of invalidSettings) {
+      const result = readiness({ settings: invalid });
+      expect(result.canRun, label).toBe(false);
+      expect(result.blockers.find((item) => item.id === "calculation")?.detail, label).toContain(expected);
+    }
   });
 
   it("accepts a valid generated HOC block and blocks malformed HOC metadata", () => {
@@ -193,7 +270,8 @@ describe("nativePlsReadiness", () => {
     for (const permutationSamples of [100, 999, 4_321]) {
       const permutation = readiness({ settings: { ...settings, permutationSamples } });
       expect(permutation.canRun, `${permutationSamples} permutations`).toBe(true);
-      expect(permutation.items.find((item) => item.id === "calculation")?.detail).toContain("candidate single-model Freedman-Lane");
+      expect(permutation.items.find((item) => item.id === "calculation")?.detail).toContain("single-model Freedman-Lane");
+      expect(permutation.items.find((item) => item.id === "calculation")?.detail).not.toContain("Experimental");
     }
 
     const mixed = readiness({ settings: { ...settings, bootstrapSamples: 500, permutationSamples: 999 } });
@@ -287,7 +365,7 @@ describe("nativePlsReadiness", () => {
     expect(formative.blockers.find((item) => item.id === "calculation")?.detail).toContain("reflective endogenous constructs");
   });
 
-  it("requires an explicit, non-indicator A-versus-B plan for two-group permutation MGA", () => {
+  it("requires an explicit, non-indicator A-versus-B plan for combined MICOM and permutation MGA", () => {
     const groupedDataset: Dataset = {
       ...dataset,
       columns: [...dataset.columns, "group"],
@@ -317,13 +395,15 @@ describe("nativePlsReadiness", () => {
 
     const valid = readiness({ dataset: groupedDataset, settings: mgaSettings });
     expect(valid.canRun).toBe(true);
-    expect(valid.items.find((item) => item.id === "calculation")?.detail).toContain("Group A) minus B (Group B)");
-    expect(valid.items.find((item) => item.id === "calculation")?.detail).toContain("Steps 2 and 3, paths, loadings, and weights");
+    expect(valid.items.find((item) => item.id === "calculation")?.detail).toContain("A (Group A) and B (Group B)");
+    expect(valid.items.find((item) => item.id === "calculation")?.detail).toContain("exactly 5000 deterministic size-preserving permutations");
+    expect(valid.items.find((item) => item.id === "calculation")?.detail).toContain("structural-path group differences are calculated");
 
     const conflicts: AnalysisUiSettings[] = [
       { ...mgaSettings, groupAValue: null },
       { ...mgaSettings, groupBValue: "A" },
       { ...mgaSettings, groupMethods: "mga_permutation" },
+      { ...mgaSettings, groupMethods: "micom" },
       { ...mgaSettings, micomConfiguralConfirmed: false },
       { ...mgaSettings, groupPermutationSamples: 4_999 },
       { ...mgaSettings, weightingScheme: "factor" },
@@ -518,7 +598,7 @@ describe("nativePlsReadiness", () => {
     });
     expect(partial.canRun).toBe(true);
     expect(partial.items.find((item) => item.id === "calculation")).toMatchObject({ status: "warning" });
-    expect(partial.items.find((item) => item.id === "calculation")?.detail).toContain("native engine will validate the complete");
+    expect(partial.items.find((item) => item.id === "calculation")?.detail).toContain("the calculation checks the complete");
 
     const missing = readiness({ dataset: weightedDataset, settings: { ...weightedSettings, caseWeightColumn: null } });
     expect(missing.canRun).toBe(false);

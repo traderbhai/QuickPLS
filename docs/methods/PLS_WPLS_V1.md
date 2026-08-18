@@ -1,13 +1,13 @@
 # WPLS v1
 
-Status: evidence-derived native-qualified for the documented positive case-weighted WPLS scope. Method-scoped packaged Windows acceptance and the final release audit remain required before release qualification. Broader weighted estimators outside this contract remain unsupported.
+Status: Supported Standard scope for documented positive case-weighted reflective WPLS with standardized preprocessing and path or factor weighting. The final current-source packaged receipt and audit are refreshed only after the shared release binary is frozen. Broader weighted estimators outside this contract remain unsupported.
 
 `AnalysisMethod::Wpls` runs a case-weighted PLS estimator using an explicit `settings.case_weight_column`. The current result reports `method_version = "wpls_case_weighted_v1"` and stores a typed `wpls` payload with the weight column, weight sum, effective sample size, covariance convention, and warnings.
 
 Implemented contract:
 
 - complete cases are selected across model indicators and the case-weight column;
-- missing weights are handled by the current listwise-deletion row policy;
+- missing weights are handled by the fixed listwise-deletion row policy and must reproduce an otherwise identical dataset with those rows removed;
 - non-finite, zero, or negative weights are rejected before estimation;
 - indicator preprocessing uses weighted means and unbiased weighted sample standard deviations;
 - Mode A outer weights use weighted covariance between indicators and inner proxies;
@@ -15,7 +15,7 @@ Implemented contract:
 - structural paths are estimated with weighted least squares;
 - outer loadings and R2 use the same weighted covariance and weighted residual definitions.
 
-Unsupported in the bounded method scope:
+Outside the supported method scope:
 
 - PCA weighting;
 - formative constructs;
@@ -29,4 +29,4 @@ Validation evidence:
 - The reference script independently implements weighted standardization, weighted covariance, weighted score iteration, weighted path estimation, weighted loadings, weighted R2, weight-sum metadata, effective sample size, missing-weight recipe validation, and negative-weight runtime rejection.
 - Current observed max delta is `3.41e-13`.
 
-Qualification status: the native method selection, case-weight picker, applicability checks, result tables, and export projections are source-bound and tested. Release qualification remains pending genuine packaged Windows execution, export, save/reopen, and the final method audit. WPLS inference, generated interaction/HOC workflows, formative blocks, and PCA weighting remain outside the bounded scope.
+Qualification status: the native method selection, case-weight picker, applicability checks, result tables, and export projections are source-bound and tested. Shipping still requires the final frozen-binary packaged Windows execution, export, save/reopen, and method audit to agree with the manifest. WPLS inference, generated interaction/HOC workflows, formative blocks, and PCA weighting remain outside the supported scope.

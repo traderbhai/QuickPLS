@@ -62,7 +62,7 @@ ANALYSIS_RECIPE_SCHEMA_VERSION = 3
 PLS_INFERENCE_PAYLOAD_KIND = "pls_pm_v3"
 PROJECT_ARCHIVE_SCHEMA_VERSION = 5
 EXPECTED_PROVENANCE_METHOD_VERSION = (
-    "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1"
+    "pls_pm_v1+pls_mediation_v1+pls_assessment_v8+freedman_lane_permutation_v1"
 )
 TARGET = "structural_path_randomization_reference_v1"
 SEED = 20_260_718

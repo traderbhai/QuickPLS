@@ -53,5 +53,6 @@ export function nativeDatasetOperationLabel(operation: DatasetVersionOperation |
   if (operation === "import") return "Imported";
   if (operation === "metadata") return "Metadata";
   if (operation === "recode") return "Recoded";
+  if (operation === "transform") return "Derived";
   return "Dataset";
 }

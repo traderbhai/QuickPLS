@@ -1,0 +1,1749 @@
+{
+  "comparison_contract": {
+    "outputs": [
+      {
+        "output_id": "model_identity",
+        "rationale": "Dataset and canonical scientific model identities must match exactly.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "shared_fold_plan",
+        "rationale": "Every complete row, repeat, fold, assignment version, and digest must match exactly.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "fold_failure_accounting",
+        "rationale": "Requested, completed, failed, and typed failure identities must match exactly.",
+        "rule": "exact"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "elementwise_tolerance": 1e-08,
+        "norm": "maximum",
+        "output_id": "indicator_prediction_numeric_metrics",
+        "rationale": "SSE, absolute error, RMSE, MAE, benchmark, and Q-squared-predict must agree in stable target order.",
+        "relative_tolerance": 1e-07,
+        "rule": "matrix_norm"
+      },
+      {
+        "output_id": "indicator_prediction_status",
+        "rationale": "Target identities, observation counts, unavailable values, and lower-RMSE/MAE labels are exact typed state.",
+        "rule": "exact"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "elementwise_tolerance": 1e-08,
+        "norm": "maximum",
+        "output_id": "fold_loss_numeric_table",
+        "rationale": "Established, alternative, and signed fold losses must agree after exact fold identity is established.",
+        "relative_tolerance": 1e-07,
+        "rule": "matrix_norm"
+      },
+      {
+        "output_id": "fold_test_row_ledger",
+        "rationale": "Repeat, fold, and exact test source-row identities must match.",
+        "rule": "exact"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "elementwise_tolerance": 1e-08,
+        "norm": "maximum",
+        "output_id": "case_loss_numeric_table",
+        "rationale": "Per-case repeated mean losses and signed differences must agree in source-row order.",
+        "relative_tolerance": 1e-07,
+        "rule": "matrix_norm"
+      },
+      {
+        "output_id": "case_loss_row_identity",
+        "rationale": "Source-row identity and repeat count must match exactly.",
+        "rule": "exact"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "cvpat_numeric_statistics",
+        "rationale": "CVPAT moments, probabilities, t statistic, and interval must agree after the exact case-loss ledger matches.",
+        "relative_tolerance": 1e-07,
+        "rule": "abs_relative"
+      },
+      {
+        "output_id": "cvpat_status_and_decision",
+        "rationale": "Direction, degrees of freedom, lower-loss model, unavailable status, reason, and decision are categorical outputs.",
+        "rule": "exact"
+      },
+      {
+        "absolute_tolerance": 1e-10,
+        "elementwise_tolerance": 1e-10,
+        "norm": "maximum",
+        "output_id": "equation_bic_numeric_vector",
+        "rationale": "Equation SSE, BIC, and BIC deltas must agree without an epsilon floor.",
+        "relative_tolerance": 1e-09,
+        "rule": "matrix_norm"
+      },
+      {
+        "output_id": "equation_bic_identity_vector",
+        "rationale": "Construct identity, sample size, parameter counts, and preferred candidate must match exactly.",
+        "rule": "exact"
+      },
+      {
+        "absolute_tolerance": 1e-12,
+        "elementwise_tolerance": 1e-12,
+        "norm": "maximum",
+        "output_id": "equation_akaike_weight_vector",
+        "rationale": "Two weights must agree and sum to one per equation.",
+        "relative_tolerance": 1e-10,
+        "rule": "matrix_norm"
+      },
+      {
+        "output_id": "akaike_weight_status_vector",
+        "rationale": "Candidate order, equation identity, and availability status must match exactly.",
+        "rule": "exact"
+      }
+    ]
+  },
+  "evidence_contract": {
+    "receipt_contract": {
+      "hardware_fingerprint_required": true,
+      "hash_algorithm": "sha256",
+      "identity_fields": [
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "build_fingerprint"
+      ],
+      "scenario_set_hash_required": true,
+      "source_descriptors_required": true
+    },
+    "receipts": [],
+    "required_roles": [
+      "method_contract",
+      "kernel_execution",
+      "oracle_independence",
+      "generative_recovery",
+      "adversarial_boundaries",
+      "runner_integration",
+      "archive_persistence",
+      "canonical_result_projection",
+      "gui_contract",
+      "cli_contract",
+      "cross_format_export",
+      "packaged_windows_e2e",
+      "accessibility",
+      "performance_scale_soak",
+      "scientific_review"
+    ]
+  },
+  "identity": {
+    "capability_cell": {
+      "capability_id": "smartpls.pls_model_comparison",
+      "capability_version": "pls_model_comparison_v1",
+      "cell_id": "qpls3.comparison.pls_models",
+      "registry_schema_version": 2
+    },
+    "execution_kind": "hybrid",
+    "method_version": "pls_model_comparison_v1",
+    "potentially_long_running": true,
+    "qualification_id": "qpls3.comparison.pls_models.qualification_v2",
+    "spec_frozen_at_utc": "2026-08-15T00:21:46Z"
+  },
+  "migration": {
+    "source_kind": "qualification_v1_manifest",
+    "source_manifest_path": "validation/methods/pls_model_comparison_v1.manifest.json",
+    "source_schema_version": 1,
+    "status": "compatibility_only",
+    "unresolved_items": [
+      "The v1 manifest predates the frozen active parity contract, references an absent Python comparison file, and still includes GM; it is read-only compatibility input and is not qualification evidence.",
+      "The Internal/Labs engine is not connected to the runner, recipe v4, project archive, CanonicalResultDocumentV2, GUI, CLI, or export surfaces.",
+      "The current independent Python oracle covers formula and fold microcases but not a complete independent PLS refit and holdout-prediction pipeline.",
+      "A second independently maintained computational implementation and a published two-model fixture have not been selected and frozen.",
+      "Qualification-sized simulations, adversarial product executions, packaged Windows, accessibility, performance, soak, and independent scientific-review evidence are missing."
+    ]
+  },
+  "operational_contract": {
+    "archive": {
+      "corruption_cases": [
+        "feature_identity",
+        "method_version",
+        "dataset_fingerprint",
+        "checksum",
+        "duplicate_entry",
+        "malformed_payload",
+        "legacy_reinterpretation",
+        "interrupted_save"
+      ],
+      "current_schema_version": 6,
+      "future_schema_policy": "verified_read_only",
+      "readable_schema_versions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "writable_schema_versions": [
+        6
+      ]
+    },
+    "cancellation": {
+      "archive_unchanged": true,
+      "maximum_latency_seconds": 1.0,
+      "no_partial_committed_result": true,
+      "no_partial_visible_result": true,
+      "phases": [
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "validate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "estimate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "resample"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "compare"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "export"
+        }
+      ],
+      "required_for_potentially_long_operations": true,
+      "same_settings_retry": true
+    },
+    "export": {
+      "canonical_projection_id": "canonical_result_document_v2_pls_model_comparison_projection",
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf",
+        "png"
+      ],
+      "provenance_required": true,
+      "same_run_required": true,
+      "semantic_readback_formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf"
+      ],
+      "validation_witness_excluded": true
+    },
+    "performance": {
+      "baseline_policy": {
+        "maximum_memory_regression_percent": 20.0,
+        "maximum_runtime_regression_percent": 20.0,
+        "measured_runs": 5,
+        "statistic": "median",
+        "warmup_runs": 1
+      },
+      "budgets": [
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 10.0,
+          "maximum_peak_working_set_bytes": 536870912,
+          "maximum_result_bytes": 16777216,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 600.0,
+          "maximum_peak_working_set_bytes": 8589934592,
+          "maximum_result_bytes": 268435456,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 3600.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 1073741824,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 14400.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 14400.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "compound_stress"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 10.0,
+          "maximum_peak_working_set_bytes": 1073741824,
+          "maximum_result_bytes": 16777216,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 300.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 268435456,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 1800.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 1073741824,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "compound_stress"
+        }
+      ],
+      "hardware_classes": [
+        {
+          "architecture": "x86_64",
+          "id": "standard",
+          "minimum_logical_cores": 6,
+          "minimum_memory_gib": 16,
+          "notes": "Product-finalization standard Windows reference class.",
+          "os_family": "windows"
+        },
+        {
+          "architecture": "x86_64",
+          "id": "workstation",
+          "minimum_logical_cores": 12,
+          "minimum_memory_gib": 32,
+          "notes": "Product-finalization workstation Windows reference class.",
+          "os_family": "windows"
+        }
+      ]
+    },
+    "windows": {
+      "accessible_tables_required": true,
+      "display_scale_percent": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "keyboard_only_required": true,
+      "offline_required": true,
+      "package_kinds": [
+        "installed",
+        "portable"
+      ],
+      "real_pointer_required": true,
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ]
+    }
+  },
+  "scenario_contract": {
+    "axes": [
+      {
+        "id": "model_topology",
+        "label": "Competing structural topology",
+        "values": [
+          {
+            "description": "Nested recursive candidates with identical endogenous targets.",
+            "id": "nested_same_targets"
+          },
+          {
+            "description": "Nonnested recursive candidates with identical endogenous targets.",
+            "id": "nonnested_same_targets"
+          },
+          {
+            "description": "Feedback or unequal targets are rejected before folds are created.",
+            "id": "cyclic_or_target_mismatch_rejected"
+          }
+        ]
+      },
+      {
+        "id": "measurement_model",
+        "label": "Measurement configuration",
+        "values": [
+          {
+            "description": "Reflective endogenous targets and Mode A exogenous composites.",
+            "id": "reflective_targets_mode_a"
+          },
+          {
+            "description": "Reflective targets with supported mixed exogenous composite modes.",
+            "id": "reflective_targets_mixed_exogenous_modes"
+          },
+          {
+            "description": "A formative endogenous target yields a typed applicability failure.",
+            "id": "formative_target_rejected"
+          }
+        ]
+      },
+      {
+        "id": "construct_type",
+        "label": "Construct and derived-term type",
+        "values": [
+          {
+            "description": "Plain PLS composite constructs only.",
+            "id": "plain_composites"
+          },
+          {
+            "description": "Controls, interactions, or higher-order terms are rejected in v1.",
+            "id": "controls_interactions_higher_order_rejected"
+          }
+        ]
+      },
+      {
+        "id": "data_distribution",
+        "label": "Indicator distribution",
+        "values": [
+          {
+            "description": "Approximately Gaussian homoscedastic indicators.",
+            "id": "gaussian_homoscedastic"
+          },
+          {
+            "description": "Skewed, heavy-tailed, heteroscedastic indicators and outliers.",
+            "id": "skewed_heavy_tail_heteroscedastic"
+          }
+        ]
+      },
+      {
+        "id": "missingness",
+        "label": "Complete-case policy",
+        "values": [
+          {
+            "description": "All union-model indicators are observed and finite.",
+            "id": "complete"
+          },
+          {
+            "description": "MCAR values require one listwise pool across the union of both models.",
+            "id": "union_listwise_mcar"
+          },
+          {
+            "description": "Extreme missingness or nonfinite values leave too few complete cases.",
+            "id": "extreme_or_nonfinite_insufficient"
+          }
+        ]
+      },
+      {
+        "id": "input_type",
+        "label": "Input representation",
+        "values": [
+          {
+            "description": "Raw numeric observations with a stable dataset fingerprint.",
+            "id": "raw_numeric_rows"
+          },
+          {
+            "description": "Covariance or correlation matrices are rejected before comparison.",
+            "id": "covariance_correlation_rejected"
+          }
+        ]
+      },
+      {
+        "id": "sample_size",
+        "label": "Analytical sample size",
+        "values": [
+          {
+            "description": "The exact minimum and one-below-minimum boundary.",
+            "id": "minimum_complete_case_boundary"
+          },
+          {
+            "description": "A typical applied PLS research sample.",
+            "id": "applied_research_size"
+          },
+          {
+            "description": "Large row count with bounded model breadth.",
+            "id": "large_n"
+          }
+        ]
+      },
+      {
+        "id": "variable_count",
+        "label": "Indicator and construct breadth",
+        "values": [
+          {
+            "description": "Hand-checkable indicator and construct count.",
+            "id": "micro"
+          },
+          {
+            "description": "Typical published-research breadth.",
+            "id": "applied"
+          },
+          {
+            "description": "Large indicator and construct counts including n less than p boundaries.",
+            "id": "wide"
+          }
+        ]
+      },
+      {
+        "id": "groups",
+        "label": "Grouping and leakage boundary",
+        "values": [
+          {
+            "description": "One ungrouped observation pool uses deterministic random-style folds.",
+            "id": "ungrouped_random_folds"
+          },
+          {
+            "description": "Grouped or time-ordered leakage controls are unavailable in v1.",
+            "id": "group_or_time_leakage_strategy_unavailable"
+          }
+        ]
+      },
+      {
+        "id": "estimator_options",
+        "label": "PLS estimator settings",
+        "values": [
+          {
+            "description": "Candidates share weighting, preprocessing, tolerance, and iteration settings.",
+            "id": "identical_supported_settings"
+          },
+          {
+            "description": "Mismatched settings, PLSc, weights, or resampling recipes are rejected.",
+            "id": "mismatched_or_specialized_estimator_rejected"
+          }
+        ]
+      },
+      {
+        "id": "effect_strength",
+        "label": "Predictive difference",
+        "values": [
+          {
+            "description": "Candidates have equal population predictive ability.",
+            "id": "null_equal_predictive_ability"
+          },
+          {
+            "description": "The established candidate has lower population loss.",
+            "id": "established_better"
+          },
+          {
+            "description": "The alternative candidate has lower population loss.",
+            "id": "alternative_better"
+          }
+        ]
+      },
+      {
+        "id": "seed",
+        "label": "Fold seed",
+        "values": [
+          {
+            "description": "The cross-language digest microcase uses seed 47.",
+            "id": "frozen_seed_47"
+          },
+          {
+            "description": "Additional preregistered seeds test exact repeatability and plan change.",
+            "id": "independent_seed_streams"
+          }
+        ]
+      },
+      {
+        "id": "fold_design",
+        "label": "Shared cross-validation design",
+        "values": [
+          {
+            "description": "Ten folds and ten repetitions.",
+            "id": "official_10_by_10"
+          },
+          {
+            "description": "A smaller explicit plan used only for hand and development fixtures.",
+            "id": "bounded_micro_plan"
+          },
+          {
+            "description": "Invalid folds, repetitions, confidence, or case counts are rejected.",
+            "id": "invalid_fold_plan_rejected"
+          }
+        ]
+      },
+      {
+        "id": "candidate_complexity",
+        "label": "Equation complexity",
+        "values": [
+          {
+            "description": "The compared equation has equal predictor counts.",
+            "id": "equal_parameter_counts"
+          },
+          {
+            "description": "The compared equation has different predictor counts and BIC penalties.",
+            "id": "different_parameter_counts"
+          }
+        ]
+      },
+      {
+        "id": "criterion_boundary",
+        "label": "CVPAT and BIC numerical boundary",
+        "values": [
+          {
+            "description": "Positive CVPAT case-difference variance and positive equation SSE.",
+            "id": "ordinary_positive_variance_and_sse"
+          },
+          {
+            "description": "Zero and near-zero case-difference variance require a frozen unavailable threshold.",
+            "id": "zero_or_near_zero_cvpat_variance"
+          },
+          {
+            "description": "Nonpositive or perfect equation SSE requires a typed failure or separately frozen unavailable policy.",
+            "id": "nonpositive_or_perfect_bic_sse"
+          }
+        ]
+      },
+      {
+        "id": "workload",
+        "label": "Comparison calculation workload",
+        "values": [
+          {
+            "description": "Formula, fold, and typed-boundary microcases.",
+            "id": "formula_and_fold_microcases"
+          },
+          {
+            "description": "Both candidates refit on every common fold plus full-sample BIC fits.",
+            "id": "full_two_candidate_refits"
+          }
+        ]
+      },
+      {
+        "id": "workers",
+        "label": "Worker scheduling",
+        "values": [
+          {
+            "description": "Serial execution.",
+            "id": "one_worker"
+          },
+          {
+            "description": "Supported parallel execution with identical results and ledgers.",
+            "id": "multiple_workers"
+          }
+        ]
+      }
+    ],
+    "complexity_profiles": [
+      {
+        "applicability": "required",
+        "description": "Hand-checkable two-candidate equations, shared folds, and typed failures.",
+        "id": "micro_exact",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 2,
+          "constructs": 3,
+          "groups": 1,
+          "indicators": 6,
+          "resamples": 16,
+          "rows": 40
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Typical applied two-model comparison using the official 10-by-10 design.",
+        "id": "applied",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 2,
+          "constructs": 8,
+          "groups": 1,
+          "indicators": 30,
+          "resamples": 200,
+          "rows": 500
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Large research comparison with full fold, case-loss, and equation ledgers.",
+        "id": "large",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 2,
+          "constructs": 20,
+          "groups": 1,
+          "indicators": 80,
+          "resamples": 400,
+          "rows": 10000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Separate maximum row, indicator, construct, and fold-refit axes.",
+        "id": "maximum_axis",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 2,
+          "constructs": 100,
+          "groups": 1,
+          "indicators": 300,
+          "resamples": 1000,
+          "rows": 100000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Combined high row count, model breadth, repetitions, ledgers, and cancellation.",
+        "id": "compound_stress",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 2,
+          "constructs": 50,
+          "groups": 1,
+          "indicators": 150,
+          "resamples": 1000,
+          "rows": 50000
+        }
+      }
+    ],
+    "mandatory_combinations": [
+      {
+        "coverage": "pairwise",
+        "id": "applied_pairwise_all_values",
+        "profile_id": "applied",
+        "purpose": "A preregistered covering array must exercise every pair of scenario values.",
+        "selections": {
+          "candidate_complexity": [
+            "equal_parameter_counts",
+            "different_parameter_counts"
+          ],
+          "construct_type": [
+            "plain_composites",
+            "controls_interactions_higher_order_rejected"
+          ],
+          "criterion_boundary": [
+            "ordinary_positive_variance_and_sse",
+            "zero_or_near_zero_cvpat_variance",
+            "nonpositive_or_perfect_bic_sse"
+          ],
+          "data_distribution": [
+            "gaussian_homoscedastic",
+            "skewed_heavy_tail_heteroscedastic"
+          ],
+          "effect_strength": [
+            "null_equal_predictive_ability",
+            "established_better",
+            "alternative_better"
+          ],
+          "estimator_options": [
+            "identical_supported_settings",
+            "mismatched_or_specialized_estimator_rejected"
+          ],
+          "fold_design": [
+            "official_10_by_10",
+            "bounded_micro_plan",
+            "invalid_fold_plan_rejected"
+          ],
+          "groups": [
+            "ungrouped_random_folds",
+            "group_or_time_leakage_strategy_unavailable"
+          ],
+          "input_type": [
+            "raw_numeric_rows",
+            "covariance_correlation_rejected"
+          ],
+          "measurement_model": [
+            "reflective_targets_mode_a",
+            "reflective_targets_mixed_exogenous_modes",
+            "formative_target_rejected"
+          ],
+          "missingness": [
+            "complete",
+            "union_listwise_mcar",
+            "extreme_or_nonfinite_insufficient"
+          ],
+          "model_topology": [
+            "nested_same_targets",
+            "nonnested_same_targets",
+            "cyclic_or_target_mismatch_rejected"
+          ],
+          "sample_size": [
+            "minimum_complete_case_boundary",
+            "applied_research_size",
+            "large_n"
+          ],
+          "seed": [
+            "frozen_seed_47",
+            "independent_seed_streams"
+          ],
+          "variable_count": [
+            "micro",
+            "applied",
+            "wide"
+          ],
+          "workers": [
+            "one_worker",
+            "multiple_workers"
+          ],
+          "workload": [
+            "formula_and_fold_microcases",
+            "full_two_candidate_refits"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "micro_exact_formula_fold_and_failure",
+        "profile_id": "micro_exact",
+        "purpose": "Hand equations, frozen fold digest, comparison direction, and typed failures.",
+        "selections": {
+          "candidate_complexity": [
+            "equal_parameter_counts"
+          ],
+          "construct_type": [
+            "plain_composites"
+          ],
+          "criterion_boundary": [
+            "ordinary_positive_variance_and_sse"
+          ],
+          "data_distribution": [
+            "gaussian_homoscedastic"
+          ],
+          "effect_strength": [
+            "null_equal_predictive_ability"
+          ],
+          "estimator_options": [
+            "identical_supported_settings"
+          ],
+          "fold_design": [
+            "official_10_by_10"
+          ],
+          "groups": [
+            "ungrouped_random_folds"
+          ],
+          "input_type": [
+            "raw_numeric_rows"
+          ],
+          "measurement_model": [
+            "reflective_targets_mode_a"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "nested_same_targets"
+          ],
+          "sample_size": [
+            "minimum_complete_case_boundary"
+          ],
+          "seed": [
+            "frozen_seed_47"
+          ],
+          "variable_count": [
+            "micro"
+          ],
+          "workers": [
+            "one_worker"
+          ],
+          "workload": [
+            "formula_and_fold_microcases"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "large_nonnormal_worker_repeatability",
+        "profile_id": "large",
+        "purpose": "Large nonnormal comparison with serial/parallel repeatability and full ledgers.",
+        "selections": {
+          "candidate_complexity": [
+            "different_parameter_counts"
+          ],
+          "construct_type": [
+            "controls_interactions_higher_order_rejected"
+          ],
+          "criterion_boundary": [
+            "nonpositive_or_perfect_bic_sse"
+          ],
+          "data_distribution": [
+            "skewed_heavy_tail_heteroscedastic"
+          ],
+          "effect_strength": [
+            "alternative_better"
+          ],
+          "estimator_options": [
+            "mismatched_or_specialized_estimator_rejected"
+          ],
+          "fold_design": [
+            "invalid_fold_plan_rejected"
+          ],
+          "groups": [
+            "group_or_time_leakage_strategy_unavailable"
+          ],
+          "input_type": [
+            "covariance_correlation_rejected"
+          ],
+          "measurement_model": [
+            "formative_target_rejected"
+          ],
+          "missingness": [
+            "extreme_or_nonfinite_insufficient"
+          ],
+          "model_topology": [
+            "cyclic_or_target_mismatch_rejected"
+          ],
+          "sample_size": [
+            "large_n"
+          ],
+          "seed": [
+            "independent_seed_streams"
+          ],
+          "variable_count": [
+            "wide"
+          ],
+          "workers": [
+            "multiple_workers"
+          ],
+          "workload": [
+            "full_two_candidate_refits"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_rows",
+        "profile_id": "maximum_axis",
+        "purpose": "Stress only the rows maximum while the other dimensions remain controlled.",
+        "selections": {
+          "candidate_complexity": [
+            "equal_parameter_counts",
+            "different_parameter_counts"
+          ],
+          "construct_type": [
+            "plain_composites",
+            "controls_interactions_higher_order_rejected"
+          ],
+          "criterion_boundary": [
+            "ordinary_positive_variance_and_sse",
+            "zero_or_near_zero_cvpat_variance",
+            "nonpositive_or_perfect_bic_sse"
+          ],
+          "data_distribution": [
+            "gaussian_homoscedastic",
+            "skewed_heavy_tail_heteroscedastic"
+          ],
+          "effect_strength": [
+            "null_equal_predictive_ability",
+            "established_better",
+            "alternative_better"
+          ],
+          "estimator_options": [
+            "identical_supported_settings",
+            "mismatched_or_specialized_estimator_rejected"
+          ],
+          "fold_design": [
+            "official_10_by_10",
+            "bounded_micro_plan",
+            "invalid_fold_plan_rejected"
+          ],
+          "groups": [
+            "ungrouped_random_folds",
+            "group_or_time_leakage_strategy_unavailable"
+          ],
+          "input_type": [
+            "raw_numeric_rows",
+            "covariance_correlation_rejected"
+          ],
+          "measurement_model": [
+            "reflective_targets_mode_a",
+            "reflective_targets_mixed_exogenous_modes",
+            "formative_target_rejected"
+          ],
+          "missingness": [
+            "complete",
+            "union_listwise_mcar",
+            "extreme_or_nonfinite_insufficient"
+          ],
+          "model_topology": [
+            "nested_same_targets",
+            "nonnested_same_targets",
+            "cyclic_or_target_mismatch_rejected"
+          ],
+          "sample_size": [
+            "minimum_complete_case_boundary",
+            "applied_research_size",
+            "large_n"
+          ],
+          "seed": [
+            "frozen_seed_47",
+            "independent_seed_streams"
+          ],
+          "variable_count": [
+            "micro",
+            "applied",
+            "wide"
+          ],
+          "workers": [
+            "one_worker",
+            "multiple_workers"
+          ],
+          "workload": [
+            "formula_and_fold_microcases",
+            "full_two_candidate_refits"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_indicators",
+        "profile_id": "maximum_axis",
+        "purpose": "Stress only the indicators maximum while the other dimensions remain controlled.",
+        "selections": {
+          "candidate_complexity": [
+            "equal_parameter_counts",
+            "different_parameter_counts"
+          ],
+          "construct_type": [
+            "plain_composites",
+            "controls_interactions_higher_order_rejected"
+          ],
+          "criterion_boundary": [
+            "ordinary_positive_variance_and_sse",
+            "zero_or_near_zero_cvpat_variance",
+            "nonpositive_or_perfect_bic_sse"
+          ],
+          "data_distribution": [
+            "gaussian_homoscedastic",
+            "skewed_heavy_tail_heteroscedastic"
+          ],
+          "effect_strength": [
+            "null_equal_predictive_ability",
+            "established_better",
+            "alternative_better"
+          ],
+          "estimator_options": [
+            "identical_supported_settings",
+            "mismatched_or_specialized_estimator_rejected"
+          ],
+          "fold_design": [
+            "official_10_by_10",
+            "bounded_micro_plan",
+            "invalid_fold_plan_rejected"
+          ],
+          "groups": [
+            "ungrouped_random_folds",
+            "group_or_time_leakage_strategy_unavailable"
+          ],
+          "input_type": [
+            "raw_numeric_rows",
+            "covariance_correlation_rejected"
+          ],
+          "measurement_model": [
+            "reflective_targets_mode_a",
+            "reflective_targets_mixed_exogenous_modes",
+            "formative_target_rejected"
+          ],
+          "missingness": [
+            "complete",
+            "union_listwise_mcar",
+            "extreme_or_nonfinite_insufficient"
+          ],
+          "model_topology": [
+            "nested_same_targets",
+            "nonnested_same_targets",
+            "cyclic_or_target_mismatch_rejected"
+          ],
+          "sample_size": [
+            "minimum_complete_case_boundary",
+            "applied_research_size",
+            "large_n"
+          ],
+          "seed": [
+            "frozen_seed_47",
+            "independent_seed_streams"
+          ],
+          "variable_count": [
+            "micro",
+            "applied",
+            "wide"
+          ],
+          "workers": [
+            "one_worker",
+            "multiple_workers"
+          ],
+          "workload": [
+            "formula_and_fold_microcases",
+            "full_two_candidate_refits"
+          ]
+        },
+        "stressed_dimensions": [
+          "indicators"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_constructs",
+        "profile_id": "maximum_axis",
+        "purpose": "Stress only the constructs maximum while the other dimensions remain controlled.",
+        "selections": {
+          "candidate_complexity": [
+            "equal_parameter_counts",
+            "different_parameter_counts"
+          ],
+          "construct_type": [
+            "plain_composites",
+            "controls_interactions_higher_order_rejected"
+          ],
+          "criterion_boundary": [
+            "ordinary_positive_variance_and_sse",
+            "zero_or_near_zero_cvpat_variance",
+            "nonpositive_or_perfect_bic_sse"
+          ],
+          "data_distribution": [
+            "gaussian_homoscedastic",
+            "skewed_heavy_tail_heteroscedastic"
+          ],
+          "effect_strength": [
+            "null_equal_predictive_ability",
+            "established_better",
+            "alternative_better"
+          ],
+          "estimator_options": [
+            "identical_supported_settings",
+            "mismatched_or_specialized_estimator_rejected"
+          ],
+          "fold_design": [
+            "official_10_by_10",
+            "bounded_micro_plan",
+            "invalid_fold_plan_rejected"
+          ],
+          "groups": [
+            "ungrouped_random_folds",
+            "group_or_time_leakage_strategy_unavailable"
+          ],
+          "input_type": [
+            "raw_numeric_rows",
+            "covariance_correlation_rejected"
+          ],
+          "measurement_model": [
+            "reflective_targets_mode_a",
+            "reflective_targets_mixed_exogenous_modes",
+            "formative_target_rejected"
+          ],
+          "missingness": [
+            "complete",
+            "union_listwise_mcar",
+            "extreme_or_nonfinite_insufficient"
+          ],
+          "model_topology": [
+            "nested_same_targets",
+            "nonnested_same_targets",
+            "cyclic_or_target_mismatch_rejected"
+          ],
+          "sample_size": [
+            "minimum_complete_case_boundary",
+            "applied_research_size",
+            "large_n"
+          ],
+          "seed": [
+            "frozen_seed_47",
+            "independent_seed_streams"
+          ],
+          "variable_count": [
+            "micro",
+            "applied",
+            "wide"
+          ],
+          "workers": [
+            "one_worker",
+            "multiple_workers"
+          ],
+          "workload": [
+            "formula_and_fold_microcases",
+            "full_two_candidate_refits"
+          ]
+        },
+        "stressed_dimensions": [
+          "constructs"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_resamples",
+        "profile_id": "maximum_axis",
+        "purpose": "Stress only the resamples maximum while the other dimensions remain controlled.",
+        "selections": {
+          "candidate_complexity": [
+            "equal_parameter_counts",
+            "different_parameter_counts"
+          ],
+          "construct_type": [
+            "plain_composites",
+            "controls_interactions_higher_order_rejected"
+          ],
+          "criterion_boundary": [
+            "ordinary_positive_variance_and_sse",
+            "zero_or_near_zero_cvpat_variance",
+            "nonpositive_or_perfect_bic_sse"
+          ],
+          "data_distribution": [
+            "gaussian_homoscedastic",
+            "skewed_heavy_tail_heteroscedastic"
+          ],
+          "effect_strength": [
+            "null_equal_predictive_ability",
+            "established_better",
+            "alternative_better"
+          ],
+          "estimator_options": [
+            "identical_supported_settings",
+            "mismatched_or_specialized_estimator_rejected"
+          ],
+          "fold_design": [
+            "official_10_by_10",
+            "bounded_micro_plan",
+            "invalid_fold_plan_rejected"
+          ],
+          "groups": [
+            "ungrouped_random_folds",
+            "group_or_time_leakage_strategy_unavailable"
+          ],
+          "input_type": [
+            "raw_numeric_rows",
+            "covariance_correlation_rejected"
+          ],
+          "measurement_model": [
+            "reflective_targets_mode_a",
+            "reflective_targets_mixed_exogenous_modes",
+            "formative_target_rejected"
+          ],
+          "missingness": [
+            "complete",
+            "union_listwise_mcar",
+            "extreme_or_nonfinite_insufficient"
+          ],
+          "model_topology": [
+            "nested_same_targets",
+            "nonnested_same_targets",
+            "cyclic_or_target_mismatch_rejected"
+          ],
+          "sample_size": [
+            "minimum_complete_case_boundary",
+            "applied_research_size",
+            "large_n"
+          ],
+          "seed": [
+            "frozen_seed_47",
+            "independent_seed_streams"
+          ],
+          "variable_count": [
+            "micro",
+            "applied",
+            "wide"
+          ],
+          "workers": [
+            "one_worker",
+            "multiple_workers"
+          ],
+          "workload": [
+            "formula_and_fold_microcases",
+            "full_two_candidate_refits"
+          ]
+        },
+        "stressed_dimensions": [
+          "resamples"
+        ]
+      },
+      {
+        "coverage": "compound",
+        "id": "compound_rows_indicators_constructs_resamples",
+        "profile_id": "compound_stress",
+        "purpose": "Combine large data, model breadth, repeated refits, cancellation, persistence, and exports.",
+        "selections": {
+          "candidate_complexity": [
+            "equal_parameter_counts",
+            "different_parameter_counts"
+          ],
+          "construct_type": [
+            "plain_composites",
+            "controls_interactions_higher_order_rejected"
+          ],
+          "criterion_boundary": [
+            "ordinary_positive_variance_and_sse",
+            "zero_or_near_zero_cvpat_variance",
+            "nonpositive_or_perfect_bic_sse"
+          ],
+          "data_distribution": [
+            "gaussian_homoscedastic",
+            "skewed_heavy_tail_heteroscedastic"
+          ],
+          "effect_strength": [
+            "null_equal_predictive_ability",
+            "established_better",
+            "alternative_better"
+          ],
+          "estimator_options": [
+            "identical_supported_settings",
+            "mismatched_or_specialized_estimator_rejected"
+          ],
+          "fold_design": [
+            "official_10_by_10",
+            "bounded_micro_plan",
+            "invalid_fold_plan_rejected"
+          ],
+          "groups": [
+            "ungrouped_random_folds",
+            "group_or_time_leakage_strategy_unavailable"
+          ],
+          "input_type": [
+            "raw_numeric_rows",
+            "covariance_correlation_rejected"
+          ],
+          "measurement_model": [
+            "reflective_targets_mode_a",
+            "reflective_targets_mixed_exogenous_modes",
+            "formative_target_rejected"
+          ],
+          "missingness": [
+            "complete",
+            "union_listwise_mcar",
+            "extreme_or_nonfinite_insufficient"
+          ],
+          "model_topology": [
+            "nested_same_targets",
+            "nonnested_same_targets",
+            "cyclic_or_target_mismatch_rejected"
+          ],
+          "sample_size": [
+            "minimum_complete_case_boundary",
+            "applied_research_size",
+            "large_n"
+          ],
+          "seed": [
+            "frozen_seed_47",
+            "independent_seed_streams"
+          ],
+          "variable_count": [
+            "micro",
+            "applied",
+            "wide"
+          ],
+          "workers": [
+            "one_worker",
+            "multiple_workers"
+          ],
+          "workload": [
+            "formula_and_fold_microcases",
+            "full_two_candidate_refits"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows",
+          "indicators",
+          "constructs",
+          "resamples"
+        ]
+      }
+    ],
+    "monte_carlo_policy": {
+      "confidence_level": 0.95,
+      "failed_fits_in_denominator": true,
+      "maximum_half_width": 0.01
+    }
+  },
+  "schema_version": 2,
+  "scientific_contract": {
+    "data_predicates": [
+      {
+        "diagnostic_code": "pls_model_comparison.data.same_raw_dataset_required",
+        "expression": "Both recipes bind to the exact raw Dataset fingerprint; covariance and correlation input are unavailable.",
+        "id": "same_raw_dataset_fingerprint",
+        "on_violation": "not_applicable"
+      },
+      {
+        "diagnostic_code": "pls_model_comparison.data.indicator_contract_invalid",
+        "expression": "Every union-model indicator is numeric, exists once per model, and has finite values on retained rows.",
+        "id": "numeric_unique_union_indicators",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "pls_model_comparison.data.insufficient_complete_cases",
+        "expression": "The shared union-listwise pool has at least max of twenty and twice the fold count complete cases.",
+        "id": "sufficient_union_complete_cases",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "pls_model_comparison.data.invalid_fold_configuration",
+        "expression": "Folds are at least two, repetitions at least one, confidence is strictly between zero and one, and every planned train/test partition is nonempty.",
+        "id": "valid_shared_fold_configuration",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "pls_model_comparison.data.invalid_bic_equation",
+        "expression": "Every common equation has N at least three, finite SSE greater than zero, and parameter count at least one.",
+        "id": "valid_prediction_oriented_bic_inputs",
+        "on_violation": "error"
+      }
+    ],
+    "estimands": [
+      {
+        "definition": "The two scientific model identities, immutable data identity, union complete-case set, deterministic shared-fold assignment, and exact pair accounting used by every downstream comparison.",
+        "id": "shared_fold_contract",
+        "label": "Exact common prediction-task identity",
+        "output_ids": [
+          "model_identity",
+          "shared_fold_plan",
+          "fold_failure_accounting"
+        ],
+        "unit": "typed identities, row/fold ledger, digest, and integer counts"
+      },
+      {
+        "definition": "Actual common-holdout indicator errors, indicator-average benchmark, Q-squared-predict values, fold losses, and case losses after both models are fully refit on every exact shared training partition.",
+        "id": "plspredict_outcome_comparison",
+        "label": "Two-candidate PLSpredict outcome comparison",
+        "output_ids": [
+          "indicator_prediction_numeric_metrics",
+          "indicator_prediction_status",
+          "fold_loss_numeric_table",
+          "fold_test_row_ledger",
+          "case_loss_numeric_table",
+          "case_loss_row_identity"
+        ],
+        "unit": "raw indicator units, squared indicator units, dimensionless Q-squared, and typed ledgers"
+      },
+      {
+        "definition": "Alternative-minus-established repeated case-loss mean, sample variance, standard error, t statistic, N minus one degrees of freedom, directional and two-sided probabilities, and interval.",
+        "id": "paired_model_cvpat",
+        "label": "Paired model CVPAT",
+        "output_ids": [
+          "cvpat_numeric_statistics",
+          "cvpat_status_and_decision"
+        ],
+        "unit": "mean squared prediction loss, probability, t scale, and decision"
+      },
+      {
+        "definition": "For each common endogenous structural equation, N log(SSE divided by N) plus p log(N), where p is incoming predictors plus one; no generic or whole-model BIC is substituted.",
+        "id": "equation_prediction_oriented_bic",
+        "label": "Prediction-oriented equation BIC",
+        "output_ids": [
+          "equation_bic_numeric_vector",
+          "equation_bic_identity_vector"
+        ],
+        "unit": "equation-level information-criterion value"
+      },
+      {
+        "definition": "Within each common endogenous equation, normalized exp of minus one-half BIC delta for exactly two candidates.",
+        "id": "bic_akaike_weights",
+        "label": "Two-candidate BIC-derived Akaike weights",
+        "output_ids": [
+          "equation_akaike_weight_vector",
+          "akaike_weight_status_vector"
+        ],
+        "unit": "delta BIC and unit-sum model weight"
+      }
+    ],
+    "model_predicates": [
+      {
+        "diagnostic_code": "pls_model_comparison.model.two_distinct_required",
+        "expression": "Exactly two schema-v3 point-estimate PLS algorithm recipes have different canonical scientific model digests after names, UUIDs, and declaration order are removed.",
+        "id": "exactly_two_distinct_pls_models",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "pls_model_comparison.model.common_targets_required",
+        "expression": "Both candidates expose the exact same nonempty reflective endogenous construct IDs and indicator sets.",
+        "id": "same_reflective_endogenous_targets",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "pls_model_comparison.model.unsupported_v1_feature",
+        "expression": "Both candidates are recursive and omit observed controls, higher-order constructs, interactions, formative endogenous targets, case weights, PLSc, and resampling recipes.",
+        "id": "bounded_plain_recursive_pls_scope",
+        "on_violation": "not_applicable"
+      },
+      {
+        "diagnostic_code": "pls_model_comparison.model.settings_mismatch",
+        "expression": "Weighting, preprocessing, missing-data policy, convergence tolerance, and maximum iterations match exactly between candidates.",
+        "id": "identical_estimation_settings",
+        "on_violation": "error"
+      }
+    ],
+    "oracle_exception": null,
+    "oracles": [
+      {
+        "citation": "Liengaard et al. (2021), Prediction: Coveted, Yet Forsaken? Introducing a Cross-Validated Predictive Ability Test in Partial Least Squares Path Modeling, DOI 10.1111/deci.12445.",
+        "covered_estimand_ids": [
+          "shared_fold_contract",
+          "plspredict_outcome_comparison",
+          "paired_model_cvpat"
+        ],
+        "id": "liengaard_et_al_2021",
+        "implementation": null,
+        "independence_group": "primary_cvpat_2021",
+        "kind": "primary_literature",
+        "locator": "docs/methods/PLS_MODEL_COMPARISON_V1.md",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Shmueli et al. (2016, 2019), PLSpredict training and holdout prediction principles.",
+        "covered_estimand_ids": [
+          "shared_fold_contract",
+          "plspredict_outcome_comparison"
+        ],
+        "id": "shmueli_et_al_plspredict",
+        "implementation": null,
+        "independence_group": "primary_plspredict",
+        "kind": "primary_literature",
+        "locator": "docs/methods/PLS_MODEL_COMPARISON_V1.md",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Sharma et al. (2019), PLS-Based Model Selection: The Role of Alternative Explanations in Information Systems Research, DOI 10.17005/1jais.00538.",
+        "covered_estimand_ids": [
+          "equation_prediction_oriented_bic"
+        ],
+        "id": "sharma_et_al_2019",
+        "implementation": null,
+        "independence_group": "primary_prediction_bic",
+        "kind": "primary_literature",
+        "locator": "docs/methods/PLS_MODEL_COMPARISON_V1.md",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Danks, Sharma, and Sarstedt (2020), Model Selection Uncertainty and Multimodel Inference in PLS-SEM, DOI 10.1016/j.jbusres.2020.03.019.",
+        "covered_estimand_ids": [
+          "bic_akaike_weights"
+        ],
+        "id": "danks_sharma_sarstedt_2020",
+        "implementation": null,
+        "independence_group": "primary_multimodel_weights",
+        "kind": "primary_literature",
+        "locator": "docs/methods/PLS_MODEL_COMPARISON_V1.md",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Transparent standard-library implementation of shared-fold assignment, paired CVPAT algebra, prediction-oriented equation BIC, and two-candidate weights; validation only.",
+        "covered_estimand_ids": [
+          "shared_fold_contract",
+          "paired_model_cvpat",
+          "equation_prediction_oriented_bic",
+          "bic_akaike_weights"
+        ],
+        "id": "python_standard_library_micro_oracle_v1",
+        "implementation": {
+          "maintainer": "QuickPLS validation authors",
+          "name": "QuickPLS independent Python PLS comparison micro-oracle",
+          "version": "1"
+        },
+        "independence_group": "python_stdlib_micro_oracle",
+        "kind": "independent_implementation",
+        "locator": "validation/pls_model_comparison_v1_oracle.py",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "Frozen hand calculations for fold counts, alternative-minus-established CVPAT moments, equation BIC, BIC deltas, and normalized weights.",
+        "covered_estimand_ids": [
+          "shared_fold_contract",
+          "paired_model_cvpat",
+          "equation_prediction_oriented_bic",
+          "bic_akaike_weights"
+        ],
+        "id": "frozen_hand_formula_cases",
+        "implementation": null,
+        "independence_group": "hand_formula_microcases",
+        "kind": "hand_calculation",
+        "locator": "validation/test_pls_model_comparison_v1_oracle.py",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "Qualification requirement: select and freeze a second independently maintained full PLSpredict/model-comparison implementation before evidence admission; currently missing.",
+        "covered_estimand_ids": [
+          "shared_fold_contract",
+          "plspredict_outcome_comparison",
+          "paired_model_cvpat",
+          "equation_prediction_oriented_bic",
+          "bic_akaike_weights"
+        ],
+        "id": "required_second_maintained_plspredict_implementation",
+        "implementation": {
+          "maintainer": "independent maintainer not yet selected",
+          "name": "Unselected independently maintained PLS comparison implementation",
+          "version": "required_before_qualification"
+        },
+        "independence_group": "required_external_full_pipeline",
+        "kind": "independent_implementation",
+        "locator": "docs/methods/PLS_MODEL_COMPARISON_V1.md#verification",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "Qualification requirement: acquire and freeze a published two-model raw-data fixture with independently reproduced fold-level predictions; currently missing.",
+        "covered_estimand_ids": [
+          "plspredict_outcome_comparison"
+        ],
+        "id": "required_published_two_model_fixture",
+        "implementation": null,
+        "independence_group": "required_published_full_pipeline_fixture",
+        "kind": "published_fixture",
+        "locator": "docs/methods/PLS_MODEL_COMPARISON_V1.md#verification",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "preprocessing": [
+      {
+        "applies_to": [
+          "dataset",
+          "established_recipe",
+          "alternative_recipe"
+        ],
+        "id": "bind_two_exact_dataset_recipes",
+        "operation": "Bind exactly two preregistered point-estimate PLS recipes to one immutable raw-data fingerprint and a persisted established-minus-alternative direction.",
+        "order": 0,
+        "parameters": {
+          "candidate_models": 2,
+          "post_hoc_candidate_generation": false
+        }
+      },
+      {
+        "applies_to": [
+          "candidate_models"
+        ],
+        "id": "validate_bounded_recipe_and_target_compatibility",
+        "operation": "Require distinct scientific model digests, identical supported settings, and identical nonempty reflective endogenous target IDs and indicators.",
+        "order": 1,
+        "parameters": {
+          "same_model": "error",
+          "unequal_targets": "error"
+        }
+      },
+      {
+        "applies_to": [
+          "raw_numeric_rows"
+        ],
+        "id": "derive_union_complete_case_pool",
+        "operation": "Resolve numeric indicators across the union of both models and apply one finite listwise pool before any fold assignment.",
+        "order": 2,
+        "parameters": {
+          "policy": "union_listwise",
+          "silent_imputation": false
+        }
+      },
+      {
+        "applies_to": [
+          "complete_case_rows"
+        ],
+        "id": "assign_exact_shared_folds",
+        "operation": "For each repetition rank source rows by SHA-256 over the version, seed, repetition, and source row, then allocate round-robin and persist the complete ledger and digest.",
+        "order": 3,
+        "parameters": {
+          "official_folds": 10,
+          "official_repeats": 10,
+          "version": "seeded_sha256_shared_complete_rows_round_robin_v1"
+        }
+      },
+      {
+        "applies_to": [
+          "shared_fold_plan"
+        ],
+        "id": "fit_both_candidates_on_every_training_partition",
+        "operation": "Fit both actual PLS models on each exact shared training partition and retain any typed pair failure without substituting saved-run results.",
+        "order": 4,
+        "parameters": {
+          "saved_run_reuse": false,
+          "silent_retry": false
+        }
+      },
+      {
+        "applies_to": [
+          "candidate_fold_fits",
+          "holdout_rows"
+        ],
+        "id": "predict_common_holdout_indicators",
+        "operation": "Apply training transforms, outer weights, recursive structural coefficients, and training indicator regressions to the identical holdout rows for both candidates.",
+        "order": 5,
+        "parameters": {
+          "prediction_scale": "raw_indicator",
+          "targets": "common_reflective_endogenous"
+        }
+      },
+      {
+        "applies_to": [
+          "holdout_predictions"
+        ],
+        "id": "aggregate_shared_prediction_losses",
+        "operation": "Aggregate indicator SSE, RMSE, MAE, indicator-average benchmark, Q-squared-predict, fold losses, and per-case repeated mean squared losses.",
+        "order": 6,
+        "parameters": {
+          "case_loss": "mean_squared_error_over_common_targets"
+        }
+      },
+      {
+        "applies_to": [
+          "paired_case_losses"
+        ],
+        "id": "calculate_paired_model_cvpat",
+        "operation": "Compute alternative-minus-established case-loss differences, sample variance with N minus one, t statistic, lower-tail directional probability, two-sided probability, and interval; zero variance is explicitly unavailable.",
+        "order": 7,
+        "parameters": {
+          "direction": "alternative_minus_established",
+          "zero_variance": "unavailable"
+        }
+      },
+      {
+        "applies_to": [
+          "full_complete_case_fits"
+        ],
+        "id": "fit_full_sample_equations_for_bic",
+        "operation": "Fit both candidates on the same complete pool and compute each common endogenous structural-score equation SSE and predictor count plus intercept.",
+        "order": 8,
+        "parameters": {
+          "epsilon_floor": false,
+          "parameter_count": "incoming_predictors_plus_intercept"
+        }
+      },
+      {
+        "applies_to": [
+          "common_endogenous_equations"
+        ],
+        "id": "calculate_prediction_oriented_bic_and_weights",
+        "operation": "Calculate equation-level BIC as N log(SSE divided by N) plus p log(N), then normalize exp of minus one-half BIC delta across exactly two candidates.",
+        "order": 9,
+        "parameters": {
+          "generic_bic_substitution": false,
+          "gm": false,
+          "whole_model_bic": false
+        }
+      },
+      {
+        "applies_to": [
+          "comparison_result"
+        ],
+        "id": "assemble_nonpromotional_result",
+        "operation": "Assemble method versions, dataset and scientific-model identities, ledgers, warnings, Internal/Labs surface, and qualified false without committing a partial result.",
+        "order": 10,
+        "parameters": {
+          "qualified": false,
+          "surface": "internal_labs"
+        }
+      }
+    ]
+  }
+}

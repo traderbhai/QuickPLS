@@ -1,0 +1,88 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "archive": "validation/results/v247-native-mediation-1786955655448-29040.qpls",
+    "archive_sha256": "d2e1cb8443cd83c3c214ededc203fb8af770da734e46db15a23046e66bc3f9ed",
+    "archive_size": 50147,
+    "checks": {
+      "checksums_exact": true,
+      "completed_results": true,
+      "current_cli_accepts_archive": true,
+      "method_payload": true,
+      "passed": true,
+      "unique_safe_members": true
+    },
+    "kind": "quickpls_phase3_persistence_gate",
+    "method": "mediation_v1",
+    "passed": true,
+    "path": "validation/results/method_factory/mediation_v1/evidence_truth_reconciliation_v2/persistence_gate.json",
+    "rejected_newer_candidates": [],
+    "schema_version": 1,
+    "validation": {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "validate",
+        "validation/results/v247-native-mediation-1786955655448-29040.qpls",
+        "--json"
+      ],
+      "duration_seconds": 0.276,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"issues\": [],\n  \"recovered\": true,\n  \"valid\": true\n}\n"
+    }
+  },
+  "feature_id": "qpls3.pls.mediation",
+  "generated_at_utc": "2026-08-18T00:33:32.347573Z",
+  "method_version": "pls_mediation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "persistence_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/mediation_persistence_gate.py",
+      "sha256": "bea45671d202052606970c3c0a633a9cb5fd96be6ecacaf2db7c2b6d0aa34f1d",
+      "size": 208
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/mediation_v1.manifest.json",
+      "sha256": "a6bbd0a4e5eba8bd3e879cb91e2a1cd2e51647c281c22c0c2279b95f711d0f40",
+      "size": 13922
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "ef5c8d32c4ea502f29666d912ae8103f7eb0e325a838df46dd5647ac07d2c11b",
+      "size": 30813
+    },
+    {
+      "path": "validation/results/method_factory/mediation_v1/evidence_truth_reconciliation_v2/persistence_gate.json",
+      "sha256": "42b1fb78654669f11b8c71f35ae29c23c192e71fb394cbff0c47df51c9a30303",
+      "size": 945
+    },
+    {
+      "path": "validation/results/v247-native-mediation-1786955655448-29040.qpls",
+      "sha256": "d2e1cb8443cd83c3c214ededc203fb8af770da734e46db15a23046e66bc3f9ed",
+      "size": 50147
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "148ba50d641d3ba1b42287e782a00854931f7495c3c938e687f2e72d08546956",
+      "size": 3303
+    }
+  ]
+}

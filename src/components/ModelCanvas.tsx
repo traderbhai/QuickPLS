@@ -4,6 +4,7 @@ import {
   Controls,
   MarkerType,
   ReactFlow,
+  applyNodeChanges,
   type EdgeChange,
   type EdgeTypes,
   type Node,
@@ -14,18 +15,23 @@ import {
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { buildDiagramGraph, isIndicatorNodeId, parseIndicatorNodeId } from "../domain/diagramGraph";
+import type { StandardSemModelV4AuthorityRecordV1, StandardSemModelV4EditorIntentV1 } from "../domain/standardSemModelV4Authority";
+import { compareUtf8StringsV1, type SemVariableV4 } from "../domain/semModelV4";
 import { SEM_SIZES } from "../domain/semGeometry";
 import { useWorkspace } from "../store";
-import type { ConstructData, DiagramToolMode } from "../types";
+import type { ConstructData, Dataset, DiagramToolMode, StandardSemPresentationLayoutV1 } from "../types";
 import { ConstructNode } from "./ConstructNode";
 import { IndicatorNode } from "./IndicatorNode";
 import { LatentNode } from "./LatentNode";
+import { planModelCanvasNodeChanges } from "./modelCanvasNodeChangePlan";
 import { SemEdge } from "./SemEdge";
+import { StandardSemPresentationLayer } from "./StandardSemPresentationLayer";
 
 const nodeTypes: NodeTypes = { construct: memo(ConstructNode), latent: memo(LatentNode), indicator: memo(IndicatorNode) };
 const edgeTypes: EdgeTypes = { semEdge: SemEdge };
 const SNAP_SIZE = 10;
 const ALIGN_THRESHOLD = 8;
+const LARGE_GRAPH_VISIBLE_RENDER_THRESHOLD = 100;
 const animationDuration = (milliseconds: number) =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0 : milliseconds;
 
@@ -57,6 +63,11 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
   const diagramTool = useWorkspace((state) => state.diagramTool);
   const diagramOverlaySettings = useWorkspace((state) => state.diagramOverlaySettings);
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
+  const dataset = useWorkspace((state) => state.dataset);
+  const strictAuthority = useWorkspace((state) => state.activeModelId
+    ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
+    : null);
+  const commitStandardIntent = useWorkspace((state) => state.commitStandardSemModelV4Intent);
   const onNodesChange = useWorkspace((state) => state.onNodesChange);
   const onEdgesChange = useWorkspace((state) => state.onEdgesChange);
   const onConnect = useWorkspace((state) => state.onConnect);
@@ -84,14 +95,52 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
   const [actionFeedback, setActionFeedback] = useState<null | { message: string; x?: number; y?: number }>(null);
   const [draggingVariableCount, setDraggingVariableCount] = useState(0);
   const [hoverDropTargetId, setHoverDropTargetId] = useState<string | null>(null);
+  const strictIdCounter = useRef(0);
+  const nextStrictId = (kind: string) => `standard:editor:${kind}:${Date.now()}:${++strictIdCounter.current}`;
+  const commitStrict = (intent: StandardSemModelV4EditorIntentV1) => {
+    setActionFeedback({ message: "Committing strict Standard model edit…" });
+    void commitStandardIntent(intent).then((result) => {
+      if (result.status === "committed") setActionFeedback({ message: "Committed to the strict Standard model authority." });
+      else if (result.status === "blocked") setActionFeedback({ message: `Blocked: ${result.diagnostic.message} ${result.diagnostic.correctiveAction}` });
+      else if (result.status === "stale") setActionFeedback({ message: "Stale edit ignored because the active authority changed." });
+      else setActionFeedback({ message: `Rejected: ${result.error instanceof Error ? result.error.message : String(result.error)}` });
+    });
+  };
+  const addStrictConstruct = (indicators: string[] = []) => commitStrict({
+    kind: "add_construct",
+    variable_id: nextStrictId("construct"),
+    label: `Construct ${nodes.length + 1}`,
+    representation: { kind: "composite", weighting: { kind: "mode_a" } },
+    indicators: indicators.map((column) => observedForStrictCanvas(strictAuthority!, dataset, column)),
+  });
+  const assignStrictIndicators = (constructId: string, indicators: string[]) => commitStrict({
+    kind: "assign_indicators",
+    construct_id: constructId,
+    indicators: indicators.map((column) => observedForStrictCanvas(strictAuthority!, dataset, column)),
+  });
   const resultRuns = useMemo(() => runs.filter((run) => run.status === "completed" && run.result), [runs]);
   const selectedResultRun = useMemo(() => resultRuns.find((run) => run.id === selectedResultRunId), [resultRuns, selectedResultRunId]);
   const graph = useMemo(() => buildDiagramGraph(nodes, edges, diagramMode, diagramOverlaySettings.mode, selectedResultRun, { layout: diagramLayout, layoutSource: diagramMode === "publication" ? "current_canvas" : undefined }), [diagramLayout, diagramMode, diagramOverlaySettings.mode, edges, nodes, selectedResultRun]);
+  const [canvasNodes, setCanvasNodes] = useState(graph.nodes);
+  const draggingNodeId = useRef<string | null>(null);
+  const dragGuideFrame = useRef<number | null>(null);
+  const pendingDragGuideNode = useRef<Node | null>(null);
   const resultDiagramMode = diagramMode === "smartpls_result" || diagramMode === "publication";
   const paperStyleCanvas = diagramMode === "sem" || diagramMode === "publication" || diagramMode === "smartpls_result";
   const layoutLocked = diagramLayout.layoutLocked && !resultDiagramMode;
   const canEditLayout = !resultDiagramMode && !layoutLocked;
+  const standardPresentation = diagramLayout.standardSemPresentation ?? { schemaVersion: 1, objects: [] };
+  const updateStandardPresentation = (presentation: StandardSemPresentationLayoutV1) => {
+    if (!strictAuthority || !canEditLayout) return;
+    checkpoint();
+    useWorkspace.setState((state) => ({
+      diagramLayout: { ...state.diagramLayout, standardSemPresentation: presentation },
+    }));
+  };
   const visibleGraph = graph;
+  useEffect(() => {
+    if (draggingNodeId.current === null) setCanvasNodes(graph.nodes);
+  }, [graph.nodes]);
   const arrangeModel = (direction: "horizontal" | "vertical" | "smartpls") => {
     autoLayout(direction);
     window.setTimeout(() => { void flow?.fitView({ padding: 0.2, duration: animationDuration(220) }); }, 0);
@@ -173,28 +222,45 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
         setActionFeedback({ message: "That structural path already exists. Select the path to edit, reverse, or delete it.", ...point });
         return false;
       }
-      addPath(source, target);
+      if (strictAuthority) commitStrict({
+        kind: "add_relationship",
+        relationship_id: nextStrictId("relationship"),
+        definition: { kind: "structural", source, target, label: "Path" },
+      });
+      else addPath(source, target);
       setActionFeedback(null);
       return true;
     }
     if (covarianceExists(source, target)) {
-      setActionFeedback({ message: "That covariance display arc already exists.", ...point });
+      setActionFeedback({ message: "That covariance already exists between these constructs.", ...point });
       return false;
     }
-    addCovariance(source, target);
+    if (strictAuthority) commitStrict({
+      kind: "add_relationship",
+      relationship_id: nextStrictId("covariance"),
+      definition: { kind: "covariance", left: { kind: "variable", id: source }, right: { kind: "variable", id: target }, label: "Covariance" },
+    });
+    else addCovariance(source, target);
     setActionFeedback(null);
     return true;
   };
   const onVisualNodesChange = (changes: NodeChange[]) => {
-    const modelChanges = changes.filter((change) => !("id" in change) || !isIndicatorNodeId(change.id)) as Array<NodeChange<Node<ConstructData>>>;
-    for (const change of changes) {
-      if (!("id" in change) || !isIndicatorNodeId(change.id) || change.type !== "position" || !change.position) continue;
-      const indicator = parseIndicatorNodeId(change.id);
-      if (indicator) moveIndicator(indicator.constructId, indicator.indicator, change.position);
+    setCanvasNodes((current) => applyNodeChanges(changes as NodeChange<(typeof current)[number]>[], current));
+    const permittedChanges = strictAuthority ? changes.filter((change) => change.type !== "remove") : changes;
+    const plan = planModelCanvasNodeChanges(
+      permittedChanges as Array<NodeChange<Node>>,
+      draggingNodeId.current !== null,
+    );
+    if (plan.checkpointBeforePersisting) checkpoint();
+    for (const change of plan.indicatorKeyboardPositions) {
+      moveIndicator(change.constructId, change.indicator, change.position);
     }
-    if (modelChanges.length) onNodesChange(modelChanges);
+    if (plan.modelChanges.length) {
+      onNodesChange(plan.modelChanges as Array<NodeChange<Node<ConstructData>>>);
+    }
   };
   const onVisualEdgesChange = (changes: EdgeChange[]) => {
+    if (strictAuthority) return;
     const modelChanges = changes.filter((change) => !("id" in change) || !change.id.startsWith("measurement::"));
     if (modelChanges.length) onEdgesChange(modelChanges);
   };
@@ -267,6 +333,24 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
       label: `Align ${anchorLabel} with ${matched.label}`,
     });
   };
+  const scheduleDragGuide = (dragged: Node) => {
+    pendingDragGuideNode.current = dragged;
+    if (dragGuideFrame.current !== null) return;
+    dragGuideFrame.current = window.requestAnimationFrame(() => {
+      dragGuideFrame.current = null;
+      const pending = pendingDragGuideNode.current;
+      pendingDragGuideNode.current = null;
+      if (pending) updateDragGuide(pending);
+    });
+  };
+  const cancelPendingDragGuide = () => {
+    if (dragGuideFrame.current !== null) window.cancelAnimationFrame(dragGuideFrame.current);
+    dragGuideFrame.current = null;
+    pendingDragGuideNode.current = null;
+  };
+  useEffect(() => () => {
+    if (dragGuideFrame.current !== null) window.cancelAnimationFrame(dragGuideFrame.current);
+  }, []);
   const draggedIndicators = (event: DragEvent) => {
     const encoded = event.dataTransfer.getData("application/qpls-indicators");
     const indicator = event.dataTransfer.getData("application/qpls-indicator");
@@ -307,7 +391,8 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
         setActionFeedback({ message: layoutLocked ? "Unlock layout before adding a construct." : "Switch to Edit model before adding a construct." });
         return;
       }
-      addConstruct();
+      if (strictAuthority) addStrictConstruct();
+      else addConstruct();
     };
     const handleArrange = (event: Event) => {
       const direction = (event as CustomEvent<{ direction?: "horizontal" | "vertical" | "smartpls" }>).detail?.direction ?? "smartpls";
@@ -323,7 +408,11 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
         setActionFeedback({ message: "Result and publication views are locked. Switch to Edit model before deleting diagram objects." });
         return;
       }
-      removeSelection();
+      if (strictAuthority) {
+        const state = useWorkspace.getState();
+        if (state.selectedNodeId) commitStrict({ kind: "delete_construct", variable_id: state.selectedNodeId });
+        else if (state.selectedEdgeId) commitStrict({ kind: "delete_relationship", relationship_id: state.selectedEdgeId });
+      } else removeSelection();
     };
     const handleUndo = () => undo();
     const handleRedo = () => redo();
@@ -344,7 +433,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
       window.removeEventListener("quickpls:model-undo", handleUndo);
       window.removeEventListener("quickpls:model-redo", handleRedo);
     };
-  }, [addConstruct, arrangeModel, canEditLayout, flow, layoutLocked, redo, removeSelection, resultDiagramMode, selectTool, undo]);
+  }, [addConstruct, arrangeModel, canEditLayout, flow, layoutLocked, redo, removeSelection, resultDiagramMode, selectTool, strictAuthority, undo]);
   const selectIndicatorForToolbar = (constructId: string, _indicator: string) => {
     setSelectedNode(constructId);
   };
@@ -380,7 +469,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
     {dragGuide?.horizontal !== undefined ? <div className="canvas-alignment-guide horizontal" style={{ top: dragGuide.horizontal }} /> : null}
     {dragGuide ? <div className="canvas-snap-hint" style={{ left: dragGuide.x + 12, top: dragGuide.y + 12 }}>{dragGuide.label}</div> : null}
     <ReactFlow
-      nodes={visibleGraph.nodes}
+      nodes={canvasNodes}
       edges={visibleGraph.edges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
@@ -404,17 +493,47 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
           return;
         }
         setActionFeedback(null);
-        onConnect(connection);
+        if (strictAuthority) commitStrict({
+          kind: "add_relationship",
+          relationship_id: nextStrictId("relationship"),
+          definition: { kind: "structural", source: connection.source, target: connection.target, label: "Path" },
+        });
+        else onConnect(connection);
       }}
-      onReconnect={!canEditLayout ? undefined : reconnectPath}
-      onNodeDragStart={!canEditLayout ? undefined : (_, node) => { checkpoint(); updateDragGuide(node); }}
-      onNodeDrag={!canEditLayout ? undefined : (_, node) => updateDragGuide(node)}
+      onReconnect={!canEditLayout ? undefined : (edge, connection) => {
+        if (!strictAuthority) {
+          reconnectPath(edge, connection);
+          return;
+        }
+        if (!connection.source || !connection.target) return;
+        const relation = strictAuthority.model.relations.find((candidate) => candidate.id === edge.id);
+        const label = relation ? strictAuthority.model.parameters.find((parameter) => parameter.id === relation.parameter)?.label ?? "Relationship" : "Relationship";
+        commitStrict({
+          kind: "replace_relationship",
+          relationship_id: edge.id,
+          definition: relation?.kind === "covariance"
+            ? { kind: "covariance", left: { kind: "variable", id: connection.source }, right: { kind: "variable", id: connection.target }, label }
+            : relation?.kind === "structural" && relation.role === "control"
+              ? { kind: "control", source: connection.source, target: connection.target, label }
+              : { kind: "structural", source: connection.source, target: connection.target, label },
+        });
+      }}
+      onNodeDragStart={!canEditLayout ? undefined : (_, node) => { draggingNodeId.current = node.id; checkpoint(); }}
+      onNodeDrag={!canEditLayout ? undefined : (_, node) => scheduleDragGuide(node)}
       onNodeDragStop={!canEditLayout ? undefined : (_, node) => {
+        draggingNodeId.current = null;
+        cancelPendingDragGuide();
         setDragGuide(null);
         const indicator = parseIndicatorNodeId(node.id);
-        if (!indicator) return;
+        if (!indicator) {
+          onNodesChange([{ id: node.id, type: "position", position: node.position, dragging: false }]);
+          return;
+        }
         const target = nearestConstructForIndicator(node, indicator.constructId);
-        if (target) assignIndicator(target.id, indicator.indicator);
+        if (target) {
+          if (strictAuthority) assignStrictIndicators(target.id, [indicator.indicator]);
+          else assignIndicator(target.id, indicator.indicator);
+        }
         else moveIndicator(indicator.constructId, indicator.indicator, node.position);
       }}
       onNodeClick={(event, node) => {
@@ -460,12 +579,14 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
         if (!canEditLayout) return;
         if (!flow) return;
         if (diagramTool === "construct") {
-          addConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }));
+          if (strictAuthority) addStrictConstruct();
+          else addConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }));
           return;
         }
         if (diagramTool === "indicator" || diagramTool === "residual" || diagramTool === "caption") return;
         if (event.detail !== 2) return;
-        addConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }));
+        if (strictAuthority) addStrictConstruct();
+        else addConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }));
       }}
       onDragOver={(event) => {
         if (!canEditLayout) return;
@@ -490,11 +611,13 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
         if (indicators.length > 0) {
           const targetConstructId = dropTargetConstructId(event);
           if (targetConstructId) {
-            assignIndicators(targetConstructId, indicators);
+            if (strictAuthority) assignStrictIndicators(targetConstructId, indicators);
+            else assignIndicators(targetConstructId, indicators);
             return;
           }
           preserveViewportForDrop.current = true;
-          addConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }), indicators);
+          if (strictAuthority) addStrictConstruct(indicators);
+          else addConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }), indicators);
         }
       }}
       fitView
@@ -506,13 +629,42 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
       multiSelectionKeyCode="Control"
       snapToGrid
       snapGrid={[10, 10]}
+      onlyRenderVisibleElements={visibleGraph.nodes.length + visibleGraph.edges.length >= LARGE_GRAPH_VISIBLE_RENDER_THRESHOLD}
       nodesDraggable={canEditLayout && diagramTool !== "pan"}
       nodesConnectable={canEditLayout}
       edgesReconnectable={canEditLayout}
       deleteKeyCode={null}
     >
+      {strictAuthority ? <StandardSemPresentationLayer
+        presentation={standardPresentation}
+        editable={canEditLayout}
+        onChange={updateStandardPresentation}
+      /> : null}
       {diagramLayout.showGrid && !resultDiagramMode ? <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#dbe1e4" /> : null}
       <Controls showInteractive={false} />
     </ReactFlow>
   </div>;
+}
+
+function observedForStrictCanvas(
+  authority: StandardSemModelV4AuthorityRecordV1,
+  dataset: Dataset,
+  column: string,
+): Extract<SemVariableV4, { kind: "observed" }> {
+  const existing = authority.model.variables.find((variable): variable is Extract<SemVariableV4, { kind: "observed" }> =>
+    variable.kind === "observed" && variable.source_column === column);
+  if (existing) return structuredClone(existing);
+  const metadata = dataset.columnMetadata?.find((item) => item.name === column);
+  return {
+    kind: "observed",
+    id: `observed:${column}`,
+    label: metadata?.label?.trim() || column,
+    source_column: column,
+    scale: metadata?.scale_type ?? "continuous",
+    role: "indicator",
+    categories: Object.keys(metadata?.value_labels ?? {}).sort(compareUtf8StringsV1),
+    value_labels: { ...(metadata?.value_labels ?? {}) },
+    missing_markers: [...new Set((metadata?.missing_markers ?? []).map((value) => value.trim()).filter(Boolean))].sort(compareUtf8StringsV1),
+    transformation_lineage: [],
+  };
 }

@@ -1,0 +1,1322 @@
+{
+  "schema_version": 1,
+  "id": "15b9ee2a-9676-4992-8f51-2522cbd2669e",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "e59185d0-15f0-4185-8802-44b4f6e233a5",
+    "dataset_fingerprint": "v2:da6d5f2557259c19c2728f2d115bb50475ec1f6f9345b48a0250dfa7e6e98dec",
+    "method": "cca",
+    "method_version": "pls_pm_v1+cca_composite_residual_v1+cca_residual_diagnostics_v1+pls_mediation_v1+pls_assessment_v8",
+    "engine_version": "2.46.0",
+    "seed": 20260719,
+    "settings": {
+      "method": "cca",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260719,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-08-17T22:38:15.592713900Z",
+    "completed_at": "2026-08-17T22:38:15.667608300Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "CCA is validated for the documented QuickPLS v1.2.3 descriptive composite residual scope; bootstrap-based CCA decisions remain unsupported."
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cbsem": null,
+      "cca": {
+        "correlations": [
+          {
+            "absolute_residual": 0.0,
+            "left": "x",
+            "observed": 0.5191914418388025,
+            "reproduced": 0.5191914418388025,
+            "residual": 0.0,
+            "right": "z"
+          },
+          {
+            "absolute_residual": 0.27627385628730694,
+            "left": "x",
+            "observed": 0.6725159957813696,
+            "reproduced": 0.3962421394940626,
+            "residual": 0.27627385628730694,
+            "right": "y"
+          },
+          {
+            "absolute_residual": 1.1102230246251565e-16,
+            "left": "z",
+            "observed": 0.7631908147228031,
+            "reproduced": 0.763190814722803,
+            "residual": 1.1102230246251565e-16,
+            "right": "y"
+          }
+        ],
+        "max_absolute_residual": 0.27627385628730694,
+        "method_version": "cca_composite_residual_v1",
+        "model": "recursive_standardized_composite_path_model_v1",
+        "warnings": [
+          "CCA bootstrap inference, discrepancy tests, and broader decision rules are outside the validated QuickPLS v1.2.3 descriptive scope."
+        ]
+      },
+      "construct_scores": {
+        "x": [
+          1.182832842648562,
+          0.7175732151437686,
+          0.593341013018008,
+          0.4235660741360486,
+          -0.05886876410204788,
+          1.124841515242228,
+          -0.6997368760603523,
+          0.5690780859048754,
+          -0.8917173217735477,
+          0.14298853357426938,
+          -0.47013498836032724,
+          2.9755779118873056,
+          -0.44707336140903836,
+          0.4391390196639467,
+          -0.8461433523558316,
+          0.3682357218359643,
+          -0.09612412593213053,
+          -0.4938014445976031,
+          0.2180857949930875,
+          0.1330560390131736,
+          1.402818502765161,
+          1.4624370452591142,
+          -0.2521699598295394,
+          -0.9283527433655334,
+          -1.3418862475293398,
+          -1.1087083208945585,
+          -0.40581051086687553,
+          0.830306162887087,
+          -0.5516327383678219,
+          0.5319081751060619,
+          -0.058212226614385694,
+          -0.2894971202549347,
+          0.6896059864099998,
+          1.1372762975802158,
+          -1.6340704345053831,
+          1.331125425474457,
+          -1.6552800207711447,
+          0.33967458225119296,
+          -2.3523412351298028,
+          -1.5366110152243189,
+          -0.07349782327808624,
+          -1.522990929981768,
+          0.17888456595680624,
+          1.5211169504973006,
+          -0.15674091055688408,
+          0.03177416878363525,
+          1.925189266807395,
+          1.4501792515942553,
+          -0.7119105077879497,
+          -0.04596000186738843,
+          0.4193314343250838,
+          -0.04123421236600419,
+          0.7696187318506799,
+          -0.43071391254107944,
+          -0.06005454842156136,
+          0.20746083246918065,
+          -0.7916414874388249,
+          0.7896089108522701,
+          -0.6359677346087108,
+          -0.1290601799991422,
+          1.048649608458521,
+          -0.24970089760774591,
+          -1.6655674893405537,
+          -0.37022146688388474,
+          -0.63425963443228,
+          -0.4370300237927448,
+          -1.7037368011249476,
+          0.3114125832439646,
+          -0.8708560446190117,
+          -0.4121428091233229,
+          -0.6576364493336833,
+          2.4230418922212484,
+          0.7575436222735066,
+          -0.43770746902765895,
+          -0.19891741019576795,
+          -1.1938904778784658,
+          -0.3607256969157969,
+          -0.8994845842476847,
+          -1.5326138703652794,
+          -2.0890668236484617,
+          0.27776381300194786,
+          1.2038434635304336,
+          0.5869460570965366,
+          1.0968607678454858,
+          0.9996840943581462,
+          0.3988382683211081,
+          -1.02005072715371,
+          -0.1518652767343323,
+          -1.1856096909133096,
+          1.2789039429020375,
+          0.27669565405731267,
+          0.1807847089282861,
+          1.4901037132382768,
+          -0.8152915965811582,
+          -1.0220364803822017,
+          -0.7669587278225793,
+          0.62929984154576,
+          -2.5910970815847656,
+          -1.3624533331214046,
+          1.1476323378247772,
+          2.2502776056277614,
+          1.3224553091032063,
+          -0.4386517750844225,
+          0.51492717145637,
+          -0.3383434733613071,
+          -0.18794976200564548,
+          0.4861944916985666,
+          0.8359398475211629,
+          0.6998268404730833,
+          -0.5006125288131124,
+          0.8689182759614752,
+          0.7825131994471093,
+          -0.5473146666342865,
+          0.4542325047355868,
+          -0.3516416415766741,
+          0.22230545629760431,
+          -0.6215794336614434,
+          -0.29099104206349397,
+          -1.8890625199318092,
+          -0.1858444032174711,
+          -0.7800588627606221,
+          0.23193508880269298,
+          -1.3814043176488178,
+          -0.10541501372464039,
+          1.9455046726187633,
+          -0.17081488161250205,
+          -0.5416663787248637,
+          0.34441182379608815,
+          0.4020858722207385,
+          0.03518555411965975,
+          2.1322362652375575,
+          0.1346302145478694
+        ],
+        "y": [
+          1.1520565231304698,
+          1.0388455771126,
+          -0.030633176223531546,
+          -0.2424574036214742,
+          -0.12359455732222845,
+          -0.0025452757557303776,
+          0.022311764125893564,
+          1.1362237693536446,
+          -1.4837029260759975,
+          1.091140521753219,
+          -0.46533266912549814,
+          2.4300398094391467,
+          0.3902107153063741,
+          0.3881462675781222,
+          -0.3322711662396828,
+          -0.34288460709819635,
+          0.3697599980200159,
+          -0.10864203759129595,
+          -1.0768119203224413,
+          -0.1203641218211446,
+          1.311785564467156,
+          1.4803005650571142,
+          -1.848469770119449,
+          -0.287545822809227,
+          -1.898769785658274,
+          -1.8725451611803188,
+          0.28746764323105184,
+          1.0301723071071023,
+          0.5569062492412823,
+          0.6146517961592398,
+          -0.6702362276379952,
+          -0.1495535809362075,
+          1.1683683179609183,
+          0.508767437442031,
+          -2.350592358156473,
+          0.8054260028784492,
+          0.43353245727183015,
+          0.2739966774070606,
+          -1.2841572537708603,
+          0.14011438587266864,
+          -1.1964233288229478,
+          -0.9225065197353762,
+          0.575265277698539,
+          1.284090068738974,
+          -0.2513566574188746,
+          -0.6565906112113193,
+          -0.9406631456863265,
+          1.4873141178028828,
+          -0.030838703810440855,
+          -0.555115417139089,
+          0.1370638864944132,
+          0.1733701636739583,
+          0.27576601647031745,
+          -0.37613126504708494,
+          1.4258893370312,
+          -0.17918485497725276,
+          -0.1531880289104002,
+          0.5691533581052265,
+          -0.47922809447833653,
+          1.3027205487647033,
+          2.0944212740006227,
+          0.8810202470121279,
+          -1.3320347212084425,
+          -1.3270594006778638,
+          -0.16232061284569752,
+          0.2908423005776734,
+          -0.18837387209738768,
+          -0.7963931255233914,
+          -1.101318304146294,
+          0.7042050490295609,
+          0.16642581083723992,
+          3.133475912916424,
+          1.4802738219818607,
+          -0.6076448741107012,
+          -0.6694301164559786,
+          -0.8824057172306096,
+          0.5209035539716069,
+          -0.8244604963347024,
+          -1.2487648111675753,
+          -0.6939194198550922,
+          -0.039626308600715796,
+          1.0555390676313918,
+          2.2578337032854967,
+          0.3396962312428007,
+          1.0172415752345272,
+          0.47581190552992797,
+          0.2733411942168669,
+          -1.0081657884053545,
+          -1.4412790255590404,
+          1.844672053256567,
+          0.15870781030158762,
+          -0.3334148509757216,
+          -1.1948343269536408,
+          0.19177667551895533,
+          -1.2640692652634624,
+          -1.1842507213376505,
+          0.19331680297077286,
+          -1.5159993888146048,
+          -1.0674630520498547,
+          -0.2088253288122221,
+          1.7068784448577285,
+          1.2483799708408463,
+          -0.32909232851295467,
+          0.8955893815715302,
+          -1.3233823274371792,
+          -1.089133748518073,
+          0.3328612123392244,
+          1.082906132647898,
+          1.4328157458897686,
+          -0.33534934938826977,
+          1.0775091921584683,
+          0.42963246657484655,
+          -0.7718266085257046,
+          -0.052912899577365995,
+          -0.4172473645196742,
+          -0.1173576876844862,
+          -1.586994825383832,
+          -0.9938835736484869,
+          -1.1195032794273603,
+          0.5212513257135846,
+          -0.9402292259030155,
+          0.1513171971695611,
+          -1.0836323587005086,
+          -1.3732673445259027,
+          0.49654569242862096,
+          0.2644355510025047,
+          0.038862987738582364,
+          -1.1328426404519272,
+          0.09197492120577178,
+          -0.08381805005848098,
+          1.3744719736715663,
+          0.18906927937058118
+        ],
+        "z": [
+          -0.13693686232146754,
+          0.6635547452774967,
+          -0.9947327278825162,
+          -0.9972729771811177,
+          -0.5455789420291778,
+          -0.8819756762460118,
+          0.06568354524170938,
+          0.5066689155423941,
+          -0.28380118412937166,
+          1.5992841268051359,
+          -0.6659484336806719,
+          1.5580298320633836,
+          -0.06174051749188101,
+          0.11911996589804817,
+          -0.4702226303243777,
+          0.11928740070265705,
+          -0.319424070586681,
+          1.1289846095835028,
+          -1.851689703740076,
+          1.0894898493768395,
+          0.9747943091439124,
+          0.7139269888173679,
+          -1.896992485327683,
+          0.5736629050749472,
+          -1.1390471575765198,
+          -2.3229625361401793,
+          0.24576551026007656,
+          0.15468916506414168,
+          1.3778550029365029,
+          0.8376246220120225,
+          -0.25858678838925403,
+          -0.31431273504057405,
+          0.7368217922609672,
+          -0.15723581314227325,
+          -2.323831216069283,
+          0.272272881121773,
+          0.9289942273825732,
+          0.5351599957787571,
+          -0.8456929253257373,
+          -0.8561371326716837,
+          -1.2465218591303298,
+          -1.274097708332589,
+          0.1259344936081753,
+          0.5086794237223313,
+          0.06989919150983492,
+          -0.41228352971917065,
+          -0.3362534622154339,
+          1.2925167728407128,
+          -0.4690140711086319,
+          0.6530742022466743,
+          0.6598226290776338,
+          0.7989909093084937,
+          1.7844842983619604,
+          -0.3744364748141726,
+          0.48664341374603204,
+          0.31702964731010824,
+          -1.114814725948486,
+          -0.26412233874363605,
+          -0.7191040808315151,
+          1.6930053657216526,
+          1.6508691836963942,
+          1.2908879374728304,
+          -1.200543322512183,
+          -0.4925511040061473,
+          -0.21310515760959756,
+          -0.7940118101223075,
+          -0.40081909504045693,
+          -1.0372425616954424,
+          -2.228673841984591,
+          0.6156404101697822,
+          0.6005616782241247,
+          2.701215460169261,
+          0.31904159320277786,
+          -0.561355084086297,
+          0.07739009227571611,
+          -0.4002327091972718,
+          0.3606776539144852,
+          0.7753417803618641,
+          0.31178586134916453,
+          -0.30669190652767225,
+          0.6621105472670891,
+          1.5016825518279084,
+          1.186280354321793,
+          0.19813653729937566,
+          0.9875292843051302,
+          0.8340992509793715,
+          -0.16807114448636812,
+          -1.4305256672990985,
+          -1.5672575318306583,
+          0.5088518019191072,
+          1.027780805609823,
+          0.12281947374003215,
+          -0.3423231664357161,
+          0.24411741472746057,
+          -1.135610612482467,
+          -1.5774523486574075,
+          0.19211681501634345,
+          -1.661937149484348,
+          -0.998273338840151,
+          -0.44511683272837677,
+          2.026931169680386,
+          0.7470104183583607,
+          -0.6708455108433553,
+          1.0007574173860847,
+          -1.3646087706579342,
+          -0.49543190331771886,
+          0.9543967439536578,
+          1.576303914256545,
+          1.3252409901256426,
+          -0.3339336930739563,
+          -0.5780543623264681,
+          0.02387737576429937,
+          -0.706074559883961,
+          0.9216178501981889,
+          0.8046775690823665,
+          -1.580510152923491,
+          -1.1494830143458896,
+          -2.097031667713703,
+          -0.20950038440286142,
+          0.6072965372181897,
+          -0.4582887394816932,
+          -0.2064161455040327,
+          -0.5765517906849869,
+          -0.9364314516204205,
+          1.4121368716992218,
+          0.7203144896875106,
+          0.33550818345737565,
+          -0.6102930675186328,
+          0.511619237885182,
+          0.8708097479846499,
+          1.4104886453233327,
+          -1.5396540222424797
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [
+        {
+          "direct": 0.5191914418388025,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "z",
+          "total": 0.5191914418388025
+        },
+        {
+          "direct": 0.0,
+          "indirect": 0.3962421394940626,
+          "source": "x",
+          "target": "y",
+          "total": 0.3962421394940626
+        },
+        {
+          "direct": 0.7631908147228033,
+          "indirect": 0.0,
+          "source": "z",
+          "target": "y",
+          "total": 0.7631908147228033
+        }
+      ],
+      "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
+      "iterations": 3,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.5191914418388025,
+            "indirect": 0.0,
+            "source": "x",
+            "target": "z",
+            "total": 0.5191914418388025,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          },
+          {
+            "classification": "indirect_only",
+            "direct": 0.0,
+            "indirect": 0.3962421394940626,
+            "source": "x",
+            "target": "y",
+            "total": 0.3962421394940626,
+            "variance_accounted_for": 1.0,
+            "warning": null
+          },
+          {
+            "classification": "direct_only",
+            "direct": 0.7631908147228033,
+            "indirect": 0.0,
+            "source": "z",
+            "target": "y",
+            "total": 0.7631908147228033,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "cca_composite_residual_v1",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
+      "nca": null,
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9925720793275246,
+          "weight": 0.5045865251782355
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9925226448452072,
+          "weight": 0.5029220301376974
+        },
+        {
+          "construct": "z",
+          "indicator": "z1",
+          "loading": 0.9877741617237425,
+          "weight": 0.502116439410257
+        },
+        {
+          "construct": "z",
+          "indicator": "z2",
+          "loading": 0.988154469235696,
+          "weight": 0.5100643377787548
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9865746511939417,
+          "weight": 0.5151687361190239
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9856779151307609,
+          "weight": 0.4988927684274176
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.5191914418388025,
+          "source": "x",
+          "target": "z"
+        },
+        {
+          "coefficient": 0.7631908147228033,
+          "source": "z",
+          "target": "y"
+        }
+      ],
+      "pca": null,
+      "plsc": null,
+      "point_estimate_attribution": {
+        "construct_scores": "zero_mean_unit_variance_construct_score",
+        "contract_version": "pls_point_estimate_attribution_v1",
+        "effects": "standardized_structural_path_decomposition",
+        "indicator_centering": "sample_mean",
+        "indicator_scaling": "sample_standard_deviation",
+        "outer_loadings": "indicator_construct_score_correlation",
+        "outer_weights": "preprocessed_indicator_to_unit_variance_construct_score",
+        "preprocessing": "standardized",
+        "structural_paths": "standardized_construct_score_regression"
+      },
+      "predict": null,
+      "r_squared": {
+        "y": 0.582460219677255,
+        "z": 0.2695597532786549
+      },
+      "regression": null,
+      "segmentation": null,
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": -0.06402957578184847,
+          "scale": 0.970534722974447
+        },
+        {
+          "indicator": "x2",
+          "mean": -0.0615396003234318,
+          "scale": 0.9122568785484464
+        },
+        {
+          "indicator": "z1",
+          "mean": -0.0065021564308712105,
+          "scale": 0.7872337155534109
+        },
+        {
+          "indicator": "z2",
+          "mean": 0.028112238619659103,
+          "scale": 0.7432096900100934
+        },
+        {
+          "indicator": "y1",
+          "mean": -0.027164153471553026,
+          "scale": 0.8763410673076579
+        },
+        {
+          "indicator": "y2",
+          "mean": -0.006841226139287889,
+          "scale": 0.7450460760856503
+        }
+      ],
+      "used_observations": 132,
+      "warnings": [
+        "CCA is validated for the documented QuickPLS v1.2.3 descriptive composite residual scope; bootstrap-based CCA decisions remain unsupported."
+      ],
+      "wpls": null
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "z",
+            "observation_sum_squares": 318.15068169993003,
+            "prediction_error_sum_squares": 238.42578696783494,
+            "q_squared": 0.25058847683780594
+          },
+          {
+            "construct": "y",
+            "observation_sum_squares": 319.3456317018852,
+            "prediction_error_sum_squares": 145.3335231983435,
+            "q_squared": 0.5449021099057496
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "cca_residual_diagnostics": {
+        "available_pair_count": 3,
+        "cells": [
+          {
+            "absolute_residual": 0.0,
+            "left": "x",
+            "observed": 0.5191914418388025,
+            "pair_index": 0,
+            "reproduced": 0.5191914418388025,
+            "residual": 0.0,
+            "right": "z",
+            "status": "available"
+          },
+          {
+            "absolute_residual": 0.27627385628730694,
+            "left": "x",
+            "observed": 0.6725159957813696,
+            "pair_index": 1,
+            "reproduced": 0.3962421394940626,
+            "residual": 0.27627385628730694,
+            "right": "y",
+            "status": "available"
+          },
+          {
+            "absolute_residual": 1.1102230246251565e-16,
+            "left": "z",
+            "observed": 0.7631908147228031,
+            "pair_index": 2,
+            "reproduced": 0.763190814722803,
+            "residual": 1.1102230246251565e-16,
+            "right": "y",
+            "status": "available"
+          }
+        ],
+        "construct_order": [
+          "x",
+          "z",
+          "y"
+        ],
+        "estimator_method_version": "cca_composite_residual_v1",
+        "expected_pair_count": 3,
+        "failures": [],
+        "matrix_convention": "construct_correlation_lower_triangle_excluding_diagonal_v1",
+        "max_absolute_residual": 0.27627385628730694,
+        "method_version": "cca_residual_diagnostics_v1",
+        "model": "recursive_standardized_composite_path_model_v1",
+        "source_max_absolute_residual": 0.27627385628730694,
+        "unavailable_pair_count": 0,
+        "warnings": [
+          "CCA bootstrap inference, discrepancy tests, and broader decision rules are outside the validated QuickPLS v1.2.3 descriptive scope."
+        ]
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9851502665955456,
+          "construct": "x",
+          "cronbach_alpha": 0.984926469203325,
+          "normalized_weight_norm_squared": 0.5075381297892694,
+          "off_diagonal_denominator": 0.12879607044224428,
+          "off_diagonal_numerator": 0.49246187021073073,
+          "rho_a": 0.9849344934919684,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9925195922628762,
+          "score_variance_before_normalization": 0.9999999999999998
+        },
+        {
+          "ave": 0.9760735248197612,
+          "construct": "z",
+          "cronbach_alpha": 0.9754885259215735,
+          "normalized_weight_norm_squared": 0.512286547399714,
+          "off_diagonal_denominator": 0.13118639464428888,
+          "off_diagonal_numerator": 0.4877134526002862,
+          "rho_a": 0.9756675058075791,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9878919100148155,
+          "score_variance_before_normalization": 1.0000000000000002
+        },
+        {
+          "ave": 0.9724452473774856,
+          "construct": "y",
+          "cronbach_alpha": 0.9716717606445828,
+          "normalized_weight_norm_squared": 0.5142928210636457,
+          "off_diagonal_denominator": 0.13211234815441866,
+          "off_diagonal_numerator": 0.4857071789363543,
+          "rho_a": 0.9724158633803487,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.986030153041776,
+          "score_variance_before_normalization": 0.9999999999999996
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9925720793275248
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "z",
+          "indicator": "x1",
+          "loading": 0.5161720670125991
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.6682445128030654
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9925226448452078
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "z",
+          "indicator": "x2",
+          "loading": 0.5144693543848272
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.6667610464485642
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "x",
+          "indicator": "z1",
+          "loading": 0.5060539340817545
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "z",
+          "indicator": "z1",
+          "loading": 0.9877741617237428
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "y",
+          "indicator": "z1",
+          "loading": 0.749965100016132
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "x",
+          "indicator": "z2",
+          "loading": 0.5197254986744557
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "z",
+          "indicator": "z2",
+          "loading": 0.9881544692356974
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "y",
+          "indicator": "z2",
+          "loading": 0.7579847881630293
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.6660835636909614
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "z",
+          "indicator": "y1",
+          "loading": 0.7644906390630274
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9865746511939419
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.6602031317536732
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "z",
+          "indicator": "y2",
+          "loading": 0.7403377274561828
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9856779151307603
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 0.3690373777849743,
+          "included_r_squared": 0.2695597532786549,
+          "source_construct": "x",
+          "target_construct": "z"
+        },
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 1.394981381718963,
+          "included_r_squared": 0.582460219677255,
+          "source_construct": "z",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "z",
+          "y"
+        ],
+        "values": [
+          [
+            0.9925473623941306,
+            0.5191914418388025,
+            0.6725159957813696
+          ],
+          [
+            0.5191914418388025,
+            0.9879643337791912,
+            0.763190814722803
+          ],
+          [
+            0.6725159957813696,
+            0.763190814722803,
+            0.9861263850934553
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5296247180998751
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.6874020488656134
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5296247180998751
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7836718078130487
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.6874020488656134
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7836718078130487
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "z",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5296247180998751
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.6874020488656134
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5296247180998751
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7836718078130487
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.6874020488656134
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7836718078130487
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "z",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v8",
+      "model_fit": {
+        "analytical_sample_size": 132,
+        "estimated": {
+          "chi_square": {
+            "status": "available",
+            "value": 159.590345296809
+          },
+          "d_g": {
+            "status": "available",
+            "value": 1.0564135433914976
+          },
+          "d_uls": 0.2947575165544374,
+          "degrees_of_freedom": {
+            "status": "available",
+            "value": 7.0
+          },
+          "nfi": {
+            "status": "available",
+            "value": 0.8636615627659027
+          },
+          "srmr": 0.11847393053696653
+        },
+        "estimated_implied_correlation": [
+          [
+            1.0,
+            0.9851502653736616,
+            0.5090345274949963,
+            0.5092305132396652,
+            0.3880187096078489,
+            0.387666024314675
+          ],
+          [
+            0.9851502653736616,
+            1.0,
+            0.5090091753227234,
+            0.5092051513064347,
+            0.3879993845588793,
+            0.38764671683099383
+          ],
+          [
+            0.5090345274949963,
+            0.5090091753227234,
+            1.0,
+            0.9760734525028594,
+            0.7437393315517783,
+            0.7430633179532113
+          ],
+          [
+            0.5092305132396652,
+            0.5092051513064347,
+            0.9760734525028594,
+            1.0,
+            0.7440256820817728,
+            0.7433494082080745
+          ],
+          [
+            0.3880187096078489,
+            0.3879993845588793,
+            0.7437393315517783,
+            0.7440256820817728,
+            1.0,
+            0.9724448453097021
+          ],
+          [
+            0.387666024314675,
+            0.38764671683099383,
+            0.7430633179532113,
+            0.7433494082080745,
+            0.9724448453097021,
+            1.0
+          ]
+        ],
+        "exact_fit_inference": {
+          "procedure": "adapted_bollen_stine_saturated_and_estimated",
+          "reason_code": "model_fit.adapted_bollen_stine_not_implemented",
+          "status": "unavailable"
+        },
+        "geodesic_logarithm": "natural_logarithm",
+        "indicator_order": [
+          "x1",
+          "x2",
+          "z1",
+          "z2",
+          "y1",
+          "y2"
+        ],
+        "matrix_convention": "indicator_correlation_lower_triangle_including_diagonal",
+        "method_version": "pls_model_fit_v2",
+        "null_model_chi_square": {
+          "status": "available",
+          "value": 1170.5455081811408
+        },
+        "observed_correlation": [
+          [
+            1.0,
+            0.970300613030773,
+            0.5026800106706292,
+            0.5171272530846198,
+            0.6622531079994871,
+            0.6555966268965051
+          ],
+          [
+            0.970300613030773,
+            1.0,
+            0.5018837097905519,
+            0.514572914800861,
+            0.6599821627343219,
+            0.6549681424359282
+          ],
+          [
+            0.5026800106706292,
+            0.5018837097905519,
+            1.0,
+            0.952149927651176,
+            0.7505707368232978,
+            0.7282016199675662
+          ],
+          [
+            0.5171272530846198,
+            0.514572914800861,
+            0.952149927651176,
+            1.0,
+            0.7599369421743666,
+            0.7346048235738744
+          ],
+          [
+            0.6622531079994871,
+            0.6599821627343219,
+            0.7505707368232978,
+            0.7599369421743666,
+            1.0,
+            0.9449042858665944
+          ],
+          [
+            0.6555966268965051,
+            0.6549681424359282,
+            0.7282016199675662,
+            0.7346048235738744,
+            0.9449042858665944,
+            1.0
+          ]
+        ],
+        "saturated": {
+          "chi_square": {
+            "status": "available",
+            "value": 122.97625833313568
+          },
+          "d_g": {
+            "status": "available",
+            "value": 0.7338394950412659
+          },
+          "d_uls": 0.0023609396098639274,
+          "degrees_of_freedom": {
+            "status": "available",
+            "value": 6.0
+          },
+          "nfi": {
+            "status": "available",
+            "value": 0.8949410702329522
+          },
+          "srmr": 0.010603098401307331
+        },
+        "saturated_implied_correlation": [
+          [
+            1.0,
+            0.9851502653736616,
+            0.5090345274949963,
+            0.5092305132396652,
+            0.6585589034192935,
+            0.6579603136240759
+          ],
+          [
+            0.9851502653736616,
+            1.0,
+            0.5090091753227234,
+            0.5092051513064347,
+            0.6585261042713585,
+            0.6579275442885619
+          ],
+          [
+            0.5090345274949963,
+            0.5090091753227234,
+            1.0,
+            0.9760734525028594,
+            0.7437393315517781,
+            0.7430633179532111
+          ],
+          [
+            0.5092305132396652,
+            0.5092051513064347,
+            0.9760734525028594,
+            1.0,
+            0.7440256820817726,
+            0.7433494082080743
+          ],
+          [
+            0.6585589034192935,
+            0.6585261042713585,
+            0.7437393315517781,
+            0.7440256820817726,
+            1.0,
+            0.9724448453097021
+          ],
+          [
+            0.6579603136240759,
+            0.6579275442885619,
+            0.7430633179532111,
+            0.7433494082080743,
+            0.9724448453097021,
+            1.0
+          ]
+        ]
+      },
+      "r_squared": {
+        "y": 0.582460219677255,
+        "z": 0.2695597532786549
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.26394098215002915,
+          "construct": "z",
+          "predictor_count": 1,
+          "r_squared": 0.2695597532786549
+        },
+        {
+          "adjusted_r_squared": 0.5792483752132339,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.582460219677255
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "z",
+          "vif": 1.0
+        },
+        {
+          "predictor_construct": "z",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.two_indicator_limited_information for construct 'x'",
+        "rho_a.two_indicator_limited_information for construct 'z'",
+        "rho_a.two_indicator_limited_information for construct 'y'"
+      ]
+    }
+  }
+}

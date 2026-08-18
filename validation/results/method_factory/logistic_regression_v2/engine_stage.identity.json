@@ -6,8 +6,8 @@
     "current_cli_binding": {
       "current_cli": {
         "path": "target/release/qpls.exe",
-        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-        "size": 20690432
+        "sha256": "f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254",
+        "size": 32373248
       },
       "execution_binding": "reference script executed in this evidence run with QUICKPLS_CLI_PATH set to current_cli",
       "explicit_report_binding": null,
@@ -16,11 +16,12 @@
     },
     "current_reference_execution": {
       "command": [
-        "not_rerun"
+        "python",
+        "validation/logistic_v2_reference.py"
       ],
-      "returncode": null,
+      "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": ""
+      "stdout_tail": "e\": 1,\n      \"expected_text\": \"exact numeric 0 and 1\",\n      \"stderr_tail\": \"Error: PLS estimation failed: unsupported estimation method: logistic regression outcome must contain only exact numeric 0 and 1 values after listwise deletion\\n\"\n    },\n    \"single_class\": {\n      \"passed\": true,\n      \"exit_code\": 1,\n      \"expected_text\": \"both 0 and 1\",\n      \"stderr_tail\": \"Error: PLS estimation failed: unsupported estimation method: logistic regression outcome must contain both 0 and 1 after listwise deletion\\n\"\n    },\n    \"rank_deficient\": {\n      \"passed\": true,\n      \"exit_code\": 1,\n      \"expected_text\": \"rank\",\n      \"stderr_tail\": \"Error: PLS estimation failed: rank-deficient regression for construct: outcome\\n\"\n    },\n    \"separation\": {\n      \"passed\": true,\n      \"exit_code\": 1,\n      \"expected_text\": \"separation\",\n      \"stderr_tail\": \"Error: PLS estimation failed: numerical failure: logistic regression produced extreme fitted probabilities; possible separation or unstable scaling\\n\"\n    },\n    \"quasi_separation\": {\n      \"passed\": true,\n      \"exit_code\": 1,\n      \"expected_text\": \"separation\",\n      \"stderr_tail\": \"Error: PLS estimation failed: numerical failure: logistic regression produced extreme fitted probabilities; possible separation or unstable scaling\\n\"\n    },\n    \"workers_fixed\": {\n      \"passed\": true,\n      \"exit_code\": 1,\n      \"expected_text\": \"worker\",\n      \"stderr_tail\": \"Error: regression.single_worker_required: Standalone regression point estimation uses one worker; multiple workers are accepted only by the deterministic indexed bootstrap plan\\n\"\n    }\n  },\n  \"artifacts\": {\n    \"fixture\": \"validation/results/logistic_v2_reference.csv\",\n    \"recipe\": \"validation/results/logistic_v2_reference.recipe.json\",\n    \"quickpls_result\": \"validation/results/logistic_v2_reference_quickpls.json\"\n  },\n  \"runtime_boundary\": \"Python, SciPy, and R glm are validation-only references and are not bundled or required by the QuickPLS desktop application.\"\n}\n"
     },
     "expected_checks": [
       "complete_separation_rejected",
@@ -28,6 +29,7 @@
       "independent_python_full_arithmetic",
       "non_binary_outcome_rejected",
       "nondefault_worker_count_rejected",
+      "quasi_separation_rejected",
       "quickpls_v2_exact_contract",
       "rank_deficiency_rejected",
       "seed_invariant_deterministic_result",
@@ -41,7 +43,7 @@
         "validation.test_logistic_method_promotion_audit"
       ],
       "returncode": 0,
-      "stderr_tail": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.632s\n\nOK\n",
+      "stderr_tail": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.867s\n\nOK\n",
       "stdout_tail": ""
     },
     "observed_passed_checks": [
@@ -50,6 +52,7 @@
       "independent_python_full_arithmetic",
       "non_binary_outcome_rejected",
       "nondefault_worker_count_rejected",
+      "quasi_separation_rejected",
       "quickpls_v2_exact_contract",
       "rank_deficiency_rejected",
       "seed_invariant_deterministic_result",
@@ -59,13 +62,13 @@
     "reference_identity_exact": true,
     "reference_report": {
       "path": "validation/results/logistic_v2_reference_report.json",
-      "sha256": "37e5d51ee904057d16d76bb26aeaf417a8b8aeeb1058885b24cedf6ae555c13c",
-      "size": 3361
+      "sha256": "0bc615bb63815ac4a5d0890e010b4ada6564dd8d39fa0b8944c5304146319192",
+      "size": 3694
     },
     "required_check_set_exact": true
   },
   "feature_id": "qpls3.standalone.logistic",
-  "generated_at_utc": "2026-08-13T19:54:23.036762Z",
+  "generated_at_utc": "2026-08-18T03:55:48.024953Z",
   "method_version": "regression_logistic_v2",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -74,18 +77,18 @@
   "source_artifacts": [
     {
       "path": "docs/methods/REGRESSION_LOGISTIC_V2.md",
-      "sha256": "19c354958b4645c3e0dae25d1afce026300eeaed4b3389fd487c945b903ce6eb",
-      "size": 2613
+      "sha256": "ec5ac7b5c41e273154c0d3ed2886cab2e7649bb9446721bc876c62817c307c82",
+      "size": 2601
     },
     {
       "path": "validation/legacy_release_factory_migration.py",
-      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
-      "size": 23709
+      "sha256": "b9c5207f9d8aff6c2cd8b243acb017634d26b00355a1f537b3cfa4ad69fa92e7",
+      "size": 24794
     },
     {
       "path": "validation/logistic_v2_reference.py",
-      "sha256": "cc40cf82ce4633a4ad503b0e0e848bc1c22d00c3e7acb38900b8b3769c01fd4e",
-      "size": 25692
+      "sha256": "630fb43176191f280d42d4a162f49abadf8ad7b900c6c0eb20a86fd2eedaec7b",
+      "size": 26312
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -94,8 +97,8 @@
     },
     {
       "path": "validation/methods/logistic_regression_v2.manifest.json",
-      "sha256": "d37e0fa1b6e67a91ec3b885163114e07c7da08de88d54385f960a77abcc73c7f",
-      "size": 13621
+      "sha256": "4e7731cb782808e278e535e28d59cbcb811b44cbbd7917a8fdea3df7c50e4407",
+      "size": 13537
     },
     {
       "path": "validation/methods/method_promotion_manifest.schema.json",
@@ -114,8 +117,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     }
   ]
 }

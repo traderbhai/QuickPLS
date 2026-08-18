@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "record_type": "quickpls_beta_privacy_request_template",
+  "template_only": true,
+  "record": {
+    "request_id": null,
+    "participant_id": null,
+    "request_type": null,
+    "received_at": null,
+    "verified_at": null,
+    "completed_at": null,
+    "external_record_id": null,
+    "status": null
+  },
+  "allowed_request_types": [
+    "access",
+    "correction",
+    "withdrawal",
+    "deletion"
+  ],
+  "allowed_status_values": [
+    "received",
+    "identity_verified_externally",
+    "completed",
+    "rejected_with_reason"
+  ],
+  "handling_policy": {
+    "route": "privacy@quickpls.org",
+    "direct_identity_verification_occurs_outside_repository": true,
+    "consent_and_identity_mapping_updates_occur_outside_repository": true,
+    "repository_record_contains_only_pseudonymous_id_and_external_record_id": true,
+    "raw_request_content_committed": false,
+    "completion_evidence_required_before_marking_completed": true
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "final_release_audit": {
+      "actual_packaged_viewport_matrix": true,
+      "bounded_claim": "One reflective-reflective disjoint two-stage higher-order construct formed from at least two measured, measurement-only lower-order components and connected by exactly one higher-order-to-measured-outcome structural path in a standardized path-weighted PLS model.",
+      "bounded_packaged_workflow": true,
+      "exact_required_check_receipt": true,
+      "excluded_scope": [
+        "Repeated-indicator and hybrid authoring remain backend/reference capabilities and are excluded from this native promotion contract.",
+        "Formative higher-order relationships, multiple or nested higher-order constructs, incoming HOC paths, and arbitrary HOC systems are excluded.",
+        "HOC bootstrap, permutation, confidence intervals, interactions, case weights, and nonstandardized or PCA settings are excluded."
+      ],
+      "invalid_setup_no_state_mutation": true,
+      "packaged_artifact": {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/higher_order_v1/packaged_acceptance.identity.json"
+      },
+      "packaged_identity_passes": true,
+      "passed": true,
+      "prior_factory_native": true,
+      "release_evidence_contract_passes": true,
+      "required_cancellation_retry": true,
+      "same_run_archive": true,
+      "source_receipt_and_cli_current": true,
+      "verified_prior_artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/higher_order_v1/engine_evidence.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/higher_order_v1/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/higher_order_v1/native_evidence.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ]
+    }
+  },
+  "feature_id": "qpls3.pls.higher_order_two_stage",
+  "generated_at_utc": "2026-08-18T14:16:06.025167Z",
+  "method_version": "pls_pm_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/higher_order_method_promotion_audit.py",
+      "sha256": "175b25a9bc4af262f83c634141445051f713cc65c16a0280e124ea912d718324",
+      "size": 276
+    },
+    {
+      "path": "validation/higher_order_v1_packaged_acceptance.py",
+      "sha256": "fe919a8ff2b338ec4664871c65da1041be1ec5a2ec1b02cccc917d44a767d0c1",
+      "size": 19135
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/higher_order_v1.manifest.json",
+      "sha256": "19bd05dfc41e6b36ffd0eb3165dd002594ef46da8493c769b781f3d590835f88",
+      "size": 15861
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase2_release_packaged_common.py",
+      "sha256": "ac2e758e49d380ce66d8b5987b0d76e1752fb4bf6ad5e6e65f16b1e4e5b15775",
+      "size": 70975
+    },
+    {
+      "path": "validation/results/method_factory/higher_order_v1/packaged_acceptance.identity.json",
+      "sha256": "619524a069b11d0a4cfb6e2f422d3fccc23343416e3dc638e2730f9e17772e96",
+      "size": 33818
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase2_release_packaged_common.py",
+      "sha256": "e50a98a98d0f3e5f29373801eaa5ec0b0352d8cdeb7d8cc6c71a5b67b87af92d",
+      "size": 38027
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "binary_path": "target/release/examples/cbsem_exact_case_bootstrap_studentized_benchmark.exe",
+  "binary_sha256": "72e1f9466beb81b27fde0e22566e4ef16fbc3c5973e459c3c874b3567e2135c5",
+  "cap_decision": {
+    "reason": "Phase-0 records bounded source-bound measurements and stop events only; it does not choose caps or qualify the product selector.",
+    "status": "not_evaluated"
+  },
+  "case_receipts": [
+    {
+      "case_id": "compact_b500_w1",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/cases/compact_b500_w1.json",
+      "sha256": "88ec3c3586f01ceb0727321217ace11b586a642094c431595fb5976f00d8f8a3",
+      "status": "survivor_measurement_recorded"
+    },
+    {
+      "case_id": "n_axis_n40_f3_b1000_w1",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/cases/n_axis_n40_f3_b1000_w1.json",
+      "sha256": "3251d5f707dccd3f6b903b65684646ed7fa5d571a79bcaa98b32df5a7c0483cc",
+      "status": "survivor_measurement_recorded"
+    },
+    {
+      "case_id": "factor_axis_n180_f1_b1000_w1",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/cases/factor_axis_n180_f1_b1000_w1.json",
+      "sha256": "9ae2b227f1982f749e9c71d7345b213c2cbd6235726eef7bb545e77185c6486d",
+      "status": "survivor_measurement_recorded"
+    },
+    {
+      "case_id": "factor_axis_n180_f2_b1000_w1",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/cases/factor_axis_n180_f2_b1000_w1.json",
+      "sha256": "ba89eded8374ec7d630a8dad2e7c980a2629b0aa8f978c5a38ef9d60e5681f36",
+      "status": "survivor_measurement_recorded"
+    },
+    {
+      "case_id": "availability_floor_n180_f3_b1000_w1",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/cases/availability_floor_n180_f3_b1000_w1.json",
+      "sha256": "369a9d930c76a8261b0bd1a29a38511ed777d6d750e3cb35bb4f5ab6726d35c1",
+      "status": "survivor_measurement_recorded"
+    },
+    {
+      "case_id": "availability_floor_n180_f3_b1000_w4",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/cases/availability_floor_n180_f3_b1000_w4.json",
+      "sha256": "98ac59c4d6bd1008cdb13488cb36f6bfbe1e95b39b161572c90785771f1452dd",
+      "status": "survivor_measurement_recorded"
+    },
+    {
+      "case_id": "availability_floor_n180_f3_b1000_w12",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/cases/availability_floor_n180_f3_b1000_w12.json",
+      "sha256": "c2a58c89d9d5fd8679ab3bb16a8b41c10bff3477dfa3cea7780ecdcda91c2644",
+      "status": "survivor_measurement_recorded"
+    },
+    {
+      "case_id": "result_size_n180_f3_b2000_w4",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/cases/result_size_n180_f3_b2000_w4.json",
+      "sha256": "07d29f5bce8691fd91e857ad559ef2c36da37a84f6ba3c96c89df781af11c43d",
+      "status": "survivor_measurement_recorded"
+    },
+    {
+      "case_id": "cancellation_n180_f3_b1000_w4",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/cases/cancellation_n180_f3_b1000_w4.json",
+      "sha256": "a9ccb2f88666e1caa0038e1294d7ad755d66c28784d3980abb7b53553d4db7ef",
+      "status": "cancellation_observed"
+    }
+  ],
+  "hardware": {
+    "architecture": "AMD64",
+    "logical_cores": 12,
+    "os": "Windows",
+    "os_release": "11",
+    "physical_memory_bytes": 16442789888,
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase0_report_v1",
+  "manifest_path": "validation/cbsem_exact_case_bootstrap_studentized_phase0_manifest_v1.json",
+  "manifest_sha256": "f64e0afe552a907430cbd32e7d4b1586bae8a9316e1586ed005adc536d70e49e",
+  "physical_memory_bytes": 16442789888,
+  "report_schema_path": "validation/cbsem_exact_case_bootstrap_studentized_phase0_report_v1.schema.json",
+  "run_id": "phase0-20260816-b",
+  "rust_example_sha256": "d7fe84008262d784abf422020517df703e78e2159541f6e05a86902fb8ca43c0",
+  "schema_version": 1,
+  "status": "phase0_measurement_complete_no_caps_or_qualification",
+  "stop_criteria": {
+    "exact_repeated_scientific_digest_required": true,
+    "exact_worker_scientific_digest_required": true,
+    "maximum_cancellation_terminal_latency_seconds": 1.0,
+    "maximum_orphan_processes": 0,
+    "maximum_peak_working_set_fraction_of_physical_ram": 0.5,
+    "maximum_project_document_proxy_bytes": 268435456,
+    "maximum_text_export_proxy_bytes": 134217728,
+    "size_scope": "combined_s2_json_is_a_conservative_phase0_proxy_only_until_v11_canonical_and_export_builders_are_authoritative",
+    "stop_effect": "stop_the_case_and_skip_only_manifest_declared_dependants"
+  },
+  "stop_evaluation": {
+    "reasons": [],
+    "status": "no_stop_triggered"
+  },
+  "worker_invariance": {
+    "case_ids": [
+      "availability_floor_n180_f3_b1000_w1",
+      "availability_floor_n180_f3_b1000_w4",
+      "availability_floor_n180_f3_b1000_w12"
+    ],
+    "scientific_result_sha256": "2d6551e9b90106bf68baae23682538e53352e2b79e548c7deb768c1cb9004b29",
+    "status": "exact"
+  }
+}

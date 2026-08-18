@@ -1,0 +1,171 @@
+{
+  "blockers": [
+    "The current validated CB-SEM engine and recipe validation reject interactions.",
+    "PLS two-stage moderation and PROCESS OLS moderation are different estimators and cannot evidence CB-SEM LMS moderation.",
+    "No LMS raw-data likelihood, quadrature/mixture diagnostics, simple-slope covariance, bootstrap refits, persistence, native workflow, or packaged acceptance exists."
+  ],
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "contract_valid": true,
+    "derived_state_matches_contract": true,
+    "forbidden_engine_markers_absent": true,
+    "preview_relabeling_forbidden": true,
+    "promotion_identity_matches": true,
+    "promotion_manifest_valid_or_explicitly_uncreated": true,
+    "source_binding_complete": true,
+    "source_probes_present": true,
+    "untracked_promotion_manifests_absent": true
+  },
+  "declared_current_state": "absent",
+  "dependencies": [
+    "cbsem_ml_baseline",
+    "cbsem_bootstrap"
+  ],
+  "derived_current_state": "absent",
+  "feature_id": "qpls3.cbsem.moderator",
+  "forbidden_engine_markers": [
+    {
+      "absent": true,
+      "locations": [],
+      "marker": "CBSEM_MODERATOR_METHOD_VERSION"
+    },
+    {
+      "absent": true,
+      "locations": [],
+      "marker": "Latent Moderated Structural Equations"
+    }
+  ],
+  "generated_at_utc": "2026-08-14T00:48:40.769713Z",
+  "ineligible_preview_versions": [],
+  "method_version": "cbsem_moderator_v1",
+  "passed": true,
+  "phase5_track_complete": false,
+  "promotion_manifest_result": {
+    "catalogue_snapshot_date": "2026-08-12",
+    "declared_state": "absent",
+    "derived_state": "absent",
+    "errors": [],
+    "feature_id": "qpls3.cbsem.moderator",
+    "method_version": "cbsem_moderator_v1",
+    "passed": true,
+    "path": "D:\\QuickPLS\\validation\\methods\\cbsem_moderator_v1.manifest.json",
+    "stage_results": [
+      {
+        "artifacts": [],
+        "missing_roles": [
+          "boundary_report",
+          "independent_reference",
+          "method_spec",
+          "simulation_report"
+        ],
+        "passed": false,
+        "state": "engine_only"
+      },
+      {
+        "artifacts": [],
+        "missing_roles": [
+          "persistence_report"
+        ],
+        "passed": false,
+        "state": "archive_qualified"
+      },
+      {
+        "artifacts": [],
+        "missing_roles": [
+          "export_report",
+          "frontend_report"
+        ],
+        "passed": false,
+        "state": "native_qualified"
+      },
+      {
+        "artifacts": [],
+        "missing_roles": [
+          "method_audit",
+          "packaged_acceptance"
+        ],
+        "passed": false,
+        "state": "release_qualified"
+      }
+    ],
+    "target_state": "release_qualified"
+  },
+  "report_kind": "quickpls_phase5_support_boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+      "size": 114179
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+      "size": 194148
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+      "size": 653641
+    },
+    {
+      "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+      "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+      "size": 5176
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cbsem_moderator_v1.manifest.json",
+      "sha256": "8566796f66e138c4d7f216e2302441070211d87f1691f73028f7e735ac61d646",
+      "size": 9843
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase5_cbsem_expansion_audit.py",
+      "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+      "size": 19268
+    },
+    {
+      "path": "validation/phase5_cbsem_expansion_contract.json",
+      "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+      "size": 13256
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_phase5_cbsem_expansion_audit.py",
+      "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+      "size": 6382
+    }
+  ],
+  "source_binding_error": null,
+  "source_probes": [
+    {
+      "error": null,
+      "found": true,
+      "needle": "CB-SEM ML v1 does not support interactions or higher-order constructs",
+      "path": "crates/qpls-estimation/src/pls.rs"
+    },
+    {
+      "error": null,
+      "found": true,
+      "needle": "cbsem.interactions_unsupported",
+      "path": "crates/qpls-core/src/validation.rs"
+    }
+  ],
+  "support_classification": "absent_contract_scaffold_only",
+  "target_state": "release_qualified",
+  "track_id": "cbsem_moderator",
+  "unexpected_promotion_manifests": []
+}

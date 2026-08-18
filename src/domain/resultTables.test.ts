@@ -221,7 +221,7 @@ describe("result export tables", () => {
       "process_bootstrap_bca",
       "process_scope",
     ]);
-    expect(tables.every((table) => table.status === "experimental")).toBe(true);
+    expect(tables.every((table) => table.status === "validated")).toBe(true);
     expect(tables.find((table) => table.id === "process_reference_effects")?.columns)
       .toContain("Reference condition");
     const csv = tablesToCsv(tables);
@@ -240,10 +240,10 @@ describe("result export tables", () => {
     expect(runExportTables(failed)).toEqual([]);
   });
 
-  it("fails closed for unknown PROCESS versions and models", () => {
+  it("validates only exact PROCESS v2 identities and fails closed for unknown versions and models", () => {
     for (const withBootstrap of [false, true]) {
       expect(methodResultTables(processV2Run(withBootstrap).result!).every(
-        (table) => table.status === "experimental",
+        (table) => table.status === "validated",
       )).toBe(true);
     }
     const futureRegression = structuredClone(processV2Run().result!);
@@ -287,12 +287,12 @@ describe("result export tables", () => {
     ]);
     expect(tables.some((table) => table.status === "validated")).toBe(true);
     expect(tables.filter((table) => table.id.startsWith("segmentation_")).every((table) => table.status === "experimental")).toBe(true);
-    expect(tables.find((table) => table.id === "segmentation_summary")?.warning).toContain("does not claim unrestricted published PLS-POS equivalence");
+    expect(tables.find((table) => table.id === "segmentation_summary")?.warning).toContain("does not implement unrestricted published PLS-POS");
     expect(tables.find((table) => table.id === "wpls_weights")?.status).toBe("validated");
     expect(tables.find((table) => table.id === "plspredict_holdout")?.status).toBe("validated");
     expect(tables.find((table) => table.id === "ipma_constructs")?.status).toBe("validated");
     expect(tables.find((table) => table.id === "cca_residuals")?.status).toBe("validated");
-    expect(tables[0].warning).toContain("Validated for the documented QuickPLS supported scope");
+    expect(tables[0].warning).toContain("Supported for the documented model and data requirements");
     expect(tables[0].rows[0]).toEqual(["WEIGHT", "135.250000", "111.1250", "weighted sample covariance"]);
   });
 
@@ -359,7 +359,7 @@ describe("result export tables", () => {
       },
     });
     expect(pcaTables.every((table) => table.status === "validated")).toBe(true);
-    expect(pcaTables[0].warning).toContain("Validated for the documented QuickPLS supported scope");
+    expect(pcaTables[0].warning).toContain("Supported for the documented model and data requirements");
 
     const olsTables = methodResultTables({
       ...result,
@@ -563,13 +563,13 @@ describe("result export tables", () => {
     expect(csv).toContain("WPLS case-weight metadata");
     expect(csv).toContain("PLSpredict holdout metrics");
     expect(csv).toContain("CVPAT paired loss comparisons");
-    expect(csv).toContain("PLS-POS bounded segmentation summary");
-    expect(csv).toContain("PLS-POS bounded segment memberships");
+    expect(csv).toContain("Experimental PLS-POS-style segmentation summary");
+    expect(csv).toContain("Experimental PLS-POS-style segment memberships");
     expect(csv).toContain("MGA path comparisons");
     expect(csv).toContain("IPMA construct importance-performance");
     expect(csv).toContain("weighted sample covariance");
     const html = tablesToHtml(tables);
     expect(html).toContain("<title>QuickPLS export</title>");
-    expect(html).toContain("Validated for the documented QuickPLS supported scope");
+    expect(html).toContain("Supported for the documented model and data requirements");
   });
 });

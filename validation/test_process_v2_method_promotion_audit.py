@@ -21,6 +21,7 @@ VALIDATION = Path(__file__).resolve().parent
 sys.path.insert(0, str(VALIDATION))
 
 import process_v2_method_promotion_audit as audit  # noqa: E402
+import process_v2_resource_policy_v3 as resource_policy  # noqa: E402
 import process_v2_boundary_gate as boundary_gate  # noqa: E402
 import process_v2_reference as process_reference  # noqa: E402
 
@@ -69,16 +70,16 @@ def make_xlsx(path: Path, *, run_provenance_warning: str | None = None) -> None:
         worksheets.append(
             f'<sheet name={quoteattr(name)} sheetId={quoteattr(str(index))} r:id={quoteattr(relation_id)}/>'
         )
-        warning = run_provenance_warning if name == "Run provenance" else audit.PROCESS_PROMOTION_PENDING_WARNING
+        warning = run_provenance_warning if name == "Run provenance" else None
         if name == "Johnson-Neyman curve data":
-            warning = f"{warning} {audit.PROCESS_CURVE_WARNING_DISCLOSURE}"
+            warning = audit.PROCESS_CURVE_WARNING_DISCLOSURE
         warning_row = f'<row r="3">{cell("A3", "Warning")}'
         if warning is not None:
             warning_row += cell("B3", warning)
         warning_row += "</row>"
         rows = [
             f'<row r="1">{cell("A1", name)}</row>',
-            f'<row r="2">{cell("A2", "Status")}{cell("B2", "experimental")}</row>',
+            f'<row r="2">{cell("A2", "Status")}{cell("B2", "validated")}</row>',
             warning_row,
         ]
         if name == "Reference effects":
@@ -205,7 +206,7 @@ def make_project(path: Path) -> None:
         }],
         "recipes": [{
             "id": "recipe-process-v2", "schema_version": 3,
-            "metadata": {"status": "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope"},
+            "metadata": {"status": "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope"},
         }], "models": [],
         "layouts": {"workspace": {
             "runs": [{"id": "process-run-1", "status": "completed"}],
@@ -489,6 +490,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
         self.assertTrue({
             "validation/windows_native_save_export.py",
             "validation/close_tauri_test_window.mjs",
+            "validation/process_v2_resource_policy_v3.py",
         }.issubset(audit.PACKAGED_SOURCES))
 
     def prepare_complete_evidence(self, root: Path) -> Path:
@@ -544,7 +546,8 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
                 "regression_process_v1", "high_leverage_hc3_instability",
                 "invalid_hc3_covariance", "degenerate_simple_slope_variance",
                 "thin SVD", "64 * machine_epsilon", "128 * machine_epsilon",
-                "three distinct finite", "original complete-sample raw mean", "experimental",
+                "three distinct finite", "original complete-sample raw mean",
+                "Supported in Standard", "terminally stable process roles",
                 *audit.DOCUMENTATION_REFERENCE_IDENTIFIERS,
             ]),
             encoding="utf-8",
@@ -598,7 +601,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
                     "controls_maximum": 1,
                     "equation_non_intercept_terms_maximum": 50,
                 },
-                "recipe_status": "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope",
+                "recipe_status": "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope",
             },
             "point_reference": {
                 "maximum_absolute_difference": 1e-12,
@@ -911,10 +914,10 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
 
         phases = [
             ("initial_idle", "model_free_fixture", "data", 0, 0, None, 0, 200_000_000, 180_000_000, 100, 20, model_free_path),
-            ("post_cancellation_idle", "cancelled_setup_no_result", "data", 0, 0, None, 10, 240_000_000, 210_000_000, 105, 22, model_free_path),
-            ("post_completed_cycle_1_idle", "one_result_reopened_original", "results", 1, 1, "process-run-1", 20, 260_000_000, 230_000_000, 110, 24, archive_path),
-            ("post_completed_history_2_idle", "two_results_retained_history", "results", 2, 2, "process-run-2", 30, 300_000_000, 260_000_000, 115, 26, history_path),
-            ("post_completed_cycle_2_idle", "one_result_reopened_reset_clone", "results", 1, 1, "process-run-1", 40, 250_000_000, 225_000_000, 112, 25, reset_path),
+            ("post_cancellation_idle", "cancelled_setup_no_result", "data", 0, 0, None, 12, 240_000_000, 210_000_000, 105, 22, model_free_path),
+            ("post_completed_cycle_1_idle", "one_result_reopened_original", "results", 1, 1, "process-run-1", 24, 260_000_000, 230_000_000, 110, 24, archive_path),
+            ("post_completed_history_2_idle", "two_results_retained_history", "results", 2, 2, "process-run-2", 36, 300_000_000, 260_000_000, 115, 26, history_path),
+            ("post_completed_cycle_2_idle", "one_result_reopened_reset_clone", "results", 1, 1, "process-run-1", 48, 250_000_000, 225_000_000, 112, 25, reset_path),
         ]
 
         def iso(milliseconds: int) -> str:
@@ -924,6 +927,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
 
         raw_samples = [sample("2026-08-12T11:59:59.000Z", 190_000_000, 170_000_000, 98, 19)]
         checkpoint_rows = []
+        checkpoint_samples_by_name = {}
         checkpoint_diagnostics = []
         phase_snapshot_descriptors = []
         phase_entries = {}
@@ -931,6 +935,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
             window = [sample(iso(second * 1_000 + offset), working, private, handles, threads)
                       for offset in (500, 750, 1_000, 1_250, 1_500, 1_750)]
             raw_samples.extend(window)
+            checkpoint_samples_by_name[name] = window
             role_window = audit.bounded_process_role_window(window)
             logical = {
                 "surface": surface, "completed_result_count": results_count,
@@ -973,7 +978,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
             checkpoint_rows.append({
                 "name": name, "phase_recorded_at_utc": iso(second * 1_000),
                 "window_start_utc": iso(second * 1_000 + 500),
-                "window_end_utc": iso(second * 1_000 + 5_500),
+                "window_end_utc": iso(second * 1_000 + 10_500),
                 "sample_recorded_at_utc": [row["recorded_at_utc"] for row in window],
                 "sample_count": 6, "median_working_set_bytes": working, "p95_working_set_bytes": working,
                 "median_private_memory_bytes": private, "p95_private_memory_bytes": private,
@@ -984,29 +989,29 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
                 "process_roles_bounded_and_terminally_stable": True,
                 "process_role_window": role_window,
                 "idle_settle_milliseconds": 5_000, "capture_delay_milliseconds": 500,
-                "sample_window_milliseconds": 5_000, "logical_state": logical,
+                "sample_window_milliseconds": 10_000, "logical_state": logical,
                 "effective_archive": effective_archive,
             })
             checkpoint_diagnostics.append({
                 "name": name, "passed": True, "phase_present": True,
                 "phase_recorded_at_utc": iso(second * 1_000),
                 "window_start_utc": iso(second * 1_000 + 500),
-                "window_end_utc": iso(second * 1_000 + 5_500),
+                "window_end_utc": iso(second * 1_000 + 10_500),
                 "eligible_sample_recorded_at_utc": [row["recorded_at_utc"] for row in window],
                 "eligible_sample_count": 6,
                 "expected_idle_settle_milliseconds": 5_000,
                 "actual_idle_settle_milliseconds": 5_000,
                 "expected_capture_delay_milliseconds": 500,
                 "actual_capture_delay_milliseconds": 500,
-                "expected_sample_window_milliseconds": 5_000,
-                "actual_sample_window_milliseconds": 5_000,
+                "expected_sample_window_milliseconds": 10_000,
+                "actual_sample_window_milliseconds": 10_000,
                 "minimum_samples": 6, "failure_reasons": [],
             })
             phase_entries[name] = {
                 "recorded_at_utc": iso(second * 1_000),
                 "idle_settle_milliseconds": 5_000,
                 "capture_delay_milliseconds": 500,
-                "sample_window_milliseconds": 5_000,
+                "sample_window_milliseconds": 10_000,
                 "logical_state": logical,
                 "effective_archive": effective_archive,
                 "primary_archive": {"path": archive_descriptor["path"], "bytes": archive_descriptor["size"]},
@@ -1050,7 +1055,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
             "logicalState": checkpoint_rows[2]["effective_archive"]["logical_state"],
             "capturedArtifacts": cycle1_captures,
         }
-        raw_samples.append(sample("2026-08-12T12:00:47.000Z", 450_000_000, 400_000_000, 130, 30))
+        raw_samples.append(sample("2026-08-12T12:00:59.000Z", 450_000_000, 400_000_000, 130, 30))
         raw_samples_path = results / "process_v2_resource_samples.jsonl"
         raw_samples_path.write_text("\n".join(json.dumps(row) for row in raw_samples) + "\n", encoding="utf-8")
         raw_samples_descriptor = artifact(raw_samples_path, root)
@@ -1063,25 +1068,42 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
         resource_phases_descriptor = artifact(resource_phases_path, root)
         initial_archive_bytes = model_free_descriptor["size"]
         first_resource_sample = raw_samples[0]
+        terminal_selection = audit.terminal_resource_selection(
+            checkpoint_samples_by_name["post_cancellation_idle"],
+            checkpoint_rows[1]["process_role_window"],
+        )
+        full_window_disclosure = audit.resource_full_window_disclosure(
+            checkpoint_samples_by_name["initial_idle"],
+            checkpoint_samples_by_name["post_cancellation_idle"],
+        )
+        self.assertTrue(terminal_selection["passed"])
+        self.assertIsNotNone(full_window_disclosure)
         resource_document = {
             "schema_version": 1, "target": "process_v2_packaged_resource_report",
             "feature_id": audit.FEATURE_ID, "method_version": audit.METHOD_VERSION,
             "generated_at_utc": "2026-08-12T12:02:01Z", "launched_pid": 1234,
             "sample_interval_milliseconds": 250, "sample_count": len(raw_samples), "raw_sample_count": len(raw_samples),
             "first_sample": first_resource_sample, "monitor_terminal_reason": "stop_signal",
-            "capture_delay_milliseconds": 500, "sample_window_milliseconds": 5_000,
+            "capture_delay_milliseconds": 500, "sample_window_milliseconds": 10_000,
             "raw_samples": raw_samples_descriptor,
             "phase_document": resource_phases_descriptor,
             "phase_snapshots": phase_snapshot_descriptors,
             "idle_checkpoints": checkpoint_rows,
             "checkpoint_diagnostics": checkpoint_diagnostics,
             "memory": {
-                "policy": "bounded_equal_logical_state_window_median_v2",
+                "policy": audit.RESOURCE_POLICY,
                 "peak_working_set_bytes": 450_000_000,
                 "peak_private_memory_bytes": 400_000_000, "peak_working_set_under_2_gib": True,
                 "cancellation_working_set_tolerance_bytes": 134_217_728,
                 "cancellation_private_memory_tolerance_bytes": 134_217_728,
+                "cancellation_terminal_sample_count": terminal_selection["sample_count"],
+                "cancellation_terminal_minimum_samples": audit.RESOURCE_TERMINAL_SAMPLE_COUNT,
+                "cancellation_terminal_samples_role_stable": terminal_selection["samples_role_stable"],
+                "cancellation_terminal_sample_recorded_at_utc": terminal_selection["sample_recorded_at_utc"],
+                "cancellation_terminal_max_working_set_bytes": terminal_selection["max_working_set_bytes"],
+                "cancellation_terminal_max_private_memory_bytes": terminal_selection["max_private_memory_bytes"],
                 "cancellation_within_baseline_tolerance": True,
+                "full_window_disclosure": full_window_disclosure,
                 "equal_state_working_set_tolerance_bytes": 67_108_864,
                 "equal_state_private_memory_tolerance_bytes": 67_108_864,
                 "equal_state_working_set_within_tolerance": True,
@@ -1100,12 +1122,12 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
                 },
                 "phase_snapshots_attested": True,
                 "phase_document_attested": True,
-                "conclusion": "bounded_post_replacement_recovery_v2",
+                "conclusion": audit.RESOURCE_CONCLUSION,
                 "cancellation_cycle_count": 1, "completed_cycle_count": 2,
                 "idle_checkpoint_count": 5,
                 "idle_settle_milliseconds": 5000,
                 "idle_checkpoints_ordered_and_distinct": True,
-                "capture_delay_milliseconds": 500, "sample_window_milliseconds": 5_000,
+                "capture_delay_milliseconds": 500, "sample_window_milliseconds": 10_000,
                 "minimum_samples_per_checkpoint": 6,
                 "checkpoint_diagnostic_count": 5,
                 "checkpoint_diagnostics_all_passed": True,
@@ -1148,8 +1170,8 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
             "reference_columns": ["Effect ID", "Kind", "Path", "Estimate", "Reference condition"],
             "reference_effect_rows": 6,
             "reference_condition": audit.REFERENCE_CONDITION,
-            "candidate_status": "experimental",
-            "promotion_pending_warning": audit.PROCESS_PROMOTION_PENDING_WARNING,
+            "result_status": "validated",
+            "promotion_pending_warning_absent": True,
             "curve_warning_disclosure": audit.PROCESS_CURVE_WARNING_DISCLOSURE,
             "curve_warning_disclosure_exact": True,
             "required_shared_strings_verified": True,
@@ -1165,7 +1187,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
             "shell_visible": True, "tauri_runtime": True,
         }
         retry_setup_snapshot = {
-            "catalogCount": 15, "selectedMethod": "Regression", "regressionType": "process",
+            "catalogCount": 18, "selectedMethod": "Regression", "regressionType": "process",
             "outcome": "Y", "focalPredictor": "X",
             "paths": [
                 {"from": "X", "to": "Y"}, {"from": "X", "to": "M1"},
@@ -1279,7 +1301,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
         source_report["checks"]["processV2Results"].update({
             "referenceEffectColumnsExact": True,
             "referenceConditionRowsExact": True,
-            "candidatePromotionWarningsExact": True,
+            "promotionPendingWarningAbsent": True,
             "curveWarningDisclosureExact": True,
             "johnsonNeymanRows": 7,
             "johnsonNeymanAnalysisCount": 4,
@@ -1341,7 +1363,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
                 "accessible_non_color_plot_semantics": True,
                 "reference_effect_columns_exact": True,
                 "reference_condition_rows_exact": True,
-                "candidate_promotion_warnings_exact": True,
+                "promotion_pending_warning_absent": True,
                 "curve_warning_disclosure_exact": True,
                 "validation_witness_not_rendered": True, "no_na_fabrication": True,
                 "generic_regression_shell_not_applicable": True,
@@ -1415,8 +1437,15 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
                 "first_sample": first_resource_sample, "monitor_terminal_reason": "stop_signal",
                 "peak_working_set_bytes": 450_000_000, "peak_private_memory_bytes": 400_000_000,
                 "peak_working_set_under_2_gib": True,
-                "policy": "bounded_equal_logical_state_window_median_v2",
+                "policy": audit.RESOURCE_POLICY,
+                "cancellation_terminal_sample_count": terminal_selection["sample_count"],
+                "cancellation_terminal_minimum_samples": audit.RESOURCE_TERMINAL_SAMPLE_COUNT,
+                "cancellation_terminal_samples_role_stable": terminal_selection["samples_role_stable"],
+                "cancellation_terminal_sample_recorded_at_utc": terminal_selection["sample_recorded_at_utc"],
+                "cancellation_terminal_max_working_set_bytes": terminal_selection["max_working_set_bytes"],
+                "cancellation_terminal_max_private_memory_bytes": terminal_selection["max_private_memory_bytes"],
                 "cancellation_within_baseline_tolerance": True,
+                "full_window_disclosure": full_window_disclosure,
                 "equal_state_working_set_within_tolerance": True,
                 "equal_state_private_memory_within_tolerance": True,
                 "equal_state_handle_count_within_tolerance": True,
@@ -1432,12 +1461,12 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
                 },
                 "phase_snapshots_attested": True,
                 "phase_document_attested": True,
-                "conclusion": "bounded_post_replacement_recovery_v2",
+                "conclusion": audit.RESOURCE_CONCLUSION,
                 "cancellation_cycle_count": 1, "completed_cycle_count": 2,
                 "idle_checkpoint_count": 5,
                 "idle_settle_milliseconds": 5000,
                 "idle_checkpoints_ordered_and_distinct": True,
-                "capture_delay_milliseconds": 500, "sample_window_milliseconds": 5_000,
+                "capture_delay_milliseconds": 500, "sample_window_milliseconds": 10_000,
                 "minimum_samples_per_checkpoint": 6,
                 "checkpoint_diagnostic_count": 5,
                 "checkpoint_diagnostics_all_passed": True,
@@ -1696,7 +1725,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
                 row.get("token") == "failed_jackknife" for row in dirty["forbidden_matches"]
             ))
 
-    def test_process_sheets_require_candidate_warning_but_generic_run_provenance_requires_none_or_empty(self) -> None:
+    def test_process_sheets_use_validated_status_without_promotion_warning_and_run_provenance_stays_empty(self) -> None:
         with tempfile.TemporaryDirectory(prefix="quickpls-process-provenance-warning-") as directory:
             root = Path(directory)
             clean_path = root / "clean.xlsx"
@@ -1704,13 +1733,16 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
             clean = audit.xlsx_process_table_attestation(clean_path)
             self.assertTrue(clean["passed"], clean)
             self.assertTrue(clean["run_provenance_warning_absent"])
+            self.assertTrue(clean["promotion_pending_warning_absent"])
             self.assertIsNone(clean["warning_by_sheet"]["Run provenance"])
             self.assertTrue(all(
-                (clean["warning_by_sheet"].get(name) or "").startswith(
-                    audit.PROCESS_PROMOTION_PENDING_WARNING
-                )
-                for name in audit.EXPECTED_WORKBOOK_SHEETS[:-1]
+                clean["status_by_sheet"].get(name) == "validated"
+                for name in audit.EXPECTED_WORKBOOK_SHEETS
             ))
+            self.assertEqual(
+                clean["warning_by_sheet"]["Johnson-Neyman curve data"],
+                audit.PROCESS_CURVE_WARNING_DISCLOSURE,
+            )
 
             empty_path = root / "empty.xlsx"
             make_xlsx(empty_path, run_provenance_warning="")
@@ -1721,7 +1753,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
 
             for label, warning in (
                 ("whitespace", " "),
-                ("candidate", audit.PROCESS_PROMOTION_PENDING_WARNING),
+                ("text", "Unexpected run provenance warning"),
             ):
                 with self.subTest(label=label):
                     warned_path = root / f"warned-{label}.xlsx"
@@ -1730,7 +1762,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
                     self.assertFalse(warned["passed"])
                     self.assertFalse(warned["run_provenance_warning_absent"])
 
-    def test_xlsx_reference_condition_and_candidate_status_are_independently_verified(self) -> None:
+    def test_xlsx_reference_condition_and_validated_status_are_independently_verified(self) -> None:
         with tempfile.TemporaryDirectory(prefix="quickpls-process-audit-xlsx-contract-") as directory:
             root = Path(directory)
             results = self.prepare_complete_evidence(root)
@@ -1829,16 +1861,16 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
             self.assertFalse(report["reference_attestation"]["checks"]["fresh_report"])
             self.assertFalse(report["passed"])
 
-    def test_premature_validated_recipe_status_cannot_be_promoted(self) -> None:
+    def test_nonvalidated_recipe_status_cannot_be_promoted(self) -> None:
         with tempfile.TemporaryDirectory(prefix="quickpls-process-audit-status-") as directory:
             root = Path(directory)
             results = self.prepare_complete_evidence(root)
             reference_path = results / audit.REFERENCE_REPORT
             reference = json.loads(reference_path.read_text(encoding="utf-8"))
-            reference["scope"]["recipe_status"] = "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope"
+            reference["scope"]["recipe_status"] = "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope"
             write_json(reference_path, reference)
             report = audit.build_audit(root, results)
-            self.assertFalse(report["reference_attestation"]["checks"]["candidate_recipe_status"])
+            self.assertFalse(report["reference_attestation"]["checks"]["validated_recipe_status"])
             self.assertFalse(report["passed"])
 
     def test_resource_gate_rejects_mutated_window_metrics_and_old_unequal_state_fields(self) -> None:
@@ -1874,6 +1906,140 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
                 report = audit.build_audit(root, results)
                 self.assertFalse(report["packaged_attestation"]["checks"]["resource_contract"])
                 self.assertFalse(report["passed"])
+
+    def test_terminal_resource_selection_fails_closed_on_short_tail_role_drift_and_metric_tamper(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="quickpls-process-terminal-policy-") as directory:
+            root = Path(directory)
+            results = self.prepare_complete_evidence(root)
+            resource = json.loads((results / "process_v2_resource_report.json").read_text(encoding="utf-8"))
+            samples = {
+                row["recorded_at_utc"]: row
+                for row in (
+                    json.loads(line)
+                    for line in (results / "process_v2_resource_samples.jsonl").read_text(
+                        encoding="utf-8"
+                    ).splitlines()
+                    if line.strip()
+                )
+            }
+            cancellation = next(
+                row for row in resource["idle_checkpoints"]
+                if row["name"] == "post_cancellation_idle"
+            )
+            rows = [samples[value] for value in cancellation["sample_recorded_at_utc"]]
+            stable = audit.terminal_resource_selection(rows, cancellation["process_role_window"])
+            self.assertTrue(stable["passed"], stable)
+            self.assertEqual(stable["sample_count"], 6)
+
+            short = audit.terminal_resource_selection(rows[-5:], cancellation["process_role_window"])
+            self.assertFalse(short["passed"])
+            self.assertEqual(short["sample_count"], 0)
+
+            role_drift = json.loads(json.dumps(rows))
+            role_drift[-1]["process_role_counts"]["webview_utility"] = 1
+            self.assertFalse(
+                audit.terminal_resource_selection(role_drift, cancellation["process_role_window"])["passed"]
+            )
+
+            metric_tamper = json.loads(json.dumps(rows))
+            metric_tamper[-1]["total_private_memory_bytes"] += 1
+            self.assertFalse(
+                audit.terminal_resource_selection(metric_tamper, cancellation["process_role_window"])["passed"]
+            )
+
+    def test_v3_terminal_and_full_window_disclosures_reject_coordinated_report_tamper(self) -> None:
+        mutations = {
+            "terminal_max": lambda resource: resource["memory"].update({
+                "cancellation_terminal_max_private_memory_bytes": 1,
+            }),
+            "terminal_timestamps": lambda resource: resource["memory"].update({
+                "cancellation_terminal_sample_recorded_at_utc": ["2026-08-12T00:00:00Z"] * 6,
+            }),
+            "per_role_delta": lambda resource: resource["memory"]["full_window_disclosure"][
+                "per_role_deltas"
+            ][0].update({"private_memory_delta_bytes": 999}),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory(
+                prefix=f"quickpls-process-v3-tamper-{label}-"
+            ) as directory:
+                root = Path(directory)
+                results = self.prepare_complete_evidence(root)
+                packaged_path = results / audit.PACKAGED_REPORT
+                resource_path = results / "process_v2_resource_report.json"
+                packaged = json.loads(packaged_path.read_text(encoding="utf-8"))
+                resource = json.loads(resource_path.read_text(encoding="utf-8"))
+                mutate(resource)
+                packaged["checks"]["resources"] = {
+                    **packaged["checks"]["resources"],
+                    **{
+                        key: resource["memory"][key]
+                        for key in (
+                            "cancellation_terminal_sample_recorded_at_utc",
+                            "cancellation_terminal_max_private_memory_bytes",
+                            "full_window_disclosure",
+                        )
+                    },
+                }
+                write_json(resource_path, resource)
+                packaged["artifacts"]["resource_report"] = artifact(resource_path, root)
+                write_json(packaged_path, packaged)
+                report = audit.build_audit(root, results)
+                self.assertFalse(report["packaged_attestation"]["checks"]["resource_contract"])
+                self.assertFalse(report["passed"])
+
+    def test_offline_v3_remint_preserves_failed_v2_bytes_and_mints_schema_valid_current_receipt(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="quickpls-process-v3-remint-") as directory:
+            root = Path(directory)
+            results = self.prepare_complete_evidence(root)
+            resource_path = results / "process_v2_resource_report.json"
+            packaged_path = results / audit.PACKAGED_REPORT
+            resource = json.loads(resource_path.read_text(encoding="utf-8"))
+            packaged = json.loads(packaged_path.read_text(encoding="utf-8"))
+            for key in (
+                "cancellation_terminal_sample_count",
+                "cancellation_terminal_minimum_samples",
+                "cancellation_terminal_samples_role_stable",
+                "cancellation_terminal_sample_recorded_at_utc",
+                "cancellation_terminal_max_working_set_bytes",
+                "cancellation_terminal_max_private_memory_bytes",
+                "full_window_disclosure",
+            ):
+                resource["memory"].pop(key)
+                packaged["checks"]["resources"].pop(key)
+            resource["memory"].update({
+                "policy": resource_policy.POLICY_V2,
+                "cancellation_within_baseline_tolerance": False,
+                "conclusion": "bounded_post_replacement_recovery_v2",
+            })
+            resource["passed"] = False
+            packaged["checks"]["resources"].update({
+                "passed": False,
+                "policy": resource_policy.POLICY_V2,
+                "cancellation_within_baseline_tolerance": False,
+                "conclusion": "bounded_post_replacement_recovery_v2",
+            })
+            packaged["passed"] = False
+            write_json(resource_path, resource)
+            packaged["artifacts"]["resource_report"] = artifact(resource_path, root)
+            write_json(packaged_path, packaged)
+            v2_resource_bytes = resource_path.read_bytes()
+            v2_packaged_bytes = packaged_path.read_bytes()
+
+            result = resource_policy.remint(root)
+            current_resource = json.loads(resource_path.read_text(encoding="utf-8"))
+            current_packaged = json.loads(packaged_path.read_text(encoding="utf-8"))
+            self.assertEqual(current_resource["memory"]["policy"], resource_policy.POLICY_V3)
+            self.assertTrue(current_resource["passed"])
+            self.assertTrue(current_packaged["passed"])
+            self.assertEqual(Path(result["preserved_v2_resource_report"]).read_bytes(), v2_resource_bytes)
+            self.assertEqual(Path(result["preserved_v2_packaged_report"]).read_bytes(), v2_packaged_bytes)
+            schema = json.loads(
+                (root / "validation/process_v2_packaged_acceptance.schema.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(list(Draft202012Validator(schema).iter_errors(current_packaged)), [])
 
     def test_resource_gate_rejects_early_or_cross_phase_checkpoint_samples(self) -> None:
         mutations = {
@@ -2051,7 +2217,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
     def test_resource_gate_uses_five_typed_windows_and_a_sidecar_free_equal_state_clone(self) -> None:
         harness = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
         wrapper = (VALIDATION / "run_v247_process_v2_native_acceptance.ps1").read_text(encoding="utf-8")
-        self.assertIn("processV2ResourceSampleWindowMilliseconds = 5_000", harness)
+        self.assertIn("processV2ResourceSampleWindowMilliseconds = 10_000", harness)
         self.assertIn("processV2ResourceSampleCaptureMilliseconds\n  + processV2ResourceSampleWindowMilliseconds", harness)
         for phase, state_kind in (
             ("initial_idle", "model_free_fixture"),
@@ -2071,7 +2237,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
         self.assertIn('}, `${processV2ResetProjectPath}.autosave`);', harness)
         self.assertIn("function Select-ResourceSamplesAtPhase", wrapper)
         self.assertIn("$resourceCaptureDelayMilliseconds = 500", wrapper)
-        self.assertIn("$resourceSampleWindowMilliseconds = 5000", wrapper)
+        self.assertIn("$resourceSampleWindowMilliseconds = 10000", wrapper)
         self.assertIn("$resourceMinimumSamplesPerCheckpoint = 6", wrapper)
         self.assertIn("$windowStart = $phaseTime.AddMilliseconds($resourceCaptureDelayMilliseconds)", wrapper)
         self.assertIn("$windowEnd = $windowStart.AddMilliseconds($resourceSampleWindowMilliseconds)", wrapper)
@@ -2084,6 +2250,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
         self.assertIn("modalSampleCount * 100 -ge $Samples.Count * 80", wrapper)
         self.assertIn("$firstThreeExactModal", wrapper)
         self.assertIn("$lastThreeExactModal", wrapper)
+        self.assertNotIn("$firstThreeExactModal -and $lastThreeExactModal", wrapper)
         self.assertIn("$longestDeviationStreak -le 2", wrapper)
         self.assertIn("baseline_identities_never_removed_or_replaced", wrapper)
         self.assertIn("transient_processes = $transientProcesses", wrapper)
@@ -2091,8 +2258,13 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
         self.assertNotIn("process_roles_stable_within_window", wrapper)
         self.assertIn("Get-MedianLong", wrapper)
         self.assertIn("Get-P95Long", wrapper)
-        self.assertIn('policy = "bounded_equal_logical_state_window_median_v2"', wrapper)
-        self.assertIn('conclusion = "bounded_post_replacement_recovery_v2"', wrapper)
+        self.assertIn('policy = "bounded_equal_logical_state_terminal_stable_v3"', wrapper)
+        self.assertIn('conclusion = "bounded_post_replacement_recovery_terminal_stable_v3"', wrapper)
+        self.assertIn("$cancellationTerminalMinimumSamples = 6", wrapper)
+        self.assertIn("$cancellationTerminalSamplesRoleStable", wrapper)
+        self.assertIn("cancellation_terminal_max_working_set_bytes", wrapper)
+        self.assertIn("full_window_disclosure = $fullWindowDisclosure", wrapper)
+        self.assertIn("Get-ResourceRoleMedianDisclosure", wrapper)
         self.assertIn("resourceSamplesEvidencePath", wrapper)
         self.assertIn("snapshotProcessV2ResourceArchive", harness)
         self.assertIn("fsConstants.COPYFILE_EXCL", harness)
@@ -2200,7 +2372,11 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
         mutations["terminal_churn"] = terminal
         boundary = samples()
         add_process(boundary, 1, transient)
-        mutations["initial_boundary_churn"] = boundary
+        boundary_contract = audit.bounded_process_role_window(boundary)
+        self.assertTrue(boundary_contract["passed"])
+        self.assertFalse(boundary_contract["first_three_exact_modal"])
+        self.assertTrue(boundary_contract["last_three_exact_modal"])
+        self.assertTrue(boundary_contract["transients_absent_terminal_three"])
         removed = samples()
         removed[6]["processes"] = [row for row in removed[6]["processes"] if row["pid"] != 300]
         removed[6]["process_role_counts"]["webview_renderer"] -= 1
@@ -2344,9 +2520,14 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
         self.assertIn("runtimePreflight.reloadCount = 1", source)
         self.assertIn("postReload.origin === packagedTauriOrigin", source)
         self.assertIn(
-            "const isolatedFocusedOnly = ctaPlsOnly || processV2Only || structuralPathRandomizationOnly;",
+            "const isolatedFocusedOnly = mgaOnly || hocOnly || predictionOnly || cbsemOnly || pcaOnly || olsOnly",
             source,
         )
+        self.assertIn(
+            "|| logisticOnly || regressionBootstrapOnly || ncaOnly || ctaPlsOnly || processV2Only",
+            source,
+        )
+        self.assertIn("|| structuralPathRandomizationOnly || gscaOnly;", source)
         self.assertIn("const inheritPriorEvidence = focusedOnly && !isolatedFocusedOnly;", source)
         self.assertIn("if (isolatedFocusedOnly && scopedReportPath !== reportPath)", source)
         self.assertLess(
@@ -2356,6 +2537,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
 
     def test_packaged_wrapper_restores_prior_environment_even_when_launch_fails(self) -> None:
         source = (VALIDATION / "run_v247_process_v2_native_acceptance.ps1").read_text(encoding="utf-8")
+        self.assertNotIn("-DateKind", source)
         self.assertIn("$application = $null", source)
         self.assertIn("$priorAcceptanceEnvironment = @{}", source)
         self.assertIn("[Environment]::SetEnvironmentVariable", source)
@@ -2368,7 +2550,10 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
         self.assertIn('resource_monitor_terminal_reason = $null', source)
         self.assertEqual(source.count("[string]$monitorStderrText = Get-Content"), 2)
         self.assertEqual(source.count("$monitorStderrText.Trim()"), 2)
-        self.assertIn("$cleanup.resource_monitor_stderr = $monitorStderrText.Trim()", source)
+        self.assertIn(
+            "$cleanup.resource_monitor_stderr = if ($null -eq $monitorStderrText)",
+            source,
+        )
         self.assertNotIn("[string](Get-Content", source)
         self.assertIn("$monitorProcess = $resourceMonitor", source)
         monitor_start = source.index("$resourceMonitor = Start-Process")

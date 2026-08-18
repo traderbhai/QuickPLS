@@ -1,0 +1,113 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "checks": {
+      "all_declared_test_sources_exist": true,
+      "prebuilt_engine_identity": {
+        "path": "target/debug/qpls.exe",
+        "sha256": "f16cc51db4eafb31b8ad6eac37d12c0c163b4169df8abf3ecc703761a7a03fe2",
+        "size": 55822848
+      },
+      "targeted_vitest_passed": true,
+      "test_file_count": 5
+    },
+    "execution": {
+      "command": [
+        "npx.cmd",
+        "vitest",
+        "run",
+        "src/domain/resultTables.test.ts",
+        "src/native/NativeModerationDialog.test.tsx",
+        "src/native/nativeExportTables.test.ts",
+        "src/native/nativeModeration.test.ts",
+        "src/native/nativeResults.test.ts"
+      ],
+      "duration_seconds": 10.874,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  5 passed (5)\n      Tests  65 passed (65)\n   Start at  12:18:26\n   Duration  4.16s (transform 3.25s, setup 0ms, import 6.66s, tests 480ms, environment 1ms)\n\n"
+    },
+    "kind": "quickpls_phase3_native_source_gate",
+    "method": "moderation_v1",
+    "packaged_workflow_not_claimed": true,
+    "passed": true,
+    "path": "validation/results/method_factory/moderation_v1/native_gate.json",
+    "schema_version": 1,
+    "tests": [
+      "src/domain/resultTables.test.ts",
+      "src/native/NativeModerationDialog.test.tsx",
+      "src/native/nativeExportTables.test.ts",
+      "src/native/nativeModeration.test.ts",
+      "src/native/nativeResults.test.ts"
+    ]
+  },
+  "feature_id": "qpls3.pls.moderation",
+  "generated_at_utc": "2026-08-14T06:48:31.264444Z",
+  "method_version": "pls_two_stage_moderation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "frontend_report+export_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/domain/resultTables.test.ts",
+      "sha256": "de58261b6650a9916e360eddb7d86f8423d9a87d022c9131c46b6fae5e6516e7",
+      "size": 22203
+    },
+    {
+      "path": "src/native/NativeModerationDialog.test.tsx",
+      "sha256": "fffb174012a4a5573affd1d1727b7e615d3fa0d82a4b2ceb10da7c230a532551",
+      "size": 1871
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "7dde0ff853611f936204f9db2ac1fb8b8a8f4755c7b6ab6ff467465c86e533b4",
+      "size": 19426
+    },
+    {
+      "path": "src/native/nativeModeration.test.ts",
+      "sha256": "1bf11a14510321139845eca7f8fb2748d014625a6a6c539f6661979c3da8df49",
+      "size": 2625
+    },
+    {
+      "path": "src/native/nativeResults.test.ts",
+      "sha256": "beab538ebf63a742b8562fa31ab994e83a1707d2ec46d16ba9d25fe2663c8c51",
+      "size": 122091
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/moderation_v1.manifest.json",
+      "sha256": "954e13dc68187a336f12ee285f7a1f248bcfacc03c3c550bebcf7dff423a16e7",
+      "size": 13093
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "cf198e70e5cf16d2a0aa39a5d4c1bb4fabc9b59027c7fa59bbd8b634b4870ed2",
+      "size": 30271
+    },
+    {
+      "path": "validation/results/method_factory/moderation_v1/native_gate.json",
+      "sha256": "a571ec97b934d0a5e2fd2a569f1f9ddacf250d39f982bf989f9fce832e4f1af9",
+      "size": 1371
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "8ba98f6953e8cacba11b3e927c9c607e48ca5c3a21b9b8d8207e7ac874b5c833",
+      "size": 2402
+    }
+  ]
+}

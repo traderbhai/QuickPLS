@@ -1,47 +1,374 @@
 {
   "schema_version": 1,
-  "governance": {"contract_frozen_at_utc": "2026-08-13T10:09:13Z", "manifest_path": "validation/methods/nca_v2.manifest.json", "schema_path": "validation/methods/method_promotion_manifest.schema.json", "validator_path": "validation/method_promotion_manifest.py", "focused_test_path": "validation/test_method_promotion_manifest.py"},
-  "feature": {"id": "qpls3.standalone.nca", "label": "Necessary Condition Analysis", "method_version": "nca_v2", "method_kind": "stochastic", "catalogue_snapshot_date": "2026-08-12", "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:09:13Z",
+    "manifest_path": "validation/methods/nca_v2.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.standalone.nca",
+    "label": "Necessary Condition Analysis",
+    "method_version": "nca_v2",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
   "claim": {
     "supported_scope": "One observed numeric condition and one observed numeric outcome with bounded CE-FDH and CR-FDH ceilings, seeded one-sided permutation p values, and observed-range bottleneck rows.",
     "estimand": "The observed-range empty-ceiling effect size and required condition level for selected outcome percentages under CE-FDH or CR-FDH geometry for one X/Y pair.",
-    "assumptions": ["The selected X and Y columns are distinct, finite, nonconstant numeric variables with at least three complete pairs.", "CE-FDH peer construction, CR-FDH fitting, observed scope, bottleneck grid, permutation count, and seed are persisted.", "Permutation inference treats Y labels as exchangeable relative to fixed X under the tested null."],
-    "exclusions": ["Multiple simultaneous conditions or outcomes, latent-score NCA, cIPMA, categorical encoding, and theoretical ranges are excluded.", "Ceiling techniques other than CE-FDH and CR-FDH and bottleneck grids outside 10 through 90 percent are excluded.", "The bounded workflow is not a claim of full parity with another product or the R NCA package."],
-    "warnings": ["Necessary-condition evidence does not establish sufficiency, causality, or intervention effectiveness.", "Effect sizes and bottlenecks depend on the observed X and Y ranges and the selected ceiling technique."]
+    "assumptions": [
+      "The selected X and Y columns are distinct, finite, nonconstant numeric variables with at least three complete pairs.",
+      "CE-FDH peer construction, CR-FDH fitting, observed scope, bottleneck grid, permutation count, and seed are persisted.",
+      "Exact seeded finite-permutation reproducibility is defined for the persisted dataset row order and fingerprint.",
+      "Permutation inference treats Y labels as exchangeable relative to fixed X under the tested null."
+    ],
+    "exclusions": [
+      "Multiple simultaneous conditions or outcomes, latent-score NCA, cIPMA, categorical encoding, and theoretical ranges are excluded.",
+      "Ceiling techniques other than CE-FDH and CR-FDH and bottleneck grids outside 10 through 90 percent are excluded.",
+      "The bounded workflow is not a claim of full parity with another product or the R NCA package."
+    ],
+    "warnings": [
+      "Necessary-condition evidence does not establish sufficiency, causality, or intervention effectiveness.",
+      "Effect sizes and bottlenecks depend on the observed X and Y ranges and the selected ceiling technique."
+    ]
   },
   "scientific_contract": {
     "equations": [
-      {"id": "empty_ceiling_effect", "expression": "effect = empty_area_above_ceiling / ((max(X)-min(X)) * (max(Y)-min(Y)))", "variables": ["effect", "empty_area_above_ceiling", "X", "Y"], "source_reference_id": "dul_2016"},
-      {"id": "cr_fdh_line", "expression": "Y_ceiling = intercept + slope * X fitted by OLS through CE-FDH peers", "variables": ["Y_ceiling", "intercept", "slope", "X"], "source_reference_id": "dul_2016"},
-      {"id": "permutation_p", "expression": "p = (1 + sum_b I(effect_b >= effect_observed)) / (B + 1)", "variables": ["p", "effect_b", "effect_observed", "B"], "source_reference_id": "dul_2016"}
+      {
+        "id": "empty_ceiling_effect",
+        "expression": "effect = empty_area_above_ceiling / ((max(X)-min(X)) * (max(Y)-min(Y)))",
+        "variables": [
+          "effect",
+          "empty_area_above_ceiling",
+          "X",
+          "Y"
+        ],
+        "source_reference_id": "dul_2016"
+      },
+      {
+        "id": "cr_fdh_line",
+        "expression": "Y_ceiling = intercept + slope * X fitted by OLS through CE-FDH peers",
+        "variables": [
+          "Y_ceiling",
+          "intercept",
+          "slope",
+          "X"
+        ],
+        "source_reference_id": "dul_2016"
+      },
+      {
+        "id": "permutation_p",
+        "expression": "p = (1 + sum_b I(effect_b >= effect_observed)) / (B + 1)",
+        "variables": [
+          "p",
+          "effect_b",
+          "effect_observed",
+          "B"
+        ],
+        "source_reference_id": "dul_2016"
+      }
     ],
     "references": [
-      {"id": "dul_2016", "kind": "primary_paper", "citation": "Dul (2016), Necessary Condition Analysis: Logic and Methodology of Necessary but Not Sufficient Causality", "locator": "docs/methods/NCA_V2.md", "independence_group": "published_nca_method", "runtime_policy": "no_runtime_dependency"},
-      {"id": "independent_python_nca", "kind": "independent_python", "citation": "Independent Python CE-FDH, CR-FDH, permutation, and bottleneck calculation", "locator": "validation/v08_extended_methods_reference.py", "independence_group": "python_reference", "runtime_policy": "development_validation_only"}
+      {
+        "id": "dul_2016",
+        "kind": "primary_paper",
+        "citation": "Dul (2016), Necessary Condition Analysis: Logic and Methodology of Necessary but Not Sufficient Causality",
+        "locator": "docs/methods/NCA_V2.md",
+        "independence_group": "published_nca_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_python_nca",
+        "kind": "independent_python",
+        "citation": "Independent Python CE-FDH, CR-FDH, permutation, and bottleneck calculation",
+        "locator": "validation/v08_extended_methods_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      }
     ],
     "simulations": [
-      {"id": "ceiling_recovery", "purpose": "recovery", "design": "Known step and linear ceilings with duplicate X values, noise, varying scope, null controls, and observed-range bottleneck targets.", "seed_policy": "Frozen indexed data-generation and ceiling-specific permutation streams independent of workers.", "metrics": ["peer_set_accuracy", "effect_size_error", "bottleneck_error", "p_value_error"], "acceptance_rule": "Peers, CR coefficients, effects, p values, bottleneck statuses, and required percentages must match the independent reference within 1e-6."},
-      {"id": "null_ceiling_test", "purpose": "type_i_error", "design": "Independent X and Y null scenarios across supported sample sizes and marginal distributions.", "seed_policy": "Frozen scenario and domain-separated ceiling permutation streams.", "metrics": ["type_i_error", "p_value_lattice", "usable_permutation_rate"], "acceptance_rule": "At alpha 0.05 the preregistered confidence interval must contain 0.05, its upper bound must not exceed 0.065, and every requested permutation must be accounted for."}
+      {
+        "id": "nca_focused_engine_matrix",
+        "purpose": "failure_behavior",
+        "design": "A frozen focused matrix covers tied X values, listwise omission, constant input, insufficient complete pairs, exact seed repeat, worker invariance, an independently counted finite-permutation microcase, and a one-peer CE-FDH geometry that remains valid for CE-FDH but fails closed for CR-FDH or both.",
+        "seed_policy": "No generative or null-calibration simulation is claimed; frozen rows use persisted order and ceiling-domain-separated indexed permutation streams.",
+        "metrics": [
+          "peer_set",
+          "listwise_counts",
+          "typed_failure",
+          "repeat_equality",
+          "worker_invariance",
+          "exact_exceedance_p_value"
+        ],
+        "acceptance_rule": "All valid cases produce the exact frozen geometry and counts, repeated and worker-varied payloads are equal, the microcase p value equals (exceedances + 1)/(B + 1), constant and sparse inputs fail with typed errors, and fewer than two CE-FDH peers fail closed only when CR-FDH is requested."
+      }
     ],
     "boundaries": [
-      {"id": "constant_or_sparse_pair", "category": "data_pathology", "case": "X or Y is constant, non-finite, or leaves fewer than three complete pairs.", "expected_behavior": "The setup is blocked with the affected variable and complete-case count identified."},
-      {"id": "unsupported_nca_scope", "category": "unsupported_scope", "case": "The request includes multiple conditions, latent scores, theoretical ranges, cIPMA, or another ceiling.", "expected_behavior": "The unsupported request is blocked before execution."},
-      {"id": "row_reorder", "category": "metamorphic", "case": "Complete X/Y pairs are reordered consistently.", "expected_behavior": "Ceiling geometry, effects, bottlenecks, and mapped permutation results remain invariant."},
-      {"id": "seed_worker_invariance", "category": "determinism", "case": "The same X/Y data, ceiling, count, and seed execute with different workers.", "expected_behavior": "Permutation draws and the analytical NCA payload are exactly equal."},
-      {"id": "nca_archive_tamper", "category": "tamper", "case": "X/Y identity, peers, scope, effects, bottlenecks, counts, seed, or method version is changed.", "expected_behavior": "Strict project validation rejects the archive."}
+      {
+        "id": "constant_or_sparse_pair",
+        "category": "data_pathology",
+        "case": "X or Y is constant, non-finite, or leaves fewer than three complete pairs.",
+        "expected_behavior": "The setup is blocked with the affected variable and complete-case count identified."
+      },
+      {
+        "id": "unsupported_nca_scope",
+        "category": "unsupported_scope",
+        "case": "The request includes multiple conditions, latent scores, theoretical ranges, cIPMA, or another ceiling.",
+        "expected_behavior": "The unsupported request is blocked before execution."
+      },
+      {
+        "id": "row_reorder",
+        "category": "metamorphic",
+        "case": "Complete X/Y pairs are reordered consistently.",
+        "expected_behavior": "Ceiling geometry, effects, and bottlenecks remain invariant. A finite indexed Monte Carlo p value is exactly reproducible for the persisted dataset row order and fingerprint, not promised invariant under row reordering."
+      },
+      {
+        "id": "seed_worker_invariance",
+        "category": "determinism",
+        "case": "The same X/Y data, ceiling, count, and seed execute with different workers.",
+        "expected_behavior": "For the same persisted dataset order and fingerprint, permutation draws and the analytical NCA payload are exactly equal across workers."
+      },
+      {
+        "id": "nca_archive_tamper",
+        "category": "tamper",
+        "case": "X/Y identity, peers, scope, effects, bottlenecks, counts, seed, or method version is changed.",
+        "expected_behavior": "Strict project validation rejects the archive."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
-    "persistence": {"recipe_schema_version": 3, "result_schema_version": 1, "payload_kind": "pls_pm_v1", "tamper_tests": [
-      {"category": "feature_identity", "expected_behavior": "Reject an archive whose capability identity differs from NCA."}, {"category": "method_version", "expected_behavior": "Reject a result relabeled as another NCA version."}, {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose dataset fingerprint differs from saved X/Y data."}, {"category": "checksum", "expected_behavior": "Reject an archive member whose checksum differs."}, {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid peer order, geometry, effects, p values, or bottleneck status."}, {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret legacy nca_v1 output as nca_v2 evidence."}
-    ], "legacy_policy": "nca_v1 remains readable only as a legacy preview and cannot satisfy current NCA v2 promotion evidence."},
-    "native": {"setup_controls": ["Condition X", "Outcome Y", "CE-FDH or CR-FDH ceiling", "Permutation samples", "Seed"], "applicability_blockers": ["Identical X and Y", "Insufficient complete pairs", "Constant or nonnumeric variable", "Unsupported ceiling or integration"], "result_surfaces": ["Ceiling effect sizes", "Permutation p values", "CE-FDH peers", "Bottleneck table", "Observed scope and provenance"], "gui_cli_parity_rule": "For identical X/Y data, ceiling selection, count, and seed, GUI and CLI must produce exactly equal analytical NCA payloads.", "accessibility_rules": ["Every ceiling plot has an equivalent accessible peer and bottleneck table.", "Unavailable bottlenecks, p values, scope, and warnings are available without color or pointer interaction."]},
-    "export": {"formats": ["csv", "xlsx"], "tables": ["NCA ceilings", "NCA peers", "NCA bottlenecks", "Permutation accounting", "Run provenance"], "same_run_required": true, "provenance_required": true},
-    "packaged": {"platforms": ["windows"], "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"], "viewports": ["1024x700", "1280x720", "1440x900"], "offline_required": true, "cancellation_required": true, "process_cleanup_required": true},
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject an archive whose capability identity differs from NCA."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a result relabeled as another NCA version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose dataset fingerprint differs from saved X/Y data."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject an archive member whose checksum differs."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid peer order, geometry, effects, p values, or bottleneck status."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret legacy nca_v1 output as nca_v2 evidence."
+        }
+      ],
+      "legacy_policy": "nca_v1 remains readable only as a legacy preview and cannot satisfy current NCA v2 promotion evidence."
+    },
+    "native": {
+      "setup_controls": [
+        "Condition X",
+        "Outcome Y",
+        "CE-FDH or CR-FDH ceiling",
+        "Permutation samples",
+        "Seed"
+      ],
+      "applicability_blockers": [
+        "Identical X and Y",
+        "Insufficient complete pairs",
+        "Constant or nonnumeric variable",
+        "Unsupported ceiling or integration"
+      ],
+      "result_surfaces": [
+        "Ceiling effect sizes",
+        "Permutation p values",
+        "CE-FDH peers",
+        "Bottleneck table",
+        "Observed scope and provenance"
+      ],
+      "gui_cli_parity_rule": "For identical X/Y data, ceiling selection, count, and seed, GUI and CLI must produce exactly equal analytical NCA payloads.",
+      "accessibility_rules": [
+        "Every ceiling plot has an equivalent accessible peer and bottleneck table.",
+        "Unavailable bottlenecks, p values, scope, and warnings are available without color or pointer interaction."
+      ]
+    },
+    "export": {
+      "formats": [
+        "csv",
+        "xlsx"
+      ],
+      "tables": [
+        "NCA ceilings",
+        "NCA peers",
+        "NCA bottlenecks",
+        "Permutation accounting",
+        "Run provenance"
+      ],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
-  "qualification": {"declared_state": "absent", "target_state": "release_qualified", "source_requirements": {
-    "method_spec": ["docs/methods/NCA_V2.md"], "independent_reference": ["validation/v08_extended_methods_reference.py"], "simulation_report": ["validation/nca_release_simulation.py"], "boundary_report": ["validation/nca_release_boundary_gate.py"], "persistence_report": ["validation/nca_release_persistence_gate.py"], "frontend_report": ["src/native/nativeNca.test.ts"], "export_report": ["src/native/nativeExportTables.test.ts"], "method_audit": ["validation/nca_method_promotion_audit.py"], "packaged_acceptance": ["validation/run_focused_nca_acceptance.ps1"]
-  }, "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}}
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": [
+        "docs/methods/NCA_V2.md"
+      ],
+      "independent_reference": [
+        "validation/v08_extended_methods_reference.py",
+        "validation/nca_release_reference.py",
+        "crates/qpls-cli/src/main.rs",
+        "crates/qpls-estimation/src/pls.rs",
+        "crates/qpls-runner/src/lib.rs"
+      ],
+      "simulation_report": [
+        "validation/nca_release_simulation.py",
+        "validation/established_method_factory_common.py"
+      ],
+      "boundary_report": [
+        "validation/nca_release_boundary_gate.py",
+        "crates/qpls-core/src/validation.rs"
+      ],
+      "persistence_report": [
+        "validation/nca_release_persistence_gate.py",
+        "crates/qpls-project/src/lib.rs"
+      ],
+      "frontend_report": [
+        "src/native/nativeAnalysisRecipe.ts",
+        "src/native/nativeResults.ts",
+        "src/native/nativeResults.test.ts",
+        "src/native/nativeNca.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.ts",
+        "src/native/nativeExportTables.test.ts",
+        "src/native/NativeExportDialog.tsx",
+        "src/native/NativeExportDialog.test.ts"
+      ],
+      "method_audit": [
+        "validation/nca_v2_release_audit.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/test_phase2_release_packaged_common.py"
+      ],
+      "packaged_acceptance": [
+        "validation/nca_v2_packaged_acceptance.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/run_phase2_release_packaged_closure.ps1",
+        "validation/run_v247_cumulative_native_acceptance.ps1",
+        "validation/run_v247_nca_native_acceptance.ps1",
+        "validation/v247_tauri_native_acceptance.mjs",
+        "validation/diagnostic_bundle_source_manifest.py",
+        "validation/test_v247_cumulative_native_acceptance_supervisor.py",
+        "validation/test_phase2_release_packaged_common.py"
+      ]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/nca_v2/engine_stage.identity.json",
+          "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/nca_v2/persistence_report.identity.json",
+          "roles": ["persistence_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/nca_v2/native_stage.identity.json",
+          "roles": ["frontend_report", "export_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/nca_v2/packaged_acceptance.identity.json",
+          "roles": ["packaged_acceptance"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/nca_v2/method_audit.identity.json",
+          "roles": ["method_audit"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
+  }
 }

@@ -1,0 +1,2340 @@
+{
+  "passed": true,
+  "feature_id": "qpls3.cbsem.bootstrap",
+  "method_version": "cbsem_exact_case_bootstrap_v1",
+  "catalogue_snapshot_date": "2026-08-12",
+  "scope": "cbsem_exact_case_bootstrap_v1",
+  "generated_at_utc": "2026-08-18T13:03:36.909Z",
+  "checks": {
+    "setup": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "fixture": {
+          "path": "D:\\QuickPLS\\validation\\results\\v08_extended_methods_fixture.csv",
+          "status": "ReadyNative Exact CB-SEM Bootstrap Acceptancev08_extended_methods_fixture.csv140 cases0 constructsDataOffline",
+          "columns": [
+            "#",
+            "x",
+            "m",
+            "w",
+            "y",
+            "z",
+            "bin_y",
+            "g1",
+            "g2",
+            "g3",
+            "h1",
+            "h2"
+          ]
+        },
+        "authored": {
+          "constructs": 1,
+          "assignedIndicators": 3,
+          "structuralPaths": 0,
+          "label": "Exact CFA factor",
+          "scientific": {
+            "representation": "common_factor",
+            "marker": "g1"
+          }
+        },
+        "schema6": {
+          "inspection": {
+            "status": "ok",
+            "value": {
+              "sourceArchivePath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.qpls",
+              "sourceArchiveSha256": "35a16c078e95de7ed59afb569713bbe45c9756008448a9bce77fb5d1e3d81e13",
+              "sourceKind": "project_archive",
+              "schemaVersion": 5,
+              "access": "historical_upgrade_copy_required",
+              "readOnly": false,
+              "upgradeAvailable": true,
+              "projectId": "f42af037-46b0-4975-bacc-c89f015fb92f",
+              "projectName": "Native Exact CB-SEM Bootstrap Acceptance",
+              "counts": {
+                "datasets": 1,
+                "models": 1,
+                "recipes": 0,
+                "results": 0
+              },
+              "futureUnsupported": {
+                "models": 0,
+                "recipes": 0,
+                "results": 0
+              },
+              "sourceWillRemainUnchanged": true,
+              "destinationMustBeNew": true
+            }
+          },
+          "plan": {
+            "status": "ok",
+            "value": {
+              "state": "ready",
+              "planId": "dd39ad93-2580-4bea-8db3-f402ad01f9aa",
+              "planSha256": "86ef8b0e3a5baaca933b10c92325a6ae4b30c0e37fd64692237fb031e914c9cf",
+              "sourceArchiveSha256": "35a16c078e95de7ed59afb569713bbe45c9756008448a9bce77fb5d1e3d81e13",
+              "destinationArchivePath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874-v6.qpls",
+              "modelCount": 1,
+              "recipeCount": 0,
+              "historicalResultCount": 0,
+              "sourceWillRemainUnchanged": true,
+              "destinationMustBeNew": true,
+              "historicalResultsImmutable": true
+            }
+          },
+          "execution": {
+            "status": "ok",
+            "value": {
+              "planId": "dd39ad93-2580-4bea-8db3-f402ad01f9aa",
+              "receipt": {
+                "write": {
+                  "schemaVersion": 6,
+                  "projectId": "f42af037-46b0-4975-bacc-c89f015fb92f",
+                  "destinationArchivePath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874-v6.qpls",
+                  "documentSha256": "86ef8b0e3a5baaca933b10c92325a6ae4b30c0e37fd64692237fb031e914c9cf",
+                  "byteLength": 14725,
+                  "postWriteValidated": true
+                },
+                "sourceArchivePath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.qpls",
+                "sourceArchiveSha256": "35a16c078e95de7ed59afb569713bbe45c9756008448a9bce77fb5d1e3d81e13",
+                "sourceVerifiedUnchanged": true,
+                "historicalResultsImmutable": true
+              },
+              "destinationWritten": true
+            }
+          },
+          "destinationInspection": {
+            "status": "ok",
+            "value": {
+              "sourceArchivePath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874-v6.qpls",
+              "sourceArchiveSha256": "cbe19ed885234ebab10501dbcf6686c972b41006719fcf00144edf9e3f393b71",
+              "sourceKind": "project_archive",
+              "schemaVersion": 6,
+              "access": "current_v6_archive",
+              "readOnly": true,
+              "upgradeAvailable": false,
+              "projectId": "f42af037-46b0-4975-bacc-c89f015fb92f",
+              "projectName": "Native Exact CB-SEM Bootstrap Acceptance",
+              "counts": {
+                "datasets": 1,
+                "models": 1,
+                "recipes": 0,
+                "results": 0
+              },
+              "futureUnsupported": {
+                "models": 0,
+                "recipes": 0,
+                "results": 0
+              },
+              "sourceWillRemainUnchanged": true,
+              "destinationMustBeNew": true
+            }
+          }
+        },
+        "controls": {
+          "interval": "percentile_type7",
+          "samples": "1000",
+          "tail": "two_sided",
+          "tailDisabled": false,
+          "workers": "1",
+          "seed": "20260818",
+          "startEnabled": true
+        }
+      }
+    },
+    "invalid_setup_blocked": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "startDisabled": true,
+        "issues": [
+          "Exact CB-SEM requires at least one authored common-factor construct. Create a reflective construct, assign its indicators, and confirm its common-factor decisions before starting this job."
+        ],
+        "noResult": true
+      }
+    },
+    "execute_percentile": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "setup": {
+          "interval": "percentile_type7",
+          "samples": "1000",
+          "tail": "two_sided",
+          "tailDisabled": false,
+          "workers": "1",
+          "seed": "20260818",
+          "startEnabled": true
+        },
+        "requested": 1000,
+        "attempted": 1000,
+        "usable": 925,
+        "failed": 75,
+        "minimumUsable": 1000,
+        "inferenceStatus": "unavailable",
+        "unavailableReason": "insufficient_usable_refits",
+        "methodVersion": "cbsem_exact_case_bootstrap_v1",
+        "runId": "b1319db5-9a50-47fb-a571-f9cd7a30161f",
+        "projectId": "f42af037-46b0-4975-bacc-c89f015fb92f",
+        "modelId": "f7ecf0ea-e7ee-4be8-9a1a-97bede532552",
+        "datasetId": "54ec8665-7e13-4552-a5cf-1f980f8f337a",
+        "tableIds": [
+          "estimation_summary",
+          "canonical_ml_covariance",
+          "parameters",
+          "standardized_parameters",
+          "modification_index_score_tests",
+          "exact_case_bootstrap_summary",
+          "exact_case_bootstrap_parameter_intervals",
+          "exact_case_bootstrap_successful_refits",
+          "exact_case_bootstrap_failures",
+          "exact_case_bootstrap_hypothesis_tests",
+          "fit_indices",
+          "implied_covariance",
+          "residual_covariance",
+          "residual_correlation"
+        ],
+        "requiredTableIds": [
+          "exact_case_bootstrap_summary",
+          "exact_case_bootstrap_parameter_intervals",
+          "exact_case_bootstrap_successful_refits",
+          "exact_case_bootstrap_failures",
+          "exact_case_bootstrap_hypothesis_tests"
+        ],
+        "tables": {
+          "exact_case_bootstrap_summary": {
+            "title": "Exact case-bootstrap summary",
+            "rows": 1,
+            "headers": [
+              "Method version",
+              "Estimator method",
+              "Dataset ID",
+              "Dataset fingerprint",
+              "Outer recipe SHA-256",
+              "Base point SHA-256",
+              "Point compiler SHA-256",
+              "Plan SHA-256",
+              "Model SHA-256",
+              "Complete cases",
+              "Universe digest method",
+              "Universe SHA-256",
+              "Covariance denominator",
+              "Source-row digest method",
+              "Schedule digest method",
+              "Interval method",
+              "Confidence level",
+              "Requested",
+              "Attempted",
+              "Usable",
+              "Failed",
+              "Minimum usable fraction",
+              "Minimum usable",
+              "Seed",
+              "Stream token",
+              "Retry policy",
+              "Maximum attempts",
+              "Parameter IDs",
+              "Inference status",
+              "Unavailable reason",
+              "Unavailable message",
+              "Archive validation scope"
+            ]
+          },
+          "exact_case_bootstrap_parameter_intervals": {
+            "title": "Exact case-bootstrap parameter intervals",
+            "rows": 0,
+            "headers": [
+              "Parameter ID",
+              "Original",
+              "Bootstrap mean",
+              "Bias",
+              "Standard error",
+              "Percentile lower",
+              "Percentile upper",
+              "Usable"
+            ]
+          },
+          "exact_case_bootstrap_successful_refits": {
+            "title": "Successful exact case-bootstrap refits",
+            "rows": 925,
+            "headers": [
+              "Replicate",
+              "Schedule SHA-256",
+              "Source rows SHA-256",
+              "Parameter estimates",
+              "Iterations",
+              "Objective",
+              "Gradient norm"
+            ]
+          },
+          "exact_case_bootstrap_failures": {
+            "title": "Failed exact case-bootstrap refits",
+            "rows": 75,
+            "headers": [
+              "Replicate",
+              "Schedule SHA-256",
+              "Source rows SHA-256",
+              "Failure kind",
+              "Message"
+            ]
+          },
+          "exact_case_bootstrap_hypothesis_tests": {
+            "title": "Exact case-bootstrap zero-null tests",
+            "rows": 6,
+            "headers": [
+              "Method version",
+              "Null hypothesis",
+              "Statistic",
+              "Tie policy",
+              "Probability method",
+              "Decision rule",
+              "Selected tail",
+              "Null value",
+              "Alpha",
+              "Usable",
+              "Inference status",
+              "Global unavailable reason",
+              "Global unavailable message",
+              "Parameter ID",
+              "Parameter status",
+              "Point estimate",
+              "Two-sided count",
+              "Greater count",
+              "Less count",
+              "Two-sided p",
+              "Greater p",
+              "Less p",
+              "Selected count",
+              "Selected p",
+              "Reject null",
+              "Unavailable reason"
+            ]
+          }
+        }
+      }
+    },
+    "execute_studentized": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "setup": {
+          "interval": "analytic_studentized_type7",
+          "samples": "1000",
+          "tail": "two_sided",
+          "tailDisabled": true,
+          "workers": "2",
+          "seed": "20260818",
+          "startEnabled": true
+        },
+        "requested": 1000,
+        "attempted": 1000,
+        "usable": 925,
+        "failed": 75,
+        "minimumUsable": 1000,
+        "inferenceStatus": "unavailable",
+        "unavailableReason": "insufficient_usable_refits",
+        "methodVersion": "cbsem_exact_case_bootstrap_v1",
+        "runId": "075fd8f4-8e78-4b45-9116-30574ab6d952",
+        "projectId": "f42af037-46b0-4975-bacc-c89f015fb92f",
+        "modelId": "f7ecf0ea-e7ee-4be8-9a1a-97bede532552",
+        "datasetId": "54ec8665-7e13-4552-a5cf-1f980f8f337a",
+        "tableIds": [
+          "estimation_summary",
+          "canonical_ml_covariance",
+          "parameters",
+          "standardized_parameters",
+          "modification_index_score_tests",
+          "exact_case_bootstrap_summary",
+          "exact_case_bootstrap_parameter_intervals",
+          "exact_case_bootstrap_successful_refits",
+          "exact_case_bootstrap_failures",
+          "exact_case_bootstrap_hypothesis_tests",
+          "exact_case_bootstrap_studentized_summary",
+          "exact_case_bootstrap_studentized_point_standard_errors",
+          "exact_case_bootstrap_studentized_parameter_intervals",
+          "exact_case_bootstrap_studentized_refit_standard_errors",
+          "fit_indices",
+          "implied_covariance",
+          "residual_covariance",
+          "residual_correlation"
+        ],
+        "requiredTableIds": [
+          "exact_case_bootstrap_summary",
+          "exact_case_bootstrap_parameter_intervals",
+          "exact_case_bootstrap_successful_refits",
+          "exact_case_bootstrap_failures",
+          "exact_case_bootstrap_hypothesis_tests",
+          "exact_case_bootstrap_studentized_summary",
+          "exact_case_bootstrap_studentized_point_standard_errors",
+          "exact_case_bootstrap_studentized_parameter_intervals",
+          "exact_case_bootstrap_studentized_refit_standard_errors"
+        ],
+        "tables": {
+          "exact_case_bootstrap_summary": {
+            "title": "Exact case-bootstrap summary",
+            "rows": 1,
+            "headers": [
+              "Method version",
+              "Estimator method",
+              "Dataset ID",
+              "Dataset fingerprint",
+              "Outer recipe SHA-256",
+              "Base point SHA-256",
+              "Point compiler SHA-256",
+              "Plan SHA-256",
+              "Model SHA-256",
+              "Complete cases",
+              "Universe digest method",
+              "Universe SHA-256",
+              "Covariance denominator",
+              "Source-row digest method",
+              "Schedule digest method",
+              "Interval method",
+              "Confidence level",
+              "Requested",
+              "Attempted",
+              "Usable",
+              "Failed",
+              "Minimum usable fraction",
+              "Minimum usable",
+              "Seed",
+              "Stream token",
+              "Retry policy",
+              "Maximum attempts",
+              "Parameter IDs",
+              "Inference status",
+              "Unavailable reason",
+              "Unavailable message",
+              "Archive validation scope"
+            ]
+          },
+          "exact_case_bootstrap_parameter_intervals": {
+            "title": "Exact case-bootstrap parameter intervals",
+            "rows": 0,
+            "headers": [
+              "Parameter ID",
+              "Original",
+              "Bootstrap mean",
+              "Bias",
+              "Standard error",
+              "Percentile lower",
+              "Percentile upper",
+              "Usable"
+            ]
+          },
+          "exact_case_bootstrap_successful_refits": {
+            "title": "Successful exact case-bootstrap refits",
+            "rows": 925,
+            "headers": [
+              "Replicate",
+              "Schedule SHA-256",
+              "Source rows SHA-256",
+              "Parameter estimates",
+              "Iterations",
+              "Objective",
+              "Gradient norm"
+            ]
+          },
+          "exact_case_bootstrap_failures": {
+            "title": "Failed exact case-bootstrap refits",
+            "rows": 75,
+            "headers": [
+              "Replicate",
+              "Schedule SHA-256",
+              "Source rows SHA-256",
+              "Failure kind",
+              "Message"
+            ]
+          },
+          "exact_case_bootstrap_hypothesis_tests": {
+            "title": "Exact case-bootstrap zero-null tests",
+            "rows": 6,
+            "headers": [
+              "Method version",
+              "Null hypothesis",
+              "Statistic",
+              "Tie policy",
+              "Probability method",
+              "Decision rule",
+              "Selected tail",
+              "Null value",
+              "Alpha",
+              "Usable",
+              "Inference status",
+              "Global unavailable reason",
+              "Global unavailable message",
+              "Parameter ID",
+              "Parameter status",
+              "Point estimate",
+              "Two-sided count",
+              "Greater count",
+              "Less count",
+              "Two-sided p",
+              "Greater p",
+              "Less p",
+              "Selected count",
+              "Selected p",
+              "Reject null",
+              "Unavailable reason"
+            ]
+          },
+          "exact_case_bootstrap_studentized_summary": {
+            "title": "Analytically studentized bootstrap summary",
+            "rows": 1,
+            "headers": [
+              "Method version",
+              "Standard-error method",
+              "Information method",
+              "Pivot method",
+              "Quantile method",
+              "Interval method",
+              "Archive validation scope",
+              "Confidence level",
+              "Minimum usable fraction",
+              "Minimum usable",
+              "Studentized usable",
+              "Parameter IDs",
+              "Inference status",
+              "Unavailable reason",
+              "Unavailable message"
+            ]
+          },
+          "exact_case_bootstrap_studentized_point_standard_errors": {
+            "title": "Point analytic standard errors",
+            "rows": 6,
+            "headers": [
+              "Method version",
+              "Parameter ID",
+              "Status",
+              "Information method",
+              "Standard error",
+              "Unavailable reason"
+            ]
+          },
+          "exact_case_bootstrap_studentized_parameter_intervals": {
+            "title": "Analytically studentized parameter intervals",
+            "rows": 6,
+            "headers": [
+              "Parameter ID",
+              "Status",
+              "Point estimate",
+              "Point standard error",
+              "Lower pivot quantile",
+              "Upper pivot quantile",
+              "Interval lower",
+              "Interval upper",
+              "Usable",
+              "Unavailable reason"
+            ]
+          },
+          "exact_case_bootstrap_studentized_refit_standard_errors": {
+            "title": "Refit analytic standard errors",
+            "rows": 925,
+            "headers": [
+              "Replicate",
+              "Status",
+              "Information method",
+              "Standard errors",
+              "Unavailable reason"
+            ]
+          }
+        }
+      }
+    },
+    "execute_bca": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "setup": {
+          "interval": "bca_type7",
+          "samples": "1000",
+          "tail": "two_sided",
+          "tailDisabled": true,
+          "workers": "2",
+          "seed": "20260818",
+          "startEnabled": true
+        },
+        "requested": 1000,
+        "attempted": 1000,
+        "usable": 925,
+        "failed": 75,
+        "minimumUsable": 1000,
+        "inferenceStatus": "unavailable",
+        "unavailableReason": "insufficient_usable_refits",
+        "methodVersion": "cbsem_exact_case_bootstrap_v1",
+        "runId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "projectId": "f42af037-46b0-4975-bacc-c89f015fb92f",
+        "modelId": "f7ecf0ea-e7ee-4be8-9a1a-97bede532552",
+        "datasetId": "54ec8665-7e13-4552-a5cf-1f980f8f337a",
+        "tableIds": [
+          "estimation_summary",
+          "canonical_ml_covariance",
+          "parameters",
+          "standardized_parameters",
+          "modification_index_score_tests",
+          "exact_case_bootstrap_summary",
+          "exact_case_bootstrap_parameter_intervals",
+          "exact_case_bootstrap_successful_refits",
+          "exact_case_bootstrap_failures",
+          "exact_case_bootstrap_hypothesis_tests",
+          "exact_case_bootstrap_bca_summary",
+          "exact_case_bootstrap_bca_parameter_intervals",
+          "exact_case_bootstrap_bca_successful_delete_one_refits",
+          "exact_case_bootstrap_bca_failures",
+          "fit_indices",
+          "implied_covariance",
+          "residual_covariance",
+          "residual_correlation"
+        ],
+        "requiredTableIds": [
+          "exact_case_bootstrap_summary",
+          "exact_case_bootstrap_parameter_intervals",
+          "exact_case_bootstrap_successful_refits",
+          "exact_case_bootstrap_failures",
+          "exact_case_bootstrap_hypothesis_tests",
+          "exact_case_bootstrap_bca_summary",
+          "exact_case_bootstrap_bca_parameter_intervals",
+          "exact_case_bootstrap_bca_successful_delete_one_refits",
+          "exact_case_bootstrap_bca_failures"
+        ],
+        "tables": {
+          "exact_case_bootstrap_summary": {
+            "title": "Exact case-bootstrap summary",
+            "rows": 1,
+            "headers": [
+              "Method version",
+              "Estimator method",
+              "Dataset ID",
+              "Dataset fingerprint",
+              "Outer recipe SHA-256",
+              "Base point SHA-256",
+              "Point compiler SHA-256",
+              "Plan SHA-256",
+              "Model SHA-256",
+              "Complete cases",
+              "Universe digest method",
+              "Universe SHA-256",
+              "Covariance denominator",
+              "Source-row digest method",
+              "Schedule digest method",
+              "Interval method",
+              "Confidence level",
+              "Requested",
+              "Attempted",
+              "Usable",
+              "Failed",
+              "Minimum usable fraction",
+              "Minimum usable",
+              "Seed",
+              "Stream token",
+              "Retry policy",
+              "Maximum attempts",
+              "Parameter IDs",
+              "Inference status",
+              "Unavailable reason",
+              "Unavailable message",
+              "Archive validation scope"
+            ]
+          },
+          "exact_case_bootstrap_parameter_intervals": {
+            "title": "Exact case-bootstrap parameter intervals",
+            "rows": 0,
+            "headers": [
+              "Parameter ID",
+              "Original",
+              "Bootstrap mean",
+              "Bias",
+              "Standard error",
+              "Percentile lower",
+              "Percentile upper",
+              "Usable"
+            ]
+          },
+          "exact_case_bootstrap_successful_refits": {
+            "title": "Successful exact case-bootstrap refits",
+            "rows": 925,
+            "headers": [
+              "Replicate",
+              "Schedule SHA-256",
+              "Source rows SHA-256",
+              "Parameter estimates",
+              "Iterations",
+              "Objective",
+              "Gradient norm"
+            ]
+          },
+          "exact_case_bootstrap_failures": {
+            "title": "Failed exact case-bootstrap refits",
+            "rows": 75,
+            "headers": [
+              "Replicate",
+              "Schedule SHA-256",
+              "Source rows SHA-256",
+              "Failure kind",
+              "Message"
+            ]
+          },
+          "exact_case_bootstrap_hypothesis_tests": {
+            "title": "Exact case-bootstrap zero-null tests",
+            "rows": 6,
+            "headers": [
+              "Method version",
+              "Null hypothesis",
+              "Statistic",
+              "Tie policy",
+              "Probability method",
+              "Decision rule",
+              "Selected tail",
+              "Null value",
+              "Alpha",
+              "Usable",
+              "Inference status",
+              "Global unavailable reason",
+              "Global unavailable message",
+              "Parameter ID",
+              "Parameter status",
+              "Point estimate",
+              "Two-sided count",
+              "Greater count",
+              "Less count",
+              "Two-sided p",
+              "Greater p",
+              "Less p",
+              "Selected count",
+              "Selected p",
+              "Reject null",
+              "Unavailable reason"
+            ]
+          },
+          "exact_case_bootstrap_bca_summary": {
+            "title": "BCa bootstrap summary",
+            "rows": 1,
+            "headers": [
+              "Method version",
+              "Base method",
+              "Recipe authority",
+              "Base point authority",
+              "Compiler authority",
+              "Plan authority",
+              "Model authority",
+              "Delete-one method",
+              "Position digest method",
+              "Source digest method",
+              "Bias correction",
+              "Acceleration",
+              "Probability adjustment",
+              "Quantile method",
+              "Retry policy",
+              "Archive validation scope",
+              "Confidence level",
+              "Bootstrap usable",
+              "Minimum bootstrap usable",
+              "Delete-one cases",
+              "Delete-one successes",
+              "Delete-one failures",
+              "Parameter IDs",
+              "Inference status",
+              "Unavailable reason",
+              "Unavailable message"
+            ]
+          },
+          "exact_case_bootstrap_bca_parameter_intervals": {
+            "title": "BCa parameter intervals",
+            "rows": 6,
+            "headers": [
+              "Parameter ID",
+              "Status",
+              "Point estimate",
+              "Bias correction",
+              "Acceleration",
+              "Adjusted lower probability",
+              "Adjusted upper probability",
+              "Interval lower",
+              "Interval upper",
+              "Usable",
+              "Unavailable reason"
+            ]
+          },
+          "exact_case_bootstrap_bca_successful_delete_one_refits": {
+            "title": "Successful delete-one refits",
+            "rows": 135,
+            "headers": [
+              "Omitted position",
+              "Omitted source row",
+              "Retained-position digest",
+              "Retained-source digest",
+              "Parameter estimates",
+              "Iterations",
+              "Objective",
+              "Gradient norm"
+            ]
+          },
+          "exact_case_bootstrap_bca_failures": {
+            "title": "Failed delete-one refits",
+            "rows": 5,
+            "headers": [
+              "Omitted position",
+              "Omitted source row",
+              "Retained-position digest",
+              "Retained-source digest",
+              "Failure kind",
+              "Failure message"
+            ]
+          }
+        }
+      }
+    },
+    "cancellation_retry": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "progressAtCancellation": 235,
+        "noPartialResult": true,
+        "appendDisabledAfterCancel": true,
+        "settingsBeforeCancel": {
+          "interval": "percentile_type7",
+          "samples": "1000",
+          "tail": "two_sided",
+          "tailDisabled": false,
+          "workers": "1",
+          "seed": "20260818",
+          "startEnabled": true
+        },
+        "retainedSettings": {
+          "interval": "percentile_type7",
+          "samples": "1000",
+          "seed": "20260818",
+          "workers": "1"
+        },
+        "completedRetryRunId": "b1319db5-9a50-47fb-a571-f9cd7a30161f"
+      }
+    },
+    "result_identity": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "documentId": "result_0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "storedDocumentId": "result_0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "runId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "expectedRunId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "projectId": "f42af037-46b0-4975-bacc-c89f015fb92f",
+        "methodVersion": "cbsem_exact_case_bootstrap_v1",
+        "estimatorMethodVersion": "cbsem_ml_exact_parameter_table_v3",
+        "appendText": "Appended document result_0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a; 1 canonical result document in the archive."
+      }
+    },
+    "xlsx_same_run": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "selectedRunId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "expectedRunId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "targetPath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx",
+        "workbookSheets": [
+          "Estimation summary",
+          "Canonical ML covariance",
+          "Model parameters",
+          "Standardized parameters",
+          "Model fit",
+          "Implied covariance",
+          "Residual covariance",
+          "Residual correlation",
+          "Modification-index score tests",
+          "Exact case-bootstrap summary",
+          "Exact case-bootstrap parameter",
+          "Successful exact case-bootstrap",
+          "Failed exact case-bootstrap ref",
+          "Exact case-bootstrap zero-null",
+          "BCa bootstrap summary",
+          "BCa parameter intervals",
+          "Successful delete-one refits",
+          "Failed delete-one refits",
+          "Canonical run provenance",
+          "Canonical result notes"
+        ],
+        "expectedSheets": [
+          "Exact case-bootstrap summary",
+          "BCa bootstrap summary",
+          "BCa parameter intervals",
+          "Successful delete-one refits",
+          "Failed delete-one refits",
+          "Canonical run provenance",
+          "Canonical result notes"
+        ],
+        "feedback": "Saved D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx.",
+        "file": {
+          "size": 214965,
+          "isFile": true
+        },
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 2163386,
+              "pid": 14324,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 2163386,
+              "handle": 459000,
+              "pid": 14324,
+              "rootOwner": 2163386,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 2163386,
+              "pid": 14324,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx",
+              "requiredSharedStrings": [
+                "Exact case-bootstrap summary",
+                "BCa bootstrap summary",
+                "BCa parameter intervals",
+                "Successful delete-one refits",
+                "Canonical run provenance",
+                "cbsem_exact_case_bootstrap_v1",
+                "result_0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+                "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a"
+              ],
+              "requiredSheets": [
+                "Exact case-bootstrap summary",
+                "BCa bootstrap summary",
+                "BCa parameter intervals",
+                "Successful delete-one refits",
+                "Failed delete-one refits",
+                "Canonical run provenance",
+                "Canonical result notes"
+              ],
+              "sha256": "8aeb141b034b8998195d2c6c77c44932129d4e30caaf50e736dd3deedadcbd27",
+              "sheetNames": [
+                "Estimation summary",
+                "Canonical ML covariance",
+                "Model parameters",
+                "Standardized parameters",
+                "Model fit",
+                "Implied covariance",
+                "Residual covariance",
+                "Residual correlation",
+                "Modification-index score tests",
+                "Exact case-bootstrap summary",
+                "Exact case-bootstrap parameter",
+                "Successful exact case-bootstrap",
+                "Failed exact case-bootstrap ref",
+                "Exact case-bootstrap zero-null",
+                "BCa bootstrap summary",
+                "BCa parameter intervals",
+                "Successful delete-one refits",
+                "Failed delete-one refits",
+                "Canonical run provenance",
+                "Canonical result notes"
+              ],
+              "size": 214965
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 2163386,
+                    "pid": 14324,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 2163386,
+                    "handle": 459000,
+                    "pid": 14324,
+                    "rootOwner": 2163386,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 2163386,
+                    "pid": 14324,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.xlsx",
+                    "requiredSharedStrings": [
+                      "Exact case-bootstrap summary",
+                      "BCa bootstrap summary",
+                      "BCa parameter intervals",
+                      "Successful delete-one refits",
+                      "Canonical run provenance",
+                      "cbsem_exact_case_bootstrap_v1",
+                      "result_0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+                      "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a"
+                    ],
+                    "requiredSheets": [
+                      "Exact case-bootstrap summary",
+                      "BCa bootstrap summary",
+                      "BCa parameter intervals",
+                      "Successful delete-one refits",
+                      "Failed delete-one refits",
+                      "Canonical run provenance",
+                      "Canonical result notes"
+                    ],
+                    "sha256": "8aeb141b034b8998195d2c6c77c44932129d4e30caaf50e736dd3deedadcbd27",
+                    "sheetNames": [
+                      "Estimation summary",
+                      "Canonical ML covariance",
+                      "Model parameters",
+                      "Standardized parameters",
+                      "Model fit",
+                      "Implied covariance",
+                      "Residual covariance",
+                      "Residual correlation",
+                      "Modification-index score tests",
+                      "Exact case-bootstrap summary",
+                      "Exact case-bootstrap parameter",
+                      "Successful exact case-bootstrap",
+                      "Failed exact case-bootstrap ref",
+                      "Exact case-bootstrap zero-null",
+                      "BCa bootstrap summary",
+                      "BCa parameter intervals",
+                      "Successful delete-one refits",
+                      "Failed delete-one refits",
+                      "Canonical run provenance",
+                      "Canonical result notes"
+                    ],
+                    "size": 214965
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        }
+      }
+    },
+    "save_reopen_same_run": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "distinctDesktopProcessRequired": true,
+        "selectedDocumentId": "result_0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "expectedDocumentId": "result_0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "selectedRunId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "expectedRunId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+        "projectId": "f42af037-46b0-4975-bacc-c89f015fb92f",
+        "methodVersion": "cbsem_exact_case_bootstrap_v1",
+        "archiveBeforeClose": {
+          "path": "validation/results/cbsem-exact-bootstrap-20260818-182955874-v6.qpls",
+          "size": 208652,
+          "sha256": "aea81288ab5e9f9114d950bb7b02fb5be9b2ac62111179a08b2752bf3b3a8616"
+        },
+        "archiveAfterRelaunch": {
+          "path": "validation/results/cbsem-exact-bootstrap-20260818-182955874-v6.qpls",
+          "size": 208652,
+          "sha256": "aea81288ab5e9f9114d950bb7b02fb5be9b2ac62111179a08b2752bf3b3a8616"
+        },
+        "tableIds": [
+          "estimation_summary",
+          "canonical_ml_covariance",
+          "parameters",
+          "standardized_parameters",
+          "modification_index_score_tests",
+          "exact_case_bootstrap_summary",
+          "exact_case_bootstrap_parameter_intervals",
+          "exact_case_bootstrap_successful_refits",
+          "exact_case_bootstrap_failures",
+          "exact_case_bootstrap_hypothesis_tests",
+          "exact_case_bootstrap_bca_summary",
+          "exact_case_bootstrap_bca_parameter_intervals",
+          "exact_case_bootstrap_bca_successful_delete_one_refits",
+          "exact_case_bootstrap_bca_failures",
+          "fit_indices",
+          "implied_covariance",
+          "residual_covariance",
+          "residual_correlation"
+        ]
+      }
+    },
+    "offline": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "analyticalWorkflowRequiresInternet": false,
+        "observedRequestCount": 23,
+        "externalRequestCount": 0,
+        "origins": [
+          "http://ipc.localhost",
+          "http://tauri.localhost"
+        ],
+        "externalRequests": [],
+        "strictZeroProcessEgressClaimed": false,
+        "platformBackgroundEgressOutsidePageRequestScope": true
+      }
+    },
+    "viewports": {
+      "passed": true,
+      "evidence": {
+        "passed": true,
+        "actualTauriWindow": true,
+        "resizeMechanism": "Browser.setWindowBounds",
+        "targetIdentity": {
+          "targetId": "3134AB5DC1E25BE7F531C35436CE08A0",
+          "windowId": 1408400857,
+          "type": "page",
+          "title": "QuickPLS - Native Exact CB-SEM Bootstrap Acceptance",
+          "url": "http://tauri.localhost/",
+          "origin": "http://tauri.localhost",
+          "lookupCommand": "Browser.getWindowForTarget"
+        },
+        "deviceMetricsOverride": {
+          "clearCommand": "Emulation.clearDeviceMetricsOverride",
+          "cleared": true,
+          "pageSetViewportSizeUsed": false,
+          "emulationOnly": false,
+          "playwrightViewportBefore": null
+        },
+        "method": {
+          "slug": "cbsem_exact_case_bootstrap_v1",
+          "version": "cbsem_exact_case_bootstrap_v1",
+          "evidenceCheck": "cbsemExactBootstrapResultIdentity",
+          "expectedRunId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+          "expectedRunLabel": "CB-SEM CFA results",
+          "expectedTableId": "exact_case_bootstrap_bca_summary"
+        },
+        "outerBoundsBefore": {
+          "left": 0,
+          "top": 23,
+          "width": 1536,
+          "height": 793,
+          "windowState": "normal"
+        },
+        "exactViewports": [
+          {
+            "id": "1024x700",
+            "requestedClientViewport": {
+              "width": 1024,
+              "height": 700
+            },
+            "domInnerDimensions": {
+              "width": 1024,
+              "height": 700
+            },
+            "outerBoundsBefore": {
+              "left": 0,
+              "top": 23,
+              "width": 1536,
+              "height": 793,
+              "windowState": "normal"
+            },
+            "outerBoundsAfter": {
+              "left": 0,
+              "top": 23,
+              "width": 1024,
+              "height": 701,
+              "windowState": "normal"
+            },
+            "outerBoundsChanged": true,
+            "resizeAttempts": [
+              {
+                "attempt": 1,
+                "requestedOuterBounds": {
+                  "width": 1024,
+                  "height": 699,
+                  "left": 0,
+                  "top": 23
+                },
+                "observedOuterBounds": {
+                  "left": 0,
+                  "top": 46,
+                  "width": 1024,
+                  "height": 700,
+                  "windowState": "normal"
+                },
+                "observedDomInnerDimensions": {
+                  "innerWidth": 1024,
+                  "innerHeight": 699
+                }
+              },
+              {
+                "attempt": 2,
+                "requestedOuterBounds": {
+                  "width": 1024,
+                  "height": 701,
+                  "left": 0,
+                  "top": 0
+                },
+                "observedOuterBounds": {
+                  "left": 0,
+                  "top": 23,
+                  "width": 1024,
+                  "height": 702,
+                  "windowState": "normal"
+                },
+                "observedDomInnerDimensions": {
+                  "innerWidth": 1024,
+                  "innerHeight": 702
+                }
+              },
+              {
+                "attempt": 3,
+                "requestedOuterBounds": {
+                  "width": 1024,
+                  "height": 700,
+                  "left": 0,
+                  "top": 0
+                },
+                "observedOuterBounds": {
+                  "left": 0,
+                  "top": 23,
+                  "width": 1024,
+                  "height": 701,
+                  "windowState": "normal"
+                },
+                "observedDomInnerDimensions": {
+                  "innerWidth": 1024,
+                  "innerHeight": 700
+                }
+              }
+            ],
+            "origin": "http://tauri.localhost",
+            "tauriRuntime": true,
+            "surface": "model",
+            "noHorizontalOverflow": true,
+            "methodRunLinkage": true,
+            "methodVersionEvidenceBound": true,
+            "selectedRunId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+            "selectedRunLabel": "CB-SEM CFA results",
+            "selectedTableId": "exact_case_bootstrap_bca_summary",
+            "resultRows": 1,
+            "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\185v-tauri-native-cbsem-exact-packaged-viewport-1024x700.png",
+            "passed": true
+          },
+          {
+            "id": "1280x720",
+            "requestedClientViewport": {
+              "width": 1280,
+              "height": 720
+            },
+            "domInnerDimensions": {
+              "width": 1280,
+              "height": 720
+            },
+            "outerBoundsBefore": {
+              "left": 0,
+              "top": 23,
+              "width": 1024,
+              "height": 701,
+              "windowState": "normal"
+            },
+            "outerBoundsAfter": {
+              "left": 0,
+              "top": 23,
+              "width": 1280,
+              "height": 721,
+              "windowState": "normal"
+            },
+            "outerBoundsChanged": true,
+            "resizeAttempts": [
+              {
+                "attempt": 1,
+                "requestedOuterBounds": {
+                  "width": 1280,
+                  "height": 721,
+                  "left": 0,
+                  "top": 0
+                },
+                "observedOuterBounds": {
+                  "left": 0,
+                  "top": 23,
+                  "width": 1280,
+                  "height": 722,
+                  "windowState": "normal"
+                },
+                "observedDomInnerDimensions": {
+                  "innerWidth": 1280,
+                  "innerHeight": 722
+                }
+              },
+              {
+                "attempt": 2,
+                "requestedOuterBounds": {
+                  "width": 1280,
+                  "height": 720,
+                  "left": 0,
+                  "top": 0
+                },
+                "observedOuterBounds": {
+                  "left": 0,
+                  "top": 23,
+                  "width": 1280,
+                  "height": 721,
+                  "windowState": "normal"
+                },
+                "observedDomInnerDimensions": {
+                  "innerWidth": 1280,
+                  "innerHeight": 720
+                }
+              }
+            ],
+            "origin": "http://tauri.localhost",
+            "tauriRuntime": true,
+            "surface": "model",
+            "noHorizontalOverflow": true,
+            "methodRunLinkage": true,
+            "methodVersionEvidenceBound": true,
+            "selectedRunId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+            "selectedRunLabel": "CB-SEM CFA results",
+            "selectedTableId": "exact_case_bootstrap_bca_summary",
+            "resultRows": 1,
+            "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\185v-tauri-native-cbsem-exact-packaged-viewport-1280x720.png",
+            "passed": true
+          },
+          {
+            "id": "1440x900",
+            "requestedClientViewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "domInnerDimensions": {
+              "width": 1440,
+              "height": 900
+            },
+            "outerBoundsBefore": {
+              "left": 0,
+              "top": 23,
+              "width": 1280,
+              "height": 721,
+              "windowState": "normal"
+            },
+            "outerBoundsAfter": {
+              "left": 0,
+              "top": 23,
+              "width": 1440,
+              "height": 901,
+              "windowState": "normal"
+            },
+            "outerBoundsChanged": true,
+            "resizeAttempts": [
+              {
+                "attempt": 1,
+                "requestedOuterBounds": {
+                  "width": 1440,
+                  "height": 901,
+                  "left": 0,
+                  "top": 0
+                },
+                "observedOuterBounds": {
+                  "left": 0,
+                  "top": 23,
+                  "width": 1440,
+                  "height": 902,
+                  "windowState": "normal"
+                },
+                "observedDomInnerDimensions": {
+                  "innerWidth": 1440,
+                  "innerHeight": 902
+                }
+              },
+              {
+                "attempt": 2,
+                "requestedOuterBounds": {
+                  "width": 1440,
+                  "height": 900,
+                  "left": 0,
+                  "top": 0
+                },
+                "observedOuterBounds": {
+                  "left": 0,
+                  "top": 23,
+                  "width": 1440,
+                  "height": 901,
+                  "windowState": "normal"
+                },
+                "observedDomInnerDimensions": {
+                  "innerWidth": 1440,
+                  "innerHeight": 900
+                }
+              }
+            ],
+            "origin": "http://tauri.localhost",
+            "tauriRuntime": true,
+            "surface": "model",
+            "noHorizontalOverflow": true,
+            "methodRunLinkage": true,
+            "methodVersionEvidenceBound": true,
+            "selectedRunId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+            "selectedRunLabel": "CB-SEM CFA results",
+            "selectedTableId": "exact_case_bootstrap_bca_summary",
+            "resultRows": 1,
+            "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\185v-tauri-native-cbsem-exact-packaged-viewport-1440x900.png",
+            "passed": true
+          }
+        ],
+        "restoredFinalWindowState": {
+          "requested": {
+            "left": 0,
+            "top": 23,
+            "width": 1536,
+            "height": 793,
+            "windowState": "normal"
+          },
+          "actual": {
+            "left": 0,
+            "top": 23,
+            "width": 1536,
+            "height": 793,
+            "windowState": "normal"
+          },
+          "tolerancePixels": 1,
+          "passed": true
+        }
+      }
+    },
+    "process_cleanup": {
+      "passed": true,
+      "exact_root_pid_count": 2,
+      "distinct_root_pids": true,
+      "graceful_process_cleanup_verified": true,
+      "forced_process_cleanup_used": false,
+      "orphan_processes": 0,
+      "cdp_closed_after_each_phase": true,
+      "platform_background_egress_observation": {
+        "passed": true,
+        "observation_kind": "sampled_exact_process_tree_tcp_v1",
+        "sample_count": 45,
+        "root_present_every_sample": true,
+        "platform_background_egress_observed": true,
+        "commercial_zero_egress_passed": false,
+        "remote_connections": [
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 64708,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 64708,
+            "local_address": "192.168.1.171",
+            "local_port": 60965,
+            "remote_address": "52.110.15.184",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "SynSent",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 60971,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          },
+          {
+            "owning_process": 43288,
+            "local_address": "192.168.1.171",
+            "local_port": 59830,
+            "remote_address": "52.110.15.179",
+            "remote_port": 443,
+            "state": "Established",
+            "remote_access": true
+          }
+        ]
+      },
+      "sampled_process_tree_zero_egress": false,
+      "network_sample_count": 45,
+      "phases": [
+        {
+          "phase": "execute",
+          "root_pid": 14324,
+          "started_at_utc": "08/18/2026 13:00:01",
+          "completed_at_utc": "08/18/2026 13:00:18",
+          "observed_process_ids": [
+            2108,
+            10760,
+            14324,
+            38060,
+            39528,
+            46152,
+            64708
+          ],
+          "cdp_closed": true,
+          "forced_cleanup_used": false,
+          "orphan_processes": 0,
+          "network_samples_path": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874-execute-network.jsonl"
+        },
+        {
+          "phase": "reopen",
+          "root_pid": 61940,
+          "started_at_utc": "08/18/2026 13:00:26",
+          "completed_at_utc": "08/18/2026 13:00:35",
+          "observed_process_ids": [
+            11644,
+            26444,
+            34524,
+            34772,
+            43288,
+            60932,
+            61940
+          ],
+          "cdp_closed": true,
+          "forced_cleanup_used": false,
+          "orphan_processes": 0,
+          "network_samples_path": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874-reopen-network.jsonl"
+        }
+      ],
+      "network_artifacts": [
+        {
+          "path": "validation/results/cbsem-exact-bootstrap-20260818-182955874-execute-network.jsonl",
+          "size": 51299,
+          "sha256": "d58fa422a6a3bf68c9ad5dcd48243a57b03acc609da54bdcc1354b24b56987a1"
+        },
+        {
+          "path": "validation/results/cbsem-exact-bootstrap-20260818-182955874-reopen-network.jsonl",
+          "size": 28294,
+          "sha256": "5f6ae83c5453819ee9ba5b4da433ab2d0194e07c4409409a300f32cb394cd108"
+        }
+      ]
+    }
+  },
+  "binary_artifacts": {
+    "desktop": {
+      "path": "target/release/quickpls-desktop.exe",
+      "size": 49983488,
+      "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476"
+    },
+    "cli": {
+      "path": "target/release/qpls.exe",
+      "size": 32373248,
+      "sha256": "f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254"
+    }
+  },
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-project/src/project_schema_v6.rs",
+      "size": 380560,
+      "sha256": "a936ced328e6e2948b30c948ed88eeb2c10f4e92ca4c313b483bc480fee4a22a"
+    },
+    {
+      "path": "src-tauri/src/project_schema6_result_append.rs",
+      "size": 10881,
+      "sha256": "21de4051b042d9604746d7cdb9e0505e6fc02160bb2a4d6d75eb0dfa16424edd"
+    },
+    {
+      "path": "src/domain/internalProjectSchema6ResultAppend.ts",
+      "size": 1428,
+      "sha256": "6d562adf8bef5fa035aeef4561f6f102e309d5b2fa0a014d6562428c665ecc91"
+    },
+    {
+      "path": "src/domain/internalRecipeV4CbsemWorkspace.ts",
+      "size": 39073,
+      "sha256": "5241097c6cbad081d032d2593ab44239c13f4adb6316715e5ebb55dbd51459f4"
+    },
+    {
+      "path": "src/native/NativeRecipeV4CbsemWorkspace.tsx",
+      "size": 43571,
+      "sha256": "9d0f8464083b1775c7205ae5930c1635785312f02829b856a804bdf905d9c21b"
+    },
+    {
+      "path": "validation/cbsem_exact_case_bootstrap_v1_factory.py",
+      "size": 22804,
+      "sha256": "eb26ee192b9b7f3b207da9eae1f9982765b337fc5ba4dbc3a576fa785d99744f"
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "size": 34283,
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865"
+    },
+    {
+      "path": "validation/methods/cbsem_exact_case_bootstrap_v1.manifest.json",
+      "size": 17699,
+      "sha256": "a42ef87fb7857a33df1ea575f8d6ca242d0da7a1a0c278e6523ead59c12af37f"
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "size": 15836,
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743"
+    },
+    {
+      "path": "validation/results/v08_extended_methods_fixture.csv",
+      "size": 22204,
+      "sha256": "4cb4385443d161634ce5a33fc1f3c9945e1b37b70d81d904814032982e683427"
+    },
+    {
+      "path": "validation/run_cbsem_exact_case_bootstrap_v1_native_acceptance.ps1",
+      "size": 19446,
+      "sha256": "58dd1aa56f7d56bab5f0ea37c65850dbaa9ddde6af038dcca10a997bb8b2adbc"
+    },
+    {
+      "path": "validation/test_cbsem_exact_case_bootstrap_v1_factory.py",
+      "size": 6733,
+      "sha256": "3eb5e05f5eede2ab6fb1fca5d1f49e51c678a645037b87a80a590f0e73370658"
+    },
+    {
+      "path": "validation/test_cbsem_exact_case_bootstrap_v1_packaged_producer.py",
+      "size": 7774,
+      "sha256": "c4fab96e6b46d43000d2420e580b009321d24d3ecc6b10fe2b6bfb2d6a341247"
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "size": 21368,
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926"
+    },
+    {
+      "path": "validation/v247_tauri_native_acceptance.mjs",
+      "size": 981471,
+      "sha256": "952061138db0e6e3beb4f858f7e8c359b9763561980920e67a918d729eaf1c34"
+    },
+    {
+      "path": "validation/windows_native_save_export.py",
+      "size": 18957,
+      "sha256": "da5ed8fb53d78375130c20dbd4cf57aa14980b4304424fe4cb65ba048c419542"
+    }
+  ]
+}

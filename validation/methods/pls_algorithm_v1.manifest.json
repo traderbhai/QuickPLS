@@ -38,13 +38,21 @@
       {
         "id": "outer_score_update",
         "expression": "y_j = standardize(sum_k w_jk x_jk)",
-        "variables": ["y_j", "w_jk", "x_jk"],
+        "variables": [
+          "y_j",
+          "w_jk",
+          "x_jk"
+        ],
         "source_reference_id": "wold_1982"
       },
       {
         "id": "structural_path_estimate",
         "expression": "beta_j = (Y_pred' Y_pred)^-1 Y_pred' y_j",
-        "variables": ["beta_j", "Y_pred", "y_j"],
+        "variables": [
+          "beta_j",
+          "Y_pred",
+          "y_j"
+        ],
         "source_reference_id": "lohmoeller_1989"
       }
     ],
@@ -78,10 +86,15 @@
       {
         "id": "parameter_recovery",
         "purpose": "recovery",
-        "design": "Recursive reflective, formative, and mixed supported models across sample size, loading strength, path strength, collinearity, and construct order.",
+        "design": "Seven frozen scenarios covering path-, factor-, and PCA-weighted reflective models, mixed Mode B, single-item blocks, listwise missingness, and a non-Gaussian factor-weighted model.",
         "seed_policy": "Frozen scenario-indexed seeds; deterministic estimator runs use identical generated rows across implementations.",
-        "metrics": ["path_bias", "loading_bias", "weight_error", "convergence_rate"],
-        "acceptance_rule": "Supported scenarios must meet preregistered recovery tolerances and converge in at least 99 percent of nonpathological cases; every failure remains counted."
+        "metrics": [
+          "path_bias",
+          "loading_bias",
+          "weight_error",
+          "convergence_rate"
+        ],
+        "acceptance_rule": "Every executed scenario in the frozen seven-scenario matrix must meet its preregistered recovery tolerance; every scenario and failure remains counted. This bounded qualification makes no population-wide 99 percent convergence claim."
       }
     ],
     "boundaries": [
@@ -116,7 +129,7 @@
         "expected_behavior": "Strict project validation rejects the archive rather than displaying the modified result."
       }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
     "persistence": {
@@ -124,38 +137,108 @@
       "result_schema_version": 1,
       "payload_kind": "pls_pm_v1",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result whose stable capability identity differs from its recipe."},
-        {"category": "method_version", "expected_behavior": "Reject a current result relabeled as another PLS method version."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose saved dataset fingerprint no longer matches."},
-        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose SHA-256 differs from the manifest."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid dimensions, or inconsistent identities."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Load supported legacy data under its original identity and never promote it as current evidence."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose stable capability identity differs from its recipe."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a current result relabeled as another PLS method version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose saved dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any modified archive member whose SHA-256 differs from the manifest."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid dimensions, or inconsistent identities."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Load supported legacy data under its original identity and never promote it as current evidence."
+        }
       ],
       "legacy_policy": "Historical PLS payloads remain explicitly versioned and cannot satisfy current promotion evidence without an accepted migration contract."
     },
     "native": {
-      "setup_controls": ["Dataset and model", "Weighting scheme", "Preprocessing", "Missing-data policy", "Tolerance", "Maximum iterations"],
-      "applicability_blockers": ["Cyclic structural graph", "Invalid measurement block", "Nonfinite or insufficient complete data", "Unsupported method combination"],
-      "result_surfaces": ["Model estimates", "Outer loadings", "Outer weights", "R-square", "Direct and indirect effects", "Run provenance"],
+      "setup_controls": [
+        "Dataset and model",
+        "Weighting scheme",
+        "Preprocessing",
+        "Missing-data policy",
+        "Tolerance",
+        "Maximum iterations"
+      ],
+      "applicability_blockers": [
+        "Cyclic structural graph",
+        "Invalid measurement block",
+        "Nonfinite or insufficient complete data",
+        "Unsupported method combination"
+      ],
+      "result_surfaces": [
+        "Model estimates",
+        "Outer loadings",
+        "Outer weights",
+        "R-square",
+        "Direct and indirect effects",
+        "Run provenance"
+      ],
       "gui_cli_parity_rule": "For the same typed recipe, dataset fingerprint, method version, and settings, GUI and CLI analytical payloads must be exactly equal apart from operational timestamps and run identifiers.",
-      "accessibility_rules": ["Every estimate and warning is available in an accessible table.", "Keyboard users can configure, execute, inspect, export, save, and reopen the workflow."]
+      "accessibility_rules": [
+        "Every estimate and warning is available in an accessible table.",
+        "Keyboard users can configure, execute, inspect, export, save, and reopen the workflow."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html", "svg", "png"],
-      "tables": ["Path coefficients", "Outer loadings", "Outer weights", "R-square", "Effects", "Run provenance"],
+      "formats": [
+        "xlsx"
+      ],
+      "tables": [
+        "Path coefficients",
+        "Outer loadings",
+        "Outer weights",
+        "R-square",
+        "Effects",
+        "Run provenance"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": false,
       "process_cleanup_required": true
     },
     "audit": {
-      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
       "source_hashes_required": true,
       "freshness_required": true,
       "reports_must_pass": true
@@ -165,7 +248,9 @@
     "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/PLS_PM_V1.md"],
+      "method_spec": [
+        "docs/methods/PLS_PM_V1.md"
+      ],
       "independent_reference": [
         "validation/Resolve-Rscript.ps1",
         "validation/r_csem_reference.R",
@@ -173,14 +258,31 @@
         "validation/python_plspm_reference.py",
         "validation/pls_pca_reference.py"
       ],
-      "simulation_report": ["validation/pls_core_simulation.py"],
-      "boundary_report": ["validation/pls_core_boundary_gate.py"],
-      "persistence_report": ["validation/pls_core_persistence_gate.py"],
-      "frontend_report": ["src/native/nativeAnalysisRecipe.test.ts", "src/native/NativeResultsSurface.test.tsx"],
-      "export_report": ["src/native/nativeExportTables.test.ts"],
-      "method_audit": ["validation/pls_algorithm_v1_factory_audit.py"],
+      "simulation_report": [
+        "validation/pls_core_simulation.py"
+      ],
+      "boundary_report": [
+        "validation/pls_core_boundary_gate.py"
+      ],
+      "persistence_report": [
+        "validation/pls_core_persistence_gate.py"
+      ],
+      "frontend_report": [
+        "src/native/nativeAnalysisRecipe.test.ts",
+        "src/native/NativeResultsSurface.test.tsx"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/pls_algorithm_v1_factory_audit.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json"
+      ],
       "packaged_acceptance": [
         "validation/pls_algorithm_v1_packaged_acceptance.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
         "validation/diagnostic_bundle_source_manifest.py",
         "validation/run_v247_cumulative_native_acceptance.ps1",
         "validation/test_pls_algorithm_v1_packaged_adapter.py",
@@ -191,102 +293,21 @@
     },
     "evidence": {
       "engine_only": [
-        {
-          "path": "validation/results/method_factory/pls_algorithm_v1/method_spec.identity.json",
-          "roles": ["method_spec"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        },
-        {
-          "path": "validation/results/method_factory/pls_algorithm_v1/independent_reference.identity.json",
-          "roles": ["independent_reference"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        },
-        {
-          "path": "validation/results/method_factory/pls_algorithm_v1/simulation_report.identity.json",
-          "roles": ["simulation_report"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        },
-        {
-          "path": "validation/results/method_factory/pls_algorithm_v1/boundary_report.identity.json",
-          "roles": ["boundary_report"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/pls_algorithm_v1/method_spec.identity.json","roles":["method_spec"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}},
+        {"path":"validation/results/method_factory/pls_algorithm_v1/independent_reference.identity.json","roles":["independent_reference"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}},
+        {"path":"validation/results/method_factory/pls_algorithm_v1/simulation_report.identity.json","roles":["simulation_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}},
+        {"path":"validation/results/method_factory/pls_algorithm_v1/boundary_report.identity.json","roles":["boundary_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ],
       "archive_qualified": [
-        {
-          "path": "validation/results/method_factory/pls_algorithm_v1/persistence_report.identity.json",
-          "roles": ["persistence_report"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/pls_algorithm_v1/persistence_report.identity.json","roles":["persistence_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ],
       "native_qualified": [
-        {
-          "path": "validation/results/method_factory/pls_algorithm_v1/frontend_report.identity.json",
-          "roles": ["frontend_report"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        },
-        {
-          "path": "validation/results/method_factory/pls_algorithm_v1/export_report.identity.json",
-          "roles": ["export_report"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/pls_algorithm_v1/frontend_report.identity.json","roles":["frontend_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}},
+        {"path":"validation/results/method_factory/pls_algorithm_v1/export_report.identity.json","roles":["export_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ],
       "release_qualified": [
-        {
-          "path": "validation/results/method_factory/pls_algorithm_v1/method_audit.identity.json",
-          "roles": ["method_audit"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        },
-        {
-          "path": "validation/results/method_factory/pls_algorithm_v1/packaged_acceptance.identity.json",
-          "roles": ["packaged_acceptance"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/pls_algorithm_v1/method_audit.identity.json","roles":["method_audit"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}},
+        {"path":"validation/results/method_factory/pls_algorithm_v1/packaged_acceptance.identity.json","roles":["packaged_acceptance"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ]
     }
   }

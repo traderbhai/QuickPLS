@@ -19,6 +19,16 @@ RANDOMIZATION_DESCRIPTION = (
     "randomization for structural paths using fixed original PLS construct scores "
     "and unadjusted pathwise p values."
 )
+CBSEM_BASE_SCOPE = (
+    "Single-group reflective raw-data CFA or recursive SEM with "
+    "listwise-standardized indicators; no mean structure, robust/ordinal/FIML "
+    "estimator, or invariance testing"
+)
+CBSEM_BOOTSTRAP_STATUS = (
+    "Exact CFA case bootstrap is available from the Exact CB-SEM model tab. "
+    "Historical schema-3 v2 and analytical v1 bootstrap results remain readable "
+    "but cannot be selected for a new calculation."
+)
 
 
 def valid_descriptor(viewport: str = "1024x700") -> dict[str, object]:
@@ -63,6 +73,35 @@ def randomization_scope_contract(description: object) -> bool:
         and re.search(r"fixed original PLS construct scores", description, re.IGNORECASE) is not None
         and re.search(r"unadjusted pathwise p values", description, re.IGNORECASE) is not None
         and re.search(r"\bMGA\b|\bMICOM\b", description, re.IGNORECASE) is None
+    )
+
+
+def cbsem_scope_contract(
+    scope: object,
+    bootstrap_status: object,
+    toggle_count: object,
+    toggle_checked: object,
+) -> bool:
+    if not isinstance(scope, str) or not isinstance(bootstrap_status, str):
+        return False
+    return (
+        re.search(r"Single-group reflective raw-data CFA or recursive SEM", scope, re.IGNORECASE)
+        is not None
+        and re.search(r"listwise-standardized indicators", scope, re.IGNORECASE) is not None
+        and re.search(
+            r"no mean structure, robust/ordinal/FIML estimator, or invariance testing",
+            scope,
+            re.IGNORECASE,
+        )
+        is not None
+        and re.search(r"Exact CFA case bootstrap is available from the Exact CB-SEM model tab", bootstrap_status, re.IGNORECASE)
+        is not None
+        and re.search(r"Historical schema-3 v2 and analytical v1 bootstrap results remain readable", bootstrap_status, re.IGNORECASE)
+        is not None
+        and re.search(r"cannot be selected for a new calculation", bootstrap_status, re.IGNORECASE)
+        is not None
+        and toggle_count == 0
+        and toggle_checked is False
     )
 
 
@@ -144,6 +183,46 @@ class VisualScreenshotIntegrityTests(unittest.TestCase):
             with self.subTest(mutate=mutate):
                 self.assertFalse(randomization_scope_contract(mutate(RANDOMIZATION_DESCRIPTION)))
 
+    def test_cbsem_scope_predicate_requires_supported_exact_route_and_historical_read_only_copy(self) -> None:
+        required_source_tokens = (
+            "/Single-group reflective raw-data CFA or recursive SEM/i",
+            "/listwise-standardized indicators/i",
+            "/no mean structure, robust\\/ordinal\\/FIML estimator, or invariance testing/i",
+            "/Exact CFA case bootstrap is available from the Exact CB-SEM model tab/i",
+            "/Historical schema-3 v2 and analytical v1 bootstrap results remain readable/i",
+            "/cannot be selected for a new calculation/i",
+            "check.bootstrapToggleCount !== 0",
+            "check.bootstrapToggleChecked",
+        )
+        for token in required_source_tokens:
+            self.assertIn(token, self.source)
+        self.assertTrue(
+            cbsem_scope_contract(CBSEM_BASE_SCOPE, CBSEM_BOOTSTRAP_STATUS, 0, False)
+        )
+
+    def test_cbsem_scope_mutations_fail_closed(self) -> None:
+        mutations = (
+            (CBSEM_BASE_SCOPE.replace("Single-group reflective ", ""), CBSEM_BOOTSTRAP_STATUS, 0, False),
+            (CBSEM_BASE_SCOPE.replace("listwise-standardized indicators", "standardized indicators"), CBSEM_BOOTSTRAP_STATUS, 0, False),
+            (CBSEM_BASE_SCOPE.replace("no mean structure, ", ""), CBSEM_BOOTSTRAP_STATUS, 0, False),
+            (CBSEM_BASE_SCOPE, CBSEM_BOOTSTRAP_STATUS.replace("Exact CFA case bootstrap is available from the Exact CB-SEM model tab. ", ""), 0, False),
+            (CBSEM_BASE_SCOPE, CBSEM_BOOTSTRAP_STATUS.replace("Historical schema-3 v2 and analytical v1 bootstrap results remain readable ", ""), 0, False),
+            (CBSEM_BASE_SCOPE, CBSEM_BOOTSTRAP_STATUS.replace("cannot be selected for a new calculation", "can be selected"), 0, False),
+            (CBSEM_BASE_SCOPE, CBSEM_BOOTSTRAP_STATUS, 1, False),
+            (CBSEM_BASE_SCOPE, CBSEM_BOOTSTRAP_STATUS, 2, False),
+            (CBSEM_BASE_SCOPE, CBSEM_BOOTSTRAP_STATUS, 0, True),
+        )
+        for scope, status, toggle_count, toggle_checked in mutations:
+            with self.subTest(
+                scope=scope,
+                status=status,
+                toggle_count=toggle_count,
+                toggle_checked=toggle_checked,
+            ):
+                self.assertFalse(
+                    cbsem_scope_contract(scope, status, toggle_count, toggle_checked)
+                )
+
     def test_compact_properties_focus_and_cta_blocker_match_exact_product_contracts(self) -> None:
         focus_wait = (
             'await page.waitForFunction(() => document.activeElement?.id === '
@@ -159,6 +238,13 @@ class VisualScreenshotIntegrityTests(unittest.TestCase):
             '/requires at least one ordinary construct with four or more indicators/i',
             self.source,
         )
+
+    def test_hoc_authoring_targets_the_current_labelled_inspector_contract(self) -> None:
+        start = self.source.index("async function auditHigherOrderConstructDialog")
+        end = self.source.index("async function auditCalculationCatalogDialog", start)
+        hoc_source = self.source[start:end]
+        self.assertEqual(hoc_source.count('page.locator("aside.nd-model-inspector")'), 2)
+        self.assertNotIn("aside[aria-label=\"Model properties\"]", hoc_source)
 
 
 if __name__ == "__main__":

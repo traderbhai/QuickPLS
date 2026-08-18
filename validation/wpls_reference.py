@@ -1,4 +1,4 @@
-"""Independent weighted PLS reference for the experimental WPLS slice."""
+"""Independent weighted PLS reference for the supported WPLS v1 scope."""
 
 import csv
 import json

@@ -38,13 +38,21 @@
       {
         "id": "stage_two_measurement_block",
         "expression": "Z_H = [eta_c1_stage1, ..., eta_ck_stage1]",
-        "variables": ["Z_H", "eta_c1_stage1", "eta_ck_stage1"],
+        "variables": [
+          "Z_H",
+          "eta_c1_stage1",
+          "eta_ck_stage1"
+        ],
         "source_reference_id": "becker_klein_wetzels_2012"
       },
       {
         "id": "higher_order_composite",
         "expression": "eta_H = Z_H w_H with w_H from the frozen stage-two PLS iteration",
-        "variables": ["eta_H", "Z_H", "w_H"],
+        "variables": [
+          "eta_H",
+          "Z_H",
+          "w_H"
+        ],
         "source_reference_id": "becker_klein_wetzels_2012"
       }
     ],
@@ -72,18 +80,49 @@
         "purpose": "recovery",
         "design": "One reflective-reflective HOC with two to four lower-order components over bounded loadings, component correlations, HOC path effects, sample sizes, and reliability levels.",
         "seed_policy": "Frozen scenario-indexed generators; QuickPLS and the independent implementation receive identical data and component order.",
-        "metrics": ["hoc_path_error", "component_loading_error", "component_weight_error", "convergence_rate", "degradation_after_component_permutation"],
+        "metrics": [
+          "hoc_path_error",
+          "component_loading_error",
+          "component_weight_error",
+          "convergence_rate",
+          "degradation_after_component_permutation"
+        ],
         "acceptance_rule": "Mapped paths, loadings, and weights must agree with the independent two-stage reference within 1e-6, supported models must converge at the preregistered rate, and component permutation must degrade the HOC signal."
       }
     ],
     "boundaries": [
-      {"id": "degenerate_component_score", "category": "data_pathology", "case": "A lower-order component cannot produce a finite nonconstant stage-one score or stage two is singular.", "expected_behavior": "Execution fails with the affected component identified and emits no completed HOC result."},
-      {"id": "unsupported_hoc_shape", "category": "unsupported_scope", "case": "The recipe contains multiple HOCs, fewer than two components, formative components, a non-two-stage method, incoming HOC paths, or more than one outgoing HOC path.", "expected_behavior": "Native setup or typed recipe validation blocks execution and names the unsupported shape."},
-      {"id": "component_and_row_reorder", "category": "metamorphic", "case": "Rows, construct declarations, and lower-order component declarations are consistently reordered.", "expected_behavior": "Canonicalized HOC paths and mapped component estimates remain equal within tolerance."},
-      {"id": "repeatability", "category": "determinism", "case": "The same data fingerprint and two-stage recipe are executed repeatedly.", "expected_behavior": "Generated indicator identities and the analytical HOC payload are exactly equal apart from operational identifiers and timestamps."},
-      {"id": "hoc_archive_tamper", "category": "tamper", "case": "A component mapping, generated score identity, HOC weight, loading, path, method setting, or version is altered.", "expected_behavior": "Strict project validation rejects the archive instead of displaying the changed higher-order result."}
+      {
+        "id": "degenerate_component_score",
+        "category": "data_pathology",
+        "case": "A lower-order component cannot produce a finite nonconstant stage-one score or stage two is singular.",
+        "expected_behavior": "Execution fails with the affected component identified and emits no completed HOC result."
+      },
+      {
+        "id": "unsupported_hoc_shape",
+        "category": "unsupported_scope",
+        "case": "The recipe contains multiple HOCs, fewer than two components, formative components, a non-two-stage method, incoming HOC paths, or more than one outgoing HOC path.",
+        "expected_behavior": "Native setup or typed recipe validation blocks execution and names the unsupported shape."
+      },
+      {
+        "id": "component_and_row_reorder",
+        "category": "metamorphic",
+        "case": "Rows, construct declarations, and lower-order component declarations are consistently reordered.",
+        "expected_behavior": "Canonicalized HOC paths and mapped component estimates remain equal within tolerance."
+      },
+      {
+        "id": "repeatability",
+        "category": "determinism",
+        "case": "The same data fingerprint and two-stage recipe are executed repeatedly.",
+        "expected_behavior": "Generated indicator identities and the analytical HOC payload are exactly equal apart from operational identifiers and timestamps."
+      },
+      {
+        "id": "hoc_archive_tamper",
+        "category": "tamper",
+        "case": "A component mapping, generated score identity, HOC weight, loading, path, method setting, or version is altered.",
+        "expected_behavior": "Strict project validation rejects the archive instead of displaying the changed higher-order result."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
     "persistence": {
@@ -91,52 +130,260 @@
       "result_schema_version": 1,
       "payload_kind": "pls_pm_v1",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result whose higher-order capability identity differs from its recipe."},
-        {"category": "method_version", "expected_behavior": "Reject a HOC result relabeled with an unsupported PLS method version or HOC method."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a HOC result whose saved dataset fingerprint no longer matches."},
-        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, leaked or inconsistent generated identities, non-finite values, or incomplete HOC estimates."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret repeated-indicator, hybrid, broader, or unversioned HOC output as the bounded native two-stage workflow."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose higher-order capability identity differs from its recipe."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a HOC result relabeled with an unsupported PLS method version or HOC method."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a HOC result whose saved dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any modified archive member whose checksum differs."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, leaked or inconsistent generated identities, non-finite values, or incomplete HOC estimates."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret repeated-indicator, hybrid, broader, or unversioned HOC output as the bounded native two-stage workflow."
+        }
       ],
       "legacy_policy": "Only the exact current recipe shape and pls_pm_v1 result regenerated or strictly loaded as a disjoint two-stage HOC may satisfy this feature contract."
     },
     "native": {
-      "setup_controls": ["Higher-order construct", "Two or more lower-order components", "Disjoint two-stage method", "Single measured outcome", "Standardized path weighting"],
-      "applicability_blockers": ["Measured HOC placeholder", "Fewer than two components", "Structurally connected lower-order component", "Unsupported measurement mode", "Multiple HOCs or HOC paths", "Requested inference"],
-      "result_surfaces": ["Higher-order component relationships", "Higher-order structural paths", "Higher-order calculation scope", "Method warnings", "Run provenance"],
+      "setup_controls": [
+        "Higher-order construct",
+        "Two or more lower-order components",
+        "Disjoint two-stage method",
+        "Single measured outcome",
+        "Standardized path weighting"
+      ],
+      "applicability_blockers": [
+        "Measured HOC placeholder",
+        "Fewer than two components",
+        "Structurally connected lower-order component",
+        "Unsupported measurement mode",
+        "Multiple HOCs or HOC paths",
+        "Requested inference"
+      ],
+      "result_surfaces": [
+        "Higher-order component relationships",
+        "Higher-order structural paths",
+        "Higher-order calculation scope",
+        "Method warnings",
+        "Run provenance"
+      ],
       "gui_cli_parity_rule": "For the same canonical two-stage HOC recipe, dataset fingerprint, and PLS method version, GUI and CLI generated component-score identities and analytical results must be exactly equal apart from operational identifiers and timestamps.",
-      "accessibility_rules": ["Component relationships, HOC paths, and method scope are available in accessible tables without exposing generated pseudo-indicator names.", "Dialog validation and exclusions are associated with controls and do not rely on canvas position or color."]
+      "accessibility_rules": [
+        "Component relationships, HOC paths, and method scope are available in accessible tables without exposing generated pseudo-indicator names.",
+        "Dialog validation and exclusions are associated with controls and do not rely on canvas position or color."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html", "svg", "png"],
-      "tables": ["Higher-order component relationships", "Higher-order structural paths", "Higher-order calculation scope", "Run provenance"],
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "png"
+      ],
+      "tables": [
+        "Higher-order component relationships",
+        "Higher-order structural paths",
+        "Higher-order calculation scope",
+        "Run provenance"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": false,
       "process_cleanup_required": true
     },
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
   "qualification": {
-    "declared_state": "absent",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/PLS_HIGHER_ORDER_V1.md"],
-      "independent_reference": ["validation/higher_order_two_stage_reference.py"],
-      "simulation_report": ["validation/higher_order_two_stage_simulation.py"],
-      "boundary_report": ["validation/higher_order_two_stage_boundary_gate.py"],
-      "persistence_report": ["validation/higher_order_two_stage_persistence_gate.py"],
-      "frontend_report": ["src/native/NativeHigherOrderDialog.test.tsx", "src/native/nativeHigherOrder.test.ts", "src/native/nativeResults.test.ts"],
-      "export_report": ["src/native/nativeExportTables.test.ts", "src/domain/resultTables.test.ts"],
-      "method_audit": ["validation/higher_order_method_promotion_audit.py"],
-      "packaged_acceptance": ["validation/run_v247_hoc_native_acceptance.ps1"]
+      "method_spec": [
+        "docs/methods/PLS_HIGHER_ORDER_V1.md"
+      ],
+      "independent_reference": [
+        "validation/higher_order_two_stage_reference.py"
+      ],
+      "simulation_report": [
+        "validation/higher_order_two_stage_simulation.py"
+      ],
+      "boundary_report": [
+        "validation/higher_order_two_stage_boundary_gate.py"
+      ],
+      "persistence_report": [
+        "validation/higher_order_two_stage_persistence_gate.py"
+      ],
+      "frontend_report": [
+        "src/native/NativeHigherOrderDialog.test.tsx",
+        "src/native/nativeHigherOrder.test.ts",
+        "src/native/nativeResults.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.test.ts",
+        "src/domain/resultTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/higher_order_method_promotion_audit.py",
+        "validation/higher_order_v1_packaged_acceptance.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/test_phase2_release_packaged_common.py"
+      ],
+      "packaged_acceptance": [
+        "validation/higher_order_v1_packaged_acceptance.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/diagnostic_bundle_source_manifest.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/run_v247_hoc_native_acceptance.ps1",
+        "validation/v247_tauri_native_acceptance.mjs",
+        "validation/close_tauri_test_window.mjs",
+        "validation/windows_native_save_export.py",
+        "crates/qpls-cli/src/main.rs"
+      ]
     },
-    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/higher_order_v1/engine_evidence.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/higher_order_v1/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/higher_order_v1/native_evidence.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/higher_order_v1/packaged_acceptance.identity.json",
+          "roles": [
+            "packaged_acceptance"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/higher_order_v1/method_audit.identity.json",
+          "roles": [
+            "method_audit"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
   }
 }

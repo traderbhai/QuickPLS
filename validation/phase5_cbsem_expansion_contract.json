@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "program_id": "qpls3.program.phase5_cbsem_expansion",
+  "program_version": "phase5_cbsem_expansion_v1",
+  "catalogue_snapshot_date": "2026-08-12",
+  "status_semantics": {
+    "release_qualified": "Current method-factory evidence proves the bounded method, archive, native workflow, export, method-audit, and packaged Windows acceptance tiers.",
+    "native_qualified": "Current method-factory evidence proves engine, archive, native setup/results, and export tiers, but not packaged release qualification.",
+    "absent": "No promotion evidence is admitted. Typed configuration, a preview payload, fit fields, documentation, or a future contract does not count as implementation.",
+    "audit_passed": "The support boundary and blockers were reproduced from current source bytes. It does not mean Phase 5 is complete."
+  },
+  "completion_rule": {
+    "required_track_state": "release_qualified",
+    "required_tracks": [
+      "cbsem_ml_baseline",
+      "cbsem_bootstrap",
+      "cbsem_measurement_invariance",
+      "cbsem_multigroup",
+      "cbsem_model_comparison",
+      "cbsem_moderator",
+      "cbsem_robust_ml",
+      "cbsem_ordinal_wlsmv",
+      "cbsem_fiml",
+      "cbsem_equality_constraints"
+    ],
+    "preview_relabeling_forbidden": true,
+    "phase5_complete_when_all_required_tracks_release_qualified": true
+  },
+  "tracks": [
+    {
+      "id": "cbsem_ml_baseline",
+      "feature_id": "qpls3.cbsem.ml",
+      "method_version": "cbsem_ml_v1",
+      "current_state": "release_qualified",
+      "target_state": "release_qualified",
+      "promotion_manifest": "validation/methods/cbsem_ml_v1.manifest.json",
+      "dependencies": [],
+      "ineligible_preview_versions": [],
+      "source_probes": [
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "contains": "CB-SEM/CFA ML v1 is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective ML scope"
+        }
+      ],
+      "blockers": [
+        "The release-qualified baseline does not promote bootstrap, invariance, multigroup, model comparison, moderator, robust ML, ordinal WLSMV, FIML, or general equality-constraint tracks.",
+        "The supported claim remains bounded to continuous reflective single-group raw-data ordinary ML."
+      ]
+    },
+    {
+      "id": "cbsem_bootstrap",
+      "feature_id": "qpls3.cbsem.bootstrap",
+      "method_version": "cbsem_bootstrap_v2",
+      "current_state": "absent",
+      "candidate_implementation": true,
+      "target_state": "release_qualified",
+      "promotion_manifest": "validation/methods/cbsem_bootstrap_v2.manifest.json",
+      "dependencies": ["cbsem_ml_baseline"],
+      "ineligible_preview_versions": ["cbsem_bootstrap_v1"],
+      "source_probes": [
+        {
+          "path": "crates/qpls-estimation/src/cbsem_bootstrap_contract.rs",
+          "contains": "pub const CBSEM_BOOTSTRAP_METHOD_VERSION_V2: &str = \"cbsem_bootstrap_v2\";"
+        },
+        {
+          "path": "crates/qpls-resampling/src/cbsem_bootstrap.rs",
+          "contains": "CBSEM_BOOTSTRAP_RETRY_POLICY_V2"
+        },
+        {
+          "path": "crates/qpls-project/src/lib.rs",
+          "contains": "fn validate_cbsem_bootstrap_v2_payload_contract("
+        },
+        {
+          "path": "src/native/NativeCalculationDialog.tsx",
+          "contains": "Nonparametric case bootstrap (Experimental)"
+        },
+        {
+          "path": "validation/cbsem_bootstrap_v2_release_persistence_gate.py",
+          "contains": "coordinated_witness_semantic_rewrite_not_replayed"
+        }
+      ],
+      "blockers": [
+        "The v2 full-refit candidate has no completed B=1000 through 10000 qualification simulation or accepted method-factory evidence, so the manifest remains absent.",
+        "Archive validation recomputes identities, indexed sample-position digests, accounting, warnings, and Type-7 summaries from stored witnesses, but it does not replay every ML fit; coordinated witness and derived-summary rewrites are not authenticated and remain a promotion blocker.",
+        "No genuine packaged Windows acceptance or independent release audit exists, and the analytical cbsem_bootstrap_v1 preview remains permanently ineligible for v2 evidence."
+      ]
+    },
+    {
+      "id": "cbsem_measurement_invariance",
+      "feature_id": "qpls3.cbsem.measurement_invariance",
+      "method_version": "cbsem_invariance_v2",
+      "current_state": "absent",
+      "target_state": "release_qualified",
+      "promotion_manifest": "validation/methods/cbsem_invariance_v2.manifest.json",
+      "dependencies": ["cbsem_ml_baseline", "cbsem_equality_constraints"],
+      "ineligible_preview_versions": ["cbsem_invariance_v1"],
+      "source_probes": [
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "contains": "pub const CBSEM_INVARIANCE_METHOD_VERSION: &str = \"cbsem_invariance_v1\";"
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "contains": "let chi = fit.chi_square + index as f64 * groups.len() as f64;"
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "contains": "cbsem.multigroup_unsupported"
+        }
+      ],
+      "blockers": [
+        "The v1 invariance steps arithmetically alter pooled-fit statistics and do not fit configural, metric, or scalar constrained group models.",
+        "The current validated CB-SEM recipe blocks group and invariance metadata.",
+        "No identified scalar mean structure, named constraint/release ledger, hierarchy recovery simulation, strict archive, or native workflow exists."
+      ]
+    },
+    {
+      "id": "cbsem_multigroup",
+      "feature_id": "qpls3.cbsem.multigroup",
+      "method_version": "cbsem_multigroup_v2",
+      "current_state": "absent",
+      "target_state": "release_qualified",
+      "promotion_manifest": "validation/methods/cbsem_multigroup_v2.manifest.json",
+      "dependencies": ["cbsem_ml_baseline", "cbsem_bootstrap", "cbsem_measurement_invariance"],
+      "ineligible_preview_versions": ["cbsem_multigroup_v1"],
+      "source_probes": [
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "contains": "pub const CBSEM_MULTIGROUP_METHOD_VERSION: &str = \"cbsem_multigroup_v1\";"
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "contains": "chi_square: fit.chi_square * share"
+        }
+      ],
+      "blockers": [
+        "The v1 group summaries apportion one pooled fit by group size instead of fitting group-specific and equality-constrained ML models.",
+        "No qualified metric-invariance prerequisite, target-path equality likelihood-ratio test, stratified bootstrap, group failure policy, or v2 persistence/native workflow exists.",
+        "The v1 preview is permanently ineligible for v2 promotion evidence."
+      ]
+    },
+    {
+      "id": "cbsem_model_comparison",
+      "feature_id": "qpls3.cbsem.model_comparison",
+      "method_version": "cbsem_model_comparison_v1",
+      "current_state": "absent",
+      "target_state": "release_qualified",
+      "promotion_manifest": "validation/methods/cbsem_model_comparison_v1.manifest.json",
+      "dependencies": ["cbsem_ml_baseline", "cbsem_equality_constraints"],
+      "ineligible_preview_versions": [],
+      "source_probes": [
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "contains": "pub aic: f64"
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "contains": "pub bic: f64"
+        }
+      ],
+      "forbidden_engine_markers": ["CBSEM_MODEL_COMPARISON_METHOD_VERSION"],
+      "blockers": [
+        "Individual CB-SEM results expose AIC and BIC, but no typed two-model comparison recipe or comparison result exists.",
+        "No shared-row/data identity check, mechanical nesting validator, constrained refit, likelihood-ratio result, comparison archive, UI/export, or packaged workflow exists.",
+        "Subtracting displayed fit fields manually is not method implementation or promotion evidence."
+      ]
+    },
+    {
+      "id": "cbsem_moderator",
+      "feature_id": "qpls3.cbsem.moderator",
+      "method_version": "cbsem_moderator_v1",
+      "current_state": "absent",
+      "target_state": "release_qualified",
+      "promotion_manifest": "validation/methods/cbsem_moderator_v1.manifest.json",
+      "dependencies": ["cbsem_ml_baseline", "cbsem_bootstrap"],
+      "ineligible_preview_versions": [],
+      "source_probes": [
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "contains": "CB-SEM ML v1 does not support interactions or higher-order constructs"
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "contains": "cbsem.interactions_unsupported"
+        }
+      ],
+      "forbidden_engine_markers": ["CBSEM_MODERATOR_METHOD_VERSION", "Latent Moderated Structural Equations"],
+      "blockers": [
+        "The current validated CB-SEM engine and recipe validation reject interactions.",
+        "PLS two-stage moderation and PROCESS OLS moderation are different estimators and cannot evidence CB-SEM LMS moderation.",
+        "No LMS raw-data likelihood, quadrature/mixture diagnostics, simple-slope covariance, bootstrap refits, persistence, native workflow, or packaged acceptance exists."
+      ]
+    },
+    {
+      "id": "cbsem_robust_ml",
+      "feature_id": "qpls3.cbsem.robust_ml",
+      "method_version": "cbsem_robust_ml_v1",
+      "current_state": "absent",
+      "target_state": "release_qualified",
+      "promotion_manifest": null,
+      "dependencies": ["cbsem_ml_baseline", "cbsem_equality_constraints"],
+      "ineligible_preview_versions": [],
+      "source_probes": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "contains": "RobustMl"
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "contains": "cbsem.ml_required"
+        }
+      ],
+      "forbidden_engine_markers": ["CBSEM_ROBUST_ML_METHOD_VERSION"],
+      "blockers": [
+        "A typed RobustMl selection exists, but validated recipe rules reject every estimator other than ordinary ML.",
+        "No sandwich/scaled statistic implementation, robust difference test, independent numerical reference, nonnormal simulation, archive identity, native workflow, or method manifest exists.",
+        "An enum value is configuration scaffolding, not engine support."
+      ]
+    },
+    {
+      "id": "cbsem_ordinal_wlsmv",
+      "feature_id": "qpls3.cbsem.ordinal_wlsmv",
+      "method_version": "cbsem_ordinal_wlsmv_v1",
+      "current_state": "absent",
+      "target_state": "release_qualified",
+      "promotion_manifest": null,
+      "dependencies": ["cbsem_ml_baseline", "cbsem_equality_constraints"],
+      "ineligible_preview_versions": [],
+      "source_probes": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "contains": "Wlsmv"
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "contains": "cbsem.ml_required"
+        }
+      ],
+      "forbidden_engine_markers": ["CBSEM_ORDINAL_WLSMV_METHOD_VERSION", "polychoric_correlation"],
+      "blockers": [
+        "A typed Wlsmv selection exists, but validated recipe rules reject it and the engine contains no ordinal threshold or polychoric-correlation estimator.",
+        "No category coding contract, thresholds, weight matrix, mean/variance correction, sparse-cell failure policy, independent reference, simulation, archive, native workflow, or method manifest exists.",
+        "Treating ordinal codes as continuous ML data is outside this capability."
+      ]
+    },
+    {
+      "id": "cbsem_fiml",
+      "feature_id": "qpls3.cbsem.fiml",
+      "method_version": "cbsem_fiml_v1",
+      "current_state": "absent",
+      "target_state": "release_qualified",
+      "promotion_manifest": null,
+      "dependencies": ["cbsem_ml_baseline"],
+      "ineligible_preview_versions": [],
+      "source_probes": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "contains": "pub enum MissingDataPolicy"
+        },
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "contains": "ListwiseDeletion"
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "contains": "cbsem.listwise_required"
+        }
+      ],
+      "forbidden_engine_markers": ["CBSEM_FIML_METHOD_VERSION", "MissingDataPolicy::Fiml"],
+      "blockers": [
+        "The typed missing-data policy exposes only listwise deletion and the validated CB-SEM rule requires it.",
+        "No case-pattern likelihood, missingness diagnostics, auxiliary-variable policy, independent reference, MAR simulation, archive, native workflow, or method manifest exists.",
+        "Mean imputation or listwise deletion cannot be relabeled as FIML."
+      ]
+    },
+    {
+      "id": "cbsem_equality_constraints",
+      "feature_id": "qpls3.cbsem.equality_constraints",
+      "method_version": "cbsem_equality_constraints_v1",
+      "current_state": "absent",
+      "target_state": "release_qualified",
+      "promotion_manifest": null,
+      "dependencies": ["cbsem_ml_baseline"],
+      "ineligible_preview_versions": [],
+      "source_probes": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "contains": "invariance_steps: Vec<CbsemInvarianceStep>"
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "contains": "enum CbsemFreeParameter"
+        }
+      ],
+      "forbidden_engine_markers": ["CBSEM_EQUALITY_CONSTRAINTS_METHOD_VERSION", "CbsemEqualityConstraint"],
+      "blockers": [
+        "The CB-SEM recipe has no general fixed/equality constraint objects, labels, bounds, or release ledger.",
+        "The optimizer parameter plan treats supported parameters as individually free or marker-fixed and has no equality mapping across free parameters.",
+        "Invariance-step names and synthetic v1 deltas are not a general constrained optimizer; no independent reference, simulation, persistence, native workflow, or method manifest exists."
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-13T19:18:52.475Z",
+  "generatedAt": "2026-08-18T13:37:33.655Z",
   "passed": true,
   "harness": {
     "runtime": "Chromium via Vite production preview",
@@ -60,211 +60,211 @@
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/02-data-1024x700.png",
-      "size": 46288,
-      "sha256": "3d75c0d3233fa7316a3e9576d0f883d08e2f22adfd514afaaab23bb5cc53a80f",
+      "size": 47303,
+      "sha256": "ef17869f10b34fe062e7dcb19725ee7b81e00eeb4e199feda24cdc1781b5902f",
       "viewport": "1024x700",
       "state": "data"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/03-recode-dialog-1024x700.png",
-      "size": 71656,
-      "sha256": "e2bb8f61f0699e1b87e2885aebe27c12047f899492b5d76cfdeae44ad4bbfa99",
+      "size": 72666,
+      "sha256": "2b4b63d11a0cc4f6259c6e5bcb4c29f7f99dd71ddb688fa7588ae65c27c99352",
       "viewport": "1024x700",
       "state": "recode-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/04-import-data-dialog-1024x700.png",
-      "size": 72487,
-      "sha256": "7c11834111057b7cc6912842277a875705f3ec1e2df87678480e0b9d2efd868f",
+      "size": 73458,
+      "sha256": "d808c59b2544adac62886610040279785bfd4adb204c2271758e5169b9274b5f",
       "viewport": "1024x700",
       "state": "import-data-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/05-model-1024x700.png",
-      "size": 70616,
-      "sha256": "c7078f6c71dd41a1a76bd2b15fc1d8b4d10577fa19d8e0a7f9d9bd731398e1fe",
+      "size": 75021,
+      "sha256": "a73cbed51410c170c8729c7422ce13f7fcb44a1e994e952ee5fc8f0b004f071d",
       "viewport": "1024x700",
       "state": "model"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-moderating-effect-dialog-1024x700.png",
-      "size": 70638,
-      "sha256": "0438bbb3f97eb9d51104ae06d8d672570289b89828a3e2cba59cd309c87ee96d",
+      "size": 85855,
+      "sha256": "17f17fe9336dbe3bc8dbce17c2c759cf58ec5ce6d47d7c278f9759b7c1b0fee6",
       "viewport": "1024x700",
       "state": "moderating-effect-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-higher-order-dialog-1024x700.png",
-      "size": 64717,
-      "sha256": "90eaf2aab0579665a2adcf4c7f3799e7402b6c4ff2209987de61ffb52cabfd79",
+      "size": 65713,
+      "sha256": "c1cbbdd4fb6d2012b6ea3921ec0bdb6dfbe23881d8d361e89e13bd57b26790c2",
       "viewport": "1024x700",
       "state": "higher-order-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-calculation-dialog-1024x700.png",
-      "size": 94681,
-      "sha256": "973d77f11f99380e54fc655cb0b87c61728b4f00a9f66d0da984d6da6a74fcaf",
+      "size": 95873,
+      "sha256": "f722f604bed81a9a53e01fa412b3bd8dce1ae7e1d448ab541e93aa84399e9a0c",
       "viewport": "1024x700",
       "state": "calculation-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/07-plsc-dialog-1024x700.png",
-      "size": 95205,
-      "sha256": "ceedca1d523021ad5b00b392390c1c13695cc7089670314517d87bd7e9dd8723",
+      "size": 98557,
+      "sha256": "d0498456ee0cb46953c7c927f9c63ad68be16c735d4f5ce2295d6e55187896aa",
       "viewport": "1024x700",
       "state": "plsc-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1024x700.png",
-      "size": 99589,
-      "sha256": "7aa38fbe768797241c789313f9f85f63f1b265e984128b6c423b5f3b7aaf84ae",
+      "size": 101230,
+      "sha256": "71bf42af2c7b48117b088dbfd26c65602c50193e47b2d286b42838febf11575f",
       "viewport": "1024x700",
       "state": "wpls-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-gsca-dialog-1024x700.png",
-      "size": 107419,
-      "sha256": "2acf55429c715bc4e6e534e38bd61c7158c74caf6303b7a97933b71391d1dbe5",
+      "size": 109322,
+      "sha256": "8fc863859827a167346986a762b8a7ba0d518dae2316a7f6369bc352b726c51e",
       "viewport": "1024x700",
       "state": "gsca-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-cca-dialog-1024x700.png",
-      "size": 99065,
-      "sha256": "42ae62c9fea785a50b19bf03578d8921932d62ebf85be6b497374adbe6780ddf",
+      "size": 100262,
+      "sha256": "bae24a08182308a6c37066253547e78d2cfd2fbbbabac9d99216df6f77a66863",
       "viewport": "1024x700",
       "state": "cca-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-cta-pls-dialog-1024x700.png",
-      "size": 109257,
-      "sha256": "c81adae12536ace78f767715414b76c60bdf553240fcea9e26fa72e99d792fa6",
+      "size": 111079,
+      "sha256": "4edf4a4feb2a59b3a68e90287f8266677da3652204050070439c6b647512c88f",
       "viewport": "1024x700",
       "state": "cta-pls-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/10-cbsem-dialog-1024x700.png",
-      "size": 113132,
-      "sha256": "65b6c35d467a8a2a9047b550214fff3280a63a10cd63f0696bd8dd2316b1d09b",
+      "size": 124992,
+      "sha256": "d73f2c8f9d27eff9124195f06c33665bd911e911e1849c87c7ebbece43ef883d",
       "viewport": "1024x700",
       "state": "cbsem-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/10-ipma-dialog-1024x700.png",
-      "size": 108404,
-      "sha256": "e9adbb49cd31533aeb6154eb294f1f9f1677438c580fe4d5a3db09a2f5f90887",
+      "size": 110062,
+      "sha256": "dd29226a24a434e1552db59004c91be840463ff6cf997d1f87860a210aa77bff",
       "viewport": "1024x700",
       "state": "ipma-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1024x700.png",
-      "size": 114551,
-      "sha256": "aa2d55ea1bdc942d43334f5631442c17bccd2a90afdd45fb6a823ebdbdd76cf5",
+      "size": 120096,
+      "sha256": "f935f6b72ef08279cc5e7d349f6ead6516b03c440986b07e853e0a0db4cea50c",
       "viewport": "1024x700",
       "state": "structural-path-randomization-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/12-prediction-dialog-1024x700.png",
-      "size": 119010,
-      "sha256": "a7193005124b2744d3fac53b6bae2bbceb53d40a09d4d65950ef91ae8af746b5",
+      "size": 120720,
+      "sha256": "2d21e602e3522f888216a1ba7f98277cc2219f52d066a80c2fab8655dff7fc15",
       "viewport": "1024x700",
       "state": "prediction-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/13-mga-dialog-1024x700.png",
-      "size": 115721,
-      "sha256": "167e6370e83c4691eb6b813a68bf3a50816eb0cff8f34c4fe00b91db8bd3d3f0",
+      "size": 120750,
+      "sha256": "60e47f93460b5694ad033869ceab29e0befb16b361bdd67c91a2443c6031728e",
       "viewport": "1024x700",
       "state": "mga-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/14-nca-standalone-dialog-1024x700.png",
-      "size": 105794,
-      "sha256": "f129a5ceb1189eaf92dc41751c3210dc5c13318922469e02bfd396a7bbb2c9ea",
+      "size": 107692,
+      "sha256": "69295527673736ffe47b516a418fb9c7a5b21ee5a31422cc5659108f6b2e3691",
       "viewport": "1024x700",
       "state": "nca-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/15-nca-empty-results-1024x700.png",
-      "size": 25088,
-      "sha256": "1d50b32ef90b8a92aeab148348edba3d2d7c0ed779bdb7c3867c93e09405267a",
+      "size": 25087,
+      "sha256": "4e8a2a1bee36e682d6d90a89d44290e06ef9e7de3274fcea2506ba928db6e91f",
       "viewport": "1024x700",
       "state": "nca-empty-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/16-pca-standalone-dialog-1024x700.png",
-      "size": 110791,
-      "sha256": "5d58134abeb046349c2b88e582891d10b8e46c6d835458d61a432509a72273be",
+      "size": 113287,
+      "sha256": "899855277ab34f66e499ebfaef4be68bba20c17a60454cef08567680d00aef20",
       "viewport": "1024x700",
       "state": "pca-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1024x700.png",
-      "size": 120034,
-      "sha256": "4a9efc800c450b309977d485e60a68ed28415b9a6a8ed25e560656cc674842ed",
+      "size": 121085,
+      "sha256": "ba5e8a908838e41f595af46820cc5078e16f06cd6c0ed5b1b08f9aee25f6ba8c",
       "viewport": "1024x700",
       "state": "ols-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1024x700.png",
-      "size": 114280,
-      "sha256": "07ebeb0a835474151f5ab4b3e386ec626c7a5580f06a79b8e3aef8c52d7f1d0e",
+      "size": 116876,
+      "sha256": "492cedaab6b81d43fceff613847284e90adf8301c4fb1b158892b7c1c6d7a752",
       "viewport": "1024x700",
       "state": "logistic-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1024x700.png",
-      "size": 117254,
-      "sha256": "0ee6c866739c9bbcbd14cd52fdd0107c2ce76028f3a69c200e8e1936c7883b68",
+      "size": 118911,
+      "sha256": "be8a618c5ba0ae1aca3809240e78b1fe69de2a4e0695e425214f0c72e6af2054",
       "viewport": "1024x700",
       "state": "regression-bootstrap-ols-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1024x700.png",
-      "size": 113627,
-      "sha256": "b0fd22eb52193701a28faf33b6a109e2dc01f457db6c69cb8cd7d5019342b398",
+      "size": 116059,
+      "sha256": "9c72a1b96667226cdccfb1116a056cbca2ef919135b5ae003ff45de208d7311f",
       "viewport": "1024x700",
       "state": "regression-bootstrap-logistic-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/21-process-v2-dialog-1024x700.png",
-      "size": 132698,
-      "sha256": "4725e9dcd5bd863cc7adbeb6d84ac0d182e53cee67ef505af7b96c00197e0bdb",
+      "size": 138306,
+      "sha256": "5537aec6a940546e304dd872a823273140a65be72d05c9dd65490c7c9857f25f",
       "viewport": "1024x700",
       "state": "process-v2-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-empty-results-1024x700.png",
-      "size": 22080,
-      "sha256": "99c9ae8d3aa5cf1987f6b0a0b22bd7ea62fbcaa0ea5fb8ec24867e4d6ec6e962",
+      "size": 22079,
+      "sha256": "a548e84e70e21bcb074a86a6869ec78d7912135e8e80747cdbe3770d5ae298ca",
       "viewport": "1024x700",
       "state": "empty-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/17-completed-results-1024x700.png",
-      "size": 68142,
-      "sha256": "715e80669bd9b3f3fe82598ebe8a97b7b21f67f8550eb7161458749d6535b12d",
+      "size": 68824,
+      "sha256": "8766ccd1848a4b6bdca204a3531b44ce102ccabf023e5573a6b4efb3642bf735",
       "viewport": "1024x700",
       "state": "completed-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-mediation-results-1024x700.png",
-      "size": 49826,
-      "sha256": "1066e291c40dc37bb8279664ff573ceb525a4a123518a96f0fd9f00fea43647b",
+      "size": 50466,
+      "sha256": "6532d0c1708fbae5eca170d2dabb9249a5344aebdb1d9f75bb536cf08cf99f0f",
       "viewport": "1024x700",
       "state": "mediation-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/19-mediation-bootstrap-inference-1024x700.png",
-      "size": 55150,
-      "sha256": "7d9b586fcbeeddcf42f8ca750c9fc0d90d01f36122fbc4b5451d982ea4d69ffd",
+      "size": 55790,
+      "sha256": "134bc7e6b020d31973945a97fca9f410f8a56e5411c33083828309cfe7867a0a",
       "viewport": "1024x700",
       "state": "mediation-bootstrap-inference"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-export-dialog-1024x700.png",
-      "size": 61662,
-      "sha256": "08864ffbe3744d4df2622dc8d4aaf07f8668c928b07c0fc9fb613bcbb97f0d79",
+      "size": 62327,
+      "sha256": "f109070cacb9ac4a0ea2fbd178eb633de287bdaac58885ad17aa0b89402793f6",
       "viewport": "1024x700",
       "state": "export-dialog"
     },
@@ -298,204 +298,204 @@
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/02-data-1280x720.png",
-      "size": 59502,
-      "sha256": "af8598f49481845f0ae3cfa761acc5f0ecc2ffeba6ecae560c96c961b38f531a",
+      "size": 60582,
+      "sha256": "a2ffb19f6a6f7611779b914201440b6b07711b9421d87ff62488cd88090ebff0",
       "viewport": "1280x720",
       "state": "data"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/03-recode-dialog-1280x720.png",
-      "size": 85361,
-      "sha256": "c5a6e61522e7db85c689bd9c2aa75b531104bbd7504f379bd8ac0dbeaa26a80a",
+      "size": 86400,
+      "sha256": "915b2d484e35a7789aa347fb0be8a05ac87932bd948efae098f4f301e766d6a2",
       "viewport": "1280x720",
       "state": "recode-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/04-import-data-dialog-1280x720.png",
-      "size": 87636,
-      "sha256": "2a44ee12357e030be691423e957617d9e1de5500a7c50f3e9cbd83751e151186",
+      "size": 88646,
+      "sha256": "4808bd273946eeafaa2d1cf7e5c9a5408d17a7f52c99c1992f49e2dda7cb0986",
       "viewport": "1280x720",
       "state": "import-data-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/05-model-1280x720.png",
-      "size": 92313,
-      "sha256": "7e47a038077ac95fbc3e8617a179981ce1a68e8fa0d3c9cf4fa7efdffbaaf0cc",
+      "size": 113206,
+      "sha256": "19e7d665189ff6b65664f971e6a7250cb90105af209f983576fb97e5378be213",
       "viewport": "1280x720",
       "state": "model"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-moderating-effect-dialog-1280x720.png",
-      "size": 87450,
-      "sha256": "9354ccf0c50668045b07df13ebba666391532d5006d44440c1c12f7fbf595d95",
+      "size": 105896,
+      "sha256": "9124c60f8aed5ab946879f7981da20bcaeb7f23c52cc33f9b286f05208568ea2",
       "viewport": "1280x720",
       "state": "moderating-effect-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-higher-order-dialog-1280x720.png",
-      "size": 79299,
-      "sha256": "6e4b3158b8c0803874aae1f508957992e4f1d163a9813b5674127ea40e0ee6c3",
+      "size": 79391,
+      "sha256": "77c5aa092f392df0c9ea213b2fb5f46ac614c5a27c7e19de3e518d23c0d523bd",
       "viewport": "1280x720",
       "state": "higher-order-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-calculation-dialog-1280x720.png",
-      "size": 102721,
-      "sha256": "9ca136af4ca3567decbfc873fb7c07abe5e0af21bfdffb0fd5cec89a64d32400",
+      "size": 121075,
+      "sha256": "5d892ef98383025b4eda9d74fce5573768910d0fd97c3c773b1a4793db33d34f",
       "viewport": "1280x720",
       "state": "calculation-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/07-plsc-dialog-1280x720.png",
-      "size": 103261,
-      "sha256": "40f91eb7188b01f8eed280d840a636eb0b33bd3c66b69cd082d6e04396f4a5c8",
+      "size": 123450,
+      "sha256": "0325c570f5bc198e16fa98cb16c3b3b261f48a73dbff9928e8df0816511f709b",
       "viewport": "1280x720",
       "state": "plsc-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1280x720.png",
-      "size": 107831,
-      "sha256": "20a37bf48c72a1dd126d35c7e1f22227aca431b3b4a6958f115d3f773adf9502",
+      "size": 126167,
+      "sha256": "e73d4fd7138cc016a7021162ae99bfec89e6460a5dadef08444285566125d64b",
       "viewport": "1280x720",
       "state": "wpls-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-gsca-dialog-1280x720.png",
-      "size": 116178,
-      "sha256": "eaa94dfa679d43311bfa82a32f6e0c29095752e72a4efb9d226dd8fb74d65640",
+      "size": 134923,
+      "sha256": "4af805ea99c458317154db848c577bf311dfab932371aedf76ebe6374859962e",
       "viewport": "1280x720",
       "state": "gsca-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-cca-dialog-1280x720.png",
-      "size": 107293,
-      "sha256": "7abeb9608ad55720c30a4c4fe257966dfb2a1c9f74e16c870df597fb62104bf4",
+      "size": 125230,
+      "sha256": "bfc5b8f28a0edb3709b5853b5941e2003c409ad5089e65c2f7124b0bfa289759",
       "viewport": "1280x720",
       "state": "cca-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-cta-pls-dialog-1280x720.png",
-      "size": 117097,
-      "sha256": "c077df0e0264258d0c050fb9aae79bac36a0e9f0eb53404902c1ef1d5a101e62",
+      "size": 135659,
+      "sha256": "8bf3884946a3ed25b68cec29083da62af57d95b10bee51190c45a9fc13809800",
       "viewport": "1280x720",
       "state": "cta-pls-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/10-cbsem-dialog-1280x720.png",
-      "size": 122731,
-      "sha256": "568ef3e0d234072de7295371c9a710c8db6eeebd04bbb1c0840726316787a781",
+      "size": 151728,
+      "sha256": "c025389c242bd7326ef6be68e14b4cec57199902eef3b36e7dad4dd869130fd5",
       "viewport": "1280x720",
       "state": "cbsem-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/10-ipma-dialog-1280x720.png",
-      "size": 115691,
-      "sha256": "0e51f3c9dc2c259cf5131d803da1a90e8efa2fd294857e670cac9e8e64ee4d24",
+      "size": 133556,
+      "sha256": "b27e6b6486f96dec97636389d96542bc883163195d1ca69d797c7ace16db0faf",
       "viewport": "1280x720",
       "state": "ipma-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1280x720.png",
-      "size": 123353,
-      "sha256": "5f070b79bf25ce00217c31973d14481fe3900aa1e5d36e88ef6136e8d0155493",
+      "size": 145850,
+      "sha256": "58bab12e8f363cc663189abfc87a33590e5fdbc3f3094381d472ae24262489cc",
       "viewport": "1280x720",
       "state": "structural-path-randomization-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/12-prediction-dialog-1280x720.png",
-      "size": 129393,
-      "sha256": "8bbe078ad85e021063553b9544b750ac8d2fbf59a64a5df276e7992cdba104ed",
+      "size": 146490,
+      "sha256": "e45cd35d8107f5d8147ed80f05b88107e688df89ea4cc1ebbf1cb757b83f0856",
       "viewport": "1280x720",
       "state": "prediction-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/13-mga-dialog-1280x720.png",
-      "size": 120037,
-      "sha256": "e084fb2d4606e39679094bd0703c97bbea321e2318c0d8fc861bf0c46d575182",
+      "size": 150427,
+      "sha256": "59cc7b77065af3a93ed27724c68014d431cb03f6335534b1dcc81393c466b8e7",
       "viewport": "1280x720",
       "state": "mga-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/14-nca-standalone-dialog-1280x720.png",
-      "size": 123320,
-      "sha256": "27c23d22dec225ced87b79ba370783ab708dc78f592cefde3cbb09affb58225a",
+      "size": 123590,
+      "sha256": "9a7e9ee55fac905dc7d7577f4cf9ba6170ca4097167e1eff3806f17f98269876",
       "viewport": "1280x720",
       "state": "nca-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/15-nca-empty-results-1280x720.png",
       "size": 28060,
-      "sha256": "2f2ed27b1f37ef4118d391ea008e8ee6922e36c84b3038516709d522325ec2f4",
+      "sha256": "08b5695816c10fe7343274937eb7b0c4a7b46373d161cf5a629e5bcc913061b0",
       "viewport": "1280x720",
       "state": "nca-empty-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/16-pca-standalone-dialog-1280x720.png",
-      "size": 126229,
-      "sha256": "64ce36fa4e8f148fc65b3cb92f6caa90680d6446d36c8de254dd4c6f11e4c9cd",
+      "size": 129803,
+      "sha256": "cbfdb6385a296e64a306d4401228d8b906df07234304fd3b19732b36825472c2",
       "viewport": "1280x720",
       "state": "pca-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1280x720.png",
-      "size": 137244,
-      "sha256": "c328bffdd3d2bee32780eae1730e368c295e369a08f4f7f9db58c6e30e7e1c2a",
+      "size": 140040,
+      "sha256": "2f64b9f15d782ddd817067dd039c391a687166ffa135cb3b6cea779f2a0f4ad7",
       "viewport": "1280x720",
       "state": "ols-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1280x720.png",
-      "size": 133043,
-      "sha256": "ccac927f417ee053c477415f224be5a381a9f5d65b1a66e91f27bdf548b5fd1c",
+      "size": 136251,
+      "sha256": "530e3cf632add5e806b0b266876183cf6f7135e2f52013a2f74029ede74f201b",
       "viewport": "1280x720",
       "state": "logistic-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1280x720.png",
-      "size": 136681,
-      "sha256": "98e2fc62a6ee4afefa0da7e08a96971a5f78c61eca82b2f2993c908f34f9af2a",
+      "size": 139123,
+      "sha256": "fd846ede7059d0a213bcc4fc02d343881bfefd348b87fe7a0b644bd67183481b",
       "viewport": "1280x720",
       "state": "regression-bootstrap-ols-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1280x720.png",
-      "size": 133296,
-      "sha256": "f68e354c8a9446d3046bdb16f1be85e963ab36fbac0570caff41e0766d4f5748",
+      "size": 135057,
+      "sha256": "34842ad46ebd42e23057b34ca86ebccc80e2139d78be5d1404865d1b993c9bfc",
       "viewport": "1280x720",
       "state": "regression-bootstrap-logistic-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/21-process-v2-dialog-1280x720.png",
-      "size": 145591,
-      "sha256": "fdbd8bd0e0472b93e5b205c11d19a81befc02b0f33e3ddf6888b6942d15515c8",
+      "size": 148138,
+      "sha256": "bf9a4596191486be0c98cb07b21b7c572ec9b540a572197284bc322c14485965",
       "viewport": "1280x720",
       "state": "process-v2-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-empty-results-1280x720.png",
       "size": 25032,
-      "sha256": "34a0afaf1e5fddb15a5d5ed246ed53382100eee9d6eb553ddad3964980fbee59",
+      "sha256": "b1e2c174a94b250ec13aa56fc964464721578d96e13cf65ae7032055cff21f03",
       "viewport": "1280x720",
       "state": "empty-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/17-completed-results-1280x720.png",
-      "size": 79380,
-      "sha256": "37ba2f384f2dba373f8c8e1df96fce9aae02b2b632e9f5d80a651b88b576c454",
+      "size": 80121,
+      "sha256": "54bae14c0c64c8eec7bc3a47b297535031628913882296b5c6a0a9f7d3a58335",
       "viewport": "1280x720",
       "state": "completed-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-mediation-results-1280x720.png",
-      "size": 59727,
-      "sha256": "1744c0e28b738a702398bc03ed90eacd536befb6abfc84f181fd6d287884ebc9",
+      "size": 60439,
+      "sha256": "f2d2e431fd93efb0b90d72895f9939853f81a688bbc7c5577d51a0fdbf673d38",
       "viewport": "1280x720",
       "state": "mediation-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-export-dialog-1280x720.png",
-      "size": 65471,
-      "sha256": "04c7d2f7868cc6f018f37ed7dfaa657015a6a48cc13d0bd9ac709438ae87fdbc",
+      "size": 66165,
+      "sha256": "7a89a34eae96dd420dd9a7b3291f26df0896349cee010ca0b27bd69eb91c8323",
       "viewport": "1280x720",
       "state": "export-dialog"
     },
@@ -529,218 +529,218 @@
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/02-data-1440x900.png",
-      "size": 62022,
-      "sha256": "3902a9ee9282103f1aec73b65836eebd0efa9b9f4be2b54f8a37caea102b311f",
+      "size": 63146,
+      "sha256": "adc5d44030503ab2b53e626ab19a1d8eb932a870258e85ac014c25a3ef53c9c1",
       "viewport": "1440x900",
       "state": "data"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/03-recode-dialog-1440x900.png",
-      "size": 90913,
-      "sha256": "c2dc85fc00000b6b62bc8188d18e9f48d2df9fdc7852871d5fd25055c97ca12f",
+      "size": 91888,
+      "sha256": "d4714f47c7679ca7747df6a83aad47d4ddb11541d02f7291e9aaa8ee66c87440",
       "viewport": "1440x900",
       "state": "recode-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/04-import-data-dialog-1440x900.png",
-      "size": 92916,
-      "sha256": "56a5c0dc72dadb875103a86d624f0fbc9da8d93a743eb1138f63a70dc322ffa6",
+      "size": 93886,
+      "sha256": "02a9f791149e17415f189e4a8df66de965a1fa285505aa5e56450bc6d68eabd9",
       "viewport": "1440x900",
       "state": "import-data-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/05-model-1440x900.png",
-      "size": 100173,
-      "sha256": "3163472361bfc9ac16ac156c709a9592251093881eef4786e36e73dedfad05bb",
+      "size": 122002,
+      "sha256": "6bd3ec75a33ad94fe961c289fa9bc508c35401d6fb82e60de34e26785e9b3c03",
       "viewport": "1440x900",
       "state": "model"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-moderating-effect-dialog-1440x900.png",
-      "size": 94951,
-      "sha256": "c499a132deb0f84a0eb36a8a35f68c05ebf85c0d6b6431eb33526ba7cb23568c",
+      "size": 113708,
+      "sha256": "95b51ea24baf31e8196807b366d0192210bed01716d5b22c14ec2c2f51550970",
       "viewport": "1440x900",
       "state": "moderating-effect-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-higher-order-dialog-1440x900.png",
-      "size": 90122,
-      "sha256": "536d656cc6fb4abea7126d7243cf9bc7c3e2f9782f191566fde51affbdd6b85e",
+      "size": 92497,
+      "sha256": "60682f1493c41da6202e356d2d78a02620d21377d3e84c495f3a5c235080119d",
       "viewport": "1440x900",
       "state": "higher-order-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-calculation-dialog-1440x900.png",
-      "size": 128854,
-      "sha256": "3733dbe5f5402b9f21feb414a121f31b7e3be6006e6690f4f6590a954098feaa",
+      "size": 144599,
+      "sha256": "486bd9f96d9d4a7869a648b5b773ebcd420d5f748d1e0becd76d4a5e9ac52b1a",
       "viewport": "1440x900",
       "state": "calculation-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/07-plsc-dialog-1440x900.png",
-      "size": 129631,
-      "sha256": "4f613c9a3108c24db3f87c038baba0262912c6ccadbf1b550d4fc28715998a11",
+      "size": 147406,
+      "sha256": "4d5af1b6234d74e04f4452ab6c937694ea1c527373a8ea2f0a47e82e350b4b91",
       "viewport": "1440x900",
       "state": "plsc-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1440x900.png",
-      "size": 133627,
-      "sha256": "e43438d2445e5569e15c1115d0a5cbe9bfc990a28c8c28b85cb3d097d42d6495",
+      "size": 150672,
+      "sha256": "2a1be772c5f842f3c6de49c59ee32745e4a026df05ccfdd901269f1d08af4973",
       "viewport": "1440x900",
       "state": "wpls-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-gsca-dialog-1440x900.png",
-      "size": 142476,
-      "sha256": "e4d6a2828d77566a9dfc95501e6fd7bf615e20673161f5cd069f178db4fe8719",
+      "size": 159004,
+      "sha256": "5f037a0f61ab80ba314d566cae03b488cec29c7e76ca6532185f8edc1a17c88a",
       "viewport": "1440x900",
       "state": "gsca-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-cca-dialog-1440x900.png",
-      "size": 133800,
-      "sha256": "e6d02d9df2653e50bedad8c47f4f6891a7586a73d0b7d983e1c74d5b12ba16be",
+      "size": 149232,
+      "sha256": "b6ae157968d244710780b14d677628539abb055b6fb4f26d00fd78dcf1a150e9",
       "viewport": "1440x900",
       "state": "cca-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-cta-pls-dialog-1440x900.png",
-      "size": 143960,
-      "sha256": "5dc1d2ad907cb602122a82a077bf9f01aaf4704f33d6ca7ad58149cd5c81ef96",
+      "size": 160320,
+      "sha256": "89a2022e9f79fc90e70a6bf6bc115af2d877de2e7aa148033cd6ea8871ebfefc",
       "viewport": "1440x900",
       "state": "cta-pls-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/10-cbsem-dialog-1440x900.png",
-      "size": 150225,
-      "sha256": "ac722abf3ee0d4106f9c7ab2480e9e704ed796716845e864df8d182b5405baf8",
+      "size": 184650,
+      "sha256": "969cff0835728cfc66f29aaf767f06364bd96f4cf90d6a07e089203576113f0a",
       "viewport": "1440x900",
       "state": "cbsem-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/10-ipma-dialog-1440x900.png",
-      "size": 142262,
-      "sha256": "7dfa1df5a8d5714abf979f02451ff561dca4beed2f10f603a16b12cc261d9226",
+      "size": 158792,
+      "sha256": "97f1c5acabb55b378a01c924a1cf5562268c48144dbc179dcb5f37ac31a0b2a4",
       "viewport": "1440x900",
       "state": "ipma-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1440x900.png",
-      "size": 149906,
-      "sha256": "69a6836b2178f593b0aaef4e527eb5caf0bdc60089af743ce0f2540494a4d5ae",
+      "size": 173455,
+      "sha256": "be57fce7592b1aaf38c67a252489047d517afdc9c224fe4ad7b2fe054c5954ea",
       "viewport": "1440x900",
       "state": "structural-path-randomization-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/12-prediction-dialog-1440x900.png",
-      "size": 157531,
-      "sha256": "96d623be51b86509a17784ccfbf56ac15c39d758c94cf70c6d970558dd538175",
+      "size": 174549,
+      "sha256": "52fdc7e94abc2e8b973f89b33262055dfbf604734fe2cf8c796ab36467cb589e",
       "viewport": "1440x900",
       "state": "prediction-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/13-mga-dialog-1440x900.png",
-      "size": 155443,
-      "sha256": "b43645198d3aad2f877831a00134aac1e509d67d9e776ab4e293b36fb4320a0f",
+      "size": 181642,
+      "sha256": "adac141ecd71861086e2e60228c931f10ae37d682902d12a935530a28ee29141",
       "viewport": "1440x900",
       "state": "mga-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/14-nca-standalone-dialog-1440x900.png",
-      "size": 143310,
-      "sha256": "ad99634ad37b0163e93bb143049bfc835d4428508fb40ce3201614892f915277",
+      "size": 145156,
+      "sha256": "cdb828e6c067f6de604d96facb58fa7865e2f25e3bad214e1d1968a9566291f5",
       "viewport": "1440x900",
       "state": "nca-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/15-nca-empty-results-1440x900.png",
-      "size": 29734,
-      "sha256": "c17a69ca24cfb8dd60b58da97474bdb5aa81e9300a901f7d0790ebc112b9f6fb",
+      "size": 29733,
+      "sha256": "6ae691592d1fc769546e317b6d6d69cde85dfa21200d6901b148b1357c04f57b",
       "viewport": "1440x900",
       "state": "nca-empty-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/16-pca-standalone-dialog-1440x900.png",
-      "size": 152417,
-      "sha256": "1dc094119621e104cbde6714786542ca840a3df17b3f1d3fdd040e174fa4e607",
+      "size": 153974,
+      "sha256": "e3029df51bc97ef162df695291271f3e039ef20c46446603029913130881f30e",
       "viewport": "1440x900",
       "state": "pca-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1440x900.png",
-      "size": 172245,
-      "sha256": "8f91f8351387d6fc1d6b6f67e07936dbd56f8a13e6dea2e76fc500361ce8a6e1",
+      "size": 173506,
+      "sha256": "cf3d7ab24b08ec32e8bdbb81b6db65dfe4920b56e8e47d130579791847d0d06f",
       "viewport": "1440x900",
       "state": "ols-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1440x900.png",
-      "size": 179429,
-      "sha256": "b51714e73dd62054d77aea43820d327452860dc062c1790a1a8e09ac338e0e8d",
+      "size": 177988,
+      "sha256": "095c9d3f95744e725224d4bb4494171f263e7440d95a9d0197ef3cc36405146b",
       "viewport": "1440x900",
       "state": "logistic-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1440x900.png",
-      "size": 179356,
-      "sha256": "80bb996503f253d42c1d1f32d61aa9ec1d5e920cda70f344015257f5b5778280",
+      "size": 179248,
+      "sha256": "5fc49688301b92c1bd54bf3870aa0463c485ebb2007b9b0a97d78e26ce176939",
       "viewport": "1440x900",
       "state": "regression-bootstrap-ols-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1440x900.png",
-      "size": 177878,
-      "sha256": "a411647a3a63857219a31cdd5ed222f356ca43bc98ee18ae1e24f5c7d9158665",
+      "size": 178544,
+      "sha256": "7e103c52c13115f10e5451a3baa9e9e4e385e77aa36e90ea045f17bf914789bb",
       "viewport": "1440x900",
       "state": "regression-bootstrap-logistic-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/21-process-v2-dialog-1440x900.png",
-      "size": 192998,
-      "sha256": "ccd07ddc0c0493e4fdbc9869ee7d0680bc1a1e3bc0fa822a3e6f412b68c3a77e",
+      "size": 192098,
+      "sha256": "9d00bdd786768ad81c797d85c7abd6e1dca294dc2d1a16db863a2f9d2a118714",
       "viewport": "1440x900",
       "state": "process-v2-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-empty-results-1440x900.png",
-      "size": 26774,
-      "sha256": "def2527682596b92af96aeaefb0854eeaa181ab37fbf3beec84956dbbabf2b77",
+      "size": 26773,
+      "sha256": "da6e2f3bcce72dd9eeec39ccb30bf2837810fd90a82b365bf011cb25ecd4ea78",
       "viewport": "1440x900",
       "state": "empty-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/17-completed-results-1440x900.png",
-      "size": 93521,
-      "sha256": "7c270980ed43872b703ea847399065d2176fd58bfb6afe4d4d998964ce8832ad",
+      "size": 95526,
+      "sha256": "8e924fce1f2136ecb783e59fa4befe851724f9af95bc407d68c0b5d41f4f2d3e",
       "viewport": "1440x900",
       "state": "completed-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-mediation-results-1440x900.png",
-      "size": 68430,
-      "sha256": "d50ae670df6c6cb7a56e9c6b37621bde285c940a10c7f2c3e9aa939831590a41",
+      "size": 70400,
+      "sha256": "5db569a525f4ebd2132d98c00f6b8b4eef25e844efe118d947caefaf77288f34",
       "viewport": "1440x900",
       "state": "mediation-results"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-export-dialog-1440x900.png",
-      "size": 75315,
-      "sha256": "8f2d88a8f1abd8f8cf61a887621767f4b0f0511bbd85b574d59092e2263eb588",
+      "size": 76922,
+      "sha256": "8ffb5d7494ba88589c09d91a422565f511fe9d4a0376afe225873c6daa2eee2e",
       "viewport": "1440x900",
       "state": "export-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/10-model-200pct-scale-1024x700@200pct-device-scale.png",
-      "size": 190877,
-      "sha256": "142894cd63522abc74d18c8f8a221e3adbee12b9100d6ad4d001c517a364e3c5",
+      "size": 196941,
+      "sha256": "cb9ba1d7196f3fd3ebb2c340c4ccb71178ad52e994c47d8fafa90608fc7f9819",
       "viewport": "1024x700@200pct-device-scale",
       "state": "model-200pct-scale"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/11-large-model-20c-80i-1440x900-large-model.png",
-      "size": 161805,
-      "sha256": "4f0fe4f28cc89542741802dc64b4483129c7666c8e29ba584487f7b7b9789ec6",
+      "size": 182718,
+      "sha256": "850c7aa73cfbb62c94bc157a617ee5485a1cfaebd1dceff418e0778892ee2cdc",
       "viewport": "1440x900-large-model",
       "state": "large-model-20c-80i"
     }
@@ -2664,7 +2664,7 @@
       {
         "state": "data",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 38,
+        "visibleInteractiveCount": 39,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2678,7 +2678,7 @@
       {
         "state": "recode-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 51,
+        "visibleInteractiveCount": 52,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2692,7 +2692,7 @@
       {
         "state": "import-data-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 46,
+        "visibleInteractiveCount": 47,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2706,7 +2706,7 @@
       {
         "state": "model",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 40,
+        "visibleInteractiveCount": 43,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2719,216 +2719,6 @@
       },
       {
         "state": "moderating-effect-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 46,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "higher-order-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 40,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "calculation-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 63,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "plsc-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 63,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "wpls-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 63,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "gsca-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 59,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "cca-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 62,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "cta-pls-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 63,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "cbsem-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 62,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "ipma-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 62,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "structural-path-randomization-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 66,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "prediction-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 64,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "mga-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 66,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "nca-standalone-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 50,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "nca-empty-results",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 11,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "pca-standalone-dialog",
         "viewport": "1024x700",
         "visibleInteractiveCount": 58,
         "unnamedInteractive": [],
@@ -2942,9 +2732,219 @@
         "namedCommandToolbarPresent": true
       },
       {
+        "state": "higher-order-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 43,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "calculation-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 70,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "plsc-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 70,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "wpls-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 70,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "gsca-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 66,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "cca-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 69,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "cta-pls-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 70,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "cbsem-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 69,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "ipma-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 69,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "structural-path-randomization-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 73,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "prediction-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 71,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "mga-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 73,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "nca-standalone-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 55,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "nca-empty-results",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 11,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "pca-standalone-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 63,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
         "state": "ols-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2958,7 +2958,7 @@
       {
         "state": "logistic-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2972,7 +2972,7 @@
       {
         "state": "regression-bootstrap-ols-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 70,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2986,7 +2986,7 @@
       {
         "state": "regression-bootstrap-logistic-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 70,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3000,7 +3000,7 @@
       {
         "state": "process-v2-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 120,
+        "visibleInteractiveCount": 125,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3028,7 +3028,7 @@
       {
         "state": "completed-results",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 42,
+        "visibleInteractiveCount": 44,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3042,7 +3042,7 @@
       {
         "state": "mediation-results",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 39,
+        "visibleInteractiveCount": 41,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3056,7 +3056,7 @@
       {
         "state": "mediation-bootstrap-inference",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 39,
+        "visibleInteractiveCount": 41,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3070,7 +3070,7 @@
       {
         "state": "export-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 40,
+        "visibleInteractiveCount": 42,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3140,7 +3140,7 @@
       {
         "state": "data",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 43,
+        "visibleInteractiveCount": 44,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3154,7 +3154,7 @@
       {
         "state": "recode-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 56,
+        "visibleInteractiveCount": 57,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3168,7 +3168,7 @@
       {
         "state": "import-data-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 51,
+        "visibleInteractiveCount": 52,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3182,7 +3182,7 @@
       {
         "state": "model",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 44,
+        "visibleInteractiveCount": 52,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3196,7 +3196,7 @@
       {
         "state": "moderating-effect-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 51,
+        "visibleInteractiveCount": 58,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3210,7 +3210,7 @@
       {
         "state": "higher-order-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 40,
+        "visibleInteractiveCount": 43,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3224,7 +3224,7 @@
       {
         "state": "calculation-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 79,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3238,7 +3238,7 @@
       {
         "state": "plsc-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 79,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3252,7 +3252,7 @@
       {
         "state": "wpls-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 79,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3266,7 +3266,7 @@
       {
         "state": "gsca-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 63,
+        "visibleInteractiveCount": 75,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3280,7 +3280,7 @@
       {
         "state": "cca-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 78,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3294,7 +3294,7 @@
       {
         "state": "cta-pls-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 79,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3308,7 +3308,7 @@
       {
         "state": "cbsem-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 78,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3322,7 +3322,7 @@
       {
         "state": "ipma-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 78,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3336,7 +3336,7 @@
       {
         "state": "structural-path-randomization-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 70,
+        "visibleInteractiveCount": 82,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3350,7 +3350,7 @@
       {
         "state": "prediction-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 68,
+        "visibleInteractiveCount": 80,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3364,7 +3364,7 @@
       {
         "state": "mga-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 79,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3378,7 +3378,7 @@
       {
         "state": "nca-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 55,
+        "visibleInteractiveCount": 60,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3406,7 +3406,7 @@
       {
         "state": "pca-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 63,
+        "visibleInteractiveCount": 68,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3420,7 +3420,7 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 72,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3434,7 +3434,7 @@
       {
         "state": "logistic-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 72,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3448,7 +3448,7 @@
       {
         "state": "regression-bootstrap-ols-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 70,
+        "visibleInteractiveCount": 75,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3462,7 +3462,7 @@
       {
         "state": "regression-bootstrap-logistic-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 70,
+        "visibleInteractiveCount": 75,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3476,7 +3476,7 @@
       {
         "state": "process-v2-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 125,
+        "visibleInteractiveCount": 130,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3504,7 +3504,7 @@
       {
         "state": "completed-results",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 42,
+        "visibleInteractiveCount": 44,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3518,7 +3518,7 @@
       {
         "state": "mediation-results",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 39,
+        "visibleInteractiveCount": 41,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3532,7 +3532,7 @@
       {
         "state": "export-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 40,
+        "visibleInteractiveCount": 42,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3602,7 +3602,7 @@
       {
         "state": "data",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 43,
+        "visibleInteractiveCount": 44,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3616,7 +3616,7 @@
       {
         "state": "recode-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 56,
+        "visibleInteractiveCount": 57,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3630,7 +3630,7 @@
       {
         "state": "import-data-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 51,
+        "visibleInteractiveCount": 52,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3644,7 +3644,7 @@
       {
         "state": "model",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 44,
+        "visibleInteractiveCount": 52,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3658,7 +3658,7 @@
       {
         "state": "moderating-effect-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 51,
+        "visibleInteractiveCount": 58,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3672,7 +3672,7 @@
       {
         "state": "higher-order-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 40,
+        "visibleInteractiveCount": 43,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3686,7 +3686,7 @@
       {
         "state": "calculation-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 79,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3700,7 +3700,7 @@
       {
         "state": "plsc-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 79,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3714,7 +3714,7 @@
       {
         "state": "wpls-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 79,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3728,7 +3728,7 @@
       {
         "state": "gsca-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 63,
+        "visibleInteractiveCount": 75,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3742,7 +3742,7 @@
       {
         "state": "cca-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 78,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3756,7 +3756,7 @@
       {
         "state": "cta-pls-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 79,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3770,7 +3770,7 @@
       {
         "state": "cbsem-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 78,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3784,7 +3784,7 @@
       {
         "state": "ipma-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 78,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3798,7 +3798,7 @@
       {
         "state": "structural-path-randomization-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 70,
+        "visibleInteractiveCount": 82,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3812,7 +3812,7 @@
       {
         "state": "prediction-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 68,
+        "visibleInteractiveCount": 80,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3826,7 +3826,7 @@
       {
         "state": "mga-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 79,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3840,7 +3840,7 @@
       {
         "state": "nca-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 55,
+        "visibleInteractiveCount": 60,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3868,7 +3868,7 @@
       {
         "state": "pca-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 63,
+        "visibleInteractiveCount": 68,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3882,7 +3882,7 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 72,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3896,7 +3896,7 @@
       {
         "state": "logistic-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 67,
+        "visibleInteractiveCount": 72,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3910,7 +3910,7 @@
       {
         "state": "regression-bootstrap-ols-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 70,
+        "visibleInteractiveCount": 75,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3924,7 +3924,7 @@
       {
         "state": "regression-bootstrap-logistic-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 70,
+        "visibleInteractiveCount": 75,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3938,7 +3938,7 @@
       {
         "state": "process-v2-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 125,
+        "visibleInteractiveCount": 130,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3966,7 +3966,7 @@
       {
         "state": "completed-results",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 42,
+        "visibleInteractiveCount": 44,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3980,7 +3980,7 @@
       {
         "state": "mediation-results",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 39,
+        "visibleInteractiveCount": 41,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3994,7 +3994,7 @@
       {
         "state": "export-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 40,
+        "visibleInteractiveCount": 42,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -4022,7 +4022,7 @@
       {
         "state": "data-200pct-scale",
         "viewport": "1024x700@200pct-device-scale",
-        "visibleInteractiveCount": 38,
+        "visibleInteractiveCount": 39,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -4036,7 +4036,7 @@
       {
         "state": "model-200pct-scale",
         "viewport": "1024x700@200pct-device-scale",
-        "visibleInteractiveCount": 40,
+        "visibleInteractiveCount": 42,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -4050,7 +4050,7 @@
       {
         "state": "results-200pct-scale",
         "viewport": "1024x700@200pct-device-scale",
-        "visibleInteractiveCount": 42,
+        "visibleInteractiveCount": 44,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -4064,7 +4064,7 @@
       {
         "state": "large-model-20c-80i",
         "viewport": "1440x900-large-model",
-        "visibleInteractiveCount": 147,
+        "visibleInteractiveCount": 154,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -5245,7 +5245,7 @@
         },
         "searchInitiallyFocused": true,
         "listboxCount": 1,
-        "optionCount": 15,
+        "optionCount": 18,
         "optionLabels": [
           "PLS-SEM Algorithm",
           "Consistent PLS",
@@ -5256,7 +5256,10 @@
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
+          "PLSc Consistent Bootstrapping",
           "Structural Path Randomization",
+          "Post-hoc Technical Minimum Sample Size",
+          "PLS-SEM Sample Size and Power",
           "MICOM and Two-Group Permutation MGA",
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
@@ -5273,14 +5276,17 @@
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
+          "PLSc Consistent Bootstrapping",
           "Structural Path Randomization",
+          "Post-hoc Technical Minimum Sample Size",
+          "PLS-SEM Sample Size and Power",
           "MICOM and Two-Group Permutation MGA",
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
           "Principal Component Analysis",
           "Regression"
         ],
-        "countStatus": "15 methods",
+        "countStatus": "18 methods",
         "searchAliases": [
           {
             "query": "survey weights",
@@ -5346,7 +5352,16 @@
             "status": "1 method"
           },
           {
-            "query": "multigroup",
+            "query": "prospective power",
+            "expectedKind": "pls_sample_size_power",
+            "expectedLabel": "PLS-SEM Sample Size and Power",
+            "optionCount": 1,
+            "optionId": "nd-calculation-method-pls_sample_size_power",
+            "optionLabel": "PLS-SEM Sample Size and Power",
+            "status": "1 method"
+          },
+          {
+            "query": "measurement invariance",
             "expectedKind": "mga",
             "expectedLabel": "MICOM and Two-Group Permutation MGA",
             "optionCount": 1,
@@ -5530,7 +5545,7 @@
         },
         "searchInitiallyFocused": true,
         "listboxCount": 1,
-        "optionCount": 15,
+        "optionCount": 18,
         "optionLabels": [
           "PLS-SEM Algorithm",
           "Consistent PLS",
@@ -5541,7 +5556,10 @@
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
+          "PLSc Consistent Bootstrapping",
           "Structural Path Randomization",
+          "Post-hoc Technical Minimum Sample Size",
+          "PLS-SEM Sample Size and Power",
           "MICOM and Two-Group Permutation MGA",
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
@@ -5558,14 +5576,17 @@
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
+          "PLSc Consistent Bootstrapping",
           "Structural Path Randomization",
+          "Post-hoc Technical Minimum Sample Size",
+          "PLS-SEM Sample Size and Power",
           "MICOM and Two-Group Permutation MGA",
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
           "Principal Component Analysis",
           "Regression"
         ],
-        "countStatus": "15 methods",
+        "countStatus": "18 methods",
         "searchAliases": [
           {
             "query": "survey weights",
@@ -5631,7 +5652,16 @@
             "status": "1 method"
           },
           {
-            "query": "multigroup",
+            "query": "prospective power",
+            "expectedKind": "pls_sample_size_power",
+            "expectedLabel": "PLS-SEM Sample Size and Power",
+            "optionCount": 1,
+            "optionId": "nd-calculation-method-pls_sample_size_power",
+            "optionLabel": "PLS-SEM Sample Size and Power",
+            "status": "1 method"
+          },
+          {
+            "query": "measurement invariance",
             "expectedKind": "mga",
             "expectedLabel": "MICOM and Two-Group Permutation MGA",
             "optionCount": 1,
@@ -5815,7 +5845,7 @@
         },
         "searchInitiallyFocused": true,
         "listboxCount": 1,
-        "optionCount": 15,
+        "optionCount": 18,
         "optionLabels": [
           "PLS-SEM Algorithm",
           "Consistent PLS",
@@ -5826,7 +5856,10 @@
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
+          "PLSc Consistent Bootstrapping",
           "Structural Path Randomization",
+          "Post-hoc Technical Minimum Sample Size",
+          "PLS-SEM Sample Size and Power",
           "MICOM and Two-Group Permutation MGA",
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
@@ -5843,14 +5876,17 @@
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
+          "PLSc Consistent Bootstrapping",
           "Structural Path Randomization",
+          "Post-hoc Technical Minimum Sample Size",
+          "PLS-SEM Sample Size and Power",
           "MICOM and Two-Group Permutation MGA",
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
           "Principal Component Analysis",
           "Regression"
         ],
-        "countStatus": "15 methods",
+        "countStatus": "18 methods",
         "searchAliases": [
           {
             "query": "survey weights",
@@ -5916,7 +5952,16 @@
             "status": "1 method"
           },
           {
-            "query": "multigroup",
+            "query": "prospective power",
+            "expectedKind": "pls_sample_size_power",
+            "expectedLabel": "PLS-SEM Sample Size and Power",
+            "optionCount": 1,
+            "optionId": "nd-calculation-method-pls_sample_size_power",
+            "optionLabel": "PLS-SEM Sample Size and Power",
+            "status": "1 method"
+          },
+          {
+            "query": "measurement invariance",
             "expectedKind": "mga",
             "expectedLabel": "MICOM and Two-Group Permutation MGA",
             "optionCount": 1,
@@ -6087,8 +6132,8 @@
           "headingLabel": "Consistent PLS",
           "linkage": true
         },
-        "scopeLabel": "Validated scope",
-        "scopeDetail": "Reflective constructs with at least two indicators each",
+        "scopeLabel": "Supported setup",
+        "scopeDetail": "Reflective constructs with at least two indicators each; path or factor weighting; raw observations with listwise deletion",
         "pcaWeightingOptionCount": 1,
         "pcaWeightingDisabled": true,
         "startCommandCount": 1,
@@ -6133,8 +6178,8 @@
           "headingLabel": "Consistent PLS",
           "linkage": true
         },
-        "scopeLabel": "Validated scope",
-        "scopeDetail": "Reflective constructs with at least two indicators each",
+        "scopeLabel": "Supported setup",
+        "scopeDetail": "Reflective constructs with at least two indicators each; path or factor weighting; raw observations with listwise deletion",
         "pcaWeightingOptionCount": 1,
         "pcaWeightingDisabled": true,
         "startCommandCount": 1,
@@ -6179,8 +6224,8 @@
           "headingLabel": "Consistent PLS",
           "linkage": true
         },
-        "scopeLabel": "Validated scope",
-        "scopeDetail": "Reflective constructs with at least two indicators each",
+        "scopeLabel": "Supported setup",
+        "scopeDetail": "Reflective constructs with at least two indicators each; path or factor weighting; raw observations with listwise deletion",
         "pcaWeightingOptionCount": 1,
         "pcaWeightingDisabled": true,
         "startCommandCount": 1,
@@ -6230,7 +6275,7 @@
         "resultData": "Standardized (fixed)",
         "caseWeightCount": 1,
         "caseWeightPlaceholder": "Select a numeric variable",
-        "caseWeightNote": "Positive finite values; complete column validated at start",
+        "caseWeightNote": "Positive finite values; the complete column is checked before calculation",
         "blockerText": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Choose a positive numeric case-weight variable.",
         "missingWeightBlocker": true,
         "startCommandCount": 1,
@@ -6279,7 +6324,7 @@
         "resultData": "Standardized (fixed)",
         "caseWeightCount": 1,
         "caseWeightPlaceholder": "Select a numeric variable",
-        "caseWeightNote": "Positive finite values; complete column validated at start",
+        "caseWeightNote": "Positive finite values; the complete column is checked before calculation",
         "blockerText": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Choose a positive numeric case-weight variable.",
         "missingWeightBlocker": true,
         "startCommandCount": 1,
@@ -6328,7 +6373,7 @@
         "resultData": "Standardized (fixed)",
         "caseWeightCount": 1,
         "caseWeightPlaceholder": "Select a numeric variable",
-        "caseWeightNote": "Positive finite values; complete column validated at start",
+        "caseWeightNote": "Positive finite values; the complete column is checked before calculation",
         "blockerText": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Choose a positive numeric case-weight variable.",
         "missingWeightBlocker": true,
         "startCommandCount": 1,
@@ -6379,7 +6424,7 @@
         "weighting": "Path weighting (fixed)",
         "resultData": "Standardized (fixed)",
         "estimator": "Joint global least-squares alternating least squares; fixed +1 initialization",
-        "scope": "Joint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, or inference.",
+        "scope": "Joint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, GSCA bootstrapping, or other inference.",
         "unsupportedControlCount": 0,
         "startCommandCount": 1,
         "startCommandDisabled": true,
@@ -6430,7 +6475,7 @@
         "weighting": "Path weighting (fixed)",
         "resultData": "Standardized (fixed)",
         "estimator": "Joint global least-squares alternating least squares; fixed +1 initialization",
-        "scope": "Joint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, or inference.",
+        "scope": "Joint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, GSCA bootstrapping, or other inference.",
         "unsupportedControlCount": 0,
         "startCommandCount": 1,
         "startCommandDisabled": true,
@@ -6481,7 +6526,7 @@
         "weighting": "Path weighting (fixed)",
         "resultData": "Standardized (fixed)",
         "estimator": "Joint global least-squares alternating least squares; fixed +1 initialization",
-        "scope": "Joint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, or inference.",
+        "scope": "Joint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, GSCA bootstrapping, or other inference.",
         "unsupportedControlCount": 0,
         "startCommandCount": 1,
         "startCommandDisabled": true,
@@ -6533,7 +6578,7 @@
         },
         "resultDataLabel": "Result data",
         "resultDataDetail": "Standardized (fixed)",
-        "scopeLabel": "Validated scope",
+        "scopeLabel": "Supported setup",
         "scopeDetail": "Reflective composite path model; descriptive residual diagnostics only",
         "missingDataLabel": "Missing data",
         "missingDataDetail": "Listwise deletion",
@@ -6592,7 +6637,7 @@
         },
         "resultDataLabel": "Result data",
         "resultDataDetail": "Standardized (fixed)",
-        "scopeLabel": "Validated scope",
+        "scopeLabel": "Supported setup",
         "scopeDetail": "Reflective composite path model; descriptive residual diagnostics only",
         "missingDataLabel": "Missing data",
         "missingDataDetail": "Listwise deletion",
@@ -6651,7 +6696,7 @@
         },
         "resultDataLabel": "Result data",
         "resultDataDetail": "Standardized (fixed)",
-        "scopeLabel": "Validated scope",
+        "scopeLabel": "Supported setup",
         "scopeDetail": "Reflective composite path model; descriptive residual diagnostics only",
         "missingDataLabel": "Missing data",
         "missingDataDetail": "Listwise deletion",
@@ -7106,7 +7151,10 @@
         "weighting": "Path weighting (fixed)",
         "resultData": "Standardized (fixed)",
         "estimator": "Maximum likelihood; first loading fixed to 1 for each latent factor",
-        "scope": "Single-group reflective raw-data CFA or recursive SEM; listwise-standardized indicators; no mean structure, bootstrap, robust/ordinal/FIML estimator, or invariance testing",
+        "scope": "Single-group reflective raw-data CFA or recursive SEM with listwise-standardized indicators; no mean structure, robust/ordinal/FIML estimator, or invariance testing",
+        "bootstrapStatus": "Exact CFA case bootstrap is available from the Exact CB-SEM model tab. Historical schema-3 v2 and analytical v1 bootstrap results remain readable but cannot be selected for a new calculation.",
+        "bootstrapToggleCount": 0,
+        "bootstrapToggleChecked": false,
         "missingData": "Listwise deletion",
         "maximumIterationsCount": 1,
         "toleranceCount": 1,
@@ -7166,7 +7214,10 @@
         "weighting": "Path weighting (fixed)",
         "resultData": "Standardized (fixed)",
         "estimator": "Maximum likelihood; first loading fixed to 1 for each latent factor",
-        "scope": "Single-group reflective raw-data CFA or recursive SEM; listwise-standardized indicators; no mean structure, bootstrap, robust/ordinal/FIML estimator, or invariance testing",
+        "scope": "Single-group reflective raw-data CFA or recursive SEM with listwise-standardized indicators; no mean structure, robust/ordinal/FIML estimator, or invariance testing",
+        "bootstrapStatus": "Exact CFA case bootstrap is available from the Exact CB-SEM model tab. Historical schema-3 v2 and analytical v1 bootstrap results remain readable but cannot be selected for a new calculation.",
+        "bootstrapToggleCount": 0,
+        "bootstrapToggleChecked": false,
         "missingData": "Listwise deletion",
         "maximumIterationsCount": 1,
         "toleranceCount": 1,
@@ -7226,7 +7277,10 @@
         "weighting": "Path weighting (fixed)",
         "resultData": "Standardized (fixed)",
         "estimator": "Maximum likelihood; first loading fixed to 1 for each latent factor",
-        "scope": "Single-group reflective raw-data CFA or recursive SEM; listwise-standardized indicators; no mean structure, bootstrap, robust/ordinal/FIML estimator, or invariance testing",
+        "scope": "Single-group reflective raw-data CFA or recursive SEM with listwise-standardized indicators; no mean structure, robust/ordinal/FIML estimator, or invariance testing",
+        "bootstrapStatus": "Exact CFA case bootstrap is available from the Exact CB-SEM model tab. Historical schema-3 v2 and analytical v1 bootstrap results remain readable but cannot be selected for a new calculation.",
+        "bootstrapToggleCount": 0,
+        "bootstrapToggleChecked": false,
         "missingData": "Listwise deletion",
         "maximumIterationsCount": 1,
         "toleranceCount": 1,
@@ -7294,7 +7348,7 @@
           "headingLabel": "Necessary Condition Analysis",
           "linkage": true
         },
-        "catalogCount": 15,
+        "catalogCount": 18,
         "category": "Standalone analysis",
         "xOptions": [
           {
@@ -7425,7 +7479,7 @@
           "headingLabel": "Necessary Condition Analysis",
           "linkage": true
         },
-        "catalogCount": 15,
+        "catalogCount": 18,
         "category": "Standalone analysis",
         "xOptions": [
           {
@@ -7556,7 +7610,7 @@
           "headingLabel": "Necessary Condition Analysis",
           "linkage": true
         },
-        "catalogCount": 15,
+        "catalogCount": 18,
         "category": "Standalone analysis",
         "xOptions": [
           {
@@ -7692,7 +7746,7 @@
           "headingLabel": "Principal Component Analysis",
           "linkage": true
         },
-        "catalogCount": 15,
+        "catalogCount": 18,
         "category": "Standalone analysis",
         "variableOptions": [
           {
@@ -7825,7 +7879,7 @@
           "headingLabel": "Principal Component Analysis",
           "linkage": true
         },
-        "catalogCount": 15,
+        "catalogCount": 18,
         "category": "Standalone analysis",
         "variableOptions": [
           {
@@ -7958,7 +8012,7 @@
           "headingLabel": "Principal Component Analysis",
           "linkage": true
         },
-        "catalogCount": 15,
+        "catalogCount": 18,
         "category": "Standalone analysis",
         "variableOptions": [
           {
@@ -8077,7 +8131,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8202,7 +8256,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8327,7 +8381,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8446,7 +8500,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8538,7 +8592,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8630,7 +8684,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8724,7 +8778,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -9136,7 +9190,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -9548,7 +9602,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -11930,7 +11984,7 @@
         "expectedDefaultPermutations": "999",
         "bootstrapSamplesInputCount": 0,
         "mutuallyExclusive": true,
-        "methodDescription": "Structural Path RandomizationRun candidate single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values.",
+        "methodDescription": "Structural Path RandomizationRun single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values within the documented scope.",
         "distinctFromMgaAndMicom": true,
         "truthAndOverflow": {
           "fabricatedRunState": {
@@ -11979,7 +12033,7 @@
         "expectedDefaultPermutations": "999",
         "bootstrapSamplesInputCount": 0,
         "mutuallyExclusive": true,
-        "methodDescription": "Structural Path RandomizationRun candidate single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values.",
+        "methodDescription": "Structural Path RandomizationRun single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values within the documented scope.",
         "distinctFromMgaAndMicom": true,
         "truthAndOverflow": {
           "fabricatedRunState": {
@@ -12028,7 +12082,7 @@
         "expectedDefaultPermutations": "999",
         "bootstrapSamplesInputCount": 0,
         "mutuallyExclusive": true,
-        "methodDescription": "Structural Path RandomizationRun candidate single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values.",
+        "methodDescription": "Structural Path RandomizationRun single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values within the documented scope.",
         "distinctFromMgaAndMicom": true,
         "truthAndOverflow": {
           "fabricatedRunState": {
@@ -12080,7 +12134,7 @@
           "headingLabel": "MICOM and Two-Group Permutation MGA",
           "linkage": true
         },
-        "methodDescription": "MICOM and Two-Group Permutation MGAAssess MICOM measurement invariance and compare Group A minus Group B paths, loadings, and weights.",
+        "methodDescription": "MICOM and Two-Group Permutation MGAAssess the three MICOM measurement-invariance steps using an explicit researcher-confirmed configural review, then compare Group A minus Group B paths, loadings, and weights with one deterministic size-preserving permutation plan.",
         "truthfulScopeDescription": true,
         "groupsCategoryCount": 1,
         "groupsCategoryLabel": "Groups",
@@ -12152,7 +12206,7 @@
         "configuralCheckboxCount": 1,
         "configuralInitiallyChecked": false,
         "configuralCheckedAfterConfirmation": true,
-        "blockerTextBeforeConfirmation": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Confirm MICOM Step 1: identical indicators, coding, data treatment, algorithm settings, and substantive meaning across both groups.Group A has 1 complete model cases; at least 10 are required.Group B has 1 complete model cases; at least 10 are required.",
+        "blockerTextBeforeConfirmation": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Confirm MICOM Step 1: identical indicators, coding, data treatment, algorithm settings, and substantive meaning across both groups.Group A has 1 complete model cases; at least 10 are required.Group B has 1 complete model cases; at least 10 are required.Confirm MICOM Step 1 through explicit researcher review before calculation.",
         "blockerTextAfterConfirmation": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Group A has 1 complete model cases; at least 10 are required.Group B has 1 complete model cases; at least 10 are required.",
         "lowSampleObserved": true,
         "startCommandCount": 1,
@@ -12212,7 +12266,7 @@
           "headingLabel": "MICOM and Two-Group Permutation MGA",
           "linkage": true
         },
-        "methodDescription": "MICOM and Two-Group Permutation MGAAssess MICOM measurement invariance and compare Group A minus Group B paths, loadings, and weights.",
+        "methodDescription": "MICOM and Two-Group Permutation MGAAssess the three MICOM measurement-invariance steps using an explicit researcher-confirmed configural review, then compare Group A minus Group B paths, loadings, and weights with one deterministic size-preserving permutation plan.",
         "truthfulScopeDescription": true,
         "groupsCategoryCount": 1,
         "groupsCategoryLabel": "Groups",
@@ -12284,7 +12338,7 @@
         "configuralCheckboxCount": 1,
         "configuralInitiallyChecked": false,
         "configuralCheckedAfterConfirmation": true,
-        "blockerTextBeforeConfirmation": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Confirm MICOM Step 1: identical indicators, coding, data treatment, algorithm settings, and substantive meaning across both groups.Group A has 1 complete model cases; at least 10 are required.Group B has 1 complete model cases; at least 10 are required.",
+        "blockerTextBeforeConfirmation": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Confirm MICOM Step 1: identical indicators, coding, data treatment, algorithm settings, and substantive meaning across both groups.Group A has 1 complete model cases; at least 10 are required.Group B has 1 complete model cases; at least 10 are required.Confirm MICOM Step 1 through explicit researcher review before calculation.",
         "blockerTextAfterConfirmation": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Group A has 1 complete model cases; at least 10 are required.Group B has 1 complete model cases; at least 10 are required.",
         "lowSampleObserved": true,
         "startCommandCount": 1,
@@ -12344,7 +12398,7 @@
           "headingLabel": "MICOM and Two-Group Permutation MGA",
           "linkage": true
         },
-        "methodDescription": "MICOM and Two-Group Permutation MGAAssess MICOM measurement invariance and compare Group A minus Group B paths, loadings, and weights.",
+        "methodDescription": "MICOM and Two-Group Permutation MGAAssess the three MICOM measurement-invariance steps using an explicit researcher-confirmed configural review, then compare Group A minus Group B paths, loadings, and weights with one deterministic size-preserving permutation plan.",
         "truthfulScopeDescription": true,
         "groupsCategoryCount": 1,
         "groupsCategoryLabel": "Groups",
@@ -12416,7 +12470,7 @@
         "configuralCheckboxCount": 1,
         "configuralInitiallyChecked": false,
         "configuralCheckedAfterConfirmation": true,
-        "blockerTextBeforeConfirmation": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Confirm MICOM Step 1: identical indicators, coding, data treatment, algorithm settings, and substantive meaning across both groups.Group A has 1 complete model cases; at least 10 are required.Group B has 1 complete model cases; at least 10 are required.",
+        "blockerTextBeforeConfirmation": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Confirm MICOM Step 1: identical indicators, coding, data treatment, algorithm settings, and substantive meaning across both groups.Group A has 1 complete model cases; at least 10 are required.Group B has 1 complete model cases; at least 10 are required.Confirm MICOM Step 1 through explicit researcher review before calculation.",
         "blockerTextAfterConfirmation": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Group A has 1 complete model cases; at least 10 are required.Group B has 1 complete model cases; at least 10 are required.",
         "lowSampleObserved": true,
         "startCommandCount": 1,
@@ -12706,7 +12760,7 @@
         "method": "Reflective–reflective disjoint two-stage",
         "stage1": "Estimate lower-order component scores",
         "stage2": "Use component scores as generated HOC indicators",
-        "scopeDisclosure": "After creation, use the Path tool to add one HOC-to-outcome relationship. The bounded native workflow permits no other structural path and runs with PLS-SEM Algorithm, path weighting, standardized data, and listwise deletion. HOC bootstrapping and permutation inference remain unavailable.",
+        "scopeDisclosure": "After creation, use the Path tool to add one HOC-to-outcome relationship and no other structural path. This workflow uses PLS-SEM Algorithm, path weighting, standardized data, and listwise deletion. HOC bootstrapping and permutation inference remain unavailable.",
         "exactBoundedScope": true,
         "unsupportedInferenceControls": 0,
         "createEnabled": true,
@@ -12739,7 +12793,7 @@
         "method": "Reflective–reflective disjoint two-stage",
         "stage1": "Estimate lower-order component scores",
         "stage2": "Use component scores as generated HOC indicators",
-        "scopeDisclosure": "After creation, use the Path tool to add one HOC-to-outcome relationship. The bounded native workflow permits no other structural path and runs with PLS-SEM Algorithm, path weighting, standardized data, and listwise deletion. HOC bootstrapping and permutation inference remain unavailable.",
+        "scopeDisclosure": "After creation, use the Path tool to add one HOC-to-outcome relationship and no other structural path. This workflow uses PLS-SEM Algorithm, path weighting, standardized data, and listwise deletion. HOC bootstrapping and permutation inference remain unavailable.",
         "exactBoundedScope": true,
         "unsupportedInferenceControls": 0,
         "createEnabled": true,
@@ -12772,7 +12826,7 @@
         "method": "Reflective–reflective disjoint two-stage",
         "stage1": "Estimate lower-order component scores",
         "stage2": "Use component scores as generated HOC indicators",
-        "scopeDisclosure": "After creation, use the Path tool to add one HOC-to-outcome relationship. The bounded native workflow permits no other structural path and runs with PLS-SEM Algorithm, path weighting, standardized data, and listwise deletion. HOC bootstrapping and permutation inference remain unavailable.",
+        "scopeDisclosure": "After creation, use the Path tool to add one HOC-to-outcome relationship and no other structural path. This workflow uses PLS-SEM Algorithm, path weighting, standardized data, and listwise deletion. HOC bootstrapping and permutation inference remain unavailable.",
         "exactBoundedScope": true,
         "unsupportedInferenceControls": 0,
         "createEnabled": true,
@@ -12950,13 +13004,26 @@
         "constructs": 20,
         "indicators": 80
       },
+      "reopenedFixtureCounts": {
+        "constructs": 20,
+        "indicators": 80
+      },
+      "reopenScope": "Deterministic smoke-fixture reload only; browser preview does not prove saved-project archive reopen.",
+      "preflight": {
+        "canRun": false,
+        "ready": 7,
+        "blockers": 1,
+        "warnings": 0
+      },
       "metrics": {
-        "fixtureRenderMs": 109.9,
-        "selectionMs": 325.2,
-        "dragMs": 516.7,
-        "panMs": 226.6,
-        "zoomMs": 316.4,
-        "workspaceRoundTripMs": 334.6
+        "fixtureRenderMs": 193.9,
+        "selectionMs": 163.5,
+        "dragMs": 315.6,
+        "panMs": 225.8,
+        "zoomMs": 337.8,
+        "workspaceRoundTripMs": 425.9,
+        "preflightMs": 1.1,
+        "fixtureReopenMs": 189.3
       },
       "budgetsMs": {
         "fixtureRender": 5000,
@@ -12964,14 +13031,18 @@
         "drag": 1250,
         "pan": 1250,
         "zoom": 1250,
-        "workspaceRoundTrip": 2500
+        "workspaceRoundTrip": 2500,
+        "preflight": 1000,
+        "fixtureReopen": 2500
       },
       "interactions": {
         "selectionChanged": true,
         "dragChanged": true,
         "panChanged": true,
         "zoomChanged": true,
-        "modelRetainedAfterWorkspaceRoundTrip": true
+        "modelRetainedAfterWorkspaceRoundTrip": true,
+        "preflightPresent": true,
+        "deterministicFixtureReopened": true
       }
     }
   },

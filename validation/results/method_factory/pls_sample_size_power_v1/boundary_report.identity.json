@@ -1,0 +1,491 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "checks": {
+      "baseline_contract_recomputed": true,
+      "baseline_typed_result": true,
+      "feature_identity": true,
+      "grid_extension_invariance": true,
+      "invalid_setup_blocked_before_result": true,
+      "method_identity": true,
+      "seed_worker_invariance": true,
+      "source_stable_during_gate": true
+    },
+    "grid_extension": {
+      "appended_outcome_count": 100,
+      "appended_sample_sizes": [
+        180
+      ],
+      "base_recipe_digest": "7ab18f01a7affac75939d8b0c3ea5e54fc469dcc20b41c0c462cd72c18c3043f",
+      "existing_outcomes_exact": true,
+      "extended_recipe_digest": "30e04bcabecb5f435d258a5a763b8041820ec3230766263a2a137ffaf54bedec",
+      "passed": true,
+      "recipe_digest_changes_with_grid": true
+    },
+    "invalid_cases": [
+      {
+        "expected_fragment": "strictly increasing",
+        "message_observed": true,
+        "name": "boundary_non_increasing_grid",
+        "no_result_created": true,
+        "nonzero_exit": true,
+        "passed": true
+      },
+      {
+        "expected_fragment": "declared loadings must map one-to-one to model indicators",
+        "message_observed": true,
+        "name": "boundary_too_few_loadings",
+        "no_result_created": true,
+        "nonzero_exit": true,
+        "passed": true
+      },
+      {
+        "expected_fragment": "exactly two constructs and the single declared",
+        "message_observed": true,
+        "name": "boundary_unsupported_model_family",
+        "no_result_created": true,
+        "nonzero_exit": true,
+        "passed": true
+      },
+      {
+        "expected_fragment": "250000 PLS fits",
+        "message_observed": true,
+        "name": "boundary_desktop_workload_cap",
+        "no_result_created": true,
+        "nonzero_exit": true,
+        "passed": true
+      },
+      {
+        "expected_fragment": "must be exactly equal",
+        "message_observed": true,
+        "name": "boundary_confidence_identity",
+        "no_result_created": true,
+        "nonzero_exit": true,
+        "passed": true
+      }
+    ],
+    "passed": true,
+    "runtime_claim_scope": "Product CLI setup rejection, indexed grid-extension invariance, and worker invariance. Packaged cancellation and responsive GUI behavior are not claimed by this gate.",
+    "source_stability": {
+      "after": {
+        "Cargo.lock": {
+          "mtime_ns": 1786655548372779200,
+          "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+          "size": 154279
+        },
+        "crates/qpls-cli/Cargo.toml": {
+          "mtime_ns": 1784436493165886700,
+          "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+          "size": 678
+        },
+        "crates/qpls-cli/src/main.rs": {
+          "mtime_ns": 1786669164612405200,
+          "sha256": "d847875d0c78a734725de9794aa19cc64d97c6ff732b2b6cdb646dce0398406c",
+          "size": 260752
+        },
+        "crates/qpls-core/Cargo.toml": {
+          "mtime_ns": 1784352071986106700,
+          "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+          "size": 363
+        },
+        "crates/qpls-core/src/contract.rs": {
+          "mtime_ns": 1786666077157513700,
+          "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "size": 114179
+        },
+        "crates/qpls-core/src/lib.rs": {
+          "mtime_ns": 1784383048514318800,
+          "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+          "size": 180
+        },
+        "crates/qpls-core/src/validation.rs": {
+          "mtime_ns": 1786667999667406800,
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        "crates/qpls-data/Cargo.toml": {
+          "mtime_ns": 1784364586747181800,
+          "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+          "size": 437
+        },
+        "crates/qpls-data/src/lib.rs": {
+          "mtime_ns": 1786607995478642000,
+          "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+          "size": 44865
+        },
+        "crates/qpls-estimation/Cargo.toml": {
+          "mtime_ns": 1786607995481159200,
+          "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+          "size": 503
+        },
+        "crates/qpls-estimation/src/lib.rs": {
+          "mtime_ns": 1786666091142845700,
+          "sha256": "e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+          "size": 93
+        },
+        "crates/qpls-estimation/src/pls.rs": {
+          "mtime_ns": 1786667991549246500,
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        "crates/qpls-project/Cargo.toml": {
+          "mtime_ns": 1786607995489944600,
+          "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+          "size": 628
+        },
+        "crates/qpls-project/src/archive_integrity.rs": {
+          "mtime_ns": 1786607995492067200,
+          "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+          "size": 31085
+        },
+        "crates/qpls-project/src/lib.rs": {
+          "mtime_ns": 1786669474971285100,
+          "sha256": "53f89d6d381d7c33b1e5f029d978e030a46a28d7d4bd47a2e17dc5b83bcbb387",
+          "size": 719445
+        },
+        "crates/qpls-resampling/Cargo.toml": {
+          "mtime_ns": 1784375063189640300,
+          "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+          "size": 589
+        },
+        "crates/qpls-resampling/src/lib.rs": {
+          "mtime_ns": 1786666206795884300,
+          "sha256": "9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+          "size": 177532
+        },
+        "crates/qpls-resampling/src/power.rs": {
+          "mtime_ns": 1786672581561173000,
+          "sha256": "28bffb50f5fc577f603668d822ef606343eb10f54f6611dcc1e2ef1afcbc3141",
+          "size": 62651
+        },
+        "crates/qpls-runner/Cargo.toml": {
+          "mtime_ns": 1784390064413583300,
+          "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+          "size": 428
+        },
+        "crates/qpls-runner/src/lib.rs": {
+          "mtime_ns": 1786669385548237600,
+          "sha256": "0a3f76ad19f897ff2db63be729a92087d8d1cad6b926e4c6908294cdb62e97e0",
+          "size": 54934
+        }
+      },
+      "changed_sources": [],
+      "passed": true
+    },
+    "worker_invariance": {
+      "analytical_payload_exact": true,
+      "outer_provenance_preserves_operational_workers": true,
+      "outer_worker_counts": [
+        1,
+        4
+      ],
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "dataset": "validation/results/method_factory/pls_sample_size_power_v1/work/prospective_power_envelope.csv",
+      "dataset_sha256": "19b6730d505c49a19157e5f0251ad445b24f8df757f2cf43b3ea372a47fc858c",
+      "import": {
+        "command": [
+          "D:\\QuickPLS\\target\\debug\\qpls.exe",
+          "import",
+          "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+          "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.qpls",
+          "--name",
+          "power-v1-envelope"
+        ],
+        "duration_seconds": 0.065,
+        "returncode": 0,
+        "stderr_tail": "",
+        "stdout_tail": "created D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.qpls\n"
+      },
+      "inspect": {
+        "command": [
+          "D:\\QuickPLS\\target\\debug\\qpls.exe",
+          "inspect",
+          "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.qpls",
+          "--json"
+        ],
+        "duration_seconds": 0.04,
+        "returncode": 0,
+        "stderr_tail": "",
+        "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 6,\n      \"fingerprint\": \"v2:1394644bd80cf19b8640d2e7d7ba7c5fc2d02519ed7358e55a196a9634562970\",\n      \"id\": \"fd8bb651-2ed3-47aa-bd39-4dec79d2b044\",\n      \"kind\": \"raw\",\n      \"name\": \"prospective_power_envelope.csv\",\n      \"rows\": 48,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"power-v1-envelope\",\n  \"projectId\": \"e0e61716-7c32-406f-9f02-bb52032c47f7\",\n  \"readOnly\": false,\n  \"recipes\": 0,\n  \"recovered\": false,\n  \"results\": 0,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
+      },
+      "project": "validation/results/method_factory/pls_sample_size_power_v1/work/prospective_power_envelope.qpls",
+      "project_sha256": "59f05c25e7c48160e6afac6a05c6e47dba6cdcbd791f5f52770ac68c07630900"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_baseline.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_baseline.result.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 61.239,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "wrote analysis result D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_baseline.result.json\n"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_grid_extended.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_grid_extended.result.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 102.893,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "wrote analysis result D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_grid_extended.result.json\n"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_workers_4.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_workers_4.result.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 22.488,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "wrote analysis result D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_workers_4.result.json\n"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_non_increasing_grid.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_non_increasing_grid.result.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.039,
+      "returncode": 1,
+      "stderr_tail": "Error: pls_power.sample_size_grid: PLS power v1 requires 2 to 16 strictly increasing sample sizes from 30 through 5000\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_too_few_loadings.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_too_few_loadings.result.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.039,
+      "returncode": 1,
+      "stderr_tail": "Error: pls_power.reflective_measurement: Each PLS power v1 construct must be reflective and its declared loadings must map one-to-one to model indicators\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_unsupported_model_family.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_unsupported_model_family.result.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.046,
+      "returncode": 1,
+      "stderr_tail": "Error: pls_power.bounded_model: PLS power v1 requires exactly two constructs and the single declared predictor-to-outcome path, without controls, interactions, or higher-order constructs\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_desktop_workload_cap.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_desktop_workload_cap.result.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.049,
+      "returncode": 1,
+      "stderr_tail": "Error: pls_power.desktop_workload_bound: PLS power v1 permits at most 250000 PLS fits and 100000000 fitted rows per prospective run\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_confidence_identity.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\boundary_confidence_identity.result.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.041,
+      "returncode": 1,
+      "stderr_tail": "Error: pls_power.confidence_identity: Generic and typed interval confidence levels must be exactly equal\n",
+      "stdout_tail": ""
+    }
+  ],
+  "feature_id": "qpls3.pls.sample_size_power",
+  "generated_at_utc": "2026-08-14T02:34:28.583698Z",
+  "method_version": "pls_sample_size_power_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+      "size": 154279
+    },
+    {
+      "path": "crates/qpls-cli/Cargo.toml",
+      "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+      "size": 678
+    },
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "d847875d0c78a734725de9794aa19cc64d97c6ff732b2b6cdb646dce0398406c",
+      "size": 260752
+    },
+    {
+      "path": "crates/qpls-core/Cargo.toml",
+      "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+      "size": 363
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+      "size": 114179
+    },
+    {
+      "path": "crates/qpls-core/src/lib.rs",
+      "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+      "size": 180
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+      "size": 194148
+    },
+    {
+      "path": "crates/qpls-data/Cargo.toml",
+      "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+      "size": 437
+    },
+    {
+      "path": "crates/qpls-data/src/lib.rs",
+      "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+      "size": 44865
+    },
+    {
+      "path": "crates/qpls-estimation/Cargo.toml",
+      "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+      "size": 503
+    },
+    {
+      "path": "crates/qpls-estimation/src/lib.rs",
+      "sha256": "e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+      "size": 93
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+      "size": 653641
+    },
+    {
+      "path": "crates/qpls-project/Cargo.toml",
+      "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+      "size": 628
+    },
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "53f89d6d381d7c33b1e5f029d978e030a46a28d7d4bd47a2e17dc5b83bcbb387",
+      "size": 719445
+    },
+    {
+      "path": "crates/qpls-resampling/Cargo.toml",
+      "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+      "size": 589
+    },
+    {
+      "path": "crates/qpls-resampling/src/lib.rs",
+      "sha256": "9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+      "size": 177532
+    },
+    {
+      "path": "crates/qpls-resampling/src/power.rs",
+      "sha256": "28bffb50f5fc577f603668d822ef606343eb10f54f6611dcc1e2ef1afcbc3141",
+      "size": 62651
+    },
+    {
+      "path": "crates/qpls-runner/Cargo.toml",
+      "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+      "size": 428
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "0a3f76ad19f897ff2db63be729a92087d8d1cad6b926e4c6908294cdb62e97e0",
+      "size": 54934
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_sample_size_power_v1.manifest.json",
+      "sha256": "59cd37e4523e233deb32521c94ad23ca24cabcffeff183933dfc961ff823a9cd",
+      "size": 18815
+    },
+    {
+      "path": "validation/pls_sample_size_power_boundary_gate.py",
+      "sha256": "260cd014383b4ce08f60061aa9e3a2e289986aee82d4589c7185cb5ec34448d6",
+      "size": 8408
+    },
+    {
+      "path": "validation/pls_sample_size_power_simulation.py",
+      "sha256": "67c7bd402a730b059682e932f19921048b3f9256af9d1fb8fd22de337904f341",
+      "size": 39018
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "a123eaf4355a92d0c790a61a9e2692ac60e5b308d439b47f8e7e693c917db727",
+      "size": 21242
+    },
+    {
+      "path": "validation/test_pls_sample_size_power_v1.py",
+      "sha256": "b416cd197a0205eda1ee63c47b6e4d92e15464fa85a1ce329d978301d27bf55c",
+      "size": 11741
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "archive": "validation/results/v247-native-hoc-1786685331323-30000.qpls",
+  "archive_sha256": "cb06582a3818870b38135f40ab17ec8f3e92aba15d0aab59d18e7a5f07cb3d5f",
+  "archive_size": 15309,
+  "checks": {
+    "checksums_exact": true,
+    "completed_results": true,
+    "current_cli_accepts_archive": true,
+    "method_payload": true,
+    "passed": true,
+    "unique_safe_members": true
+  },
+  "kind": "quickpls_phase3_persistence_gate",
+  "method": "higher_order_v1",
+  "passed": true,
+  "rejected_newer_candidates": [],
+  "schema_version": 1,
+  "validation": {
+    "command": [
+      "D:\\QuickPLS\\target\\debug\\qpls.exe",
+      "validate",
+      "validation/results/v247-native-hoc-1786685331323-30000.qpls",
+      "--json"
+    ],
+    "duration_seconds": 0.07,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "{\n  \"issues\": [\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786685332365\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786685332584\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786685332817\"\n    },\n    {\n      \"code\": \"higher_order.indicators.generated\",\n      \"message\": \"Higher-order construct indicators are generated from lower-order components for supported HOC methods\",\n      \"severity\": \"warning\",\n      \"subject\": \"hoc-oc\"\n    },\n    {\n      \"code\": \"method.higher_order.experimental\",\n      \"message\": \"Higher-order construct semantics are validated only inside the documented QuickPLS v1.0.0 supported scope\",\n      \"severity\": \"warning\",\n      \"subject\": \"hoc-oc\"\n    }\n  ],\n  \"recovered\": false,\n  \"valid\": true\n}\n"
+  }
+}

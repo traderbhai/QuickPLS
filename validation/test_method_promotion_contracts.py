@@ -29,7 +29,7 @@ class MethodPromotionContractTests(unittest.TestCase):
 
     def test_contract_errors_still_fail_closed(self) -> None:
         source = factory.strict_load_json(
-            factory.MANIFEST_DIR / "pls_sample_size_power_v1.manifest.json"
+            factory.MANIFEST_DIR / "history" / "pls_sample_size_power_v1.manifest.json"
         )
         source = copy.deepcopy(source)
         source["qualification"]["target_state"] = "invented_state"

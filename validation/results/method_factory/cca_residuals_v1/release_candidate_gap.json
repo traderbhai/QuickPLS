@@ -1,0 +1,30 @@
+{
+  "blockers": [],
+  "current_state": "release_qualified",
+  "feature_id": "qpls3.assessment.cca_residuals",
+  "method_version": "cca_composite_residual_v1",
+  "missing_roles": [],
+  "offline_required": true,
+  "process_cleanup_required": true,
+  "promotion_ready": true,
+  "release_evidence_status": "managed_by_phase2_packaged_closure",
+  "required_viewports": [
+    "1024x700",
+    "1280x720",
+    "1440x900"
+  ],
+  "required_workflow_steps": [
+    "setup",
+    "invalid_setup_blocked",
+    "execute",
+    "inspect_results",
+    "export",
+    "save",
+    "close",
+    "reopen_same_run",
+    "cleanup"
+  ],
+  "schema_version": 1,
+  "source_factory_scope": "engine_archive_native_identity_refresh_only",
+  "target_state": "release_qualified"
+}

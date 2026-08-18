@@ -1,0 +1,68 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "bounded_scope_not_broadened": true,
+    "document": "docs/methods/CBSEM_ML_V1.md",
+    "passed": true,
+    "required_contract_fragments": {
+      "F_ml = log|Sigma(theta)|": true,
+      "Robust corrections": true,
+      "WLSMV/polychoric estimators": true,
+      "`cbsem_ml_v1` is release-qualified": true,
+      "first-loading marker identification": true,
+      "independent QuickPLS method claim": true,
+      "raw-data single-group reflective ML SEM scope": true,
+      "recursive latent regression": true,
+      "same-run reopen": true
+    }
+  },
+  "feature_id": "qpls3.cbsem.ml",
+  "generated_at_utc": "2026-08-18T13:08:26.378476Z",
+  "method_version": "cbsem_ml_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/CBSEM_ML_V1.md",
+      "sha256": "3c79bf55442c8c471543de0fa70a100eae3dd2b45e5208cc067f83797271d640",
+      "size": 2909
+    },
+    {
+      "path": "validation/cbsem_ml_v1_factory_common.py",
+      "sha256": "b07b75e9f66d481bd2190ab94a03cb42d56768e0bf830c67be9f94e2d1422245",
+      "size": 13364
+    },
+    {
+      "path": "validation/cbsem_ml_v1_factory_evidence.py",
+      "sha256": "c91277b2ccbcec5d4f3ccbe4779376f0533d1e1a85343e615f314d24915d3813",
+      "size": 7351
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cbsem_ml_v1.manifest.json",
+      "sha256": "d94429dd105bc9c993a0c5e90c88d639ab51c92625d89df8751a14321f71ff10",
+      "size": 17158
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_cbsem_ml_v1_factory.py",
+      "sha256": "78fc5f355c6c98e1432b51978f8d0631ae5622680a458473e6ba54056d82387f",
+      "size": 11304
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "kind": "cbsem_exact_cfa_interval_coverage_manifest_v1",
+  "status": "predeclared_validation_only_coverage_program_product_qualification_blocked",
+  "source_binding": {
+    "runner_path": "validation/cbsem_exact_cfa_interval_coverage_v1.py",
+    "runner_sha256": "60e84f07aa930daab3a1a61cd8cb6e471b0e455d2db758d2781610cd9c912f6c",
+    "oracle_path": "validation/cbsem_exact_cfa_interval_coverage_v1_oracle.py",
+    "oracle_sha256": "24f9f828ee332be19c784b3bdc8751e6952d5a0e4593626d3ec38da5b54dfd99",
+    "rust_example_path": "crates/qpls-resampling/examples/cbsem_exact_cfa_interval_coverage_v1.rs",
+    "rust_example_sha256": "c7896cbfd85d2a04e9677be0c23eeb487f9f1cadff5e1e46e08553ab94f731ba",
+    "rust_kernel_path": "crates/qpls-resampling/src/cbsem_exact_bootstrap.rs",
+    "rust_kernel_sha256": "4656ccab1446eb5d30d0afdc38a4eb8b347e92ea24249c2fb8b954cfcdee9bbf",
+    "estimation_contract_path": "crates/qpls-estimation/src/cbsem_bootstrap_contract.rs",
+    "estimation_contract_sha256": "74328bc5d0b493ca2c7c669bfc0454cb018c49aef9384fd148cd195b4c3d9bce",
+    "resampling_cargo_path": "crates/qpls-resampling/Cargo.toml",
+    "resampling_cargo_sha256": "ecc5726052949d6a39868f22bfdca6fccaa435ee2788eccd778182ab8a972b2d",
+    "cargo_lock_path": "Cargo.lock",
+    "cargo_lock_sha256": "2782f92e86ae7420af0c27210b1602ebf6c5fc1c1002c2f4ad1ed56cdc38dcb7",
+    "focused_test_path": "validation/test_cbsem_exact_cfa_interval_coverage_v1.py",
+    "focused_test_sha256": "054e6df333ea216b03914a65c82c108d5600b4ee3e15d7567c8f3947341e07f5"
+  },
+  "schema_binding": {
+    "manifest_schema_path": "validation/cbsem_exact_cfa_interval_coverage_v1_manifest.schema.json",
+    "manifest_schema_sha256": "17704c759e9c5bd2172a1434bad59b39e8fe232663f389441bcf754d91b5c6f1",
+    "case_schema_path": "validation/cbsem_exact_cfa_interval_coverage_v1_case.schema.json",
+    "case_schema_sha256": "7923847ab098d6b10596f314fb7d114b60a3d9aa70949fbc988e1464185c08fa",
+    "report_schema_path": "validation/cbsem_exact_cfa_interval_coverage_v1_report.schema.json",
+    "report_schema_sha256": "896f53026bcc60f3a06b22a79cc080c8067fff40bca9c74ac3d869f7d8fb2968"
+  },
+  "binary_binding": {
+    "path": "target/release/examples/cbsem_exact_cfa_interval_coverage_v1.exe",
+    "sha256": "e222043929361e5b0fe14990e89e83b7f6bf98c11c9413c42e6bb4b16e6f2fb3",
+    "policy": "build_release_from_bound_rust_source_then_freeze_sha256_before_execute_v1"
+  },
+  "scientific_runtime": {
+    "python": "3.13.1",
+    "numpy": "1.26.4",
+    "scipy": "1.15.2"
+  },
+  "seed_contract": {
+    "data_master_seed": 2026081701,
+    "bootstrap_master_seed": 2026081702,
+    "oracle_master_seed": 2026081703,
+    "derivation": "sha256_domain_v1_first_u64_little_endian",
+    "domain": "quickpls_cbsem_exact_cfa_interval_coverage_v1_nul",
+    "fields": ["master_seed", "dgp_id", "stage", "dataset_index", "purpose"],
+    "derivation_stage_by_planned_stage": {
+      "conformance": "conformance",
+      "pilot": "pilot",
+      "final": "final",
+      "paired_confirmation": "final"
+    },
+    "data_generator": "numpy_generator_pcg64dxsm_standard_normal_v1",
+    "covariance_factorization": "numpy_cholesky_population_covariance_v1"
+  },
+  "digest_contract": {
+    "scientific_result_digest_method": "sha256_typed_json_tree_v1",
+    "base_point_result_digest_method": "sha256_typed_json_tree_v1",
+    "schedule_authentication_method": "bound_rust_exact_schedule_and_source_verifier_v1",
+    "compact_evidence_digest_method": "sha256_typed_json_tree_v1",
+    "compact_evidence_fields": ["scientific_result_sha256", "data_sha256", "source_dataset_fingerprint", "ledger", "methods"],
+    "compact_method_order": ["percentile", "studentized", "bca"],
+    "compact_parameter_order": "frozen_dgp_parameter_truth_order_v1",
+    "coverage_authentication": "excluded_from_compact_evidence_and_rederived_by_aggregator_v1"
+  },
+  "arithmetic_kernel_contract": {
+    "percentile_engine_mean_operation": "ordered_left_to_right_binary64_sum_then_binary64_divide_by_usable_count_v1",
+    "percentile_mean_validation_method": "math_fsum_reference_higham_gamma_b_minus_1_outward_binary64_v1",
+    "percentile_bias_binding_method": "observed_mean_minus_point_binary64_bit_exact_v1",
+    "binary64_unit_roundoff": 1.1102230246251565e-16,
+    "gamma_formula": "gamma_(B-1)=((B-1)*u)/(1-(B-1)*u)_v1",
+    "absolute_sum_method": "nextafter_math_fsum_absolute_values_toward_positive_infinity_v1",
+    "mean_bound_formula": "outward_gamma_times_A_over_B_plus_ulp_observed_mean_plus_ulp_reference_mean_v1",
+    "bias_bound_formula": "outward_mean_bound_plus_ulp_observed_bias_plus_ulp_reference_bias_v1",
+    "arithmetic_preconditions": "authenticated_order_and_usable_B_finite_no_intermediate_overflow_gamma_domain_v1",
+    "bca_method_version": "cbsem_exact_case_bootstrap_bca_interval_v1",
+    "bca_bias_correction_method": "midrank_less_plus_half_ties_no_clamp_v1",
+    "bca_acceleration_method": "complete_delete_one_jackknife_neumaier_mean_squares_cubes_acceleration_v2",
+    "bca_adjusted_probability_method": "efron_bca_statrs_inverse_normal_libm_erfc_cdf_adjustment_v2",
+    "bca_inverse_normal_kernel": "statrs_0_18_inverse_cdf_v1",
+    "bca_final_normal_cdf_kernel": "half_libm_0_2_16_erfc_negative_argument_over_sqrt_2_v1",
+    "bca_quantile_method": "percentile_type7_v1"
+  },
+  "dgps": [
+    {
+      "dgp_id": "dgp_a_one_factor_n150",
+      "sample_size": 150,
+      "observed_columns": ["a1", "a2", "a3"],
+      "loading_matrix": [[1.0], [0.78], [0.64]],
+      "factor_covariance": [[1.35]],
+      "residual_variances": [0.42, 0.58, 0.73],
+      "parameter_truth": [
+        {"parameter_id": "parameter_6631_6132", "target": "loading:construct:f1:observed:a2", "true_value": 0.78},
+        {"parameter_id": "parameter_6631_6133", "target": "loading:construct:f1:observed:a3", "true_value": 0.64},
+        {"parameter_id": "residual_variance_6131", "target": "variance:residual:observed:a1", "true_value": 0.42},
+        {"parameter_id": "residual_variance_6132", "target": "variance:residual:observed:a2", "true_value": 0.58},
+        {"parameter_id": "residual_variance_6133", "target": "variance:residual:observed:a3", "true_value": 0.73},
+        {"parameter_id": "variance_6631", "target": "variance:variable:construct:f1", "true_value": 1.35}
+      ],
+      "fixture_sha256": "11ddda3d517b8d66d022ae4bfbf98b7bd1c14bae0ac12ab612a846a37dec9dee"
+    },
+    {
+      "dgp_id": "dgp_b_two_factor_n300",
+      "sample_size": 300,
+      "observed_columns": ["b1", "b2", "b3", "b4", "b5", "b6"],
+      "loading_matrix": [[1.0, 0.0], [0.78, 0.0], [0.64, 0.0], [0.0, 1.0], [0.0, 0.7], [0.0, 1.15]],
+      "factor_covariance": [[1.35, 0.45], [0.45, 2.1]],
+      "residual_variances": [0.42, 0.58, 0.73, 0.5, 0.9, 2.0],
+      "parameter_truth": [
+        {"parameter_id": "coverage_factor_covariance_f1_f2", "target": "covariance:variable:construct:f1:variable:construct:f2", "true_value": 0.45},
+        {"parameter_id": "parameter_6631_6232", "target": "loading:construct:f1:observed:b2", "true_value": 0.78},
+        {"parameter_id": "parameter_6631_6233", "target": "loading:construct:f1:observed:b3", "true_value": 0.64},
+        {"parameter_id": "parameter_6632_6235", "target": "loading:construct:f2:observed:b5", "true_value": 0.7},
+        {"parameter_id": "parameter_6632_6236", "target": "loading:construct:f2:observed:b6", "true_value": 1.15},
+        {"parameter_id": "residual_variance_6231", "target": "variance:residual:observed:b1", "true_value": 0.42},
+        {"parameter_id": "residual_variance_6232", "target": "variance:residual:observed:b2", "true_value": 0.58},
+        {"parameter_id": "residual_variance_6233", "target": "variance:residual:observed:b3", "true_value": 0.73},
+        {"parameter_id": "residual_variance_6234", "target": "variance:residual:observed:b4", "true_value": 0.5},
+        {"parameter_id": "residual_variance_6235", "target": "variance:residual:observed:b5", "true_value": 0.9},
+        {"parameter_id": "residual_variance_6236", "target": "variance:residual:observed:b6", "true_value": 2.0},
+        {"parameter_id": "variance_6631", "target": "variance:variable:construct:f1", "true_value": 1.35},
+        {"parameter_id": "variance_6632", "target": "variance:variable:construct:f2", "true_value": 2.1}
+      ],
+      "fixture_sha256": "52205148ff258e7311c1cad20c0b3a1e71b4f255ed4504b664407d132ac8c16a"
+    }
+  ],
+  "stages": [
+    {
+      "stage": "conformance",
+      "datasets_per_dgp": 1,
+      "replicates": 500,
+      "workers": 12,
+      "datasets_per_shard": 1,
+      "executable": true,
+      "per_dataset_timeout_seconds": 900,
+      "evidence_role": "ledger_conformance_only_insufficient_usable_no_coverage"
+    },
+    {
+      "stage": "pilot",
+      "datasets_per_dgp": 20,
+      "replicates": 5000,
+      "workers": 12,
+      "datasets_per_shard": 5,
+      "executable": true,
+      "per_dataset_timeout_seconds": 1800,
+      "evidence_role": "descriptive_pilot_no_qualification_decision"
+    },
+    {
+      "stage": "final",
+      "datasets_per_dgp": 3200,
+      "replicates": 5000,
+      "workers": 12,
+      "datasets_per_shard": 100,
+      "executable": false,
+      "per_dataset_timeout_seconds": 1800,
+      "evidence_role": "predeclared_final_plan_32_shards_per_dgp_not_staged_for_execution"
+    },
+    {
+      "stage": "paired_confirmation",
+      "datasets_per_dgp": 20,
+      "replicates": 10000,
+      "workers": 12,
+      "datasets_per_shard": 20,
+      "executable": false,
+      "per_dataset_timeout_seconds": 3600,
+      "evidence_role": "paired_first_20_final_datasets_sensitivity_only_not_independent_coverage"
+    }
+  ],
+  "ledger_contract": {
+    "bootstrap_draw_policy": "one_shared_exact_base_ledger_for_percentile_studentized_and_bca_v1",
+    "retry_policy": "no_retry_fixed_preplanned_primary_draws_v1",
+    "max_attempts_per_replicate": 1,
+    "conformance_expected_base_reason": "insufficient_usable_refits",
+    "known_point_failure_kinds": ["moment_matrix_not_positive_definite", "non_convergence", "inadmissible_solution", "numerical_failure"],
+    "known_standard_error_unavailable_reasons": ["singular_information", "information_not_positive_definite", "invalid_information_variance_or_standard_error", "derivative_unavailable", "numerical_information_failure"],
+    "delete_one_policy": "exactly_n_single_omission_refits_no_retry_v1",
+    "failure_rate_inference_unit": "generated_dataset_not_inner_bootstrap_draw"
+  },
+  "coverage_contract": {
+    "methods": ["percentile", "studentized", "bca"],
+    "primary_cell_count": 57,
+    "availability_cell_count": 6,
+    "confidence_level": 0.95,
+    "ordinary_confidence_level": 0.95,
+    "family_confidence_level": 0.95,
+    "unconditional_rule": "all_requested_datasets_denominator_unavailable_interval_counts_not_covered_v1",
+    "conditional_rule": "available_intervals_only_denominator_v1",
+    "binomial_endpoint_kernel": "scipy_beta_seed_exact_integer_binomial_tail_certified_tight_binary64_v2",
+    "ordinary_interval": "clopper_pearson_two_sided_exact_certified_outward_binary64_v2",
+    "ordinary_two_sided_tail": {"numerator": 1, "denominator": 40},
+    "simultaneous_interval": "bonferroni_57_cell_clopper_pearson_two_sided_exact_certified_outward_binary64_v2",
+    "simultaneous_two_sided_tail": {"numerator": 1, "denominator": 2280},
+    "maximum_ordinary_cp95_half_width": 0.01,
+    "simultaneous_acceptance_lower": 0.925,
+    "simultaneous_acceptance_upper": 0.975,
+    "availability_interval": "bonferroni_6_cell_clopper_pearson_one_sided_lower_exact_certified_outward_binary64_v2",
+    "availability_one_sided_tail": {"numerator": 1, "denominator": 120},
+    "minimum_availability_lower_bound": 0.99,
+    "endpoint_relative_tolerance": 1e-12,
+    "pilot_decision_policy": "descriptive_only_never_qualification"
+  },
+  "failure_summary_contract": {
+    "independent_cluster_unit": "generated_dataset",
+    "descriptive_quantile_method": "type7_over_dataset_level_failure_fractions_v1",
+    "descriptive_probabilities": [0.05, 0.5, 0.95],
+    "cluster_bootstrap_method": "fixed_seed_dataset_resample_percentile_mean_v1",
+    "cluster_bootstrap_generator": "numpy_generator_pcg64dxsm_v1",
+    "cluster_bootstrap_resamples": 10000,
+    "cluster_bootstrap_confidence_level": 0.95,
+    "aggregate_seed_dataset_index_by_metric": {
+      "point": 4294967293,
+      "standard_error": 4294967294,
+      "delete_one": 4294967295
+    },
+    "seed_master": "oracle_master_seed",
+    "runner_oracle_endpoint_tolerance": 1e-12,
+    "inner_bootstrap_draws_are_never_binomial_trials": true
+  },
+  "worker_replay_contract": {
+    "datasets_per_dgp": 1,
+    "primary_workers": 12,
+    "replay_workers": 1,
+    "acceptance": "bit_identical_scientific_result_sha256"
+  },
+  "cancellation_contract": {
+    "dataset_index": 0,
+    "phase_by_dgp": {
+      "dgp_a_one_factor_n150": "bootstrap",
+      "dgp_b_two_factor_n300": "jackknife"
+    },
+    "cancel_after_completed": 10,
+    "maximum_terminal_latency_seconds": 1.0,
+    "maximum_orphan_processes": 0,
+    "timeout_seconds": 900
+  },
+  "external_reference_contract": {
+    "authority": "lavaan_validation_only_never_product_dependency",
+    "datasets_per_dgp": 10,
+    "point_relative_tolerance": 1e-6,
+    "standard_error_relative_tolerance": 1e-4,
+    "status": "planned_not_implemented_in_this_pilot_harness"
+  },
+  "retention_contract": {
+    "full_audit_results_per_shard": 1,
+    "retain_all_integrity_failures": true,
+    "compact_receipts_for_other_datasets": true,
+    "append_only_outputs": true
+  },
+  "qualification_boundary": {
+    "status": "blocked_not_product_qualification",
+    "missing_evidence": [
+      "executed_final_3200_dataset_per_dgp_campaign",
+      "executed_paired_b10000_confirmation",
+      "lavaan_first_10_dataset_per_dgp_parity",
+      "independent_scientific_review",
+      "canonical_export_package_and_integration_gates"
+    ]
+  }
+}

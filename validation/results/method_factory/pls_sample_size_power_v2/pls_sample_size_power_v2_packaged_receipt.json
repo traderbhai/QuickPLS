@@ -1,0 +1,743 @@
+{
+    "schema_version":  1,
+    "kind":  "quickpls_v247_pls_sample_size_power_v2_scoped_native_acceptance_receipt",
+    "passed":  true,
+    "supervisor_started_at_utc":  "2026-08-18T14:01:18.4503922Z",
+    "completed_at_utc":  "2026-08-18T14:01:46.2012164Z",
+    "scope":  "pls_sample_size_power",
+    "feature_id":  "qpls3.pls.sample_size_power",
+    "method_version":  "pls_sample_size_power_v2",
+    "report":  {
+                   "path":  "validation/results/v247_tauri_native_acceptance_pls_sample_size_power.json",
+                   "size":  38339,
+                   "sha256":  "42eca20b15ce793705f35783c2516cc86a728e4e07c818cba4ae76099aa419f0"
+               },
+    "executable":  {
+                       "path":  "target/release/quickpls-desktop.exe",
+                       "size":  49983488,
+                       "sha256":  "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476"
+                   },
+    "cli":  {
+                "path":  "target/release/qpls.exe",
+                "size":  32387072,
+                "sha256":  "7e1ee9c72d79b6102362f81313a54aeed987cb458f921397cb6fd3a09598d53a"
+            },
+    "export":  {
+                   "path":  "validation/results/v247-native-pls-power-v2-20260818-193118450.xlsx",
+                   "size":  11529,
+                   "sha256":  "1bfe05bddf5ff89ab8f3918ecbfc0894e1ef8d3df307799bff3ab7420d752f6e"
+               },
+    "project_archive":  {
+                            "path":  "validation/results/v247-native-pls-sample-size-power-1787061682161-29596.qpls",
+                            "size":  35945,
+                            "sha256":  "cca7a8a5857fdaf22fec6318a56b82326033249422ad6de26569a15e7e3b21f4"
+                        },
+    "network_samples":  {
+                            "path":  "validation/results/v247-native-pls-power-v2-network-20260818-193118450.jsonl",
+                            "size":  66215,
+                            "sha256":  "a0cfd6b0b56876ef3961f5988288b837aee3bc20e5fcb837844e801fb169fc40"
+                        },
+    "screenshots":  [
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/200-tauri-native-pls-sample-size-power-invalid-setup-1440x900.png",
+                            "size":  236036,
+                            "sha256":  "0f3e1ad1e826c71cafc2818212382a191cd900917ad6d4f760e1bdd203c50f66"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/201-tauri-native-pls-sample-size-power-cancellation-running-1440x900.png",
+                            "size":  178852,
+                            "sha256":  "cac277b75d2f66fbd81303b6208181ce4d0812fadedc18bf08130e208fdbdd4a"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/202-tauri-native-pls-sample-size-power-running-1440x900.png",
+                            "size":  178227,
+                            "sha256":  "22d98de619128419682464eaa8298afcb2dc7238e72ea82bea338920928425dd"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/209v-tauri-native-pls-sample-size-power-packaged-viewport-1024x700.png",
+                            "size":  105665,
+                            "sha256":  "5a0d05a0650e263b5e793294863a19202f252f032677f0f3b9018076aab157ce"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/209v-tauri-native-pls-sample-size-power-packaged-viewport-1280x720.png",
+                            "size":  98728,
+                            "sha256":  "46f665073d5467f2583869059d8253c1488fe470cfc2c5ceccef36d4a61d2768"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/209v-tauri-native-pls-sample-size-power-packaged-viewport-1440x900.png",
+                            "size":  101182,
+                            "sha256":  "d7f49697268c19600b613b16ba43ccfbc01f4d09e494a85a54d954c685a32544"
+                        }
+                    ],
+    "checks":  16,
+    "unique_checks":  16,
+    "check_ids":  [
+                      "plsSampleSizePowerCancellation",
+                      "plsSampleSizePowerDialog",
+                      "plsSampleSizePowerExport",
+                      "plsSampleSizePowerFixture",
+                      "plsSampleSizePowerFixtureProvisioning",
+                      "plsSampleSizePowerFunctionalOffline",
+                      "plsSampleSizePowerInitialModel",
+                      "plsSampleSizePowerInvalidSetup",
+                      "plsSampleSizePowerModel",
+                      "plsSampleSizePowerPackagedViewports",
+                      "plsSampleSizePowerProgress",
+                      "plsSampleSizePowerResult",
+                      "plsSampleSizePowerSaveReopen",
+                      "recentProjectsRestored",
+                      "runtime",
+                      "runtimePreflight"
+                  ],
+    "failures":  0,
+    "console_errors":  0,
+    "runtime":  "tauri-webview2-cdp",
+    "cdp_endpoint":  "http://127.0.0.1:9222",
+    "cdp_loopback_only":  true,
+    "functional_offline":  {
+                               "passed":  true,
+                               "analyticalWorkflowRequiresInternet":  false,
+                               "strictZeroProcessEgressClaimed":  false,
+                               "observedRequestCount":  0,
+                               "externalRequestCount":  0,
+                               "origins":  [
+
+                                           ],
+                               "externalRequests":  [
+
+                                                    ]
+                           },
+    "platform_background_egress_observation":  {
+                                                   "passed":  true,
+                                                   "observation_kind":  "sampled_exact_process_tree_tcp_v1",
+                                                   "sample_count":  34,
+                                                   "root_present_every_sample":  true,
+                                                   "platform_background_egress_observed":  true,
+                                                   "commercial_zero_egress_passed":  false,
+                                                   "remote_connections":  [
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "SynSent",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  60241,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              },
+                                                                              {
+                                                                                  "owning_process":  39888,
+                                                                                  "local_address":  "192.168.1.171",
+                                                                                  "local_port":  54361,
+                                                                                  "remote_address":  "52.110.15.143",
+                                                                                  "remote_port":  443,
+                                                                                  "state":  "Established",
+                                                                                  "remote_access":  true
+                                                                              }
+                                                                          ]
+                                               },
+    "sampled_process_tree_zero_egress":  false,
+    "network_sample_count":  34,
+    "observed_process_tree":  [
+                                  {
+                                      "process_id":  15472,
+                                      "parent_process_id":  17956,
+                                      "name":  "quickpls-desktop.exe",
+                                      "executable_path":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                                      "creation_date":  "08/18/2026 19:31:19"
+                                  },
+                                  {
+                                      "process_id":  39888,
+                                      "parent_process_id":  15472,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 19:31:19"
+                                  },
+                                  {
+                                      "process_id":  38128,
+                                      "parent_process_id":  39888,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 19:31:19"
+                                  },
+                                  {
+                                      "process_id":  18908,
+                                      "parent_process_id":  39888,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 19:31:20"
+                                  },
+                                  {
+                                      "process_id":  32804,
+                                      "parent_process_id":  39888,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 19:31:20"
+                                  },
+                                  {
+                                      "process_id":  52500,
+                                      "parent_process_id":  39888,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 19:31:20"
+                                  },
+                                  {
+                                      "process_id":  62664,
+                                      "parent_process_id":  39888,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 19:31:20"
+                                  }
+                              ],
+    "graceful_process_cleanup_verified":  true,
+    "forced_process_cleanup_used":  false,
+    "orphan_processes":  0
+}

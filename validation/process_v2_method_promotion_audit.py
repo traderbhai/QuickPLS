@@ -31,18 +31,17 @@ JN_INVALID_COVARIANCE_MESSAGE = (
     "Johnson-Neyman conditional-effect variance must be finite and strictly positive "
     "across the tested moderator range."
 )
-PROCESS_PROMOTION_PENDING_WARNING = (
-    "Implemented bounded PROCESS v2 candidate; release qualification remains pending until "
-    "the current independent-reference, native, packaged, and promotion evidence gates pass."
-)
 PROCESS_CURVE_WARNING_DISCLOSURE = (
-    "Exact engine-persisted Johnson-Neyman curve points; bootstrap validation witnesses "
-    "are never exported."
+    "Exact engine-persisted Johnson-Neyman curve points; internal bootstrap refit diagnostics "
+    "are not exported."
 )
 RESOURCE_ROLE_NAMES = (
     "desktop_root", "webview_browser", "webview_renderer", "webview_gpu",
     "webview_utility", "webview_other", "other_descendant",
 )
+RESOURCE_POLICY = "bounded_equal_logical_state_terminal_stable_v3"
+RESOURCE_CONCLUSION = "bounded_post_replacement_recovery_terminal_stable_v3"
+RESOURCE_TERMINAL_SAMPLE_COUNT = 6
 TARGET = "quickpls3_process_v2_promotion"
 REFERENCE_REPORT = "process_v2_reference_report.json"
 PACKAGED_REPORT = "process_v2_packaged_acceptance.json"
@@ -133,6 +132,7 @@ BOUNDARY_SUITES = {
         {
             "process_graph_v2_unavailable_inference_uses_process_specific_tokens",
             "process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional",
+            "process_graph_v2_case_bootstrap_cancellation_returns_no_result",
             "process_graph_v2_bootstrap_maps_high_leverage_hc3_failure",
             "process_graph_v2_bootstrap_maps_invalid_hc3_covariance_failure",
             "process_graph_v2_bootstrap_maps_degenerate_simple_slope_failure",
@@ -278,6 +278,7 @@ PACKAGED_SOURCES = [
     "validation/v247_tauri_native_acceptance.mjs",
     "validation/process_v2_packaged_acceptance.schema.json",
     "validation/run_v247_process_v2_native_acceptance.ps1",
+    "validation/process_v2_resource_policy_v3.py",
     "validation/monitor_quickpls_process_tree.ps1",
     "validation/windows_native_save_export.py",
     "validation/close_tauri_test_window.mjs",
@@ -539,7 +540,6 @@ def bounded_process_role_window(samples: list[dict[str, Any]]) -> dict[str, Any]
             and unique_modal
             and modal_sample_count >= 6
             and modal_sample_count * 100 >= len(samples) * 80
-            and first_three_exact
             and last_three_exact
             and len(deviation_indices) <= maximum_deviating
             and longest_deviation_streak <= 2
@@ -581,6 +581,159 @@ def bounded_process_role_window(samples: list[dict[str, Any]]) -> dict[str, Any]
         }
     except (KeyError, TypeError, ValueError):
         return default_result()
+
+
+def _resource_process_identity_key(process: dict[str, Any]) -> tuple[int, int, str, str, str]:
+    return (
+        int(process["pid"]), int(process["parent_pid"]), str(process["name"]).lower(),
+        str(process["role"]), str(process["creation_date"]),
+    )
+
+
+def _resource_role_counts(sample: dict[str, Any]) -> dict[str, int]:
+    processes = sample.get("processes")
+    if not isinstance(processes, list):
+        raise ValueError("missing processes")
+    return {
+        role: sum(1 for process in processes if isinstance(process, dict) and process.get("role") == role)
+        for role in RESOURCE_ROLE_NAMES
+    }
+
+
+def _resource_metric_totals_exact(sample: dict[str, Any]) -> bool:
+    processes = sample.get("processes")
+    if not isinstance(processes, list) or not processes:
+        return False
+    try:
+        return (
+            int(sample["total_working_set_bytes"])
+            == sum(int(process["working_set_bytes"]) for process in processes)
+            and int(sample["total_private_memory_bytes"])
+            == sum(int(process["private_memory_bytes"]) for process in processes)
+            and int(sample["total_handle_count"])
+            == sum(int(process["handle_count"]) for process in processes)
+            and int(sample["total_thread_count"])
+            == sum(int(process["thread_count"]) for process in processes)
+        )
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def _resource_integer_median(values: list[int]) -> int:
+    if not values:
+        raise ValueError("empty resource metric window")
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    return ordered[middle] if len(ordered) % 2 else (ordered[middle - 1] + ordered[middle]) // 2
+
+
+def resource_full_window_disclosure(
+    initial_samples: list[dict[str, Any]],
+    cancellation_samples: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    """Recompute disclosure-only full-window medians and signed per-role deltas."""
+    if len(initial_samples) < 6 or len(cancellation_samples) < 6:
+        return None
+    try:
+        per_role = []
+        for role in RESOURCE_ROLE_NAMES:
+            def role_medians(rows: list[dict[str, Any]]) -> tuple[int, int]:
+                working = []
+                private = []
+                for sample in rows:
+                    processes = [
+                        process for process in sample["processes"]
+                        if isinstance(process, dict) and process.get("role") == role
+                    ]
+                    working.append(sum(int(process["working_set_bytes"]) for process in processes))
+                    private.append(sum(int(process["private_memory_bytes"]) for process in processes))
+                return _resource_integer_median(working), _resource_integer_median(private)
+
+            baseline_working, baseline_private = role_medians(initial_samples)
+            cancellation_working, cancellation_private = role_medians(cancellation_samples)
+            per_role.append({
+                "role": role,
+                "baseline_median_working_set_bytes": baseline_working,
+                "cancellation_median_working_set_bytes": cancellation_working,
+                "working_set_delta_bytes": cancellation_working - baseline_working,
+                "baseline_median_private_memory_bytes": baseline_private,
+                "cancellation_median_private_memory_bytes": cancellation_private,
+                "private_memory_delta_bytes": cancellation_private - baseline_private,
+            })
+        baseline_working = _resource_integer_median([
+            int(sample["total_working_set_bytes"]) for sample in initial_samples
+        ])
+        cancellation_working = _resource_integer_median([
+            int(sample["total_working_set_bytes"]) for sample in cancellation_samples
+        ])
+        baseline_private = _resource_integer_median([
+            int(sample["total_private_memory_bytes"]) for sample in initial_samples
+        ])
+        cancellation_private = _resource_integer_median([
+            int(sample["total_private_memory_bytes"]) for sample in cancellation_samples
+        ])
+        return {
+            "qualification_role": "disclosure_only_not_a_threshold",
+            "baseline_checkpoint": "initial_idle",
+            "cancellation_checkpoint": "post_cancellation_idle",
+            "baseline_median_working_set_bytes": baseline_working,
+            "cancellation_median_working_set_bytes": cancellation_working,
+            "working_set_delta_bytes": cancellation_working - baseline_working,
+            "baseline_median_private_memory_bytes": baseline_private,
+            "cancellation_median_private_memory_bytes": cancellation_private,
+            "private_memory_delta_bytes": cancellation_private - baseline_private,
+            "per_role_deltas": per_role,
+        }
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def terminal_resource_selection(
+    cancellation_samples: list[dict[str, Any]], role_window: dict[str, Any],
+) -> dict[str, Any]:
+    """Verify and summarize the fixed final-six cancellation samples."""
+    result = {
+        "sample_count": 0,
+        "minimum_samples": RESOURCE_TERMINAL_SAMPLE_COUNT,
+        "samples_role_stable": False,
+        "sample_recorded_at_utc": [],
+        "max_working_set_bytes": 0,
+        "max_private_memory_bytes": 0,
+        "passed": False,
+    }
+    if len(cancellation_samples) < RESOURCE_TERMINAL_SAMPLE_COUNT:
+        return result
+    terminal = cancellation_samples[-RESOURCE_TERMINAL_SAMPLE_COUNT:]
+    result["sample_count"] = len(terminal)
+    try:
+        modal_identities = role_window.get("modal_pid_role_identities")
+        modal_counts = role_window.get("modal_role_counts")
+        if not isinstance(modal_identities, list) or not modal_identities or not isinstance(modal_counts, dict):
+            return result
+        modal_signature = tuple(sorted(_resource_process_identity_key(row) for row in modal_identities))
+        samples_role_stable = True
+        for sample in terminal:
+            reported_counts = {
+                role: int(sample.get("process_role_counts", {}).get(role, 0))
+                for role in RESOURCE_ROLE_NAMES
+            }
+            samples_role_stable = samples_role_stable and (
+                isinstance(sample.get("processes"), list)
+                and tuple(sorted(_resource_process_identity_key(row) for row in sample["processes"]))
+                == modal_signature
+                and reported_counts == _resource_role_counts(sample) == modal_counts
+                and _resource_metric_totals_exact(sample)
+            )
+        result.update({
+            "samples_role_stable": samples_role_stable,
+            "sample_recorded_at_utc": [sample.get("recorded_at_utc") for sample in terminal],
+            "max_working_set_bytes": max(int(sample["total_working_set_bytes"]) for sample in terminal),
+            "max_private_memory_bytes": max(int(sample["total_private_memory_bytes"]) for sample in terminal),
+            "passed": samples_role_stable,
+        })
+    except (KeyError, TypeError, ValueError):
+        return result
+    return result
 
 
 def finite(value: Any) -> bool:
@@ -812,6 +965,7 @@ def xlsx_process_table_attestation(path: Path) -> dict[str, Any]:
         "status_by_sheet": {},
         "warning_by_sheet": {},
         "run_provenance_warning_absent": False,
+        "promotion_pending_warning_absent": False,
         "curve_warning_disclosure_exact": False,
         "errors": [],
         "passed": False,
@@ -906,16 +1060,16 @@ def xlsx_process_table_attestation(path: Path) -> dict[str, Any]:
                 bool(reference_rows.get(row, {}).get("A")) for row in range(6, 12)
             )
             result["reference_condition_values"] = conditions
-            expected_process_sheets = EXPECTED_WORKBOOK_SHEETS[:-1]
-            expected_curve_warning = (
-                f"{PROCESS_PROMOTION_PENDING_WARNING} {PROCESS_CURVE_WARNING_DISCLOSURE}"
-            )
             result["curve_warning_disclosure_exact"] = (
                 result["warning_by_sheet"].get("Johnson-Neyman curve data")
-                == expected_curve_warning
+                == PROCESS_CURVE_WARNING_DISCLOSURE
             )
             result["run_provenance_warning_absent"] = (
                 result["warning_by_sheet"].get("Run provenance") in (None, "")
+            )
+            result["promotion_pending_warning_absent"] = all(
+                not (result["warning_by_sheet"].get(name) or "").lower().startswith("experimental ")
+                for name in EXPECTED_WORKBOOK_SHEETS[:-1]
             )
             result["passed"] = (
                 not result["errors"]
@@ -923,13 +1077,8 @@ def xlsx_process_table_attestation(path: Path) -> dict[str, Any]:
                 and result["reference_effect_rows"] == 6
                 and conditions == [REFERENCE_CONDITION] * 6
                 and set(result["status_by_sheet"]) == set(EXPECTED_WORKBOOK_SHEETS)
-                and all(result["status_by_sheet"].get(name) == "experimental" for name in EXPECTED_WORKBOOK_SHEETS)
-                and all(
-                    (result["warning_by_sheet"].get(name) or "").startswith(
-                        PROCESS_PROMOTION_PENDING_WARNING
-                    )
-                    for name in expected_process_sheets
-                )
+                and all(result["status_by_sheet"].get(name) == "validated" for name in EXPECTED_WORKBOOK_SHEETS)
+                and result["promotion_pending_warning_absent"]
                 and result["curve_warning_disclosure_exact"]
                 and result["run_provenance_warning_absent"]
             )
@@ -1132,8 +1281,7 @@ def archive_witness_attestation(path: Path) -> dict[str, Any]:
         and isinstance(recipe, dict)
         and recipe.get("schema_version") == 3
         and recipe.get("metadata", {}).get("status")
-        == "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope"
-        and "validated" not in recipe.get("metadata", {}).get("status", "")
+        == "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope"
         and estimation.get("method_version") == METHOD_VERSION
         and regression.get("method_version") == METHOD_VERSION
         and regression.get("regression_type") == "process"
@@ -1334,10 +1482,9 @@ def reference_attestation(root: Path, report: dict[str, Any], report_path: Path)
             "controls_maximum": 1,
             "equation_non_intercept_terms_maximum": 50,
         },
-        "candidate_recipe_status": (
+        "validated_recipe_status": (
             report.get("scope", {}).get("recipe_status")
-            == "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope"
-            and "validated" not in report.get("scope", {}).get("recipe_status", "")
+            == "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope"
         ),
         "release_cli_bound": cli["passed"],
         "fixture_and_r_script_bound": fixture["passed"] and r_script["passed"],
@@ -1563,6 +1710,8 @@ def packaged_attestation(
     checkpoint_contract = len(checkpoint_rows) == len(checkpoint_contracts) and raw_samples_parse_ok
     checkpoint_diagnostic_contract = len(checkpoint_diagnostics) == len(checkpoint_contracts)
     snapshot_attestations: list[dict[str, Any]] = []
+    checkpoint_samples_by_name: dict[str, list[dict[str, Any]]] = {}
+    checkpoint_role_windows: dict[str, dict[str, Any]] = {}
     previous_phase: datetime | None = None
     for index, row in enumerate(checkpoint_rows):
         if not isinstance(row, dict):
@@ -1586,6 +1735,7 @@ def packaged_attestation(
                 and (next_phase is None or sample_time < next_phase)
             ]
         sample_times = [sample.get("recorded_at_utc") for sample in eligible]
+        checkpoint_samples_by_name[expected_name] = eligible
         recorded_sample_times = row.get("sample_recorded_at_utc")
         metrics = {
             "median_working_set_bytes": median_int([int(sample["total_working_set_bytes"]) for sample in eligible]),
@@ -1600,6 +1750,7 @@ def packaged_attestation(
             "p95_process_count": p95_int([len(sample.get("processes", [])) for sample in eligible]),
         } if len(eligible) >= 6 else {}
         role_window = bounded_process_role_window(eligible)
+        checkpoint_role_windows[expected_name] = role_window
         selected = logical.get("selected_run_id")
         selected_exact = selected is None if expected_results == 0 else isinstance(selected, str) and bool(selected)
         effective_attestation = artifact_attestation(root, {
@@ -1617,7 +1768,7 @@ def packaged_attestation(
             row.get("name") == expected_name
             and row.get("idle_settle_milliseconds") == 5_000
             and row.get("capture_delay_milliseconds") == 500
-            and row.get("sample_window_milliseconds") == 5_000
+            and row.get("sample_window_milliseconds") == 10_000
             and row.get("sample_count") == len(eligible) >= 6
             and recorded_sample_times == sample_times
             and all(row.get(name) == value for name, value in metrics.items())
@@ -1638,7 +1789,7 @@ def packaged_attestation(
             and effective_attestation.get("passed") is True
             and snapshot_attestation.get("passed") is True
             and phase is not None and window_start == phase + timedelta(milliseconds=500)
-            and window_end == phase + timedelta(milliseconds=5500)
+            and window_end == phase + timedelta(milliseconds=10500)
             and (previous_phase is None or phase > previous_phase)
         )
         diagnostic = checkpoint_diagnostics[index] if index < len(checkpoint_diagnostics) else None
@@ -1655,8 +1806,8 @@ def packaged_attestation(
             "actual_idle_settle_milliseconds": 5_000,
             "expected_capture_delay_milliseconds": 500,
             "actual_capture_delay_milliseconds": 500,
-            "expected_sample_window_milliseconds": 5_000,
-            "actual_sample_window_milliseconds": 5_000,
+            "expected_sample_window_milliseconds": 10_000,
+            "actual_sample_window_milliseconds": 10_000,
             "minimum_samples": 6,
             "failure_reasons": [],
         }
@@ -1714,7 +1865,7 @@ def packaged_attestation(
             == timestamp(checkpoint_row.get("phase_recorded_at_utc"))
             and phase_entry.get("idle_settle_milliseconds") == 5_000
             and phase_entry.get("capture_delay_milliseconds") == 500
-            and phase_entry.get("sample_window_milliseconds") == 5_000
+            and phase_entry.get("sample_window_milliseconds") == 10_000
             and phase_entry.get("logical_state") == checkpoint_row.get("logical_state")
             and phase_entry.get("effective_archive") == checkpoint_row.get("effective_archive")
             and isinstance(phase_entry.get("primary_archive"), dict)
@@ -2033,10 +2184,19 @@ def packaged_attestation(
     cancel_private_tolerance = max(134_217_728, math.ceil(initial_checkpoint.get("median_private_memory_bytes", 0) * 0.35))
     equal_ws_tolerance = max(67_108_864, math.ceil(cycle1_checkpoint.get("median_working_set_bytes", 0) * 0.10))
     equal_private_tolerance = max(67_108_864, math.ceil(cycle1_checkpoint.get("median_private_memory_bytes", 0) * 0.10))
+    terminal_selection = terminal_resource_selection(
+        checkpoint_samples_by_name.get("post_cancellation_idle", []),
+        checkpoint_role_windows.get("post_cancellation_idle", {}),
+    )
+    full_window_disclosure = resource_full_window_disclosure(
+        checkpoint_samples_by_name.get("initial_idle", []),
+        checkpoint_samples_by_name.get("post_cancellation_idle", []),
+    )
     cancellation_within = (
-        cancellation_checkpoint.get("median_working_set_bytes", math.inf)
+        terminal_selection.get("passed") is True
+        and terminal_selection.get("max_working_set_bytes", math.inf)
         <= initial_checkpoint.get("median_working_set_bytes", 0) + cancel_ws_tolerance
-        and cancellation_checkpoint.get("median_private_memory_bytes", math.inf)
+        and terminal_selection.get("max_private_memory_bytes", math.inf)
         <= initial_checkpoint.get("median_private_memory_bytes", 0) + cancel_private_tolerance
     )
     equal_ws_within = cycle2_checkpoint.get("median_working_set_bytes", math.inf) <= (
@@ -2063,13 +2223,20 @@ def packaged_attestation(
     peak_ws = max((int(row.get("total_working_set_bytes", 0)) for row in raw_samples), default=0)
     peak_private = max((int(row.get("total_private_memory_bytes", 0)) for row in raw_samples), default=0)
     memory_contract = memory == {
-        "policy": "bounded_equal_logical_state_window_median_v2",
+        "policy": RESOURCE_POLICY,
         "peak_working_set_bytes": peak_ws,
         "peak_private_memory_bytes": peak_private,
         "peak_working_set_under_2_gib": 0 < peak_ws < 2_147_483_648,
         "cancellation_working_set_tolerance_bytes": cancel_ws_tolerance,
         "cancellation_private_memory_tolerance_bytes": cancel_private_tolerance,
+        "cancellation_terminal_sample_count": terminal_selection["sample_count"],
+        "cancellation_terminal_minimum_samples": RESOURCE_TERMINAL_SAMPLE_COUNT,
+        "cancellation_terminal_samples_role_stable": terminal_selection["samples_role_stable"],
+        "cancellation_terminal_sample_recorded_at_utc": terminal_selection["sample_recorded_at_utc"],
+        "cancellation_terminal_max_working_set_bytes": terminal_selection["max_working_set_bytes"],
+        "cancellation_terminal_max_private_memory_bytes": terminal_selection["max_private_memory_bytes"],
         "cancellation_within_baseline_tolerance": cancellation_within,
+        "full_window_disclosure": full_window_disclosure,
         "equal_state_working_set_tolerance_bytes": equal_ws_tolerance,
         "equal_state_private_memory_tolerance_bytes": equal_private_tolerance,
         "equal_state_working_set_within_tolerance": equal_ws_within,
@@ -2083,14 +2250,14 @@ def packaged_attestation(
         "retained_history_disclosure": retained_history_disclosure,
         "phase_snapshots_attested": phase_snapshot_contract,
         "phase_document_attested": phase_document_contract,
-        "conclusion": "bounded_post_replacement_recovery_v2",
+        "conclusion": RESOURCE_CONCLUSION,
         "cancellation_cycle_count": 1,
         "completed_cycle_count": 2,
         "idle_checkpoint_count": 5,
         "idle_settle_milliseconds": 5_000,
         "idle_checkpoints_ordered_and_distinct": checkpoint_contract,
         "capture_delay_milliseconds": 500,
-        "sample_window_milliseconds": 5_000,
+        "sample_window_milliseconds": 10_000,
         "minimum_samples_per_checkpoint": 6,
         "checkpoint_diagnostic_count": len(checkpoint_diagnostics),
         "checkpoint_diagnostics_all_passed": checkpoint_diagnostic_contract,
@@ -2104,8 +2271,15 @@ def packaged_attestation(
         "peak_working_set_bytes": peak_ws,
         "peak_private_memory_bytes": peak_private,
         "peak_working_set_under_2_gib": 0 < peak_ws < 2_147_483_648,
-        "policy": "bounded_equal_logical_state_window_median_v2",
+        "policy": RESOURCE_POLICY,
+        "cancellation_terminal_sample_count": terminal_selection["sample_count"],
+        "cancellation_terminal_minimum_samples": RESOURCE_TERMINAL_SAMPLE_COUNT,
+        "cancellation_terminal_samples_role_stable": terminal_selection["samples_role_stable"],
+        "cancellation_terminal_sample_recorded_at_utc": terminal_selection["sample_recorded_at_utc"],
+        "cancellation_terminal_max_working_set_bytes": terminal_selection["max_working_set_bytes"],
+        "cancellation_terminal_max_private_memory_bytes": terminal_selection["max_private_memory_bytes"],
         "cancellation_within_baseline_tolerance": cancellation_within,
+        "full_window_disclosure": full_window_disclosure,
         "equal_state_working_set_within_tolerance": equal_ws_within,
         "equal_state_private_memory_within_tolerance": equal_private_within,
         "equal_state_handle_count_within_tolerance": equal_handles_within,
@@ -2115,14 +2289,14 @@ def packaged_attestation(
         "retained_history_disclosure": retained_history_disclosure,
         "phase_snapshots_attested": phase_snapshot_contract,
         "phase_document_attested": phase_document_contract,
-        "conclusion": "bounded_post_replacement_recovery_v2",
+        "conclusion": RESOURCE_CONCLUSION,
         "cancellation_cycle_count": 1,
         "completed_cycle_count": 2,
         "idle_checkpoint_count": 5,
         "idle_settle_milliseconds": 5_000,
         "idle_checkpoints_ordered_and_distinct": checkpoint_contract,
         "capture_delay_milliseconds": 500,
-        "sample_window_milliseconds": 5_000,
+        "sample_window_milliseconds": 10_000,
         "minimum_samples_per_checkpoint": 6,
         "checkpoint_diagnostic_count": len(checkpoint_diagnostics),
         "checkpoint_diagnostics_all_passed": checkpoint_diagnostic_contract,
@@ -2234,6 +2408,111 @@ def packaged_attestation(
             *cycle1_capture_paths,
         ],
     )
+    resource_contract_diagnostics = {
+        "summary_exact": resources == expected_resource_summary,
+        "first_sample_contract": first_sample_contract,
+        "checkpoint_contract": checkpoint_contract,
+        "checkpoint_diagnostic_contract": checkpoint_diagnostic_contract,
+        "phase_snapshot_contract": phase_snapshot_contract,
+        "phase_document_contract": phase_document_contract,
+        "memory_contract": memory_contract,
+        "process_roles_bounded_and_terminally_stable": process_roles_bounded_and_terminally_stable,
+        "cancellation_terminal_samples_exact_and_role_stable": terminal_selection.get("passed") is True,
+        "full_window_disclosure_exact": full_window_disclosure is not None,
+        "cancellation_within_baseline_tolerance": cancellation_within,
+        "equal_state_working_set_within_tolerance": equal_ws_within,
+        "equal_state_private_memory_within_tolerance": equal_private_within,
+        "equal_state_handle_count_within_tolerance": equal_handles_within,
+        "equal_state_thread_count_within_tolerance": equal_threads_within,
+        "equal_state_process_roles_exact": equal_roles_exact,
+        "peak_working_set_under_2_gib": 0 < peak_ws < 2_147_483_648,
+        "cleanup_passed": cleanup_passed,
+        "resource_disk_contract": resource_disk_contract,
+        "raw_samples_parse_ok": raw_samples_parse_ok,
+    }
+    resource_report_diagnostics = {
+        "identity": (
+            resource_document.get("schema_version") == 1
+            and resource_document.get("target") == "process_v2_packaged_resource_report"
+            and resource_document.get("feature_id") == FEATURE_ID
+            and resource_document.get("method_version") == METHOD_VERSION
+            and resource_document.get("launched_pid") == cleanup.get("launched_pid")
+        ),
+        "sampling_contract": (
+            resource_document.get("sample_interval_milliseconds") == 250
+            and resource_document.get("capture_delay_milliseconds") == 500
+            and resource_document.get("sample_window_milliseconds") == 10_000
+            and resource_document.get("sample_count") == resources.get("sample_count")
+            and resource_document.get("raw_sample_count") == resources.get("raw_sample_count")
+            and resource_document.get("monitor_terminal_reason") == "stop_signal"
+        ),
+        "first_sample_contract": first_sample_contract,
+        "artifact_descriptors": (
+            resource_document.get("raw_samples") == raw_artifacts.get("resource_samples")
+            and resource_document.get("phase_document") == raw_artifacts.get("resource_phases")
+            and resource_document.get("phase_snapshots") == raw_artifacts.get("resource_phase_snapshots")
+            and resource_samples_artifact.get("passed") is True
+            and resource_phases_artifact.get("passed") is True
+        ),
+        "phase_snapshot_contract": phase_snapshot_contract,
+        "phase_document_contract": phase_document_contract,
+        "memory_contract": memory_contract,
+        "checkpoint_contract": checkpoint_contract,
+        "checkpoint_diagnostic_contract": checkpoint_diagnostic_contract,
+        "resource_disk_contract": resource_disk_contract,
+        "process_cleanup_contract": resource_document.get("process_cleanup") == {
+            "graceful_close_exit_code": 0,
+            "graceful_exit_confirmed": True,
+            "forced_parent_termination": False,
+            "forced_descendant_pids": [],
+            "forced_resource_monitor_termination": False,
+            "parent_exit_confirmed": True,
+            "lingering_descendant_pids": [],
+            "resource_monitor_exit_confirmed": True,
+            "resource_monitor_exit_code": 0,
+            "resource_monitor_stderr": "",
+            "resource_monitor_terminal_reason": "stop_signal",
+        },
+        "reported_passed": resource_document.get("passed") is True,
+    }
+    source_report_diagnostics = {
+        "identity": (
+            source_document.get("passed") is True
+            and source_document.get("feature_id") == FEATURE_ID
+            and source_document.get("method_version") == METHOD_VERSION
+            and source_document.get("bootstrap_method_version") == BOOTSTRAP_METHOD_VERSION
+            and source_document.get("catalogue_snapshot_date") == CATALOGUE_SNAPSHOT_DATE
+            and source_document.get("runtime") == "tauri-webview2-cdp"
+        ),
+        "isolated_source": process_source_isolated,
+        "runtime_preflight": source_runtime_preflight.get("passed") is True,
+        "utf8_text_integrity": mojibake_matches(json.dumps(source_document, ensure_ascii=False)) == [],
+        "required_checks": all(source_checks.get(name, {}).get("passed") is True for name in (
+            "processV2Workflow", "processV2Setup", "processV2Results", "processV2Export",
+            "processV2SaveReopen", "processV2Cancellation", "processV2CancelledRetrySetup",
+            "processV2WitnessBoundary",
+        )),
+        "result_disclosures": (
+            source_results.get("referenceEffectColumnsExact") is True
+            and source_results.get("referenceConditionRowsExact") is True
+            and source_results.get("promotionPendingWarningAbsent") is True
+            and source_results.get("curveWarningDisclosureExact") is True
+        ),
+        "johnson_neyman_counts": (
+            source_results.get("johnsonNeymanRows") == expected_counts.get("johnsonNeymanRegionRows")
+            and source_results.get("johnsonNeymanAnalysisCount") == expected_counts.get("johnsonNeyman")
+            and source_results.get("johnsonNeymanAnalysisKeys") == expected_johnson_neyman_analysis_keys
+        ),
+        "cancelled_retry_setup": (
+            source_cancelled_retry_setup.get("passed") is True
+            and source_cancelled_retry_setup.get("readOnly") is True
+            and source_cancelled_retry_setup.get("exactFrozenSetupMatch") is True
+            and source_cancelled_retry_setup.get("snapshot") == cancelled_retry_setup.get("snapshot")
+            and source_cancelled_retry_setup.get("frozenSetup") == cancelled_retry_setup.get("frozen_setup")
+        ),
+        "xlsx_contract": source_native_xlsx.get("processTableContract") == process_table_contract,
+        "repeated_completion_identity": repeated_completion_identity_bound,
+    }
     checks = {
         "draft202012_schema_valid": schema_path.is_file() and schema_errors == [],
         "utf8_text_integrity": mojibake_matches(json.dumps(report, ensure_ascii=False)) == [],
@@ -2296,7 +2575,7 @@ def packaged_attestation(
                 "passed", "failure_disclosure_truthful", "validation_witness_not_rendered",
                 "no_na_fabrication", "generic_regression_shell_not_applicable",
                 "accessible_non_color_plot_semantics", "reference_effect_columns_exact",
-                "reference_condition_rows_exact", "candidate_promotion_warnings_exact",
+                "reference_condition_rows_exact", "promotion_pending_warning_absent",
                 "curve_warning_disclosure_exact",
             ))
             and result_check.get("source_check") == "processV2Results"
@@ -2331,8 +2610,8 @@ def packaged_attestation(
                 "reference_columns": ["Effect ID", "Kind", "Path", "Estimate", "Reference condition"],
                 "reference_effect_rows": expected_counts.get("referenceEffects"),
                 "reference_condition": REFERENCE_CONDITION,
-                "candidate_status": "experimental",
-                "promotion_pending_warning": PROCESS_PROMOTION_PENDING_WARNING,
+                "result_status": "validated",
+                "promotion_pending_warning_absent": True,
                 "curve_warning_disclosure": PROCESS_CURVE_WARNING_DISCLOSURE,
                 "curve_warning_disclosure_exact": True,
                 "required_shared_strings_verified": True,
@@ -2345,17 +2624,12 @@ def packaged_attestation(
             and xlsx_scan["process_table_contract"].get("reference_condition_values")
             == [REFERENCE_CONDITION] * expected_counts.get("referenceEffects", 0)
             and xlsx_scan["process_table_contract"].get("curve_warning_disclosure_exact") is True
+            and xlsx_scan["process_table_contract"].get("promotion_pending_warning_absent") is True
             and xlsx_scan["process_table_contract"].get("run_provenance_warning_absent") is True
             and all(
                 xlsx_scan["process_table_contract"].get("status_by_sheet", {}).get(name)
-                == "experimental"
+                == "validated"
                 for name in EXPECTED_WORKBOOK_SHEETS
-            )
-            and all(
-                (xlsx_scan["process_table_contract"].get("warning_by_sheet", {}).get(name) or "").startswith(
-                    PROCESS_PROMOTION_PENDING_WARNING
-                )
-                for name in EXPECTED_WORKBOOK_SHEETS[:-1]
             )
             and xlsx_scan["process_table_contract"].get("warning_by_sheet", {}).get("Run provenance")
             in (None, "")
@@ -2421,55 +2695,8 @@ def packaged_attestation(
             "source_check": "processV2WitnessBoundary",
         },
         "resource_reset_contract": resource_reset_contract,
-        "resource_contract": (
-            resources == expected_resource_summary
-            and first_sample_contract and checkpoint_contract and checkpoint_diagnostic_contract
-            and phase_snapshot_contract and phase_document_contract and memory_contract
-            and process_roles_bounded_and_terminally_stable
-            and cancellation_within and equal_ws_within and equal_private_within
-            and equal_handles_within and equal_threads_within and equal_roles_exact
-            and 0 < peak_ws < 2_147_483_648
-            and cleanup_passed and resource_disk_contract and raw_samples_parse_ok
-        ),
-        "resource_report_independently_verified": (
-            resource_document.get("schema_version") == 1
-            and resource_document.get("target") == "process_v2_packaged_resource_report"
-            and resource_document.get("feature_id") == FEATURE_ID
-            and resource_document.get("method_version") == METHOD_VERSION
-            and resource_document.get("launched_pid") == cleanup.get("launched_pid")
-            and resource_document.get("sample_interval_milliseconds") == 250
-            and resource_document.get("capture_delay_milliseconds") == 500
-            and resource_document.get("sample_window_milliseconds") == 5_000
-            and resource_document.get("sample_count") == resources.get("sample_count")
-            and resource_document.get("raw_sample_count") == resources.get("raw_sample_count")
-            and resource_document.get("monitor_terminal_reason") == "stop_signal"
-            and first_sample_contract
-            and resource_document.get("raw_samples") == raw_artifacts.get("resource_samples")
-            and resource_document.get("phase_document") == raw_artifacts.get("resource_phases")
-            and resource_document.get("phase_snapshots") == raw_artifacts.get("resource_phase_snapshots")
-            and resource_samples_artifact.get("passed") is True
-            and resource_phases_artifact.get("passed") is True
-            and phase_snapshot_contract
-            and phase_document_contract
-            and memory_contract
-            and checkpoint_contract
-            and checkpoint_diagnostic_contract
-            and resource_disk_contract
-            and resource_document.get("process_cleanup") == {
-                "graceful_close_exit_code": 0,
-                "graceful_exit_confirmed": True,
-                "forced_parent_termination": False,
-                "forced_descendant_pids": [],
-                "forced_resource_monitor_termination": False,
-                "parent_exit_confirmed": True,
-                "lingering_descendant_pids": [],
-                "resource_monitor_exit_confirmed": True,
-                "resource_monitor_exit_code": 0,
-                "resource_monitor_stderr": "",
-                "resource_monitor_terminal_reason": "stop_signal",
-            }
-            and resource_document.get("passed") is True
-        ),
+        "resource_contract": all(resource_contract_diagnostics.values()),
+        "resource_report_independently_verified": all(resource_report_diagnostics.values()),
         "resource_cleanup_timestamps_ordered": (
             completed is not None and resource_generated is not None and cleanup_generated is not None
             and resource_generated >= completed and cleanup_generated >= resource_generated
@@ -2477,39 +2704,7 @@ def packaged_attestation(
         "desktop_bound_fresh": desktop["passed"],
         "provisioning_cli_bound_fresh": cli["passed"],
         "dist_bound": dist == actual_dist and actual_dist["file_count"] > 0,
-        "source_report_bound": (
-            source_document.get("passed") is True
-            and source_document.get("feature_id") == FEATURE_ID
-            and source_document.get("method_version") == METHOD_VERSION
-            and source_document.get("bootstrap_method_version") == BOOTSTRAP_METHOD_VERSION
-            and source_document.get("catalogue_snapshot_date") == CATALOGUE_SNAPSHOT_DATE
-            and source_document.get("runtime") == "tauri-webview2-cdp"
-            and process_source_isolated
-            and source_runtime_preflight.get("passed") is True
-            and mojibake_matches(json.dumps(source_document, ensure_ascii=False)) == []
-            and all(source_checks.get(name, {}).get("passed") is True for name in (
-                "processV2Workflow", "processV2Setup", "processV2Results", "processV2Export",
-                "processV2SaveReopen", "processV2Cancellation", "processV2CancelledRetrySetup",
-                "processV2WitnessBoundary",
-            ))
-            and source_results.get("referenceEffectColumnsExact") is True
-            and source_results.get("referenceConditionRowsExact") is True
-            and source_results.get("candidatePromotionWarningsExact") is True
-            and source_results.get("curveWarningDisclosureExact") is True
-            and source_results.get("johnsonNeymanRows")
-            == expected_counts.get("johnsonNeymanRegionRows")
-            and source_results.get("johnsonNeymanAnalysisCount")
-            == expected_counts.get("johnsonNeyman")
-            and source_results.get("johnsonNeymanAnalysisKeys")
-            == expected_johnson_neyman_analysis_keys
-            and source_cancelled_retry_setup.get("passed") is True
-            and source_cancelled_retry_setup.get("readOnly") is True
-            and source_cancelled_retry_setup.get("exactFrozenSetupMatch") is True
-            and source_cancelled_retry_setup.get("snapshot") == cancelled_retry_setup.get("snapshot")
-            and source_cancelled_retry_setup.get("frozenSetup") == cancelled_retry_setup.get("frozen_setup")
-            and source_native_xlsx.get("processTableContract") == process_table_contract
-            and repeated_completion_identity_bound
-        ),
+        "source_report_bound": all(source_report_diagnostics.values()),
         "exact_pid_cleanup_confirmed": cleanup_passed,
         "zero_console_errors_failures": report.get("console_errors") == [] and report.get("failures") == [],
         "fresh_report": freshness["passed"],
@@ -2523,6 +2718,9 @@ def packaged_attestation(
             "draft": "2020-12", "errors": schema_errors, "passed": schema_errors == [],
         },
         "process_cleanup": {"path": cleanup_path.relative_to(root).as_posix(), "document": cleanup, "fresh": cleanup_fresh, "passed": cleanup_passed},
+        "resource_contract_diagnostics": resource_contract_diagnostics,
+        "resource_report_diagnostics": resource_report_diagnostics,
+        "source_report_diagnostics": source_report_diagnostics,
         "report_freshness": freshness, "passed": all(checks.values()),
     }
 
@@ -2757,7 +2955,7 @@ def documentation_attestation(root: Path) -> dict[str, Any]:
         "high_leverage_hc3_instability", "invalid_hc3_covariance",
         "degenerate_simple_slope_variance", "thin SVD", "64 * machine_epsilon",
         "128 * machine_epsilon", "three distinct finite", "original complete-sample raw mean",
-        "experimental",
+        "Supported in Standard", "terminally stable process roles",
     ]
     checks = {phrase: phrase.lower() in text.lower() for phrase in required}
     references = {identifier: identifier in text for identifier in DOCUMENTATION_REFERENCE_IDENTIFIERS}

@@ -1,0 +1,30 @@
+{
+  "archive": "validation/results/v247-native-moderation-1786685103784-40164.qpls",
+  "archive_sha256": "1c778cf0e9b3b7a31f23545068860578f27a6593676bf750ff3ced263c5bc7ef",
+  "archive_size": 25956,
+  "checks": {
+    "checksums_exact": true,
+    "completed_results": true,
+    "current_cli_accepts_archive": true,
+    "method_payload": true,
+    "passed": true,
+    "unique_safe_members": true
+  },
+  "kind": "quickpls_phase3_persistence_gate",
+  "method": "moderation_v1",
+  "passed": true,
+  "rejected_newer_candidates": [],
+  "schema_version": 1,
+  "validation": {
+    "command": [
+      "D:\\QuickPLS\\target\\debug\\qpls.exe",
+      "validate",
+      "validation/results/v247-native-moderation-1786685103784-40164.qpls",
+      "--json"
+    ],
+    "duration_seconds": 0.111,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "{\n  \"issues\": [\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786685189382\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786685189614\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786685189885\"\n    },\n    {\n      \"code\": \"interaction.product_indicator.generated\",\n      \"message\": \"Two-stage interaction product indicators are generated from stage-1 construct scores\",\n      \"severity\": \"warning\",\n      \"subject\": \"interaction-construct-1786685189382-construct-1786685189614-construct-1786685189885\"\n    },\n    {\n      \"code\": \"method.moderation.experimental\",\n      \"message\": \"Two-stage moderation is validated only inside the documented QuickPLS v1.0.0 supported scope\",\n      \"severity\": \"warning\",\n      \"subject\": \"interaction-construct-1786685189382-construct-1786685189614-construct-1786685189885\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786685189382\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786685189614\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786685189885\"\n    },\n    {\n      \"code\": \"interaction.product_indicator.generated\",\n      \"message\": \"Two-stage interaction product indicators are generated from stage-1 construct scores\",\n      \"severity\": \"warning\",\n      \"subject\": \"interaction-construct-1786685189382-construct-1786685189614-construct-1786685189885\"\n    },\n    {\n      \"code\": \"method.moderation.experimental\",\n      \"message\": \"Two-stage moderation is validated only inside the documented QuickPLS v1.0.0 supported scope\",\n      \"severity\": \"warning\",\n      \"subject\": \"interaction-construct-1786685189382-construct-1786685189614-construct-1786685189885\"\n    }\n  ],\n  \"recovered\": false,\n  \"valid\": true\n}\n"
+  }
+}

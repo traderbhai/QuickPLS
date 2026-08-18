@@ -5,7 +5,7 @@
       "checksums_verified": true,
       "path": "validation/results/method_factory/pca_v1/pca_v1_packaged.qpls",
       "schema_version": 5,
-      "sha256": "1129737473f25f554c1f362cf807731aa9ab54be44be86c344d8f540c93c6e8c"
+      "sha256": "453e360252cd10a8e5212fe0c5d50be2d37bd67d2b9249dc60d3a30618af396e"
     },
     "builds": [],
     "console_errors": [],
@@ -54,7 +54,7 @@
       "categories": {
         "checksum": {
           "archive": "validation/results/method_factory/pca_v1/mutation_checksum.qpls",
-          "archive_sha256": "0be766211d897a89835ab585ebb19c381b5d1ff14fa05a2179e2192d34751524",
+          "archive_sha256": "79d752aefa12b1fc8cccf180b6fffd6eef66548e219f9585211d21bfe66afd9f",
           "execution": {
             "command": [
               "D:\\QuickPLS\\target\\release\\qpls.exe",
@@ -62,7 +62,7 @@
               "validation/results/method_factory/pca_v1/mutation_checksum.qpls",
               "--json"
             ],
-            "duration_seconds": 0.036,
+            "duration_seconds": 0.044,
             "returncode": 1,
             "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_checksum.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
             "stdout_tail": ""
@@ -71,7 +71,7 @@
         },
         "dataset_fingerprint": {
           "archive": "validation/results/method_factory/pca_v1/mutation_dataset_fingerprint.qpls",
-          "archive_sha256": "c6a972a888e8f78ac1f79df0c91f471431086a282f2cfabf606ca1c3ca0597d7",
+          "archive_sha256": "8dd17f0881868f29c7f1fdaedc53c84f8730a2cc1e862e51984017b3bb3f0478",
           "execution": {
             "command": [
               "D:\\QuickPLS\\target\\release\\qpls.exe",
@@ -79,16 +79,16 @@
               "validation/results/method_factory/pca_v1/mutation_dataset_fingerprint.qpls",
               "--json"
             ],
-            "duration_seconds": 0.039,
+            "duration_seconds": 0.046,
             "returncode": 1,
-            "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_dataset_fingerprint.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result 98be6078-1ad2-41e7-8354-8449abbc8549 dataset fingerprint differs from its immutable analysis recipe); autosave is absent; backup is absent\n",
+            "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_dataset_fingerprint.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result 842fff18-ee0a-40ec-8ea6-960c2d6d583f dataset fingerprint differs from its immutable analysis recipe); autosave is absent; backup is absent\n",
             "stdout_tail": ""
           },
           "passed": true
         },
         "feature_identity": {
           "archive": "validation/results/method_factory/pca_v1/mutation_feature_identity.qpls",
-          "archive_sha256": "fcea723372c797e8f5d858e59864c812a4d89bc8d1c9be9c13383c16cdbde3e7",
+          "archive_sha256": "443c2b8e047741b5c20c48ccc2e308733819172c0c23a3ef57a3da8a9d48f153",
           "execution": {
             "command": [
               "D:\\QuickPLS\\target\\release\\qpls.exe",
@@ -96,16 +96,16 @@
               "validation/results/method_factory/pca_v1/mutation_feature_identity.qpls",
               "--json"
             ],
-            "duration_seconds": 0.097,
+            "duration_seconds": 0.034,
             "returncode": 1,
-            "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_feature_identity.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result 98be6078-1ad2-41e7-8354-8449abbc8549 method differs from its immutable provenance settings); autosave is absent; backup is absent\n",
+            "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_feature_identity.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result 842fff18-ee0a-40ec-8ea6-960c2d6d583f method differs from its immutable provenance settings); autosave is absent; backup is absent\n",
             "stdout_tail": ""
           },
           "passed": true
         },
         "legacy_reinterpretation": {
           "archive": "validation/results/method_factory/pca_v1/mutation_legacy_reinterpretation.qpls",
-          "archive_sha256": "7303f31d7e4a369ba456437af147d9ee4725f72381a8e80f33ee30ef50de9f66",
+          "archive_sha256": "3faa11781edfe540818d001d1ed6241619e525334729b1cbea31c795ef6d0474",
           "execution": {
             "command": [
               "D:\\QuickPLS\\target\\release\\qpls.exe",
@@ -113,16 +113,16 @@
               "validation/results/method_factory/pca_v1/mutation_legacy_reinterpretation.qpls",
               "--json"
             ],
-            "duration_seconds": 0.036,
+            "duration_seconds": 0.037,
             "returncode": 1,
-            "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_legacy_reinterpretation.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: analysis recipe 99f901ff-390e-4ce0-95ed-837b6d790721 is invalid: method_config.method_mismatch: method_config kind pca is incompatible with settings.method pls_pm); autosave is absent; backup is absent\n",
+            "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_legacy_reinterpretation.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: analysis recipe 6e6e23ba-4941-4f4a-9dbf-c664bad7a473 is invalid: method_config.method_mismatch: method_config kind pca is incompatible with settings.method pls_pm); autosave is absent; backup is absent\n",
             "stdout_tail": ""
           },
           "passed": true
         },
         "malformed_payload": {
           "archive": "validation/results/method_factory/pca_v1/mutation_malformed_payload.qpls",
-          "archive_sha256": "680a394a86ab48e12713cd930884649c1f09e5427fefe537788ba178d0bc7bf4",
+          "archive_sha256": "7a39d262cf58c54a333ea353fbd5db9f6d3c453f820cffaa003fa76327204ea8",
           "execution": {
             "command": [
               "D:\\QuickPLS\\target\\release\\qpls.exe",
@@ -130,16 +130,16 @@
               "validation/results/method_factory/pca_v1/mutation_malformed_payload.qpls",
               "--json"
             ],
-            "duration_seconds": 0.039,
+            "duration_seconds": 0.074,
             "returncode": 1,
-            "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_malformed_payload.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result 98be6078-1ad2-41e7-8354-8449abbc8549 has an invalid PLS estimation payload: invalid type: string \"not-a-number\", expected f64); autosave is absent; backup is absent\n",
+            "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_malformed_payload.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result 842fff18-ee0a-40ec-8ea6-960c2d6d583f has an invalid PLS estimation payload: invalid type: string \"not-a-number\", expected f64); autosave is absent; backup is absent\n",
             "stdout_tail": ""
           },
           "passed": true
         },
         "method_version": {
           "archive": "validation/results/method_factory/pca_v1/mutation_method_version.qpls",
-          "archive_sha256": "2c4f8d20c712caf67b8ef58925b9e16557623aef540fb087b44b5e92facce1ae",
+          "archive_sha256": "9755e7ccf4352b20525cdf2722d06d8587fc569cf050a180f913a869e85d1666",
           "execution": {
             "command": [
               "D:\\QuickPLS\\target\\release\\qpls.exe",
@@ -147,9 +147,9 @@
               "validation/results/method_factory/pca_v1/mutation_method_version.qpls",
               "--json"
             ],
-            "duration_seconds": 0.062,
+            "duration_seconds": 0.038,
             "returncode": 1,
-            "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_method_version.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result 98be6078-1ad2-41e7-8354-8449abbc8549 uses an invalid or unsupported pca payload contract); autosave is absent; backup is absent\n",
+            "stderr_tail": "Error: invalid project validation/results/method_factory/pca_v1/mutation_method_version.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result 842fff18-ee0a-40ec-8ea6-960c2d6d583f uses an invalid or unsupported pca payload contract); autosave is absent; backup is absent\n",
             "stdout_tail": ""
           },
           "passed": true
@@ -159,7 +159,7 @@
     },
     "failures": [],
     "focused_scope": {
-      "completedAt": "2026-08-13T19:37:15.253Z",
+      "completedAt": "2026-08-18T13:53:40.357Z",
       "priorGeneratedAt": null,
       "scope": "pca"
     },
@@ -176,9 +176,10 @@
         "-File",
         "validation/run_v247_pca_native_acceptance.ps1",
         "-ExportPath",
-        "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+        "-PreserveMainReport"
       ],
-      "duration_seconds": 69.36,
+      "duration_seconds": 71.303,
       "initial_cleanup_probe": {
         "command": [
           "powershell",
@@ -186,111 +187,111 @@
           "-Command",
           "@(Get-Process -Name 'quickpls-desktop' -ErrorAction SilentlyContinue).Count"
         ],
-        "duration_seconds": 0.527,
+        "duration_seconds": 0.56,
         "returncode": 0,
         "stderr_tail": "",
         "stdout_tail": "0\n"
       },
       "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": "{\n  \"passed\": true,\n  \"checks\": [\n    \"pcaFixtureProvisioning\",\n    \"runtimePreflight\",\n    \"runtime\",\n    \"pcaFixture\",\n    \"pcaDialog\",\n    \"pcaProgress\",\n    \"pcaResult\",\n    \"pcaExport\",\n    \"pcaSaveReopen\",\n    \"recentProjectsRestored\"\n  ],\n  \"screenshots\": 6,\n  \"consoleErrors\": 0,\n  \"failures\": [],\n  \"reportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v247_tauri_native_acceptance.json\",\n  \"scopedReportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v247_tauri_native_acceptance_pca.json\"\n}\n\nFullName                                                                  Length LastWriteTime      \n--------                                                                  ------ -------------      \nD:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx  15751 14-08-2026 01:07:13\n\n\n"
+      "stdout_tail": "{\n  \"passed\": true,\n  \"checks\": [\n    \"pcaFixtureProvisioning\",\n    \"runtimePreflight\",\n    \"runtime\",\n    \"pcaFixture\",\n    \"pcaDialog\",\n    \"pcaProgress\",\n    \"pcaResult\",\n    \"pcaExport\",\n    \"pcaSaveReopen\",\n    \"recentProjectsRestored\"\n  ],\n  \"screenshots\": 6,\n  \"consoleErrors\": 0,\n  \"failures\": [],\n  \"reportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v247_tauri_native_acceptance.json\",\n  \"scopedReportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v247_tauri_native_acceptance_pca.json\"\n}\n\nFullName                                                                  Length LastWriteTime      \n--------                                                                  ------ -------------      \nD:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx  15894 18-08-2026 19:23:38\n\n\n"
     },
     "source_freshness": {
       "build_receipt": {
-        "mtime_ns": 1786636747532798800,
+        "mtime_ns": 1787057665052584100,
         "path": "validation/results/diagnostic_bundle_build_receipt.json",
-        "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
-        "size": 144210
+        "sha256": "210aa30fd8d7a268b444a0254108e61118584656f6517face86500caeb4b1ea3",
+        "size": 265122
       },
       "build_receipt_schema_version": "quickpls.diagnostic_bundle_build_receipt.v1",
       "desktop": {
-        "mtime_ns": 1786636746102237000,
+        "mtime_ns": 1787057662249356300,
         "path": "target/release/quickpls-desktop.exe",
-        "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
-        "size": 30507008
+        "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476",
+        "size": 49983488
       },
       "desktop_receipt_exact": true,
       "gate_sources_excluded_from_binary_freshness": [
         {
-          "mtime_ns": 1786627059621599000,
+          "mtime_ns": 1786884735966143100,
           "path": "validation/diagnostic_bundle_source_manifest.py",
-          "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
-          "size": 28025
+          "sha256": "abdbccab42e3da4324dc67b40c19f2c6162ae1abcff1663bc43a94af56499e63",
+          "size": 28083
         },
         {
-          "mtime_ns": 1786610514590924400,
+          "mtime_ns": 1786654347549305000,
           "path": "validation/method_promotion_manifest.py",
           "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
           "size": 34283
         },
         {
-          "mtime_ns": 1786610379730126700,
+          "mtime_ns": 1786653643022992500,
           "path": "validation/methods/method_promotion_manifest.schema.json",
           "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
           "size": 15836
         },
         {
-          "mtime_ns": 1786617003208712200,
+          "mtime_ns": 1786942440932857100,
           "path": "validation/methods/pca_v1.manifest.json",
-          "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
-          "size": 14506
+          "sha256": "e89c5a6c5c57853c93b207c2c50451bdfab0a80acb30108ffa19a0cd09d6c8c9",
+          "size": 14560
         },
         {
-          "mtime_ns": 1786617096286460000,
+          "mtime_ns": 1786653643092975000,
           "path": "validation/pca_v1_factory_audit.py",
           "sha256": "2c3fa66b6eb03cef5e9c16df1499d1d7d98d5e982df7b3a9ddf4a055f3b9389f",
           "size": 3551
         },
         {
-          "mtime_ns": 1786617096280643300,
+          "mtime_ns": 1786983062387482100,
           "path": "validation/pca_v1_factory_common.py",
-          "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
-          "size": 11599
+          "sha256": "88fceff4dd6fb914e2773f0d4fe537b5df3d01fb70066873808ba3980b2e7a1c",
+          "size": 11651
         },
         {
-          "mtime_ns": 1786629670973688100,
+          "mtime_ns": 1787038127366078600,
           "path": "validation/pca_v1_packaged_acceptance.py",
-          "sha256": "b84570f107cc699d8e6bd02bad3920ce5e29061852316acfceefd007c08e3571",
-          "size": 26020
+          "sha256": "2c80783d164efff996bdbb009d82b2069531315fe5d684c7b66e1db21eec1890",
+          "size": 26807
         },
         {
-          "mtime_ns": 1786649701478913900,
+          "mtime_ns": 1786659340826813700,
           "path": "validation/run_v247_pca_native_acceptance.ps1",
-          "sha256": "e6bedc67945371fa6e76e21675b92c25e4f61a1a57f75d5de240b85c5d46f461",
-          "size": 3052
+          "sha256": "ad3edb894125f4ee61f3fc17a4eaeea3bf477118d984f20fbb92e877f1a38fc9",
+          "size": 3182
         },
         {
-          "mtime_ns": 1786649701481197100,
+          "mtime_ns": 1787038160713914900,
           "path": "validation/test_pca_v1_packaged_adapter.py",
-          "sha256": "47c4e58b8a37eff00018cf48a7c292a29e95cc0168bc1186b5b58f18c9fd0225",
-          "size": 5104
+          "sha256": "aef62daeeea6d2870c3beacbbe51b998a67881e6f7843e1fd4d200822b0672bc",
+          "size": 7376
         },
         {
-          "mtime_ns": 1786638335159990200,
+          "mtime_ns": 1787053838961733900,
           "path": "validation/v247_tauri_native_acceptance.mjs",
-          "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
-          "size": 809598
+          "sha256": "952061138db0e6e3beb4f858f7e8c359b9763561980920e67a918d729eaf1c34",
+          "size": 981471
         }
       ],
       "passed": true,
       "release_cli": {
-        "mtime_ns": 1786620631883365000,
+        "mtime_ns": 1787060951350724000,
         "path": "target/release/qpls.exe",
-        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-        "size": 20690432
+        "sha256": "7e1ee9c72d79b6102362f81313a54aeed987cb458f921397cb6fd3a09598d53a",
+        "size": 32387072
       },
       "release_cli_build_sources": [
         {
-          "mtime_ns": 1786618668433447400,
+          "mtime_ns": 1786860463958907500,
           "path": "Cargo.lock",
-          "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
-          "size": 154279
+          "sha256": "2782f92e86ae7420af0c27210b1602ebf6c5fc1c1002c2f4ad1ed56cdc38dcb7",
+          "size": 154646
         },
         {
-          "mtime_ns": 1786607995439584400,
+          "mtime_ns": 1786729071876818500,
           "path": "Cargo.toml",
-          "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
-          "size": 914
+          "sha256": "7b5cc1ab12cb81475cce1227b7ab1381e6278cc22f3b501c3b80858d9b1c749d",
+          "size": 1503
         },
         {
           "mtime_ns": 1784372817481351800,
@@ -299,10 +300,10 @@
           "size": 456
         },
         {
-          "mtime_ns": 1786607995450741900,
+          "mtime_ns": 1787002994858928000,
           "path": "crates/qpls-assessment/src/lib.rs",
-          "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
-          "size": 144364
+          "sha256": "910a3c42edde1db2dcff8b283a9d7acb388b4eb6b30f88c55201624610c2e341",
+          "size": 187841
         },
         {
           "mtime_ns": 1784436493165886700,
@@ -311,34 +312,88 @@
           "size": 678
         },
         {
-          "mtime_ns": 1786607995455877000,
+          "mtime_ns": 1787000828418698500,
           "path": "crates/qpls-cli/src/main.rs",
-          "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
-          "size": 216983
+          "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+          "size": 430654
         },
         {
-          "mtime_ns": 1784352071986106700,
+          "mtime_ns": 1786702377443713300,
           "path": "crates/qpls-core/Cargo.toml",
-          "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
-          "size": 363
+          "sha256": "f3c060597827e18cb29690adab487f96042c0528fc1010f5077f605b2114968e",
+          "size": 453
         },
         {
-          "mtime_ns": 1786607995461617100,
+          "mtime_ns": 1786699776372310400,
+          "path": "crates/qpls-core/src/analysis_recipe_v4.rs",
+          "sha256": "a8d8b808d0bb4c91cf08c1c6762c036c25fb477857710babe88256618f343072",
+          "size": 21328
+        },
+        {
+          "mtime_ns": 1786701952653478700,
+          "path": "crates/qpls-core/src/canonical_result_v2.rs",
+          "sha256": "c34bdbcf39286cd16cddbb633760eee4e00e3a892bdc2feaed262ad58ff49f84",
+          "size": 56826
+        },
+        {
+          "mtime_ns": 1787001641796806900,
+          "path": "crates/qpls-core/src/capability_registry_v2.rs",
+          "sha256": "86ce2f425896a1b3faa19436bcdf5633a99c9bd245ff5cdd87ec426f069ded35",
+          "size": 19248
+        },
+        {
+          "mtime_ns": 1786816780151920600,
+          "path": "crates/qpls-core/src/compiled_cbsem_plan_v2.rs",
+          "sha256": "c4572e4448994ebcb28efb8e4e4ba1a5457aa5cd117a1295cd5e558c216b8731",
+          "size": 85511
+        },
+        {
+          "mtime_ns": 1786816494112683400,
+          "path": "crates/qpls-core/src/compiled_cbsem_product_indicator_v1.rs",
+          "sha256": "34cae04ee493a9198cc8f07d5a5397fe99e9ec2df904bd484a255c21a4a653c5",
+          "size": 57323
+        },
+        {
+          "mtime_ns": 1786816780155299800,
+          "path": "crates/qpls-core/src/compiled_pls_plan_v2.rs",
+          "sha256": "e5f9b1521100f5afafae3b9d728291ce3fe52c945d4ca24404e77845bf92904d",
+          "size": 25316
+        },
+        {
+          "mtime_ns": 1786997348571231100,
           "path": "crates/qpls-core/src/contract.rs",
-          "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
-          "size": 107095
+          "sha256": "51c235a9173d3f9c84e5bfe4c0ce6280268ee26b882e2a41dd01be889a7cdfb5",
+          "size": 144508
         },
         {
-          "mtime_ns": 1784383048514318800,
+          "mtime_ns": 1786807798001317300,
+          "path": "crates/qpls-core/src/dataset_transformation_v2.rs",
+          "sha256": "8a2bfafa9624aae5b6b1a59250cfefd49cb5701e50342a7f3345446934bb85f1",
+          "size": 119293
+        },
+        {
+          "mtime_ns": 1786869790222479600,
+          "path": "crates/qpls-core/src/generated/established_method_contracts_v1.rs",
+          "sha256": "8c072771933a47073cd35a3016c7e14de9016037295efdc1ed95a5af354b043c",
+          "size": 7034
+        },
+        {
+          "mtime_ns": 1786871655298337700,
           "path": "crates/qpls-core/src/lib.rs",
-          "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
-          "size": 180
+          "sha256": "f62d2b1dc99c996bb1cd85e109d08b0dc98c3c847cca7a470366548ff90f13fb",
+          "size": 1108
         },
         {
-          "mtime_ns": 1786607995463756700,
+          "mtime_ns": 1786709293084030600,
           "path": "crates/qpls-core/src/methods.rs",
-          "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
-          "size": 3790
+          "sha256": "474b1f559b920f2a09d90aa45b2e70f5677fac3fb2b2462efcd24b08ea2a56eb",
+          "size": 4404
+        },
+        {
+          "mtime_ns": 1786996627309697100,
+          "path": "crates/qpls-core/src/recipe_v4_compiler.rs",
+          "sha256": "8032ba591af80539a9e00f328c69dd2c385b394af6480a782a67a4fd3d41f6dd",
+          "size": 126441
         },
         {
           "mtime_ns": 1786607995466130100,
@@ -347,16 +402,28 @@
           "size": 12376
         },
         {
+          "mtime_ns": 1786816780158320900,
+          "path": "crates/qpls-core/src/sem_model_v4.rs",
+          "sha256": "b28e0ecdc285f9c256e16739a91aae67f2bfac3faeddf5d1ddf5c935eb34712f",
+          "size": 149643
+        },
+        {
           "mtime_ns": 1786607995469322800,
           "path": "crates/qpls-core/src/statistics.rs",
           "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
           "size": 8527
         },
         {
-          "mtime_ns": 1786620129020320300,
+          "mtime_ns": 1786995968383587500,
           "path": "crates/qpls-core/src/validation.rs",
-          "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
-          "size": 177352
+          "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+          "size": 227427
+        },
+        {
+          "mtime_ns": 1786783615144417500,
+          "path": "crates/qpls-core/src/weight_semantics_v1.rs",
+          "sha256": "f5fcd290ff6498a99a7fdef16de785d0260856997cddfae6a82d9d292db8df7c",
+          "size": 34172
         },
         {
           "mtime_ns": 1784364586747181800,
@@ -371,28 +438,76 @@
           "size": 44865
         },
         {
-          "mtime_ns": 1786607995481159200,
+          "mtime_ns": 1786854028409944000,
           "path": "crates/qpls-estimation/Cargo.toml",
-          "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+          "sha256": "83e71bb5bd14eb64f83f82fe5472f9ab5467d0cb6913fe5e06ee01609393e848",
           "size": 503
         },
         {
-          "mtime_ns": 1784360087780652100,
+          "mtime_ns": 1786873675065897600,
+          "path": "crates/qpls-estimation/src/cbsem_bootstrap_contract.rs",
+          "sha256": "a603bb2fbf2dc6da62fd7d80b10df72fd6f34375b4ad91103a6d847d706c48e9",
+          "size": 39817
+        },
+        {
+          "mtime_ns": 1786873675081550500,
+          "path": "crates/qpls-estimation/src/cbsem_exact_nested_lrt.rs",
+          "sha256": "c7915c1e752a36f8921998f724f3e5326bceff3f26914dd940d6653c3de1b458",
+          "size": 67546
+        },
+        {
+          "mtime_ns": 1786873675066749100,
+          "path": "crates/qpls-estimation/src/cbsem_exact_parameter_table.rs",
+          "sha256": "154ba1fe5c2b6cabfde9f3341dd56938baacd09f1d7a3aee3e02b8ec6dbba35a",
+          "size": 168802
+        },
+        {
+          "mtime_ns": 1786853939426505400,
+          "path": "crates/qpls-estimation/src/cbsem_exact_two_group_invariance.rs",
+          "sha256": "0669b95dc809fca986892ec448389d9b60fb545631c43743b8802ddc237ccb52",
+          "size": 79989
+        },
+        {
+          "mtime_ns": 1786869083458348700,
+          "path": "crates/qpls-estimation/src/cbsem_matrix_input.rs",
+          "sha256": "9639a9fbd2f54adba434859a50b2e9147e148f8e4549993219ad0e9d624048d3",
+          "size": 203709
+        },
+        {
+          "mtime_ns": 1786819654800426000,
+          "path": "crates/qpls-estimation/src/cbsem_product_indicator_moderation.rs",
+          "sha256": "6baa20fa2bd695ea8d13f8ee9bf16829c31686af30c59a7406100202e7cb8ff9",
+          "size": 67567
+        },
+        {
+          "mtime_ns": 1786779255357299200,
+          "path": "crates/qpls-estimation/src/continuous_raw_mean_replacement_v1.rs",
+          "sha256": "f27f000f766c27981cf9005008a875030dc87dd2bf8d98925604a5275a9ce8fd",
+          "size": 55129
+        },
+        {
+          "mtime_ns": 1786852661557123100,
           "path": "crates/qpls-estimation/src/lib.rs",
-          "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
-          "size": 26
+          "sha256": "7dc9eae0e5b5bb436ac52e9d9cf3df24d25ccfa47db23bfd8d7d1d8fafd2bfea",
+          "size": 779
         },
         {
-          "mtime_ns": 1786617342744705100,
+          "mtime_ns": 1786993733812215700,
           "path": "crates/qpls-estimation/src/pls.rs",
-          "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-          "size": 639198
+          "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+          "size": 808499
         },
         {
-          "mtime_ns": 1786607995489944600,
+          "mtime_ns": 1786750927454959800,
+          "path": "crates/qpls-estimation/src/pls_model_comparison.rs",
+          "sha256": "880a9d25c3c19ce175706f8325e42fdc00b0c2b28896ddcd7ff2ca37b4b930f6",
+          "size": 77127
+        },
+        {
+          "mtime_ns": 1786807524127743500,
           "path": "crates/qpls-project/Cargo.toml",
-          "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
-          "size": 628
+          "sha256": "d51f1e2ae30b436bac003892103f05f9cef80ae7956b3a3cbfc3c22e16506fa6",
+          "size": 870
         },
         {
           "mtime_ns": 1786607995492067200,
@@ -401,41 +516,149 @@
           "size": 31085
         },
         {
-          "mtime_ns": 1786620129494578100,
+          "mtime_ns": 1786708225376317800,
+          "path": "crates/qpls-project/src/canonical_result_document_v2.rs",
+          "sha256": "704bf7045e8099f79d47f90a28cc4d36a84651abf031a810dd89af45bd263b58",
+          "size": 30040
+        },
+        {
+          "mtime_ns": 1786807122225577500,
+          "path": "crates/qpls-project/src/data_lineage_v1.rs",
+          "sha256": "db0ed93df87c78483ae5114f0c275ecbcba016ed1cd7d35715efc34708982afa",
+          "size": 41942
+        },
+        {
+          "mtime_ns": 1787021162794577400,
           "path": "crates/qpls-project/src/lib.rs",
-          "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-          "size": 660277
+          "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+          "size": 854728
         },
         {
-          "mtime_ns": 1784375063189640300,
+          "mtime_ns": 1787056097125942800,
+          "path": "crates/qpls-project/src/missing_data_execution_v1.rs",
+          "sha256": "ed0a05fc9115d2bdddb7ff756913c8298ec51e7ab0a5dad3a5f5d402b48a1f55",
+          "size": 53452
+        },
+        {
+          "mtime_ns": 1786825524575836100,
+          "path": "crates/qpls-project/src/pls_score_execution_v2.rs",
+          "sha256": "e1269405136cee66ea948c07b1d11b2f894e7549c4e6010c7605bc4e0ad7d7b8",
+          "size": 40956
+        },
+        {
+          "mtime_ns": 1786818622639890100,
+          "path": "crates/qpls-project/src/project_archive_v6_save_copy.rs",
+          "sha256": "cafcce46dda628197601a1b73ca0f0beff3a7e98aa19040492c2e8cc6e223884",
+          "size": 61426
+        },
+        {
+          "mtime_ns": 1786795933111581000,
+          "path": "crates/qpls-project/src/project_archive_v6_upgrade_zip.rs",
+          "sha256": "5d8fb6eb26fbc69012c01f95aafcee7cc099b0c61f5b1a493bbff4ff0049c7cb",
+          "size": 64961
+        },
+        {
+          "mtime_ns": 1787054742746172200,
+          "path": "crates/qpls-project/src/project_archive_v6_zip.rs",
+          "sha256": "b9384d40081300b97af203e95f0d06b92c08dd1ab01dd408344cf93f4b596619",
+          "size": 32771
+        },
+        {
+          "mtime_ns": 1787054856376136900,
+          "path": "crates/qpls-project/src/project_schema_v6.rs",
+          "sha256": "a936ced328e6e2948b30c948ed88eeb2c10f4e92ca4c313b483bc480fee4a22a",
+          "size": 380560
+        },
+        {
+          "mtime_ns": 1786860463958907500,
           "path": "crates/qpls-resampling/Cargo.toml",
-          "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
-          "size": 589
+          "sha256": "ecc5726052949d6a39868f22bfdca6fccaa435ee2788eccd778182ab8a972b2d",
+          "size": 656
         },
         {
-          "mtime_ns": 1786607995501017700,
+          "mtime_ns": 1786836188583667700,
+          "path": "crates/qpls-resampling/src/cbsem_bootstrap.rs",
+          "sha256": "56bdc1933b608f89ef6157f2cb989ac73a1d1708af26a922a1c01b18a685eb3e",
+          "size": 31308
+        },
+        {
+          "mtime_ns": 1786873922820718800,
+          "path": "crates/qpls-resampling/src/cbsem_exact_bootstrap.rs",
+          "sha256": "fbc89dd825eeb6826f2cd228f100fd2cce53176fde310be91c9b24ce21ac14e3",
+          "size": 158310
+        },
+        {
+          "mtime_ns": 1786994171943469200,
+          "path": "crates/qpls-resampling/src/consistent_bootstrap.rs",
+          "sha256": "fc0091c9078588a1743d37f20381c36200669832b9d40d1c10583a302b74792b",
+          "size": 56561
+        },
+        {
+          "mtime_ns": 1786834615302248200,
+          "path": "crates/qpls-resampling/src/consistent_permutation.rs",
+          "sha256": "d26d80f33604ceb109f903a64e05ab015da2f10f5adf7f1157583ca1c2da8c77",
+          "size": 73167
+        },
+        {
+          "mtime_ns": 1786995196462829700,
           "path": "crates/qpls-resampling/src/lib.rs",
-          "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
-          "size": 170900
+          "sha256": "5aec61b8090183912bce7da7f9855344a882e691aea2336baf8c72c4272cc8ec",
+          "size": 244850
         },
         {
-          "mtime_ns": 1784390064413583300,
+          "mtime_ns": 1786730251870993600,
+          "path": "crates/qpls-resampling/src/pls_model_fit_exact.rs",
+          "sha256": "05a3444522aa7b9c4aa15804c4796f30e611ce71cc9e0f3169bb24e4501ade31",
+          "size": 63796
+        },
+        {
+          "mtime_ns": 1786995575091518300,
+          "path": "crates/qpls-resampling/src/power.rs",
+          "sha256": "100197d9105a82aa28da85b4b34e6c76c9c078eb5189ed8f28a9d8b5adb2e56a",
+          "size": 75512
+        },
+        {
+          "mtime_ns": 1786704824293020900,
           "path": "crates/qpls-runner/Cargo.toml",
-          "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
-          "size": 428
+          "sha256": "07246ac150eb04ae6cb479201c2292caff1d6c66142d9a476237790a9c2e5571",
+          "size": 472
         },
         {
-          "mtime_ns": 1786620129040430400,
+          "mtime_ns": 1786996467995192100,
           "path": "crates/qpls-runner/src/lib.rs",
-          "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
-          "size": 49349
+          "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+          "size": 100140
+        },
+        {
+          "mtime_ns": 1786756525673757500,
+          "path": "crates/qpls-runner/src/pls_model_comparison_execution.rs",
+          "sha256": "1be7b61356bb8cb3bee8e1c6434868c06aa91610a4367e82be0182863950594a",
+          "size": 58981
+        },
+        {
+          "mtime_ns": 1786873888569083800,
+          "path": "crates/qpls-runner/src/recipe_v4_cbsem_execution.rs",
+          "sha256": "aa7d30c1e73c8900a987efd4ff24efe4dc5b3aabb36f560386afacf7958c3dd2",
+          "size": 107058
+        },
+        {
+          "mtime_ns": 1786819586992364400,
+          "path": "crates/qpls-runner/src/recipe_v4_cbsem_product_indicator_execution.rs",
+          "sha256": "fc7a7dae8d050885a7a4f5474f76fd875cd025f035110917b68985cae22ba596",
+          "size": 25359
+        },
+        {
+          "mtime_ns": 1786995436640387400,
+          "path": "crates/qpls-runner/src/recipe_v4_pls_execution.rs",
+          "sha256": "1fb7816b2aea38908e09d48a7827e5728a7b0384c47a5738604d60a96aac4d6a",
+          "size": 62181
         }
       ],
       "release_cli_newer_build_sources": []
     },
     "xlsx": {
       "path": "validation/results/method_factory/pca_v1/pca_v1_packaged.xlsx",
-      "sha256": "98c0ff9c9905430b4fcb3824741aca65be73ce077d6772b5330264ed55ece43d",
+      "sha256": "2f2960cc9d672e9f2b26441854f0c423149d046479e82ebb6d218f31b5db9cba",
       "sheets": [
         "Calculation scope",
         "Component loadings and weights",
@@ -455,9 +678,10 @@
       "-File",
       "validation/run_v247_pca_native_acceptance.ps1",
       "-ExportPath",
-      "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
+      "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+      "-PreserveMainReport"
     ],
-    "duration_seconds": 69.36,
+    "duration_seconds": 71.303,
     "initial_cleanup_probe": {
       "command": [
         "powershell",
@@ -465,17 +689,17 @@
         "-Command",
         "@(Get-Process -Name 'quickpls-desktop' -ErrorAction SilentlyContinue).Count"
       ],
-      "duration_seconds": 0.527,
+      "duration_seconds": 0.56,
       "returncode": 0,
       "stderr_tail": "",
       "stdout_tail": "0\n"
     },
     "returncode": 0,
     "stderr_tail": "",
-    "stdout_tail": "{\n  \"passed\": true,\n  \"checks\": [\n    \"pcaFixtureProvisioning\",\n    \"runtimePreflight\",\n    \"runtime\",\n    \"pcaFixture\",\n    \"pcaDialog\",\n    \"pcaProgress\",\n    \"pcaResult\",\n    \"pcaExport\",\n    \"pcaSaveReopen\",\n    \"recentProjectsRestored\"\n  ],\n  \"screenshots\": 6,\n  \"consoleErrors\": 0,\n  \"failures\": [],\n  \"reportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v247_tauri_native_acceptance.json\",\n  \"scopedReportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v247_tauri_native_acceptance_pca.json\"\n}\n\nFullName                                                                  Length LastWriteTime      \n--------                                                                  ------ -------------      \nD:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx  15751 14-08-2026 01:07:13\n\n\n"
+    "stdout_tail": "{\n  \"passed\": true,\n  \"checks\": [\n    \"pcaFixtureProvisioning\",\n    \"runtimePreflight\",\n    \"runtime\",\n    \"pcaFixture\",\n    \"pcaDialog\",\n    \"pcaProgress\",\n    \"pcaResult\",\n    \"pcaExport\",\n    \"pcaSaveReopen\",\n    \"recentProjectsRestored\"\n  ],\n  \"screenshots\": 6,\n  \"consoleErrors\": 0,\n  \"failures\": [],\n  \"reportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v247_tauri_native_acceptance.json\",\n  \"scopedReportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v247_tauri_native_acceptance_pca.json\"\n}\n\nFullName                                                                  Length LastWriteTime      \n--------                                                                  ------ -------------      \nD:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx  15894 18-08-2026 19:23:38\n\n\n"
   },
   "feature_id": "qpls3.standalone.pca",
-  "generated_at_utc": "2026-08-13T19:37:17.075181Z",
+  "generated_at_utc": "2026-08-18T13:53:42.237702Z",
   "method_version": "pca_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -484,33 +708,33 @@
   "source_artifacts": [
     {
       "path": "Cargo.lock",
-      "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
-      "size": 154279
+      "sha256": "2782f92e86ae7420af0c27210b1602ebf6c5fc1c1002c2f4ad1ed56cdc38dcb7",
+      "size": 154646
     },
     {
       "path": "crates/qpls-estimation/src/pls.rs",
-      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-      "size": 639198
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
     },
     {
       "path": "crates/qpls-project/src/lib.rs",
-      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-      "size": 660277
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
     },
     {
       "path": "package.json",
-      "sha256": "5338e2c69f2d15a2a1d39d60178b6e774707a95c0228c68b8975fb10db345702",
-      "size": 65788
+      "sha256": "40efbe8c8a3055f3e5623fb74349f8151856210c4c5c8aa546ab604bad7f81ab",
+      "size": 69044
     },
     {
       "path": "src-tauri/Cargo.toml",
-      "sha256": "83afaf99ecf91c90a6ae4ee83221a6d3dafe3b8a86bae4a11e2148f27948da41",
-      "size": 1101
+      "sha256": "00f0b4f6fed310e716520d22891763f5cce2f358589f62498fecf492d1044181",
+      "size": 1123
     },
     {
       "path": "src-tauri/src/lib.rs",
-      "sha256": "b5884e190043bbcaeed246d7d06d148c4565bbcb92ad4bfd067678e2592215ea",
-      "size": 214108
+      "sha256": "06dfe3282a99f45ea03ac487a6fcaff8fd714f8c59a06810cec38efb822018eb",
+      "size": 275300
     },
     {
       "path": "src-tauri/tauri.conf.json",
@@ -519,33 +743,33 @@
     },
     {
       "path": "src/native/nativeExportTables.ts",
-      "sha256": "ca8ebea6a2607152bd539a56ca73a7178f2e4270b7b3284ff62bd88c20562c88",
-      "size": 20407
+      "sha256": "6ce1244a6be88c0035a6113b070f5c876b46807623f96c949f1d41c985aa6ba7",
+      "size": 42765
     },
     {
       "path": "src/native/nativePca.ts",
-      "sha256": "80ad64ebe070350c3e148374a7243ec3458fef6a77805f12b6137dab0e506ef0",
-      "size": 4989
+      "sha256": "0e311bcd7d837d959cd01d8c16794bb9dd8b0be8afa16e4302d4940c329318bf",
+      "size": 4992
     },
     {
       "path": "src/native/nativeResults.ts",
-      "sha256": "e81f4563ca317d7ce56cb8f8fa29daa4b3674c472bf75eea0fa8d2149eaf6f39",
-      "size": 214672
+      "sha256": "86159a6227f9c404ba7056f7002ccc8ccd637c003489e1e4cb1b5328275c4007",
+      "size": 350624
     },
     {
       "path": "target/release/qpls.exe",
-      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-      "size": 20690432
+      "sha256": "7e1ee9c72d79b6102362f81313a54aeed987cb458f921397cb6fd3a09598d53a",
+      "size": 32387072
     },
     {
       "path": "target/release/quickpls-desktop.exe",
-      "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
-      "size": 30507008
+      "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476",
+      "size": 49983488
     },
     {
       "path": "validation/diagnostic_bundle_source_manifest.py",
-      "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
-      "size": 28025
+      "sha256": "abdbccab42e3da4324dc67b40c19f2c6162ae1abcff1663bc43a94af56499e63",
+      "size": 28083
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -559,48 +783,48 @@
     },
     {
       "path": "validation/methods/pca_v1.manifest.json",
-      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
-      "size": 14506
+      "sha256": "e89c5a6c5c57853c93b207c2c50451bdfab0a80acb30108ffa19a0cd09d6c8c9",
+      "size": 14560
     },
     {
       "path": "validation/pca_v1_factory_common.py",
-      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
-      "size": 11599
+      "sha256": "88fceff4dd6fb914e2773f0d4fe537b5df3d01fb70066873808ba3980b2e7a1c",
+      "size": 11651
     },
     {
       "path": "validation/pca_v1_packaged_acceptance.py",
-      "sha256": "b84570f107cc699d8e6bd02bad3920ce5e29061852316acfceefd007c08e3571",
-      "size": 26020
+      "sha256": "2c80783d164efff996bdbb009d82b2069531315fe5d684c7b66e1db21eec1890",
+      "size": 26807
     },
     {
       "path": "validation/results/diagnostic_bundle_build_receipt.json",
-      "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
-      "size": 144210
+      "sha256": "210aa30fd8d7a268b444a0254108e61118584656f6517face86500caeb4b1ea3",
+      "size": 265122
     },
     {
       "path": "validation/results/method_factory/pca_v1/pca_v1_packaged.qpls",
-      "sha256": "1129737473f25f554c1f362cf807731aa9ab54be44be86c344d8f540c93c6e8c",
-      "size": 24301
+      "sha256": "453e360252cd10a8e5212fe0c5d50be2d37bd67d2b9249dc60d3a30618af396e",
+      "size": 24457
     },
     {
       "path": "validation/results/method_factory/pca_v1/pca_v1_packaged.xlsx",
-      "sha256": "98c0ff9c9905430b4fcb3824741aca65be73ce077d6772b5330264ed55ece43d",
-      "size": 15751
+      "sha256": "2f2960cc9d672e9f2b26441854f0c423149d046479e82ebb6d218f31b5db9cba",
+      "size": 15894
     },
     {
       "path": "validation/results/method_factory/pca_v1/pca_v1_packaged_raw.json",
-      "sha256": "7717c202b0aace4e541e85c562f76a2a2b505cc20f2197554987e2a8aff1afec",
-      "size": 22599
+      "sha256": "b0a771026f5b015884472b765c44b8acc684d57db8b3fae0dd7975ab00e6635c",
+      "size": 25213
     },
     {
       "path": "validation/run_v247_pca_native_acceptance.ps1",
-      "sha256": "e6bedc67945371fa6e76e21675b92c25e4f61a1a57f75d5de240b85c5d46f461",
-      "size": 3052
+      "sha256": "ad3edb894125f4ee61f3fc17a4eaeea3bf477118d984f20fbb92e877f1a38fc9",
+      "size": 3182
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pca_v1_factory_evidence.py",
@@ -609,13 +833,13 @@
     },
     {
       "path": "validation/test_pca_v1_packaged_adapter.py",
-      "sha256": "47c4e58b8a37eff00018cf48a7c292a29e95cc0168bc1186b5b58f18c9fd0225",
-      "size": 5104
+      "sha256": "aef62daeeea6d2870c3beacbbe51b998a67881e6f7843e1fd4d200822b0672bc",
+      "size": 7376
     },
     {
       "path": "validation/v247_tauri_native_acceptance.mjs",
-      "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
-      "size": 809598
+      "sha256": "952061138db0e6e3beb4f858f7e8c359b9763561980920e67a918d729eaf1c34",
+      "size": 981471
     }
   ]
 }

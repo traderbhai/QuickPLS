@@ -1,39 +1,160 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "integrity_contract": "explicit_pass_state_and_bound_evidence_v1",
+  "generated_at_utc": "2026-08-13T22:01:29.868241Z",
   "target": "v1_2_2_group_prediction_regression_promotion",
   "method_id": "fimix_pls",
   "promoted_scope": "Bounded deterministic 2-3 class FIMIX-PLS score-space segmentation with probabilities, memberships, class paths/R2, log-likelihood, information criteria, entropy, and convergence diagnostics.",
-  "passed": true,
+  "passed": false,
   "reports": [
     {
       "path": "validation\\results\\v06_group_methods_reference_report.json",
       "present": true,
-      "passed": true
+      "bytes": 679,
+      "sha256": "017862e182d326427032a39a8d440a8eb7fc1af718ff74c3854dec11d19b40e3",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": false,
+        "states": [
+          {
+            "path": "passed",
+            "present": false,
+            "value": null,
+            "passed": false
+          }
+        ]
+      },
+      "requirement_checks": [
+        {
+          "path": "kind",
+          "expected": "v06_group_methods_reference",
+          "observed": "v06_group_methods_reference",
+          "passed": true
+        },
+        {
+          "path": "sections.fimix.method_version",
+          "expected": "fimix_pls_v1",
+          "observed": null,
+          "passed": false
+        }
+      ],
+      "companions": [
+        {
+          "path": "validation/results/v06_fimix_quickpls.json",
+          "present": true,
+          "bytes": 67653,
+          "sha256": "b5e2c552fea2de1d71730aa1be1ce995ab58fe1985cf43c0627db1686160e92f",
+          "readable": true,
+          "checks": [
+            {
+              "path": "status",
+              "expected": "completed",
+              "observed": "completed",
+              "passed": true
+            },
+            {
+              "path": "provenance.method",
+              "expected": "predict",
+              "observed": "predict",
+              "passed": true
+            },
+            {
+              "path": "payload.estimation.fimix.method_version",
+              "expected": "fimix_pls_v1",
+              "observed": "fimix_pls_v1",
+              "passed": true
+            }
+          ],
+          "passed": true
+        }
+      ],
+      "passed": false,
+      "freshness": {
+        "checked": true,
+        "passed": true,
+        "report_modified_at_utc": "2026-08-13T21:06:34.805900Z",
+        "age_days": 0.038137,
+        "max_age_days": null,
+        "sources": [
+          {
+            "path": "validation\\v06_group_methods_reference.py",
+            "present": true,
+            "modified_at_utc": "2026-08-13T07:59:56.857964Z"
+          }
+        ]
+      },
+      "generated_at": null
     },
     {
       "path": "validation\\results\\prediction_heterogeneity_publication_audit.json",
       "present": true,
-      "passed": true
+      "bytes": 7267,
+      "sha256": "ecc71afe10a02625c21201ae8638e0452c316b5f6eebf32cee6bbfc1fbd2b0c5",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [
+        {
+          "path": "coverage.fimix",
+          "expected": true,
+          "observed": true,
+          "passed": true
+        }
+      ],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": true,
+        "passed": true,
+        "report_modified_at_utc": "2026-08-13T21:06:02.218283Z",
+        "age_days": 0.038514,
+        "max_age_days": null,
+        "sources": [
+          {
+            "path": "validation\\prediction_heterogeneity_publication_audit.py",
+            "present": true,
+            "modified_at_utc": "2026-08-13T07:59:56.315949Z"
+          }
+        ]
+      },
+      "generated_at": null
     }
   ],
   "docs": [
     {
       "path": "docs\\methods\\FIMIX_PLS_V1.md",
       "present": true,
-      "bytes": 1248
+      "bytes": 4056,
+      "sha256": "1f3b201d99fd8e103385544947c603f445fb0d26960243f5ed0000dd2eec25da",
+      "required_phrases": [
+        {
+          "phrase": "fimix_pls_v1",
+          "present": true
+        },
+        {
+          "phrase": "random-start EM qualification",
+          "present": true
+        },
+        {
+          "phrase": "not blanket full EM/FIMIX parity",
+          "present": true
+        }
+      ],
+      "forbidden_phrases": [],
+      "passed": true
     }
   ],
-  "checks": [
-    {
-      "name": "bounded_deterministic_scope_documented",
-      "passed": true,
-      "detail": "Known difference states QuickPLS promotes bounded deterministic score-space segmentation, not blanket EM/FIMIX parity."
-    },
-    {
-      "name": "recovery_and_null_evidence_present",
-      "passed": true,
-      "detail": "Integrated v0.6 report and segmentation recovery artifacts cover class recovery/null behavior."
-    }
-  ],
-  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+  "checks": [],
+  "note": "Promotion is limited to this documented scope; missing, stale, contradictory, or unbound evidence fails closed."
 }

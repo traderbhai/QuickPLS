@@ -1,0 +1,33 @@
+{
+  "acceptance_reasons": [
+    "predeclared_dependency_not_accepted"
+  ],
+  "aggregates": null,
+  "cap_decision": "blocked_missing_optimizer_dimension",
+  "case": {
+    "cancel_after": null,
+    "case_id": "applied_n180_v9_p18_b10000_w12",
+    "depends_on": [
+      "applied_n180_v9_p18_b5000_w12"
+    ],
+    "factors": 3,
+    "maximum_p95_elapsed_seconds": 76.29804119467735,
+    "mode": "full",
+    "order": 2,
+    "replicates": 10000,
+    "rows": 180,
+    "survivor_policy": "one_probe_then_one_warmup_five_measured_if_probe_survives",
+    "workers": 12
+  },
+  "dimensions": null,
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase1_case_v1",
+  "manifest_sha256": "75913af943717a6dd784cb4a3f49a2412dcbc1038517ba63440df88a895066ca",
+  "measured_runs": [],
+  "phase0_report_sha256": "37c489462887485b102252c7074b3be8a7fa9d302535bb011b558d6e0de5479e",
+  "probe": null,
+  "representative_metrics": null,
+  "schema_version": 1,
+  "scientific_result_sha256": null,
+  "status": "blocked_by_dependency",
+  "warmup_runs": []
+}

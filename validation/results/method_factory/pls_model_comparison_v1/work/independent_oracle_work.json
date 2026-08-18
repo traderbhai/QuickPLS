@@ -1,0 +1,169 @@
+{
+  "blockers": [
+    "The micro-oracle does not independently fit both PLS models or reproduce holdout indicator predictions.",
+    "No current product-to-oracle comparison artifact is attached.",
+    "A second independently maintained implementation and published two-model fixture are missing."
+  ],
+  "capability_id": "smartpls.pls_model_comparison",
+  "cell_id": "qpls3.comparison.pls_models",
+  "checks": {
+    "cross_language_fold_digest_frozen": true,
+    "cvpat_bic_and_weights_microcases_present": true,
+    "frozen_oracle_report_passes": true,
+    "full_pls_refit_oracle_explicitly_not_claimed": true,
+    "no_quickpls_runtime_import": true,
+    "qualification_and_promotion_explicitly_false": true,
+    "standard_library_only": true
+  },
+  "imports": [
+    "__future__",
+    "argparse",
+    "dataclasses",
+    "hashlib",
+    "json",
+    "math",
+    "struct"
+  ],
+  "method_version": "pls_model_comparison_v1",
+  "oracle_result": {
+    "bic": -0.02371652661731538,
+    "cvpat": {
+      "alternative_mean_loss": 3.75,
+      "average_loss_difference": -0.75,
+      "degrees_of_freedom": 3,
+      "established_mean_loss": 4.5,
+      "sample_variance": 18.916666666666668,
+      "standard_error": 2.174664725116648,
+      "t_statistic": -0.34488074935770635
+    },
+    "fold_assignment_digest": "sha256:b08f53b2641bc2a2bc8eef4c46c56a5b4f5ad3a413fc195f210ec68212a25c74",
+    "fold_ledger_entries": 69,
+    "oracle": "independent_python_standard_library_v1",
+    "weights": {
+      "first_delta": 0.0,
+      "first_weight": 0.7310585786300049,
+      "second_delta": 2.0,
+      "second_weight": 0.2689414213699951
+    }
+  },
+  "oracle_result_sha256": "f8970cef7ea088a3577dbace5d02e72bf57a1150579beed67ca4c421d28bd818",
+  "oracle_source": {
+    "path": "validation/pls_model_comparison_v1_oracle.py",
+    "sha256": "8488bff8ac85331ec3b4b378f4e31abf8c6083e4ba8eee1a81b231d53ad133ba",
+    "size_bytes": 6507
+  },
+  "oracle_test_source": {
+    "path": "validation/test_pls_model_comparison_v1_oracle.py",
+    "sha256": "0122ddf4c02f79184b63c33fe97bc8cbb9ac6932dfc93a683bb3de1052ecd4c3",
+    "size_bytes": 1307
+  },
+  "passed_work_checks": true,
+  "promotion_allowed": false,
+  "qualification_id": "qpls3.comparison.pls_models.qualification_v2",
+  "qualification_ready": false,
+  "qualification_role_satisfied": false,
+  "receipt_eligible": false,
+  "report_kind": "pls_model_comparison_v1_independent_oracle_work",
+  "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-estimation/src/lib.rs",
+      "sha256": "a05ece4c1236d8717b8bb12777525d1085f4008fc133dbf7a06958f485a79d6b",
+      "size_bytes": 504
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls_model_comparison.rs",
+      "sha256": "880a9d25c3c19ce175706f8325e42fdc00b0c2b28896ddcd7ff2ca37b4b930f6",
+      "size_bytes": 77127
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "5e4cea07125c9868dd2eb768fb68afacde183bc32f195e511f2263141bf8dc2b",
+      "size_bytes": 82721
+    },
+    {
+      "path": "crates/qpls-runner/src/pls_model_comparison_execution.rs",
+      "sha256": "1be7b61356bb8cb3bee8e1c6434868c06aa91610a4367e82be0182863950594a",
+      "size_bytes": 58981
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "sha256": "aaa3ff9373ace489e4b22b6593340e75f74a71f602204272dd214f0b2118bf5b",
+      "size_bytes": 251413
+    },
+    {
+      "path": "src-tauri/src/pls_model_comparison_jobs.rs",
+      "sha256": "a43c63e92c403ae8243c773e8eae5fb8795ef714cb88844f96e068e89413fc2a",
+      "size_bytes": 32271
+    },
+    {
+      "path": "src-tauri/src/recipe_v4_jobs.rs",
+      "sha256": "08e049873c28f35db18ad7c330f7a3b73ec7db4e384cba11474ab2cb8a5535d4",
+      "size_bytes": 60565
+    },
+    {
+      "path": "crates/qpls-project/tests/pls_model_comparison_schema6.rs",
+      "sha256": "14caffcbed5117324590b841334451aaf0d62b7eb0b0f7fda78b1b47fd046650",
+      "size_bytes": 7654
+    },
+    {
+      "path": "docs/methods/PLS_MODEL_COMPARISON_V1.md",
+      "sha256": "29186003693243b3507fb9199e5a38c891cf6899b3e2225a0d8d09af490c3931",
+      "size_bytes": 10484
+    },
+    {
+      "path": "validation/pls_model_comparison_v1_oracle.py",
+      "sha256": "8488bff8ac85331ec3b4b378f4e31abf8c6083e4ba8eee1a81b231d53ad133ba",
+      "size_bytes": 6507
+    },
+    {
+      "path": "validation/test_pls_model_comparison_v1_oracle.py",
+      "sha256": "0122ddf4c02f79184b63c33fe97bc8cbb9ac6932dfc93a683bb3de1052ecd4c3",
+      "size_bytes": 1307
+    },
+    {
+      "path": "validation/pls_model_comparison_v1_qualification_factory.py",
+      "sha256": "273ce18d0d8a7b46dd13975816e640dc67bddca90530f8a914a4e89405058c03",
+      "size_bytes": 65579
+    },
+    {
+      "path": "validation/pls_model_comparison_v1_qualification_factory.schema.json",
+      "sha256": "ada4515030722f6e2a441bd000081f20a441934ad9a7b475109d21e93cdfc862",
+      "size_bytes": 9163
+    },
+    {
+      "path": "validation/test_pls_model_comparison_v1_qualification_factory.py",
+      "sha256": "a0e2f2ca8ff930224ab92551e9ebe5ff80ced48a614f5232c50b97a4795c329d",
+      "size_bytes": 11126
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/qualification_v2/pls_model_comparison_v1.qualification.json",
+      "sha256": "809066722fcd0cc3082a6758aeb8f8582c93813b3a233c2e72179bffb55d3a51",
+      "size_bytes": 61367
+    },
+    {
+      "path": "validation/methods/pls_model_comparison_v1.manifest.json",
+      "sha256": "dbb994b1a353a12b084e34fedea1fe4161ab41e506fa8ca6639d6eed6830b0f5",
+      "size_bytes": 9850
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.json",
+      "sha256": "d3e480178a619d0bec28e48ddfd9a2fb1848c083b78e1afe1c51f1b12e980fd9",
+      "size_bytes": 303615
+    }
+  ],
+  "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+  "work_evidence_only": true,
+  "work_id": "pls_model_comparison_v1.oracle_micro_work.v1"
+}

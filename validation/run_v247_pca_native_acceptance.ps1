@@ -1,5 +1,6 @@
 param(
-    [string]$ExportPath = ""
+    [string]$ExportPath = "",
+    [switch]$PreserveMainReport
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,7 +27,11 @@ function Remove-FileWithRetry {
 
 $mainReportPath = Join-Path $repositoryRoot "validation\results\v247_tauri_native_acceptance.json"
 $scopedReportPath = Join-Path $repositoryRoot "validation\results\v247_tauri_native_acceptance_pca.json"
-foreach ($priorReport in @($mainReportPath, $scopedReportPath)) {
+$priorReports = @($scopedReportPath)
+if (-not $PreserveMainReport) {
+    $priorReports += $mainReportPath
+}
+foreach ($priorReport in $priorReports) {
     Remove-FileWithRetry -Path $priorReport
 }
 

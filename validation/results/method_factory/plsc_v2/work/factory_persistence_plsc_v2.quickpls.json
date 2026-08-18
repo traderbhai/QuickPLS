@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "id": "53709b96-18c6-4e8c-8695-36c3170e6c1c",
+  "id": "c6d177f6-d193-4cfd-aff9-3ce97ec2e4f0",
   "status": "completed",
   "provenance": {
     "recipe_id": "6bea5c07-5c2f-5d5a-b9a8-613bad877654",
     "dataset_fingerprint": "v2:f38ee35231816456cd88f59bde3004c996c7b060ba9e3341a7c3be274b64e6b8",
     "method": "plsc",
-    "method_version": "pls_pm_v1+plsc_v2+pls_mediation_v1+pls_assessment_v7",
+    "method_version": "pls_pm_v1+plsc_v2+pls_mediation_v1+pls_assessment_v8",
     "engine_version": "2.46.0",
     "seed": 20260813,
     "settings": {
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-08-13T19:01:08.775809Z",
-    "completed_at": "2026-08-13T19:01:08.810361200Z"
+    "started_at": "2026-08-18T03:47:39.174504200Z",
+    "completed_at": "2026-08-18T03:47:39.233870700Z"
   },
   "diagnostics": [
     {
@@ -614,6 +614,17 @@
           "PLSc is validated for the documented QuickPLS v1.2.1 reflective path/factor-weighting scope; broader PLSc shapes remain unsupported."
         ]
       },
+      "point_estimate_attribution": {
+        "construct_scores": "zero_mean_unit_variance_construct_score",
+        "contract_version": "pls_point_estimate_attribution_v1",
+        "effects": "standardized_structural_path_decomposition",
+        "indicator_centering": "sample_mean",
+        "indicator_scaling": "sample_standard_deviation",
+        "outer_loadings": "indicator_construct_score_correlation",
+        "outer_weights": "preprocessed_indicator_to_unit_variance_construct_score",
+        "preprocessing": "standardized",
+        "structural_paths": "standardized_construct_score_regression"
+      },
       "predict": null,
       "r_squared": {
         "y": 0.4032435686317343
@@ -903,7 +914,7 @@
             {
               "reason": null,
               "status": "available",
-              "value": 0.34262702683050705
+              "value": 0.342627026830507
             },
             {
               "reason": null,
@@ -920,7 +931,7 @@
             {
               "reason": null,
               "status": "available",
-              "value": 0.512709059458666
+              "value": 0.5127090594586659
             },
             {
               "reason": null,
@@ -966,7 +977,7 @@
             {
               "reason": null,
               "status": "available",
-              "value": 0.34262702683050705
+              "value": 0.342627026830507
             },
             {
               "reason": null,
@@ -983,7 +994,7 @@
             {
               "reason": null,
               "status": "available",
-              "value": 0.512709059458666
+              "value": 0.5127090594586659
             },
             {
               "reason": null,
@@ -1005,16 +1016,219 @@
         "correlation_type": "pearson"
       },
       "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
-      "method_version": "pls_assessment_v7",
+      "method_version": "pls_assessment_v8",
       "model_fit": {
+        "analytical_sample_size": 120,
         "estimated": {
+          "chi_square": {
+            "status": "available",
+            "value": 111.34706838081956
+          },
+          "d_g": {
+            "status": "available",
+            "value": 0.7307680276820435
+          },
           "d_uls": 0.0004967392243449941,
+          "degrees_of_freedom": {
+            "status": "available",
+            "value": 6.0
+          },
+          "nfi": {
+            "status": "available",
+            "value": 0.920682156030651
+          },
           "srmr": 0.004863563382781503
         },
+        "estimated_implied_correlation": [
+          [
+            1.0,
+            0.9949039590459877,
+            0.338772719561253,
+            0.3388263100204097,
+            0.5088024951148955,
+            0.5088411144837424
+          ],
+          [
+            0.9949039590459877,
+            1.0,
+            0.33876472377034234,
+            0.3388183129646448,
+            0.5087904862424839,
+            0.5088291046998276
+          ],
+          [
+            0.338772719561253,
+            0.33876472377034234,
+            1.0,
+            0.993763836242853,
+            0.5233339621364723,
+            0.5233736844796366
+          ],
+          [
+            0.3388263100204097,
+            0.3388183129646448,
+            0.993763836242853,
+            1.0,
+            0.5234167483400353,
+            0.5234564769668774
+          ],
+          [
+            0.5088024951148955,
+            0.5087904862424839,
+            0.5233339621364723,
+            0.5234167483400353,
+            1.0,
+            0.9927919997222756
+          ],
+          [
+            0.5088411144837424,
+            0.5088291046998276,
+            0.5233736844796366,
+            0.5234564769668774,
+            0.9927919997222756,
+            1.0
+          ]
+        ],
+        "exact_fit_inference": {
+          "procedure": "adapted_bollen_stine_saturated_and_estimated",
+          "reason_code": "model_fit.adapted_bollen_stine_not_implemented",
+          "status": "unavailable"
+        },
+        "geodesic_logarithm": "natural_logarithm",
+        "indicator_order": [
+          "x1",
+          "x2",
+          "z1",
+          "z2",
+          "y1",
+          "y2"
+        ],
+        "matrix_convention": "indicator_correlation_lower_triangle_including_diagonal",
+        "method_version": "pls_model_fit_v2",
+        "null_model_chi_square": {
+          "status": "available",
+          "value": 1403.8085607047979
+        },
+        "observed_correlation": [
+          [
+            1.0,
+            0.9898079724716768,
+            0.3353941315300053,
+            0.3430991258146897,
+            0.5029591567464662,
+            0.5121732585948188
+          ],
+          [
+            0.9898079724716768,
+            1.0,
+            0.3341175295784559,
+            0.3423669461072299,
+            0.5007048671998005,
+            0.5097612142718341
+          ],
+          [
+            0.3353941315300053,
+            0.3341175295784559,
+            1.0,
+            0.9875296663450344,
+            0.5129507129694161,
+            0.5151321038434553
+          ],
+          [
+            0.3430991258146897,
+            0.3423669461072299,
+            0.9875296663450344,
+            1.0,
+            0.5264348136987305,
+            0.5279013183331882
+          ],
+          [
+            0.5029591567464662,
+            0.5007048671998005,
+            0.5129507129694161,
+            0.5264348136987305,
+            1.0,
+            0.9855843961830522
+          ],
+          [
+            0.5121732585948188,
+            0.5097612142718341,
+            0.5151321038434553,
+            0.5279013183331882,
+            0.9855843961830522,
+            1.0
+          ]
+        ],
         "saturated": {
+          "chi_square": {
+            "status": "available",
+            "value": 111.35019054282752
+          },
+          "d_g": {
+            "status": "available",
+            "value": 0.7308200423304612
+          },
           "d_uls": 0.00044228889924586976,
+          "degrees_of_freedom": {
+            "status": "available",
+            "value": 6.0
+          },
+          "nfi": {
+            "status": "available",
+            "value": 0.9206799319652795
+          },
           "srmr": 0.004589267496514583
-        }
+        },
+        "saturated_implied_correlation": [
+          [
+            1.0,
+            0.9949039590459877,
+            0.338772719561253,
+            0.3388263100204097,
+            0.5064128312976918,
+            0.5064512692851396
+          ],
+          [
+            0.9949039590459877,
+            1.0,
+            0.33876472377034234,
+            0.3388183129646448,
+            0.50640087882667,
+            0.5064393159068956
+          ],
+          [
+            0.338772719561253,
+            0.33876472377034234,
+            1.0,
+            0.993763836242853,
+            0.5206306628208862,
+            0.5206701799769409
+          ],
+          [
+            0.3388263100204097,
+            0.3388183129646448,
+            0.993763836242853,
+            1.0,
+            0.5207130213895094,
+            0.5207525447967832
+          ],
+          [
+            0.5064128312976918,
+            0.50640087882667,
+            0.5206306628208862,
+            0.5207130213895094,
+            1.0,
+            0.9927919997222756
+          ],
+          [
+            0.5064512692851396,
+            0.5064393159068956,
+            0.5206701799769409,
+            0.5207525447967832,
+            0.9927919997222756,
+            1.0
+          ]
+        ]
       },
       "r_squared": {
         "y": 0.4032435686317343

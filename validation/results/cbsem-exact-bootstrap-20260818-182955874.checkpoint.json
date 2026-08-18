@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "projectPath": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874.qpls",
+  "projectName": "Native Exact CB-SEM Bootstrap Acceptance",
+  "modelName": "Exact CFA Bootstrap Model",
+  "schema6Path": "D:\\QuickPLS\\validation\\results\\cbsem-exact-bootstrap-20260818-182955874-v6.qpls",
+  "documentId": "result_0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+  "runId": "0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a",
+  "projectId": "f42af037-46b0-4975-bacc-c89f015fb92f",
+  "methodVersion": "cbsem_exact_case_bootstrap_v1",
+  "tableIds": [
+    "estimation_summary",
+    "canonical_ml_covariance",
+    "parameters",
+    "standardized_parameters",
+    "modification_index_score_tests",
+    "exact_case_bootstrap_summary",
+    "exact_case_bootstrap_parameter_intervals",
+    "exact_case_bootstrap_successful_refits",
+    "exact_case_bootstrap_failures",
+    "exact_case_bootstrap_hypothesis_tests",
+    "exact_case_bootstrap_bca_summary",
+    "exact_case_bootstrap_bca_parameter_intervals",
+    "exact_case_bootstrap_bca_successful_delete_one_refits",
+    "exact_case_bootstrap_bca_failures",
+    "fit_indices",
+    "implied_covariance",
+    "residual_covariance",
+    "residual_correlation"
+  ],
+  "archive": {
+    "path": "validation/results/cbsem-exact-bootstrap-20260818-182955874-v6.qpls",
+    "size": 208652,
+    "sha256": "aea81288ab5e9f9114d950bb7b02fb5be9b2ac62111179a08b2752bf3b3a8616"
+  },
+  "export": {
+    "path": "validation/results/cbsem-exact-bootstrap-20260818-182955874.xlsx",
+    "size": 214965,
+    "sha256": "8aeb141b034b8998195d2c6c77c44932129d4e30caaf50e736dd3deedadcbd27"
+  }
+}

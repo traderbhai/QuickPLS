@@ -38,13 +38,23 @@
       {
         "id": "total_indirect_effect",
         "expression": "indirect_ij = sum_{p in P_ij, length(p) >= 2} product_{e in p} beta_e",
-        "variables": ["indirect_ij", "P_ij", "p", "beta_e"],
+        "variables": [
+          "indirect_ij",
+          "P_ij",
+          "p",
+          "beta_e"
+        ],
         "source_reference_id": "nitzl_roldan_cepeda_2016"
       },
       {
         "id": "total_and_vaf",
         "expression": "total_ij = direct_ij + indirect_ij; VAF_ij = indirect_ij / total_ij when abs(total_ij) > 1e-12",
-        "variables": ["total_ij", "direct_ij", "indirect_ij", "VAF_ij"],
+        "variables": [
+          "total_ij",
+          "direct_ij",
+          "indirect_ij",
+          "VAF_ij"
+        ],
         "source_reference_id": "nitzl_roldan_cepeda_2016"
       }
     ],
@@ -80,7 +90,13 @@
         "purpose": "coverage",
         "design": "Single, parallel, and serial mediation graphs over bounded loading, path, sample-size, reliability, and nonnormality grids.",
         "seed_policy": "Frozen scenario-indexed data and bootstrap streams; replicate identity is independent of worker count and completion order.",
-        "metrics": ["direct_error", "indirect_error", "total_error", "interval_coverage", "failure_rate"],
+        "metrics": [
+          "direct_error",
+          "indirect_error",
+          "total_error",
+          "interval_coverage",
+          "failure_rate"
+        ],
         "acceptance_rule": "Point decompositions must match an independent path-product reference within 1e-6 and preregistered indirect-effect interval coverage must pass with every failure retained."
       },
       {
@@ -88,18 +104,47 @@
         "purpose": "type_i_error",
         "design": "Graphs with one broken mediation stage while retaining bounded direct and nuisance structural effects.",
         "seed_policy": "Frozen indexed null scenarios and resampling streams shared only by scenario identity.",
-        "metrics": ["false_positive_rate", "binomial_confidence_interval", "classification_error"],
+        "metrics": [
+          "false_positive_rate",
+          "binomial_confidence_interval",
+          "classification_error"
+        ],
         "acceptance_rule": "The preregistered false-positive confidence interval must contain the nominal level and descriptive class labels must reflect the frozen tolerance exactly."
       }
     ],
     "boundaries": [
-      {"id": "singular_or_failed_path_model", "category": "data_pathology", "case": "The PLS model cannot estimate one or more edges required for a requested indirect path.", "expected_behavior": "No completed mediation estimate is emitted; the underlying estimation failure remains explicit."},
-      {"id": "cyclic_or_moderated_graph", "category": "unsupported_scope", "case": "The requested effect relies on a cycle, reciprocal path, unsupported generated construct, or moderated stage.", "expected_behavior": "The graph is blocked or the unsupported effect is excluded with an explicit scope message."},
-      {"id": "graph_and_indicator_reorder", "category": "metamorphic", "case": "Rows, constructs, indicators, or independent path declaration order are consistently permuted.", "expected_behavior": "Mapped direct, indirect, total, VAF, class, and matching inference rows remain equal within tolerance."},
-      {"id": "seed_worker_invariance", "category": "determinism", "case": "The same mediation bootstrap recipe is run repeatedly with different supported worker counts.", "expected_behavior": "Resample plans, effect identities, intervals, probabilities, and aggregate order are exactly equal."},
-      {"id": "mediation_archive_tamper", "category": "tamper", "case": "A path, effect identity, decomposition, class, interval, seed, or method version is altered.", "expected_behavior": "Strict project validation rejects the archive rather than displaying the changed mediation result."}
+      {
+        "id": "singular_or_failed_path_model",
+        "category": "data_pathology",
+        "case": "The PLS model cannot estimate one or more edges required for a requested indirect path.",
+        "expected_behavior": "No completed mediation estimate is emitted; the underlying estimation failure remains explicit."
+      },
+      {
+        "id": "cyclic_or_moderated_graph",
+        "category": "unsupported_scope",
+        "case": "The requested effect relies on a cycle, reciprocal path, unsupported generated construct, or moderated stage.",
+        "expected_behavior": "The graph is blocked or the unsupported effect is excluded with an explicit scope message."
+      },
+      {
+        "id": "graph_and_indicator_reorder",
+        "category": "metamorphic",
+        "case": "Rows, constructs, indicators, or independent path declaration order are consistently permuted.",
+        "expected_behavior": "Mapped direct, indirect, total, VAF, class, and matching inference rows remain equal within tolerance."
+      },
+      {
+        "id": "seed_worker_invariance",
+        "category": "determinism",
+        "case": "The same mediation bootstrap recipe is run repeatedly with different supported worker counts.",
+        "expected_behavior": "Resample plans, effect identities, intervals, probabilities, and aggregate order are exactly equal."
+      },
+      {
+        "id": "mediation_archive_tamper",
+        "category": "tamper",
+        "case": "A path, effect identity, decomposition, class, interval, seed, or method version is altered.",
+        "expected_behavior": "Strict project validation rejects the archive rather than displaying the changed mediation result."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
     "persistence": {
@@ -107,52 +152,197 @@
       "result_schema_version": 1,
       "payload_kind": "pls_pm_v3",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result whose mediation capability identity differs from its recipe."},
-        {"category": "method_version", "expected_behavior": "Reject a mediation payload relabeled with another method version."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a mediation result whose dataset fingerprint no longer matches."},
-        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite effects, invalid classes, or decompositions inconsistent with saved paths."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret unversioned path products or inference from another effect identity as current mediation evidence."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose mediation capability identity differs from its recipe."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a mediation payload relabeled with another method version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a mediation result whose dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any modified archive member whose checksum differs."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite effects, invalid classes, or decompositions inconsistent with saved paths."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret unversioned path products or inference from another effect identity as current mediation evidence."
+        }
       ],
       "legacy_policy": "Only pls_mediation_v1 effect identities regenerated or strictly loaded under the current recipe contract may satisfy current evidence."
     },
     "native": {
-      "setup_controls": ["Supported recursive PLS model", "Source and target effect review", "Bootstrap settings", "Seed and workers"],
-      "applicability_blockers": ["Cyclic graph", "No mediated path", "Unsupported generated construct", "Mismatched inference recipe", "Failed underlying PLS estimation"],
-      "result_surfaces": ["Direct, indirect, and total effects", "VAF and descriptive class", "Indirect-effect intervals and probabilities", "Method warnings", "Run provenance"],
+      "setup_controls": [
+        "Supported recursive PLS model",
+        "Source and target effect review",
+        "Bootstrap settings",
+        "Seed and workers"
+      ],
+      "applicability_blockers": [
+        "Cyclic graph",
+        "No mediated path",
+        "Unsupported generated construct",
+        "Mismatched inference recipe",
+        "Failed underlying PLS estimation"
+      ],
+      "result_surfaces": [
+        "Direct, indirect, and total effects",
+        "VAF and descriptive class",
+        "Indirect-effect intervals and probabilities",
+        "Method warnings",
+        "Run provenance"
+      ],
       "gui_cli_parity_rule": "For the same model, data fingerprint, resampling plan, seed, and method versions, GUI and CLI mediation and inference payloads must be exactly equal apart from operational identifiers and timestamps.",
-      "accessibility_rules": ["All decompositions, labels, intervals, and unavailable reasons are available in accessible tables.", "Effect identity and uncertainty are understandable without diagram position, color, or pointer interaction."]
+      "accessibility_rules": [
+        "All decompositions, labels, intervals, and unavailable reasons are available in accessible tables.",
+        "Effect identity and uncertainty are understandable without diagram position, color, or pointer interaction."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html", "svg", "png"],
-      "tables": ["Mediation effects", "Indirect-effect inference", "Mediation method scope", "Run provenance"],
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "png"
+      ],
+      "tables": [
+        "Mediation effects",
+        "Indirect-effect inference",
+        "Mediation method scope",
+        "Run provenance"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": true,
       "process_cleanup_required": true
     },
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
   "qualification": {
-    "declared_state": "absent",
+    "declared_state": "archive_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/PLS_MEDIATION_V1.md"],
-      "independent_reference": ["validation/mediation_reference.py", "validation/mediation_r_reference.py", "validation/mediation_r_reference.R", "validation/mediation_published_example.py"],
-      "simulation_report": ["validation/mediation_metamorphic.py", "validation/mediation_randomization.py", "validation/mediation_coverage_qualification.py"],
-      "boundary_report": ["validation/mediation_boundary_gate.py"],
-      "persistence_report": ["validation/mediation_persistence_gate.py"],
-      "frontend_report": ["src/native/nativeResults.test.ts", "src/domain/resultInterpretation.test.ts"],
-      "export_report": ["src/native/nativeExportTables.test.ts", "src/domain/resultTables.test.ts"],
-      "method_audit": ["validation/mediation_method_promotion_audit.py"],
-      "packaged_acceptance": ["validation/run_mediation_native_acceptance.ps1"]
+      "method_spec": [
+        "docs/methods/PLS_MEDIATION_V1.md"
+      ],
+      "independent_reference": [
+        "validation/mediation_reference.py",
+        "validation/mediation_r_reference.py",
+        "validation/mediation_r_reference.R",
+        "validation/mediation_published_example.py"
+      ],
+      "simulation_report": [
+        "validation/mediation_metamorphic.py",
+        "validation/mediation_randomization.py",
+        "validation/mediation_coverage_qualification.py"
+      ],
+      "boundary_report": [
+        "validation/mediation_boundary_gate.py"
+      ],
+      "persistence_report": [
+        "validation/mediation_persistence_gate.py"
+      ],
+      "frontend_report": [
+        "src/native/nativeResults.test.ts",
+        "src/domain/resultInterpretation.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.test.ts",
+        "src/domain/resultTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/mediation_method_promotion_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_mediation_native_acceptance.ps1"
+      ]
     },
-    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/mediation_v1/evidence_truth_reconciliation_v2/engine_evidence.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/mediation_v1/evidence_truth_reconciliation_v2/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [],
+      "release_qualified": []
+    }
   }
 }

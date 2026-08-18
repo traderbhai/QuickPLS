@@ -13,6 +13,7 @@ import { nativeProcessGraphAssessment, parseNativeProcessGraph } from "./nativeP
 export type NativeWorkbenchAnalysisKind =
   | "pls_algorithm"
   | "plsc"
+  | "plsc_bootstrap"
   | "wpls"
   | "gsca"
   | "cca"
@@ -21,6 +22,8 @@ export type NativeWorkbenchAnalysisKind =
   | "cbsem"
   | "pls_bootstrap"
   | "pls_permutation"
+  | "pls_posthoc_technical_minimum_sample_size"
+  | "pls_sample_size_power"
   | "mga"
   | "predict"
   | "nca"
@@ -28,6 +31,39 @@ export type NativeWorkbenchAnalysisKind =
   | "regression";
 
 export type NativeAnalysisCategoryId = "estimation" | "component_models" | "assessment" | "covariance" | "inference" | "groups" | "prediction" | "standalone";
+
+/**
+ * The established Calculate catalogue that shipped before capability-evidence
+ * filtering was introduced. These workflows have native implementations and
+ * remain selectable in Experimental Labs; Registry V2 controls qualification
+ * claims, not whether an implemented bounded workflow disappears from the UI.
+ */
+export const NATIVE_ESTABLISHED_WORKING_ANALYSIS_KINDS_V1 = [
+  "pls_algorithm",
+  "plsc",
+  "wpls",
+  "gsca",
+  "cca",
+  "ipma",
+  "cbsem",
+  "pls_bootstrap",
+  "pls_permutation",
+  "mga",
+  "predict",
+  "nca",
+  "pca",
+  "regression",
+] as const satisfies readonly NativeWorkbenchAnalysisKind[];
+
+const ESTABLISHED_WORKING_ANALYSIS_KINDS = new Set<NativeWorkbenchAnalysisKind>(
+  NATIVE_ESTABLISHED_WORKING_ANALYSIS_KINDS_V1,
+);
+
+export function isNativeEstablishedWorkingAnalysisKindV1(
+  kind: NativeWorkbenchAnalysisKind,
+): boolean {
+  return ESTABLISHED_WORKING_ANALYSIS_KINDS.has(kind);
+}
 
 export type NativeAnalysisCapabilityId =
   | "qpls3.pls.algorithm"
@@ -38,8 +74,12 @@ export type NativeAnalysisCapabilityId =
   | "qpls3.assessment.cta_pls"
   | "qpls3.assessment.ipma"
   | "qpls3.cbsem.ml"
+  | "qpls3.cbsem.bootstrap"
   | "qpls3.inference.bootstrap"
+  | "qpls3.inference.consistent_bootstrap"
   | "qpls3.inference.structural_path_randomization"
+  | "qpls3.pls.posthoc_technical_minimum_sample_size"
+  | "qpls3.pls.sample_size_power"
   | "qpls3.groups.micom_permutation_mga"
   | "qpls3.prediction.plspredict_cvpat"
   | "qpls3.standalone.nca"
@@ -93,7 +133,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     kind: "gsca",
     categoryId: "component_models",
     categoryLabel: "Component models",
-    description: "Estimate a bounded generalized structured component model with reflective or formative blocks and recursive structural paths.",
+    description: "Estimate a generalized structured component model with reflective or formative blocks and recursive structural paths.",
     keywords: ["gsca", "generalized structured component analysis", "component model", "alternating least squares", "als"],
     capabilityIds: ["qpls3.gsca.als"],
   },
@@ -125,9 +165,9 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     kind: "cbsem",
     categoryId: "covariance",
     categoryLabel: "Covariance-based SEM",
-    description: "Estimate a bounded single-group reflective CFA or recursive latent SEM with maximum likelihood.",
-    keywords: ["cbsem", "cb-sem", "cfa", "confirmatory factor analysis", "maximum likelihood", "covariance", "model fit"],
-    capabilityIds: ["qpls3.cbsem.ml"],
+    description: "Estimate single-group reflective CFA or recursive latent SEM with maximum likelihood. Current exact CFA case bootstrap is available from the Exact CB-SEM model tab.",
+    keywords: ["cbsem", "cb-sem", "cfa", "confirmatory factor analysis", "maximum likelihood", "covariance", "model fit", "case bootstrap", "percentile interval"],
+    capabilityIds: ["qpls3.cbsem.ml", "qpls3.cbsem.bootstrap"],
   },
   {
     kind: "pls_bootstrap",
@@ -138,19 +178,43 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     capabilityIds: ["qpls3.inference.bootstrap"],
   },
   {
+    kind: "plsc_bootstrap",
+    categoryId: "inference",
+    categoryLabel: "Inference",
+    description: "Fully re-estimate consistent PLS for each indexed case resample and report percentile plus conditional BCa inference.",
+    keywords: ["plsc bootstrap", "consistent bootstrap", "full re-estimation", "bca", "confidence interval", "inference"],
+    capabilityIds: ["qpls3.inference.consistent_bootstrap"],
+  },
+  {
     kind: "pls_permutation",
     categoryId: "inference",
     categoryLabel: "Inference",
-    description: "Run candidate single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values.",
+    description: "Run single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values within the documented scope.",
     keywords: ["freedman lane", "permutation", "randomization", "path significance", "inference"],
     capabilityIds: ["qpls3.inference.structural_path_randomization"],
+  },
+  {
+    kind: "pls_posthoc_technical_minimum_sample_size",
+    categoryId: "inference",
+    categoryLabel: "Inference",
+    description: "Retrospective inverse-square-root technical minimum sample-size result, using the weakest statistically significant structural path from linked PLS bootstrap inference.",
+    keywords: ["post hoc", "technical minimum sample size", "inverse square root", "bootstrap", "power", "retrospective"],
+    capabilityIds: ["qpls3.pls.posthoc_technical_minimum_sample_size"],
+  },
+  {
+    kind: "pls_sample_size_power",
+    categoryId: "inference",
+    categoryLabel: "Inference",
+    description: "Prospective Monte Carlo power for exactly one two-construct reflective Gaussian path, evaluated only on an explicit sample-size grid.",
+    keywords: ["power", "sample size", "monte carlo", "prospective", "simulation", "wilson", "gaussian", "reflective", "inference"],
+    capabilityIds: ["qpls3.pls.sample_size_power"],
   },
   {
     kind: "mga",
     categoryId: "groups",
     categoryLabel: "Groups",
-    description: "Assess MICOM measurement invariance and compare Group A minus Group B paths, loadings, and weights.",
-    keywords: ["micom", "measurement invariance", "mga", "multigroup", "group a", "group b", "permutation mga", "inference"],
+    description: "Assess the three MICOM measurement-invariance steps using an explicit researcher-confirmed configural review, then compare Group A minus Group B paths, loadings, and weights with one deterministic size-preserving permutation plan.",
+    keywords: ["micom", "measurement invariance", "configural invariance", "compositional invariance", "group a", "group b", "permutation", "inference"],
     capabilityIds: ["qpls3.groups.micom_permutation_mga"],
   },
   {
@@ -165,7 +229,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     kind: "nca",
     categoryId: "standalone",
     categoryLabel: "Standalone analysis",
-    description: "Analyze whether one numeric observed condition is necessary for one numeric observed outcome with bounded ceiling lines and bottlenecks.",
+    description: "Analyze whether one numeric observed condition is necessary for one numeric observed outcome using ceiling lines and bottlenecks.",
     keywords: ["nca", "necessary condition", "ce-fdh", "cr-fdh", "ceiling", "bottleneck", "observed variable"],
     capabilityIds: ["qpls3.standalone.nca"],
   },
@@ -189,7 +253,11 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
 
 export const NATIVE_ANALYSIS_CATALOG: readonly NativeAnalysisCatalogItem[] = CATALOG_DRAFTS.map((item) => ({
   ...item,
-  label: item.kind === "regression" ? "Regression" : nativeAnalysisRecipeDescriptor(item.kind).label,
+  label: item.kind === "regression"
+    ? "Regression"
+    : item.kind === "mga"
+      ? "MICOM and Two-Group Permutation MGA"
+      : nativeAnalysisRecipeDescriptor(item.kind).label,
 }));
 
 const workbenchKinds = new Set<string>(NATIVE_ANALYSIS_CATALOG.map((item) => item.kind));
@@ -292,18 +360,23 @@ export function nativeAnalysisSettingsForWorkbenchKind(
   kind: NativeWorkbenchAnalysisKind,
 ): AnalysisUiSettings {
   const normalized = normalizedNativeRecipeScalars(settings);
-  if (kind === "pls_algorithm" || kind === "pls_bootstrap" || kind === "pls_permutation" || kind === "predict") {
+  if (kind === "pls_algorithm" || kind === "pls_bootstrap" || kind === "pls_permutation" || kind === "pls_posthoc_technical_minimum_sample_size" || kind === "predict") {
     const mode = kind === "pls_bootstrap"
       ? "bootstrap"
+      : kind === "pls_posthoc_technical_minimum_sample_size"
+        ? "bootstrap"
       : kind === "pls_permutation"
         ? "permutation"
         : kind === "predict"
           ? "predict"
           : "pls";
-    return {
+    const selected = {
       ...nativeCalculationSettingsForMode(normalized, mode),
       caseWeightColumn: null,
     };
+    return kind === "pls_posthoc_technical_minimum_sample_size"
+      ? { ...selected, studentizedInnerSamples: 0, permutationSamples: 0 }
+      : selected;
   }
 
   if (kind === "mga") {
@@ -328,6 +401,37 @@ export function nativeAnalysisSettingsForWorkbenchKind(
     };
   }
 
+  if (kind === "pls_sample_size_power") {
+    return {
+      ...normalized,
+      method: "pls_sample_size_power",
+      weightingScheme: "path",
+      preprocessing: "standardized",
+      tolerance: boundedNumber(normalized.tolerance, 1e-7, 1e-10, 1e-3),
+      maxIterations: boundedInteger(normalized.maxIterations, 3_000, 100, 10_000),
+      bootstrapSamples: 0,
+      studentizedInnerSamples: 0,
+      permutationSamples: 0,
+      caseWeightColumn: null,
+      confidenceLevel: boundedNumber(normalized.confidenceLevel, 0.95, 0.80, 0.999),
+      plsPowerScenarioIdentity: normalized.plsPowerScenarioIdentity?.trim() || "prospective_two_construct_path",
+      plsPowerPredictorConstruct: normalized.plsPowerPredictorConstruct?.trim() || null,
+      plsPowerOutcomeConstruct: normalized.plsPowerOutcomeConstruct?.trim() || null,
+      plsPowerPredictorLoadings: normalized.plsPowerPredictorLoadings?.trim() || null,
+      plsPowerOutcomeLoadings: normalized.plsPowerOutcomeLoadings?.trim() || null,
+      plsPowerPopulationPath: boundedNumber(normalized.plsPowerPopulationPath, 0.30, -0.80, 0.80),
+      plsPowerSampleSizeGrid: normalized.plsPowerSampleSizeGrid?.trim() || "50,100,150",
+      plsPowerAlpha: boundedNumber(normalized.plsPowerAlpha, 0.05, 0.001, 0.10),
+      plsPowerTargetPower: boundedNumber(normalized.plsPowerTargetPower, 0.80, 0.50, 0.99),
+      // 3 grid points * 250 data sets * (1 + 199 fits) = 150,000 PLS fits.
+      plsPowerMonteCarloReplicates: boundedInteger(normalized.plsPowerMonteCarloReplicates, 250, 100, 10_000),
+      plsPowerBootstrapReplicates: (() => {
+        const value = boundedInteger(normalized.plsPowerBootstrapReplicates, 199, 99, 1_999);
+        return value % 2 === 0 ? Math.max(99, value - 1) : value;
+      })(),
+    };
+  }
+
   if (kind === "ipma") {
     const targets = (normalized.ipmaTargets ?? "")
       .split(",")
@@ -348,6 +452,12 @@ export function nativeAnalysisSettingsForWorkbenchKind(
   }
 
   if (kind === "cbsem") {
+    const cbsemBootstrapSamples = boundedInteger(
+      normalized.cbsemBootstrapSamples,
+      0,
+      NATIVE_ANALYSIS_RECIPE_BOUNDS.cbsemBootstrapSamples.minimum,
+      NATIVE_ANALYSIS_RECIPE_BOUNDS.cbsemBootstrapSamples.maximum,
+    );
     return {
       ...normalized,
       method: "cbsem",
@@ -356,14 +466,34 @@ export function nativeAnalysisSettingsForWorkbenchKind(
       bootstrapSamples: 0,
       studentizedInnerSamples: 0,
       permutationSamples: 0,
-      workers: 1,
+      workers: cbsemBootstrapSamples > 0 ? normalized.workers : 1,
       caseWeightColumn: null,
       cbsemModelType: normalized.cbsemModelType === "cfa" ? "cfa" : "sem",
       cbsemMeanStructure: false,
       cbsemStandardization: "std_all",
       cbsemGroupColumn: null,
       cbsemInvarianceSteps: null,
-      cbsemBootstrapSamples: 0,
+      cbsemBootstrapSamples,
+      ...(cbsemBootstrapSamples > 0 ? { confidenceLevel: 0.95 } : {}),
+    };
+  }
+
+  if (kind === "plsc_bootstrap") {
+    return {
+      ...normalized,
+      method: "plsc",
+      weightingScheme: normalized.weightingScheme === "pca" ? "path" : (normalized.weightingScheme ?? "path"),
+      preprocessing: normalized.preprocessing ?? "standardized",
+      bootstrapSamples: boundedInteger(
+        normalized.bootstrapSamples > 0 ? normalized.bootstrapSamples : undefined,
+        10_000,
+        1_000,
+        10_000,
+      ),
+      studentizedInnerSamples: 0,
+      permutationSamples: 0,
+      workers: normalized.workers,
+      caseWeightColumn: null,
     };
   }
 
@@ -509,6 +639,26 @@ export function nativeAnalysisSettingsForWorkbenchKind(
   };
 }
 
+/**
+ * Product-capability projection for a concrete native catalogue entry.
+ *
+ * Bootstrap and path randomization share the legacy PLS engine recipe field,
+ * but they are distinct option cells in Capability Registry V2. Customer
+ * surfaces must use this projection before asking the registry for visibility.
+ */
+export function nativeCapabilitySettingsForWorkbenchKindV2(
+  settings: Readonly<AnalysisUiSettings>,
+  kind: NativeWorkbenchAnalysisKind,
+): AnalysisUiSettings {
+  const normalized = nativeAnalysisSettingsForWorkbenchKind(settings, kind);
+  if (kind === "pls_bootstrap") return { ...normalized, method: "bootstrap" };
+  if (kind === "pls_permutation") return { ...normalized, method: "permutation" };
+  if (kind === "pls_posthoc_technical_minimum_sample_size") {
+    return { ...normalized, method: "pls_pm", posthocTechnicalMinimumSampleSize: true };
+  }
+  return normalized;
+}
+
 export function nativeAnalysisStartLabel(
   kind: NativeWorkbenchAnalysisKind,
   retry: boolean,
@@ -517,7 +667,10 @@ export function nativeAnalysisStartLabel(
 ): string {
   const verb = retry ? "Retry" : "Start";
   if (kind === "pls_bootstrap") return `${verb} bootstrapping`;
+  if (kind === "plsc_bootstrap") return `${verb} consistent bootstrapping`;
   if (kind === "pls_permutation") return `${verb} path randomization`;
+  if (kind === "pls_posthoc_technical_minimum_sample_size") return `${verb} post-hoc calculation`;
+  if (kind === "pls_sample_size_power") return `${verb} prospective power analysis`;
   if (kind === "mga") return `${verb} group analysis`;
   if (kind === "predict") return `${verb} prediction`;
   if (kind === "plsc") return `${verb} consistent PLS`;

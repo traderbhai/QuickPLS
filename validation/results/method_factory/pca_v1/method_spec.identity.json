@@ -16,7 +16,7 @@
     }
   },
   "feature_id": "qpls3.standalone.pca",
-  "generated_at_utc": "2026-08-13T19:35:32.829086Z",
+  "generated_at_utc": "2026-08-18T03:07:15.570033Z",
   "method_version": "pca_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -40,13 +40,13 @@
     },
     {
       "path": "validation/methods/pca_v1.manifest.json",
-      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
-      "size": 14506
+      "sha256": "e89c5a6c5c57853c93b207c2c50451bdfab0a80acb30108ffa19a0cd09d6c8c9",
+      "size": 14560
     },
     {
       "path": "validation/pca_v1_factory_common.py",
-      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
-      "size": 11599
+      "sha256": "88fceff4dd6fb914e2773f0d4fe537b5df3d01fb70066873808ba3980b2e7a1c",
+      "size": 11651
     },
     {
       "path": "validation/pca_v1_factory_evidence.py",
@@ -55,8 +55,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pca_v1_factory_evidence.py",

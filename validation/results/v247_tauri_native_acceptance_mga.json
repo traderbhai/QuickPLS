@@ -1,0 +1,2566 @@
+{
+  "passed": true,
+  "generatedAt": "2026-08-18T13:55:19.204Z",
+  "endpoint": "http://127.0.0.1:9222",
+  "runtime": "tauri-webview2-cdp",
+  "focusedRun": {
+    "scope": "mga",
+    "priorGeneratedAt": null,
+    "completedAt": "2026-08-18T13:55:33.756Z"
+  },
+  "checks": {
+    "mgaReferenceFixture": {
+      "path": "D:\\QuickPLS\\validation\\results\\mga_reference.csv",
+      "columns": [
+        "group",
+        "x1",
+        "x2",
+        "z1",
+        "z2",
+        "y1",
+        "y2"
+      ],
+      "rows": 180,
+      "groups": {
+        "A": 90,
+        "B": 90
+      },
+      "deterministic": true
+    },
+    "mgaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\mga_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-mga-1787061319200-42928.qpls",
+      "projectName": "Native MGA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-mga-1787061319200-42928.qpls",
+      "stderr": "",
+      "importAttempts": 1
+    },
+    "runtimePreflight": {
+      "passed": true,
+      "expectedOrigin": "http://tauri.localhost",
+      "enumeratedPages": [
+        {
+          "index": 0,
+          "url": "http://tauri.localhost/",
+          "origin": "http://tauri.localhost",
+          "title": "QuickPLS",
+          "shellVisible": true,
+          "tauriRuntime": true
+        }
+      ],
+      "qualifyingPageCount": 1,
+      "preReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "reloadCount": 1,
+      "postReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "sameOrigin": true,
+      "experimentalLabsPreferenceRestored": true
+    },
+    "runtime": {
+      "title": "QuickPLS",
+      "tauriRuntime": true,
+      "viewport": {
+        "width": 1536,
+        "height": 794,
+        "dpr": 1.25
+      },
+      "surface": "launcher"
+    },
+    "mgaRecentProject": {
+      "visibleRows": 1,
+      "pathVisible": true,
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-mga-1787061319200-42928.qpls"
+    },
+    "mgaDataset": {
+      "cases": 180,
+      "columns": [
+        "#",
+        "group",
+        "x1",
+        "x2",
+        "z1",
+        "z2",
+        "y1",
+        "y2"
+      ],
+      "previewRows": 100,
+      "status": "ReadyNative MGA Acceptancemga_reference.csv180 cases0 constructsDataOffline",
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\mga_reference.csv"
+    },
+    "initialMgaModelCreation": {
+      "projectName": "Native MGA Acceptance",
+      "importedEditableModels": 0,
+      "name": "Two-Group Structural Model",
+      "constructs": 0,
+      "structuralPaths": 0
+    },
+    "visibleMgaModelBuild": {
+      "constructs": 3,
+      "constructLabels": [
+        "X",
+        "Z",
+        "Y"
+      ],
+      "assignedIndicators": 6,
+      "structuralPaths": 2,
+      "groupVariableVisible": 1,
+      "groupVariableUnassigned": true
+    },
+    "mgaGroupSetup": {
+      "command": "Use as Grouping Variable…",
+      "groupingVariable": "group",
+      "groupA": "A",
+      "groupB": "B",
+      "headers": [
+        "Role",
+        "Value",
+        "Observed",
+        "Complete model cases"
+      ],
+      "rows": [
+        [
+          "A",
+          "A",
+          "90",
+          "90"
+        ],
+        [
+          "B",
+          "B",
+          "90",
+          "90"
+        ]
+      ],
+      "observedCount": 180,
+      "previewRows": 100,
+      "completeDatasetBeyondPreview": true,
+      "scope": "Two-group scope This screen selects Group A and Group B; results report Group A − Group B. Configure the combined MICOM and structural-path permutation MGA workflow in Calculate, including Step 1 confirmation and the shared permutation plan.",
+      "applyEnabled": true
+    },
+    "mgaConfiguredData": {
+      "groupingMarker": 1,
+      "groupingClass": true,
+      "editCommandCount": 1,
+      "editCommandEnabled": true
+    },
+    "mgaCalculationDialog": {
+      "methods": [
+        "PLS-SEM Algorithm",
+        "Consistent PLS",
+        "Weighted PLS",
+        "GSCA",
+        "CCA composite residual diagnostics",
+        "Confirmatory Tetrad Analysis",
+        "Importance-Performance Map Analysis",
+        "CB-SEM / CFA",
+        "PLS-SEM Bootstrapping",
+        "PLSc Consistent Bootstrapping",
+        "Structural Path Randomization",
+        "Post-hoc Technical Minimum Sample Size",
+        "PLS-SEM Sample Size and Power",
+        "MICOM and Two-Group Permutation MGA",
+        "PLSpredict / CVPAT",
+        "Necessary Condition Analysis",
+        "Principal Component Analysis",
+        "Regression"
+      ],
+      "selectedMethod": "MICOM and Two-Group Permutation MGA",
+      "groupColumn": "group",
+      "groupA": "A",
+      "groupB": "B",
+      "defaultPermutations": "5000",
+      "permutationMinimum": "5000",
+      "permutationMaximum": "10000",
+      "confidence": {
+        "value": "95",
+        "minimum": "80",
+        "maximum": "99.9",
+        "step": "0.1"
+      },
+      "configuralConfirmation": {
+        "count": 1,
+        "initiallyChecked": false,
+        "blockersBefore": [
+          "Confirm MICOM Step 1: identical indicators, coding, data treatment, algorithm settings, and substantive meaning across both groups.",
+          "Confirm MICOM Step 1 through explicit researcher review before calculation."
+        ],
+        "checkedAfter": true,
+        "blockersAfter": []
+      },
+      "weighting": "Path weighting (fixed)",
+      "preprocessing": "Standardized (fixed)",
+      "twoTailedAMinusB": true,
+      "automaticStepsTwoAndThree": true,
+      "startEnabledBeforeConfigural": false
+    },
+    "mgaRunning": {
+      "status": "running",
+      "phase": "Iterating",
+      "message": "QuickPLS is calculating.",
+      "progressValue": "9",
+      "progressMax": "100",
+      "logEntries": 3,
+      "cancelVisible": true,
+      "cancelEnabled": true,
+      "permutationSamples": 5000
+    },
+    "mgaResult": {
+      "runId": "0c0af0bc-f069-4ffc-abc8-64aff6531d5e",
+      "runLabel": "MICOM and Two-Group Permutation MGA run",
+      "autoOpenedSurface": "results",
+      "autoOpenedTable": "MICOM invariance summary",
+      "navigation": {
+        "groupTitle": "Groups",
+        "selectedTable": "Combined permutation plan and provenance",
+        "treeItems": [
+          "Groups",
+          "Two-group sample summary",
+          "MICOM invariance summary",
+          "MICOM Step 1 - configural invariance",
+          "MICOM Step 2 - compositional invariance",
+          "MICOM Step 3 - equality of composite means",
+          "MICOM Step 3 - equality of composite variances",
+          "MICOM permutation accounting",
+          "Group path coefficients",
+          "Group R-square",
+          "Group outer loadings",
+          "Group outer weights",
+          "Group A minus Group B path differences",
+          "Group A minus Group B outer-loading differences",
+          "Group A minus Group B outer-weight differences",
+          "Two-tailed permutation path differences",
+          "Two-tailed permutation outer-loading differences",
+          "Two-tailed permutation outer-weight differences",
+          "Combined permutation plan and provenance"
+        ],
+        "tables": {
+          "Two-group sample summary": {
+            "rows": 2,
+            "headers": [
+              "Group column",
+              "Role",
+              "Group value",
+              "Analyzed observations"
+            ],
+            "rowValues": [
+              [
+                "group",
+                "Group A",
+                "A",
+                "90"
+              ],
+              [
+                "group",
+                "Group B",
+                "B",
+                "90"
+              ]
+            ],
+            "text": "groupGroup AA90groupGroup BB90",
+            "viewText": "Two-group sample summary2 rowsTwo-group MGA v4 reports Group A/Group B structural paths, R-squared values, outer loadings, outer weights, and A-minus-B differences. Inference uses a canonical deterministic two-tailed fixed partition plan shared with MICOM v4. Two-group permutation MGA v4 re-estimates paths, outer loadings, and outer weights using one fixed indexed size-preserving partition plan and reports two-tailed A-minus-B evidence without replacement retries. MICOM v4 uses the same fixed partition identities for Steps 2 and 3. Step 1 records explicit researcher review; translation, coding meaning, and substantive indicator equivalence are not inferred from data.Group columnRoleGroup valueAnalyzed observationsgroupGroup AA90groupGroup BB90Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM invariance summary": {
+            "rows": 3,
+            "headers": [
+              "Construct",
+              "Configural",
+              "Compositional",
+              "Partial invariance",
+              "Equal means",
+              "Equal variances",
+              "Full invariance",
+              "Confidence",
+              "Usable permutations"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "Confirmed",
+                "Established",
+                "Established",
+                "Equal",
+                "Equal",
+                "Established",
+                "95.0%",
+                "5000"
+              ],
+              [
+                "Z",
+                "Confirmed",
+                "Established",
+                "Established",
+                "Equal",
+                "Equal",
+                "Established",
+                "95.0%",
+                "5000"
+              ],
+              [
+                "Y",
+                "Confirmed",
+                "Established",
+                "Established",
+                "Equal",
+                "Equal",
+                "Established",
+                "95.0%",
+                "5000"
+              ]
+            ],
+            "text": "XConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000ZConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000YConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000",
+            "viewText": "MICOM invariance summary3 rowsConstructConfiguralCompositionalPartial invarianceEqual meansEqual variancesFull invarianceConfidenceUsable permutationsXConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000ZConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000YConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM Step 1 - configural invariance": {
+            "rows": 3,
+            "headers": [
+              "Construct",
+              "Configural invariance"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "Confirmed"
+              ],
+              [
+                "Z",
+                "Confirmed"
+              ],
+              [
+                "Y",
+                "Confirmed"
+              ]
+            ],
+            "text": "XConfirmedZConfirmedYConfirmed",
+            "viewText": "MICOM Step 1 - configural invariance3 rowsConstructConfigural invarianceXConfirmedZConfirmedYConfirmedUse the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM Step 2 - compositional invariance": {
+            "rows": 3,
+            "headers": [
+              "Construct",
+              "Original correlation",
+              "Lower confidence bound",
+              "Permutation p",
+              "Compositional invariance"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "1.0000",
+                "1.0000",
+                "0.9524",
+                "Established"
+              ],
+              [
+                "Z",
+                "1.0000",
+                "1.0000",
+                "0.9074",
+                "Established"
+              ],
+              [
+                "Y",
+                "1.0000",
+                "1.0000",
+                "0.8394",
+                "Established"
+              ]
+            ],
+            "text": "X1.00001.00000.9524EstablishedZ1.00001.00000.9074EstablishedY1.00001.00000.8394Established",
+            "viewText": "MICOM Step 2 - compositional invariance3 rowsConstructOriginal correlationLower confidence boundPermutation pCompositional invarianceX1.00001.00000.9524EstablishedZ1.00001.00000.9074EstablishedY1.00001.00000.8394EstablishedUse the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM Step 3 - equality of composite means": {
+            "rows": 3,
+            "headers": [
+              "Construct",
+              "Mean A",
+              "Mean B",
+              "Mean difference (A - B)",
+              "Lower confidence bound",
+              "Upper confidence bound",
+              "Two-tailed p",
+              "Equal means"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "-0.0215",
+                "0.0215",
+                "-0.0431",
+                "-0.2960",
+                "0.2875",
+                "0.7610",
+                "Equal"
+              ],
+              [
+                "Z",
+                "0.0651",
+                "-0.0651",
+                "0.1302",
+                "-0.2826",
+                "0.2903",
+                "0.3651",
+                "Equal"
+              ],
+              [
+                "Y",
+                "0.0314",
+                "-0.0314",
+                "0.0628",
+                "-0.2955",
+                "0.2895",
+                "0.6567",
+                "Equal"
+              ]
+            ],
+            "text": "X-0.02150.0215-0.0431-0.29600.28750.7610EqualZ0.0651-0.06510.1302-0.28260.29030.3651EqualY0.0314-0.03140.0628-0.29550.28950.6567Equal",
+            "viewText": "MICOM Step 3 - equality of composite means3 rowsConstructMean AMean BMean difference (A - B)Lower confidence boundUpper confidence boundTwo-tailed pEqual meansX-0.02150.0215-0.0431-0.29600.28750.7610EqualZ0.0651-0.06510.1302-0.28260.29030.3651EqualY0.0314-0.03140.0628-0.29550.28950.6567EqualUse the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM Step 3 - equality of composite variances": {
+            "rows": 3,
+            "headers": [
+              "Construct",
+              "Variance A",
+              "Variance B",
+              "Log variance ratio (A/B)",
+              "Lower confidence bound",
+              "Upper confidence bound",
+              "Two-tailed p",
+              "Equal variances"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "1.0153",
+                "0.9950",
+                "0.0201",
+                "-0.2725",
+                "0.2733",
+                "0.8818",
+                "Equal"
+              ],
+              [
+                "Z",
+                "1.0347",
+                "0.9679",
+                "0.0667",
+                "-0.2538",
+                "0.2471",
+                "0.5847",
+                "Equal"
+              ],
+              [
+                "Y",
+                "1.1112",
+                "0.8981",
+                "0.2129",
+                "-0.2975",
+                "0.3024",
+                "0.1708",
+                "Equal"
+              ]
+            ],
+            "text": "X1.01530.99500.0201-0.27250.27330.8818EqualZ1.03470.96790.0667-0.25380.24710.5847EqualY1.11120.89810.2129-0.29750.30240.1708Equal",
+            "viewText": "MICOM Step 3 - equality of composite variances3 rowsConstructVariance AVariance BLog variance ratio (A/B)Lower confidence boundUpper confidence boundTwo-tailed pEqual variancesX1.01530.99500.0201-0.27250.27330.8818EqualZ1.03470.96790.0667-0.25380.24710.5847EqualY1.11120.89810.2129-0.29750.30240.1708EqualUse the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM permutation accounting": {
+            "rows": 10,
+            "headers": [
+              "Field",
+              "Value"
+            ],
+            "rowValues": [
+              [
+                "Step 1",
+                "Confirmed by researcher review; not computed from the data"
+              ],
+              [
+                "Requested permutations",
+                "5000"
+              ],
+              [
+                "Attempted permutations",
+                "5000"
+              ],
+              [
+                "Retry policy",
+                "none"
+              ],
+              [
+                "Step 2 usable",
+                "5000"
+              ],
+              [
+                "Step 2 failed",
+                "0"
+              ],
+              [
+                "Step 3 usable",
+                "5000"
+              ],
+              [
+                "Step 3 failed",
+                "0"
+              ],
+              [
+                "Ledger rows",
+                "5000"
+              ],
+              [
+                "Permutation plan",
+                "sha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17"
+              ]
+            ],
+            "text": "Step 1Confirmed by researcher review; not computed from the dataRequested permutations5000Attempted permutations5000Retry policynoneStep 2 usable5000Step 2 failed0Step 3 usable5000Step 3 failed0Ledger rows5000Permutation plansha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17",
+            "viewText": "MICOM permutation accounting10 rowsTwo-group permutation MGA v4 re-estimates paths, outer loadings, and outer weights using one fixed indexed size-preserving partition plan and reports two-tailed A-minus-B evidence without replacement retries. MICOM v4 uses the same fixed partition identities for Steps 2 and 3. Step 1 records explicit researcher review; translation, coding meaning, and substantive indicator equivalence are not inferred from data.FieldValueStep 1Confirmed by researcher review; not computed from the dataRequested permutations5000Attempted permutations5000Retry policynoneStep 2 usable5000Step 2 failed0Step 3 usable5000Step 3 failed0Ledger rows5000Permutation plansha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group path coefficients": {
+            "rows": 4,
+            "headers": [
+              "Role",
+              "Group value",
+              "Path",
+              "Coefficient"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "X → Y",
+                "0.9338"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z → Y",
+                "0.2057"
+              ],
+              [
+                "Group B",
+                "B",
+                "X → Y",
+                "0.3126"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z → Y",
+                "0.8690"
+              ]
+            ],
+            "text": "Group AAX → Y0.9338Group AAZ → Y0.2057Group BBX → Y0.3126Group BBZ → Y0.8690",
+            "viewText": "Group path coefficients4 rowsRoleGroup valuePathCoefficientGroup AAX → Y0.9338Group AAZ → Y0.2057Group BBX → Y0.3126Group BBZ → Y0.8690Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group R-square": {
+            "rows": 2,
+            "headers": [
+              "Role",
+              "Group value",
+              "Construct",
+              "R²"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "Y",
+                "0.9376"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "0.9236"
+              ]
+            ],
+            "text": "Group AAY0.9376Group BBY0.9236",
+            "viewText": "Group R-square2 rowsRoleGroup valueConstructR²Group AAY0.9376Group BBY0.9236Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group outer loadings": {
+            "rows": 12,
+            "headers": [
+              "Role",
+              "Group value",
+              "Construct",
+              "Indicator",
+              "Outer loading"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "X",
+                "x1",
+                "0.9969"
+              ],
+              [
+                "Group A",
+                "A",
+                "X",
+                "x2",
+                "0.9969"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z",
+                "z1",
+                "0.9960"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z",
+                "z2",
+                "0.9961"
+              ],
+              [
+                "Group A",
+                "A",
+                "Y",
+                "y1",
+                "0.9973"
+              ],
+              [
+                "Group A",
+                "A",
+                "Y",
+                "y2",
+                "0.9973"
+              ],
+              [
+                "Group B",
+                "B",
+                "X",
+                "x1",
+                "0.9968"
+              ],
+              [
+                "Group B",
+                "B",
+                "X",
+                "x2",
+                "0.9969"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z",
+                "z1",
+                "0.9959"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z",
+                "z2",
+                "0.9958"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "y1",
+                "0.9965"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "y2",
+                "0.9965"
+              ]
+            ],
+            "text": "Group AAXx10.9969Group AAXx20.9969Group AAZz10.9960Group AAZz20.9961Group AAYy10.9973Group AAYy20.9973Group BBXx10.9968Group BBXx20.9969Group BBZz10.9959Group BBZz20.9958Group BBYy10.9965Group BBYy20.9965",
+            "viewText": "Group outer loadings12 rowsRoleGroup valueConstructIndicatorOuter loadingGroup AAXx10.9969Group AAXx20.9969Group AAZz10.9960Group AAZz20.9961Group AAYy10.9973Group AAYy20.9973Group BBXx10.9968Group BBXx20.9969Group BBZz10.9959Group BBZz20.9958Group BBYy10.9965Group BBYy20.9965Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group outer weights": {
+            "rows": 12,
+            "headers": [
+              "Role",
+              "Group value",
+              "Construct",
+              "Indicator",
+              "Outer weight"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "X",
+                "x1",
+                "0.5035"
+              ],
+              [
+                "Group A",
+                "A",
+                "X",
+                "x2",
+                "0.4996"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z",
+                "z1",
+                "0.4990"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z",
+                "z2",
+                "0.5049"
+              ],
+              [
+                "Group A",
+                "A",
+                "Y",
+                "y1",
+                "0.5017"
+              ],
+              [
+                "Group A",
+                "A",
+                "Y",
+                "y2",
+                "0.5009"
+              ],
+              [
+                "Group B",
+                "B",
+                "X",
+                "x1",
+                "0.4994"
+              ],
+              [
+                "Group B",
+                "B",
+                "X",
+                "x2",
+                "0.5038"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z",
+                "z1",
+                "0.5039"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z",
+                "z2",
+                "0.5003"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "y1",
+                "0.5027"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "y2",
+                "0.5008"
+              ]
+            ],
+            "text": "Group AAXx10.5035Group AAXx20.4996Group AAZz10.4990Group AAZz20.5049Group AAYy10.5017Group AAYy20.5009Group BBXx10.4994Group BBXx20.5038Group BBZz10.5039Group BBZz20.5003Group BBYy10.5027Group BBYy20.5008",
+            "viewText": "Group outer weights12 rowsRoleGroup valueConstructIndicatorOuter weightGroup AAXx10.5035Group AAXx20.4996Group AAZz10.4990Group AAZz20.5049Group AAYy10.5017Group AAYy20.5009Group BBXx10.4994Group BBXx20.5038Group BBZz10.5039Group BBZz20.5003Group BBYy10.5027Group BBYy20.5008Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group A minus Group B path differences": {
+            "rows": 2,
+            "headers": [
+              "Path",
+              "Group A",
+              "Coefficient A",
+              "Group B",
+              "Coefficient B",
+              "A − B"
+            ],
+            "rowValues": [
+              [
+                "X → Y",
+                "A",
+                "0.9338",
+                "B",
+                "0.3126",
+                "0.6211"
+              ],
+              [
+                "Z → Y",
+                "A",
+                "0.2057",
+                "B",
+                "0.8690",
+                "-0.6634"
+              ]
+            ],
+            "text": "X → YA0.9338B0.31260.6211Z → YA0.2057B0.8690-0.6634",
+            "viewText": "Group A minus Group B path differences2 rowsPathGroup ACoefficient AGroup BCoefficient BA − BX → YA0.9338B0.31260.6211Z → YA0.2057B0.8690-0.6634Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Two-tailed permutation path differences": {
+            "rows": 2,
+            "headers": [
+              "Path",
+              "A − B",
+              "Two-tailed p",
+              "Percentile rank",
+              "Requested permutations",
+              "Usable permutations"
+            ],
+            "rowValues": [
+              [
+                "X → Y",
+                "0.6211",
+                "0.0002",
+                "1.0000",
+                "5000",
+                "5000"
+              ],
+              [
+                "Z → Y",
+                "-0.6634",
+                "0.0002",
+                "0.0000",
+                "5000",
+                "5000"
+              ]
+            ],
+            "text": "X → Y0.62110.00021.000050005000Z → Y-0.66340.00020.000050005000",
+            "viewText": "Two-tailed permutation path differences2 rowsPathA − BTwo-tailed pPercentile rankRequested permutationsUsable permutationsX → Y0.62110.00021.000050005000Z → Y-0.66340.00020.000050005000Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group A minus Group B outer-loading differences": {
+            "rows": 6,
+            "headers": [
+              "Construct",
+              "Indicator",
+              "Group A",
+              "Outer loading A",
+              "Group B",
+              "Outer loading B",
+              "A - B"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "x1",
+                "A",
+                "0.9969",
+                "B",
+                "0.9968",
+                "0.0001"
+              ],
+              [
+                "X",
+                "x2",
+                "A",
+                "0.9969",
+                "B",
+                "0.9969",
+                "-0.0000"
+              ],
+              [
+                "Z",
+                "z1",
+                "A",
+                "0.9960",
+                "B",
+                "0.9959",
+                "0.0002"
+              ],
+              [
+                "Z",
+                "z2",
+                "A",
+                "0.9961",
+                "B",
+                "0.9958",
+                "0.0003"
+              ],
+              [
+                "Y",
+                "y1",
+                "A",
+                "0.9973",
+                "B",
+                "0.9965",
+                "0.0008"
+              ],
+              [
+                "Y",
+                "y2",
+                "A",
+                "0.9973",
+                "B",
+                "0.9965",
+                "0.0008"
+              ]
+            ],
+            "text": "Xx1A0.9969B0.99680.0001Xx2A0.9969B0.9969-0.0000Zz1A0.9960B0.99590.0002Zz2A0.9961B0.99580.0003Yy1A0.9973B0.99650.0008Yy2A0.9973B0.99650.0008",
+            "viewText": "Group A minus Group B outer-loading differences6 rowsConstructIndicatorGroup AOuter loading AGroup BOuter loading BA - BXx1A0.9969B0.99680.0001Xx2A0.9969B0.9969-0.0000Zz1A0.9960B0.99590.0002Zz2A0.9961B0.99580.0003Yy1A0.9973B0.99650.0008Yy2A0.9973B0.99650.0008Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group A minus Group B outer-weight differences": {
+            "rows": 6,
+            "headers": [
+              "Construct",
+              "Indicator",
+              "Group A",
+              "Outer weight A",
+              "Group B",
+              "Outer weight B",
+              "A - B"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "x1",
+                "A",
+                "0.5035",
+                "B",
+                "0.4994",
+                "0.0042"
+              ],
+              [
+                "X",
+                "x2",
+                "A",
+                "0.4996",
+                "B",
+                "0.5038",
+                "-0.0042"
+              ],
+              [
+                "Z",
+                "z1",
+                "A",
+                "0.4990",
+                "B",
+                "0.5039",
+                "-0.0048"
+              ],
+              [
+                "Z",
+                "z2",
+                "A",
+                "0.5049",
+                "B",
+                "0.5003",
+                "0.0046"
+              ],
+              [
+                "Y",
+                "y1",
+                "A",
+                "0.5017",
+                "B",
+                "0.5027",
+                "-0.0010"
+              ],
+              [
+                "Y",
+                "y2",
+                "A",
+                "0.5009",
+                "B",
+                "0.5008",
+                "0.0001"
+              ]
+            ],
+            "text": "Xx1A0.5035B0.49940.0042Xx2A0.4996B0.5038-0.0042Zz1A0.4990B0.5039-0.0048Zz2A0.5049B0.50030.0046Yy1A0.5017B0.5027-0.0010Yy2A0.5009B0.50080.0001",
+            "viewText": "Group A minus Group B outer-weight differences6 rowsConstructIndicatorGroup AOuter weight AGroup BOuter weight BA - BXx1A0.5035B0.49940.0042Xx2A0.4996B0.5038-0.0042Zz1A0.4990B0.5039-0.0048Zz2A0.5049B0.50030.0046Yy1A0.5017B0.5027-0.0010Yy2A0.5009B0.50080.0001Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Two-tailed permutation outer-loading differences": {
+            "rows": 6,
+            "headers": [
+              "Construct",
+              "Indicator",
+              "A - B",
+              "Two-tailed p",
+              "Percentile rank",
+              "Requested permutations",
+              "Usable permutations"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "x1",
+                "0.0001",
+                "0.9148",
+                "0.5392",
+                "5000",
+                "5000"
+              ],
+              [
+                "X",
+                "x2",
+                "-0.0000",
+                "0.9694",
+                "0.4818",
+                "5000",
+                "5000"
+              ],
+              [
+                "Z",
+                "z1",
+                "0.0002",
+                "0.8676",
+                "0.5748",
+                "5000",
+                "5000"
+              ],
+              [
+                "Z",
+                "z2",
+                "0.0003",
+                "0.7341",
+                "0.6382",
+                "5000",
+                "5000"
+              ],
+              [
+                "Y",
+                "y1",
+                "0.0008",
+                "0.2320",
+                "0.8820",
+                "5000",
+                "5000"
+              ],
+              [
+                "Y",
+                "y2",
+                "0.0008",
+                "0.2298",
+                "0.8834",
+                "5000",
+                "5000"
+              ]
+            ],
+            "text": "Xx10.00010.91480.539250005000Xx2-0.00000.96940.481850005000Zz10.00020.86760.574850005000Zz20.00030.73410.638250005000Yy10.00080.23200.882050005000Yy20.00080.22980.883450005000",
+            "viewText": "Two-tailed permutation outer-loading differences6 rowsConstructIndicatorA - BTwo-tailed pPercentile rankRequested permutationsUsable permutationsXx10.00010.91480.539250005000Xx2-0.00000.96940.481850005000Zz10.00020.86760.574850005000Zz20.00030.73410.638250005000Yy10.00080.23200.882050005000Yy20.00080.22980.883450005000Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Two-tailed permutation outer-weight differences": {
+            "rows": 6,
+            "headers": [
+              "Construct",
+              "Indicator",
+              "A - B",
+              "Two-tailed p",
+              "Percentile rank",
+              "Requested permutations",
+              "Usable permutations"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "x1",
+                "0.0042",
+                "0.4915",
+                "0.7594",
+                "5000",
+                "5000"
+              ],
+              [
+                "X",
+                "x2",
+                "-0.0042",
+                "0.5031",
+                "0.2474",
+                "5000",
+                "5000"
+              ],
+              [
+                "Z",
+                "z1",
+                "-0.0048",
+                "0.6399",
+                "0.3284",
+                "5000",
+                "5000"
+              ],
+              [
+                "Z",
+                "z2",
+                "0.0046",
+                "0.6605",
+                "0.6624",
+                "5000",
+                "5000"
+              ],
+              [
+                "Y",
+                "y1",
+                "-0.0010",
+                "0.7986",
+                "0.4030",
+                "5000",
+                "5000"
+              ],
+              [
+                "Y",
+                "y2",
+                "0.0001",
+                "0.9704",
+                "0.5104",
+                "5000",
+                "5000"
+              ]
+            ],
+            "text": "Xx10.00420.49150.759450005000Xx2-0.00420.50310.247450005000Zz1-0.00480.63990.328450005000Zz20.00460.66050.662450005000Yy1-0.00100.79860.403050005000Yy20.00010.97040.510450005000",
+            "viewText": "Two-tailed permutation outer-weight differences6 rowsConstructIndicatorA - BTwo-tailed pPercentile rankRequested permutationsUsable permutationsXx10.00420.49150.759450005000Xx2-0.00420.50310.247450005000Zz1-0.00480.63990.328450005000Zz20.00460.66050.662450005000Yy1-0.00100.79860.403050005000Yy20.00010.97040.510450005000Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Combined permutation plan and provenance": {
+            "rows": 10,
+            "headers": [
+              "Field",
+              "Value"
+            ],
+            "rowValues": [
+              [
+                "MGA method version",
+                "pls_mga_two_group_v4"
+              ],
+              [
+                "Permutation method version",
+                "pls_mga_permutation_v4"
+              ],
+              [
+                "MICOM method version",
+                "micom_v4"
+              ],
+              [
+                "Requested partitions",
+                "5000"
+              ],
+              [
+                "Attempted partitions",
+                "5000"
+              ],
+              [
+                "Usable MGA partitions",
+                "5000"
+              ],
+              [
+                "Failed MGA partitions",
+                "0"
+              ],
+              [
+                "Retry policy",
+                "none"
+              ],
+              [
+                "Partition plan digest",
+                "sha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17"
+              ],
+              [
+                "Seed",
+                "20260718"
+              ]
+            ],
+            "text": "MGA method versionpls_mga_two_group_v4Permutation method versionpls_mga_permutation_v4MICOM method versionmicom_v4Requested partitions5000Attempted partitions5000Usable MGA partitions5000Failed MGA partitions0Retry policynonePartition plan digestsha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17Seed20260718",
+            "viewText": "Combined permutation plan and provenance10 rowsFieldValueMGA method versionpls_mga_two_group_v4Permutation method versionpls_mga_permutation_v4MICOM method versionmicom_v4Requested partitions5000Attempted partitions5000Usable MGA partitions5000Failed MGA partitions0Retry policynonePartition plan digestsha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17Seed20260718Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          }
+        },
+        "noPooledDiagram": true,
+        "noApproximateNormalInference": true,
+        "allRequiredTablesVisible": true,
+        "noPlaceholderNa": true
+      },
+      "runDetails": {
+        "properties": {
+          "Run": "MICOM and Two-Group Permutation MGA run",
+          "Method": "MICOM and Two-Group Permutation MGA",
+          "Created": "18/8/2026, 7:25:25 pm",
+          "Recorded seed": "20260718",
+          "Dataset fingerprint": "v2:39cda42ad687e77d85dfeea50afff2b3806b8db4f90386c4529104e0671d9b2c",
+          "Recipe": "28d2ddd4-0f9a-4e49-a81c-1b774aca6b9c",
+          "Engine": "2.46.0",
+          "Method version": "pls_pm_v1+pls_mga_two_group_v4+pls_mga_permutation_v4+micom_v4+pls_mediation_v1+pls_assessment_v8",
+          "Weighting": "path",
+          "Preprocessing": "standardized"
+        },
+        "logEntries": 4
+      }
+    },
+    "mgaExport": {
+      "selectedRunId": "0c0af0bc-f069-4ffc-abc8-64aff6531d5e",
+      "formats": 5,
+      "xlsxEnabled": true,
+      "modelDiagramCount": 0,
+      "reviewerPackText": "Reviewer packResults tables and run provenance",
+      "printText": "Print / PDFPrint the selected MGA results table",
+      "selectedTable": "MICOM invariance summary",
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx",
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 2622656,
+              "pid": 41240,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 2622656,
+              "handle": 2491628,
+              "pid": 41240,
+              "rootOwner": 2622656,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 2622656,
+              "pid": 41240,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx",
+              "requiredSharedStrings": [
+                "Two-group sample summary",
+                "MICOM invariance summary",
+                "MICOM Step 1 - configural invariance",
+                "MICOM Step 2 - compositional invariance",
+                "MICOM Step 3 - equality of composite means",
+                "MICOM Step 3 - equality of composite variances",
+                "MICOM permutation accounting",
+                "Group path coefficients",
+                "Group R-square",
+                "Group outer loadings",
+                "Group outer weights",
+                "Group A minus Group B path differences",
+                "Two-tailed permutation path differences",
+                "Group A minus Group B outer-loading differences",
+                "Group A minus Group B outer-weight differences",
+                "Two-tailed permutation outer-loading differences",
+                "Two-tailed permutation outer-weight differences",
+                "Combined permutation plan and provenance",
+                "Run provenance"
+              ],
+              "requiredSheets": [
+                "Two-group sample summary",
+                "MICOM invariance summary",
+                "Group path coefficients",
+                "Group outer loadings",
+                "Group outer weights",
+                "Run provenance"
+              ],
+              "sha256": "4eddc4e3692789cef6854984d82596b029c2c8d5fd3b81edb8dde50e6e57a060",
+              "sheetNames": [
+                "Two-group sample summary",
+                "MICOM invariance summary",
+                "MICOM Step 1 - configural invar",
+                "MICOM Step 2 - compositional in",
+                "MICOM Step 3 - equality of comp",
+                "MICOM Step 3 - equality of  (2)",
+                "MICOM permutation accounting",
+                "Group path coefficients",
+                "Group outer loadings",
+                "Group outer weights",
+                "Group R-square",
+                "Group A minus Group B path diff",
+                "Group A minus Group B outer-loa",
+                "Group A minus Group B outer-wei",
+                "Two-tailed permutation path dif",
+                "Two-tailed permutation outer-lo",
+                "Two-tailed permutation outer-we",
+                "Combined permutation plan and p",
+                "Run provenance"
+              ],
+              "size": 22084
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 2622656,
+                    "pid": 41240,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 2622656,
+                    "handle": 2491628,
+                    "pid": 41240,
+                    "rootOwner": 2622656,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 2622656,
+                    "pid": 41240,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-mga-20260818-192517370.xlsx",
+                    "requiredSharedStrings": [
+                      "Two-group sample summary",
+                      "MICOM invariance summary",
+                      "MICOM Step 1 - configural invariance",
+                      "MICOM Step 2 - compositional invariance",
+                      "MICOM Step 3 - equality of composite means",
+                      "MICOM Step 3 - equality of composite variances",
+                      "MICOM permutation accounting",
+                      "Group path coefficients",
+                      "Group R-square",
+                      "Group outer loadings",
+                      "Group outer weights",
+                      "Group A minus Group B path differences",
+                      "Two-tailed permutation path differences",
+                      "Group A minus Group B outer-loading differences",
+                      "Group A minus Group B outer-weight differences",
+                      "Two-tailed permutation outer-loading differences",
+                      "Two-tailed permutation outer-weight differences",
+                      "Combined permutation plan and provenance",
+                      "Run provenance"
+                    ],
+                    "requiredSheets": [
+                      "Two-group sample summary",
+                      "MICOM invariance summary",
+                      "Group path coefficients",
+                      "Group outer loadings",
+                      "Group outer weights",
+                      "Run provenance"
+                    ],
+                    "sha256": "4eddc4e3692789cef6854984d82596b029c2c8d5fd3b81edb8dde50e6e57a060",
+                    "sheetNames": [
+                      "Two-group sample summary",
+                      "MICOM invariance summary",
+                      "MICOM Step 1 - configural invar",
+                      "MICOM Step 2 - compositional in",
+                      "MICOM Step 3 - equality of comp",
+                      "MICOM Step 3 - equality of  (2)",
+                      "MICOM permutation accounting",
+                      "Group path coefficients",
+                      "Group outer loadings",
+                      "Group outer weights",
+                      "Group R-square",
+                      "Group A minus Group B path diff",
+                      "Group A minus Group B outer-loa",
+                      "Group A minus Group B outer-wei",
+                      "Two-tailed permutation path dif",
+                      "Two-tailed permutation outer-lo",
+                      "Two-tailed permutation outer-we",
+                      "Combined permutation plan and p",
+                      "Run provenance"
+                    ],
+                    "size": 22084
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        },
+        "appFeedback": "Saved v247-native-mga-20260818-192517370.xlsx.",
+        "file": {
+          "size": 22084,
+          "isFile": true
+        },
+        "workbookSheets": [
+          "Two-group sample summary",
+          "MICOM invariance summary",
+          "MICOM Step 1 - configural invar",
+          "MICOM Step 2 - compositional in",
+          "MICOM Step 3 - equality of comp",
+          "MICOM Step 3 - equality of  (2)",
+          "MICOM permutation accounting",
+          "Group path coefficients",
+          "Group outer loadings",
+          "Group outer weights",
+          "Group R-square",
+          "Group A minus Group B path diff",
+          "Group A minus Group B outer-loa",
+          "Group A minus Group B outer-wei",
+          "Two-tailed permutation path dif",
+          "Two-tailed permutation outer-lo",
+          "Two-tailed permutation outer-we",
+          "Combined permutation plan and p",
+          "Run provenance"
+        ],
+        "allSheetsDistinct": true,
+        "micomStep3Sheets": [
+          "MICOM Step 3 - equality of comp",
+          "MICOM Step 3 - equality of  (2)"
+        ]
+      }
+    },
+    "mgaEditModel": {
+      "constructs": 3,
+      "assignedIndicators": 6,
+      "structuralPaths": 2,
+      "groupingVariableCount": 1,
+      "groupingVariableDisabled": true,
+      "selectedResultRetained": true
+    },
+    "mgaSaveReopen": {
+      "attempted": true,
+      "reopenedThroughRecentProjectRow": true,
+      "selectedRunId": "0c0af0bc-f069-4ffc-abc8-64aff6531d5e",
+      "expectedRunId": "0c0af0bc-f069-4ffc-abc8-64aff6531d5e",
+      "expectedSelectedTable": "Combined permutation plan and provenance",
+      "runOptions": [
+        "MICOM and Two-Group Permutation MGA run"
+      ],
+      "archive": {
+        "resultStatus": "completed",
+        "provenanceMethod": "mga",
+        "provenanceMethodVersion": "pls_pm_v1+pls_mga_two_group_v4+pls_mga_permutation_v4+micom_v4+pls_mediation_v1+pls_assessment_v8",
+        "exactCurrentVersions": true,
+        "estimationMethodVersion": "pls_mga_two_group_v4",
+        "mgaMethodVersion": "pls_mga_two_group_v4",
+        "permutationMethodVersion": "pls_mga_permutation_v4",
+        "micomMethodVersion": "micom_v4",
+        "exactGroupPayload": true,
+        "exactPermutationPayload": true,
+        "exactMicomPayload": true,
+        "recipe": {
+          "schemaVersion": 3,
+          "status": "validated_micom_v4_and_permutation_mga_v4_fixed_plan_scope",
+          "exactMethodConfigKeys": true,
+          "methodConfigKind": "mga",
+          "groupMethods": [
+            "micom",
+            "mga_permutation"
+          ],
+          "exactGroupMethods": true,
+          "groupPermutationSamples": 5000,
+          "configuralConfirmed": true,
+          "groupColumn": "group",
+          "groupA": "A",
+          "groupB": "B",
+          "method": "mga",
+          "weighting": "path",
+          "preprocessing": "standardized",
+          "missingData": "listwise_deletion",
+          "bootstrapSamples": 0,
+          "permutationSamples": 0,
+          "caseWeightColumn": null,
+          "confidenceLevel": 0.95
+        },
+        "run": {
+          "method": "MICOM and Two-Group Permutation MGA",
+          "status": "completed",
+          "logs": 4
+        }
+      },
+      "navigation": {
+        "groupTitle": "Groups",
+        "selectedTable": "Combined permutation plan and provenance",
+        "treeItems": [
+          "Groups",
+          "Two-group sample summary",
+          "MICOM invariance summary",
+          "MICOM Step 1 - configural invariance",
+          "MICOM Step 2 - compositional invariance",
+          "MICOM Step 3 - equality of composite means",
+          "MICOM Step 3 - equality of composite variances",
+          "MICOM permutation accounting",
+          "Group path coefficients",
+          "Group R-square",
+          "Group outer loadings",
+          "Group outer weights",
+          "Group A minus Group B path differences",
+          "Group A minus Group B outer-loading differences",
+          "Group A minus Group B outer-weight differences",
+          "Two-tailed permutation path differences",
+          "Two-tailed permutation outer-loading differences",
+          "Two-tailed permutation outer-weight differences",
+          "Combined permutation plan and provenance"
+        ],
+        "tables": {
+          "Two-group sample summary": {
+            "rows": 2,
+            "headers": [
+              "Group column",
+              "Role",
+              "Group value",
+              "Analyzed observations"
+            ],
+            "rowValues": [
+              [
+                "group",
+                "Group A",
+                "A",
+                "90"
+              ],
+              [
+                "group",
+                "Group B",
+                "B",
+                "90"
+              ]
+            ],
+            "text": "groupGroup AA90groupGroup BB90",
+            "viewText": "Two-group sample summary2 rowsTwo-group MGA v4 reports Group A/Group B structural paths, R-squared values, outer loadings, outer weights, and A-minus-B differences. Inference uses a canonical deterministic two-tailed fixed partition plan shared with MICOM v4. Two-group permutation MGA v4 re-estimates paths, outer loadings, and outer weights using one fixed indexed size-preserving partition plan and reports two-tailed A-minus-B evidence without replacement retries. MICOM v4 uses the same fixed partition identities for Steps 2 and 3. Step 1 records explicit researcher review; translation, coding meaning, and substantive indicator equivalence are not inferred from data.Group columnRoleGroup valueAnalyzed observationsgroupGroup AA90groupGroup BB90Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM invariance summary": {
+            "rows": 3,
+            "headers": [
+              "Construct",
+              "Configural",
+              "Compositional",
+              "Partial invariance",
+              "Equal means",
+              "Equal variances",
+              "Full invariance",
+              "Confidence",
+              "Usable permutations"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "Confirmed",
+                "Established",
+                "Established",
+                "Equal",
+                "Equal",
+                "Established",
+                "95.0%",
+                "5000"
+              ],
+              [
+                "Z",
+                "Confirmed",
+                "Established",
+                "Established",
+                "Equal",
+                "Equal",
+                "Established",
+                "95.0%",
+                "5000"
+              ],
+              [
+                "Y",
+                "Confirmed",
+                "Established",
+                "Established",
+                "Equal",
+                "Equal",
+                "Established",
+                "95.0%",
+                "5000"
+              ]
+            ],
+            "text": "XConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000ZConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000YConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000",
+            "viewText": "MICOM invariance summary3 rowsConstructConfiguralCompositionalPartial invarianceEqual meansEqual variancesFull invarianceConfidenceUsable permutationsXConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000ZConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000YConfirmedEstablishedEstablishedEqualEqualEstablished95.0%5000Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM Step 1 - configural invariance": {
+            "rows": 3,
+            "headers": [
+              "Construct",
+              "Configural invariance"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "Confirmed"
+              ],
+              [
+                "Z",
+                "Confirmed"
+              ],
+              [
+                "Y",
+                "Confirmed"
+              ]
+            ],
+            "text": "XConfirmedZConfirmedYConfirmed",
+            "viewText": "MICOM Step 1 - configural invariance3 rowsConstructConfigural invarianceXConfirmedZConfirmedYConfirmedUse the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM Step 2 - compositional invariance": {
+            "rows": 3,
+            "headers": [
+              "Construct",
+              "Original correlation",
+              "Lower confidence bound",
+              "Permutation p",
+              "Compositional invariance"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "1.0000",
+                "1.0000",
+                "0.9524",
+                "Established"
+              ],
+              [
+                "Z",
+                "1.0000",
+                "1.0000",
+                "0.9074",
+                "Established"
+              ],
+              [
+                "Y",
+                "1.0000",
+                "1.0000",
+                "0.8394",
+                "Established"
+              ]
+            ],
+            "text": "X1.00001.00000.9524EstablishedZ1.00001.00000.9074EstablishedY1.00001.00000.8394Established",
+            "viewText": "MICOM Step 2 - compositional invariance3 rowsConstructOriginal correlationLower confidence boundPermutation pCompositional invarianceX1.00001.00000.9524EstablishedZ1.00001.00000.9074EstablishedY1.00001.00000.8394EstablishedUse the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM Step 3 - equality of composite means": {
+            "rows": 3,
+            "headers": [
+              "Construct",
+              "Mean A",
+              "Mean B",
+              "Mean difference (A - B)",
+              "Lower confidence bound",
+              "Upper confidence bound",
+              "Two-tailed p",
+              "Equal means"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "-0.0215",
+                "0.0215",
+                "-0.0431",
+                "-0.2960",
+                "0.2875",
+                "0.7610",
+                "Equal"
+              ],
+              [
+                "Z",
+                "0.0651",
+                "-0.0651",
+                "0.1302",
+                "-0.2826",
+                "0.2903",
+                "0.3651",
+                "Equal"
+              ],
+              [
+                "Y",
+                "0.0314",
+                "-0.0314",
+                "0.0628",
+                "-0.2955",
+                "0.2895",
+                "0.6567",
+                "Equal"
+              ]
+            ],
+            "text": "X-0.02150.0215-0.0431-0.29600.28750.7610EqualZ0.0651-0.06510.1302-0.28260.29030.3651EqualY0.0314-0.03140.0628-0.29550.28950.6567Equal",
+            "viewText": "MICOM Step 3 - equality of composite means3 rowsConstructMean AMean BMean difference (A - B)Lower confidence boundUpper confidence boundTwo-tailed pEqual meansX-0.02150.0215-0.0431-0.29600.28750.7610EqualZ0.0651-0.06510.1302-0.28260.29030.3651EqualY0.0314-0.03140.0628-0.29550.28950.6567EqualUse the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM Step 3 - equality of composite variances": {
+            "rows": 3,
+            "headers": [
+              "Construct",
+              "Variance A",
+              "Variance B",
+              "Log variance ratio (A/B)",
+              "Lower confidence bound",
+              "Upper confidence bound",
+              "Two-tailed p",
+              "Equal variances"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "1.0153",
+                "0.9950",
+                "0.0201",
+                "-0.2725",
+                "0.2733",
+                "0.8818",
+                "Equal"
+              ],
+              [
+                "Z",
+                "1.0347",
+                "0.9679",
+                "0.0667",
+                "-0.2538",
+                "0.2471",
+                "0.5847",
+                "Equal"
+              ],
+              [
+                "Y",
+                "1.1112",
+                "0.8981",
+                "0.2129",
+                "-0.2975",
+                "0.3024",
+                "0.1708",
+                "Equal"
+              ]
+            ],
+            "text": "X1.01530.99500.0201-0.27250.27330.8818EqualZ1.03470.96790.0667-0.25380.24710.5847EqualY1.11120.89810.2129-0.29750.30240.1708Equal",
+            "viewText": "MICOM Step 3 - equality of composite variances3 rowsConstructVariance AVariance BLog variance ratio (A/B)Lower confidence boundUpper confidence boundTwo-tailed pEqual variancesX1.01530.99500.0201-0.27250.27330.8818EqualZ1.03470.96790.0667-0.25380.24710.5847EqualY1.11120.89810.2129-0.29750.30240.1708EqualUse the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "MICOM permutation accounting": {
+            "rows": 10,
+            "headers": [
+              "Field",
+              "Value"
+            ],
+            "rowValues": [
+              [
+                "Step 1",
+                "Confirmed by researcher review; not computed from the data"
+              ],
+              [
+                "Requested permutations",
+                "5000"
+              ],
+              [
+                "Attempted permutations",
+                "5000"
+              ],
+              [
+                "Retry policy",
+                "none"
+              ],
+              [
+                "Step 2 usable",
+                "5000"
+              ],
+              [
+                "Step 2 failed",
+                "0"
+              ],
+              [
+                "Step 3 usable",
+                "5000"
+              ],
+              [
+                "Step 3 failed",
+                "0"
+              ],
+              [
+                "Ledger rows",
+                "5000"
+              ],
+              [
+                "Permutation plan",
+                "sha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17"
+              ]
+            ],
+            "text": "Step 1Confirmed by researcher review; not computed from the dataRequested permutations5000Attempted permutations5000Retry policynoneStep 2 usable5000Step 2 failed0Step 3 usable5000Step 3 failed0Ledger rows5000Permutation plansha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17",
+            "viewText": "MICOM permutation accounting10 rowsTwo-group permutation MGA v4 re-estimates paths, outer loadings, and outer weights using one fixed indexed size-preserving partition plan and reports two-tailed A-minus-B evidence without replacement retries. MICOM v4 uses the same fixed partition identities for Steps 2 and 3. Step 1 records explicit researcher review; translation, coding meaning, and substantive indicator equivalence are not inferred from data.FieldValueStep 1Confirmed by researcher review; not computed from the dataRequested permutations5000Attempted permutations5000Retry policynoneStep 2 usable5000Step 2 failed0Step 3 usable5000Step 3 failed0Ledger rows5000Permutation plansha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group path coefficients": {
+            "rows": 4,
+            "headers": [
+              "Role",
+              "Group value",
+              "Path",
+              "Coefficient"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "X → Y",
+                "0.9338"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z → Y",
+                "0.2057"
+              ],
+              [
+                "Group B",
+                "B",
+                "X → Y",
+                "0.3126"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z → Y",
+                "0.8690"
+              ]
+            ],
+            "text": "Group AAX → Y0.9338Group AAZ → Y0.2057Group BBX → Y0.3126Group BBZ → Y0.8690",
+            "viewText": "Group path coefficients4 rowsRoleGroup valuePathCoefficientGroup AAX → Y0.9338Group AAZ → Y0.2057Group BBX → Y0.3126Group BBZ → Y0.8690Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group R-square": {
+            "rows": 2,
+            "headers": [
+              "Role",
+              "Group value",
+              "Construct",
+              "R²"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "Y",
+                "0.9376"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "0.9236"
+              ]
+            ],
+            "text": "Group AAY0.9376Group BBY0.9236",
+            "viewText": "Group R-square2 rowsRoleGroup valueConstructR²Group AAY0.9376Group BBY0.9236Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group outer loadings": {
+            "rows": 12,
+            "headers": [
+              "Role",
+              "Group value",
+              "Construct",
+              "Indicator",
+              "Outer loading"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "X",
+                "x1",
+                "0.9969"
+              ],
+              [
+                "Group A",
+                "A",
+                "X",
+                "x2",
+                "0.9969"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z",
+                "z1",
+                "0.9960"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z",
+                "z2",
+                "0.9961"
+              ],
+              [
+                "Group A",
+                "A",
+                "Y",
+                "y1",
+                "0.9973"
+              ],
+              [
+                "Group A",
+                "A",
+                "Y",
+                "y2",
+                "0.9973"
+              ],
+              [
+                "Group B",
+                "B",
+                "X",
+                "x1",
+                "0.9968"
+              ],
+              [
+                "Group B",
+                "B",
+                "X",
+                "x2",
+                "0.9969"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z",
+                "z1",
+                "0.9959"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z",
+                "z2",
+                "0.9958"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "y1",
+                "0.9965"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "y2",
+                "0.9965"
+              ]
+            ],
+            "text": "Group AAXx10.9969Group AAXx20.9969Group AAZz10.9960Group AAZz20.9961Group AAYy10.9973Group AAYy20.9973Group BBXx10.9968Group BBXx20.9969Group BBZz10.9959Group BBZz20.9958Group BBYy10.9965Group BBYy20.9965",
+            "viewText": "Group outer loadings12 rowsRoleGroup valueConstructIndicatorOuter loadingGroup AAXx10.9969Group AAXx20.9969Group AAZz10.9960Group AAZz20.9961Group AAYy10.9973Group AAYy20.9973Group BBXx10.9968Group BBXx20.9969Group BBZz10.9959Group BBZz20.9958Group BBYy10.9965Group BBYy20.9965Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group outer weights": {
+            "rows": 12,
+            "headers": [
+              "Role",
+              "Group value",
+              "Construct",
+              "Indicator",
+              "Outer weight"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "X",
+                "x1",
+                "0.5035"
+              ],
+              [
+                "Group A",
+                "A",
+                "X",
+                "x2",
+                "0.4996"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z",
+                "z1",
+                "0.4990"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z",
+                "z2",
+                "0.5049"
+              ],
+              [
+                "Group A",
+                "A",
+                "Y",
+                "y1",
+                "0.5017"
+              ],
+              [
+                "Group A",
+                "A",
+                "Y",
+                "y2",
+                "0.5009"
+              ],
+              [
+                "Group B",
+                "B",
+                "X",
+                "x1",
+                "0.4994"
+              ],
+              [
+                "Group B",
+                "B",
+                "X",
+                "x2",
+                "0.5038"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z",
+                "z1",
+                "0.5039"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z",
+                "z2",
+                "0.5003"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "y1",
+                "0.5027"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "y2",
+                "0.5008"
+              ]
+            ],
+            "text": "Group AAXx10.5035Group AAXx20.4996Group AAZz10.4990Group AAZz20.5049Group AAYy10.5017Group AAYy20.5009Group BBXx10.4994Group BBXx20.5038Group BBZz10.5039Group BBZz20.5003Group BBYy10.5027Group BBYy20.5008",
+            "viewText": "Group outer weights12 rowsRoleGroup valueConstructIndicatorOuter weightGroup AAXx10.5035Group AAXx20.4996Group AAZz10.4990Group AAZz20.5049Group AAYy10.5017Group AAYy20.5009Group BBXx10.4994Group BBXx20.5038Group BBZz10.5039Group BBZz20.5003Group BBYy10.5027Group BBYy20.5008Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group A minus Group B path differences": {
+            "rows": 2,
+            "headers": [
+              "Path",
+              "Group A",
+              "Coefficient A",
+              "Group B",
+              "Coefficient B",
+              "A − B"
+            ],
+            "rowValues": [
+              [
+                "X → Y",
+                "A",
+                "0.9338",
+                "B",
+                "0.3126",
+                "0.6211"
+              ],
+              [
+                "Z → Y",
+                "A",
+                "0.2057",
+                "B",
+                "0.8690",
+                "-0.6634"
+              ]
+            ],
+            "text": "X → YA0.9338B0.31260.6211Z → YA0.2057B0.8690-0.6634",
+            "viewText": "Group A minus Group B path differences2 rowsPathGroup ACoefficient AGroup BCoefficient BA − BX → YA0.9338B0.31260.6211Z → YA0.2057B0.8690-0.6634Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Two-tailed permutation path differences": {
+            "rows": 2,
+            "headers": [
+              "Path",
+              "A − B",
+              "Two-tailed p",
+              "Percentile rank",
+              "Requested permutations",
+              "Usable permutations"
+            ],
+            "rowValues": [
+              [
+                "X → Y",
+                "0.6211",
+                "0.0002",
+                "1.0000",
+                "5000",
+                "5000"
+              ],
+              [
+                "Z → Y",
+                "-0.6634",
+                "0.0002",
+                "0.0000",
+                "5000",
+                "5000"
+              ]
+            ],
+            "text": "X → Y0.62110.00021.000050005000Z → Y-0.66340.00020.000050005000",
+            "viewText": "Two-tailed permutation path differences2 rowsPathA − BTwo-tailed pPercentile rankRequested permutationsUsable permutationsX → Y0.62110.00021.000050005000Z → Y-0.66340.00020.000050005000Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group A minus Group B outer-loading differences": {
+            "rows": 6,
+            "headers": [
+              "Construct",
+              "Indicator",
+              "Group A",
+              "Outer loading A",
+              "Group B",
+              "Outer loading B",
+              "A - B"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "x1",
+                "A",
+                "0.9969",
+                "B",
+                "0.9968",
+                "0.0001"
+              ],
+              [
+                "X",
+                "x2",
+                "A",
+                "0.9969",
+                "B",
+                "0.9969",
+                "-0.0000"
+              ],
+              [
+                "Z",
+                "z1",
+                "A",
+                "0.9960",
+                "B",
+                "0.9959",
+                "0.0002"
+              ],
+              [
+                "Z",
+                "z2",
+                "A",
+                "0.9961",
+                "B",
+                "0.9958",
+                "0.0003"
+              ],
+              [
+                "Y",
+                "y1",
+                "A",
+                "0.9973",
+                "B",
+                "0.9965",
+                "0.0008"
+              ],
+              [
+                "Y",
+                "y2",
+                "A",
+                "0.9973",
+                "B",
+                "0.9965",
+                "0.0008"
+              ]
+            ],
+            "text": "Xx1A0.9969B0.99680.0001Xx2A0.9969B0.9969-0.0000Zz1A0.9960B0.99590.0002Zz2A0.9961B0.99580.0003Yy1A0.9973B0.99650.0008Yy2A0.9973B0.99650.0008",
+            "viewText": "Group A minus Group B outer-loading differences6 rowsConstructIndicatorGroup AOuter loading AGroup BOuter loading BA - BXx1A0.9969B0.99680.0001Xx2A0.9969B0.9969-0.0000Zz1A0.9960B0.99590.0002Zz2A0.9961B0.99580.0003Yy1A0.9973B0.99650.0008Yy2A0.9973B0.99650.0008Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group A minus Group B outer-weight differences": {
+            "rows": 6,
+            "headers": [
+              "Construct",
+              "Indicator",
+              "Group A",
+              "Outer weight A",
+              "Group B",
+              "Outer weight B",
+              "A - B"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "x1",
+                "A",
+                "0.5035",
+                "B",
+                "0.4994",
+                "0.0042"
+              ],
+              [
+                "X",
+                "x2",
+                "A",
+                "0.4996",
+                "B",
+                "0.5038",
+                "-0.0042"
+              ],
+              [
+                "Z",
+                "z1",
+                "A",
+                "0.4990",
+                "B",
+                "0.5039",
+                "-0.0048"
+              ],
+              [
+                "Z",
+                "z2",
+                "A",
+                "0.5049",
+                "B",
+                "0.5003",
+                "0.0046"
+              ],
+              [
+                "Y",
+                "y1",
+                "A",
+                "0.5017",
+                "B",
+                "0.5027",
+                "-0.0010"
+              ],
+              [
+                "Y",
+                "y2",
+                "A",
+                "0.5009",
+                "B",
+                "0.5008",
+                "0.0001"
+              ]
+            ],
+            "text": "Xx1A0.5035B0.49940.0042Xx2A0.4996B0.5038-0.0042Zz1A0.4990B0.5039-0.0048Zz2A0.5049B0.50030.0046Yy1A0.5017B0.5027-0.0010Yy2A0.5009B0.50080.0001",
+            "viewText": "Group A minus Group B outer-weight differences6 rowsConstructIndicatorGroup AOuter weight AGroup BOuter weight BA - BXx1A0.5035B0.49940.0042Xx2A0.4996B0.5038-0.0042Zz1A0.4990B0.5039-0.0048Zz2A0.5049B0.50030.0046Yy1A0.5017B0.5027-0.0010Yy2A0.5009B0.50080.0001Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Two-tailed permutation outer-loading differences": {
+            "rows": 6,
+            "headers": [
+              "Construct",
+              "Indicator",
+              "A - B",
+              "Two-tailed p",
+              "Percentile rank",
+              "Requested permutations",
+              "Usable permutations"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "x1",
+                "0.0001",
+                "0.9148",
+                "0.5392",
+                "5000",
+                "5000"
+              ],
+              [
+                "X",
+                "x2",
+                "-0.0000",
+                "0.9694",
+                "0.4818",
+                "5000",
+                "5000"
+              ],
+              [
+                "Z",
+                "z1",
+                "0.0002",
+                "0.8676",
+                "0.5748",
+                "5000",
+                "5000"
+              ],
+              [
+                "Z",
+                "z2",
+                "0.0003",
+                "0.7341",
+                "0.6382",
+                "5000",
+                "5000"
+              ],
+              [
+                "Y",
+                "y1",
+                "0.0008",
+                "0.2320",
+                "0.8820",
+                "5000",
+                "5000"
+              ],
+              [
+                "Y",
+                "y2",
+                "0.0008",
+                "0.2298",
+                "0.8834",
+                "5000",
+                "5000"
+              ]
+            ],
+            "text": "Xx10.00010.91480.539250005000Xx2-0.00000.96940.481850005000Zz10.00020.86760.574850005000Zz20.00030.73410.638250005000Yy10.00080.23200.882050005000Yy20.00080.22980.883450005000",
+            "viewText": "Two-tailed permutation outer-loading differences6 rowsConstructIndicatorA - BTwo-tailed pPercentile rankRequested permutationsUsable permutationsXx10.00010.91480.539250005000Xx2-0.00000.96940.481850005000Zz10.00020.86760.574850005000Zz20.00030.73410.638250005000Yy10.00080.23200.882050005000Yy20.00080.22980.883450005000Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Two-tailed permutation outer-weight differences": {
+            "rows": 6,
+            "headers": [
+              "Construct",
+              "Indicator",
+              "A - B",
+              "Two-tailed p",
+              "Percentile rank",
+              "Requested permutations",
+              "Usable permutations"
+            ],
+            "rowValues": [
+              [
+                "X",
+                "x1",
+                "0.0042",
+                "0.4915",
+                "0.7594",
+                "5000",
+                "5000"
+              ],
+              [
+                "X",
+                "x2",
+                "-0.0042",
+                "0.5031",
+                "0.2474",
+                "5000",
+                "5000"
+              ],
+              [
+                "Z",
+                "z1",
+                "-0.0048",
+                "0.6399",
+                "0.3284",
+                "5000",
+                "5000"
+              ],
+              [
+                "Z",
+                "z2",
+                "0.0046",
+                "0.6605",
+                "0.6624",
+                "5000",
+                "5000"
+              ],
+              [
+                "Y",
+                "y1",
+                "-0.0010",
+                "0.7986",
+                "0.4030",
+                "5000",
+                "5000"
+              ],
+              [
+                "Y",
+                "y2",
+                "0.0001",
+                "0.9704",
+                "0.5104",
+                "5000",
+                "5000"
+              ]
+            ],
+            "text": "Xx10.00420.49150.759450005000Xx2-0.00420.50310.247450005000Zz1-0.00480.63990.328450005000Zz20.00460.66050.662450005000Yy1-0.00100.79860.403050005000Yy20.00010.97040.510450005000",
+            "viewText": "Two-tailed permutation outer-weight differences6 rowsConstructIndicatorA - BTwo-tailed pPercentile rankRequested permutationsUsable permutationsXx10.00420.49150.759450005000Xx2-0.00420.50310.247450005000Zz1-0.00480.63990.328450005000Zz20.00460.66050.662450005000Yy1-0.00100.79860.403050005000Yy20.00010.97040.510450005000Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Combined permutation plan and provenance": {
+            "rows": 10,
+            "headers": [
+              "Field",
+              "Value"
+            ],
+            "rowValues": [
+              [
+                "MGA method version",
+                "pls_mga_two_group_v4"
+              ],
+              [
+                "Permutation method version",
+                "pls_mga_permutation_v4"
+              ],
+              [
+                "MICOM method version",
+                "micom_v4"
+              ],
+              [
+                "Requested partitions",
+                "5000"
+              ],
+              [
+                "Attempted partitions",
+                "5000"
+              ],
+              [
+                "Usable MGA partitions",
+                "5000"
+              ],
+              [
+                "Failed MGA partitions",
+                "0"
+              ],
+              [
+                "Retry policy",
+                "none"
+              ],
+              [
+                "Partition plan digest",
+                "sha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17"
+              ],
+              [
+                "Seed",
+                "20260718"
+              ]
+            ],
+            "text": "MGA method versionpls_mga_two_group_v4Permutation method versionpls_mga_permutation_v4MICOM method versionmicom_v4Requested partitions5000Attempted partitions5000Usable MGA partitions5000Failed MGA partitions0Retry policynonePartition plan digestsha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17Seed20260718",
+            "viewText": "Combined permutation plan and provenance10 rowsFieldValueMGA method versionpls_mga_two_group_v4Permutation method versionpls_mga_permutation_v4MICOM method versionmicom_v4Requested partitions5000Attempted partitions5000Usable MGA partitions5000Failed MGA partitions0Retry policynonePartition plan digestsha256:97d20aef5c8f3b8841c467f63733420bbf15a4ee8c2d4836f8ac581fd2fe4c17Seed20260718Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          }
+        },
+        "noPooledDiagram": true,
+        "noApproximateNormalInference": true,
+        "allRequiredTablesVisible": true,
+        "noPlaceholderNa": true
+      }
+    },
+    "recentProjectsRestored": true
+  },
+  "screenshots": [
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\60-tauri-native-mga-data-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\61-tauri-native-mga-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\62-tauri-native-mga-group-setup-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\63-tauri-native-mga-groups-applied-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\64-tauri-native-mga-micom-v4-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\65-tauri-native-mga-micom-v4-running-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\66-tauri-native-mga-micom-v4-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\67-tauri-native-mga-export-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\68-tauri-native-mga-edit-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\69-tauri-native-mga-micom-v4-reopen-1536x794.png"
+  ],
+  "screenshotArtifacts": [
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/60-tauri-native-mga-data-1536x794.png",
+      "size": 223662,
+      "sha256": "38423cb877e2751bf40836ae8068a16b9022b088f6d621757aef562d09f01c5f"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/61-tauri-native-mga-model-1536x794.png",
+      "size": 150060,
+      "sha256": "7b436bc5f65997850a161b7b68e2baf01a878e0092c1b834744f7976704041a2"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/62-tauri-native-mga-group-setup-1536x794.png",
+      "size": 219028,
+      "sha256": "4db734efc5bf0e020a6f9ec117a673a92c0a5c890d53608d7612b2f63782c905"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/63-tauri-native-mga-groups-applied-1536x794.png",
+      "size": 240586,
+      "sha256": "88378fe86028c2064165627d61833e6bafa83ef61891053d74f9c68e0d2a111a"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/64-tauri-native-mga-micom-v4-dialog-1536x794.png",
+      "size": 217978,
+      "sha256": "822ea0a3317b19ed0983c1fe0802ad7517691d7934a7f874e48a0ebeca4f319d"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/65-tauri-native-mga-micom-v4-running-1536x794.png",
+      "size": 160132,
+      "sha256": "04687424b27a351d6c4afd213c8ae426ff76fef6b8b49c31d775c2f178e355c0"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/66-tauri-native-mga-micom-v4-results-1536x794.png",
+      "size": 128679,
+      "sha256": "48d08a46780cf651708131659e6fc4073c141955a42794e815e408de18f2bedc"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/67-tauri-native-mga-export-1536x794.png",
+      "size": 151248,
+      "sha256": "81053315f936f31bb143bd771b4ea692050822c036056ecdd33c7aa6c65eafc6"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/68-tauri-native-mga-edit-model-1536x794.png",
+      "size": 153393,
+      "sha256": "b00a9314321f43c08d5e1b46c1e51a2a0d0c358fb0c4b39b7ee79891854ab8a8"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/69-tauri-native-mga-micom-v4-reopen-1536x794.png",
+      "size": 122156,
+      "sha256": "45acee9d87ab21ccfadb675522385190227e7f8ca5cde5d851e2e8dfab768d71"
+    }
+  ],
+  "consoleErrors": [],
+  "failures": []
+}

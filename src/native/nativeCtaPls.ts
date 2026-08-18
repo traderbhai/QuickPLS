@@ -88,16 +88,16 @@ export function nativeCtaPlsSetupAssessment(
       ? "CTA-PLS requires at least one ordinary construct with four or more assigned indicators"
       : null,
     specialConstructs.length > 0
-      ? "The bounded native CTA-PLS workflow does not support interaction or higher-order constructs"
+      ? "CTA-PLS descriptive tetrads do not support interaction or higher-order constructs"
       : null,
     nonStructuralEdges.length > 0
-      ? "The bounded native CTA-PLS workflow supports structural paths only; control and covariance edges are excluded"
+      ? "CTA-PLS descriptive tetrads support structural paths only; remove control and covariance edges"
       : null,
     (settings.weightingScheme ?? "path") === "pca"
       ? "CTA-PLS requires path or factor weighting"
       : null,
     settings.caseWeightColumn?.trim()
-      ? "CTA-PLS does not support case weights in the bounded descriptive scope"
+      ? "CTA-PLS descriptive tetrads do not support case weights"
       : null,
     settings.bootstrapSamples > 0 || settings.studentizedInnerSamples > 0 || settings.permutationSamples > 0
       ? "CTA-PLS descriptive tetrads must be run separately from resampling inference"

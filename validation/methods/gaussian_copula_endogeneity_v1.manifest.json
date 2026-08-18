@@ -38,13 +38,26 @@
       {
         "id": "rankit_inverse_normal",
         "expression": "c_i = Phi_inverse(average_rank(x_i) / (n + 1)) - mean_j Phi_inverse(average_rank(x_j) / (n + 1))",
-        "variables": ["c_i", "Phi_inverse", "average_rank", "x_i", "n"],
+        "variables": [
+          "c_i",
+          "Phi_inverse",
+          "average_rank",
+          "x_i",
+          "n"
+        ],
         "source_reference_id": "park_gupta_2012"
       },
       {
         "id": "augmented_copula_equation",
         "expression": "eta_y = sum_j beta_j eta_j + sum_j gamma_j c_j + epsilon",
-        "variables": ["eta_y", "beta_j", "eta_j", "gamma_j", "c_j", "epsilon"],
+        "variables": [
+          "eta_y",
+          "beta_j",
+          "eta_j",
+          "gamma_j",
+          "c_j",
+          "epsilon"
+        ],
         "source_reference_id": "park_gupta_2012"
       }
     ],
@@ -70,20 +83,51 @@
       {
         "id": "copula_diagnostic_behavior",
         "purpose": "false_positive_containment",
-        "design": "Exogenous null and endogenous signal equations over bounded score skewness, omitted-variable strength, path effects, predictor correlation, reliability, and sample-size grids.",
+        "design": "A frozen 16-scenario matrix crossing sample sizes 120 and 240 with copula signal strengths 0.0 and 0.4, four deterministic replicates per cell, fixed structural coefficients, fixed indicator noise, and a lognormal predictor whose latent Gaussian rank driver enters only the signal outcomes.",
         "seed_policy": "Frozen scenario-indexed generators; QuickPLS and the independent reference receive identical rows and path order.",
-        "metrics": ["copula_coefficient_error", "standard_error_error", "applicability_classification", "null_flag_rate", "signal_detection_rate"],
-        "acceptance_rule": "All mapped diagnostics must agree with the independent fixed-score implementation within 1e-6, applicability flags must follow the exact skewness boundary, and preregistered null and signal rules must pass."
+        "metrics": [
+          "copula_coefficient_error",
+          "standard_error_error",
+          "applicability_classification",
+          "null_flag_rate",
+          "signal_detection_rate"
+        ],
+        "acceptance_rule": "All mapped diagnostics must agree with the independent fixed-score implementation within 1e-6, applicability flags must follow the exact skewness boundary, the empirical null flag rate must be at most 0.25, and signal detection must be at least 0.75."
       }
     ],
     "boundaries": [
-      {"id": "constant_or_singular_score", "category": "data_pathology", "case": "A predecessor score is constant, nonfinite, or its augmented score-and-copula equation is singular.", "expected_behavior": "Execution fails with the affected equation or path identified and emits no completed endogeneity payload."},
-      {"id": "unsupported_copula_scope", "category": "unsupported_scope", "case": "The recipe requests PCA weighting, a non-Gaussian copula, instrumental-variable correction, resampling inference, or automatic path adjustment.", "expected_behavior": "The unsupported request is blocked or excluded before execution."},
-      {"id": "row_and_path_reorder", "category": "metamorphic", "case": "Rows, constructs, or predecessor declarations are consistently reordered, including tied predictor values.", "expected_behavior": "Average-rank mapping and canonicalized path diagnostics remain equal within the frozen tolerance."},
-      {"id": "repeatability", "category": "determinism", "case": "The same data fingerprint and recipe are executed repeatedly.", "expected_behavior": "Ranks, transformed scores, coefficients, warnings, and the analytical payload are exactly equal apart from operational identifiers and timestamps."},
-      {"id": "endogeneity_archive_tamper", "category": "tamper", "case": "A transform identity, rank policy, coefficient, skewness, applicability flag, warning, or method version is altered.", "expected_behavior": "Strict project validation rejects the archive rather than displaying the changed diagnostic."}
+      {
+        "id": "constant_or_singular_score",
+        "category": "data_pathology",
+        "case": "A predecessor score is constant, nonfinite, or its augmented score-and-copula equation is singular.",
+        "expected_behavior": "Execution fails with the affected equation or path identified and emits no completed endogeneity payload."
+      },
+      {
+        "id": "unsupported_copula_scope",
+        "category": "unsupported_scope",
+        "case": "The recipe requests PCA weighting, a non-Gaussian copula, instrumental-variable correction, resampling inference, or automatic path adjustment.",
+        "expected_behavior": "The unsupported request is blocked or excluded before execution."
+      },
+      {
+        "id": "row_and_path_reorder",
+        "category": "metamorphic",
+        "case": "Rows, constructs, or predecessor declarations are consistently reordered, including tied predictor values.",
+        "expected_behavior": "Average-rank mapping and canonicalized path diagnostics remain equal within the frozen tolerance."
+      },
+      {
+        "id": "repeatability",
+        "category": "determinism",
+        "case": "The same data fingerprint and recipe are executed repeatedly.",
+        "expected_behavior": "Ranks, transformed scores, coefficients, warnings, and the analytical payload are exactly equal apart from operational identifiers and timestamps."
+      },
+      {
+        "id": "endogeneity_archive_tamper",
+        "category": "tamper",
+        "case": "A transform identity, rank policy, coefficient, skewness, applicability flag, warning, or method version is altered.",
+        "expected_behavior": "Strict project validation rejects the archive rather than displaying the changed diagnostic."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
     "persistence": {
@@ -91,52 +135,156 @@
       "result_schema_version": 1,
       "payload_kind": "pls_pm_v1",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result whose endogeneity capability identity differs from its recipe."},
-        {"category": "method_version", "expected_behavior": "Reject an endogeneity payload relabeled with another method or transform version."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject an endogeneity result whose saved dataset fingerprint no longer matches."},
-        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite diagnostics, invalid probabilities, or applicability flags inconsistent with saved skewness."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret an unversioned screen or broader causal-correction claim as current diagnostic evidence."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose endogeneity capability identity differs from its recipe."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject an endogeneity payload relabeled with another method or transform version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject an endogeneity result whose saved dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any modified archive member whose checksum differs."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite diagnostics, invalid probabilities, or applicability flags inconsistent with saved skewness."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret an unversioned screen or broader causal-correction claim as current diagnostic evidence."
+        }
       ],
       "legacy_policy": "Only a typed gaussian_copula_endogeneity_v1 nested result can satisfy current bounded diagnostic evidence."
     },
     "native": {
-      "setup_controls": ["Endogeneity calculation selection", "Path or factor weighting", "Supported PLS preprocessing", "Equation and applicability preview"],
-      "applicability_blockers": ["PCA weighting", "No structural predecessor", "Singular augmented equation", "Unsupported copula or correction request"],
-      "result_surfaces": ["Path and copula coefficients", "Classical uncertainty", "Predictor skewness and applicability", "Diagnostic warnings", "Run provenance"],
+      "setup_controls": [
+        "Endogeneity calculation selection",
+        "Path or factor weighting",
+        "Supported PLS preprocessing",
+        "Equation and applicability preview"
+      ],
+      "applicability_blockers": [
+        "PCA weighting",
+        "No structural predecessor",
+        "Control paths",
+        "Generated interactions",
+        "Higher-order constructs",
+        "Singular augmented equation",
+        "Unsupported copula or correction request"
+      ],
+      "result_surfaces": [
+        "Path and copula coefficients",
+        "Classical uncertainty",
+        "Predictor skewness and applicability",
+        "Diagnostic warnings",
+        "Run provenance"
+      ],
       "gui_cli_parity_rule": "For the same recipe, data fingerprint, and method version, GUI and CLI Gaussian-copula diagnostic payloads must be exactly equal apart from operational identifiers and timestamps.",
-      "accessibility_rules": ["Every coefficient, probability, skewness value, applicability flag, and warning is available in an accessible table.", "Weak-applicability and causal-scope warnings do not rely on color or chart interaction."]
+      "accessibility_rules": [
+        "Every coefficient, probability, skewness value, applicability flag, and warning is available in an accessible table.",
+        "Weak-applicability and causal-scope warnings do not rely on color or chart interaction."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html"],
-      "tables": ["Gaussian-copula diagnostics", "Applicability and warnings", "Method scope", "Run provenance"],
+      "formats": [
+        "csv",
+        "xlsx",
+        "html"
+      ],
+      "tables": [
+        "Gaussian-copula diagnostics",
+        "Applicability and warnings",
+        "Method scope",
+        "Run provenance"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": false,
       "process_cleanup_required": true
     },
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
   "qualification": {
     "declared_state": "absent",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md"],
-      "independent_reference": ["validation/endogeneity_reference.py"],
-      "simulation_report": ["validation/endogeneity_simulation.py"],
-      "boundary_report": ["validation/endogeneity_boundary_gate.py"],
-      "persistence_report": ["validation/endogeneity_persistence_gate.py"],
-      "frontend_report": ["src/domain/methodApplicability.test.ts", "src/native/nativeResults.test.ts"],
-      "export_report": ["src/domain/resultTables.test.ts", "src/native/nativeExportTables.test.ts"],
-      "method_audit": ["validation/endogeneity_method_promotion_audit.py"],
-      "packaged_acceptance": ["validation/run_endogeneity_native_acceptance.ps1"]
+      "method_spec": [
+        "docs/methods/PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md"
+      ],
+      "independent_reference": [
+        "validation/endogeneity_reference.py",
+        "validation/endogeneity_frontend_gate.py"
+      ],
+      "simulation_report": [
+        "validation/endogeneity_simulation.py"
+      ],
+      "boundary_report": [
+        "validation/endogeneity_boundary_gate.py"
+      ],
+      "persistence_report": [
+        "validation/endogeneity_persistence_gate.py"
+      ],
+      "frontend_report": [
+        "validation/endogeneity_frontend_gate.py",
+        "src/domain/endogeneityApplicability.test.ts",
+        "src/native/nativeEndogeneity.test.ts"
+      ],
+      "export_report": [
+        "validation/endogeneity_frontend_gate.py",
+        "src/native/nativeEndogeneity.test.ts",
+        "src/native/nativeExportTables.test.ts",
+        "src/native/NativeExportDialog.test.ts"
+      ],
+      "method_audit": [
+        "validation/endogeneity_factory_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_endogeneity_native_acceptance.ps1"
+      ]
     },
-    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+    "evidence": {
+      "engine_only": [],
+      "archive_qualified": [],
+      "native_qualified": [],
+      "release_qualified": []
+    }
   }
 }

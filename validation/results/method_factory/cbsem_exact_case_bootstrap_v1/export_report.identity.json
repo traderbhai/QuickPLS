@@ -1,0 +1,81 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "gates": {
+      "export": {
+        "command": [
+          "npx.cmd",
+          "vitest",
+          "run",
+          "src/native/NativeRecipeV4CbsemWorkspace.test.tsx",
+          "src/domain/internalProjectSchema6ResultRead.test.ts"
+        ],
+        "duration_seconds": 7.459,
+        "passed": true,
+        "returncode": 0,
+        "stderr_tail": "",
+        "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  2 passed (2)\n      Tests  26 passed (26)\n   Start at  18:29:32\n   Duration  3.21s (transform 1.78s, setup 0ms, import 3.38s, tests 461ms, environment 0ms)\n\n"
+      }
+    },
+    "passed": true
+  },
+  "feature_id": "qpls3.cbsem.bootstrap",
+  "generated_at_utc": "2026-08-18T12:59:35.876760Z",
+  "method_version": "cbsem_exact_case_bootstrap_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "export_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/domain/internalProjectSchema6ResultRead.test.ts",
+      "sha256": "c709b8bcbdc255e8e5006a291d28dbca918223454c06d3aaa44a95d722be44d5",
+      "size": 98047
+    },
+    {
+      "path": "src/native/NativeRecipeV4CbsemWorkspace.test.tsx",
+      "sha256": "61d0917b3a2a17cd6f28722fcb680132f7d0674508ba6442fb1bb912b19e14c1",
+      "size": 10638
+    },
+    {
+      "path": "src/native/NativeRecipeV4CbsemWorkspace.tsx",
+      "sha256": "9d0f8464083b1775c7205ae5930c1635785312f02829b856a804bdf905d9c21b",
+      "size": 43571
+    },
+    {
+      "path": "src/services/projectService.ts",
+      "sha256": "a497ac4446fa465cd0af2582de48f9810359fce053026c5085dacdfee159aca6",
+      "size": 20897
+    },
+    {
+      "path": "validation/cbsem_exact_case_bootstrap_v1_factory.py",
+      "sha256": "eb26ee192b9b7f3b207da9eae1f9982765b337fc5ba4dbc3a576fa785d99744f",
+      "size": 22804
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cbsem_exact_case_bootstrap_v1.manifest.json",
+      "sha256": "a42ef87fb7857a33df1ea575f8d6ca242d0da7a1a0c278e6523ead59c12af37f",
+      "size": 17699
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_cbsem_exact_case_bootstrap_v1_factory.py",
+      "sha256": "3eb5e05f5eede2ab6fb1fca5d1f49e51c678a645037b87a80a590f0e73370658",
+      "size": 6733
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

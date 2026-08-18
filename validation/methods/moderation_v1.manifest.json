@@ -38,13 +38,22 @@
       {
         "id": "generated_product_score",
         "expression": "z_xw = standardize(eta_x * eta_w)",
-        "variables": ["z_xw", "eta_x", "eta_w"],
+        "variables": [
+          "z_xw",
+          "eta_x",
+          "eta_w"
+        ],
         "source_reference_id": "henseler_chin_2010"
       },
       {
         "id": "conditional_simple_slope",
         "expression": "slope_x(w) = beta_x + beta_xw * w",
-        "variables": ["slope_x", "beta_x", "beta_xw", "w"],
+        "variables": [
+          "slope_x",
+          "beta_x",
+          "beta_xw",
+          "w"
+        ],
         "source_reference_id": "henseler_chin_2010"
       }
     ],
@@ -80,7 +89,12 @@
         "purpose": "power",
         "design": "Signal interactions across bounded loadings, main effects, interaction magnitudes, sample sizes, and predictor-moderator correlations using the supported single-interaction recipe.",
         "seed_policy": "Frozen scenario-indexed data and resampling streams invariant to worker count and execution order.",
-        "metrics": ["interaction_error", "signal_detection_rate", "interval_coverage", "worker_invariance"],
+        "metrics": [
+          "interaction_error",
+          "signal_detection_rate",
+          "interval_coverage",
+          "worker_invariance"
+        ],
         "acceptance_rule": "Every interaction estimate must match the independent standardized OLS reference within 1e-6, and preregistered signal-detection and interval-coverage bounds must pass."
       },
       {
@@ -88,18 +102,47 @@
         "purpose": "type_i_error",
         "design": "Null-interaction models with nonzero main effects over the same supported model and distribution envelope.",
         "seed_policy": "Frozen scenario-indexed null datasets and indexed permutation streams with all failures retained.",
-        "metrics": ["false_positive_rate", "binomial_confidence_interval", "failure_rate"],
+        "metrics": [
+          "false_positive_rate",
+          "binomial_confidence_interval",
+          "failure_rate"
+        ],
         "acceptance_rule": "The preregistered Type-I-error confidence interval must contain the nominal level and no failed run may be silently removed."
       }
     ],
     "boundaries": [
-      {"id": "degenerate_product", "category": "data_pathology", "case": "The predictor, moderator, outcome, or generated product has zero variance or creates a singular stage-two equation.", "expected_behavior": "Execution fails with a method-specific diagnostic and emits no completed moderation result."},
-      {"id": "unsupported_interaction_system", "category": "unsupported_scope", "case": "The recipe requests multiple interactions, PCA weighting, case weights, higher-order constructs, or an invalid main-effect hierarchy.", "expected_behavior": "The setup is blocked before execution and names the unsupported combination."},
-      {"id": "positive_affine_and_reorder", "category": "metamorphic", "case": "Observed indicators are positively affine transformed or rows and constructs are consistently reordered.", "expected_behavior": "Mapped interaction and simple-slope estimates remain equal within the frozen tolerance."},
-      {"id": "seed_and_worker_invariance", "category": "determinism", "case": "The same inferential recipe is run with repeated execution and different supported worker counts.", "expected_behavior": "Resample identities, estimates, intervals, probabilities, and ordering are exactly equal."},
-      {"id": "moderation_archive_tamper", "category": "tamper", "case": "The interaction mapping, generated product, coefficient, probe level, inference identity, or method version is altered.", "expected_behavior": "Strict project validation rejects the archive rather than displaying the changed moderation result."}
+      {
+        "id": "degenerate_product",
+        "category": "data_pathology",
+        "case": "The predictor, moderator, outcome, or generated product has zero variance or creates a singular stage-two equation.",
+        "expected_behavior": "Execution fails with a method-specific diagnostic and emits no completed moderation result."
+      },
+      {
+        "id": "unsupported_interaction_system",
+        "category": "unsupported_scope",
+        "case": "The recipe requests multiple interactions, PCA weighting, case weights, higher-order constructs, or an invalid main-effect hierarchy.",
+        "expected_behavior": "The setup is blocked before execution and names the unsupported combination."
+      },
+      {
+        "id": "positive_affine_and_reorder",
+        "category": "metamorphic",
+        "case": "Observed indicators are positively affine transformed or rows and constructs are consistently reordered.",
+        "expected_behavior": "Mapped interaction and simple-slope estimates remain equal within the frozen tolerance."
+      },
+      {
+        "id": "seed_and_worker_invariance",
+        "category": "determinism",
+        "case": "The same inferential recipe is run with repeated execution and different supported worker counts.",
+        "expected_behavior": "Resample identities, estimates, intervals, probabilities, and ordering are exactly equal."
+      },
+      {
+        "id": "moderation_archive_tamper",
+        "category": "tamper",
+        "case": "The interaction mapping, generated product, coefficient, probe level, inference identity, or method version is altered.",
+        "expected_behavior": "Strict project validation rejects the archive rather than displaying the changed moderation result."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
     "persistence": {
@@ -107,52 +150,204 @@
       "result_schema_version": 1,
       "payload_kind": "pls_pm_v3",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result whose moderation capability identity differs from its recipe."},
-        {"category": "method_version", "expected_behavior": "Reject a moderation payload relabeled with another method version."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a moderation result whose dataset fingerprint no longer matches."},
-        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite coefficients, invalid probe levels, or inconsistent inference identities."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret interaction placeholders or preview product paths as current bounded moderation evidence."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose moderation capability identity differs from its recipe."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a moderation payload relabeled with another method version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a moderation result whose dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any modified archive member whose checksum differs."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite coefficients, invalid probe levels, or inconsistent inference identities."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret interaction placeholders or preview product paths as current bounded moderation evidence."
+        }
       ],
       "legacy_policy": "Only a typed single-interaction recipe and pls_two_stage_moderation_v1 nested result may satisfy current evidence."
     },
     "native": {
-      "setup_controls": ["Substantive predictor-to-outcome path", "Moderator construct", "Generated product construct", "Path or factor weighting", "Bootstrap or permutation settings", "Seed and workers"],
-      "applicability_blockers": ["Missing main-effect hierarchy", "More than one interaction", "PCA weighting", "Case weights", "Higher-order generated constructs", "Invalid or constant score source"],
-      "result_surfaces": ["Interaction coefficient", "Simple slopes at -1, 0, and +1", "Matching inference", "Method warnings", "Run provenance"],
+      "setup_controls": [
+        "Substantive predictor-to-outcome path",
+        "Moderator construct",
+        "Generated product construct",
+        "Path or factor weighting",
+        "Bootstrap or permutation settings",
+        "Seed and workers"
+      ],
+      "applicability_blockers": [
+        "Missing main-effect hierarchy",
+        "More than one interaction",
+        "PCA weighting",
+        "Case weights",
+        "Higher-order generated constructs",
+        "Invalid or constant score source"
+      ],
+      "result_surfaces": [
+        "Interaction coefficient",
+        "Simple slopes at -1, 0, and +1",
+        "Matching inference",
+        "Method warnings",
+        "Run provenance"
+      ],
       "gui_cli_parity_rule": "For the same typed interaction recipe, dataset fingerprint, seed, worker-invariant stream plan, and method versions, GUI and CLI analytical payloads must be exactly equal apart from operational identifiers and timestamps.",
-      "accessibility_rules": ["Interaction, simple-slope, and inference values are available in accessible tables.", "Setup failures and uncertainty warnings are associated with their controls and do not rely on color or diagram position."]
+      "accessibility_rules": [
+        "Interaction, simple-slope, and inference values are available in accessible tables.",
+        "Setup failures and uncertainty warnings are associated with their controls and do not rely on color or diagram position."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html", "svg", "png"],
-      "tables": ["Moderation estimates", "Simple slopes", "Interaction inference", "Method scope", "Run provenance"],
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "png"
+      ],
+      "tables": [
+        "Moderation estimates",
+        "Simple slopes",
+        "Interaction inference",
+        "Method scope",
+        "Run provenance"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": true,
       "process_cleanup_required": true
     },
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
   "qualification": {
-    "declared_state": "absent",
+    "declared_state": "archive_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/PLS_TWO_STAGE_MODERATION_V1.md"],
-      "independent_reference": ["validation/moderation_reference.py", "validation/moderation_r_reference.py", "validation/moderation_r_reference.R", "validation/moderation_published_formula.py", "validation/moderation_published_empirical.py"],
-      "simulation_report": ["validation/moderation_simulation.py", "validation/moderation_inference_qualification.py", "validation/moderation_coverage_qualification.py"],
-      "boundary_report": ["validation/moderation_inference.py", "validation/moderation_boundary_gate.py"],
-      "persistence_report": ["validation/moderation_persistence_gate.py"],
-      "frontend_report": ["src/native/NativeModerationDialog.test.tsx", "src/native/nativeModeration.test.ts", "src/native/nativeResults.test.ts"],
-      "export_report": ["src/native/nativeExportTables.test.ts", "src/domain/resultTables.test.ts"],
-      "method_audit": ["validation/moderation_method_promotion_audit.py"],
-      "packaged_acceptance": ["validation/run_moderation_native_acceptance.ps1"]
+      "method_spec": [
+        "docs/methods/PLS_TWO_STAGE_MODERATION_V1.md"
+      ],
+      "independent_reference": [
+        "validation/moderation_reference.py",
+        "validation/moderation_r_reference.py",
+        "validation/moderation_r_reference.R",
+        "validation/moderation_published_formula.py",
+        "validation/moderation_published_empirical.py"
+      ],
+      "simulation_report": [
+        "validation/moderation_simulation.py",
+        "validation/moderation_inference_qualification.py",
+        "validation/moderation_coverage_qualification.py"
+      ],
+      "boundary_report": [
+        "validation/moderation_inference.py",
+        "validation/moderation_boundary_gate.py"
+      ],
+      "persistence_report": [
+        "validation/moderation_persistence_gate.py"
+      ],
+      "frontend_report": [
+        "src/native/NativeModerationDialog.test.tsx",
+        "src/native/nativeModeration.test.ts",
+        "src/native/nativeResults.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.test.ts",
+        "src/domain/resultTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/moderation_method_promotion_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_moderation_native_acceptance.ps1"
+      ]
     },
-    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/engine_evidence.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [],
+      "release_qualified": []
+    }
   }
 }

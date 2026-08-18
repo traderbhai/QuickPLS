@@ -43,10 +43,9 @@
           "--data",
           "validation/fixtures/corporate_reputation.csv",
           "--output",
-          "validation/results/method_factory/plsc_v2/work/factory_simulation_inadmissible_small_sample.quickpls.json",
-          "--allow-experimental"
+          "validation/results/method_factory/plsc_v2/work/factory_simulation_inadmissible_small_sample.quickpls.json"
         ],
-        "duration_seconds": 0.056,
+        "duration_seconds": 0.174,
         "returncode": 1,
         "stderr_tail": "Error: PLS estimation failed: numerical failure: invalid PLSc rho_A for construct 'like': 1.5389388194769444\n",
         "stdout_tail": ""
@@ -88,10 +87,9 @@
             "--data",
             "validation/results/method_factory/plsc_v2/work/simulation_strong_reliability_large_path.csv",
             "--output",
-            "validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.quickpls.json",
-            "--allow-experimental"
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.quickpls.json"
           ],
-          "duration_seconds": 0.194,
+          "duration_seconds": 0.315,
           "returncode": 0,
           "stderr_tail": "",
           "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.quickpls.json\n"
@@ -136,10 +134,9 @@
             "--data",
             "validation/results/method_factory/plsc_v2/work/simulation_moderate_reliability_path.csv",
             "--output",
-            "validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.quickpls.json",
-            "--allow-experimental"
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.quickpls.json"
           ],
-          "duration_seconds": 0.142,
+          "duration_seconds": 0.265,
           "returncode": 0,
           "stderr_tail": "",
           "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.quickpls.json\n"
@@ -184,10 +181,9 @@
             "--data",
             "validation/results/method_factory/plsc_v2/work/simulation_two_indicator_limited_information.csv",
             "--output",
-            "validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.quickpls.json",
-            "--allow-experimental"
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.quickpls.json"
           ],
-          "duration_seconds": 0.077,
+          "duration_seconds": 0.158,
           "returncode": 0,
           "stderr_tail": "",
           "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.quickpls.json\n"
@@ -232,10 +228,9 @@
             "--data",
             "validation/results/method_factory/plsc_v2/work/simulation_factor_inner_weighting.csv",
             "--output",
-            "validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.quickpls.json",
-            "--allow-experimental"
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.quickpls.json"
           ],
-          "duration_seconds": 0.15,
+          "duration_seconds": 0.235,
           "returncode": 0,
           "stderr_tail": "",
           "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.quickpls.json\n"
@@ -280,10 +275,9 @@
             "--data",
             "validation/results/method_factory/plsc_v2/work/simulation_nongaussian_reflective.csv",
             "--output",
-            "validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.quickpls.json",
-            "--allow-experimental"
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.quickpls.json"
           ],
-          "duration_seconds": 0.154,
+          "duration_seconds": 0.275,
           "returncode": 0,
           "stderr_tail": "",
           "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.quickpls.json\n"
@@ -306,7 +300,7 @@
     ]
   },
   "feature_id": "qpls3.pls.consistent",
-  "generated_at_utc": "2026-08-13T19:01:05.570700Z",
+  "generated_at_utc": "2026-08-17T23:26:04.334663Z",
   "method_version": "plsc_v2",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -340,18 +334,18 @@
     },
     {
       "path": "validation/methods/plsc_v2.manifest.json",
-      "sha256": "6390cc9e9b1fc2844d8688700e5f554c9d4efda579e89b9f64b1740ce11d54e8",
-      "size": 15346
+      "sha256": "e4f51f683105859673e217b366726fb9659f37c09f624bb80407f889a63ab00d",
+      "size": 17680
     },
     {
       "path": "validation/plsc_reference.py",
-      "sha256": "e8aa16716a345121d5c17b47bc54fb9f9d062bf6b879dd34af8e7d4f5199471c",
-      "size": 11019
+      "sha256": "15e42a8e57d6e84b2877e1527af6028cf0efa7e0a3dedc4c72a733a3a1c3db33",
+      "size": 11329
     },
     {
       "path": "validation/plsc_v2_factory_common.py",
-      "sha256": "e8df9baab689e4bdab8c648cdfed9433162c9172e009565cfeed5da5b932522d",
-      "size": 13718
+      "sha256": "c84fc5a36c08b6e80d35cc43eea4cc135e46e4556e737aefdcdb10474c841786",
+      "size": 13682
     },
     {
       "path": "validation/plsc_v2_factory_evidence.py",
@@ -365,8 +359,8 @@
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.quickpls.json",
-      "sha256": "5ff69fb65745287dc078b8cc7fbc1e661b8321915620e16ec3dcab92fc91f8eb",
-      "size": 39598
+      "sha256": "626aedf3c5b4e3c5f0ca9087b65e6e7b8f6ef5d471dcf257c5f6abc4d125c368",
+      "size": 45557
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.recipe.json",
@@ -380,8 +374,8 @@
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.quickpls.json",
-      "sha256": "ee5027fc20f1e205270bf3ff15c0ae14ba5a6be60575427eea8a695e25c195ed",
-      "size": 37460
+      "sha256": "74e22840a8fcd6d7b9cdf9dce1038f9a33f3ec550a20d56f099438ed3985f452",
+      "size": 46208
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.recipe.json",
@@ -390,8 +384,8 @@
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.quickpls.json",
-      "sha256": "0f50bc3cc0c8445d4102b5e7b7cb32a9e60b8b0cd3dc70f0672b58802ad3dc5d",
-      "size": 43362
+      "sha256": "4316a1dbde94d8935f9855eabe420b01cf510448a56395e0149bf806763e6682",
+      "size": 49313
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.recipe.json",
@@ -400,8 +394,8 @@
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.quickpls.json",
-      "sha256": "f087528c51b073e6552e7dffb240ff5ce4799d8a4f9a96d154cdd4b6474acfc5",
-      "size": 50550
+      "sha256": "af0ead037545698bac76d99a7a7901bc53df03fb41f1707a17644998829bab6c",
+      "size": 56495
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.recipe.json",
@@ -410,8 +404,8 @@
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.quickpls.json",
-      "sha256": "bc47d9764c015ea045fb957cc93d096ad2704b29674e083791b5277ae517fc35",
-      "size": 27213
+      "sha256": "3f8bfcd21306abd5bbd005232b9b296b8be904e550747fd704c666eb0fe35f08",
+      "size": 31171
     },
     {
       "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.recipe.json",
@@ -445,13 +439,13 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_plsc_v2_factory_evidence.py",
-      "sha256": "9d8249925d07ff3abf79eecea85a2dd32f9b13ad7d395f795c3229b77a7958c8",
-      "size": 3844
+      "sha256": "6e11bd652e864af3b5bc674389e718ffd18d516afd850bc842cbfa4c207af7ed",
+      "size": 4030
     }
   ]
 }

@@ -1,0 +1,117 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "final_release_audit": {
+      "archive_matches_visible_run": true,
+      "bounded_claim": "A bounded indexed nonparametric case bootstrap that fully re-estimates plsc_v2 for 1,000 through 10,000 fixed replicates within the reflective PLSc model scope and reports two-sided normal-reference diagnostics, Type-7 percentile intervals, conditional BCa intervals, replayable successful-fit witnesses, and typed failure accounting.",
+      "cancellation_retry_passes": true,
+      "commercial_zero_egress_passed": false,
+      "exact_scoped_receipt_and_clean_shutdown": true,
+      "excluded_scope": [
+        "Studentized PLSc intervals, clustered or stratified resampling, case weights, interactions, higher-order constructs, PCA weighting, multigroup inference, and matrix-only data are excluded.",
+        "Selectable one-sided testing, interval-family selection, and consistent-bootstrap inference for Cronbach alpha, HTMT, HTMT+, and other assessment-only families are not implemented in v1.",
+        "Ordinary PLS bootstrap estimates cannot substitute for full replicate-level PLSc re-estimation.",
+        "Confidence intervals do not repair misspecification, nonexchangeable observations, inadmissible PLSc solutions, or weak measurement."
+      ],
+      "invalid_setup_fails_closed": true,
+      "method_functional_offline": true,
+      "packaged_artifact": {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/consistent_bootstrap_v1/packaged_acceptance.identity.json"
+      },
+      "packaged_identity_passes": true,
+      "passed": true,
+      "platform_background_egress_recorded_truthfully": true,
+      "prior_factory_native": true,
+      "release_evidence_contract_passes": true,
+      "replayable_witnesses_exposed": true,
+      "requested_attempted_usable_failed_close": true,
+      "selected_run_xlsx_and_reopen": true,
+      "source_build_and_cli_current": true,
+      "three_actual_packaged_viewports": true,
+      "verified_prior_artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/consistent_bootstrap_v1/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/consistent_bootstrap_v1/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/consistent_bootstrap_v1/native_stage.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ]
+    }
+  },
+  "feature_id": "qpls3.inference.consistent_bootstrap",
+  "generated_at_utc": "2026-08-18T14:01:06.842410Z",
+  "method_version": "plsc_bootstrap_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/consistent_bootstrap_v1_factory_audit.py",
+      "sha256": "e3434de27351607a86704c613f263971002f2b767e8dbe9ccf60fdf1eafca09c",
+      "size": 8294
+    },
+    {
+      "path": "validation/consistent_bootstrap_v1_packaged_acceptance.py",
+      "sha256": "da01c3c52d53cba1a1979382140647a3324853aa430cf11b149804d88b234324",
+      "size": 32240
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/consistent_bootstrap_v1.manifest.json",
+      "sha256": "5a7e77d0adfbb942ba0ff051a3975f0e9c64432b1d7950e9eda7334ccd50132a",
+      "size": 16647
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase2_release_packaged_common.py",
+      "sha256": "ac2e758e49d380ce66d8b5987b0d76e1752fb4bf6ad5e6e65f16b1e4e5b15775",
+      "size": 70975
+    },
+    {
+      "path": "validation/results/method_factory/consistent_bootstrap_v1/packaged_acceptance.identity.json",
+      "sha256": "60cc53f773bfc5b55c0e48dac913294505964bf422cee3078ec6e4361d6dfb6f",
+      "size": 60261
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

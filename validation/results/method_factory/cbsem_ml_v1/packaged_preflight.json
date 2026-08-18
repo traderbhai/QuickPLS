@@ -1,0 +1,128 @@
+{
+  "diagnostics": {
+    "prior_workflow_contract": {
+      "ancillary": {
+        "native_visual_contract": true,
+        "no_console_errors": true,
+        "no_failures": true,
+        "offline_functional": true,
+        "packaged_viewports": false,
+        "report_passed": true
+      },
+      "passed": false,
+      "visual": {
+        "checks": {
+          "accessible_close_focus": true,
+          "dialog_linkage": true,
+          "exact_viewports": true,
+          "invalid_setup_blocked": true,
+          "no_overflow_or_fabricated_run": true,
+          "report_passed": true
+        },
+        "passed": true,
+        "viewports": [
+          "1024x700",
+          "1280x720",
+          "1440x900"
+        ]
+      },
+      "workflow_steps": {
+        "cleanup": true,
+        "close": true,
+        "execute": true,
+        "export": true,
+        "inspect_results": true,
+        "invalid_setup_blocked": false,
+        "reopen_same_run": true,
+        "save": true,
+        "setup": true
+      }
+    }
+  },
+  "highest_honest_state": "native_qualified",
+  "passed": false,
+  "preflight": {
+    "freshness": {
+      "build_receipt": "validation/results/diagnostic_bundle_build_receipt.json",
+      "build_receipt_current": true,
+      "desktop_sha256": "bdc29da02e2c5118ffee45597a76a1112bc1f0f484c9f1421d6b60fdc6cf5422",
+      "passed": true,
+      "release_cli_sha256": "704b8740245e29e4ad558a95d98eacab072ab932ec7f984cfc8df3768c6b624c"
+    },
+    "passed": true,
+    "prior": {
+      "artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cbsem_ml_v1/method_spec.identity.json",
+          "roles": [
+            "method_spec"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json",
+          "roles": [
+            "independent_reference"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cbsem_ml_v1/simulation_report.identity.json",
+          "roles": [
+            "simulation_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json",
+          "roles": [
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json",
+          "roles": [
+            "frontend_report"
+          ],
+          "stage": "native_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json",
+          "roles": [
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ],
+      "passed": true
+    }
+  },
+  "release_blockers": [
+    "fresh receipt/build binding: ValueError: cumulative v247 receipt does not bind a passing current report",
+    "packaged invalid setup: no fail-closed CB-SEM invalid-setup/no-state-mutation proof",
+    "packaged viewport matrix: 1024x700, 1280x720, and 1440x900 CB-SEM proof is absent"
+  ],
+  "release_qualified": false
+}

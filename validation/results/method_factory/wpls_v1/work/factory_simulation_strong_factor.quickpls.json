@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "id": "49cb6e4b-485d-4a18-8c19-bec8098f9461",
+  "id": "835e3f99-cbab-42c3-88fe-8cca61d919bb",
   "status": "completed",
   "provenance": {
     "recipe_id": "40ebf508-7b30-5d80-840e-126506d5360c",
     "dataset_fingerprint": "v2:0d93cfa6d7e74083b1cb7409fecb9ebbd598150888a2e6c602e62057b6b181c1",
     "method": "wpls",
-    "method_version": "pls_pm_v1+wpls_case_weighted_v1+pls_mediation_v1+pls_assessment_v7",
+    "method_version": "pls_pm_v1+wpls_case_weighted_v1+pls_mediation_v1+pls_assessment_v8",
     "engine_version": "2.46.0",
     "seed": 20260813,
     "settings": {
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": "case_wt"
     },
-    "started_at": "2026-08-13T19:01:22.379823500Z",
-    "completed_at": "2026-08-13T19:01:22.387545900Z"
+    "started_at": "2026-08-17T21:54:50.813675300Z",
+    "completed_at": "2026-08-17T21:54:50.824249100Z"
   },
   "diagnostics": [
     {
@@ -684,6 +684,17 @@
       ],
       "pca": null,
       "plsc": null,
+      "point_estimate_attribution": {
+        "construct_scores": "zero_mean_unit_variance_construct_score",
+        "contract_version": "pls_point_estimate_attribution_v1",
+        "effects": "standardized_structural_path_decomposition",
+        "indicator_centering": "sample_mean",
+        "indicator_scaling": "sample_standard_deviation",
+        "outer_loadings": "indicator_construct_score_correlation",
+        "outer_weights": "preprocessed_indicator_to_unit_variance_construct_score",
+        "preprocessing": "standardized",
+        "structural_paths": "standardized_construct_score_regression"
+      },
       "predict": null,
       "r_squared": {
         "y": 0.5957205747617519
@@ -922,16 +933,145 @@
         "correlation_type": "pearson"
       },
       "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
-      "method_version": "pls_assessment_v7",
+      "method_version": "pls_assessment_v8",
       "model_fit": {
+        "analytical_sample_size": 280,
         "estimated": {
+          "chi_square": {
+            "status": "available",
+            "value": 313.1560265807546
+          },
+          "d_g": {
+            "status": "available",
+            "value": 0.7977601634500204
+          },
           "d_uls": 0.0168678721008768,
+          "degrees_of_freedom": {
+            "status": "available",
+            "value": 1.0
+          },
+          "nfi": {
+            "status": "available",
+            "value": 0.7676433092656314
+          },
           "srmr": 0.04107051509401458
         },
+        "estimated_implied_correlation": [
+          [
+            1.0,
+            0.9738101646770587,
+            0.7499124751618974,
+            0.749543190010387
+          ],
+          [
+            0.9738101646770587,
+            1.0,
+            0.7488489786898139,
+            0.7484802172440277
+          ],
+          [
+            0.7499124751618974,
+            0.7488489786898139,
+            1.0,
+            0.967551301083977
+          ],
+          [
+            0.749543190010387,
+            0.7484802172440277,
+            0.967551301083977,
+            1.0
+          ]
+        ],
+        "exact_fit_inference": {
+          "procedure": "adapted_bollen_stine_saturated_and_estimated",
+          "reason_code": "model_fit.adapted_bollen_stine_not_implemented",
+          "status": "unavailable"
+        },
+        "geodesic_logarithm": "natural_logarithm",
+        "indicator_order": [
+          "x1",
+          "x2",
+          "y1",
+          "y2"
+        ],
+        "matrix_convention": "indicator_correlation_lower_triangle_including_diagonal",
+        "method_version": "pls_model_fit_v2",
+        "null_model_chi_square": {
+          "status": "available",
+          "value": 1347.7383654889295
+        },
+        "observed_correlation": [
+          [
+            1.0,
+            0.9456243769054561,
+            0.7320635722119261,
+            0.7042768597478378
+          ],
+          [
+            0.9456243769054561,
+            1.0,
+            0.7012234001428707,
+            0.6571131146037861
+          ],
+          [
+            0.7320635722119261,
+            0.7012234001428707,
+            1.0,
+            0.9119665342875625
+          ],
+          [
+            0.7042768597478378,
+            0.6571131146037861,
+            0.9119665342875625,
+            1.0
+          ]
+        ],
         "saturated": {
+          "chi_square": {
+            "status": "available",
+            "value": 311.6286110755091
+          },
+          "d_g": {
+            "status": "available",
+            "value": 0.7961631423424089
+          },
           "d_uls": 0.006766966715446116,
+          "degrees_of_freedom": {
+            "status": "available",
+            "value": 1.0
+          },
+          "nfi": {
+            "status": "available",
+            "value": 0.7687766267880508
+          },
           "srmr": 0.026013394079677715
-        }
+        },
+        "saturated_implied_correlation": [
+          [
+            1.0,
+            0.9738101646770587,
+            0.7044535894277654,
+            0.7041066899439987
+          ],
+          [
+            0.9738101646770587,
+            1.0,
+            0.7034545609652222,
+            0.7031081534407032
+          ],
+          [
+            0.7044535894277654,
+            0.7034545609652222,
+            1.0,
+            0.967551301083977
+          ],
+          [
+            0.7041066899439987,
+            0.7031081534407032,
+            0.967551301083977,
+            1.0
+          ]
+        ]
       },
       "r_squared": {
         "y": 0.5957205747617519

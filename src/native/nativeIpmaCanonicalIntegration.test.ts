@@ -146,7 +146,7 @@ describe("native canonical IPMA frontend slice", () => {
     const csv = tablesToCsv([...navigation.tables, provenance]);
     expect(csv).toContain("Construct importance and performance");
     expect(csv).toContain("Indicator performance");
-    expect(csv).toContain("Calculation scope");
+    expect(csv).toContain("Analysis details");
     expect(csv).not.toMatch(/\bN\/?A\b|Confidence level|Workers/i);
   });
 

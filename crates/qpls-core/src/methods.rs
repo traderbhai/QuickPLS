@@ -2,6 +2,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
+/// Transitional execution-dispatch state for legacy recipes.
+///
+/// `Validated` means the legacy validator may dispatch this method after its
+/// method-specific checks. It is not a SmartPLS coverage, evidence, Standard,
+/// or customer-availability claim. Those decisions belong exclusively to
+/// Capability Registry V2 option cells.
 pub enum MethodStatus {
     Experimental,
     Validated,
@@ -16,6 +22,7 @@ pub struct MethodCapability {
     pub status: MethodStatus,
 }
 
+/// Legacy recipe execution table. Do not expose this as a product catalogue.
 pub const METHOD_CAPABILITIES: &[MethodCapability] = &[
     MethodCapability {
         id: "pls_pm",
@@ -28,6 +35,12 @@ pub const METHOD_CAPABILITIES: &[MethodCapability] = &[
         family: "PLS-SEM",
         name: "Bootstrapping",
         status: MethodStatus::Validated,
+    },
+    MethodCapability {
+        id: "pls_sample_size_power",
+        family: "PLS-SEM",
+        name: "Prospective sample-size and power analysis",
+        status: MethodStatus::Experimental,
     },
     MethodCapability {
         id: "pls_mediation",

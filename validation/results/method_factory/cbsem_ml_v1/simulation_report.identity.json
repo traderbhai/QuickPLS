@@ -1,0 +1,83 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "coverage": {
+      "all_six_models_converged_and_matched": true,
+      "measurement_shapes": true,
+      "recursive_path_shapes": true
+    },
+    "design": "Six deterministic 240-case generated fixtures cover one-, two-, and three-factor CFA plus recursive regression, mediation, and correlated-exogenous SEM; identical data and syntax are compared with lavaan 0.7.2.",
+    "maximum_observed_deltas": {
+      "max_estimate_delta": 5.462345956663839e-07,
+      "max_fit_delta": 6.2049907365024914e-09,
+      "max_p_delta": 3.537765635996948e-10,
+      "max_standard_error_delta": 5.0223601028021037e-08,
+      "max_standardized_delta": 2.809076414811429e-07,
+      "max_z_delta": 1.179546566731915e-05
+    },
+    "models": [
+      "correlated_exogenous_sem",
+      "latent_mediation_sem",
+      "latent_regression_sem",
+      "one_factor_cfa",
+      "three_factor_cfa",
+      "two_factor_cfa"
+    ],
+    "passed": true,
+    "seed_policy": "cbsem_lavaan_reference.py fixes one seed per named model"
+  },
+  "feature_id": "qpls3.cbsem.ml",
+  "generated_at_utc": "2026-08-18T13:08:43.055292Z",
+  "method_version": "cbsem_ml_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "simulation_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/cbsem_ml_v1_factory_common.py",
+      "sha256": "b07b75e9f66d481bd2190ab94a03cb42d56768e0bf830c67be9f94e2d1422245",
+      "size": 13364
+    },
+    {
+      "path": "validation/cbsem_ml_v1_reference.py",
+      "sha256": "1450b05af9a3f6715b976349a62ae2476c48e484b55d0d1272399dbf83dfa967",
+      "size": 8461
+    },
+    {
+      "path": "validation/cbsem_ml_v1_simulation.py",
+      "sha256": "9247a3a18bee30ecb3ff66875fa543192db3c796c184da7e59e01b884c85df32",
+      "size": 2579
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cbsem_ml_v1.manifest.json",
+      "sha256": "d94429dd105bc9c993a0c5e90c88d639ab51c92625d89df8751a14321f71ff10",
+      "size": 17158
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json",
+      "sha256": "fe88b8a195a5ca5f3fd28db8d3f3c8a2ae693c76e4753247a8030cabf6b9f798",
+      "size": 18433
+    },
+    {
+      "path": "validation/test_cbsem_ml_v1_factory.py",
+      "sha256": "78fc5f355c6c98e1432b51978f8d0631ae5622680a458473e6ba54056d82387f",
+      "size": 11304
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

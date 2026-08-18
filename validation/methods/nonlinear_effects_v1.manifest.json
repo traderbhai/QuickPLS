@@ -124,7 +124,7 @@
     "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
   },
   "qualification": {
-    "declared_state": "absent",
+    "declared_state": "engine_only",
     "target_state": "release_qualified",
     "source_requirements": {
       "method_spec": ["docs/methods/PLS_NONLINEAR_EFFECTS_V1.md"],
@@ -137,6 +137,20 @@
       "method_audit": ["validation/nonlinear_effects_method_promotion_audit.py"],
       "packaged_acceptance": ["validation/run_nonlinear_effects_native_acceptance.ps1"]
     },
-    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+    "evidence": {
+      "engine_only": [{
+        "path": "validation/results/method_factory/nonlinear_effects_v1/engine_evidence.identity.json",
+        "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+        "verification": {
+          "kind": "identity_report",
+          "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+          "source_artifacts_pointer": "/source_artifacts",
+          "generated_at_pointer": "/generated_at_utc"
+        }
+      }],
+      "archive_qualified": [],
+      "native_qualified": [],
+      "release_qualified": []
+    }
   }
 }

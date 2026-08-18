@@ -1,0 +1,78 @@
+{
+  "checks": {
+    "all_runs_succeeded": true,
+    "bootstrap_failed_total": 1,
+    "bootstrap_failure_rate": 1.443001443001443e-05,
+    "bootstrap_failure_rate_at_most_0_001": true,
+    "bootstrap_requested_total": 69300,
+    "each_null_rate_at_most_0_08": true,
+    "pooled_null_rate": 0.058333333333333334,
+    "pooled_null_rate_at_most_0_065": true,
+    "pooled_null_rejections": 35,
+    "pooled_null_runs": 600,
+    "pooled_null_wilson_95": [
+      0.042239474556454035,
+      0.08004669467231493
+    ],
+    "pooled_null_wilson_contains_0_05": true,
+    "signal_rejection_rate_at_least_0_60": true
+  },
+  "generated_at_utc": "2026-08-17T20:14:46.815643Z",
+  "independence": "NumPy generator and estimator; no QuickPLS binary or Rust result is consumed",
+  "inference_method": "pls_pm_case_bootstrap_null_centered_two_sided_plus_one_v2",
+  "method_version": "pls_sample_size_power_v2",
+  "passed": true,
+  "profile": "compact",
+  "report_kind": "quickpls_pls_sample_size_power_v2_independent_calibration",
+  "scenarios": [
+    {
+      "bootstrap_failed_total": 1,
+      "bootstrap_requested_per_run": 99,
+      "bootstrap_usable_total": 29699,
+      "effect": 0.0,
+      "failed_runs": 0,
+      "rejection_rate": 0.06666666666666667,
+      "rejections": 20,
+      "requested_runs": 300,
+      "sample_size": 160,
+      "successful_runs": 300,
+      "wilson_95": [
+        0.04356751554515827,
+        0.10072305951611495
+      ]
+    },
+    {
+      "bootstrap_failed_total": 0,
+      "bootstrap_requested_per_run": 99,
+      "bootstrap_usable_total": 29700,
+      "effect": 0.0,
+      "failed_runs": 0,
+      "rejection_rate": 0.05,
+      "rejections": 15,
+      "requested_runs": 300,
+      "sample_size": 320,
+      "successful_runs": 300,
+      "wilson_95": [
+        0.03053164062934728,
+        0.08084703347274413
+      ]
+    },
+    {
+      "bootstrap_failed_total": 0,
+      "bootstrap_requested_per_run": 99,
+      "bootstrap_usable_total": 9900,
+      "effect": 0.45,
+      "failed_runs": 0,
+      "rejection_rate": 0.75,
+      "rejections": 75,
+      "requested_runs": 100,
+      "sample_size": 60,
+      "successful_runs": 100,
+      "wilson_95": [
+        0.656955364519384,
+        0.8245478863771232
+      ]
+    }
+  ],
+  "schema_version": 1
+}

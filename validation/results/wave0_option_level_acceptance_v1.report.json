@@ -1,0 +1,2086 @@
+{
+  "blockers": [
+    {
+      "code": "ACTIVE_PARITY_CELL_NOT_FINAL",
+      "count": 44,
+      "message": "Active-parity cells must be full, release-qualified, and Standard."
+    }
+  ],
+  "catalogue_counts": {
+    "active_cell_identities": 45,
+    "active_multi_cell_rows": 2,
+    "active_rows": 43,
+    "catalogue_rows": 45,
+    "explicit_exclusions": 2,
+    "legacy_identity_fallback_rows": 0,
+    "option_cell_authority_rows": 43
+  },
+  "cell_role_counts": {
+    "active_parity": 44,
+    "beyond_parity": 1,
+    "open": 0
+  },
+  "cell_state_counts": {
+    "coverage": {
+      "absent": 17,
+      "partial": 28
+    },
+    "evidence": {
+      "absent": 40,
+      "archive_qualified": 3,
+      "engine_only": 2
+    },
+    "parity_obligation": {
+      "active_parity": 44,
+      "beyond_parity": 1
+    },
+    "surface": {
+      "labs": 45
+    }
+  },
+  "contract_passed": true,
+  "coverage_evidence_independence": {
+    "enforced": true,
+    "evidence_never_infers_coverage": true,
+    "option_cells_release_qualified_without_full": [],
+    "option_cells_release_qualified_without_full_count": 0,
+    "registry_release_qualified_without_full_count": 0,
+    "registry_release_qualified_without_full_rows": [],
+    "row_states_are_informational_only": true
+  },
+  "dimension_counts": {
+    "captured": 387,
+    "complete_traces": 387,
+    "expected_traces": 387,
+    "open": 0,
+    "required_per_active_row": 9
+  },
+  "error_count": 0,
+  "errors": [],
+  "exclusions": [
+    {
+      "capability_id": "smartpls.blindfolding",
+      "catalogue_position": 8,
+      "cells": [
+        {
+          "capability_id": "smartpls.blindfolding",
+          "capability_version": "blindfolding_q2_v1",
+          "cell_id": "qpls3.assessment.blindfolding_legacy",
+          "registry_schema_version": 2
+        }
+      ],
+      "decision": "intentionally_excluded",
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/blindfolding/"
+    },
+    {
+      "capability_id": "smartpls.gof",
+      "catalogue_position": 15,
+      "cells": [
+        {
+          "capability_id": "smartpls.gof",
+          "capability_version": "exclusion_policy_v1",
+          "cell_id": "qpls3.exclusion.gof",
+          "registry_schema_version": 2
+        }
+      ],
+      "decision": "intentionally_excluded",
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/validity-and-model-fit/goodness-of-fit/"
+    }
+  ],
+  "finalization_ready": false,
+  "matrix_id": "quickpls.wave0.option_level_parity_acceptance.v1",
+  "matrix_version": "1.0.0",
+  "multi_cell_row_limitations": [
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "catalogue_position": 2,
+      "cell_ids": [
+        "qpls3.pls.posthoc_technical_minimum_sample_size",
+        "qpls3.pls.sample_size_power"
+      ],
+      "limitation": "The registry row-level coverage/evidence/surface values cannot represent mixed option-cell states; this matrix keeps all cell assessments independent."
+    },
+    {
+      "capability_id": "smartpls.permutation",
+      "catalogue_position": 9,
+      "cell_ids": [
+        "qpls3.groups.micom_permutation_mga",
+        "qpls3.inference.structural_path_randomization"
+      ],
+      "limitation": "The registry row-level coverage/evidence/surface values cannot represent mixed option-cell states; this matrix keeps all cell assessments independent."
+    }
+  ],
+  "report_schema_version": 1,
+  "rows": [
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "catalogue_position": 1,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.pls_algorithm",
+            "capability_version": "pls_pm_v1",
+            "cell_id": "qpls3.pls.algorithm",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "catalogue_position": 2,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "engine_only",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.pls_power_analysis",
+            "capability_version": "pls_posthoc_technical_minimum_sample_size_v2",
+            "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        },
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "beyond_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.pls_power_analysis",
+            "capability_version": "pls_sample_size_power_v1",
+            "cell_id": "qpls3.pls.sample_size_power",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.wpls",
+      "catalogue_position": 3,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.wpls",
+            "capability_version": "wpls_case_weighted_v1",
+            "cell_id": "qpls3.pls.weighted",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.plsc",
+      "catalogue_position": 4,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.plsc",
+            "capability_version": "plsc_v2",
+            "cell_id": "qpls3.pls.consistent",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.pca_core",
+      "catalogue_position": 5,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.pca_core",
+            "capability_version": "pca_v1",
+            "cell_id": "qpls3.standalone.pca",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.pls_bootstrapping",
+      "catalogue_position": 6,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.pls_bootstrapping",
+            "capability_version": "indexed_resampling_v4",
+            "cell_id": "qpls3.inference.bootstrap",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "catalogue_position": 7,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.consistent_bootstrapping",
+            "capability_version": "plsc_bootstrap_v1",
+            "cell_id": "qpls3.inference.consistent_bootstrap",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.permutation",
+      "catalogue_position": 9,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.permutation",
+            "capability_version": "pls_mga_permutation_v3",
+            "cell_id": "qpls3.groups.micom_permutation_mga",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        },
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.permutation",
+            "capability_version": "freedman_lane_permutation_v1",
+            "cell_id": "qpls3.inference.structural_path_randomization",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.consistent_permutation",
+      "catalogue_position": 10,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.consistent_permutation",
+            "capability_version": "plsc_permutation_v1",
+            "cell_id": "qpls3.inference.consistent_permutation",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.cvpat",
+      "catalogue_position": 11,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.cvpat",
+            "capability_version": "plspredict_indicator_v2",
+            "cell_id": "qpls3.prediction.plspredict_cvpat",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/cvpat/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.cca",
+      "catalogue_position": 12,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.cca",
+            "capability_version": "cca_composite_residual_v1",
+            "cell_id": "qpls3.assessment.cca_residuals",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/validity-and-model-fit/confirmatory-composite-analysis/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.cta_pls",
+      "catalogue_position": 13,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.cta_pls",
+            "capability_version": "cta_pls_tetrad_v1",
+            "cell_id": "qpls3.assessment.cta_pls",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/validity-and-model-fit/cta-pls/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.htmt",
+      "catalogue_position": 14,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.htmt",
+            "capability_version": "ringle_et_al_htmt_plus_v1",
+            "cell_id": "qpls3.assessment.htmt",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/validity-and-model-fit/discriminant-validity-assessment/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.model_fit",
+      "catalogue_position": 16,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.model_fit",
+            "capability_version": "pls_model_fit_v2",
+            "cell_id": "qpls3.assessment.model_fit",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/model-fit/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.pls_model_comparison",
+      "catalogue_position": 17,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.pls_model_comparison",
+            "capability_version": "pls_model_comparison_v1",
+            "cell_id": "qpls3.comparison.pls_models",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/validity-and-model-fit/model-comparison/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.prediction_oriented_model_selection",
+      "catalogue_position": 18,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.prediction_oriented_model_selection",
+            "capability_version": "prediction_oriented_model_selection_v1",
+            "cell_id": "qpls3.selection.prediction_oriented",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/validity-and-model-fit/prediction-oriented-model-selection/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.micom",
+      "catalogue_position": 19,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.micom",
+            "capability_version": "pls_mga_permutation_v3",
+            "cell_id": "qpls3.groups.micom_permutation_mga",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/heterogeneity-and-multigroup/micom/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.mga",
+      "catalogue_position": 20,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.mga",
+            "capability_version": "pls_mga_permutation_v3",
+            "cell_id": "qpls3.groups.micom_permutation_mga",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/heterogeneity-and-multigroup/multigroup-analysis/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.consistent_mga",
+      "catalogue_position": 21,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.consistent_mga",
+            "capability_version": "plsc_mga_v1",
+            "cell_id": "qpls3.groups.consistent_mga",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/heterogeneity-and-multigroup/consistent-multigroup-analysis/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.plspredict",
+      "catalogue_position": 22,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.plspredict",
+            "capability_version": "plspredict_indicator_v2",
+            "cell_id": "qpls3.prediction.plspredict_cvpat",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/prediction-and-segmentation/predict/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.pls_pos",
+      "catalogue_position": 23,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.pls_pos",
+            "capability_version": "pls_pos_v1",
+            "cell_id": "qpls3.segmentation.pls_pos",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/prediction-and-segmentation/pos/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.fimix_pls",
+      "catalogue_position": 24,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.fimix_pls",
+            "capability_version": "fimix_pls_v1",
+            "cell_id": "qpls3.segmentation.fimix_pls",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/prediction-and-segmentation/fimix-pls/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.ipma",
+      "catalogue_position": 25,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.ipma",
+            "capability_version": "ipma_v1",
+            "cell_id": "qpls3.assessment.ipma",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/prediction-and-segmentation/ipma/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.moderation",
+      "catalogue_position": 26,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "archive_qualified",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.moderation",
+            "capability_version": "pls_two_stage_moderation_v1",
+            "cell_id": "qpls3.pls.moderation",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "archive_qualified",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.mediation",
+      "catalogue_position": 27,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "archive_qualified",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.mediation",
+            "capability_version": "pls_mediation_v1",
+            "cell_id": "qpls3.pls.mediation",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "archive_qualified",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.nonlinear_relationships",
+      "catalogue_position": 28,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "engine_only",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.nonlinear_relationships",
+            "capability_version": "pls_quadratic_nonlinear_effects_v1",
+            "cell_id": "qpls3.pls.nonlinear_quadratic",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/nonlinear/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "engine_only",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.higher_order_models",
+      "catalogue_position": 29,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "archive_qualified",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.higher_order_models",
+            "capability_version": "pls_pm_v1",
+            "cell_id": "qpls3.pls.higher_order_two_stage",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "archive_qualified",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.endogeneity_gaussian_copulas",
+      "catalogue_position": 30,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.endogeneity_gaussian_copulas",
+            "capability_version": "gaussian_copula_endogeneity_v1",
+            "cell_id": "qpls3.pls.gaussian_copula_endogeneity",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/gaussian-copula/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.gsca",
+      "catalogue_position": 31,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.gsca",
+            "capability_version": "gsca_als_v2",
+            "cell_id": "qpls3.gsca.als",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/gsca/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.logistic_regression",
+      "catalogue_position": 32,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.logistic_regression",
+            "capability_version": "regression_logistic_v2",
+            "cell_id": "qpls3.standalone.logistic",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/logistic-regression/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.nca",
+      "catalogue_position": 33,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.nca",
+            "capability_version": "nca_v2",
+            "cell_id": "qpls3.standalone.nca",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/nca/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.process",
+      "catalogue_position": 34,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.process",
+            "capability_version": "regression_process_v2",
+            "cell_id": "qpls3.standalone.process",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.process_bootstrapping",
+      "catalogue_position": 35,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.process_bootstrapping",
+            "capability_version": "regression_process_v2",
+            "cell_id": "qpls3.standalone.process",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process-bootstrapping/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.regression",
+      "catalogue_position": 36,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.regression",
+            "capability_version": "regression_ols_v1",
+            "cell_id": "qpls3.standalone.ols",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/regression/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.regression_bootstrapping",
+      "catalogue_position": 37,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.regression_bootstrapping",
+            "capability_version": "regression_bootstrap_v1",
+            "cell_id": "qpls3.standalone.regression_bootstrap",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.cbsem",
+      "catalogue_position": 38,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.cbsem",
+            "capability_version": "cbsem_ml_v1",
+            "cell_id": "qpls3.cbsem.ml",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "catalogue_position": 39,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.cbsem_bootstrapping",
+            "capability_version": "cbsem_bootstrap_v2",
+            "cell_id": "qpls3.cbsem.bootstrap",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.cbsem_model_comparison",
+      "catalogue_position": 40,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.cbsem_model_comparison",
+            "capability_version": "cbsem_model_comparison_v1",
+            "cell_id": "qpls3.cbsem.model_comparison",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-model-comparison/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.cbsem_mga",
+      "catalogue_position": 41,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.cbsem_mga",
+            "capability_version": "cbsem_multigroup_v2",
+            "cell_id": "qpls3.cbsem.multigroup",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-multigroup-analysis/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.cbsem_measurement_invariance",
+      "catalogue_position": 42,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.cbsem_measurement_invariance",
+            "capability_version": "cbsem_invariance_v2",
+            "cell_id": "qpls3.cbsem.measurement_invariance",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-measurement-invariance/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.cbsem_moderator",
+      "catalogue_position": 43,
+      "cells": [
+        {
+          "coverage": "absent",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.cbsem_moderator",
+            "capability_version": "cbsem_moderator_v1",
+            "cell_id": "qpls3.cbsem.moderator",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-moderation/",
+      "registry_row_state": {
+        "coverage_state": "absent",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.cfa",
+      "catalogue_position": 44,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.cfa",
+            "capability_version": "cbsem_ml_v1",
+            "cell_id": "qpls3.cbsem.ml",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cfa/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    },
+    {
+      "capability_id": "smartpls.pca_cbsem",
+      "catalogue_position": 45,
+      "cells": [
+        {
+          "coverage": "partial",
+          "evidence": "absent",
+          "parity_obligation": "active_parity",
+          "qualification_link": {
+            "capability_id": "smartpls.pca_cbsem",
+            "capability_version": "pca_v1",
+            "cell_id": "qpls3.standalone.pca",
+            "registry_schema_version": 2
+          },
+          "state_sources": {
+            "coverage": "registry_option_cell",
+            "evidence": "registry_option_cell",
+            "parity_obligation": "matrix_cell_assessment",
+            "surface": "registry_option_cell"
+          },
+          "surface": "labs"
+        }
+      ],
+      "dimension_capture_states": {
+        "charts": "captured",
+        "data_inputs": "captured",
+        "defaults": "captured",
+        "failure_conditions": "captured",
+        "model_shapes": "captured",
+        "outputs": "captured",
+        "preprocessing": "captured",
+        "settings": "captured",
+        "workflows": "captured"
+      },
+      "finalization_ready": false,
+      "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-pca/",
+      "registry_row_state": {
+        "coverage_state": "partial",
+        "evidence_state": "absent",
+        "surface": "labs",
+        "use": "informational_only_not_inferred_into_cells"
+      },
+      "trace_complete": true
+    }
+  ],
+  "source_bindings": {
+    "matrix_path": "validation/parity/wave0_option_level_acceptance_v1.json",
+    "matrix_sha256": "7419358019b5d9e67b3ae031349fa2c358c65dcaa0465c4621a516f43cb2c38c",
+    "override_fragment_count": 6,
+    "override_fragments": [
+      {
+        "fragment_id": "quickpls.wave0.pls_power_posthoc.v1",
+        "path": "validation/parity/fragments/pls_power_posthoc_v1.json",
+        "sha256": "2bfbd622ef22b5319e283671492fd140def4006cd67c5dd0113ba3cef9378192"
+      },
+      {
+        "fragment_id": "quickpls.wave0.pls_core_resampling_official.v1",
+        "path": "validation/parity/fragments/pls_core_resampling_official_v1.json",
+        "sha256": "179fe2e75e1612f7b4ba93bfaa2afa033c86ca043dd7795a83b873bfca1060f6"
+      },
+      {
+        "fragment_id": "quickpls.wave0.cbsem_cfa_official.v1",
+        "path": "validation/parity/fragments/cbsem_cfa_official_v1.json",
+        "sha256": "69ff10567fa9fe973acce8b7e70ca6e28bd63fbf212de81bf039c0b22912da06"
+      },
+      {
+        "fragment_id": "quickpls.wave0.pls_assessment_prediction_official.v1",
+        "path": "validation/parity/fragments/pls_assessment_prediction_official_v1.json",
+        "sha256": "5b5e926c657a8a5952cc736c92a63212dc1b208ea1669a02be45217da2404642"
+      },
+      {
+        "fragment_id": "quickpls.wave0.pls_advanced_groups_official.v1",
+        "path": "validation/parity/fragments/pls_advanced_groups_official_v1.json",
+        "sha256": "da339715b4fc4274637686ebd32b0ef03cad6a480b093b06215189f9cb7d0ef9"
+      },
+      {
+        "fragment_id": "quickpls.wave0.other_analytical_families_official.v1",
+        "path": "validation/parity/fragments/other_analytical_families_official_v1.json",
+        "sha256": "cc8be4f5793d9ad4a4772a6ce56876e4dafb5ebce0764628494be4d02096fbc8"
+      }
+    ],
+    "registry_path": "validation/capabilities/capability_registry_v2.json",
+    "registry_sha256": "71784d8ab7edaa70b5ea5cc771b2c52f8ee96cc58b7d52534beaac891abd69de",
+    "schema_contract": "draft_2020_12_plus_fail_closed_manual_checks",
+    "schema_path": "validation/parity/wave0_option_level_acceptance_v1.schema.json",
+    "schema_sha256": "4cf602aaecc11a686ce26ca3c78145cb90f75b879734288a54f56784a08f8405"
+  }
+}

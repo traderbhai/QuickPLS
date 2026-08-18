@@ -1,0 +1,60 @@
+{
+  "checks": {
+    "dataset_identity_tamper_rejected": true,
+    "metamorphic_and_determinism_covered_by_engine_gate": true,
+    "no_scope_result_written": true,
+    "no_tampered_result_written": true,
+    "prebuilt_cli_only": true,
+    "unsupported_scope_rejected": true
+  },
+  "executions": [
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "validate",
+        "validation/results/method_factory/mediation_v1/work/boundary_invalid.recipe.json",
+        "--json"
+      ],
+      "duration_seconds": 0.066,
+      "returncode": 1,
+      "stderr_tail": "Error: recipe validation failed\n",
+      "stdout_tail": "[\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"x\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"m\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"y\"\n  },\n  {\n    \"code\": \"path.cycle\",\n    \"severity\": \"error\",\n    \"message\": \"Structural model contains a directed cycle\",\n    \"subject\": null\n  }\n]\n"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "validation/results/method_factory/mediation_v1/work/boundary_invalid.recipe.json",
+        "--data",
+        "validation/results/method_factory/mediation_v1/work/mediation_metamorphic_base.csv",
+        "--output",
+        "validation/results/method_factory/mediation_v1/work/boundary_scope_invalid.quickpls.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.074,
+      "returncode": 1,
+      "stderr_tail": "Error: path.cycle: Structural model contains a directed cycle\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "validation/results/method_factory/mediation_v1/work/boundary_identity_tampered.recipe.json",
+        "--data",
+        "validation/results/method_factory/mediation_v1/work/mediation_metamorphic_base.csv",
+        "--output",
+        "validation/results/method_factory/mediation_v1/work/boundary_identity_tampered.quickpls.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.14,
+      "returncode": 1,
+      "stderr_tail": "Error: recipe dataset fingerprint does not match the imported dataset\n",
+      "stdout_tail": ""
+    }
+  ],
+  "kind": "quickpls_phase3_boundary_gate",
+  "method": "mediation_v1",
+  "passed": true,
+  "schema_version": 1
+}

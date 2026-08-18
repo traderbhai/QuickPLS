@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "integrity_contract": "exact_current_reference_packaged_identity_and_artifact_binding_v1",
-  "generated_at_utc": "2026-08-13T19:27:19.413499Z",
+  "generated_at_utc": "2026-08-17T02:15:02.687303Z",
   "target": "quickpls3_regression_bootstrap_v1_promotion",
   "feature_id": "qpls3.standalone.regression_bootstrap",
   "method_version": "regression_bootstrap_v1",
   "catalogue_snapshot_date": "2026-08-12",
-  "passed": true,
+  "passed": false,
   "reference_report": {
     "path": "validation\\results\\regression_bootstrap_v1_reference_report.json",
     "present": true,
     "bytes": 28934,
-    "sha256": "f50c3a2e2a80b4e5a21f215f69e2df908c073cc2a8a5b6ecabdab209d7f21e6c",
+    "sha256": "ec9b28cdd82dc0ea0df40aa304ab2bc0c3639b2209173a10b119f45da5513dd6",
     "readable": true,
     "explicit_pass_state": {
       "present": true,
@@ -550,7 +550,7 @@
         "path": "validation/results/regression_bootstrap_v1_ols_quickpls.json",
         "present": true,
         "bytes": 364296,
-        "sha256": "194a7af06982bf525ebac84160ca0f673b1c0ef025932ce3b6020fd0f77bee44",
+        "sha256": "9d11e294fc3f63fb5822f44a86d7489001630b057de4664ebe725bf3c5161cac",
         "readable": true,
         "checks": [
           {
@@ -655,8 +655,8 @@
       {
         "path": "validation/results/regression_bootstrap_v1_logistic_quickpls.json",
         "present": true,
-        "bytes": 370177,
-        "sha256": "2fc64ab4766d2137f3b448fcd073919e0953395ad3e80cdc55fb72a63083c77e",
+        "bytes": 370180,
+        "sha256": "f48fe3b3c84965c5d9fd4eb60b3061d919045a3eddd2353149698b494e301dc7",
         "readable": true,
         "checks": [
           {
@@ -759,12 +759,12 @@
         "passed": true
       }
     ],
-    "passed": true,
+    "passed": false,
     "freshness": {
       "checked": true,
-      "passed": true,
-      "report_modified_at_utc": "2026-08-13T15:31:56.172097Z",
-      "age_days": 0.163463,
+      "passed": false,
+      "report_modified_at_utc": "2026-08-14T06:48:01.551444Z",
+      "age_days": 2.81043,
       "max_age_days": null,
       "sources": [
         {
@@ -780,32 +780,32 @@
         {
           "path": "crates\\qpls-core\\src\\contract.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:55.461617Z"
+          "modified_at_utc": "2026-08-16T09:47:38.258264Z"
         },
         {
           "path": "crates\\qpls-core\\src\\validation.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:22:09.020320Z"
+          "modified_at_utc": "2026-08-16T09:47:38.263786Z"
         },
         {
           "path": "crates\\qpls-estimation\\src\\pls.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T10:35:42.744705Z"
+          "modified_at_utc": "2026-08-16T23:49:10.185900Z"
         },
         {
           "path": "crates\\qpls-resampling\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:55.501018Z"
+          "modified_at_utc": "2026-08-15T23:21:05.256186Z"
         },
         {
           "path": "crates\\qpls-project\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:22:09.494578Z"
+          "modified_at_utc": "2026-08-17T00:05:28.628040Z"
         },
         {
           "path": "crates\\qpls-runner\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:22:09.040430Z"
+          "modified_at_utc": "2026-08-16T23:51:39.152164Z"
         }
       ]
     },
@@ -814,8 +814,8 @@
   "packaged_acceptance": {
     "path": "validation\\results\\regression_bootstrap_v1_packaged_acceptance.json",
     "present": true,
-    "bytes": 15537,
-    "sha256": "bee972d7a0d35c9e8714ef09f82d8a50867bd31f8a85e81c2ea63fdc2ac6cde5",
+    "bytes": 15509,
+    "sha256": "456aa994e2ed650ae6efdce9f9f1f4e18432f1e4644642cb1c82ea697614c034",
     "readable": true,
     "explicit_pass_state": {
       "present": true,
@@ -967,8 +967,8 @@
       {
         "path": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json",
         "present": true,
-        "bytes": 499999,
-        "sha256": "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
+        "bytes": 59648,
+        "sha256": "3289b3cc616c17878814690a7a9ede991bbccab29427ab4eceb77653b2776a2f",
         "readable": true,
         "checks": [
           {
@@ -1119,18 +1119,18 @@
         }
       }
     ],
-    "passed": true,
+    "passed": false,
     "freshness": {
       "checked": true,
-      "passed": true,
-      "report_modified_at_utc": "2026-08-13T19:17:09.223552Z",
-      "age_days": 0.007062,
+      "passed": false,
+      "report_modified_at_utc": "2026-08-17T01:38:06.129179Z",
+      "age_days": 0.025655,
       "max_age_days": null,
       "sources": [
         {
           "path": "validation\\v247_tauri_native_acceptance.mjs",
           "present": true,
-          "modified_at_utc": "2026-08-13T16:25:35.159990Z"
+          "modified_at_utc": "2026-08-17T02:06:27.887191Z"
         },
         {
           "path": "validation\\regression_bootstrap_v1_packaged_acceptance.schema.json",
@@ -1145,22 +1145,22 @@
         {
           "path": "src\\native\\NativeCalculationDialog.tsx",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:12:18.532142Z"
+          "modified_at_utc": "2026-08-16T23:05:06.729365Z"
         },
         {
           "path": "src\\native\\nativeAnalysisCatalog.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:11:46.140020Z"
+          "modified_at_utc": "2026-08-16T17:03:49.192252Z"
         },
         {
           "path": "src\\native\\nativeAnalysisRecipe.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:13:59.316697Z"
+          "modified_at_utc": "2026-08-16T22:02:17.283128Z"
         },
         {
           "path": "src\\native\\nativeCalculationRequest.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:56.006302Z"
+          "modified_at_utc": "2026-08-16T17:03:49.198545Z"
         },
         {
           "path": "src\\native\\nativeRegressionBootstrapWitness.ts",
@@ -1170,87 +1170,87 @@
         {
           "path": "src\\native\\nativeOls.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:56.089183Z"
+          "modified_at_utc": "2026-08-14T09:39:00.088098Z"
         },
         {
           "path": "src\\native\\nativeLogistic.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:56.064323Z"
+          "modified_at_utc": "2026-08-14T09:39:00.081689Z"
         },
         {
           "path": "src\\native\\nativeResults.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:17:28.915374Z"
+          "modified_at_utc": "2026-08-16T23:32:15.278069Z"
         },
         {
           "path": "src\\native\\nativeExportTables.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:17:46.583920Z"
+          "modified_at_utc": "2026-08-16T20:28:33.757391Z"
         },
         {
           "path": "src\\native\\NativeDesktopController.tsx",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:56:51.083690Z"
+          "modified_at_utc": "2026-08-16T23:15:43.010880Z"
         },
         {
           "path": "src\\services\\projectService.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:57:10.901825Z"
+          "modified_at_utc": "2026-08-16T17:45:13.303874Z"
         },
         {
           "path": "src-tauri\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:48:19.326273Z"
+          "modified_at_utc": "2026-08-16T16:18:42.205359Z"
         },
         {
           "path": "crates\\qpls-core\\src\\contract.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:55.461617Z"
+          "modified_at_utc": "2026-08-16T09:47:38.258264Z"
         },
         {
           "path": "crates\\qpls-core\\src\\validation.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:22:09.020320Z"
+          "modified_at_utc": "2026-08-16T09:47:38.263786Z"
         },
         {
           "path": "crates\\qpls-estimation\\src\\pls.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T10:35:42.744705Z"
+          "modified_at_utc": "2026-08-16T23:49:10.185900Z"
         },
         {
           "path": "crates\\qpls-resampling\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:55.501018Z"
+          "modified_at_utc": "2026-08-15T23:21:05.256186Z"
         },
         {
           "path": "crates\\qpls-project\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:22:09.494578Z"
+          "modified_at_utc": "2026-08-17T00:05:28.628040Z"
         },
         {
           "path": "crates\\qpls-runner\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:22:09.040430Z"
+          "modified_at_utc": "2026-08-16T23:51:39.152164Z"
         }
       ]
     },
-    "generated_at": "2026-08-13T19:15:24.423Z"
+    "generated_at": "2026-08-17T01:36:17.692Z"
   },
   "browser_visual_acceptance": {
     "path": "validation\\results\\v247_native_desktop_visual_acceptance.json",
     "present": true,
-    "bytes": 464629,
-    "sha256": "3fca6d38de201f6309bfec13d20c5136f82789fb450fe9a4617c710cc33793c1",
+    "bytes": 48909,
+    "sha256": "55e9c2934a617c1f3b4ad58fd4a83a03f60bb7dcfa72d03fde8b9acb3e9b4b85",
     "readable": true,
     "explicit_pass_state": {
       "present": true,
-      "passed": true,
+      "passed": false,
       "states": [
         {
           "path": "passed",
           "present": true,
-          "value": true,
-          "passed": true
+          "value": false,
+          "passed": false
         }
       ]
     },
@@ -1258,8 +1258,8 @@
       {
         "path": "passed",
         "expected": true,
-        "observed": true,
-        "passed": true
+        "observed": false,
+        "passed": false
       },
       {
         "path": "consoleErrors",
@@ -1270,163 +1270,670 @@
       {
         "path": "failures",
         "expected": [],
-        "observed": [],
-        "passed": true
+        "observed": [
+          {
+            "id": "hoc-visible-model-authoring",
+            "detail": "The HOC browser audit did not visibly create the three ordinary measured constructs at 1024x700.",
+            "viewport": "1024x700",
+            "fixtureApiPresent": true,
+            "fixture": {
+              "variables": 3,
+              "models": 0
+            },
+            "constructCount": 0,
+            "constructLabels": [],
+            "commandCount": 0,
+            "commandEnabled": false,
+            "dialogOpened": false,
+            "componentCount": 0,
+            "selectedComponents": [],
+            "method": "",
+            "stage1": "",
+            "stage2": "",
+            "scopeDisclosure": "",
+            "exactBoundedScope": false,
+            "unsupportedInferenceControls": 0,
+            "createEnabled": false,
+            "dialogOverflow": false,
+            "pageOverflow": false,
+            "dialogClosed": false,
+            "focusRestored": false,
+            "error": "locator.waitFor: Timeout 2000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('aside[aria-label=\"Model properties\"]') to be visible\u001b[22m\n"
+          },
+          {
+            "id": "hoc-command-dialog-contract",
+            "detail": "The model toolbar did not expose and open one usable Higher-Order Construct dialog at 1024x700.",
+            "viewport": "1024x700",
+            "fixtureApiPresent": true,
+            "fixture": {
+              "variables": 3,
+              "models": 0
+            },
+            "constructCount": 0,
+            "constructLabels": [],
+            "commandCount": 0,
+            "commandEnabled": false,
+            "dialogOpened": false,
+            "componentCount": 0,
+            "selectedComponents": [],
+            "method": "",
+            "stage1": "",
+            "stage2": "",
+            "scopeDisclosure": "",
+            "exactBoundedScope": false,
+            "unsupportedInferenceControls": 0,
+            "createEnabled": false,
+            "dialogOverflow": false,
+            "pageOverflow": false,
+            "dialogClosed": false,
+            "focusRestored": false,
+            "error": "locator.waitFor: Timeout 2000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('aside[aria-label=\"Model properties\"]') to be visible\u001b[22m\n"
+          },
+          {
+            "id": "hoc-component-selection",
+            "detail": "The HOC dialog did not retain the explicit Capability and Resources component selection at 1024x700.",
+            "viewport": "1024x700",
+            "fixtureApiPresent": true,
+            "fixture": {
+              "variables": 3,
+              "models": 0
+            },
+            "constructCount": 0,
+            "constructLabels": [],
+            "commandCount": 0,
+            "commandEnabled": false,
+            "dialogOpened": false,
+            "componentCount": 0,
+            "selectedComponents": [],
+            "method": "",
+            "stage1": "",
+            "stage2": "",
+            "scopeDisclosure": "",
+            "exactBoundedScope": false,
+            "unsupportedInferenceControls": 0,
+            "createEnabled": false,
+            "dialogOverflow": false,
+            "pageOverflow": false,
+            "dialogClosed": false,
+            "focusRestored": false,
+            "error": "locator.waitFor: Timeout 2000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('aside[aria-label=\"Model properties\"]') to be visible\u001b[22m\n"
+          },
+          {
+            "id": "hoc-two-stage-disclosure",
+            "detail": "The HOC dialog did not explain the exact reflective-reflective disjoint two-stage method at 1024x700.",
+            "viewport": "1024x700",
+            "fixtureApiPresent": true,
+            "fixture": {
+              "variables": 3,
+              "models": 0
+            },
+            "constructCount": 0,
+            "constructLabels": [],
+            "commandCount": 0,
+            "commandEnabled": false,
+            "dialogOpened": false,
+            "componentCount": 0,
+            "selectedComponents": [],
+            "method": "",
+            "stage1": "",
+            "stage2": "",
+            "scopeDisclosure": "",
+            "exactBoundedScope": false,
+            "unsupportedInferenceControls": 0,
+            "createEnabled": false,
+            "dialogOverflow": false,
+            "pageOverflow": false,
+            "dialogClosed": false,
+            "focusRestored": false,
+            "error": "locator.waitFor: Timeout 2000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('aside[aria-label=\"Model properties\"]') to be visible\u001b[22m\n"
+          },
+          {
+            "id": "hoc-bounded-scope",
+            "detail": "The HOC dialog did not truthfully expose the bounded point-estimate-only calculation scope at 1024x700.",
+            "viewport": "1024x700",
+            "fixtureApiPresent": true,
+            "fixture": {
+              "variables": 3,
+              "models": 0
+            },
+            "constructCount": 0,
+            "constructLabels": [],
+            "commandCount": 0,
+            "commandEnabled": false,
+            "dialogOpened": false,
+            "componentCount": 0,
+            "selectedComponents": [],
+            "method": "",
+            "stage1": "",
+            "stage2": "",
+            "scopeDisclosure": "",
+            "exactBoundedScope": false,
+            "unsupportedInferenceControls": 0,
+            "createEnabled": false,
+            "dialogOverflow": false,
+            "pageOverflow": false,
+            "dialogClosed": false,
+            "focusRestored": false,
+            "error": "locator.waitFor: Timeout 2000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('aside[aria-label=\"Model properties\"]') to be visible\u001b[22m\n"
+          },
+          {
+            "id": "hoc-dialog-close-focus",
+            "detail": "Cancel did not close the HOC dialog and restore toolbar focus at 1024x700.",
+            "viewport": "1024x700",
+            "fixtureApiPresent": true,
+            "fixture": {
+              "variables": 3,
+              "models": 0
+            },
+            "constructCount": 0,
+            "constructLabels": [],
+            "commandCount": 0,
+            "commandEnabled": false,
+            "dialogOpened": false,
+            "componentCount": 0,
+            "selectedComponents": [],
+            "method": "",
+            "stage1": "",
+            "stage2": "",
+            "scopeDisclosure": "",
+            "exactBoundedScope": false,
+            "unsupportedInferenceControls": 0,
+            "createEnabled": false,
+            "dialogOverflow": false,
+            "pageOverflow": false,
+            "dialogClosed": false,
+            "focusRestored": false,
+            "error": "locator.waitFor: Timeout 2000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('aside[aria-label=\"Model properties\"]') to be visible\u001b[22m\n"
+          },
+          {
+            "id": "harness-exception",
+            "detail": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.nd-dialog-calculation[role=\"dialog\"]').locator('#nd-calculation-method-wpls')\u001b[22m\n\n    at selectCalculationMethod (D:\\QuickPLS\\validation\\v247_native_desktop_visual_acceptance.mjs:1718:16)\n    at auditCalculationCatalogDialog (D:\\QuickPLS\\validation\\v247_native_desktop_visual_acceptance.mjs:1804:28)\n    at async exerciseViewport (D:\\QuickPLS\\validation\\v247_native_desktop_visual_acceptance.mjs:4579:9)\n    at async file:///D:/QuickPLS/validation/v247_native_desktop_visual_acceptance.mjs:4972:5"
+          },
+          {
+            "id": "screenshot-matrix-incomplete",
+            "detail": "79 required viewport/state screenshot(s) are missing.",
+            "missingMatrix": [
+              {
+                "viewport": "1024x700",
+                "state": "higher-order-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "calculation-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "plsc-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "wpls-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "gsca-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "cca-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "cbsem-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "structural-path-randomization-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "prediction-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "mga-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "pca-standalone-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "ols-standalone-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "logistic-standalone-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "regression-bootstrap-ols-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "regression-bootstrap-logistic-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "process-v2-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "empty-results"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "completed-results"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "mediation-results"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "export-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "launcher"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "workspace-explorer"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "workspace-explorer-context-menu"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "workspace-explorer-rename-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "data"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "recode-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "import-data-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "model"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "moderating-effect-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "higher-order-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "calculation-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "plsc-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "wpls-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "gsca-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "cca-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "cbsem-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "structural-path-randomization-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "prediction-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "mga-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "pca-standalone-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "ols-standalone-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "logistic-standalone-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "regression-bootstrap-ols-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "regression-bootstrap-logistic-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "process-v2-dialog"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "empty-results"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "completed-results"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "mediation-results"
+              },
+              {
+                "viewport": "1280x720",
+                "state": "export-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "launcher"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "workspace-explorer"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "workspace-explorer-context-menu"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "workspace-explorer-rename-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "data"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "recode-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "import-data-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "model"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "moderating-effect-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "higher-order-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "calculation-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "plsc-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "wpls-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "gsca-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "cca-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "cbsem-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "structural-path-randomization-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "prediction-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "mga-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "pca-standalone-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "ols-standalone-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "logistic-standalone-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "regression-bootstrap-ols-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "regression-bootstrap-logistic-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "process-v2-dialog"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "empty-results"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "completed-results"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "mediation-results"
+              },
+              {
+                "viewport": "1440x900",
+                "state": "export-dialog"
+              },
+              {
+                "viewport": "1024x700",
+                "state": "mediation-bootstrap-inference"
+              }
+            ]
+          },
+          {
+            "id": "running-capture-not-accounted",
+            "detail": "Running calculation evidence was neither truthfully captured nor explicitly skipped for every viewport.",
+            "runningSkips": 0,
+            "expected": 3
+          }
+        ],
+        "passed": false
       }
     ],
     "companions": [],
-    "passed": true,
+    "passed": false,
     "freshness": {
       "checked": true,
-      "passed": true,
-      "report_modified_at_utc": "2026-08-13T19:19:47.226932Z",
-      "age_days": 0.005234,
+      "passed": false,
+      "report_modified_at_utc": "2026-08-16T19:29:47.338113Z",
+      "age_days": 0.281428,
       "max_age_days": 2,
       "sources": [
         {
           "path": "validation\\v247_native_desktop_visual_acceptance.mjs",
           "present": true,
-          "modified_at_utc": "2026-08-13T16:45:43.726298Z"
+          "modified_at_utc": "2026-08-15T13:47:14.153215Z"
         },
         {
           "path": "src\\native\\NativeCalculationDialog.tsx",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:12:18.532142Z"
+          "modified_at_utc": "2026-08-16T23:05:06.729365Z"
         },
         {
           "path": "src\\native\\nativeAnalysisCatalog.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:11:46.140020Z"
+          "modified_at_utc": "2026-08-16T17:03:49.192252Z"
         },
         {
           "path": "src\\native\\nativeAnalysisRecipe.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:13:59.316697Z"
+          "modified_at_utc": "2026-08-16T22:02:17.283128Z"
         },
         {
           "path": "src\\native\\nativeOls.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:56.089183Z"
+          "modified_at_utc": "2026-08-14T09:39:00.088098Z"
         },
         {
           "path": "src\\native\\nativeLogistic.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:56.064323Z"
+          "modified_at_utc": "2026-08-14T09:39:00.081689Z"
         },
         {
           "path": "src\\native\\nativeResults.ts",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:17:28.915374Z"
+          "modified_at_utc": "2026-08-16T23:32:15.278069Z"
         },
         {
           "path": "src\\native\\nativeDesktop.css",
           "present": true,
-          "modified_at_utc": "2026-08-13T12:20:30.679065Z"
+          "modified_at_utc": "2026-08-15T14:21:56.424735Z"
         },
         {
-          "path": "dist\\assets\\NativeCalculationDialog-CekKsDqn.js",
+          "path": "dist\\assets\\NativeCalculationDialog-CyD2Mn13.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
+          "modified_at_utc": "2026-08-17T01:33:08.583660Z"
         },
         {
-          "path": "dist\\assets\\NativeExportDialog-CTZOLsrg.js",
+          "path": "dist\\assets\\NativeExportDialog-CmqZqP4-.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
+          "modified_at_utc": "2026-08-17T01:33:08.584934Z"
         },
         {
-          "path": "dist\\assets\\NativeGroupSetupDialog-DncLahbL.js",
+          "path": "dist\\assets\\NativeGroupSetupDialog-OY7zt2La.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
+          "modified_at_utc": "2026-08-17T01:33:08.584934Z"
         },
         {
-          "path": "dist\\assets\\NativeHigherOrderDialog-Bn4cY5Gi.js",
+          "path": "dist\\assets\\NativeHigherOrderDialog-fINoN5de.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
+          "modified_at_utc": "2026-08-17T01:33:08.584934Z"
         },
         {
-          "path": "dist\\assets\\NativeModerationDialog-D2IfblSQ.js",
+          "path": "dist\\assets\\NativeModerationDialog-DPb5Hepd.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
+          "modified_at_utc": "2026-08-17T01:33:08.584934Z"
         },
         {
-          "path": "dist\\assets\\NativeResultsSurface-Bv7Fchdi.js",
+          "path": "dist\\assets\\NativeResultsSurface-BCMLh1JK.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
+          "modified_at_utc": "2026-08-17T01:33:08.583660Z"
         },
         {
-          "path": "dist\\assets\\NativeUtilityDialog-B_BR7mw4.js",
+          "path": "dist\\assets\\NativeUtilityDialog-BJs1wf1R.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
-        },
-        {
-          "path": "dist\\assets\\flow-BN-PNp2v.js",
-          "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.497097Z"
+          "modified_at_utc": "2026-08-17T01:33:08.584934Z"
         },
         {
           "path": "dist\\assets\\flow-BnuhLJ6X.css",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.497097Z"
+          "modified_at_utc": "2026-08-17T01:33:08.581295Z"
         },
         {
-          "path": "dist\\assets\\icons-CWW7Ihoi.js",
+          "path": "dist\\assets\\flow-DG_yhx79.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.497097Z"
+          "modified_at_utc": "2026-08-17T01:33:08.583660Z"
         },
         {
-          "path": "dist\\assets\\index-DBKNtbUu.js",
+          "path": "dist\\assets\\icons-BugDteTW.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.499172Z"
+          "modified_at_utc": "2026-08-17T01:33:08.583660Z"
         },
         {
-          "path": "dist\\assets\\index-DpTHova4.css",
+          "path": "dist\\assets\\index-4SiFGWID.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.497097Z"
+          "modified_at_utc": "2026-08-17T01:33:08.586174Z"
         },
         {
-          "path": "dist\\assets\\largeModelSmoke-PEBccAlJ.js",
+          "path": "dist\\assets\\index-BlsU2D78.css",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.502627Z"
+          "modified_at_utc": "2026-08-17T01:33:08.581295Z"
         },
         {
-          "path": "dist\\assets\\nativeMga-DgYeq6DN.js",
+          "path": "dist\\assets\\largeModelSmoke-ChuXLqDH.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
+          "modified_at_utc": "2026-08-17T01:33:08.584934Z"
         },
         {
-          "path": "dist\\assets\\publicationDiagram-BlkNs4Z4.js",
+          "path": "dist\\assets\\nativeMga-CQPrK7Ua.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
+          "modified_at_utc": "2026-08-17T01:33:08.583660Z"
         },
         {
-          "path": "dist\\assets\\smokeRun-CMXwsrTO.js",
+          "path": "dist\\assets\\publicationDiagram-CYXIaeSG.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.499172Z"
+          "modified_at_utc": "2026-08-17T01:33:08.584934Z"
+        },
+        {
+          "path": "dist\\assets\\smokeRun-DsBvJjQf.js",
+          "present": true,
+          "modified_at_utc": "2026-08-17T01:33:08.586174Z"
         },
         {
           "path": "dist\\assets\\tauri-CZBL8huA.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
+          "modified_at_utc": "2026-08-17T01:33:08.583660Z"
         },
         {
-          "path": "dist\\assets\\vendor-3AznE2Td.js",
+          "path": "dist\\assets\\vendor-DAfPu0rL.js",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
+          "modified_at_utc": "2026-08-17T01:33:08.581295Z"
         },
         {
           "path": "dist\\index.html",
           "present": true,
-          "modified_at_utc": "2026-08-13T15:53:46.499172Z"
+          "modified_at_utc": "2026-08-17T01:33:08.587301Z"
         }
       ]
     },
-    "generated_at": "2026-08-13T19:18:52.475Z"
+    "generated_at": "2026-08-16T19:16:47.566Z"
   },
   "failure_boundary_report": {
     "path": "validation\\results\\regression_bootstrap_failure_boundary_test_report.json",
     "present": true,
-    "bytes": 5010,
-    "sha256": "676e3b8fb9b59c6a1c9ae94f7e5dea4a440efc56f9bd9b9371929bbb89a8b5b2",
+    "bytes": 4908,
+    "sha256": "9666c0ad6d3d750b85454871cc5d85e4aa36b2a8492480e52249bb781cae580f",
     "readable": true,
     "explicit_pass_state": {
       "present": true,
@@ -1581,12 +2088,12 @@
       }
     ],
     "companions": [],
-    "passed": true,
+    "passed": false,
     "freshness": {
       "checked": true,
-      "passed": true,
-      "report_modified_at_utc": "2026-08-13T18:11:08.894307Z",
-      "age_days": 0.0529,
+      "passed": false,
+      "report_modified_at_utc": "2026-08-13T21:06:10.404531Z",
+      "age_days": 3.214494,
       "max_age_days": 2,
       "sources": [
         {
@@ -1597,27 +2104,27 @@
         {
           "path": "crates\\qpls-resampling\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:55.501018Z"
+          "modified_at_utc": "2026-08-15T23:21:05.256186Z"
         },
         {
           "path": "crates\\qpls-estimation\\src\\pls.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T10:35:42.744705Z"
+          "modified_at_utc": "2026-08-16T23:49:10.185900Z"
         },
         {
           "path": "crates\\qpls-core\\src\\contract.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:55.461617Z"
+          "modified_at_utc": "2026-08-16T09:47:38.258264Z"
         },
         {
           "path": "crates\\qpls-project\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T11:22:09.494578Z"
+          "modified_at_utc": "2026-08-17T00:05:28.628040Z"
         },
         {
           "path": "crates\\qpls-core\\src\\contract.rs",
           "present": true,
-          "modified_at_utc": "2026-08-13T07:59:55.461617Z"
+          "modified_at_utc": "2026-08-16T09:47:38.258264Z"
         }
       ]
     },
@@ -1689,18 +2196,18 @@
       "external_r_identified": true,
       "external_r_ols_distribution_within_thresholds": true,
       "external_r_logistic_distribution_within_thresholds": true,
-      "tested_release_cli_is_current_and_bound": true
+      "tested_release_cli_is_current_and_bound": false
     },
     "tested_cli": {
       "artifact": {
         "path": "target/release/qpls.exe",
-        "reported_size": 20690432,
-        "reported_sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+        "reported_size": 22403072,
+        "reported_sha256": "1f7e6ac39b2c43fbd4a8bde4a25e3b5bab0915d3e05207b3e89eae65d931c059",
         "present": true,
         "inside_repository": true,
-        "actual_size": 20690432,
-        "actual_sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-        "passed": true
+        "actual_size": 32173056,
+        "actual_sha256": "f1c018bbd4dfe94e2b34769203da98bb4213af28a9ad6e42950b3484ba67d7cd",
+        "passed": false
       },
       "source_freshness": [
         {
@@ -1736,12 +2243,12 @@
       ],
       "checks": {
         "exact_path": true,
-        "digest_and_size_match": true,
+        "digest_and_size_match": false,
         "not_older_than_sources": true
       },
-      "passed": true
+      "passed": false
     },
-    "passed": true
+    "passed": false
   },
   "packaged_attestation": {
     "checks": {
@@ -1764,154 +2271,154 @@
     },
     "artifacts": {
       "ols_xlsx": {
-        "path": "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
-        "reported_size": 18281,
-        "reported_sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
+        "path": "validation/results/v247-native-regression-bootstrap-ols-20260817-070613798.xlsx",
+        "reported_size": 18278,
+        "reported_sha256": "7abcc1ac074f8ad80b57439bb98428cf9f424d5839291914c056b78a505ccebb",
         "present": true,
         "inside_repository": true,
-        "actual_size": 18281,
-        "actual_sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
+        "actual_size": 18278,
+        "actual_sha256": "7abcc1ac074f8ad80b57439bb98428cf9f424d5839291914c056b78a505ccebb",
         "passed": true
       },
       "logistic_xlsx": {
-        "path": "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
-        "reported_size": 21909,
-        "reported_sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
+        "path": "validation/results/v247-native-regression-bootstrap-logistic-20260817-070613798.xlsx",
+        "reported_size": 21893,
+        "reported_sha256": "27af8bdc32615332bfa92639199d3c2d4895a52e9b063bb4523855281a634c11",
         "present": true,
         "inside_repository": true,
-        "actual_size": 21909,
-        "actual_sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
+        "actual_size": 21893,
+        "actual_sha256": "27af8bdc32615332bfa92639199d3c2d4895a52e9b063bb4523855281a634c11",
         "passed": true
       },
       "project_archive": {
-        "path": "validation/results/v247-native-regression-bootstrap-1786648524414-57288.qpls",
-        "reported_size": 944352,
-        "reported_sha256": "238aa6217f22e5eb911c01958a27afb3a4081b28a5ec250793e0b622a45c093d",
+        "path": "validation/results/v247-native-regression-bootstrap-1786930577688-31052.qpls",
+        "reported_size": 944505,
+        "reported_sha256": "d3a4bb444725d2826f8e4883ca0cf35746e86d21ff85c1c897d2482bd0ca142f",
         "present": true,
         "inside_repository": true,
-        "actual_size": 944352,
-        "actual_sha256": "238aa6217f22e5eb911c01958a27afb3a4081b28a5ec250793e0b622a45c093d",
+        "actual_size": 944505,
+        "actual_sha256": "d3a4bb444725d2826f8e4883ca0cf35746e86d21ff85c1c897d2482bd0ca142f",
         "passed": true
       },
       "screenshots": [
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/160-tauri-native-regression-bootstrap-fixture-data-1536x794.png",
-          "reported_size": 293913,
-          "reported_sha256": "93818582b7e4d6bb9279d101e7ed103d9916766847aec4ae0bacb7a150bab5ff",
+          "reported_size": 295238,
+          "reported_sha256": "88841364d2132bf282c9c1ffebbca2fe044b748d4bc36ee44dfa3fe6f820f011",
           "present": true,
           "inside_repository": true,
-          "actual_size": 293913,
-          "actual_sha256": "93818582b7e4d6bb9279d101e7ed103d9916766847aec4ae0bacb7a150bab5ff",
+          "actual_size": 295238,
+          "actual_sha256": "88841364d2132bf282c9c1ffebbca2fe044b748d4bc36ee44dfa3fe6f820f011",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/161-tauri-native-regression-bootstrap-cancellation-running-1536x794.png",
-          "reported_size": 232032,
-          "reported_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+          "reported_size": 225018,
+          "reported_sha256": "8c57a67d9fa13c58924a6aadd0ade2bab1b066c6ea3c2bb65de07427d15a5cdd",
           "present": true,
           "inside_repository": true,
-          "actual_size": 232032,
-          "actual_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+          "actual_size": 225018,
+          "actual_sha256": "8c57a67d9fa13c58924a6aadd0ade2bab1b066c6ea3c2bb65de07427d15a5cdd",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/162-tauri-native-regression-bootstrap-cancelled-1536x794.png",
-          "reported_size": 284306,
-          "reported_sha256": "dd6ec983a2df778dd3cdab4a1c845f559090cd4f145b389f91f7969ac4a7c036",
+          "reported_size": 281544,
+          "reported_sha256": "ea48216f7c5933a5151f79f2e0bf6d690878ccb6462c77fa62b647d7983e4821",
           "present": true,
           "inside_repository": true,
-          "actual_size": 284306,
-          "actual_sha256": "dd6ec983a2df778dd3cdab4a1c845f559090cd4f145b389f91f7969ac4a7c036",
+          "actual_size": 281544,
+          "actual_sha256": "ea48216f7c5933a5151f79f2e0bf6d690878ccb6462c77fa62b647d7983e4821",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/163-tauri-native-regression-bootstrap-ols-dialog-1536x794.png",
-          "reported_size": 299690,
-          "reported_sha256": "7ecf52821dc59f125aaeef326835046bbae7eba9ca4c4f081e3fad8fa4223aa7",
+          "reported_size": 292527,
+          "reported_sha256": "bb876aea89c00a87102221bfcf3c9ff1848355e9659e94141eb29b39b45b51ee",
           "present": true,
           "inside_repository": true,
-          "actual_size": 299690,
-          "actual_sha256": "7ecf52821dc59f125aaeef326835046bbae7eba9ca4c4f081e3fad8fa4223aa7",
+          "actual_size": 292527,
+          "actual_sha256": "bb876aea89c00a87102221bfcf3c9ff1848355e9659e94141eb29b39b45b51ee",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/164-tauri-native-regression-bootstrap-ols-running-1536x794.png",
-          "reported_size": 232032,
-          "reported_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+          "reported_size": 225018,
+          "reported_sha256": "8c57a67d9fa13c58924a6aadd0ade2bab1b066c6ea3c2bb65de07427d15a5cdd",
           "present": true,
           "inside_repository": true,
-          "actual_size": 232032,
-          "actual_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+          "actual_size": 225018,
+          "actual_sha256": "8c57a67d9fa13c58924a6aadd0ade2bab1b066c6ea3c2bb65de07427d15a5cdd",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/165-tauri-native-regression-bootstrap-ols-results-1536x794.png",
-          "reported_size": 111851,
-          "reported_sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
+          "reported_size": 112470,
+          "reported_sha256": "939d1a263c1ba996cadb555cf6ae0c8d87966806fb6ad8e8aedb89ea071909fb",
           "present": true,
           "inside_repository": true,
-          "actual_size": 111851,
-          "actual_sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
+          "actual_size": 112470,
+          "actual_sha256": "939d1a263c1ba996cadb555cf6ae0c8d87966806fb6ad8e8aedb89ea071909fb",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/166-tauri-native-regression-bootstrap-ols-export-1536x794.png",
-          "reported_size": 111851,
-          "reported_sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
+          "reported_size": 102749,
+          "reported_sha256": "52a45551436eac3082444a0d3ccce68fe97c01edf88454db9f396b6e3c89e7c2",
           "present": true,
           "inside_repository": true,
-          "actual_size": 111851,
-          "actual_sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
+          "actual_size": 102749,
+          "actual_sha256": "52a45551436eac3082444a0d3ccce68fe97c01edf88454db9f396b6e3c89e7c2",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/167-tauri-native-regression-bootstrap-logistic-dialog-1536x794.png",
-          "reported_size": 306791,
-          "reported_sha256": "efe800431cf09999a0d4c5ea10442b4f598f4429e1e6306444c2b46a9ffac377",
+          "reported_size": 299699,
+          "reported_sha256": "e059003ab1ab96513fe6a3e8bc284d494313e3b335ce9fe88995b7629ce76de2",
           "present": true,
           "inside_repository": true,
-          "actual_size": 306791,
-          "actual_sha256": "efe800431cf09999a0d4c5ea10442b4f598f4429e1e6306444c2b46a9ffac377",
+          "actual_size": 299699,
+          "actual_sha256": "e059003ab1ab96513fe6a3e8bc284d494313e3b335ce9fe88995b7629ce76de2",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/168-tauri-native-regression-bootstrap-logistic-running-1536x794.png",
-          "reported_size": 232032,
-          "reported_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+          "reported_size": 225018,
+          "reported_sha256": "8c57a67d9fa13c58924a6aadd0ade2bab1b066c6ea3c2bb65de07427d15a5cdd",
           "present": true,
           "inside_repository": true,
-          "actual_size": 232032,
-          "actual_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+          "actual_size": 225018,
+          "actual_sha256": "8c57a67d9fa13c58924a6aadd0ade2bab1b066c6ea3c2bb65de07427d15a5cdd",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/169-tauri-native-regression-bootstrap-logistic-results-1536x794.png",
-          "reported_size": 117547,
-          "reported_sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
+          "reported_size": 118533,
+          "reported_sha256": "0d8690f5c7d9dacddb74840668811dccfe80daf899acfd54b82fa2f4f01f274d",
           "present": true,
           "inside_repository": true,
-          "actual_size": 117547,
-          "actual_sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
+          "actual_size": 118533,
+          "actual_sha256": "0d8690f5c7d9dacddb74840668811dccfe80daf899acfd54b82fa2f4f01f274d",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/170-tauri-native-regression-bootstrap-logistic-export-1536x794.png",
-          "reported_size": 117547,
-          "reported_sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
+          "reported_size": 118533,
+          "reported_sha256": "0d8690f5c7d9dacddb74840668811dccfe80daf899acfd54b82fa2f4f01f274d",
           "present": true,
           "inside_repository": true,
-          "actual_size": 117547,
-          "actual_sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
+          "actual_size": 118533,
+          "actual_sha256": "0d8690f5c7d9dacddb74840668811dccfe80daf899acfd54b82fa2f4f01f274d",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/171-tauri-native-regression-bootstrap-reopened-1536x794.png",
-          "reported_size": 115831,
-          "reported_sha256": "1ae3e6877243898b2df2e7accc9e3b103d3e179d3f63ea32e857c53c156cad09",
+          "reported_size": 116807,
+          "reported_sha256": "208aa7f277e269601693a31f69c20f6a5791c5f4a2648fa1083594ff97110315",
           "present": true,
           "inside_repository": true,
-          "actual_size": 115831,
-          "actual_sha256": "1ae3e6877243898b2df2e7accc9e3b103d3e179d3f63ea32e857c53c156cad09",
+          "actual_size": 116807,
+          "actual_sha256": "208aa7f277e269601693a31f69c20f6a5791c5f4a2648fa1083594ff97110315",
           "passed": true
         }
       ]
@@ -1920,12 +2427,12 @@
       "quickpls_desktop_exe": {
         "artifact": {
           "path": "target/release/quickpls-desktop.exe",
-          "reported_size": 30507008,
-          "reported_sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+          "reported_size": 49828352,
+          "reported_sha256": "f9affb84834b685a141ef87604583786ff8350d47314fb9a2bf191db76f42779",
           "present": true,
           "inside_repository": true,
-          "actual_size": 30507008,
-          "actual_sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+          "actual_size": 49828352,
+          "actual_sha256": "f9affb84834b685a141ef87604583786ff8350d47314fb9a2bf191db76f42779",
           "passed": true
         },
         "source_freshness": [
@@ -2020,42 +2527,37 @@
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeCalculationDialog-CekKsDqn.js",
+            "path": "dist/assets/NativeCalculationDialog-CyD2Mn13.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeExportDialog-CTZOLsrg.js",
+            "path": "dist/assets/NativeExportDialog-CmqZqP4-.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeGroupSetupDialog-DncLahbL.js",
+            "path": "dist/assets/NativeGroupSetupDialog-OY7zt2La.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
+            "path": "dist/assets/NativeHigherOrderDialog-fINoN5de.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeModerationDialog-D2IfblSQ.js",
+            "path": "dist/assets/NativeModerationDialog-DPb5Hepd.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeResultsSurface-Bv7Fchdi.js",
+            "path": "dist/assets/NativeResultsSurface-BCMLh1JK.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeUtilityDialog-B_BR7mw4.js",
-            "present": true,
-            "binary_not_older": true
-          },
-          {
-            "path": "dist/assets/flow-BN-PNp2v.js",
+            "path": "dist/assets/NativeUtilityDialog-BJs1wf1R.js",
             "present": true,
             "binary_not_older": true
           },
@@ -2065,37 +2567,42 @@
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/icons-CWW7Ihoi.js",
+            "path": "dist/assets/flow-DG_yhx79.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/index-DBKNtbUu.js",
+            "path": "dist/assets/icons-BugDteTW.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/index-DpTHova4.css",
+            "path": "dist/assets/index-4SiFGWID.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/largeModelSmoke-PEBccAlJ.js",
+            "path": "dist/assets/index-BlsU2D78.css",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/nativeMga-DgYeq6DN.js",
+            "path": "dist/assets/largeModelSmoke-ChuXLqDH.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/publicationDiagram-BlkNs4Z4.js",
+            "path": "dist/assets/nativeMga-CQPrK7Ua.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/smokeRun-CMXwsrTO.js",
+            "path": "dist/assets/publicationDiagram-CYXIaeSG.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/smokeRun-DsBvJjQf.js",
             "present": true,
             "binary_not_older": true
           },
@@ -2105,7 +2612,7 @@
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/vendor-3AznE2Td.js",
+            "path": "dist/assets/vendor-DAfPu0rL.js",
             "present": true,
             "binary_not_older": true
           },
@@ -2125,49 +2632,44 @@
       "dist_bundle": {
         "reported": {
           "path": "dist",
-          "size": 1191494,
+          "size": 2255447,
           "file_count": 19,
-          "sha256": "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
+          "sha256": "0fa16884b7535bd4dcb3490c49d840917c5715b63308f6e7054d8fa353e28bd7",
           "manifest": [
             {
-              "path": "assets/NativeCalculationDialog-CekKsDqn.js",
-              "size": 51101,
-              "sha256": "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694"
+              "path": "assets/NativeCalculationDialog-CyD2Mn13.js",
+              "size": 71425,
+              "sha256": "0cec60e48840c3f19c13953b18b0fa88eaa79f37fe7d8251dd37bc3289f41f95"
             },
             {
-              "path": "assets/NativeExportDialog-CTZOLsrg.js",
-              "size": 6432,
-              "sha256": "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2"
+              "path": "assets/NativeExportDialog-CmqZqP4-.js",
+              "size": 5203,
+              "sha256": "67e7978e250c4a9d6b48b690376cab3f10e56123cfd8fc85b64bad7e5654afde"
             },
             {
-              "path": "assets/NativeGroupSetupDialog-DncLahbL.js",
-              "size": 6779,
-              "sha256": "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190"
+              "path": "assets/NativeGroupSetupDialog-OY7zt2La.js",
+              "size": 6807,
+              "sha256": "04176d68a56e2070b3869cab505b2135a060a5314a8402a67831d761c0e021d3"
             },
             {
-              "path": "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
-              "size": 2948,
-              "sha256": "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609"
+              "path": "assets/NativeHigherOrderDialog-fINoN5de.js",
+              "size": 2921,
+              "sha256": "b0334779882b56fda30f2c645afe2f1ce9a16f294d47a8e8d411ca0375b5ca6c"
             },
             {
-              "path": "assets/NativeModerationDialog-D2IfblSQ.js",
-              "size": 3081,
-              "sha256": "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840"
+              "path": "assets/NativeModerationDialog-DPb5Hepd.js",
+              "size": 3070,
+              "sha256": "9d44f54503ce01624edf6ef8cda80134be4a99cbee2489b249c75c7263d11789"
             },
             {
-              "path": "assets/NativeResultsSurface-Bv7Fchdi.js",
-              "size": 31251,
-              "sha256": "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f"
+              "path": "assets/NativeResultsSurface-BCMLh1JK.js",
+              "size": 32644,
+              "sha256": "528e8e9c99015b67d49d8074e6782d27b79d0b52da8ceeb3fe7df5a3dee31483"
             },
             {
-              "path": "assets/NativeUtilityDialog-B_BR7mw4.js",
-              "size": 12164,
-              "sha256": "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06"
-            },
-            {
-              "path": "assets/flow-BN-PNp2v.js",
-              "size": 83921,
-              "sha256": "e96e69cde521273e387064b0ff3ea9f94e29834ea085646f0b8e1fe9e0ea8fde"
+              "path": "assets/NativeUtilityDialog-BJs1wf1R.js",
+              "size": 24329,
+              "sha256": "d6420da41c329ca58f0936a0214adda3f2d96a45556ae7c0167486b06ac58e8f"
             },
             {
               "path": "assets/flow-BnuhLJ6X.css",
@@ -2175,39 +2677,44 @@
               "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
             },
             {
-              "path": "assets/icons-CWW7Ihoi.js",
-              "size": 20835,
-              "sha256": "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6"
+              "path": "assets/flow-DG_yhx79.js",
+              "size": 84113,
+              "sha256": "bc613b2f8b6af00ce0d183175180163e8d5c915dbfbe86518a803d95d7d44ba3"
             },
             {
-              "path": "assets/index-DBKNtbUu.js",
-              "size": 528769,
-              "sha256": "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7"
+              "path": "assets/icons-BugDteTW.js",
+              "size": 23086,
+              "sha256": "3bdd97c7e1e19a8acd9f88862fe9d89456b712637697048062b3af0fe0bfca7a"
             },
             {
-              "path": "assets/index-DpTHova4.css",
-              "size": 74714,
-              "sha256": "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182"
+              "path": "assets/index-4SiFGWID.js",
+              "size": 1523960,
+              "sha256": "0dbc69f252c7f24a1d6dfe6aebfa7f8e22703f528f545088a6848d3f2099e230"
             },
             {
-              "path": "assets/largeModelSmoke-PEBccAlJ.js",
-              "size": 880,
-              "sha256": "a4977bf130c85a688b570fb1f17f8dac958787116a585c9300f3d4c3fbd6b535"
+              "path": "assets/index-BlsU2D78.css",
+              "size": 107607,
+              "sha256": "f4db41e23cb1cbc76519bb41487c1a2d64b05f3fb2551b49771175b7e4b79eff"
             },
             {
-              "path": "assets/nativeMga-DgYeq6DN.js",
-              "size": 3108,
-              "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
+              "path": "assets/largeModelSmoke-ChuXLqDH.js",
+              "size": 983,
+              "sha256": "fb24e9dddb7e5a48ae648cf23391b83a80e40d05f57cc3ef1f025cb6fbf1d22d"
             },
             {
-              "path": "assets/publicationDiagram-BlkNs4Z4.js",
-              "size": 8648,
-              "sha256": "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df"
+              "path": "assets/nativeMga-CQPrK7Ua.js",
+              "size": 3745,
+              "sha256": "e14a6c3728b9d157839875d8de4ae3128abce2f863458d143b8b3860520eb0fd"
             },
             {
-              "path": "assets/smokeRun-CMXwsrTO.js",
-              "size": 7141,
-              "sha256": "33388a0e9df739d8812f2a03c2980f00a3f49046375ae48c9a854d8f94f7f962"
+              "path": "assets/publicationDiagram-CYXIaeSG.js",
+              "size": 8679,
+              "sha256": "4a7fb5bfb7d673660c7591f036e328f9579bc9b089c4024919b5ddd6a153e69a"
+            },
+            {
+              "path": "assets/smokeRun-DsBvJjQf.js",
+              "size": 7145,
+              "sha256": "e2b3a0beddc1838c8975b86fe64d9eb33af8f0ad4669b58db797ecef2214c718"
             },
             {
               "path": "assets/tauri-CZBL8huA.js",
@@ -2215,62 +2722,57 @@
               "sha256": "8fbb85b9879fc37af89bc405134891d8b7dec19829e03c6d7900ba79f71dbe77"
             },
             {
-              "path": "assets/vendor-3AznE2Td.js",
-              "size": 317214,
-              "sha256": "7dadeaa73f481ffd1ab52c5247997462fd195062a4dbe10353701ffbbc45711f"
+              "path": "assets/vendor-DAfPu0rL.js",
+              "size": 317222,
+              "sha256": "61f10878d1ededa46b28c7b00d59492a03bbc88f903ea4a7a4fd5b5818d1d1c2"
             },
             {
               "path": "index.html",
               "size": 821,
-              "sha256": "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50"
+              "sha256": "2a6a13860340cbd95bf8afed554aaed3f94c3428ce1fa6f225a427db0bac7a66"
             }
           ]
         },
         "actual": {
           "path": "dist",
-          "size": 1191494,
+          "size": 2255447,
           "file_count": 19,
-          "sha256": "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
+          "sha256": "0fa16884b7535bd4dcb3490c49d840917c5715b63308f6e7054d8fa353e28bd7",
           "manifest": [
             {
-              "path": "assets/NativeCalculationDialog-CekKsDqn.js",
-              "size": 51101,
-              "sha256": "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694"
+              "path": "assets/NativeCalculationDialog-CyD2Mn13.js",
+              "size": 71425,
+              "sha256": "0cec60e48840c3f19c13953b18b0fa88eaa79f37fe7d8251dd37bc3289f41f95"
             },
             {
-              "path": "assets/NativeExportDialog-CTZOLsrg.js",
-              "size": 6432,
-              "sha256": "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2"
+              "path": "assets/NativeExportDialog-CmqZqP4-.js",
+              "size": 5203,
+              "sha256": "67e7978e250c4a9d6b48b690376cab3f10e56123cfd8fc85b64bad7e5654afde"
             },
             {
-              "path": "assets/NativeGroupSetupDialog-DncLahbL.js",
-              "size": 6779,
-              "sha256": "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190"
+              "path": "assets/NativeGroupSetupDialog-OY7zt2La.js",
+              "size": 6807,
+              "sha256": "04176d68a56e2070b3869cab505b2135a060a5314a8402a67831d761c0e021d3"
             },
             {
-              "path": "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
-              "size": 2948,
-              "sha256": "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609"
+              "path": "assets/NativeHigherOrderDialog-fINoN5de.js",
+              "size": 2921,
+              "sha256": "b0334779882b56fda30f2c645afe2f1ce9a16f294d47a8e8d411ca0375b5ca6c"
             },
             {
-              "path": "assets/NativeModerationDialog-D2IfblSQ.js",
-              "size": 3081,
-              "sha256": "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840"
+              "path": "assets/NativeModerationDialog-DPb5Hepd.js",
+              "size": 3070,
+              "sha256": "9d44f54503ce01624edf6ef8cda80134be4a99cbee2489b249c75c7263d11789"
             },
             {
-              "path": "assets/NativeResultsSurface-Bv7Fchdi.js",
-              "size": 31251,
-              "sha256": "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f"
+              "path": "assets/NativeResultsSurface-BCMLh1JK.js",
+              "size": 32644,
+              "sha256": "528e8e9c99015b67d49d8074e6782d27b79d0b52da8ceeb3fe7df5a3dee31483"
             },
             {
-              "path": "assets/NativeUtilityDialog-B_BR7mw4.js",
-              "size": 12164,
-              "sha256": "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06"
-            },
-            {
-              "path": "assets/flow-BN-PNp2v.js",
-              "size": 83921,
-              "sha256": "e96e69cde521273e387064b0ff3ea9f94e29834ea085646f0b8e1fe9e0ea8fde"
+              "path": "assets/NativeUtilityDialog-BJs1wf1R.js",
+              "size": 24329,
+              "sha256": "d6420da41c329ca58f0936a0214adda3f2d96a45556ae7c0167486b06ac58e8f"
             },
             {
               "path": "assets/flow-BnuhLJ6X.css",
@@ -2278,39 +2780,44 @@
               "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
             },
             {
-              "path": "assets/icons-CWW7Ihoi.js",
-              "size": 20835,
-              "sha256": "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6"
+              "path": "assets/flow-DG_yhx79.js",
+              "size": 84113,
+              "sha256": "bc613b2f8b6af00ce0d183175180163e8d5c915dbfbe86518a803d95d7d44ba3"
             },
             {
-              "path": "assets/index-DBKNtbUu.js",
-              "size": 528769,
-              "sha256": "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7"
+              "path": "assets/icons-BugDteTW.js",
+              "size": 23086,
+              "sha256": "3bdd97c7e1e19a8acd9f88862fe9d89456b712637697048062b3af0fe0bfca7a"
             },
             {
-              "path": "assets/index-DpTHova4.css",
-              "size": 74714,
-              "sha256": "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182"
+              "path": "assets/index-4SiFGWID.js",
+              "size": 1523960,
+              "sha256": "0dbc69f252c7f24a1d6dfe6aebfa7f8e22703f528f545088a6848d3f2099e230"
             },
             {
-              "path": "assets/largeModelSmoke-PEBccAlJ.js",
-              "size": 880,
-              "sha256": "a4977bf130c85a688b570fb1f17f8dac958787116a585c9300f3d4c3fbd6b535"
+              "path": "assets/index-BlsU2D78.css",
+              "size": 107607,
+              "sha256": "f4db41e23cb1cbc76519bb41487c1a2d64b05f3fb2551b49771175b7e4b79eff"
             },
             {
-              "path": "assets/nativeMga-DgYeq6DN.js",
-              "size": 3108,
-              "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
+              "path": "assets/largeModelSmoke-ChuXLqDH.js",
+              "size": 983,
+              "sha256": "fb24e9dddb7e5a48ae648cf23391b83a80e40d05f57cc3ef1f025cb6fbf1d22d"
             },
             {
-              "path": "assets/publicationDiagram-BlkNs4Z4.js",
-              "size": 8648,
-              "sha256": "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df"
+              "path": "assets/nativeMga-CQPrK7Ua.js",
+              "size": 3745,
+              "sha256": "e14a6c3728b9d157839875d8de4ae3128abce2f863458d143b8b3860520eb0fd"
             },
             {
-              "path": "assets/smokeRun-CMXwsrTO.js",
-              "size": 7141,
-              "sha256": "33388a0e9df739d8812f2a03c2980f00a3f49046375ae48c9a854d8f94f7f962"
+              "path": "assets/publicationDiagram-CYXIaeSG.js",
+              "size": 8679,
+              "sha256": "4a7fb5bfb7d673660c7591f036e328f9579bc9b089c4024919b5ddd6a153e69a"
+            },
+            {
+              "path": "assets/smokeRun-DsBvJjQf.js",
+              "size": 7145,
+              "sha256": "e2b3a0beddc1838c8975b86fe64d9eb33af8f0ad4669b58db797ecef2214c718"
             },
             {
               "path": "assets/tauri-CZBL8huA.js",
@@ -2318,14 +2825,14 @@
               "sha256": "8fbb85b9879fc37af89bc405134891d8b7dec19829e03c6d7900ba79f71dbe77"
             },
             {
-              "path": "assets/vendor-3AznE2Td.js",
-              "size": 317214,
-              "sha256": "7dadeaa73f481ffd1ab52c5247997462fd195062a4dbe10353701ffbbc45711f"
+              "path": "assets/vendor-DAfPu0rL.js",
+              "size": 317222,
+              "sha256": "61f10878d1ededa46b28c7b00d59492a03bbc88f903ea4a7a4fd5b5818d1d1c2"
             },
             {
               "path": "index.html",
               "size": 821,
-              "sha256": "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50"
+              "sha256": "2a6a13860340cbd95bf8afed554aaed3f94c3428ce1fa6f225a427db0bac7a66"
             }
           ]
         },
@@ -2343,7 +2850,7 @@
     "process_cleanup": {
       "path": "validation\\results\\v247_regression_bootstrap_process_cleanup.json",
       "fresh_after_packaged_report": true,
-      "launched_pid": 22532,
+      "launched_pid": 25284,
       "parent_exit_confirmed": true,
       "lingering_descendant_pids": [],
       "passed": true
@@ -2352,1304 +2859,24 @@
   },
   "visual_attestation": {
     "checks": {
-      "overall_passed": true,
-      "zero_failures": true,
+      "overall_passed": false,
+      "zero_failures": false,
       "zero_console_errors": true,
-      "exact_three_viewport_rows": true,
-      "all_method_contracts_pass": true,
-      "exact_screenshot_matrix_and_files": true,
+      "exact_three_viewport_rows": false,
+      "all_method_contracts_pass": false,
+      "exact_screenshot_matrix_and_files": false,
       "dist_sources_present": true
     },
-    "rows": [
-      {
-        "viewport": "1024x700",
-        "fixtureApiPresent": true,
-        "fixture": {
-          "variables": 5,
-          "models": 0
-        },
-        "dataSurface": true,
-        "visibleModelNodes": 0,
-        "analyzeCommandCount": 1,
-        "dialogOpened": true,
-        "catalogCount": 15,
-        "selectedMethod": "Regression",
-        "linkage": {
-          "expectedKind": "regression",
-          "expectedLabel": "Regression",
-          "selectedCount": 1,
-          "selectedId": "nd-calculation-method-regression",
-          "selectedLabel": "Regression",
-          "panelCount": 1,
-          "panelId": "nd-calculation-panel",
-          "panelLabelledBy": "nd-calculation-panel-regression-title",
-          "headingCount": 1,
-          "headingId": "nd-calculation-panel-regression-title",
-          "headingLabel": "Regression",
-          "linkage": true
-        },
-        "category": "Standalone analysis",
-        "regressionTypeOptions": [
-          {
-            "value": "ols",
-            "label": "Ordinary least squares"
-          },
-          {
-            "value": "logistic",
-            "label": "Binary logistic (outcome coded 0/1)"
-          },
-          {
-            "value": "process",
-            "label": "Graph-defined Path Analysis / PROCESS"
-          }
-        ],
-        "outcome": "outcome",
-        "roles": {
-          "fieldsetCount": 2,
-          "predictors": {
-            "legend": "Predictors (1 selected)",
-            "variables": [
-              {
-                "name": "outcome",
-                "checked": false,
-                "disabled": true
-              },
-              {
-                "name": "predictor",
-                "checked": true,
-                "disabled": false
-              },
-              {
-                "name": "moderator",
-                "checked": false,
-                "disabled": false
-              },
-              {
-                "name": "control",
-                "checked": false,
-                "disabled": true
-              }
-            ]
-          },
-          "controls": {
-            "legend": "Controls (1 selected, optional)",
-            "variables": [
-              {
-                "name": "outcome",
-                "checked": false,
-                "disabled": true
-              },
-              {
-                "name": "predictor",
-                "checked": false,
-                "disabled": true
-              },
-              {
-                "name": "moderator",
-                "checked": false,
-                "disabled": false
-              },
-              {
-                "name": "control",
-                "checked": true,
-                "disabled": false
-              }
-            ]
-          },
-          "selectedPredictors": [
-            "predictor"
-          ],
-          "selectedControls": [
-            "control"
-          ]
-        },
-        "bootstrap": {
-          "value": "enabled",
-          "options": [
-            {
-              "value": "off",
-              "label": "Off"
-            },
-            {
-              "value": "enabled",
-              "label": "Case-resampling bootstrap"
-            }
-          ],
-          "samples": {
-            "count": 1,
-            "value": "10000",
-            "min": "99",
-            "max": "10000",
-            "step": "1"
-          },
-          "workers": {
-            "count": 1,
-            "value": "1",
-            "min": "1",
-            "max": "64",
-            "step": null
-          },
-          "seed": {
-            "count": 1,
-            "value": "20260718",
-            "min": "0",
-            "max": "4294967295",
-            "step": null
-          },
-          "scope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
-          "toggleFocused": true
-        },
-        "accessibility": {
-          "labeledRegressionType": 1,
-          "labeledOutcome": 1,
-          "labeledBootstrapToggle": 1,
-          "labeledSamples": 1,
-          "labeledWorkers": 1,
-          "labeledSeed": 1,
-          "predictorGroup": 1,
-          "controlGroup": 1,
-          "distinctControlIds": 6
-        },
-        "ols": {
-          "type": "ols",
-          "outcome": "outcome",
-          "roles": {
-            "fieldsetCount": 2,
-            "predictors": {
-              "legend": "Predictors (1 selected)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": true,
-                  "disabled": false
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": false,
-                  "disabled": true
-                }
-              ]
-            },
-            "controls": {
-              "legend": "Controls (1 selected, optional)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": true,
-                  "disabled": false
-                }
-              ]
-            },
-            "selectedPredictors": [
-              "predictor"
-            ],
-            "selectedControls": [
-              "control"
-            ]
-          },
-          "calculationBasis": "Raw-value OLS with intercept (fixed)",
-          "variableData": "Unstandardized numeric values (fixed)",
-          "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
-          "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
-          "blockers": {
-            "messages": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
-            ],
-            "runtime": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
-            ],
-            "allowedFixtureProfile": [],
-            "unexpected": [],
-            "model": []
-          },
-          "startCommandCount": 1,
-          "startCommandDisabled": true,
-          "truthAndOverflow": {
-            "fabricatedRunState": {
-              "statusSections": 0,
-              "progressElements": 0,
-              "calculationLogs": 0,
-              "iterationRows": 0
-            },
-            "noFabricatedRunState": true,
-            "horizontalOverflow": {
-              "dialogScrollWidth": 848,
-              "dialogClientWidth": 848,
-              "dialogOutsideViewport": false,
-              "dialogContentOverflow": false,
-              "pageOverflow": false
-            },
-            "noHorizontalOverflow": true
-          },
-          "dialogBounds": {
-            "viewport": {
-              "width": 1024,
-              "height": 700
-            },
-            "rect": {
-              "left": 87,
-              "top": 24,
-              "right": 937,
-              "bottom": 676,
-              "width": 850,
-              "height": 652
-            },
-            "withinHorizontalViewport": true,
-            "verticalScrollAvailable": false,
-            "pageHorizontalOverflow": false
-          },
-          "noPhantomResult": true
-        },
-        "logistic": {
-          "type": "logistic",
-          "typeFocused": true,
-          "outcome": "outcome",
-          "roles": {
-            "fieldsetCount": 2,
-            "predictors": {
-              "legend": "Predictors (1 selected)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": true,
-                  "disabled": false
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": false,
-                  "disabled": true
-                }
-              ]
-            },
-            "controls": {
-              "legend": "Controls (1 selected, optional)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": true,
-                  "disabled": false
-                }
-              ]
-            },
-            "selectedPredictors": [
-              "predictor"
-            ],
-            "selectedControls": [
-              "control"
-            ]
-          },
-          "bootstrapValue": "enabled",
-          "samples": "10000",
-          "workers": "1",
-          "seed": "20260718",
-          "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
-          "variableData": "Unstandardized numeric values (fixed)",
-          "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
-          "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
-          "bootstrapScope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
-          "profile": {
-            "role": "status",
-            "ariaLive": "polite",
-            "ariaBusy": "false",
-            "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion"
-          },
-          "blockers": {
-            "messages": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
-              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
-              "36 non-missing outcome rows are not coded exactly 0 or 1",
-              "The listwise-complete outcome must contain both class 0 and class 1"
-            ],
-            "runtime": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
-            ],
-            "allowedFixtureProfile": [
-              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
-              "36 non-missing outcome rows are not coded exactly 0 or 1",
-              "The listwise-complete outcome must contain both class 0 and class 1"
-            ],
-            "unexpected": [],
-            "model": []
-          },
-          "startCommandCount": 1,
-          "startCommandDisabled": true,
-          "truthAndOverflow": {
-            "fabricatedRunState": {
-              "statusSections": 0,
-              "progressElements": 0,
-              "calculationLogs": 0,
-              "iterationRows": 0
-            },
-            "noFabricatedRunState": true,
-            "horizontalOverflow": {
-              "dialogScrollWidth": 848,
-              "dialogClientWidth": 848,
-              "dialogOutsideViewport": false,
-              "dialogContentOverflow": false,
-              "pageOverflow": false
-            },
-            "noHorizontalOverflow": true
-          },
-          "dialogBounds": {
-            "viewport": {
-              "width": 1024,
-              "height": 700
-            },
-            "rect": {
-              "left": 87,
-              "top": 24,
-              "right": 937,
-              "bottom": 676,
-              "width": 850,
-              "height": 652
-            },
-            "withinHorizontalViewport": true,
-            "verticalScrollAvailable": false,
-            "pageHorizontalOverflow": false
-          },
-          "noPhantomResult": true
-        },
-        "closeFocus": {
-          "closeButtonCount": 1,
-          "dialogClosed": true,
-          "focusRestored": true
-        },
-        "completedResult": {
-          "genuineSmokeLoader": null,
-          "inspected": false,
-          "synthesizedByHarness": false,
-          "runOptionCount": 0,
-          "groupCount": 0,
-          "tableCount": 0
-        }
-      },
-      {
-        "viewport": "1280x720",
-        "fixtureApiPresent": true,
-        "fixture": {
-          "variables": 5,
-          "models": 0
-        },
-        "dataSurface": true,
-        "visibleModelNodes": 0,
-        "analyzeCommandCount": 1,
-        "dialogOpened": true,
-        "catalogCount": 15,
-        "selectedMethod": "Regression",
-        "linkage": {
-          "expectedKind": "regression",
-          "expectedLabel": "Regression",
-          "selectedCount": 1,
-          "selectedId": "nd-calculation-method-regression",
-          "selectedLabel": "Regression",
-          "panelCount": 1,
-          "panelId": "nd-calculation-panel",
-          "panelLabelledBy": "nd-calculation-panel-regression-title",
-          "headingCount": 1,
-          "headingId": "nd-calculation-panel-regression-title",
-          "headingLabel": "Regression",
-          "linkage": true
-        },
-        "category": "Standalone analysis",
-        "regressionTypeOptions": [
-          {
-            "value": "ols",
-            "label": "Ordinary least squares"
-          },
-          {
-            "value": "logistic",
-            "label": "Binary logistic (outcome coded 0/1)"
-          },
-          {
-            "value": "process",
-            "label": "Graph-defined Path Analysis / PROCESS"
-          }
-        ],
-        "outcome": "outcome",
-        "roles": {
-          "fieldsetCount": 2,
-          "predictors": {
-            "legend": "Predictors (1 selected)",
-            "variables": [
-              {
-                "name": "outcome",
-                "checked": false,
-                "disabled": true
-              },
-              {
-                "name": "predictor",
-                "checked": true,
-                "disabled": false
-              },
-              {
-                "name": "moderator",
-                "checked": false,
-                "disabled": false
-              },
-              {
-                "name": "control",
-                "checked": false,
-                "disabled": true
-              }
-            ]
-          },
-          "controls": {
-            "legend": "Controls (1 selected, optional)",
-            "variables": [
-              {
-                "name": "outcome",
-                "checked": false,
-                "disabled": true
-              },
-              {
-                "name": "predictor",
-                "checked": false,
-                "disabled": true
-              },
-              {
-                "name": "moderator",
-                "checked": false,
-                "disabled": false
-              },
-              {
-                "name": "control",
-                "checked": true,
-                "disabled": false
-              }
-            ]
-          },
-          "selectedPredictors": [
-            "predictor"
-          ],
-          "selectedControls": [
-            "control"
-          ]
-        },
-        "bootstrap": {
-          "value": "enabled",
-          "options": [
-            {
-              "value": "off",
-              "label": "Off"
-            },
-            {
-              "value": "enabled",
-              "label": "Case-resampling bootstrap"
-            }
-          ],
-          "samples": {
-            "count": 1,
-            "value": "10000",
-            "min": "99",
-            "max": "10000",
-            "step": "1"
-          },
-          "workers": {
-            "count": 1,
-            "value": "1",
-            "min": "1",
-            "max": "64",
-            "step": null
-          },
-          "seed": {
-            "count": 1,
-            "value": "20260718",
-            "min": "0",
-            "max": "4294967295",
-            "step": null
-          },
-          "scope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
-          "toggleFocused": true
-        },
-        "accessibility": {
-          "labeledRegressionType": 1,
-          "labeledOutcome": 1,
-          "labeledBootstrapToggle": 1,
-          "labeledSamples": 1,
-          "labeledWorkers": 1,
-          "labeledSeed": 1,
-          "predictorGroup": 1,
-          "controlGroup": 1,
-          "distinctControlIds": 6
-        },
-        "ols": {
-          "type": "ols",
-          "outcome": "outcome",
-          "roles": {
-            "fieldsetCount": 2,
-            "predictors": {
-              "legend": "Predictors (1 selected)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": true,
-                  "disabled": false
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": false,
-                  "disabled": true
-                }
-              ]
-            },
-            "controls": {
-              "legend": "Controls (1 selected, optional)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": true,
-                  "disabled": false
-                }
-              ]
-            },
-            "selectedPredictors": [
-              "predictor"
-            ],
-            "selectedControls": [
-              "control"
-            ]
-          },
-          "calculationBasis": "Raw-value OLS with intercept (fixed)",
-          "variableData": "Unstandardized numeric values (fixed)",
-          "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
-          "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
-          "blockers": {
-            "messages": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
-            ],
-            "runtime": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
-            ],
-            "allowedFixtureProfile": [],
-            "unexpected": [],
-            "model": []
-          },
-          "startCommandCount": 1,
-          "startCommandDisabled": true,
-          "truthAndOverflow": {
-            "fabricatedRunState": {
-              "statusSections": 0,
-              "progressElements": 0,
-              "calculationLogs": 0,
-              "iterationRows": 0
-            },
-            "noFabricatedRunState": true,
-            "horizontalOverflow": {
-              "dialogScrollWidth": 848,
-              "dialogClientWidth": 848,
-              "dialogOutsideViewport": false,
-              "dialogContentOverflow": false,
-              "pageOverflow": false
-            },
-            "noHorizontalOverflow": true
-          },
-          "dialogBounds": {
-            "viewport": {
-              "width": 1280,
-              "height": 720
-            },
-            "rect": {
-              "left": 215,
-              "top": 24,
-              "right": 1065,
-              "bottom": 696,
-              "width": 850,
-              "height": 672
-            },
-            "withinHorizontalViewport": true,
-            "verticalScrollAvailable": false,
-            "pageHorizontalOverflow": false
-          },
-          "noPhantomResult": true
-        },
-        "logistic": {
-          "type": "logistic",
-          "typeFocused": true,
-          "outcome": "outcome",
-          "roles": {
-            "fieldsetCount": 2,
-            "predictors": {
-              "legend": "Predictors (1 selected)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": true,
-                  "disabled": false
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": false,
-                  "disabled": true
-                }
-              ]
-            },
-            "controls": {
-              "legend": "Controls (1 selected, optional)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": true,
-                  "disabled": false
-                }
-              ]
-            },
-            "selectedPredictors": [
-              "predictor"
-            ],
-            "selectedControls": [
-              "control"
-            ]
-          },
-          "bootstrapValue": "enabled",
-          "samples": "10000",
-          "workers": "1",
-          "seed": "20260718",
-          "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
-          "variableData": "Unstandardized numeric values (fixed)",
-          "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
-          "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
-          "bootstrapScope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
-          "profile": {
-            "role": "status",
-            "ariaLive": "polite",
-            "ariaBusy": "false",
-            "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion"
-          },
-          "blockers": {
-            "messages": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
-              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
-              "36 non-missing outcome rows are not coded exactly 0 or 1",
-              "The listwise-complete outcome must contain both class 0 and class 1"
-            ],
-            "runtime": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
-            ],
-            "allowedFixtureProfile": [
-              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
-              "36 non-missing outcome rows are not coded exactly 0 or 1",
-              "The listwise-complete outcome must contain both class 0 and class 1"
-            ],
-            "unexpected": [],
-            "model": []
-          },
-          "startCommandCount": 1,
-          "startCommandDisabled": true,
-          "truthAndOverflow": {
-            "fabricatedRunState": {
-              "statusSections": 0,
-              "progressElements": 0,
-              "calculationLogs": 0,
-              "iterationRows": 0
-            },
-            "noFabricatedRunState": true,
-            "horizontalOverflow": {
-              "dialogScrollWidth": 848,
-              "dialogClientWidth": 848,
-              "dialogOutsideViewport": false,
-              "dialogContentOverflow": false,
-              "pageOverflow": false
-            },
-            "noHorizontalOverflow": true
-          },
-          "dialogBounds": {
-            "viewport": {
-              "width": 1280,
-              "height": 720
-            },
-            "rect": {
-              "left": 215,
-              "top": 24,
-              "right": 1065,
-              "bottom": 696,
-              "width": 850,
-              "height": 672
-            },
-            "withinHorizontalViewport": true,
-            "verticalScrollAvailable": false,
-            "pageHorizontalOverflow": false
-          },
-          "noPhantomResult": true
-        },
-        "closeFocus": {
-          "closeButtonCount": 1,
-          "dialogClosed": true,
-          "focusRestored": true
-        },
-        "completedResult": {
-          "genuineSmokeLoader": null,
-          "inspected": false,
-          "synthesizedByHarness": false,
-          "runOptionCount": 0,
-          "groupCount": 0,
-          "tableCount": 0
-        }
-      },
-      {
-        "viewport": "1440x900",
-        "fixtureApiPresent": true,
-        "fixture": {
-          "variables": 5,
-          "models": 0
-        },
-        "dataSurface": true,
-        "visibleModelNodes": 0,
-        "analyzeCommandCount": 1,
-        "dialogOpened": true,
-        "catalogCount": 15,
-        "selectedMethod": "Regression",
-        "linkage": {
-          "expectedKind": "regression",
-          "expectedLabel": "Regression",
-          "selectedCount": 1,
-          "selectedId": "nd-calculation-method-regression",
-          "selectedLabel": "Regression",
-          "panelCount": 1,
-          "panelId": "nd-calculation-panel",
-          "panelLabelledBy": "nd-calculation-panel-regression-title",
-          "headingCount": 1,
-          "headingId": "nd-calculation-panel-regression-title",
-          "headingLabel": "Regression",
-          "linkage": true
-        },
-        "category": "Standalone analysis",
-        "regressionTypeOptions": [
-          {
-            "value": "ols",
-            "label": "Ordinary least squares"
-          },
-          {
-            "value": "logistic",
-            "label": "Binary logistic (outcome coded 0/1)"
-          },
-          {
-            "value": "process",
-            "label": "Graph-defined Path Analysis / PROCESS"
-          }
-        ],
-        "outcome": "outcome",
-        "roles": {
-          "fieldsetCount": 2,
-          "predictors": {
-            "legend": "Predictors (1 selected)",
-            "variables": [
-              {
-                "name": "outcome",
-                "checked": false,
-                "disabled": true
-              },
-              {
-                "name": "predictor",
-                "checked": true,
-                "disabled": false
-              },
-              {
-                "name": "moderator",
-                "checked": false,
-                "disabled": false
-              },
-              {
-                "name": "control",
-                "checked": false,
-                "disabled": true
-              }
-            ]
-          },
-          "controls": {
-            "legend": "Controls (1 selected, optional)",
-            "variables": [
-              {
-                "name": "outcome",
-                "checked": false,
-                "disabled": true
-              },
-              {
-                "name": "predictor",
-                "checked": false,
-                "disabled": true
-              },
-              {
-                "name": "moderator",
-                "checked": false,
-                "disabled": false
-              },
-              {
-                "name": "control",
-                "checked": true,
-                "disabled": false
-              }
-            ]
-          },
-          "selectedPredictors": [
-            "predictor"
-          ],
-          "selectedControls": [
-            "control"
-          ]
-        },
-        "bootstrap": {
-          "value": "enabled",
-          "options": [
-            {
-              "value": "off",
-              "label": "Off"
-            },
-            {
-              "value": "enabled",
-              "label": "Case-resampling bootstrap"
-            }
-          ],
-          "samples": {
-            "count": 1,
-            "value": "10000",
-            "min": "99",
-            "max": "10000",
-            "step": "1"
-          },
-          "workers": {
-            "count": 1,
-            "value": "1",
-            "min": "1",
-            "max": "64",
-            "step": null
-          },
-          "seed": {
-            "count": 1,
-            "value": "20260718",
-            "min": "0",
-            "max": "4294967295",
-            "step": null
-          },
-          "scope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
-          "toggleFocused": true
-        },
-        "accessibility": {
-          "labeledRegressionType": 1,
-          "labeledOutcome": 1,
-          "labeledBootstrapToggle": 1,
-          "labeledSamples": 1,
-          "labeledWorkers": 1,
-          "labeledSeed": 1,
-          "predictorGroup": 1,
-          "controlGroup": 1,
-          "distinctControlIds": 6
-        },
-        "ols": {
-          "type": "ols",
-          "outcome": "outcome",
-          "roles": {
-            "fieldsetCount": 2,
-            "predictors": {
-              "legend": "Predictors (1 selected)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": true,
-                  "disabled": false
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": false,
-                  "disabled": true
-                }
-              ]
-            },
-            "controls": {
-              "legend": "Controls (1 selected, optional)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": true,
-                  "disabled": false
-                }
-              ]
-            },
-            "selectedPredictors": [
-              "predictor"
-            ],
-            "selectedControls": [
-              "control"
-            ]
-          },
-          "calculationBasis": "Raw-value OLS with intercept (fixed)",
-          "variableData": "Unstandardized numeric values (fixed)",
-          "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
-          "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
-          "blockers": {
-            "messages": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
-            ],
-            "runtime": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
-            ],
-            "allowedFixtureProfile": [],
-            "unexpected": [],
-            "model": []
-          },
-          "startCommandCount": 1,
-          "startCommandDisabled": true,
-          "truthAndOverflow": {
-            "fabricatedRunState": {
-              "statusSections": 0,
-              "progressElements": 0,
-              "calculationLogs": 0,
-              "iterationRows": 0
-            },
-            "noFabricatedRunState": true,
-            "horizontalOverflow": {
-              "dialogScrollWidth": 848,
-              "dialogClientWidth": 848,
-              "dialogOutsideViewport": false,
-              "dialogContentOverflow": false,
-              "pageOverflow": false
-            },
-            "noHorizontalOverflow": true
-          },
-          "dialogBounds": {
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "rect": {
-              "left": 295,
-              "top": 70,
-              "right": 1145,
-              "bottom": 830,
-              "width": 850,
-              "height": 760
-            },
-            "withinHorizontalViewport": true,
-            "verticalScrollAvailable": false,
-            "pageHorizontalOverflow": false
-          },
-          "noPhantomResult": true
-        },
-        "logistic": {
-          "type": "logistic",
-          "typeFocused": true,
-          "outcome": "outcome",
-          "roles": {
-            "fieldsetCount": 2,
-            "predictors": {
-              "legend": "Predictors (1 selected)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": true,
-                  "disabled": false
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": false,
-                  "disabled": true
-                }
-              ]
-            },
-            "controls": {
-              "legend": "Controls (1 selected, optional)",
-              "variables": [
-                {
-                  "name": "outcome",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "predictor",
-                  "checked": false,
-                  "disabled": true
-                },
-                {
-                  "name": "moderator",
-                  "checked": false,
-                  "disabled": false
-                },
-                {
-                  "name": "control",
-                  "checked": true,
-                  "disabled": false
-                }
-              ]
-            },
-            "selectedPredictors": [
-              "predictor"
-            ],
-            "selectedControls": [
-              "control"
-            ]
-          },
-          "bootstrapValue": "enabled",
-          "samples": "10000",
-          "workers": "1",
-          "seed": "20260718",
-          "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
-          "variableData": "Unstandardized numeric values (fixed)",
-          "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
-          "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
-          "bootstrapScope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
-          "profile": {
-            "role": "status",
-            "ariaLive": "polite",
-            "ariaBusy": "false",
-            "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion"
-          },
-          "blockers": {
-            "messages": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
-              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
-              "36 non-missing outcome rows are not coded exactly 0 or 1",
-              "The listwise-complete outcome must contain both class 0 and class 1"
-            ],
-            "runtime": [
-              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
-            ],
-            "allowedFixtureProfile": [
-              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
-              "36 non-missing outcome rows are not coded exactly 0 or 1",
-              "The listwise-complete outcome must contain both class 0 and class 1"
-            ],
-            "unexpected": [],
-            "model": []
-          },
-          "startCommandCount": 1,
-          "startCommandDisabled": true,
-          "truthAndOverflow": {
-            "fabricatedRunState": {
-              "statusSections": 0,
-              "progressElements": 0,
-              "calculationLogs": 0,
-              "iterationRows": 0
-            },
-            "noFabricatedRunState": true,
-            "horizontalOverflow": {
-              "dialogScrollWidth": 848,
-              "dialogClientWidth": 848,
-              "dialogOutsideViewport": false,
-              "dialogContentOverflow": false,
-              "pageOverflow": false
-            },
-            "noHorizontalOverflow": true
-          },
-          "dialogBounds": {
-            "viewport": {
-              "width": 1440,
-              "height": 900
-            },
-            "rect": {
-              "left": 295,
-              "top": 70,
-              "right": 1145,
-              "bottom": 830,
-              "width": 850,
-              "height": 760
-            },
-            "withinHorizontalViewport": true,
-            "verticalScrollAvailable": false,
-            "pageHorizontalOverflow": false
-          },
-          "noPhantomResult": true
-        },
-        "closeFocus": {
-          "closeButtonCount": 1,
-          "dialogClosed": true,
-          "focusRestored": true
-        },
-        "completedResult": {
-          "genuineSmokeLoader": null,
-          "inspected": false,
-          "synthesizedByHarness": false,
-          "runOptionCount": 0,
-          "groupCount": 0,
-          "tableCount": 0
-        }
-      }
-    ],
-    "screenshots": [
-      {
-        "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1024x700.png",
-        "size": 117254,
-        "sha256": "0ee6c866739c9bbcbd14cd52fdd0107c2ce76028f3a69c200e8e1936c7883b68",
-        "viewport": "1024x700",
-        "state": "regression-bootstrap-ols-dialog"
-      },
-      {
-        "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1024x700.png",
-        "size": 113627,
-        "sha256": "b0fd22eb52193701a28faf33b6a109e2dc01f457db6c69cb8cd7d5019342b398",
-        "viewport": "1024x700",
-        "state": "regression-bootstrap-logistic-dialog"
-      },
-      {
-        "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1280x720.png",
-        "size": 136681,
-        "sha256": "98e2fc62a6ee4afefa0da7e08a96971a5f78c61eca82b2f2993c908f34f9af2a",
-        "viewport": "1280x720",
-        "state": "regression-bootstrap-ols-dialog"
-      },
-      {
-        "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1280x720.png",
-        "size": 133296,
-        "sha256": "f68e354c8a9446d3046bdb16f1be85e963ab36fbac0570caff41e0766d4f5748",
-        "viewport": "1280x720",
-        "state": "regression-bootstrap-logistic-dialog"
-      },
-      {
-        "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1440x900.png",
-        "size": 179356,
-        "sha256": "80bb996503f253d42c1d1f32d61aa9ec1d5e920cda70f344015257f5b5778280",
-        "viewport": "1440x900",
-        "state": "regression-bootstrap-ols-dialog"
-      },
-      {
-        "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1440x900.png",
-        "size": 177878,
-        "sha256": "a411647a3a63857219a31cdd5ed222f356ca43bc98ee18ae1e24f5c7d9158665",
-        "viewport": "1440x900",
-        "state": "regression-bootstrap-logistic-dialog"
-      }
-    ],
-    "passed": true
+    "rows": [],
+    "screenshots": [],
+    "passed": false
   },
   "failure_boundary_execution_attestation": {
     "checks": {
       "exact_test_name_set": true,
       "exact_archive_test_name_set": true,
       "all_execution_rows_pass": true,
-      "test_executables_are_current_and_bound": true
+      "test_executables_are_current_and_bound": false
     },
     "test_executables": {
       "qpls_resampling": {
@@ -3668,20 +2895,20 @@
           {
             "path": "crates/qpls-resampling/src/lib.rs",
             "present": true,
-            "binary_not_older": true
+            "binary_not_older": false
           },
           {
             "path": "crates/qpls-estimation/src/pls.rs",
             "present": true,
-            "binary_not_older": true
+            "binary_not_older": false
           },
           {
             "path": "crates/qpls-core/src/contract.rs",
             "present": true,
-            "binary_not_older": true
+            "binary_not_older": false
           }
         ],
-        "passed": true
+        "passed": false
       },
       "qpls_project": {
         "artifact": {
@@ -3699,15 +2926,15 @@
           {
             "path": "crates/qpls-project/src/lib.rs",
             "present": true,
-            "binary_not_older": true
+            "binary_not_older": false
           },
           {
             "path": "crates/qpls-core/src/contract.rs",
             "present": true,
-            "binary_not_older": true
+            "binary_not_older": false
           }
         ],
-        "passed": true
+        "passed": false
       }
     },
     "observed_test_names": [
@@ -3720,7 +2947,7 @@
       "regression_bootstrap_append_save_reopen_and_tamper_contract_are_atomic",
       "regression_bootstrap_json_roundtrip_tolerance_is_narrow"
     ],
-    "passed": true
+    "passed": false
   },
   "failure_boundary_source_identity": {
     "expected": [
@@ -3792,8 +3019,8 @@
     {
       "path": "docs\\METHOD_COMPATIBILITY.md",
       "present": true,
-      "bytes": 14642,
-      "sha256": "151c15caecd5d81732e957257fe0d5e83817e10db3c01b7710415d9b71b1f77e",
+      "bytes": 14667,
+      "sha256": "e926ce0bee6eb3cd2b7556b757b79f29cc29e3e2caf707ee52523bcedc4b6045",
       "required_phrases": [
         {
           "phrase": "Regression | OLS and binary-logistic bootstrapping",
@@ -3828,22 +3055,22 @@
   "checks": [
     {
       "name": "dedicated_exact_and_independent_reference",
-      "passed": true,
+      "passed": false,
       "detail": "The dedicated report must bind exact witness arithmetic and independently seeded Python/R OLS and logistic sampling-distribution comparisons."
     },
     {
       "name": "genuine_method_specific_packaged_acceptance",
-      "passed": true,
+      "passed": false,
       "detail": "The dedicated packaged report must prove both workflows, truthful results, two genuine XLSX exports, cancellation, archive-only witness handling, and same-run save/reopen with bound digests."
     },
     {
       "name": "browser_visual_acceptance_gate_7",
-      "passed": true,
+      "passed": false,
       "detail": "A fresh production-bundle visual report must pass the exact three-viewport Regression bootstrap OLS/logistic setup, accessibility, focus, and overflow contract."
     },
     {
       "name": "real_engine_failure_boundaries_executed",
-      "passed": true,
+      "passed": false,
       "detail": "A fresh exact-name four-test report must bind passing real-engine boundaries to its current release-profile Rust test executable."
     },
     {

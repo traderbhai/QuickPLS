@@ -5,12 +5,15 @@ import { publicationDiagramSvg } from "../domain/publicationDiagram";
 import { buildResultInterpretation } from "../domain/resultInterpretation";
 import { runExportTables, tablesToCsv, tablesToHtml, type ResultTable } from "../domain/resultTables";
 import { spreadsheetSafeCsvCell } from "../domain/spreadsheetSafety";
-import { compareRuns } from "../domain/runComparison";
 import { nativeLegacyProcessResultProjection, nativeProcessResultProjection } from "../native/nativeProcessResults";
 import { nativeStructuralPathRandomizationProjection } from "../native/nativeStructuralPathRandomization";
 import { exportNativeXlsxTables, isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
 import { Card, MethodConfidencePanel, MethodScopeDrawer, MetricCard, PageHeader, Panel, StatusBadge, WorkspacePage } from "./Ui";
+import {
+  canonicalComparisonAvailabilityCopyV2,
+  useCanonicalRunComparisonV2,
+} from "./canonicalRunComparisonUiV2";
 
 type ReportPreset = "thesis" | "journal_figure" | "journal_tables" | "presentation" | "reviewer_pack" | "full_report";
 type ReportExportTable = ReturnType<typeof runExportTables>[number];
@@ -27,6 +30,10 @@ export function reportScopeStatus(tables: readonly ResultTable[]): "validated" |
   return tables.length > 0 && tables.every((table) => table.status === "validated")
     ? "validated"
     : "experimental";
+}
+
+export function reportTableStatusLabel(status: ResultTable["status"]): string {
+  return status === "validated" ? "Supported result" : "Experimental result";
 }
 
 export function reportMethodId(
@@ -91,7 +98,14 @@ export function ReportsWorkspace() {
   const [lastExportMessage, setLastExportMessage] = useState<string | null>(null);
   const [activeWizardStep, setActiveWizardStep] = useState<ReportWizardStep>("content");
   const selectedRun = useMemo(() => completedRuns.find((run) => run.id === selectedRunId) ?? completedRuns.at(0), [completedRuns, selectedRunId]);
-  const comparisonRun = useMemo(() => completedRuns.find((run) => run.id !== selectedRun?.id), [completedRuns, selectedRun?.id]);
+  const comparisonCandidates = useMemo(() => completedRuns.filter((run) => run.id !== selectedRun?.id), [completedRuns, selectedRun?.id]);
+  const [comparisonRunId, setComparisonRunId] = useState("");
+  const comparisonRun = useMemo(
+    () => comparisonCandidates.find((run) => run.id === comparisonRunId) ?? comparisonCandidates.at(0),
+    [comparisonCandidates, comparisonRunId],
+  );
+  const comparisonState = useCanonicalRunComparisonV2(selectedRun, comparisonRun);
+  const comparisonAvailability = canonicalComparisonAvailabilityCopyV2(comparisonState);
   const tables = useMemo(() => selectedRun ? runExportTables(selectedRun) : [], [selectedRun]);
   const selectedScopeStatus = reportScopeStatus(tables);
   const processDiagramUnavailable = Boolean(selectedRun
@@ -110,7 +124,6 @@ export function ReportsWorkspace() {
     () => selectedRun ? buildResultInterpretation({ run: selectedRun, nodes: reportModel.nodes, edges: reportModel.edges }) : null,
     [reportModel.edges, reportModel.nodes, selectedRun],
   );
-  const comparisonRows = useMemo(() => compareRuns(selectedRun, comparisonRun), [selectedRun, comparisonRun]);
   const diagramSvg = useMemo(
     () => reportDiagramSvgForRun(selectedRun, nodes, edges, publicationDiagramSettings, diagramLayout),
     [diagramLayout, edges, nodes, publicationDiagramSettings, selectedRun],
@@ -189,6 +202,7 @@ export function ReportsWorkspace() {
     setLastExportMessage(null);
   };
   const openResultsComparison = () => {
+    if (!comparisonAvailability.available) return;
     const ids = [selectedRun?.id, comparisonRun?.id].filter(Boolean) as string[];
     setResultWorkspaceState({ selectedTab: "comparison", comparisonRunIds: ids });
     setView("runs");
@@ -232,7 +246,7 @@ export function ReportsWorkspace() {
   }, [diagramSvg, svgDisabledReason, tableExportDisabledReason, tables, xlsxDisabledReason, pdfDisabledReason, includeInterpretationNotes]);
 
   return <WorkspacePage className="publication-workspace report-v2-workspace report-v213-workspace report-v2100-workspace report-v219-workspace report-v2310-workspace" data-report-export-flow="v2.31" data-v219-mockup-screen="report" data-v2310-report-wizard="true">
-    <PageHeader title="Publication report" description="Assemble figure, tables, provenance, and optional interpretation notes from one completed result-backed run." actions={<StatusBadge status={selectedRun ? selectedScopeStatus : "warning"}>{selectedRun ? selectedScopeStatus === "validated" ? "Validated run" : "Candidate run" : "model-only"}</StatusBadge>} />
+    <PageHeader title="Publication report" description="Assemble figure, tables, provenance, and optional interpretation notes from one completed result-backed run." actions={<StatusBadge status={selectedRun ? selectedScopeStatus : "warning"}>{selectedRun ? selectedScopeStatus === "validated" ? "Supported run" : "Experimental run" : "model-only"}</StatusBadge>} />
     <MethodScopeDrawer method={selectedMethod} open={uiPreferences.methodScopeDrawerOpen} onToggle={() => setUiPreferences({ methodScopeDrawerOpen: !uiPreferences.methodScopeDrawerOpen })} />
     <ReportWizardNav active={activeWizardStep} setActive={setActiveWizardStep} selectedRun={Boolean(selectedRun)} hasPreview={Boolean(diagramSvg || tables.length)} hasExports={Boolean(tables.length || diagramSvg)} />
     <Panel title="Report package" description="Selected preset, run, tables, figure, and export readiness." className="report-v2-hero report-v213-hero">
@@ -259,11 +273,11 @@ export function ReportsWorkspace() {
       </div>
       <div className="report-preset-panel" aria-label="Report export presets">
         {[
-          ["thesis", "Thesis appendix", "Detailed tables, provenance, and validation footer."],
+          ["thesis", "Thesis appendix", "Detailed tables, provenance, and a Run Details appendix."],
           ["journal_figure", "Journal figure", "Clean grayscale SVG diagram for manuscript figures."],
           ["journal_tables", "Journal tables", "Numerical tables with publication-safe precision."],
           ["presentation", "Presentation", "Color figure and compact table settings."],
-          ["reviewer_pack", "Reviewer pack", "Scope, fingerprints, known limits, validation index, tables, and diagram."],
+          ["reviewer_pack", "Reviewer pack", "Requirements, fingerprints, known limitations, Run Details, tables, and diagram."],
           ["full_report", "Full reproducibility report", "Tables, provenance, and interpretation notes."],
         ].map(([id, label, detail]) => <button key={id} className={selectedPreset === id ? "report-preset-card active" : "report-preset-card"} onClick={() => applyExportPreset(id as ReportPreset)}>
           <strong>{label}</strong><span>{detail}</span>
@@ -276,12 +290,12 @@ export function ReportsWorkspace() {
         <li className={tables.length || diagramSvg ? "complete" : ""}><b>4</b><span>Export package</span></li>
       </ol>
     </Panel>
-    {selectedRun ? <Panel title="Method confidence" description="Selected run provenance and documented scope status." className="report-v2-confidence report-v213-confidence"><MethodConfidencePanel run={selectedRun} /></Panel> : null}
+    {selectedRun ? <Panel title="Method details" description="Selected-run requirements, warnings, and provenance." className="report-v2-confidence report-v213-confidence"><MethodConfidencePanel run={selectedRun} /></Panel> : null}
     <div className="report-status-row" aria-label="Publication readiness summary">
       <Card title="Figure" description={processDiagramUnavailable ? PROCESS_GENERIC_DIAGRAM_UNAVAILABLE : "SVG is the audited publication diagram format."} tone={processDiagramUnavailable ? "warning" : "validated"} />
       <Card title="Tables" description={tables.length ? `${tables.length} export table(s) available for this run.` : "Run a method before exporting result tables."} tone={tables.length ? "validated" : "warning"} />
       <Card title="Print / PDF" description="Use the guided browser print path; native PDF remains post-v1.5 unless separately audited." />
-      <Card title="Comparison" description={comparisonRows.length ? "Run comparison stays in Results; Report links to it." : "Add a second compatible run for comparison."} tone={comparisonRows.length ? "validated" : undefined} />
+      <Card title="Comparison" description={comparisonAvailability.description} tone={comparisonAvailability.available ? "validated" : comparisonState.status === "loading" || comparisonState.status === "missing" ? undefined : "warning"} />
     </div>
     <div className="report-wizard-footer"><button className="primary-button" type="button" onClick={() => setActiveWizardStep("preview")}>Next: Preview figure and tables</button></div>
     </section> : null}
@@ -345,9 +359,9 @@ export function ReportsWorkspace() {
     {selectedPreset === "reviewer_pack" ? <section className="reviewer-pack-preview" aria-label="Reviewer pack preview">
       <header><strong>Reviewer pack contents</strong><span>Designed for transparent method review, not for unsupported equivalence claims.</span></header>
       <ul>
-        <li>Method scope statement, validation status, and known limitations.</li>
+        <li>Method requirements, availability at run time, and known limitations.</li>
         <li>Data fingerprint, recipe fingerprint, seed, worker count, and run provenance.</li>
-        <li>{processDiagramUnavailable ? "Warnings, known differences, validation artifact index references, and result tables; no generic live-canvas diagram." : "Warnings, known differences, validation artifact index references, result tables, and publication diagram."}</li>
+        <li>{processDiagramUnavailable ? "Warnings, known differences, method references, and result tables; no generic live-canvas diagram." : "Warnings, known differences, method references, result tables, and publication diagram."}</li>
         <li>Interpretation notes only because Reviewer Pack explicitly opts in.</li>
       </ul>
     </section> : null}
@@ -378,14 +392,19 @@ export function ReportsWorkspace() {
       <ExportAction icon={<Printer />} title="Print / PDF" detail="Open browser print dialog for PDF output" disabledReason={pdfDisabledReason} onClick={printPdfReport} />
       {!processDiagramUnavailable ? <ExportAction icon={<Image />} title="Model diagram SVG" detail="WYSIWYG publication figure" disabledReason={svgDisabledReason} onClick={() => download("quickpls-publication-diagram.svg", diagramSvg, "image/svg+xml", "SVG diagram")} /> : null}
     </Panel>
-    <Panel title="Run comparison" description={comparisonRows.length ? `${comparisonRows.length} comparable metric rows are available in Results.` : "Comparison needs two compatible completed runs."} className="report-comparison-link report-v213-comparison">
+    <Panel title="Run comparison" description={comparisonAvailability.description} className="report-comparison-link report-v213-comparison">
       <div>
         <strong>Run comparison</strong>
-        <span>{comparisonRows.length ? `${comparisonRows.length} comparable metric rows are available in Results.` : "Comparison needs two compatible completed runs."}</span>
+        {comparisonCandidates.length ? <label className="compact-select-label">Second run
+          <select aria-label="Run to compare with the report run" value={comparisonRun?.id ?? ""} onChange={(event) => setComparisonRunId(event.target.value)}>
+            {comparisonCandidates.map((run) => <option key={run.id} value={run.id}>{run.name}</option>)}
+          </select>
+        </label> : null}
+        <span role="status" aria-live="polite">{comparisonAvailability.description}</span>
       </div>
-      <button className="secondary-button" disabled={!comparisonRows.length} title={comparisonRows.length ? "Open Results comparison workspace" : "Create a second compatible run before comparing"} onClick={openResultsComparison}><ExternalLink size={15} /> Open Results Comparison</button>
+      <button className="secondary-button" disabled={!comparisonAvailability.available} title={comparisonAvailability.actionTitle} onClick={openResultsComparison}><ExternalLink size={15} /> Open Results Comparison</button>
     </Panel>
-    {!tables.length ? <div className="method-note wide"><strong>Export gate</strong><p>Run an available method before exporting result tables. Stable publication exports remain gated until the relevant method family is validated.</p></div> : null}
+    {!tables.length ? <div className="method-note wide"><strong>Export unavailable</strong><p>Run an available method before exporting result tables. Publication exports become available when that method and setup provide compatible result tables.</p></div> : null}
     <div className="report-wizard-footer"><button className="secondary-button" type="button" onClick={() => setActiveWizardStep("settings")}>Back: Settings</button></div>
     </section> : null}
   </WorkspacePage>;
@@ -438,7 +457,7 @@ function ReportTablePreview({ table, onStatus }: { table: ReportExportTable; onS
         <span>{table.rows.length} row(s), {table.columns.length} column(s). First column stays pinned for wide review.</span>
       </div>
       <div className="v2100-report-table-actions">
-        <span className={`status-text ${table.status}`}>{table.status}</span>
+        <span className={`status-text ${table.status}`}>{reportTableStatusLabel(table.status)}</span>
         <button type="button" className="secondary-button" onClick={() => void copyTable()}>Copy table</button>
         <button type="button" className="secondary-button" onClick={exportReportTable}>Export table</button>
       </div>
@@ -472,7 +491,7 @@ function selectedPresetLabel(preset: ReportPreset) {
 function reportHtml(baseHtml: string, interpretation: ReturnType<typeof buildResultInterpretation> | null) {
   if (!interpretation) return baseHtml;
   const notes = interpretation.reportParagraphs.map((paragraph) => `<section><h2>${escapeHtml(paragraph.section)}</h2><p>${escapeHtml(paragraph.text)}</p></section>`).join("");
-  return baseHtml.replace("</body>", `<section><h1>Interpretation notes</h1>${notes}<p><small>Interpretation notes are deterministic QuickPLS guidance based on available result values and documented scope; they are not AI-generated and do not establish causality.</small></p></section></body>`);
+  return baseHtml.replace("</body>", `<section><h1>Interpretation notes</h1>${notes}<p><small>Interpretation notes are deterministic QuickPLS guidance based on the saved result and its listed requirements; they are not AI-generated and do not establish causality.</small></p></section></body>`);
 }
 
 function escapeHtml(value: string) {

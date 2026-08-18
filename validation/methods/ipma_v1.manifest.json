@@ -1,43 +1,350 @@
 {
   "schema_version": 1,
-  "governance": {"contract_frozen_at_utc": "2026-08-13T10:09:13Z", "manifest_path": "validation/methods/ipma_v1.manifest.json", "schema_path": "validation/methods/method_promotion_manifest.schema.json", "validator_path": "validation/method_promotion_manifest.py", "focused_test_path": "validation/test_method_promotion_manifest.py"},
-  "feature": {"id": "qpls3.assessment.ipma", "label": "Importance-Performance Map Analysis", "method_version": "ipma_v1", "method_kind": "deterministic", "catalogue_snapshot_date": "2026-08-12", "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:09:13Z",
+    "manifest_path": "validation/methods/ipma_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.assessment.ipma",
+    "label": "Importance-Performance Map Analysis",
+    "method_version": "ipma_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
   "claim": {
     "supported_scope": "One endogenous target with predecessor-only PLS total-effect importance and observed-range construct and indicator performance on a fixed 0-100 scale.",
     "estimand": "For each structural predecessor of the selected target, its PLS total effect as importance and its observed-range min-max scaled score mean as performance.",
-    "assumptions": ["The selected target is endogenous and the underlying PLS solution satisfies its accepted bounded contract.", "Construct and indicator score ranges are finite and nonconstant for every reported predecessor.", "The selected target, range convention, and exclusions are persisted with the run."],
-    "exclusions": ["Conditional IPMA, multiple simultaneous targets, theoretical-range correction, and cIPMA are excluded.", "Case-weighted, interaction, and higher-order models are excluded.", "Disconnected constructs and the target itself are excluded from the predecessor map."],
-    "warnings": ["Observed-range performance is sample-dependent and must not be read as an absolute population score.", "High importance or performance does not establish causality or intervention effectiveness."]
+    "assumptions": [
+      "The selected target is endogenous and the underlying PLS solution satisfies its accepted bounded contract.",
+      "Construct and indicator score ranges are finite and nonconstant for every reported predecessor.",
+      "The selected target, range convention, and exclusions are persisted with the run."
+    ],
+    "exclusions": [
+      "Conditional IPMA, multiple simultaneous targets, theoretical-range correction, and cIPMA are excluded.",
+      "Case-weighted, interaction, and higher-order models are excluded.",
+      "Disconnected constructs and the target itself are excluded from the predecessor map."
+    ],
+    "warnings": [
+      "Observed-range performance is sample-dependent and must not be read as an absolute population score.",
+      "High importance or performance does not establish causality or intervention effectiveness."
+    ]
   },
   "scientific_contract": {
     "equations": [
-      {"id": "total_importance", "expression": "importance(i,t) = sum over all directed paths p from i to t of product(beta_e for e in p)", "variables": ["importance", "i", "t", "p", "beta_e"], "source_reference_id": "ringle_sarstedt_2016"},
-      {"id": "observed_range_performance", "expression": "performance(z) = 100 * mean((z - min(z)) / (max(z) - min(z)))", "variables": ["performance", "z"], "source_reference_id": "ringle_sarstedt_2016"}
+      {
+        "id": "total_importance",
+        "expression": "importance(i,t) = sum over all directed paths p from i to t of product(beta_e for e in p)",
+        "variables": [
+          "importance",
+          "i",
+          "t",
+          "p",
+          "beta_e"
+        ],
+        "source_reference_id": "ringle_sarstedt_2016"
+      },
+      {
+        "id": "observed_range_performance",
+        "expression": "performance(z) = 100 * mean((z - min(z)) / (max(z) - min(z)))",
+        "variables": [
+          "performance",
+          "z"
+        ],
+        "source_reference_id": "ringle_sarstedt_2016"
+      }
     ],
     "references": [
-      {"id": "ringle_sarstedt_2016", "kind": "primary_paper", "citation": "Ringle and Sarstedt (2016), Gain More Insight from Your PLS-SEM Results: The Importance-Performance Map Analysis", "locator": "docs/methods/IPMA_V1.md", "independence_group": "published_ipma_method", "runtime_policy": "no_runtime_dependency"},
-      {"id": "independent_python_ipma", "kind": "independent_python", "citation": "Independent Python total-effect and observed-range performance calculation", "locator": "validation/ipma_reference.py", "independence_group": "python_reference", "runtime_policy": "development_validation_only"}
+      {
+        "id": "ringle_sarstedt_2016",
+        "kind": "primary_paper",
+        "citation": "Ringle and Sarstedt (2016), Gain More Insight from Your PLS-SEM Results: The Importance-Performance Map Analysis",
+        "locator": "docs/methods/IPMA_V1.md",
+        "independence_group": "published_ipma_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_python_ipma",
+        "kind": "independent_python",
+        "citation": "Independent Python total-effect and observed-range performance calculation",
+        "locator": "validation/ipma_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      }
     ],
-    "simulations": [{"id": "importance_performance_recovery", "purpose": "recovery", "design": "Supported mediated and direct-effect models with disconnected negative controls, varying signs, path strengths, score ranges, and construct order.", "seed_policy": "Frozen seeds identify each generated scenario; reference calculations are independent of execution order.", "metrics": ["total_effect_error", "construct_performance_error", "indicator_performance_error", "predecessor_set_accuracy"], "acceptance_rule": "All predecessor sets and table rows must match the independent calculation within 1e-6, with no disconnected or target rows."}],
+    "simulations": [
+      {
+        "id": "importance_performance_recovery",
+        "purpose": "recovery",
+        "design": "One frozen direct-plus-mediated model with a disconnected negative-control component is checked against an independent Python calculation; a focused engine matrix reverses construct and path order and exercises listwise omission.",
+        "seed_policy": "The deterministic fixture and selected target are frozen; no stochastic simulation or resampling claim is made.",
+        "metrics": [
+          "total_effect_error",
+          "construct_performance_error",
+          "indicator_performance_error",
+          "predecessor_set_accuracy"
+        ],
+        "acceptance_rule": "All predecessor sets and table rows must match the independent calculation within 1e-6, with no disconnected or target rows."
+      }
+    ],
     "boundaries": [
-      {"id": "constant_performance_score", "category": "data_pathology", "case": "A required construct or indicator score has zero observed range.", "expected_behavior": "The setup is blocked or the affected row is explicitly unavailable; no division-by-zero result is emitted."},
-      {"id": "unsupported_ipma_shape", "category": "unsupported_scope", "case": "The user requests cIPMA, theoretical ranges, an interaction, or a higher-order target.", "expected_behavior": "The workflow blocks the unsupported request before execution."},
-      {"id": "model_reorder", "category": "metamorphic", "case": "Constructs, indicators, and paths are consistently reordered.", "expected_behavior": "Mapped predecessor, importance, and performance rows remain equal within tolerance."},
-      {"id": "repeat_ipma", "category": "determinism", "case": "The same model, target, and data are executed repeatedly.", "expected_behavior": "The analytical IPMA payload is exactly equal apart from timestamps."},
-      {"id": "ipma_archive_tamper", "category": "tamper", "case": "The target, total effect, performance row, range convention, or identity is altered.", "expected_behavior": "Strict project validation rejects the archive."}
+      {
+        "id": "constant_performance_score",
+        "category": "data_pathology",
+        "case": "A required construct or indicator score has zero observed range.",
+        "expected_behavior": "Constant raw indicators are blocked during preprocessing; any later empty, non-finite, or zero-range IPMA score fails closed with a typed estimator error and no result is emitted."
+      },
+      {
+        "id": "unsupported_ipma_shape",
+        "category": "unsupported_scope",
+        "case": "The user requests cIPMA, theoretical ranges, an interaction, or a higher-order target.",
+        "expected_behavior": "The workflow blocks the unsupported request before execution."
+      },
+      {
+        "id": "model_reorder",
+        "category": "metamorphic",
+        "case": "Construct and path declarations are consistently reordered.",
+        "expected_behavior": "Mapped predecessor, importance, and performance rows remain equal within tolerance."
+      },
+      {
+        "id": "repeat_ipma",
+        "category": "determinism",
+        "case": "The same model, target, and data are executed repeatedly.",
+        "expected_behavior": "The analytical IPMA payload is exactly equal apart from timestamps."
+      },
+      {
+        "id": "ipma_archive_tamper",
+        "category": "tamper",
+        "case": "The target, total effect, performance row, range convention, or identity is altered.",
+        "expected_behavior": "Strict project validation rejects the archive."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
-    "persistence": {"recipe_schema_version": 3, "result_schema_version": 1, "payload_kind": "pls_pm_v1", "tamper_tests": [
-      {"category": "feature_identity", "expected_behavior": "Reject an archive whose capability identity differs from IPMA."}, {"category": "method_version", "expected_behavior": "Reject a payload relabeled as another IPMA version."}, {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose dataset fingerprint differs from its saved data."}, {"category": "checksum", "expected_behavior": "Reject an archive member whose checksum differs from the manifest."}, {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, inconsistent targets, or impossible performance rows."}, {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret a historical score map as current IPMA v1 evidence."}
-    ], "legacy_policy": "Historical IPMA previews retain their original identity and cannot satisfy current promotion evidence."},
-    "native": {"setup_controls": ["Endogenous target", "Observed-range performance convention", "Supported PLS model"], "applicability_blockers": ["Non-endogenous target", "Unsupported interaction or higher-order model", "Constant required score range"], "result_surfaces": ["Construct importance and performance", "Indicator importance and performance", "Predecessor map", "Scope and provenance"], "gui_cli_parity_rule": "GUI and CLI must return the same predecessor set and numerical IPMA tables for the same model, target, and data.", "accessibility_rules": ["The importance-performance map has an equivalent accessible table.", "Target, ranges, exclusions, and row values are available without color or pointer interaction."]},
-    "export": {"formats": ["csv", "xlsx"], "tables": ["Construct IPMA", "Indicator IPMA", "IPMA scope", "Run provenance"], "same_run_required": true, "provenance_required": true},
-    "packaged": {"platforms": ["windows"], "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"], "viewports": ["1024x700", "1280x720", "1440x900"], "offline_required": true, "cancellation_required": false, "process_cleanup_required": true},
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject an archive whose capability identity differs from IPMA."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a payload relabeled as another IPMA version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose dataset fingerprint differs from its saved data."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject an archive member whose checksum differs from the manifest."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, inconsistent targets, or impossible performance rows."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret a historical score map as current IPMA v1 evidence."
+        }
+      ],
+      "legacy_policy": "Historical IPMA previews retain their original identity and cannot satisfy current promotion evidence."
+    },
+    "native": {
+      "setup_controls": [
+        "Endogenous target",
+        "Observed-range performance convention",
+        "Supported PLS model"
+      ],
+      "applicability_blockers": [
+        "Non-endogenous target",
+        "Unsupported interaction or higher-order model",
+        "Constant required score range"
+      ],
+      "result_surfaces": [
+        "Construct importance and performance",
+        "Indicator importance and performance",
+        "Predecessor map",
+        "Scope and provenance"
+      ],
+      "gui_cli_parity_rule": "GUI and CLI must return the same predecessor set and numerical IPMA tables for the same model, target, and data.",
+      "accessibility_rules": [
+        "The importance-performance map has an equivalent accessible table.",
+        "Target, ranges, exclusions, and row values are available without color or pointer interaction."
+      ]
+    },
+    "export": {
+      "formats": [
+        "csv",
+        "xlsx"
+      ],
+      "tables": [
+        "Construct IPMA",
+        "Indicator IPMA",
+        "IPMA scope",
+        "Run provenance"
+      ],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
+      "offline_required": true,
+      "cancellation_required": false,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
-  "qualification": {"declared_state": "absent", "target_state": "release_qualified", "source_requirements": {
-    "method_spec": ["docs/methods/IPMA_V1.md"], "independent_reference": ["validation/ipma_reference.py"], "simulation_report": ["validation/ipma_release_simulation.py"], "boundary_report": ["validation/ipma_release_boundary_gate.py"], "persistence_report": ["validation/ipma_release_persistence_gate.py"], "frontend_report": ["src/native/nativeIpma.test.ts", "src/native/nativeIpmaCanonicalIntegration.test.ts"], "export_report": ["src/native/nativeExportTables.test.ts"], "method_audit": ["validation/ipma_method_promotion_audit.py"], "packaged_acceptance": ["validation/run_v247_cumulative_native_acceptance.ps1"]
-  }, "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}}
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": [
+        "docs/methods/IPMA_V1.md"
+      ],
+      "independent_reference": [
+        "validation/ipma_reference.py",
+        "validation/ipma_release_reference.py",
+        "crates/qpls-cli/src/main.rs",
+        "crates/qpls-estimation/src/pls.rs",
+        "crates/qpls-runner/src/lib.rs"
+      ],
+      "simulation_report": [
+        "validation/ipma_release_simulation.py",
+        "validation/established_method_factory_common.py"
+      ],
+      "boundary_report": [
+        "validation/ipma_release_boundary_gate.py",
+        "crates/qpls-core/src/validation.rs"
+      ],
+      "persistence_report": [
+        "validation/ipma_release_persistence_gate.py",
+        "crates/qpls-project/src/lib.rs"
+      ],
+      "frontend_report": [
+        "src/native/nativeAnalysisRecipe.ts",
+        "src/native/nativeResults.ts",
+        "src/native/nativeIpma.test.ts",
+        "src/native/nativeIpmaCanonicalIntegration.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.ts",
+        "src/native/nativeExportTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/ipma_v1_release_audit.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/test_phase2_release_packaged_common.py"
+      ],
+      "packaged_acceptance": [
+        "validation/ipma_v1_packaged_acceptance.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/run_phase2_release_packaged_closure.ps1",
+        "validation/run_v247_cumulative_native_acceptance.ps1",
+        "validation/v247_tauri_native_acceptance.mjs",
+        "validation/diagnostic_bundle_source_manifest.py",
+        "validation/test_v247_cumulative_native_acceptance_supervisor.py",
+        "validation/test_phase2_release_packaged_common.py"
+      ]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/ipma_v1/engine_stage.identity.json",
+          "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/ipma_v1/persistence_report.identity.json",
+          "roles": ["persistence_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/ipma_v1/native_stage.identity.json",
+          "roles": ["frontend_report", "export_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/ipma_v1/packaged_acceptance.identity.json",
+          "roles": ["packaged_acceptance"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/ipma_v1/method_audit.identity.json",
+          "roles": ["method_audit"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
+  }
 }

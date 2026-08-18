@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem-exact-case-bootstrap-studentized-phase0-manifest-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "status", "source_binding", "execution_policy", "stop_criteria", "dimension_contract", "cases", "worker_invariance_group"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "cbsem_exact_case_bootstrap_studentized_phase0_manifest_v1" },
+    "status": { "const": "predeclared_measurement_matrix_no_caps_or_qualification" },
+    "source_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["data_path", "data_sha256", "recipe_path", "recipe_sha256", "rust_example", "standalone_measurement_schema", "phase0_report_schema"],
+      "properties": {
+        "data_path": { "const": "validation/results/v07_cbsem.csv" },
+        "data_sha256": { "const": "bbe3db1d036264accf6793c717694672e42ebdc3c47ad412429fb0bfe2fca65d" },
+        "recipe_path": { "const": "validation/results/v07_cfa.recipe.json" },
+        "recipe_sha256": { "const": "589c913cd349da4c2a61ae6a1bfbcf0000d6986fe8e886595c5afbb2b356ae19" },
+        "rust_example": { "const": "crates/qpls-resampling/examples/cbsem_exact_case_bootstrap_studentized_benchmark.rs" },
+        "standalone_measurement_schema": { "const": "validation/cbsem_exact_case_bootstrap_studentized_benchmark_v1.schema.json" },
+        "phase0_report_schema": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase0_report_v1.schema.json" }
+      }
+    },
+    "execution_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["probe_runs", "survivor_warmup_runs", "survivor_measured_runs", "aggregate_statistics", "append_only_result_paths", "explicit_execute_required", "vary_scheduler_workers_only", "cap_decision"],
+      "properties": {
+        "probe_runs": { "const": 1 },
+        "survivor_warmup_runs": { "const": 1 },
+        "survivor_measured_runs": { "const": 5 },
+        "aggregate_statistics": { "const": ["median", "p95_type7"] },
+        "append_only_result_paths": { "const": true },
+        "explicit_execute_required": { "const": true },
+        "vary_scheduler_workers_only": { "const": true },
+        "cap_decision": { "const": "not_permitted_from_phase0" }
+      }
+    },
+    "stop_criteria": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximum_peak_working_set_fraction_of_physical_ram", "maximum_text_export_proxy_bytes", "maximum_project_document_proxy_bytes", "maximum_cancellation_terminal_latency_seconds", "maximum_orphan_processes", "exact_repeated_scientific_digest_required", "exact_worker_scientific_digest_required", "size_scope", "stop_effect"],
+      "properties": {
+        "maximum_peak_working_set_fraction_of_physical_ram": { "const": 0.5 },
+        "maximum_text_export_proxy_bytes": { "const": 134217728 },
+        "maximum_project_document_proxy_bytes": { "const": 268435456 },
+        "maximum_cancellation_terminal_latency_seconds": { "const": 1.0 },
+        "maximum_orphan_processes": { "const": 0 },
+        "exact_repeated_scientific_digest_required": { "const": true },
+        "exact_worker_scientific_digest_required": { "const": true },
+        "size_scope": { "const": "combined_s2_json_is_a_conservative_phase0_proxy_only_until_v11_canonical_and_export_builders_are_authoritative" },
+        "stop_effect": { "const": "stop_the_case_and_skip_only_manifest_declared_dependants" }
+      }
+    },
+    "dimension_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["N", "V", "P", "D"],
+      "properties": {
+        "N": { "$ref": "#/$defs/nonEmptyString" },
+        "V": { "$ref": "#/$defs/nonEmptyString" },
+        "P": { "$ref": "#/$defs/nonEmptyString" },
+        "D": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": { "$ref": "#/$defs/case" }
+    },
+    "worker_invariance_group": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/id" }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_]*$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "order", "mode", "rows", "factors", "replicates", "workers", "cancel_after", "roles", "depends_on", "survivor_policy"],
+      "properties": {
+        "case_id": { "$ref": "#/$defs/id" },
+        "order": { "type": "integer", "minimum": 1 },
+        "mode": { "enum": ["full", "cancellation"] },
+        "rows": { "type": "integer", "minimum": 10, "maximum": 180 },
+        "factors": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "replicates": { "enum": [500, 1000, 2000] },
+        "workers": { "enum": [1, 4, 12] },
+        "cancel_after": { "type": ["integer", "null"], "minimum": 1 },
+        "roles": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true },
+        "depends_on": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+        "survivor_policy": { "enum": ["probe_then_one_warmup_five_measured_if_no_stop", "single_typed_cancellation_probe_only"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "cancellation" } } },
+          "then": {
+            "properties": {
+              "cancel_after": { "type": "integer", "minimum": 1 },
+              "survivor_policy": { "const": "single_typed_cancellation_probe_only" }
+            }
+          },
+          "else": {
+            "properties": {
+              "cancel_after": { "type": "null" },
+              "survivor_policy": { "const": "probe_then_one_warmup_five_measured_if_no_stop" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

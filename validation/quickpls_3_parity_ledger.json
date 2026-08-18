@@ -25,7 +25,7 @@
       "official_family": "PLS-SEM algorithm",
       "quickpls_scope": "Deterministic PLS path modelling for supported recursive composite models, including weights, loadings, paths, scores, R-squared, effects, assessment tables, persistence, and native export.",
       "method_version": "pls_pm_v1",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "QuickPLS is independently implemented and does not claim numerical identity for every initialization, sign convention, or stopping path.",
         "Unsupported model shapes remain blocked by the typed recipe validator."
@@ -85,7 +85,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/pls_algorithm_v1/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/pls_algorithm_v1/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.pls.consistent",
@@ -94,7 +109,7 @@
       "official_family": "Consistent PLS",
       "quickpls_scope": "Reflective-only PLSc with path or factor weighting, corrected construct correlations, paths, loadings, R-squared, and rho_A attenuation correction.",
       "method_version": "plsc_v2",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "Formative blocks and unsupported correction shapes are rejected.",
         "Historical plsc_v1 output remains legacy archive data and is not current evidence."
@@ -154,7 +169,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/plsc_v2/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/plsc_v2/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.pls.weighted",
@@ -163,7 +193,7 @@
       "official_family": "Weighted PLS",
       "quickpls_scope": "Positive case-weighted reflective PLS with standardized preprocessing and path or factor weighting.",
       "method_version": "wpls_case_weighted_v1",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "The current workflow accepts positive case weights and does not claim general survey-design estimation.",
         "Formative measurement and non-standardized preprocessing are excluded."
@@ -223,7 +253,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/wpls_v1/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/wpls_v1/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.gsca.als",
@@ -232,7 +277,7 @@
       "official_family": "Generalized structured component analysis",
       "quickpls_scope": "Bounded joint global least-squares ALS for standardized raw data, disjoint reflective or formative blocks, and recursive single-group paths; point estimates only.",
       "method_version": "gsca_als_v2",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "Inference, controls, covariance paths, interactions, higher-order constructs, case weights, and multigroup analysis are not in the current accepted scope.",
         "Historical gsca_v1 is preview-only and is never reinterpreted as v2 evidence."
@@ -292,7 +337,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/gsca_als_v2/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/gsca_als_v2/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.assessment.cca_residuals",
@@ -301,7 +361,7 @@
       "official_family": "Confirmatory composite analysis",
       "quickpls_scope": "Descriptive observed-versus-reproduced composite correlation residuals for a supported recursive standardized composite path model.",
       "method_version": "cca_composite_residual_v1",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "Current output is descriptive residual diagnostics, not the full inferential CCA workflow planned for Wave 5.",
         "No fabricated significance or reflective-versus-formative classification is reported."
@@ -361,7 +421,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/cca_residuals_v1/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/cca_residuals_v1/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.assessment.ipma",
@@ -370,7 +445,7 @@
       "official_family": "Importance-performance map analysis",
       "quickpls_scope": "One endogenous target with predecessor-only total importance and observed-range construct performance on a fixed 0-100 scale.",
       "method_version": "ipma_v1",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "Multiple outcomes, conditional IPMA, and broader range policies are not in the current accepted scope.",
         "Disconnected constructs are excluded from the predecessor map."
@@ -430,7 +505,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/ipma_v1/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/ipma_v1/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.cbsem.ml",
@@ -439,7 +529,7 @@
       "official_family": "Covariance-based structural equation modelling",
       "quickpls_scope": "Raw-data single-group reflective CFA or recursive SEM with maximum likelihood, marker identification, standardized and unstandardized parameters, residuals, fit indices, and residual-based modification screening.",
       "method_version": "cbsem_ml_v1",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "Mean structures, robust ML, ordinal WLSMV, FIML, bootstrap, unrestricted multigroup invariance, interactions, and higher-order models remain outside this workflow.",
         "The current estimator is independently validated against external references but does not bundle an external statistical runtime."
@@ -499,7 +589,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/cbsem_ml_v1/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/cbsem_ml_v1/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.inference.bootstrap",
@@ -508,7 +613,7 @@
       "official_family": "Bootstrapping",
       "quickpls_scope": "Deterministic PLS resampling with documented percentile, BCa, studentized bootstrap-t, jackknife, progress, cancellation, persistence, and inference tables for supported models.",
       "method_version": "indexed_resampling_v4",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "Resampling claims are limited to supported PLS model shapes and documented defaults.",
         "Regression bootstrapping is not part of the current accepted workflow and is scheduled for Wave 1."
@@ -568,7 +673,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/pls_bootstrap_v4/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/pls_bootstrap_v4/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.inference.structural_path_randomization",
@@ -648,67 +768,18 @@
       "catalog_kind": "mga",
       "label": "MICOM and Two-Group Permutation MGA",
       "official_family": "Measurement invariance and multigroup analysis",
-      "quickpls_scope": "Two-group MICOM v2 plus deterministic two-tailed permutation comparisons for paths, outer loadings, and outer weights with explicit Group A minus Group B direction.",
+      "quickpls_scope": "The former two-group MICOM v2 and permutation-MGA scope is withdrawn while the group-swap-invariant v3 repair and complete evidence regeneration are in progress.",
       "method_version": "pls_mga_permutation_v2",
-      "state": "native_qualified",
+      "state": "absent",
       "known_differences": [
-        "Current native scope is two groups and permutation MGA coupled to MICOM; PLS-MGA, parametric, Welch, and consistent MGA variants remain pending.",
+        "No current MICOM or permutation-MGA qualification claim is authorized until the v3 contract and identities pass the strict factory.",
+        "The intended bounded scope remains two groups and permutation MGA coupled to MICOM; PLS-MGA, parametric, Welch, and consistent MGA variants remain pending.",
         "Translation, coding meaning, and substantive measurement equivalence remain researcher responsibilities."
       ],
       "evidence": {
-        "engine": [
-          {
-            "description": "Current permutation MGA method version is defined in source.",
-            "path": "crates/qpls-estimation/src/pls.rs",
-            "contains": "pub const PLS_MGA_PERMUTATION_METHOD_VERSION: &str = \"pls_mga_permutation_v2\";"
-          },
-          {
-            "description": "Current scoped permutation MGA audit passed.",
-            "path": "validation/results/mga_permutation_method_promotion_audit.json",
-            "pointer": "/passed",
-            "equals": true
-          },
-          {
-            "description": "Audit identity is current permutation MGA.",
-            "path": "validation/results/mga_permutation_method_promotion_audit.json",
-            "pointer": "/method_version",
-            "equals": "pls_mga_permutation_v2"
-          }
-        ],
-        "archive": [
-          {
-            "description": "The packaged archive reopened the MGA project.",
-            "path": "validation/results/v247_tauri_native_acceptance.json",
-            "pointer": "/checks/mgaSaveReopen/reopenedThroughRecentProjectRow",
-            "equals": true
-          },
-          {
-            "description": "The archived permutation MGA identity is current.",
-            "path": "validation/results/v247_tauri_native_acceptance.json",
-            "pointer": "/checks/mgaSaveReopen/archive/permutationMethodVersion",
-            "equals": "pls_mga_permutation_v2"
-          }
-        ],
-        "native": [
-          {
-            "description": "The cumulative packaged-native acceptance report passed.",
-            "path": "validation/results/v247_tauri_native_acceptance.json",
-            "pointer": "/passed",
-            "equals": true
-          },
-          {
-            "description": "A genuine MGA result was shown.",
-            "path": "validation/results/v247_tauri_native_acceptance.json",
-            "pointer": "/checks/mgaResult/runLabel",
-            "equals": "MICOM and Two-Group Permutation MGA run"
-          },
-          {
-            "description": "Native MGA XLSX export was available.",
-            "path": "validation/results/v247_tauri_native_acceptance.json",
-            "pointer": "/checks/mgaExport/xlsxEnabled",
-            "equals": true
-          }
-        ]
+        "engine": [],
+        "archive": [],
+        "native": []
       },
       "release_evidence": null
     },
@@ -719,7 +790,7 @@
       "official_family": "Prediction and predictive model assessment",
       "quickpls_scope": "Indicator-first seeded repeated 10-fold prediction with indicator-average and linear-model benchmarks plus single-model CVPAT; deterministic holdout remains secondary.",
       "method_version": "plspredict_indicator_v2",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "The seeded fold assignment is independently specified and does not reproduce another product's random fold assignments.",
         "CVPAT compares one fitted model with IA and LM benchmarks; saved-model comparison is pending Wave 5."
@@ -779,7 +850,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/plspredict_cvpat_v2/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/plspredict_cvpat_v2/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.standalone.nca",
@@ -788,7 +874,7 @@
       "official_family": "Necessary condition analysis",
       "quickpls_scope": "One observed numeric condition and one observed numeric outcome with CE-FDH and CR-FDH ceilings, seeded permutation p-values, and observed-range bottlenecks.",
       "method_version": "nca_v2",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "Multiple conditions, latent-score NCA, theoretical ranges, and cIPMA are pending Wave 5.",
         "Current bottlenecks use observed ranges."
@@ -848,7 +934,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/nca_v2/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/nca_v2/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.standalone.pca",
@@ -857,7 +958,7 @@
       "official_family": "Principal component analysis",
       "quickpls_scope": "Standardized numeric raw-data PCA with listwise deletion, deterministic sign orientation, fixed, Kaiser, or variance-threshold retention, eigenvalues, loadings, weights, and scores.",
       "method_version": "pca_v1",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "Rotations and covariance or correlation-matrix input are pending Wave 5.",
         "Pairwise deletion and component-score uncertainty are not supported."
@@ -917,7 +1018,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/pca_v1/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/pca_v1/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.standalone.ols",
@@ -926,7 +1042,7 @@
       "official_family": "Linear regression",
       "quickpls_scope": "Raw-data OLS with intercept, numeric predictors and controls, complete-case rows, HC3 robust standard errors, t tests, confidence intervals, fit diagnostics, fitted values, and residuals.",
       "method_version": "regression_ols_v1",
-      "state": "native_qualified",
+      "state": "release_qualified",
       "known_differences": [
         "Categorical coding helpers, survey weights, clustered standard errors, GLS, mixed models, and panel models are not supported.",
         "Binary logistic regression, PROCESS, and regression bootstrap are Wave 1 work."
@@ -986,7 +1102,22 @@
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/method_factory/ols_v1/method_audit.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/method_factory/ols_v1/packaged_acceptance.identity.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.standalone.logistic",

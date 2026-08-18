@@ -1,0 +1,167 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "fresh_boundary_gate": {
+      "passed": true
+    },
+    "fresh_independent_and_simulation_gate": {
+      "passed": true
+    },
+    "method_contract_is_current": {
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "qpls-cli"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Blocking waiting for file lock on package cache\n    Blocking waiting for file lock on build directory\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.44s\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "--version"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "qpls 2.46.0\n"
+    },
+    {
+      "command": [
+        "C:\\Python313\\python.exe",
+        "validation/nca_release_reference.py"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"checks\": {\n    \"nca\": {\n      \"all_bottleneck_rows_checked\": true,\n      \"ce_fdh_peer_count\": 14,\n      \"ce_fdh_peers_ordered\": true,\n      \"cr_fdh_regression_checked\": true,\n      \"exact_ceiling_shape\": true,\n      \"exact_standalone_envelope\": true,\n      \"max_abs_difference\": 1.7763568394002505e-14,\n      \"method_version\": \"nca_v2\",\n      \"passed\": true,\n      \"permutation_p_value_lattice\": true,\n      \"scope\": {\n        \"ceilings\": [\n          \"ce_fdh\",\n          \"cr_fdh\"\n        ],\n        \"cipma\": false,\n        \"latent_score_nca\": false,\n        \"listwise_complete_rows_minimum\": 3,\n        \"multiple_conditions\": false,\n        \"observed_numeric_variables\": 2\n      },\n      \"seeded_repeat_deterministic\": true\n    }\n  },\n  \"note\": \"NCA v2 evidence is limited to the documented standalone observed numeric X/Y CE-FDH/CR-FDH scope; packaged-native acceptance and broader method parity are separate gates.\",\n  \"passed\": true,\n  \"report_scope\": \"method_specific\",\n  \"schema_version\": 2,\n  \"selected_section\": \"nca\",\n  \"target\": \"nca_v2 bounded backend qualification\",\n  \"tolerance\": 1e-06\n}\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-estimation",
+        "nca_v2",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Blocking waiting for file lock on package cache\n    Blocking waiting for file lock on build directory\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.27s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_estimation-964bbb5bd1846697.exe)\n",
+      "stdout_tail": "\nrunning 4 tests\ntest pls::tests::nca_v2_uses_record_high_ce_fdh_peers_and_regresses_cr_fdh_through_them ... ok\ntest pls::tests::nca_v2_permutations_are_seeded_independent_shuffles ... ok\ntest pls::tests::nca_v2_payload_contract_rejects_tampered_geometry ... ok\ntest pls::tests::nca_v2_focused_engine_boundary_and_permutation_matrix ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 159 filtered out; finished in 0.01s\n\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-core",
+        "bounded_nca_v2",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.79s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_core-4c9e2694292d11bc.exe)\n",
+      "stdout_tail": "\nrunning 2 tests\ntest validation::tests::bounded_nca_v2_accepts_a_no_model_raw_numeric_recipe ... ok\ntest validation::tests::bounded_nca_v2_rejects_ambiguous_variables_and_incompatible_settings ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 172 filtered out; finished in 0.00s\n\n"
+    }
+  ],
+  "feature_id": "qpls3.standalone.nca",
+  "generated_at_utc": "2026-08-18T02:24:25.476999Z",
+  "method_version": "nca_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+      "size": 227427
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+      "size": 100140
+    },
+    {
+      "path": "docs/methods/NCA_V2.md",
+      "sha256": "7315f1172b255fbee8a67a5be28f6d7df5b61ff3d5e9ad84037baf215deea0e0",
+      "size": 7196
+    },
+    {
+      "path": "validation/established_method_factory_common.py",
+      "sha256": "cbc4eb8e5d7ab329d3a5c1eaae910c43cdac39f6c11fbd26eb774cc65e95c090",
+      "size": 20368
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/nca_v2.manifest.json",
+      "sha256": "cfe666fb8c04e0cfa2b880d8801277af9714eb47341ba3ed0f9f055331694b30",
+      "size": 15381
+    },
+    {
+      "path": "validation/nca_release_boundary_gate.py",
+      "sha256": "c1e1edc4e9c4e3a429d9eeab5ca9ea466d1610715c0221300cb5d6083e0dc081",
+      "size": 156
+    },
+    {
+      "path": "validation/nca_release_reference.py",
+      "sha256": "bfd63e5b1d638dfb3f854a3eca2655633feb9eb5df503986c8f06eca99f7d75e",
+      "size": 2536
+    },
+    {
+      "path": "validation/nca_release_simulation.py",
+      "sha256": "52f7232181ba4a6326ad5ea31565b87f2895ada328a35c7f69c61f1c5165582d",
+      "size": 158
+    },
+    {
+      "path": "validation/results/method_factory/nca_v2/independent_reference.json",
+      "sha256": "272f2623d321d8d526c2d9074ba7136fe617cdee5960c43ae3c7504e0bc4ce89",
+      "size": 1141
+    },
+    {
+      "path": "validation/test_established_method_factory.py",
+      "sha256": "a16157170cc23ffb0fe8a112a2b28b25b9f6f1518a443c6265c9fe993d70ee52",
+      "size": 2917
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/v08_extended_methods_reference.py",
+      "sha256": "80e4e1abdf6f941e7b5fcf456662248178acd4178bf1e785f759d5d29bf0c15e",
+      "size": 22698
+    }
+  ]
+}

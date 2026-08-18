@@ -16,8 +16,15 @@ use arrow::{
     compute::take,
     record_batch::RecordBatch,
 };
+#[cfg(test)]
+use qpls_assessment::HtmtCell;
+use qpls_assessment::{
+    HTMT_ORIGINAL_METHOD_VERSION, HTMT_PLUS_METHOD_VERSION, HtmtArtifacts, HtmtAssessment,
+    HtmtStatus, assess_htmt_validated_with_control,
+};
 use qpls_core::{
-    AnalysisMethod, AnalysisRecipe, MethodConfig, RegressionBootstrapAlgorithm,
+    AnalysisMethod, AnalysisRecipe, HtmtBootstrapInferenceConfig, HtmtBootstrapIntervalFamily,
+    HtmtBootstrapTestTail, MethodConfig, PlsBootstrapTestTail, RegressionBootstrapAlgorithm,
     RegressionBootstrapInterval, RegressionModelConfig, ValidatedExecutionRecipe,
 };
 use qpls_data::{DataKind, Dataset};
@@ -35,13 +42,52 @@ use qpls_estimation::{
     process_bootstrap_estimands, process_bootstrap_estimands_at_reference,
 };
 
+mod cbsem_bootstrap;
+mod cbsem_exact_bootstrap;
+mod consistent_bootstrap;
+mod consistent_permutation;
+mod pls_model_fit_exact;
+mod power;
+pub use cbsem_bootstrap::*;
+pub use cbsem_exact_bootstrap::*;
+pub use consistent_bootstrap::*;
+pub use consistent_permutation::*;
+pub use pls_model_fit_exact::*;
+pub use power::*;
+
 pub const RESAMPLING_METHOD_VERSION_V1: &str = "indexed_resampling_v1";
 pub const RESAMPLING_METHOD_VERSION_V2: &str = "indexed_resampling_v2";
 pub const RESAMPLING_METHOD_VERSION_V3: &str = "indexed_resampling_v3";
 pub const RESAMPLING_METHOD_VERSION: &str = "indexed_resampling_v4";
+pub const PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION: &str = "pls_bootstrap_null_centered_test_tail_v1";
 pub const JACKKNIFE_METHOD_VERSION: &str = "indexed_jackknife_v1";
 pub const PERMUTATION_METHOD_VERSION: &str = "freedman_lane_permutation_v1";
 pub const STUDENTIZED_METHOD_VERSION: &str = "nested_studentized_v1";
+pub const HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION: &str =
+    "htmt_bias_corrected_bootstrap_inference_v1";
+pub const HTMT_CONFIGURABLE_BOOTSTRAP_INFERENCE_METHOD_VERSION: &str =
+    "htmt_configurable_bootstrap_inference_v2";
+pub const HTMT_PLUS_BOOTSTRAP_METHOD_VERSION: &str =
+    "ringle_et_al_htmt_plus_bias_corrected_bootstrap_v1";
+pub const HTMT_PLUS_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION: &str =
+    "ringle_et_al_htmt_plus_configurable_bootstrap_v2";
+pub const HTMT_ORIGINAL_BOOTSTRAP_METHOD_VERSION: &str =
+    "henseler_et_al_htmt_bias_corrected_bootstrap_v1";
+pub const HTMT_ORIGINAL_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION: &str =
+    "henseler_et_al_htmt_configurable_bootstrap_v2";
+pub const HTMT_BOOTSTRAP_INTERVAL_METHOD: &str = "bias_corrected_percentile_type7_v1";
+pub const HTMT_BOOTSTRAP_PERCENTILE_INTERVAL_METHOD: &str = "percentile_type7_v1";
+pub const HTMT_BOOTSTRAP_TEST_TYPE: &str = "one_tailed_upper";
+pub const HTMT_BOOTSTRAP_TWO_SIDED_TEST_TYPE: &str = "two_sided";
+pub const HTMT_BOOTSTRAP_SIGNIFICANCE_LEVEL: f64 = 0.05;
+pub const HTMT_BOOTSTRAP_EQUIVALENT_TWO_SIDED_CONFIDENCE_LEVEL: f64 = 0.90;
+pub const HTMT_BOOTSTRAP_CRITICAL_VALUE: f64 = 0.90;
+pub const HTMT_BOOTSTRAP_DECISION_RULE: &str =
+    "bias_corrected_upper_bound_strictly_below_critical_value_v1";
+pub const HTMT_BOOTSTRAP_CONFIGURABLE_DECISION_RULE: &str =
+    "selected_interval_upper_bound_strictly_below_critical_value_v2";
+pub const HTMT_BOOTSTRAP_REPLICATE_INDEX_DIGEST_METHOD: &str = "sha256_u32_le_v1";
+pub const HTMT_BOOTSTRAP_MINIMUM_USABLE_FRACTION: f64 = 0.90;
 pub const REGRESSION_BOOTSTRAP_METHOD_VERSION: &str = "regression_bootstrap_v1";
 pub const REGRESSION_BOOTSTRAP_ALGORITHM: &str = "indexed_case_resampling_v1";
 pub const REGRESSION_BOOTSTRAP_STREAM_TOKEN: &str = "quickpls_indexed_resampling_v1";
@@ -129,6 +175,8 @@ pub enum ResamplingPhase {
     Jackknife,
     Permutation,
     StudentizedInner,
+    ModelFitExactSaturated,
+    ModelFitExactEstimated,
 }
 
 impl ResamplingPhase {
@@ -138,6 +186,8 @@ impl ResamplingPhase {
             Self::Jackknife => "jackknife",
             Self::Permutation => "permutation",
             Self::StudentizedInner => "studentized_inner",
+            Self::ModelFitExactSaturated => "model_fit_exact_saturated",
+            Self::ModelFitExactEstimated => "model_fit_exact_estimated",
         }
     }
 }
@@ -182,6 +232,143 @@ pub struct JackknifeRun<T> {
     pub outcomes: Vec<ReplicateOutcome<T>>,
 }
 
+/// Stable identity families shared by PLS bootstrap and permutation outputs.
+///
+/// The encoded representation intentionally remains the historical JSON tuple
+/// `[family, [components...]]` so archived results keep the same wire format.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub enum PlsResamplingParameterFamily {
+    OuterLoading,
+    OuterWeight,
+    Path,
+    DirectEffect,
+    IndirectEffect,
+    TotalEffect,
+    RSquared,
+}
+
+impl PlsResamplingParameterFamily {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::OuterLoading => "outer_loading",
+            Self::OuterWeight => "outer_weight",
+            Self::Path => "path",
+            Self::DirectEffect => "direct_effect",
+            Self::IndirectEffect => "indirect_effect",
+            Self::TotalEffect => "total_effect",
+            Self::RSquared => "r_squared",
+        }
+    }
+
+    pub const fn component_arity(self) -> usize {
+        match self {
+            Self::RSquared => 1,
+            Self::OuterLoading
+            | Self::OuterWeight
+            | Self::Path
+            | Self::DirectEffect
+            | Self::IndirectEffect
+            | Self::TotalEffect => 2,
+        }
+    }
+
+    fn from_wire(value: &str) -> Result<Self, PlsResamplingParameterIdentityError> {
+        match value {
+            "outer_loading" => Ok(Self::OuterLoading),
+            "outer_weight" => Ok(Self::OuterWeight),
+            "path" => Ok(Self::Path),
+            "direct_effect" => Ok(Self::DirectEffect),
+            "indirect_effect" => Ok(Self::IndirectEffect),
+            "total_effect" => Ok(Self::TotalEffect),
+            "r_squared" => Ok(Self::RSquared),
+            _ => Err(PlsResamplingParameterIdentityError::UnknownFamily(
+                value.to_owned(),
+            )),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PlsResamplingParameterIdentity {
+    family: PlsResamplingParameterFamily,
+    components: Vec<String>,
+}
+
+impl PlsResamplingParameterIdentity {
+    pub fn new<I, S>(
+        family: PlsResamplingParameterFamily,
+        components: I,
+    ) -> Result<Self, PlsResamplingParameterIdentityError>
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        let components = components.into_iter().map(Into::into).collect::<Vec<_>>();
+        let expected = family.component_arity();
+        if components.len() != expected {
+            return Err(PlsResamplingParameterIdentityError::InvalidArity {
+                family,
+                expected,
+                observed: components.len(),
+            });
+        }
+        if let Some(index) = components.iter().position(String::is_empty) {
+            return Err(PlsResamplingParameterIdentityError::EmptyComponent { family, index });
+        }
+        Ok(Self { family, components })
+    }
+
+    pub fn decode(value: &str) -> Result<Self, PlsResamplingParameterIdentityError> {
+        let (family, components) = serde_json::from_str::<(String, Vec<String>)>(value)
+            .map_err(|_| PlsResamplingParameterIdentityError::InvalidWire)?;
+        let identity = Self::new(
+            PlsResamplingParameterFamily::from_wire(&family)?,
+            components,
+        )?;
+        if identity.encode() != value {
+            return Err(PlsResamplingParameterIdentityError::NonCanonicalWire);
+        }
+        Ok(identity)
+    }
+
+    pub fn encode(&self) -> String {
+        serde_json::to_string(&(self.family.as_str(), &self.components))
+            .expect("PLS resampling parameter identity is serializable")
+    }
+
+    pub const fn family(&self) -> PlsResamplingParameterFamily {
+        self.family
+    }
+
+    pub fn components(&self) -> &[String] {
+        &self.components
+    }
+}
+
+#[derive(Debug, Clone, Error, PartialEq, Eq)]
+pub enum PlsResamplingParameterIdentityError {
+    #[error("PLS resampling parameter identity is not a JSON string tuple")]
+    InvalidWire,
+    #[error("unknown PLS resampling parameter family `{0}`")]
+    UnknownFamily(String),
+    #[error(
+        "PLS resampling parameter family `{family:?}` requires {expected} components, observed {observed}"
+    )]
+    InvalidArity {
+        family: PlsResamplingParameterFamily,
+        expected: usize,
+        observed: usize,
+    },
+    #[error("PLS resampling parameter family `{family:?}` has an empty component at index {index}")]
+    EmptyComponent {
+        family: PlsResamplingParameterFamily,
+        index: usize,
+    },
+    #[error("PLS resampling parameter identity does not use the canonical JSON encoding")]
+    NonCanonicalWire,
+}
+
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum ResamplingError {
     #[error("invalid resampling plan: {0}")]
@@ -206,6 +393,11 @@ pub struct PlsBootstrapEstimate {
     pub studentized_standard_errors: Option<std::collections::BTreeMap<String, f64>>,
     #[serde(default)]
     pub studentized_error: Option<String>,
+    /// Complete-result HTMT artifacts for this exact indexed case resample.
+    /// The narrower normal-reference simulation path deliberately leaves this
+    /// absent and therefore cannot be presented as HTMT inference.
+    #[serde(default)]
+    pub htmt: Option<HtmtArtifacts>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -243,6 +435,250 @@ pub struct PlsBootstrapResult {
     pub bca: Option<BcaInference>,
     #[serde(default)]
     pub studentized: Option<StudentizedInference>,
+    /// Present only for the complete user-facing PLS bootstrap workflow.
+    /// Historical indexed-resampling archives remain readable without it.
+    #[serde(default)]
+    pub htmt_inference: Option<HtmtBootstrapInferenceBundle>,
+    /// Separate null-transformed complete-bootstrap model-fit workflow.
+    /// Historical and sub-999 development runs remain readable without it.
+    #[serde(default)]
+    pub model_fit_exact_inference: Option<PlsModelFitExactInference>,
+}
+
+/// Additive inference sidecar for explicit general-PLS bootstrap tail
+/// selection. It never replaces the historical normal-reference fields.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PlsBootstrapTestTailInference {
+    pub method_version: String,
+    pub selected_test_tail: PlsBootstrapTestTail,
+    pub parameters: Vec<PlsBootstrapTestTailParameterInference>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PlsBootstrapTestTailParameterInference {
+    pub parameter: String,
+    pub usable_replicates: u32,
+    pub two_sided_exceedances: u32,
+    pub greater_or_equal_exceedances: u32,
+    pub less_or_equal_exceedances: u32,
+    pub p_value_two_sided: f64,
+    pub p_value_greater: f64,
+    pub p_value_less: f64,
+}
+
+#[derive(Debug, Clone, Error, PartialEq, Eq)]
+#[error("invalid PLS bootstrap test-tail contract: {0}")]
+pub struct PlsBootstrapTestTailValidationError(pub String);
+
+/// Validates the additive test-tail receipt before a caller deserializes the
+/// legacy bootstrap result and thereby drops unknown JSON fields.
+pub fn validate_pls_bootstrap_test_tail_contract(
+    bootstrap: &PlsBootstrapResult,
+    receipt: Option<&PlsBootstrapTestTailInference>,
+    selected_test_tail: PlsBootstrapTestTail,
+    envelope_has_method_version: bool,
+) -> Result<(), PlsBootstrapTestTailValidationError> {
+    let invalid = |code: &str| PlsBootstrapTestTailValidationError(code.into());
+    if selected_test_tail == PlsBootstrapTestTail::TwoSided {
+        if receipt.is_some() {
+            return Err(invalid("default_tail_has_injected_receipt"));
+        }
+        if envelope_has_method_version {
+            return Err(invalid("default_tail_has_injected_method_version"));
+        }
+        return Ok(());
+    }
+
+    let receipt = receipt.ok_or_else(|| invalid("nondefault_tail_missing_receipt"))?;
+    if !envelope_has_method_version {
+        return Err(invalid("nondefault_tail_missing_method_version"));
+    }
+    if bootstrap.method_version != RESAMPLING_METHOD_VERSION {
+        return Err(invalid("nondefault_tail_requires_current_resampling"));
+    }
+    if receipt.method_version != PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION {
+        return Err(invalid("receipt_method_version_mismatch"));
+    }
+    if receipt.selected_test_tail != selected_test_tail {
+        return Err(invalid("receipt_selected_tail_mismatch"));
+    }
+    let failed_indices = bootstrap
+        .failed_replicates
+        .iter()
+        .map(|failure| failure.replicate_index)
+        .collect::<std::collections::BTreeSet<_>>();
+    if bootstrap.usable_replicates as usize + bootstrap.failed_replicates.len()
+        != bootstrap.plan.replicates as usize
+        || failed_indices.len() != bootstrap.failed_replicates.len()
+        || failed_indices
+            .iter()
+            .any(|index| *index >= bootstrap.plan.replicates)
+    {
+        return Err(invalid("receipt_usable_ledger_mismatch"));
+    }
+    if receipt.parameters.len() != bootstrap.percentile.parameters.len() {
+        return Err(invalid("receipt_parameter_count_mismatch"));
+    }
+
+    let mut identities = std::collections::BTreeSet::new();
+    for (receipt_parameter, percentile_parameter) in receipt
+        .parameters
+        .iter()
+        .zip(&bootstrap.percentile.parameters)
+    {
+        if PlsResamplingParameterIdentity::decode(&percentile_parameter.parameter).is_err()
+            || !identities.insert(percentile_parameter.parameter.as_str())
+            || receipt_parameter.parameter != percentile_parameter.parameter
+        {
+            return Err(invalid("receipt_parameter_identity_or_order_mismatch"));
+        }
+        if percentile_parameter.usable_replicates != bootstrap.usable_replicates
+            || receipt_parameter.usable_replicates != bootstrap.usable_replicates
+        {
+            return Err(invalid("receipt_parameter_usable_ledger_mismatch"));
+        }
+        if !percentile_parameter.original.is_finite()
+            || u64::from(receipt_parameter.greater_or_equal_exceedances)
+                + u64::from(receipt_parameter.less_or_equal_exceedances)
+                < u64::from(receipt_parameter.usable_replicates)
+            || (percentile_parameter.original >= 0.0
+                && receipt_parameter.two_sided_exceedances
+                    < receipt_parameter.greater_or_equal_exceedances)
+            || (percentile_parameter.original <= 0.0
+                && receipt_parameter.two_sided_exceedances
+                    < receipt_parameter.less_or_equal_exceedances)
+            || (percentile_parameter.original == 0.0
+                && receipt_parameter.two_sided_exceedances != receipt_parameter.usable_replicates)
+        {
+            return Err(invalid("receipt_tail_count_relationship_mismatch"));
+        }
+        for (count, probability) in [
+            (
+                receipt_parameter.two_sided_exceedances,
+                receipt_parameter.p_value_two_sided,
+            ),
+            (
+                receipt_parameter.greater_or_equal_exceedances,
+                receipt_parameter.p_value_greater,
+            ),
+            (
+                receipt_parameter.less_or_equal_exceedances,
+                receipt_parameter.p_value_less,
+            ),
+        ] {
+            if count > receipt_parameter.usable_replicates
+                || probability.to_bits()
+                    != pls_bootstrap_plus_one_probability(
+                        count,
+                        receipt_parameter.usable_replicates,
+                    )
+                    .to_bits()
+            {
+                return Err(invalid("receipt_count_or_plus_one_probability_mismatch"));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Internal execution return used by the runner to persist an additive
+/// non-default sidecar without changing `PlsBootstrapResult`'s legacy shape.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlsBootstrapExecutionResult {
+    pub result: PlsBootstrapResult,
+    pub test_tail_inference: PlsBootstrapTestTailInference,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum HtmtBootstrapInferenceStatus {
+    Available,
+    NotApplicable,
+    Unavailable,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct HtmtBootstrapInferenceCell {
+    pub status: HtmtBootstrapInferenceStatus,
+    pub reason: Option<String>,
+    pub original: Option<f64>,
+    pub bootstrap_mean: Option<f64>,
+    pub bias: Option<f64>,
+    pub standard_error: Option<f64>,
+    pub bias_correction: Option<f64>,
+    pub lower: Option<f64>,
+    pub upper: Option<f64>,
+    pub usable_replicates: u32,
+    pub failed_replicates: u32,
+    pub below_original: u32,
+    pub tied_original: u32,
+    pub replicate_min: Option<f64>,
+    pub replicate_max: Option<f64>,
+    /// Decision used by the documented one-tailed HTMT inference workflow.
+    /// `None` is mandatory when the interval itself is unavailable.
+    pub upper_bound_below_critical_value: Option<bool>,
+    /// Digest of the exact successful primary replicate indices contributing
+    /// to this construct-pair interval. Global failed replicate identities
+    /// remain in `PlsBootstrapResult::failed_replicates`; pair-specific
+    /// unavailable identities are retained below.
+    pub usable_replicate_indices_sha256: Option<String>,
+    pub pair_unavailable_replicates: Vec<HtmtBootstrapUnavailableReplicate>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct HtmtBootstrapUnavailableReplicate {
+    pub replicate_index: u32,
+    pub reason_code: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct HtmtBootstrapInference {
+    pub method_version: String,
+    pub point_method_version: String,
+    pub constructs: Vec<String>,
+    pub correlation_type: String,
+    pub absolute_correlations: bool,
+    pub interval_method: String,
+    pub test_type: String,
+    pub significance_level: f64,
+    pub equivalent_two_sided_confidence_level: f64,
+    pub critical_value: f64,
+    pub decision_rule: String,
+    pub replicate_index_digest_method: String,
+    pub requested_replicates: u32,
+    pub minimum_usable_replicates: u32,
+    pub retry_policy: String,
+    pub cells: Vec<Vec<HtmtBootstrapInferenceCell>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct HtmtBootstrapInferenceBundle {
+    pub method_version: String,
+    pub htmt_plus: HtmtBootstrapInference,
+    pub htmt_original: HtmtBootstrapInference,
+}
+
+/// The bounded case-bootstrap output needed by prospective simulation tests
+/// that use a large-sample normal reference. Unlike [`PlsBootstrapResult`],
+/// this contract deliberately does not request or compute BCa/delete-one or
+/// nested-studentized inference.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PlsBootstrapNormalReferenceResult {
+    pub method_version: String,
+    pub plan: BootstrapPlan,
+    pub usable_replicates: u32,
+    pub failed_replicates: Vec<FailedReplicate>,
+    pub inference: PercentileInference,
+    /// Exact null-centered, plus-one tail accounting from the same indexed
+    /// case-bootstrap run.  Prospective-power v2 consumes this receipt instead
+    /// of reinterpreting the historical large-sample normal-reference p value.
+    pub test_tail_inference: PlsBootstrapTestTailInference,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -299,7 +735,45 @@ pub struct BcaParameterInference {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct FailedReplicate {
     pub replicate_index: u32,
+    /// Stable product-facing category for the retained estimator failure.
+    /// Historical archives predate typed failure disclosure and deserialize
+    /// to the explicit legacy category instead of inventing a current cause.
+    #[serde(default = "legacy_pls_bootstrap_failure_reason_code")]
+    pub reason_code: String,
     pub message: String,
+}
+
+pub const PLS_BOOTSTRAP_LEGACY_FAILURE_REASON_CODE: &str = "legacy_unclassified_failure";
+
+fn legacy_pls_bootstrap_failure_reason_code() -> String {
+    PLS_BOOTSTRAP_LEGACY_FAILURE_REASON_CODE.into()
+}
+
+/// Classifies the retained estimator message without changing scheduling,
+/// retry, fit, or valid-domain arithmetic. The fallback remains typed so
+/// every newly generated v4 failed replicate has a stable category.
+pub fn pls_bootstrap_failure_reason_code(message: &str) -> &'static str {
+    if message == "estimation was cancelled" {
+        "cancelled"
+    } else if message == "at least three complete observations are required" {
+        "insufficient_observations"
+    } else if message.starts_with("constant indicator:") {
+        "constant_indicator"
+    } else if message.starts_with("rank-deficient regression for construct:") {
+        "rank_deficient_inner_model"
+    } else if message.starts_with("construct has no connected inner proxy:") {
+        "isolated_construct"
+    } else if message.starts_with("PLS weights did not converge after") {
+        "non_convergence"
+    } else if message.starts_with("unknown or nonnumeric indicator:") {
+        "invalid_indicator"
+    } else if message.starts_with("PLS score execution contract mismatch:") {
+        "score_execution_contract"
+    } else if message.starts_with("numerical failure:") {
+        "numerical_failure"
+    } else {
+        "estimation_failure"
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -362,6 +836,8 @@ pub enum PlsBootstrapError {
     BaseEstimation(#[from] EstimationError),
     #[error("PLS jackknife required for BCa inference failed: {0}")]
     Jackknife(String),
+    #[error(transparent)]
+    ExactFit(#[from] PlsModelFitExactError),
     #[error(transparent)]
     Resampling(#[from] ResamplingError),
 }
@@ -671,6 +1147,163 @@ pub fn bootstrap_pls(
     )
 }
 
+/// Runs the production PLS case-resampling kernel and returns the bootstrap
+/// standard errors and normal-reference tests without the unused BCa
+/// jackknife. This is intentionally narrower than [`bootstrap_pls`]; it is
+/// suitable for prospective Monte Carlo rejection decisions, not a substitute
+/// for the full user-facing bootstrap result.
+pub fn bootstrap_pls_normal_reference(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipe,
+    original: &PlsResult,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<PlsBootstrapNormalReferenceResult, PlsBootstrapError> {
+    if recipe.settings.studentized_inner_samples > 0 {
+        return Err(PlsBootstrapError::InvalidStudentizedPlan);
+    }
+    let execution = ValidatedExecutionRecipe::for_dataset(recipe, &dataset.fingerprint.0)
+        .map_err(|error| PlsBootstrapError::InconsistentResult(error.to_string()))?;
+    bootstrap_pls_normal_reference_validated(
+        dataset,
+        &execution,
+        original,
+        workers,
+        is_cancelled,
+        report_progress,
+    )
+}
+
+/// Validated-recipe form of [`bootstrap_pls_normal_reference`]. Replicate
+/// generation, sign alignment, failure accounting, minimum usable fraction,
+/// and normal-reference calculations are the same production primitives used
+/// by the full PLS bootstrap path.
+pub fn bootstrap_pls_normal_reference_validated(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    original: &PlsResult,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<PlsBootstrapNormalReferenceResult, PlsBootstrapError> {
+    let effective_recipe = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| PlsBootstrapError::InconsistentResult(error.to_string()))?;
+    let base_execution = recipe
+        .without_outer_resampling()
+        .map_err(|error| PlsBootstrapError::InconsistentResult(error.to_string()))?;
+    let recipe = effective_recipe;
+    if dataset.schema.kind != DataKind::Raw {
+        return Err(PlsBootstrapError::RawDataRequired);
+    }
+    if recipe.settings.method != AnalysisMethod::PlsPm {
+        return Err(PlsBootstrapError::InvalidMethod);
+    }
+    if recipe.settings.bootstrap_samples == 0 {
+        return Err(PlsBootstrapError::MissingReplicates);
+    }
+    if recipe.settings.studentized_inner_samples > 0 {
+        return Err(PlsBootstrapError::InvalidStudentizedPlan);
+    }
+    if !original.converged || original.method_version != qpls_estimation::PLS_METHOD_VERSION {
+        return Err(PlsBootstrapError::InconsistentResult(
+            "base estimate is not a converged PLS-PM v1 result".into(),
+        ));
+    }
+    let base_recipe = base_execution.effective();
+    let complete_rows = complete_case_rows(dataset, base_recipe);
+    if original.used_observations != complete_rows.len() {
+        return Err(PlsBootstrapError::InconsistentResult(
+            "base estimate observation count differs from the complete-case sample".into(),
+        ));
+    }
+    let plan = BootstrapPlan {
+        replicates: recipe.settings.bootstrap_samples,
+        master_seed: recipe.settings.seed,
+        // Keep the production bootstrap operation domain so the primary
+        // samples match the corresponding full bootstrap plan exactly.
+        operation: "pls_pm_bootstrap_v1".into(),
+    };
+    let cancellation = &is_cancelled;
+    let run = run_bootstrap(
+        complete_rows.len(),
+        &plan,
+        workers,
+        |replicate_index, indices| {
+            let raw_indices = indices
+                .iter()
+                .map(|position| complete_rows[*position])
+                .collect::<Vec<_>>();
+            let sampled = resample_model_dataset(dataset, base_recipe, &raw_indices, cancellation)?;
+            let mut estimate =
+                estimate_pls_validated_with_control(&sampled, &base_execution, |_| {
+                    !cancellation()
+                })?;
+            align_pls_signs(
+                &mut estimate,
+                &original.construct_scores,
+                indices,
+                cancellation,
+            )?;
+            Ok::<_, EstimationError>(PlsBootstrapEstimate {
+                replicate_index,
+                iterations: estimate.iterations,
+                used_observations: estimate.used_observations,
+                omitted_observations: estimate.omitted_observations,
+                outer_estimates: estimate.outer_estimates,
+                paths: estimate.paths,
+                effects: estimate.effects,
+                r_squared: estimate.r_squared,
+                studentized_standard_errors: None,
+                studentized_error: None,
+                htmt: None,
+            })
+        },
+        cancellation,
+        report_progress,
+    )?;
+    let successful = run
+        .outcomes
+        .iter()
+        .filter(|outcome| matches!(outcome, ReplicateOutcome::Success { .. }))
+        .count();
+    let required = ((run.plan.replicates as f64 * 0.9).ceil() as usize).max(2);
+    if successful < required {
+        return Err(PlsBootstrapError::InsufficientUsableReplicates {
+            usable: successful,
+            required,
+        });
+    }
+    let (inference, test_tail_inference) = summarize_percentile(
+        original,
+        &run,
+        recipe.settings.confidence_level,
+        recipe.settings.bootstrap_test_tail,
+    )?;
+    let failed_replicates = run
+        .outcomes
+        .iter()
+        .enumerate()
+        .filter_map(|(index, outcome)| match outcome {
+            ReplicateOutcome::Failed { message } => Some(FailedReplicate {
+                replicate_index: index as u32,
+                reason_code: pls_bootstrap_failure_reason_code(message).into(),
+                message: message.clone(),
+            }),
+            ReplicateOutcome::Success { .. } => None,
+        })
+        .collect::<Vec<_>>();
+    Ok(PlsBootstrapNormalReferenceResult {
+        method_version: run.method_version,
+        plan: run.plan,
+        usable_replicates: successful as u32,
+        failed_replicates,
+        inference,
+        test_tail_inference,
+    })
+}
+
 /// Bootstraps an opaque schema-v3 recipe capability. The capability is
 /// validated once before the worker pool and the no-resampling base is reused
 /// by all replicates.
@@ -682,6 +1315,28 @@ pub fn bootstrap_pls_validated(
     is_cancelled: impl Fn() -> bool + Sync,
     report_progress: impl Fn(ResamplingProgress) + Sync,
 ) -> Result<PlsBootstrapResult, PlsBootstrapError> {
+    Ok(bootstrap_pls_validated_with_test_tail(
+        dataset,
+        recipe,
+        original,
+        workers,
+        is_cancelled,
+        report_progress,
+    )?
+    .result)
+}
+
+/// Runner-facing form that retains the additive null-centered tail summary.
+/// The historical public result remains unchanged for existing callers.
+pub fn bootstrap_pls_validated_with_test_tail(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    original: &PlsResult,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<PlsBootstrapExecutionResult, PlsBootstrapError> {
+    let execution = recipe;
     let effective_recipe = recipe
         .effective_for_dataset(&dataset.fingerprint.0)
         .map_err(|error| PlsBootstrapError::InconsistentResult(error.to_string()))?;
@@ -780,6 +1435,21 @@ pub fn bootstrap_pls_validated(
                 } else {
                     (None, None)
                 };
+            let htmt = assess_htmt_validated_with_control(
+                &sampled,
+                &base_execution,
+                &estimate,
+                |update| {
+                    let _ = update;
+                    !cancellation()
+                },
+            )
+            .map_err(|error| match error {
+                qpls_assessment::AssessmentError::Cancelled => EstimationError::Cancelled,
+                other => EstimationError::Numerical(format!(
+                    "complete HTMT bootstrap assessment failed: {other}"
+                )),
+            })?;
             Ok::<_, EstimationError>(PlsBootstrapEstimate {
                 replicate_index,
                 iterations: estimate.iterations,
@@ -791,6 +1461,7 @@ pub fn bootstrap_pls_validated(
                 r_squared: estimate.r_squared,
                 studentized_standard_errors,
                 studentized_error,
+                htmt: Some(htmt),
             })
         },
         cancellation,
@@ -808,7 +1479,27 @@ pub fn bootstrap_pls_validated(
             required,
         });
     }
-    let percentile = summarize_percentile(original, &run, recipe.settings.confidence_level)?;
+    let original_htmt =
+        assess_htmt_validated_with_control(dataset, &base_execution, original, |_| !cancellation())
+            .map_err(|error| match error {
+                qpls_assessment::AssessmentError::Cancelled => {
+                    PlsBootstrapError::Resampling(ResamplingError::Cancelled)
+                }
+                other => PlsBootstrapError::InconsistentResult(format!(
+                    "base HTMT assessment failed: {other}"
+                )),
+            })?;
+    let htmt_inference = summarize_htmt_bootstrap(
+        &original_htmt,
+        &run,
+        recipe.settings.htmt_bootstrap_inference,
+    )?;
+    let (percentile, test_tail_inference) = summarize_percentile(
+        original,
+        &run,
+        recipe.settings.confidence_level,
+        recipe.settings.bootstrap_test_tail,
+    )?;
     let jackknife = jackknife_pls(
         dataset,
         &base_execution,
@@ -837,19 +1528,40 @@ pub fn bootstrap_pls_validated(
         .filter_map(|(index, outcome)| match outcome {
             ReplicateOutcome::Failed { message } => Some(FailedReplicate {
                 replicate_index: index as u32,
+                reason_code: pls_bootstrap_failure_reason_code(message).into(),
                 message: message.clone(),
             }),
             ReplicateOutcome::Success { .. } => None,
         })
         .collect::<Vec<_>>();
-    Ok(PlsBootstrapResult {
-        method_version: run.method_version,
-        plan: run.plan,
-        usable_replicates: successful as u32,
-        failed_replicates,
-        percentile,
-        bca: Some(bca),
-        studentized,
+    let model_fit_exact_inference = if pls_model_fit_exact_requested(execution) {
+        Some(
+            bootstrap_pls_model_fit_exact_validated(
+                dataset,
+                execution,
+                original,
+                workers,
+                || cancellation(),
+                progress_callback,
+            )
+            .map_err(PlsBootstrapError::ExactFit)?,
+        )
+    } else {
+        None
+    };
+    Ok(PlsBootstrapExecutionResult {
+        result: PlsBootstrapResult {
+            method_version: run.method_version,
+            plan: run.plan,
+            usable_replicates: successful as u32,
+            failed_replicates,
+            percentile,
+            bca: Some(bca),
+            studentized,
+            htmt_inference: Some(htmt_inference),
+            model_fit_exact_inference,
+        },
+        test_tail_inference,
     })
 }
 
@@ -1793,6 +2505,10 @@ pub fn summarize_regression_bootstrap_coefficients(
 fn regression_replicate_error(error: EstimationError) -> String {
     let reason = match &error {
         EstimationError::RankDeficient(_) => "rank_deficient",
+        EstimationError::OlsNonPositiveResidualDegreesOfFreedom { .. } => {
+            "nonpositive_residual_degrees_of_freedom"
+        }
+        EstimationError::OlsHc3Invalid { .. } => "undefined_hc3_covariance",
         EstimationError::LogisticNonConvergence(_) | EstimationError::NonConvergence(_) => {
             "nonconvergence"
         }
@@ -2147,7 +2863,10 @@ pub fn permutation_pls_validated(
             )));
         }
         setups.push(StructuralPermutationSetup {
-            parameter: parameter_key("path", &[&path.source, &path.target]),
+            parameter: parameter_key(
+                PlsResamplingParameterFamily::Path,
+                &[&path.source, &path.target],
+            ),
             original: path.coefficient,
             focal_index,
             predictors,
@@ -2379,11 +3098,541 @@ fn inner_bootstrap_standard_errors(
     Ok(Some(standard_errors))
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BiasCorrectedPercentileIntervalValues {
+    pub bias_correction: f64,
+    pub lower: f64,
+    pub upper: f64,
+    pub below_original: u32,
+    pub tied_original: u32,
+}
+
+/// Bias-corrected percentile interval (BC, acceleration fixed at zero).
+/// HTMT inference uses the 5th and 95th percentiles after bias correction:
+/// a 90% two-sided interval, equivalent to the documented 95% one-sided
+/// upper-tail test at alpha .05. This is deliberately not labelled BCa.
+pub fn bias_corrected_percentile_interval(
+    bootstrap_values: &[f64],
+    original: f64,
+    confidence_level: f64,
+) -> Option<BiasCorrectedPercentileIntervalValues> {
+    if bootstrap_values.len() < 2
+        || !original.is_finite()
+        || !confidence_level.is_finite()
+        || !(0.0..1.0).contains(&confidence_level)
+        || bootstrap_values.iter().any(|value| !value.is_finite())
+    {
+        return None;
+    }
+    let below = bootstrap_values
+        .iter()
+        .filter(|value| **value < original)
+        .count() as u32;
+    let tied = bootstrap_values
+        .iter()
+        .filter(|value| **value == original)
+        .count() as u32;
+    let count = bootstrap_values.len() as f64;
+    let probability =
+        ((f64::from(below) + 0.5 * f64::from(tied)) / count).clamp(0.5 / count, 1.0 - 0.5 / count);
+    let normal = Normal::standard();
+    let bias_correction = normal.inverse_cdf(probability);
+    if !bias_correction.is_finite() {
+        return None;
+    }
+    let tail = (1.0 - confidence_level) / 2.0;
+    let adjusted = |nominal: f64| {
+        let probability = normal.cdf(2.0 * bias_correction + normal.inverse_cdf(nominal));
+        probability
+            .is_finite()
+            .then_some(probability.clamp(0.0, 1.0))
+    };
+    let lower_probability = adjusted(tail)?;
+    let upper_probability = adjusted(1.0 - tail)?;
+    if lower_probability > upper_probability {
+        return None;
+    }
+    let mut sorted = bootstrap_values.to_vec();
+    sorted.sort_by(f64::total_cmp);
+    let lower = type7_quantile(&sorted, lower_probability);
+    let upper = type7_quantile(&sorted, upper_probability);
+    (lower.is_finite() && upper.is_finite() && lower <= upper).then_some(
+        BiasCorrectedPercentileIntervalValues {
+            bias_correction,
+            lower,
+            upper,
+            below_original: below,
+            tied_original: tied,
+        },
+    )
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct HtmtBootstrapIntervalValues {
+    bias_correction: Option<f64>,
+    lower: f64,
+    upper: f64,
+    below_original: u32,
+    tied_original: u32,
+}
+
+fn htmt_bootstrap_interval(
+    bootstrap_values: &[f64],
+    original: f64,
+    confidence_level: f64,
+    family: HtmtBootstrapIntervalFamily,
+) -> Option<HtmtBootstrapIntervalValues> {
+    if bootstrap_values.len() < 2
+        || !original.is_finite()
+        || !confidence_level.is_finite()
+        || !(0.0..1.0).contains(&confidence_level)
+        || bootstrap_values.iter().any(|value| !value.is_finite())
+    {
+        return None;
+    }
+    match family {
+        HtmtBootstrapIntervalFamily::BiasCorrectedPercentile => {
+            let interval =
+                bias_corrected_percentile_interval(bootstrap_values, original, confidence_level)?;
+            Some(HtmtBootstrapIntervalValues {
+                bias_correction: Some(interval.bias_correction),
+                lower: interval.lower,
+                upper: interval.upper,
+                below_original: interval.below_original,
+                tied_original: interval.tied_original,
+            })
+        }
+        HtmtBootstrapIntervalFamily::Percentile => {
+            let below_original = bootstrap_values
+                .iter()
+                .filter(|value| **value < original)
+                .count() as u32;
+            let tied_original = bootstrap_values
+                .iter()
+                .filter(|value| **value == original)
+                .count() as u32;
+            let mut sorted = bootstrap_values.to_vec();
+            sorted.sort_by(f64::total_cmp);
+            let tail = (1.0 - confidence_level) / 2.0;
+            let lower = type7_quantile(&sorted, tail);
+            let upper = type7_quantile(&sorted, 1.0 - tail);
+            (lower.is_finite() && upper.is_finite() && lower <= upper).then_some(
+                HtmtBootstrapIntervalValues {
+                    bias_correction: None,
+                    lower,
+                    upper,
+                    below_original,
+                    tied_original,
+                },
+            )
+        }
+    }
+}
+
+fn htmt_equivalent_two_sided_confidence_level(test_tail: HtmtBootstrapTestTail) -> f64 {
+    match test_tail {
+        HtmtBootstrapTestTail::OneTailedUpper => 1.0 - 2.0 * HTMT_BOOTSTRAP_SIGNIFICANCE_LEVEL,
+        HtmtBootstrapTestTail::TwoSided => 1.0 - HTMT_BOOTSTRAP_SIGNIFICANCE_LEVEL,
+    }
+}
+
+fn summarize_htmt_bootstrap(
+    original: &HtmtArtifacts,
+    run: &BootstrapRun<PlsBootstrapEstimate>,
+    config: HtmtBootstrapInferenceConfig,
+) -> Result<HtmtBootstrapInferenceBundle, PlsBootstrapError> {
+    if original.htmt_plus_method_version != HTMT_PLUS_METHOD_VERSION
+        || original.htmt_original_method_version != HTMT_ORIGINAL_METHOD_VERSION
+    {
+        return Err(PlsBootstrapError::InconsistentResult(
+            "base HTMT method identities are not current".into(),
+        ));
+    }
+    let replicates = run
+        .outcomes
+        .iter()
+        .enumerate()
+        .filter_map(|(replicate_index, outcome)| match outcome {
+            ReplicateOutcome::Success { value } => Some(
+                value
+                    .htmt
+                    .as_ref()
+                    .ok_or_else(|| {
+                        PlsBootstrapError::InconsistentResult(
+                            "a successful complete bootstrap replicate omits HTMT artifacts".into(),
+                        )
+                    })
+                    .map(|artifact| (replicate_index as u32, artifact)),
+            ),
+            ReplicateOutcome::Failed { .. } => None,
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    for (_, replicate) in &replicates {
+        if replicate.htmt_plus_method_version != HTMT_PLUS_METHOD_VERSION
+            || replicate.htmt_original_method_version != HTMT_ORIGINAL_METHOD_VERSION
+            || replicate.htmt_plus.constructs != original.htmt_plus.constructs
+            || replicate.htmt_original.constructs != original.htmt_original.constructs
+            || replicate.htmt_plus.absolute_correlations != true
+            || replicate.htmt_original.absolute_correlations != false
+            || replicate.htmt_plus.correlation_type != "pearson"
+            || replicate.htmt_original.correlation_type != "pearson"
+        {
+            return Err(PlsBootstrapError::InconsistentResult(
+                "a complete bootstrap replicate changed HTMT identity or construct order".into(),
+            ));
+        }
+    }
+    let plus_replicates = replicates
+        .iter()
+        .map(|(replicate_index, artifact)| (*replicate_index, &artifact.htmt_plus))
+        .collect::<Vec<_>>();
+    let original_replicates = replicates
+        .iter()
+        .map(|(replicate_index, artifact)| (*replicate_index, &artifact.htmt_original))
+        .collect::<Vec<_>>();
+    let configurable = !config.is_default();
+    Ok(HtmtBootstrapInferenceBundle {
+        method_version: if configurable {
+            HTMT_CONFIGURABLE_BOOTSTRAP_INFERENCE_METHOD_VERSION
+        } else {
+            HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION
+        }
+        .into(),
+        htmt_plus: summarize_htmt_artifact(
+            &original.htmt_plus,
+            &plus_replicates,
+            &run.plan,
+            if configurable {
+                HTMT_PLUS_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION
+            } else {
+                HTMT_PLUS_BOOTSTRAP_METHOD_VERSION
+            },
+            HTMT_PLUS_METHOD_VERSION,
+            config,
+        )?,
+        htmt_original: summarize_htmt_artifact(
+            &original.htmt_original,
+            &original_replicates,
+            &run.plan,
+            if configurable {
+                HTMT_ORIGINAL_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION
+            } else {
+                HTMT_ORIGINAL_BOOTSTRAP_METHOD_VERSION
+            },
+            HTMT_ORIGINAL_METHOD_VERSION,
+            config,
+        )?,
+    })
+}
+
+fn summarize_htmt_artifact(
+    original: &HtmtAssessment,
+    replicates: &[(u32, &HtmtAssessment)],
+    plan: &BootstrapPlan,
+    method_version: &str,
+    point_method_version: &str,
+    config: HtmtBootstrapInferenceConfig,
+) -> Result<HtmtBootstrapInference, PlsBootstrapError> {
+    let dimension = original.constructs.len();
+    if original.cells.len() != dimension
+        || original.cells.iter().any(|row| row.len() != dimension)
+        || replicates.iter().any(|(_, artifact)| {
+            artifact.constructs != original.constructs
+                || artifact.correlation_type != original.correlation_type
+                || artifact.absolute_correlations != original.absolute_correlations
+                || artifact.cells.len() != dimension
+                || artifact.cells.iter().any(|row| row.len() != dimension)
+        })
+    {
+        return Err(PlsBootstrapError::InconsistentResult(
+            "HTMT bootstrap matrices are not conformable".into(),
+        ));
+    }
+    let minimum_usable = ((f64::from(plan.replicates) * HTMT_BOOTSTRAP_MINIMUM_USABLE_FRACTION)
+        .ceil() as u32)
+        .max(2);
+    let interval_confidence_level = htmt_equivalent_two_sided_confidence_level(config.test_tail);
+    let mut cells = Vec::with_capacity(dimension);
+    for row in 0..dimension {
+        let mut output_row = Vec::with_capacity(dimension);
+        for column in 0..dimension {
+            let point = &original.cells[row][column];
+            if row == column {
+                output_row.push(htmt_inference_unavailable(
+                    HtmtBootstrapInferenceStatus::NotApplicable,
+                    Some("htmt.bootstrap.diagonal_not_inferred".into()),
+                    point.value,
+                    0,
+                    0,
+                    None,
+                    Vec::new(),
+                ));
+                continue;
+            }
+            if point.status != HtmtStatus::Available {
+                output_row.push(htmt_inference_unavailable(
+                    match point.status {
+                        HtmtStatus::NotApplicable => HtmtBootstrapInferenceStatus::NotApplicable,
+                        HtmtStatus::Unavailable => HtmtBootstrapInferenceStatus::Unavailable,
+                        HtmtStatus::Available => unreachable!(),
+                    },
+                    point.reason.clone(),
+                    point.value,
+                    0,
+                    0,
+                    None,
+                    Vec::new(),
+                ));
+                continue;
+            }
+            let original_value =
+                point
+                    .value
+                    .filter(|value| value.is_finite())
+                    .ok_or_else(|| {
+                        PlsBootstrapError::InconsistentResult(
+                            "an available HTMT point cell has no finite value".into(),
+                        )
+                    })?;
+            let mut indexed_values = Vec::with_capacity(replicates.len());
+            let mut pair_unavailable_replicates = Vec::new();
+            for (replicate_index, artifact) in replicates {
+                let cell = &artifact.cells[row][column];
+                match (cell.status, cell.value) {
+                    (HtmtStatus::Available, Some(value)) if value.is_finite() => {
+                        indexed_values.push((*replicate_index, value));
+                    }
+                    (HtmtStatus::Available, _) => {
+                        return Err(PlsBootstrapError::InconsistentResult(
+                            "an available HTMT bootstrap cell has no finite value".into(),
+                        ));
+                    }
+                    (HtmtStatus::NotApplicable | HtmtStatus::Unavailable, None) => {
+                        let reason_code = cell
+                            .reason
+                            .as_ref()
+                            .filter(|reason| !reason.trim().is_empty())
+                            .ok_or_else(|| {
+                                PlsBootstrapError::InconsistentResult(
+                                    "an unavailable HTMT bootstrap cell omits its reason code"
+                                        .into(),
+                                )
+                            })?
+                            .clone();
+                        pair_unavailable_replicates.push(HtmtBootstrapUnavailableReplicate {
+                            replicate_index: *replicate_index,
+                            reason_code,
+                        });
+                    }
+                    (HtmtStatus::NotApplicable | HtmtStatus::Unavailable, Some(_)) => {
+                        return Err(PlsBootstrapError::InconsistentResult(
+                            "an unavailable HTMT bootstrap cell contains a value".into(),
+                        ));
+                    }
+                }
+            }
+            let usable_indices = indexed_values
+                .iter()
+                .map(|(replicate_index, _)| *replicate_index)
+                .collect::<Vec<_>>();
+            let usable_indices_digest = replicate_index_digest(&usable_indices);
+            let values = indexed_values
+                .iter()
+                .map(|(_, value)| *value)
+                .collect::<Vec<_>>();
+            let usable = values.len() as u32;
+            let failed = plan.replicates.saturating_sub(usable);
+            if usable < minimum_usable {
+                output_row.push(htmt_inference_unavailable(
+                    HtmtBootstrapInferenceStatus::Unavailable,
+                    Some("htmt.bootstrap.insufficient_usable_replicates".into()),
+                    Some(original_value),
+                    usable,
+                    failed,
+                    Some(usable_indices_digest),
+                    pair_unavailable_replicates,
+                ));
+                continue;
+            }
+            let Some(interval) = htmt_bootstrap_interval(
+                &values,
+                original_value,
+                interval_confidence_level,
+                config.interval_family,
+            ) else {
+                output_row.push(htmt_inference_unavailable(
+                    HtmtBootstrapInferenceStatus::Unavailable,
+                    Some(
+                        if config.is_default() {
+                            "htmt.bootstrap.bias_corrected_interval_unavailable"
+                        } else {
+                            "htmt.bootstrap.selected_interval_unavailable"
+                        }
+                        .into(),
+                    ),
+                    Some(original_value),
+                    usable,
+                    failed,
+                    Some(usable_indices_digest),
+                    pair_unavailable_replicates,
+                ));
+                continue;
+            };
+            let mean = values.iter().sum::<f64>() / values.len() as f64;
+            let standard_error = (values
+                .iter()
+                .map(|value| (value - mean).powi(2))
+                .sum::<f64>()
+                / (values.len() - 1) as f64)
+                .sqrt();
+            let replicate_min = values.iter().copied().min_by(f64::total_cmp);
+            let replicate_max = values.iter().copied().max_by(f64::total_cmp);
+            if !mean.is_finite() || !standard_error.is_finite() {
+                return Err(PlsBootstrapError::InconsistentResult(
+                    "HTMT bootstrap summary is non-finite".into(),
+                ));
+            }
+            output_row.push(HtmtBootstrapInferenceCell {
+                status: HtmtBootstrapInferenceStatus::Available,
+                reason: None,
+                original: Some(original_value),
+                bootstrap_mean: Some(mean),
+                bias: Some(mean - original_value),
+                standard_error: Some(standard_error),
+                bias_correction: interval.bias_correction,
+                lower: Some(interval.lower),
+                upper: Some(interval.upper),
+                usable_replicates: usable,
+                failed_replicates: failed,
+                below_original: interval.below_original,
+                tied_original: interval.tied_original,
+                replicate_min,
+                replicate_max,
+                upper_bound_below_critical_value: Some(
+                    interval.upper < HTMT_BOOTSTRAP_CRITICAL_VALUE,
+                ),
+                usable_replicate_indices_sha256: Some(usable_indices_digest),
+                pair_unavailable_replicates,
+            });
+        }
+        cells.push(output_row);
+    }
+    Ok(HtmtBootstrapInference {
+        method_version: method_version.into(),
+        point_method_version: point_method_version.into(),
+        constructs: original.constructs.clone(),
+        correlation_type: original.correlation_type.clone(),
+        absolute_correlations: original.absolute_correlations,
+        interval_method: match config.interval_family {
+            HtmtBootstrapIntervalFamily::Percentile => HTMT_BOOTSTRAP_PERCENTILE_INTERVAL_METHOD,
+            HtmtBootstrapIntervalFamily::BiasCorrectedPercentile => HTMT_BOOTSTRAP_INTERVAL_METHOD,
+        }
+        .into(),
+        test_type: match config.test_tail {
+            HtmtBootstrapTestTail::OneTailedUpper => HTMT_BOOTSTRAP_TEST_TYPE,
+            HtmtBootstrapTestTail::TwoSided => HTMT_BOOTSTRAP_TWO_SIDED_TEST_TYPE,
+        }
+        .into(),
+        significance_level: HTMT_BOOTSTRAP_SIGNIFICANCE_LEVEL,
+        equivalent_two_sided_confidence_level: interval_confidence_level,
+        critical_value: HTMT_BOOTSTRAP_CRITICAL_VALUE,
+        decision_rule: if config.is_default() {
+            HTMT_BOOTSTRAP_DECISION_RULE
+        } else {
+            HTMT_BOOTSTRAP_CONFIGURABLE_DECISION_RULE
+        }
+        .into(),
+        replicate_index_digest_method: HTMT_BOOTSTRAP_REPLICATE_INDEX_DIGEST_METHOD.into(),
+        requested_replicates: plan.replicates,
+        minimum_usable_replicates: minimum_usable,
+        retry_policy: "no_retry_fixed_preplanned_primary_draws_v1".into(),
+        cells,
+    })
+}
+
+fn htmt_inference_unavailable(
+    status: HtmtBootstrapInferenceStatus,
+    reason: Option<String>,
+    original: Option<f64>,
+    usable_replicates: u32,
+    failed_replicates: u32,
+    usable_replicate_indices_sha256: Option<String>,
+    pair_unavailable_replicates: Vec<HtmtBootstrapUnavailableReplicate>,
+) -> HtmtBootstrapInferenceCell {
+    HtmtBootstrapInferenceCell {
+        status,
+        reason,
+        original,
+        bootstrap_mean: None,
+        bias: None,
+        standard_error: None,
+        bias_correction: None,
+        lower: None,
+        upper: None,
+        usable_replicates,
+        failed_replicates,
+        below_original: 0,
+        tied_original: 0,
+        replicate_min: None,
+        replicate_max: None,
+        upper_bound_below_critical_value: None,
+        usable_replicate_indices_sha256,
+        pair_unavailable_replicates,
+    }
+}
+
+fn replicate_index_digest(indices: &[u32]) -> String {
+    let mut digest = Sha256::new();
+    for index in indices {
+        digest.update(index.to_le_bytes());
+    }
+    digest
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PlsBootstrapNullCenteredTailCounts {
+    two_sided: u32,
+    greater_or_equal: u32,
+    less_or_equal: u32,
+    usable: u32,
+}
+
+fn pls_bootstrap_null_centered_tail_counts(
+    values: impl IntoIterator<Item = f64>,
+    original: f64,
+) -> PlsBootstrapNullCenteredTailCounts {
+    values.into_iter().fold(
+        PlsBootstrapNullCenteredTailCounts {
+            two_sided: 0,
+            greater_or_equal: 0,
+            less_or_equal: 0,
+            usable: 0,
+        },
+        |mut counts, value| {
+            let delta = value - original;
+            counts.usable += 1;
+            counts.two_sided += u32::from(delta.abs() >= original.abs());
+            counts.greater_or_equal += u32::from(delta >= original);
+            counts.less_or_equal += u32::from(delta <= original);
+            counts
+        },
+    )
+}
+
+fn pls_bootstrap_plus_one_probability(exceedances: u32, usable: u32) -> f64 {
+    (f64::from(exceedances) + 1.0) / (f64::from(usable) + 1.0)
+}
+
 fn summarize_percentile(
     original: &PlsResult,
     run: &BootstrapRun<PlsBootstrapEstimate>,
     confidence_level: f64,
-) -> Result<PercentileInference, PlsBootstrapError> {
+    selected_test_tail: PlsBootstrapTestTail,
+) -> Result<(PercentileInference, PlsBootstrapTestTailInference), PlsBootstrapError> {
     let original_values = result_values(
         &original.outer_estimates,
         &original.paths,
@@ -2411,6 +3660,7 @@ fn summarize_percentile(
     }
     let tail = (1.0 - confidence_level) / 2.0;
     let mut parameters = Vec::with_capacity(original_values.len());
+    let mut test_tail_parameters = Vec::with_capacity(original_values.len());
     for (parameter, original) in original_values {
         let mut values = successful
             .iter()
@@ -2421,6 +3671,20 @@ fn summarize_percentile(
                     .ok_or_else(|| PlsBootstrapError::InconsistentResult(parameter.clone()))
             })
             .collect::<Result<Vec<_>, _>>()?;
+        let counts = pls_bootstrap_null_centered_tail_counts(values.iter().copied(), original);
+        test_tail_parameters.push(PlsBootstrapTestTailParameterInference {
+            parameter: parameter.clone(),
+            usable_replicates: counts.usable,
+            two_sided_exceedances: counts.two_sided,
+            greater_or_equal_exceedances: counts.greater_or_equal,
+            less_or_equal_exceedances: counts.less_or_equal,
+            p_value_two_sided: pls_bootstrap_plus_one_probability(counts.two_sided, counts.usable),
+            p_value_greater: pls_bootstrap_plus_one_probability(
+                counts.greater_or_equal,
+                counts.usable,
+            ),
+            p_value_less: pls_bootstrap_plus_one_probability(counts.less_or_equal, counts.usable),
+        });
         values.sort_by(f64::total_cmp);
         let bootstrap_mean = values.iter().sum::<f64>() / values.len() as f64;
         let standard_error = (values
@@ -2443,10 +3707,17 @@ fn summarize_percentile(
             p_value_two_sided,
         });
     }
-    Ok(PercentileInference {
-        confidence_level,
-        parameters,
-    })
+    Ok((
+        PercentileInference {
+            confidence_level,
+            parameters,
+        },
+        PlsBootstrapTestTailInference {
+            method_version: PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION.into(),
+            selected_test_tail,
+            parameters: test_tail_parameters,
+        },
+    ))
 }
 
 fn summarize_studentized(
@@ -2825,34 +4096,57 @@ fn result_values(
     let mut values = std::collections::BTreeMap::new();
     for outer in outer_estimates {
         values.insert(
-            parameter_key("outer_loading", &[&outer.construct, &outer.indicator]),
+            parameter_key(
+                PlsResamplingParameterFamily::OuterLoading,
+                &[&outer.construct, &outer.indicator],
+            ),
             outer.loading,
         );
         values.insert(
-            parameter_key("outer_weight", &[&outer.construct, &outer.indicator]),
+            parameter_key(
+                PlsResamplingParameterFamily::OuterWeight,
+                &[&outer.construct, &outer.indicator],
+            ),
             outer.weight,
         );
     }
     for path in paths {
         values.insert(
-            parameter_key("path", &[&path.source, &path.target]),
+            parameter_key(
+                PlsResamplingParameterFamily::Path,
+                &[&path.source, &path.target],
+            ),
             path.coefficient,
         );
     }
     for effect in effects {
         let parts = [effect.source.as_str(), effect.target.as_str()];
-        values.insert(parameter_key("direct_effect", &parts), effect.direct);
-        values.insert(parameter_key("indirect_effect", &parts), effect.indirect);
-        values.insert(parameter_key("total_effect", &parts), effect.total);
+        values.insert(
+            parameter_key(PlsResamplingParameterFamily::DirectEffect, &parts),
+            effect.direct,
+        );
+        values.insert(
+            parameter_key(PlsResamplingParameterFamily::IndirectEffect, &parts),
+            effect.indirect,
+        );
+        values.insert(
+            parameter_key(PlsResamplingParameterFamily::TotalEffect, &parts),
+            effect.total,
+        );
     }
     for (construct, value) in r_squared {
-        values.insert(parameter_key("r_squared", &[construct]), *value);
+        values.insert(
+            parameter_key(PlsResamplingParameterFamily::RSquared, &[construct]),
+            *value,
+        );
     }
     values
 }
 
-fn parameter_key(kind: &str, parts: &[&str]) -> String {
-    serde_json::to_string(&(kind, parts)).expect("bootstrap parameter identity is serializable")
+fn parameter_key(family: PlsResamplingParameterFamily, parts: &[&str]) -> String {
+    PlsResamplingParameterIdentity::new(family, parts.iter().copied())
+        .expect("internal PLS resampling parameter identity has valid components")
+        .encode()
 }
 
 fn type7_quantile(sorted: &[f64], probability: f64) -> f64 {
@@ -3008,6 +4302,20 @@ fn align_pls_signs(
         effect.indirect *= sign;
         effect.total *= sign;
     }
+    if let Some(plsc) = estimate.plsc.as_mut() {
+        for loading in &mut plsc.corrected_outer_loadings {
+            loading.weight *= signs[&loading.construct];
+            loading.loading *= signs[&loading.construct];
+        }
+        for path in &mut plsc.corrected_paths {
+            path.coefficient *= signs[&path.source] * signs[&path.target];
+        }
+        for correlation in &mut plsc.construct_correlations {
+            let sign = signs[&correlation.left] * signs[&correlation.right];
+            correlation.original *= sign;
+            correlation.corrected *= sign;
+        }
+    }
     Ok(())
 }
 
@@ -3148,6 +4456,122 @@ mod tests {
     }
 
     #[test]
+    fn pls_bootstrap_test_tail_uses_one_null_centered_ledger_and_plus_one_denominator() {
+        let counts = pls_bootstrap_null_centered_tail_counts([3.1, 2.0, 1.5, 0.0, -0.5], 1.0);
+
+        assert_eq!(counts.usable, 5);
+        assert_eq!(counts.two_sided, 4);
+        assert_eq!(counts.greater_or_equal, 2);
+        assert_eq!(counts.less_or_equal, 4);
+        assert_eq!(
+            pls_bootstrap_plus_one_probability(counts.two_sided, counts.usable).to_bits(),
+            (5.0_f64 / 6.0).to_bits()
+        );
+        assert_eq!(
+            pls_bootstrap_plus_one_probability(counts.greater_or_equal, counts.usable).to_bits(),
+            (3.0_f64 / 6.0).to_bits()
+        );
+        assert_eq!(
+            pls_bootstrap_plus_one_probability(counts.less_or_equal, counts.usable).to_bits(),
+            (5.0_f64 / 6.0).to_bits()
+        );
+    }
+
+    #[test]
+    fn pls_bootstrap_test_tail_validator_binds_receipt_and_rejects_default_injection() {
+        let parameter =
+            PlsResamplingParameterIdentity::new(PlsResamplingParameterFamily::Path, ["x", "y"])
+                .unwrap()
+                .encode();
+        let bootstrap = PlsBootstrapResult {
+            method_version: RESAMPLING_METHOD_VERSION.into(),
+            plan: BootstrapPlan {
+                replicates: 5,
+                master_seed: 7,
+                operation: "pls_pm_bootstrap_v1".into(),
+            },
+            usable_replicates: 5,
+            failed_replicates: Vec::new(),
+            percentile: PercentileInference {
+                confidence_level: 0.95,
+                parameters: vec![BootstrapParameterInference {
+                    parameter: parameter.clone(),
+                    original: 1.0,
+                    bootstrap_mean: 1.0,
+                    bias: 0.0,
+                    standard_error: 0.1,
+                    lower: 0.8,
+                    upper: 1.2,
+                    usable_replicates: 5,
+                    t_statistic: Some(10.0),
+                    p_value_two_sided: Some(0.0),
+                }],
+            },
+            bca: None,
+            studentized: None,
+            htmt_inference: None,
+            model_fit_exact_inference: None,
+        };
+        let receipt = PlsBootstrapTestTailInference {
+            method_version: PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION.into(),
+            selected_test_tail: PlsBootstrapTestTail::OneSidedGreater,
+            parameters: vec![PlsBootstrapTestTailParameterInference {
+                parameter,
+                usable_replicates: 5,
+                two_sided_exceedances: 4,
+                greater_or_equal_exceedances: 2,
+                less_or_equal_exceedances: 4,
+                p_value_two_sided: 5.0 / 6.0,
+                p_value_greater: 3.0 / 6.0,
+                p_value_less: 5.0 / 6.0,
+            }],
+        };
+
+        validate_pls_bootstrap_test_tail_contract(
+            &bootstrap,
+            Some(&receipt),
+            PlsBootstrapTestTail::OneSidedGreater,
+            true,
+        )
+        .unwrap();
+        assert!(
+            validate_pls_bootstrap_test_tail_contract(
+                &bootstrap,
+                Some(&receipt),
+                PlsBootstrapTestTail::OneSidedGreater,
+                false,
+            )
+            .unwrap_err()
+            .to_string()
+            .contains("nondefault_tail_missing_method_version")
+        );
+        assert!(
+            validate_pls_bootstrap_test_tail_contract(
+                &bootstrap,
+                Some(&receipt),
+                PlsBootstrapTestTail::TwoSided,
+                false,
+            )
+            .unwrap_err()
+            .to_string()
+            .contains("default_tail_has_injected_receipt")
+        );
+        let mut tampered = receipt;
+        tampered.parameters[0].p_value_greater = 0.49;
+        assert!(
+            validate_pls_bootstrap_test_tail_contract(
+                &bootstrap,
+                Some(&tampered),
+                PlsBootstrapTestTail::OneSidedGreater,
+                true,
+            )
+            .unwrap_err()
+            .to_string()
+            .contains("count_or_plus_one_probability")
+        );
+    }
+
+    #[test]
     fn process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional() {
         let (dataset, recipe_one) = process_graph_bootstrap_fixture(1);
         let execution_one =
@@ -3216,6 +4640,25 @@ mod tests {
             RegressionBootstrapBcaInterval::Available { .. }
                 | RegressionBootstrapBcaInterval::Unavailable { .. }
         )));
+    }
+
+    #[test]
+    fn process_graph_v2_case_bootstrap_cancellation_returns_no_result() {
+        let (dataset, recipe) = process_graph_bootstrap_fixture(1);
+        let execution =
+            ValidatedExecutionRecipe::for_dataset(&recipe, &dataset.fingerprint.0).unwrap();
+        let point = execution.without_outer_resampling().unwrap();
+        let original = estimate_pls_validated_with_control(&dataset, &point, |_| true).unwrap();
+
+        let cancelled =
+            bootstrap_process_validated(&dataset, &execution, &original, 1, || true, |_| {});
+
+        assert!(matches!(
+            cancelled,
+            Err(RegressionBootstrapError::Resampling(
+                ResamplingError::Cancelled
+            ))
+        ));
     }
 
     #[test]
@@ -3457,6 +4900,56 @@ mod tests {
     }
 
     #[test]
+    fn pls_bootstrap_failed_replicates_have_stable_typed_reasons_and_legacy_default() {
+        let cases = [
+            ("estimation was cancelled", "cancelled"),
+            (
+                "at least three complete observations are required",
+                "insufficient_observations",
+            ),
+            ("constant indicator: x1", "constant_indicator"),
+            (
+                "rank-deficient regression for construct: y",
+                "rank_deficient_inner_model",
+            ),
+            (
+                "construct has no connected inner proxy: x",
+                "isolated_construct",
+            ),
+            (
+                "PLS weights did not converge after 3000 iterations",
+                "non_convergence",
+            ),
+            (
+                "PLS score execution contract mismatch: score order",
+                "score_execution_contract",
+            ),
+            ("numerical failure: non-finite score", "numerical_failure"),
+            ("unexpected estimator failure", "estimation_failure"),
+        ];
+        for (message, expected) in cases {
+            assert_eq!(pls_bootstrap_failure_reason_code(message), expected);
+        }
+
+        let current = FailedReplicate {
+            replicate_index: 4,
+            reason_code: "constant_indicator".into(),
+            message: "constant indicator: x1".into(),
+        };
+        assert_eq!(
+            serde_json::to_value(&current).unwrap()["reason_code"],
+            "constant_indicator"
+        );
+
+        let legacy: FailedReplicate = serde_json::from_value(serde_json::json!({
+            "replicate_index": 4,
+            "message": "constant indicator: x1"
+        }))
+        .unwrap();
+        assert_eq!(legacy.reason_code, PLS_BOOTSTRAP_LEGACY_FAILURE_REASON_CODE);
+    }
+
+    #[test]
     fn pls_bootstrap_is_exactly_invariant_to_worker_count() {
         let dataset = import_delimited_bytes(
             include_bytes!("../../../validation/fixtures/simple_reflective.csv"),
@@ -3499,6 +4992,65 @@ mod tests {
         assert_eq!(serial.method_version, RESAMPLING_METHOD_VERSION);
         assert_eq!(serial.usable_replicates, 24);
         assert!(serial.failed_replicates.is_empty());
+        let htmt = serial.htmt_inference.as_ref().unwrap();
+        assert_eq!(htmt.method_version, HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION);
+        assert_eq!(
+            htmt.htmt_plus.method_version,
+            HTMT_PLUS_BOOTSTRAP_METHOD_VERSION
+        );
+        assert_eq!(
+            htmt.htmt_original.method_version,
+            HTMT_ORIGINAL_BOOTSTRAP_METHOD_VERSION
+        );
+        assert_eq!(htmt.htmt_plus.equivalent_two_sided_confidence_level, 0.90);
+        assert_eq!(htmt.htmt_plus.test_type, "one_tailed_upper");
+        assert_eq!(htmt.htmt_plus.critical_value, HTMT_BOOTSTRAP_CRITICAL_VALUE);
+        assert_eq!(htmt.htmt_plus.decision_rule, HTMT_BOOTSTRAP_DECISION_RULE);
+        assert_eq!(
+            htmt.htmt_plus.replicate_index_digest_method,
+            HTMT_BOOTSTRAP_REPLICATE_INDEX_DIGEST_METHOD
+        );
+        assert!(htmt.htmt_plus.cells.iter().enumerate().all(|(row, cells)| {
+            cells.iter().enumerate().all(|(column, cell)| {
+                row == column
+                    || matches!(
+                        cell.status,
+                        HtmtBootstrapInferenceStatus::Available
+                            | HtmtBootstrapInferenceStatus::NotApplicable
+                            | HtmtBootstrapInferenceStatus::Unavailable
+                    )
+            })
+        }));
+        for artifact in [&htmt.htmt_plus, &htmt.htmt_original] {
+            for (row, cells) in artifact.cells.iter().enumerate() {
+                for (column, cell) in cells.iter().enumerate() {
+                    if row == column || cell.original.is_none() {
+                        assert!(cell.upper_bound_below_critical_value.is_none());
+                        assert!(cell.usable_replicate_indices_sha256.is_none());
+                        continue;
+                    }
+                    assert_eq!(
+                        cell.upper_bound_below_critical_value,
+                        cell.upper
+                            .map(|upper| upper < HTMT_BOOTSTRAP_CRITICAL_VALUE)
+                    );
+                    assert_eq!(
+                        cell.usable_replicates + cell.failed_replicates,
+                        artifact.requested_replicates
+                    );
+                    assert!(
+                        cell.usable_replicate_indices_sha256
+                            .as_ref()
+                            .is_some_and(|digest| digest.len() == 64)
+                    );
+                    assert!(
+                        cell.pair_unavailable_replicates
+                            .windows(2)
+                            .all(|pair| { pair[0].replicate_index < pair[1].replicate_index })
+                    );
+                }
+            }
+        }
         assert!(serial.percentile.parameters.iter().all(|parameter| {
             parameter.standard_error.is_finite()
                 && parameter.lower.is_finite()
@@ -3606,7 +5158,7 @@ mod tests {
         base_recipe.method_config = Some(qpls_core::MethodConfig::PlsAlgorithm);
         let original = qpls_estimation::estimate_pls(&dataset, &base_recipe).unwrap();
         let result = bootstrap_pls(&dataset, &recipe, &original, 1, || false, |_| {}).unwrap();
-        let indirect_key = parameter_key("indirect_effect", &["x", "y"]);
+        let indirect_key = parameter_key(PlsResamplingParameterFamily::IndirectEffect, &["x", "y"]);
         let percentile = result
             .percentile
             .parameters
@@ -3772,7 +5324,12 @@ mod tests {
             original
                 .paths
                 .iter()
-                .map(|path| parameter_key("path", &[&path.source, &path.target]))
+                .map(|path| {
+                    parameter_key(
+                        PlsResamplingParameterFamily::Path,
+                        &[&path.source, &path.target],
+                    )
+                })
                 .collect::<Vec<_>>()
         );
         let expected_progress = (1..=recipe.settings.permutation_samples)
@@ -3932,6 +5489,182 @@ mod tests {
         assert!((interval.acceleration - -0.015853543711576476).abs() < 1e-12);
         assert!((interval.lower - 1.1202082785627896).abs() < 1e-12);
         assert!((interval.upper - 3.112197306363598).abs() < 1e-11);
+    }
+
+    #[test]
+    fn htmt_bias_corrected_interval_matches_independent_python_oracle() {
+        // Python's statistics.NormalDist and statrs use independent inverse-normal
+        // implementations.  Their adjusted probabilities agree well within 1e-10.
+        const ORACLE_TOLERANCE: f64 = 1e-10;
+        let reference: serde_json::Value = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/htmt_bootstrap_inference_reference.json"
+        ))
+        .unwrap();
+        assert_eq!(reference["method"], HTMT_BOOTSTRAP_INTERVAL_METHOD);
+        assert_eq!(reference["test_type"], HTMT_BOOTSTRAP_TEST_TYPE);
+        assert_eq!(
+            reference["critical_value"].as_f64().unwrap().to_bits(),
+            HTMT_BOOTSTRAP_CRITICAL_VALUE.to_bits()
+        );
+        assert_eq!(reference["decision_rule"], HTMT_BOOTSTRAP_DECISION_RULE);
+        assert_eq!(
+            reference["replicate_index_digest_method"],
+            HTMT_BOOTSTRAP_REPLICATE_INDEX_DIGEST_METHOD
+        );
+        for scenario in reference["scenarios"].as_array().unwrap() {
+            let values = scenario["values"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|value| value.as_f64().unwrap())
+                .collect::<Vec<_>>();
+            let original = scenario["original"].as_f64().unwrap();
+            let expected = &scenario["expected"];
+            let actual = bias_corrected_percentile_interval(
+                &values,
+                original,
+                HTMT_BOOTSTRAP_EQUIVALENT_TWO_SIDED_CONFIDENCE_LEVEL,
+            )
+            .unwrap();
+            assert_eq!(
+                actual.below_original,
+                expected["below_original"].as_u64().unwrap() as u32
+            );
+            assert_eq!(
+                actual.tied_original,
+                expected["tied_original"].as_u64().unwrap() as u32
+            );
+            assert!(
+                (actual.bias_correction - expected["bias_correction"].as_f64().unwrap()).abs()
+                    < ORACLE_TOLERANCE
+            );
+            assert!((actual.lower - expected["lower"].as_f64().unwrap()).abs() < ORACLE_TOLERANCE);
+            assert!(
+                (actual.upper - expected["upper"].as_f64().unwrap()).abs() < ORACLE_TOLERANCE,
+                "scenario={} actual_upper={} expected_upper={}",
+                scenario["id"].as_str().unwrap(),
+                actual.upper,
+                expected["upper"].as_f64().unwrap()
+            );
+            assert_eq!(
+                actual.upper < HTMT_BOOTSTRAP_CRITICAL_VALUE,
+                expected["upper_bound_below_critical_value"]
+                    .as_bool()
+                    .unwrap()
+            );
+            let indices = scenario["usable_replicate_indices"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|value| value.as_u64().unwrap() as u32)
+                .collect::<Vec<_>>();
+            assert_eq!(
+                replicate_index_digest(&indices),
+                scenario["usable_replicate_indices_sha256"]
+                    .as_str()
+                    .unwrap()
+            );
+        }
+        assert!(bias_corrected_percentile_interval(&[0.5], 0.5, 0.90).is_none());
+        assert!(bias_corrected_percentile_interval(&[0.4, f64::NAN], 0.5, 0.90).is_none());
+        assert!(bias_corrected_percentile_interval(&[0.4, 0.6], 0.5, 1.0).is_none());
+    }
+
+    #[test]
+    fn htmt_typed_interval_and_tail_selection_preserves_pair_failure_accounting() {
+        let assessment = |value: Option<f64>, status: HtmtStatus, reason: Option<&str>| {
+            let diagonal = HtmtCell {
+                value: Some(1.0),
+                status: HtmtStatus::Available,
+                reason: None,
+            };
+            let off_diagonal = HtmtCell {
+                value,
+                status,
+                reason: reason.map(str::to_owned),
+            };
+            HtmtAssessment {
+                constructs: vec!["a".into(), "b".into()],
+                correlation_type: "pearson".into(),
+                absolute_correlations: true,
+                cells: vec![
+                    vec![diagonal.clone(), off_diagonal.clone()],
+                    vec![off_diagonal, diagonal],
+                ],
+            }
+        };
+        let original = assessment(Some(0.5), HtmtStatus::Available, None);
+        let replicate_artifacts = (0..10)
+            .map(|index| {
+                if index == 4 {
+                    assessment(
+                        None,
+                        HtmtStatus::Unavailable,
+                        Some("htmt.zero_monotrait_denominator"),
+                    )
+                } else {
+                    assessment(
+                        Some(0.40 + f64::from(index) * 0.02),
+                        HtmtStatus::Available,
+                        None,
+                    )
+                }
+            })
+            .collect::<Vec<_>>();
+        let indexed = replicate_artifacts
+            .iter()
+            .enumerate()
+            .map(|(index, artifact)| (index as u32, artifact))
+            .collect::<Vec<_>>();
+        let plan = BootstrapPlan {
+            replicates: 10,
+            master_seed: 7,
+            operation: "htmt_selection_test".into(),
+        };
+
+        let configured = summarize_htmt_artifact(
+            &original,
+            &indexed,
+            &plan,
+            HTMT_PLUS_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION,
+            HTMT_PLUS_METHOD_VERSION,
+            HtmtBootstrapInferenceConfig {
+                interval_family: HtmtBootstrapIntervalFamily::Percentile,
+                test_tail: HtmtBootstrapTestTail::TwoSided,
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            configured.interval_method,
+            HTMT_BOOTSTRAP_PERCENTILE_INTERVAL_METHOD
+        );
+        assert_eq!(configured.test_type, HTMT_BOOTSTRAP_TWO_SIDED_TEST_TYPE);
+        assert_eq!(configured.equivalent_two_sided_confidence_level, 0.95);
+        let cell = &configured.cells[0][1];
+        assert_eq!(cell.status, HtmtBootstrapInferenceStatus::Available);
+        assert_eq!(cell.bias_correction, None);
+        assert_eq!(cell.usable_replicates, 9);
+        assert_eq!(cell.failed_replicates, 1);
+        assert_eq!(cell.pair_unavailable_replicates.len(), 1);
+        assert_eq!(cell.pair_unavailable_replicates[0].replicate_index, 4);
+        assert_eq!(
+            cell.usable_replicates + cell.failed_replicates,
+            plan.replicates
+        );
+
+        let legacy = summarize_htmt_artifact(
+            &original,
+            &indexed,
+            &plan,
+            HTMT_PLUS_BOOTSTRAP_METHOD_VERSION,
+            HTMT_PLUS_METHOD_VERSION,
+            HtmtBootstrapInferenceConfig::default(),
+        )
+        .unwrap();
+        assert_eq!(legacy.interval_method, HTMT_BOOTSTRAP_INTERVAL_METHOD);
+        assert_eq!(legacy.test_type, HTMT_BOOTSTRAP_TEST_TYPE);
+        assert_eq!(legacy.equivalent_two_sided_confidence_level, 0.90);
+        assert!(legacy.cells[0][1].bias_correction.is_some());
     }
 
     #[test]
@@ -4283,6 +6016,34 @@ mod tests {
     }
 
     #[test]
+    fn regression_bootstrap_failure_boundary_maps_typed_ols_failures() {
+        let cases = [
+            (
+                EstimationError::OlsNonPositiveResidualDegreesOfFreedom {
+                    subject: "y".into(),
+                    observations: 3,
+                    parameters: 3,
+                },
+                "nonpositive_residual_degrees_of_freedom",
+            ),
+            (
+                EstimationError::OlsHc3Invalid {
+                    subject: "y".into(),
+                    reason: "1 - leverage is not positive".into(),
+                },
+                "undefined_hc3_covariance",
+            ),
+        ];
+
+        for (error, expected_reason) in cases {
+            let encoded = regression_replicate_error(error);
+            let (reason, message) = split_regression_failure(&encoded);
+            assert_eq!(reason, expected_reason);
+            assert!(!message.trim().is_empty());
+        }
+    }
+
+    #[test]
     fn studentized_interval_matches_reversed_pivot_quantiles() {
         let interval =
             studentized_interval(10.0, 2.0, &[-2.0, -1.0, 0.0, 1.0, 2.0], 0.8, 12.0).unwrap();
@@ -4328,6 +6089,7 @@ mod tests {
             r_squared: original.r_squared.clone(),
             studentized_standard_errors: None,
             studentized_error: Some("inner estimate parameter schema mismatch".into()),
+            htmt: None,
         };
         let run = BootstrapRun {
             method_version: RESAMPLING_METHOD_VERSION.into(),
@@ -4405,8 +6167,137 @@ mod tests {
         ];
         let values = result_values(&outer, &[], &[], &std::collections::BTreeMap::new());
         assert_eq!(values.len(), 4);
-        assert!(values.contains_key(&parameter_key("outer_loading", &["a", "b:c"])));
-        assert!(values.contains_key(&parameter_key("outer_loading", &["a:b", "c"])));
+        assert!(values.contains_key(&parameter_key(
+            PlsResamplingParameterFamily::OuterLoading,
+            &["a", "b:c"]
+        )));
+        assert!(values.contains_key(&parameter_key(
+            PlsResamplingParameterFamily::OuterLoading,
+            &["a:b", "c"]
+        )));
+    }
+
+    #[test]
+    fn parameter_identity_roundtrips_every_family_and_preserves_wire() {
+        let cases = [
+            (
+                PlsResamplingParameterFamily::OuterLoading,
+                vec!["construct:alpha", "indicator/beta"],
+            ),
+            (
+                PlsResamplingParameterFamily::OuterWeight,
+                vec!["构造", "δ:indicator"],
+            ),
+            (PlsResamplingParameterFamily::Path, vec!["source", "target"]),
+            (
+                PlsResamplingParameterFamily::DirectEffect,
+                vec!["source", "target"],
+            ),
+            (
+                PlsResamplingParameterFamily::IndirectEffect,
+                vec!["source", "target"],
+            ),
+            (
+                PlsResamplingParameterFamily::TotalEffect,
+                vec!["source", "target"],
+            ),
+            (PlsResamplingParameterFamily::RSquared, vec!["target"]),
+        ];
+
+        for (family, components) in cases {
+            let identity = PlsResamplingParameterIdentity::new(family, components).unwrap();
+            let encoded = identity.encode();
+            assert_eq!(
+                PlsResamplingParameterIdentity::decode(&encoded).unwrap(),
+                identity
+            );
+        }
+        assert_eq!(
+            PlsResamplingParameterIdentity::new(
+                PlsResamplingParameterFamily::Path,
+                ["source", "target"]
+            )
+            .unwrap()
+            .encode(),
+            r#"["path",["source","target"]]"#
+        );
+    }
+
+    #[test]
+    fn parameter_identity_rejects_unknown_malformed_noncanonical_and_wrong_arity() {
+        assert_eq!(
+            PlsResamplingParameterIdentity::decode("not-json"),
+            Err(PlsResamplingParameterIdentityError::InvalidWire)
+        );
+        assert_eq!(
+            PlsResamplingParameterIdentity::decode(r#"["unknown",["a","b"]]"#),
+            Err(PlsResamplingParameterIdentityError::UnknownFamily(
+                "unknown".into()
+            ))
+        );
+        assert!(matches!(
+            PlsResamplingParameterIdentity::decode(r#"["path",["a"]]"#),
+            Err(PlsResamplingParameterIdentityError::InvalidArity {
+                family: PlsResamplingParameterFamily::Path,
+                expected: 2,
+                observed: 1,
+            })
+        ));
+        assert!(matches!(
+            PlsResamplingParameterIdentity::decode(r#"["r_squared",[""]]"#),
+            Err(PlsResamplingParameterIdentityError::EmptyComponent {
+                family: PlsResamplingParameterFamily::RSquared,
+                index: 0,
+            })
+        ));
+        assert_eq!(
+            PlsResamplingParameterIdentity::decode(r#"[ "path", ["a", "b"]]"#),
+            Err(PlsResamplingParameterIdentityError::NonCanonicalWire)
+        );
+    }
+
+    #[test]
+    fn result_values_exposes_the_complete_typed_parameter_family_set() {
+        let outer = [OuterEstimate {
+            construct: "construct".into(),
+            indicator: "indicator".into(),
+            weight: 1.0,
+            loading: 2.0,
+        }];
+        let paths = [PathEstimate {
+            source: "source".into(),
+            target: "target".into(),
+            coefficient: 3.0,
+        }];
+        let effects = [EffectEstimate {
+            source: "source".into(),
+            target: "target".into(),
+            direct: 4.0,
+            indirect: 5.0,
+            total: 6.0,
+        }];
+        let r_squared = std::collections::BTreeMap::from([("target".into(), 0.7)]);
+
+        let families = result_values(&outer, &paths, &effects, &r_squared)
+            .keys()
+            .map(|key| {
+                PlsResamplingParameterIdentity::decode(key)
+                    .unwrap()
+                    .family()
+            })
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(
+            families,
+            std::collections::BTreeSet::from([
+                PlsResamplingParameterFamily::OuterLoading,
+                PlsResamplingParameterFamily::OuterWeight,
+                PlsResamplingParameterFamily::Path,
+                PlsResamplingParameterFamily::DirectEffect,
+                PlsResamplingParameterFamily::IndirectEffect,
+                PlsResamplingParameterFamily::TotalEffect,
+                PlsResamplingParameterFamily::RSquared,
+            ])
+        );
     }
 
     #[test]

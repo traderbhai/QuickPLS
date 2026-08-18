@@ -1,0 +1,294 @@
+{
+  "bootstrap": {
+    "critical_value": 0.9,
+    "equivalent_two_sided_confidence_level": 0.9,
+    "interval_method": "bias_corrected_percentile_type7_v1",
+    "scenarios": [
+      {
+        "expected": {
+          "below_original": 4,
+          "bias": 0.02100000000000002,
+          "bias_correction": -0.2533471031357997,
+          "bootstrap_mean": 0.771,
+          "lower": 0.6284869058388926,
+          "lower_probability": 0.01571649229424538,
+          "original": 0.75,
+          "standard_error": 0.09158481193832184,
+          "tied_original": 0,
+          "upper": 0.8740902944425077,
+          "upper_bound_below_critical_value": true,
+          "upper_probability": 0.8724730401180769
+        },
+        "id": "asymmetric_htmt_plus",
+        "original": 0.75,
+        "usable_replicate_indices_sha256": "10b4796eac59c7d81c33711f219ba227247a4e338adad078159ba01e87590841",
+        "values": [
+          0.62,
+          0.68,
+          0.7,
+          0.73,
+          0.76,
+          0.78,
+          0.81,
+          0.84,
+          0.88,
+          0.91
+        ]
+      },
+      {
+        "expected": {
+          "below_original": 0,
+          "bias": 0.09999999999999998,
+          "bias_correction": -0.6744897501960817,
+          "bootstrap_mean": 0.6,
+          "lower": 0.5,
+          "lower_probability": 0.0013774828840026044,
+          "original": 0.5,
+          "standard_error": 0.1264911064067352,
+          "tied_original": 3,
+          "upper": 0.6081684472760354,
+          "upper_bound_below_critical_value": true,
+          "upper_probability": 0.6163368945520707
+        },
+        "id": "midrank_ties",
+        "original": 0.5,
+        "usable_replicate_indices_sha256": "cd9a54ed1f18bf97db08914e280ea7349e11ca2c4885a4d8052552ceba84208d",
+        "values": [
+          0.5,
+          0.5,
+          0.5,
+          0.6,
+          0.7,
+          0.8
+        ]
+      },
+      {
+        "expected": {
+          "below_original": 4,
+          "bias": -0.007500000000000007,
+          "bias_correction": 0.0,
+          "bootstrap_mean": -0.20750000000000002,
+          "lower": -0.41500000000000004,
+          "lower_probability": 0.049999999999999975,
+          "original": -0.2,
+          "standard_error": 0.15163395774976376,
+          "tied_original": 0,
+          "upper": -0.015000000000000051,
+          "upper_bound_below_critical_value": true,
+          "upper_probability": 0.95
+        },
+        "id": "signed_original_htmt",
+        "original": -0.2,
+        "usable_replicate_indices_sha256": "ff1f6ee5d67458cfac950f62e93042e21fcb867e2234dcc8721801231064ad40",
+        "values": [
+          -0.45,
+          -0.35,
+          -0.28,
+          -0.22,
+          -0.18,
+          -0.12,
+          -0.08,
+          0.02
+        ]
+      }
+    ],
+    "significance_level": 0.05,
+    "test_type": "one_tailed_upper"
+  },
+  "implementations": {
+    "numpy": "1.26.4",
+    "scipy": "1.15.2"
+  },
+  "kind": "htmt_numpy_scipy_independent_reference_v1",
+  "point": {
+    "constructs": [
+      "comp",
+      "like",
+      "satisfaction",
+      "loyalty"
+    ],
+    "htmt_original": [
+      [
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.0
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": -0.49750176893050946
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.6138730929271496
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": -0.020618908089415387
+        }
+      ],
+      [
+        {
+          "reason": null,
+          "status": "available",
+          "value": -0.4975017689305093
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.0
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.5436164388760398
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.9579766376208554
+        }
+      ],
+      [
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.6138730929271496
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.5436164388760399
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.0
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.120163578445834
+        }
+      ],
+      [
+        {
+          "reason": null,
+          "status": "available",
+          "value": -0.02061890808941538
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.9579766376208554
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.120163578445834
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.0
+        }
+      ]
+    ],
+    "htmt_plus": [
+      [
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.0
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.49750176893050946
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.6138730929271496
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.1333390389665451
+        }
+      ],
+      [
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.4975017689305093
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.0
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.5436164388760398
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.9579766376208554
+        }
+      ],
+      [
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.6138730929271496
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.5436164388760399
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.0
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.120163578445834
+        }
+      ],
+      [
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.1333390389665451
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 0.9579766376208554
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.120163578445834
+        },
+        {
+          "reason": null,
+          "status": "available",
+          "value": 1.0
+        }
+      ]
+    ],
+    "rows": 12
+  },
+  "schema_version": 1,
+  "source": "validation/fixtures/corporate_reputation.csv"
+}

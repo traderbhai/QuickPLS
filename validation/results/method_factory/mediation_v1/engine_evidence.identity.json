@@ -1,0 +1,192 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "boundary_gate": {
+      "checks": {
+        "dataset_identity_tamper_rejected": true,
+        "metamorphic_and_determinism_covered_by_engine_gate": true,
+        "no_scope_result_written": true,
+        "no_tampered_result_written": true,
+        "prebuilt_cli_only": true,
+        "unsupported_scope_rejected": true
+      },
+      "executions": [
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "validate",
+            "validation/results/method_factory/mediation_v1/work/boundary_invalid.recipe.json",
+            "--json"
+          ],
+          "duration_seconds": 0.066,
+          "returncode": 1,
+          "stderr_tail": "Error: recipe validation failed\n",
+          "stdout_tail": "[\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"x\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"m\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"y\"\n  },\n  {\n    \"code\": \"path.cycle\",\n    \"severity\": \"error\",\n    \"message\": \"Structural model contains a directed cycle\",\n    \"subject\": null\n  }\n]\n"
+        },
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/mediation_v1/work/boundary_invalid.recipe.json",
+            "--data",
+            "validation/results/method_factory/mediation_v1/work/mediation_metamorphic_base.csv",
+            "--output",
+            "validation/results/method_factory/mediation_v1/work/boundary_scope_invalid.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.074,
+          "returncode": 1,
+          "stderr_tail": "Error: path.cycle: Structural model contains a directed cycle\n",
+          "stdout_tail": ""
+        },
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/mediation_v1/work/boundary_identity_tampered.recipe.json",
+            "--data",
+            "validation/results/method_factory/mediation_v1/work/mediation_metamorphic_base.csv",
+            "--output",
+            "validation/results/method_factory/mediation_v1/work/boundary_identity_tampered.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.14,
+          "returncode": 1,
+          "stderr_tail": "Error: recipe dataset fingerprint does not match the imported dataset\n",
+          "stdout_tail": ""
+        }
+      ],
+      "kind": "quickpls_phase3_boundary_gate",
+      "method": "mediation_v1",
+      "passed": true,
+      "path": "validation/results/method_factory/mediation_v1/boundary_gate.json",
+      "schema_version": 1
+    },
+    "engine_gate": {
+      "checks": {
+        "checks": {
+          "baseline_indirect_abs": 0.5866198661181502,
+          "construct_reorder_max_delta": 0.0,
+          "independent_reference_max_delta": 6.94999613415348e-14,
+          "permuted_mediator_drop_ratio": 0.0697466198393737,
+          "permuted_mediator_indirect_abs": 0.04091475279236692,
+          "positive_affine_max_delta": 6.317169010117141e-14,
+          "row_reversal_max_delta": 2.220446049250313e-16
+        },
+        "claim_limited_to": "single-mediator direct, indirect, total, VAF, and descriptive classification",
+        "passed": true,
+        "report": "validation/results/method_factory/mediation_v1/work/mediation_coverage_report.json",
+        "report_sha256": "41dc8d0848ef6f2832a02691d9abfe5584fd14262faef56ca8b93c1b87757c67",
+        "scenario_count": 5
+      },
+      "completed_at_utc": "2026-08-14T06:47:34.053009Z",
+      "kind": "quickpls_phase3_current_engine_gate",
+      "method": "mediation_v1",
+      "passed": true,
+      "path": "validation/results/method_factory/mediation_v1/engine_gate.json",
+      "prebuilt_cli": {
+        "path": "target/debug/qpls.exe",
+        "sha256": "f16cc51db4eafb31b8ad6eac37d12c0c163b4169df8abf3ecc703761a7a03fe2",
+        "size": 55822848
+      },
+      "recipe_policy": "historical fixtures copied to explicit schema v3; source fixtures preserved",
+      "schema_version": 1,
+      "started_at_utc": "2026-08-14T06:47:32.179581Z"
+    },
+    "passed": true
+  },
+  "feature_id": "qpls3.pls.mediation",
+  "generated_at_utc": "2026-08-14T06:47:34.489378Z",
+  "method_version": "pls_mediation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_MEDIATION_V1.md",
+      "sha256": "5a985019e6c986ca54d66baf2bdf2965d15e2b6b50a4e9f123f4713a2f38c5fa",
+      "size": 4581
+    },
+    {
+      "path": "validation/mediation_boundary_gate.py",
+      "sha256": "df1834c68664391ec65214631a72495fee1b6fa4df80b1f50ee753b41e6aac14",
+      "size": 212
+    },
+    {
+      "path": "validation/mediation_coverage_qualification.py",
+      "sha256": "8c0d4667ca334b471be32dd5c62a52c7ef85d51b719847925529a795fd3a3d8d",
+      "size": 214
+    },
+    {
+      "path": "validation/mediation_metamorphic.py",
+      "sha256": "9438c62584139ead67775021237cbb1ad7c84cb1e557dc40e76c9a42b20c5780",
+      "size": 9386
+    },
+    {
+      "path": "validation/mediation_published_example.py",
+      "sha256": "6d0f1b668396aeae8abaf9ce4005050140e779ea086585dc312e50e9d2669ad8",
+      "size": 7976
+    },
+    {
+      "path": "validation/mediation_r_reference.R",
+      "sha256": "7122d6fc86d303628f6ee48a4425b76b758be8db3c165c17391a2cd0f2fcabf2",
+      "size": 1384
+    },
+    {
+      "path": "validation/mediation_r_reference.py",
+      "sha256": "9cdf2d66e5feef1bdd0f5734042c6cb79d2beb9e1597c9992286cf57269c55a9",
+      "size": 3611
+    },
+    {
+      "path": "validation/mediation_randomization.py",
+      "sha256": "054e72f7a55a13dc4af2d3b91bc5ce4dc5fd604693eb4deb0fda3165197685be",
+      "size": 4243
+    },
+    {
+      "path": "validation/mediation_reference.py",
+      "sha256": "006eb4ae184da57b6f7161195458c3a0a2cabda84b663e9582bfa8b0d8f6fa06",
+      "size": 8202
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/mediation_v1.manifest.json",
+      "sha256": "c26ca3b8c2e2689e7b0b76feac57d2a8ecbfc611858cc6a45afb35a2880e656f",
+      "size": 12853
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "cf198e70e5cf16d2a0aa39a5d4c1bb4fabc9b59027c7fa59bbd8b634b4870ed2",
+      "size": 30271
+    },
+    {
+      "path": "validation/results/method_factory/mediation_v1/boundary_gate.json",
+      "sha256": "632e4a3ed10c5554fef092c956cd81dce05d6459bf1ae9821f022189c4918d19",
+      "size": 2864
+    },
+    {
+      "path": "validation/results/method_factory/mediation_v1/engine_gate.json",
+      "sha256": "e11a4f2e4fcbe56c5c3f71b8783c4fd19b359d5e2fdabdf8a6e174db78bc376f",
+      "size": 1284
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "8ba98f6953e8cacba11b3e927c9c607e48ca5c3a21b9b8d8207e7ac874b5c833",
+      "size": 2402
+    }
+  ]
+}

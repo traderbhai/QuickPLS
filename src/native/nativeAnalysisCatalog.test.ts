@@ -3,6 +3,10 @@ import type { AnalysisUiSettings } from "../types";
 import { buildNativeAnalysisRecipe, nativeAnalysisRecipeDescriptor } from "./nativeAnalysisRecipe";
 import { nativePlsReadiness } from "./nativePlsReadiness";
 import {
+  buildNativePlsSampleSizePowerRecipe,
+  NATIVE_PLS_SAMPLE_SIZE_POWER_INFERENCE,
+} from "./nativePlsSampleSizePower";
+import {
   NATIVE_ANALYSIS_CATALOG,
   filterNativeAnalysisCatalog,
   nativeAnalysisSettingsForWorkbenchKind,
@@ -33,29 +37,12 @@ const settings: AnalysisUiSettings = {
 };
 
 describe("native analysis catalog", () => {
-  it("exposes each native-workbench method once using the canonical recipe label", () => {
-    expect(NATIVE_ANALYSIS_CATALOG.map((item) => item.kind)).toEqual([
-      "pls_algorithm",
-      "plsc",
-      "wpls",
-      "gsca",
-      "cca",
-      "cta_pls",
-      "ipma",
-      "cbsem",
-      "pls_bootstrap",
-      "pls_permutation",
-      "mga",
-      "predict",
-      "nca",
-      "pca",
-      "regression",
-    ]);
+  it("exposes a non-empty, unique execution-adapter order using canonical recipe labels", () => {
+    expect(NATIVE_ANALYSIS_CATALOG.length).toBeGreaterThan(0);
     expect(new Set(NATIVE_ANALYSIS_CATALOG.map((item) => item.kind)).size).toBe(NATIVE_ANALYSIS_CATALOG.length);
     for (const item of NATIVE_ANALYSIS_CATALOG) {
       expect(item.label).toBe(item.kind === "regression" ? "Regression" : nativeAnalysisRecipeDescriptor(item.kind).label);
     }
-    expect(NATIVE_ANALYSIS_CATALOG).toHaveLength(15);
   });
 
   it("links each catalog kind to an exact ordered tuple of unique parity capabilities", () => {
@@ -67,9 +54,12 @@ describe("native analysis catalog", () => {
       ["cca", ["qpls3.assessment.cca_residuals"]],
       ["cta_pls", ["qpls3.assessment.cta_pls"]],
       ["ipma", ["qpls3.assessment.ipma"]],
-      ["cbsem", ["qpls3.cbsem.ml"]],
+      ["cbsem", ["qpls3.cbsem.ml", "qpls3.cbsem.bootstrap"]],
       ["pls_bootstrap", ["qpls3.inference.bootstrap"]],
+      ["plsc_bootstrap", ["qpls3.inference.consistent_bootstrap"]],
       ["pls_permutation", ["qpls3.inference.structural_path_randomization"]],
+      ["pls_posthoc_technical_minimum_sample_size", ["qpls3.pls.posthoc_technical_minimum_sample_size"]],
+      ["pls_sample_size_power", ["qpls3.pls.sample_size_power"]],
       ["mga", ["qpls3.groups.micom_permutation_mga"]],
       ["predict", ["qpls3.prediction.plspredict_cvpat"]],
       ["nca", ["qpls3.standalone.nca"]],
@@ -77,7 +67,7 @@ describe("native analysis catalog", () => {
       ["regression", ["qpls3.standalone.ols", "qpls3.standalone.logistic", "qpls3.standalone.regression_bootstrap", "qpls3.standalone.process"]],
     ]);
     const capabilityIds = NATIVE_ANALYSIS_CATALOG.flatMap((item) => item.capabilityIds);
-    expect(capabilityIds).toHaveLength(18);
+    expect(capabilityIds).toHaveLength(22);
     expect(new Set(capabilityIds).size).toBe(capabilityIds.length);
   });
 
@@ -90,7 +80,10 @@ describe("native analysis catalog", () => {
     expect(filterNativeAnalysisCatalog("confirmatory tetrad").map((item) => item.kind)).toEqual(["cta_pls"]);
     expect(filterNativeAnalysisCatalog("importance performance").map((item) => item.kind)).toEqual(["ipma"]);
     expect(filterNativeAnalysisCatalog("confirmatory factor maximum likelihood").map((item) => item.kind)).toEqual(["cbsem"]);
-    expect(filterNativeAnalysisCatalog("inference").map((item) => item.kind)).toEqual(["pls_bootstrap", "pls_permutation", "mga", "regression"]);
+    expect(filterNativeAnalysisCatalog("inference").map((item) => item.kind)).toEqual(["pls_bootstrap", "plsc_bootstrap", "pls_permutation", "pls_posthoc_technical_minimum_sample_size", "pls_sample_size_power", "mga", "regression"]);
+    expect(filterNativeAnalysisCatalog("retrospective inverse square root").map((item) => item.kind)).toEqual(["pls_posthoc_technical_minimum_sample_size"]);
+    expect(filterNativeAnalysisCatalog("full re-estimation bca").map((item) => item.kind)).toEqual(["plsc_bootstrap"]);
+    expect(filterNativeAnalysisCatalog("prospective monte carlo sample size").map((item) => item.kind)).toEqual(["pls_sample_size_power"]);
     expect(filterNativeAnalysisCatalog("cvpat").map((item) => item.kind)).toEqual(["predict"]);
     expect(filterNativeAnalysisCatalog("indicator prediction").map((item) => item.kind)).toEqual(["predict"]);
     expect(filterNativeAnalysisCatalog("permutation group a group b").map((item) => item.kind)).toEqual(["mga"]);
@@ -99,7 +92,7 @@ describe("native analysis catalog", () => {
     expect(filterNativeAnalysisCatalog("ordinary least squares hc3").map((item) => item.kind)).toEqual(["regression"]);
     expect(NATIVE_ANALYSIS_CATALOG.find((item) => item.kind === "mga")).toMatchObject({
       label: "MICOM and Two-Group Permutation MGA",
-      description: expect.stringContaining("paths, loadings, and weights"),
+      description: expect.stringContaining("explicit researcher-confirmed configural review"),
     });
     expect(NATIVE_ANALYSIS_CATALOG.find((item) => item.kind === "predict")).toMatchObject({
       label: "PLSpredict / CVPAT",
@@ -134,11 +127,82 @@ describe("native analysis catalog", () => {
     const permutation = nativeAnalysisSettingsForWorkbenchKind(settings, "pls_permutation");
     expect(permutation).toMatchObject({ method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 999, caseWeightColumn: null });
 
+    const posthoc = nativeAnalysisSettingsForWorkbenchKind(settings, "pls_posthoc_technical_minimum_sample_size");
+    expect(posthoc).toMatchObject({ method: "pls_pm", bootstrapSamples: 5_000, studentizedInnerSamples: 0, permutationSamples: 0, caseWeightColumn: null });
+
+    const power = nativeAnalysisSettingsForWorkbenchKind({
+      ...settings,
+      plsPowerPredictorConstruct: "x",
+      plsPowerOutcomeConstruct: "y",
+      plsPowerPredictorLoadings: "0.8,0.8,0.8",
+      plsPowerOutcomeLoadings: "0.8,0.8,0.8",
+    }, "pls_sample_size_power");
+    expect(power).toMatchObject({
+      method: "pls_sample_size_power",
+      weightingScheme: "path",
+      preprocessing: "standardized",
+      bootstrapSamples: 0,
+      studentizedInnerSamples: 0,
+      permutationSamples: 0,
+      plsPowerSampleSizeGrid: "50,100,150",
+      plsPowerPopulationPath: 0.30,
+      plsPowerAlpha: 0.05,
+      plsPowerTargetPower: 0.80,
+      plsPowerMonteCarloReplicates: 250,
+      plsPowerBootstrapReplicates: 199,
+    });
+    const powerWorkload = buildNativePlsSampleSizePowerRecipe({
+      scenarioIdentity: power.plsPowerScenarioIdentity!,
+      predictorConstruct: power.plsPowerPredictorConstruct!,
+      outcomeConstruct: power.plsPowerOutcomeConstruct!,
+      predictorIndicatorLoadings: power.plsPowerPredictorLoadings!,
+      outcomeIndicatorLoadings: power.plsPowerOutcomeLoadings!,
+      populationPath: String(power.plsPowerPopulationPath),
+      exogenousDistribution: "standard_normal",
+      structuralDisturbanceDistribution: "standard_normal",
+      indicatorErrorDistribution: "standard_normal",
+      missingData: "none",
+      weightingScheme: "path",
+      preprocessing: "standardized",
+      tolerance: String(power.tolerance),
+      maxIterations: String(power.maxIterations),
+      inference: NATIVE_PLS_SAMPLE_SIZE_POWER_INFERENCE,
+      sampleSizeGrid: power.plsPowerSampleSizeGrid!,
+      alpha: String(power.plsPowerAlpha),
+      targetPower: String(power.plsPowerTargetPower),
+      confidenceLevel: String(power.confidenceLevel),
+      monteCarloReplicates: String(power.plsPowerMonteCarloReplicates),
+      bootstrapReplicates: String(power.plsPowerBootstrapReplicates),
+      masterSeed: String(power.seed),
+      workers: String(power.workers),
+    }).workload;
+    expect(powerWorkload).toEqual({
+      gridPoints: 3,
+      plannedDatasets: 750,
+      estimatedPlsFits: 150_000,
+      estimatedPlsCaseFits: 15_000_000,
+    });
+
     const prediction = nativeAnalysisSettingsForWorkbenchKind(settings, "predict");
     expect(prediction).toMatchObject({ method: "predict", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupMethods: null });
 
     const plsc = nativeAnalysisSettingsForWorkbenchKind(settings, "plsc");
     expect(plsc).toMatchObject({ method: "plsc", weightingScheme: "path", preprocessing: "mean_centered", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, workers: 1, caseWeightColumn: null });
+
+    const consistentBootstrap = nativeAnalysisSettingsForWorkbenchKind(settings, "plsc_bootstrap");
+    expect(consistentBootstrap).toMatchObject({
+      method: "plsc",
+      weightingScheme: "path",
+      preprocessing: "mean_centered",
+      bootstrapSamples: 5_000,
+      studentizedInnerSamples: 0,
+      permutationSamples: 0,
+      workers: 4,
+      confidenceLevel: 0.95,
+      caseWeightColumn: null,
+    });
+    expect(nativeAnalysisSettingsForWorkbenchKind({ ...settings, bootstrapSamples: 0 }, "plsc_bootstrap").bootstrapSamples).toBe(10_000);
+    expect(nativeAnalysisSettingsForWorkbenchKind({ ...settings, bootstrapSamples: 999 }, "plsc_bootstrap").bootstrapSamples).toBe(1_000);
 
     const wpls = nativeAnalysisSettingsForWorkbenchKind(settings, "wpls");
     expect(wpls).toMatchObject({ method: "wpls", weightingScheme: "path", preprocessing: "standardized", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, workers: 1, caseWeightColumn: "WEIGHT" });
@@ -156,16 +220,17 @@ describe("native analysis catalog", () => {
     expect(ipma).toMatchObject({ method: "ipma", weightingScheme: "path", preprocessing: "standardized", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, workers: 1, caseWeightColumn: null, ipmaTargets: "y" });
     expect(nativeAnalysisSettingsForWorkbenchKind({ ...settings, ipmaTargets: "y,z" }, "ipma").ipmaTargets).toBeNull();
 
-    const cbsem = nativeAnalysisSettingsForWorkbenchKind({
+    const cbsemInput: AnalysisUiSettings = {
       ...settings,
       cbsemModelType: "cfa",
       cbsemMeanStructure: true,
       cbsemStandardization: "std_lv",
       cbsemGroupColumn: "segment",
       cbsemInvarianceSteps: "configural,metric",
-      cbsemBootstrapSamples: 999,
-    }, "cbsem");
-    expect(cbsem).toMatchObject({
+      cbsemBootstrapSamples: 0,
+    };
+    const cbsemPointOnly = nativeAnalysisSettingsForWorkbenchKind(cbsemInput, "cbsem");
+    expect(cbsemPointOnly).toMatchObject({
       method: "cbsem",
       weightingScheme: "path",
       preprocessing: "standardized",
@@ -180,6 +245,28 @@ describe("native analysis catalog", () => {
       cbsemGroupColumn: null,
       cbsemInvarianceSteps: null,
       cbsemBootstrapSamples: 0,
+    });
+    const cbsemBootstrap = nativeAnalysisSettingsForWorkbenchKind({
+      ...cbsemInput,
+      confidenceLevel: 0.90,
+      cbsemBootstrapSamples: 1_000,
+    }, "cbsem");
+    expect(cbsemBootstrap).toMatchObject({
+      method: "cbsem",
+      weightingScheme: "path",
+      preprocessing: "standardized",
+      bootstrapSamples: 0,
+      studentizedInnerSamples: 0,
+      permutationSamples: 0,
+      workers: 4,
+      confidenceLevel: 0.95,
+      caseWeightColumn: null,
+      cbsemModelType: "cfa",
+      cbsemMeanStructure: false,
+      cbsemStandardization: "std_all",
+      cbsemGroupColumn: null,
+      cbsemInvarianceSteps: null,
+      cbsemBootstrapSamples: 1_000,
     });
 
     const mga = nativeAnalysisSettingsForWorkbenchKind(settings, "mga");
@@ -354,8 +441,62 @@ describe("native analysis catalog", () => {
     })).not.toThrow();
   });
 
+  it("keeps the default prospective power plan Start-eligible and blocks the first replicate step above desktop caps", () => {
+    const nodes = [
+      { id: "x", position: { x: 0, y: 0 }, data: { label: "Predictor", shortName: "X", mode: "reflective" as const, indicators: ["x1", "x2", "x3"] } },
+      { id: "y", position: { x: 240, y: 0 }, data: { label: "Outcome", shortName: "Y", mode: "reflective" as const, indicators: ["y1", "y2", "y3"] } },
+    ];
+    const edges = [{ id: "x-y", source: "x", target: "y" }];
+    const dataset = {
+      id: "provenance-anchor",
+      name: "project.csv",
+      columns: [],
+      rows: [],
+      rowCount: 0,
+      missing: 0,
+      fingerprint: "sha256:project-anchor",
+      kind: "raw" as const,
+    };
+    const power = nativeAnalysisSettingsForWorkbenchKind({
+      ...settings,
+      plsPowerPredictorConstruct: "x",
+      plsPowerOutcomeConstruct: "y",
+      plsPowerPredictorLoadings: "0.8,0.8,0.8",
+      plsPowerOutcomeLoadings: "0.8,0.8,0.8",
+    }, "pls_sample_size_power");
+    const ready = nativePlsReadiness({ dataset, nodes, edges, settings: power, nativeDesktop: true });
+    expect(ready.canRun).toBe(true);
+    expect(ready.items.find((item) => item.id === "calculation")?.detail).toContain("150,000 PLS fits");
+    expect(ready.items.find((item) => item.id === "calculation")?.detail).toContain("15,000,000 fitted rows");
+    expect(ready.items.find((item) => item.id === "provenance-anchor")?.detail).toContain("observed values and observed sample size are not used");
+    expect(() => buildNativeAnalysisRecipe({
+      kind: "pls_sample_size_power",
+      recipeId: "11111111-1111-4111-8111-111111111111",
+      modelId: "22222222-2222-4222-8222-222222222222",
+      createdAt: "2026-08-13T00:00:00.000Z",
+      datasetFingerprint: dataset.fingerprint,
+      projectName: "Prospective power",
+      nodes,
+      edges,
+      settings: power,
+    })).not.toThrow();
+
+    const exactFitCap = { ...power, plsPowerSampleSizeGrid: "30,31", plsPowerMonteCarloReplicates: 1_250, plsPowerBootstrapReplicates: 99 };
+    expect(nativePlsReadiness({ dataset, nodes, edges, settings: exactFitCap, nativeDesktop: true }).canRun).toBe(true);
+    const nextFitStep = { ...exactFitCap, plsPowerMonteCarloReplicates: 1_251 };
+    expect(nativePlsReadiness({ dataset, nodes, edges, settings: nextFitStep, nativeDesktop: true }).canRun).toBe(false);
+    expect(nativePlsReadiness({ dataset, nodes, edges, settings: nextFitStep, nativeDesktop: true }).blockers[0].detail).toContain("250,000-fit");
+
+    const belowRowCap = { ...power, plsPowerSampleSizeGrid: "4999,5000", plsPowerMonteCarloReplicates: 100, plsPowerBootstrapReplicates: 99 };
+    expect(nativePlsReadiness({ dataset, nodes, edges, settings: belowRowCap, nativeDesktop: true }).canRun).toBe(true);
+    const nextRowStep = { ...belowRowCap, plsPowerMonteCarloReplicates: 101 };
+    expect(nativePlsReadiness({ dataset, nodes, edges, settings: nextRowStep, nativeDesktop: true }).canRun).toBe(false);
+    expect(nativePlsReadiness({ dataset, nodes, edges, settings: nextRowStep, nativeDesktop: true }).blockers[0].detail).toContain("100,000,000-row");
+  });
+
   it("restores a supported selection from settings and falls back from unfinished workflows", () => {
-    expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "plsc" })).toBe("plsc");
+    expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "plsc", bootstrapSamples: 0, permutationSamples: 0 })).toBe("plsc");
+    expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "plsc", bootstrapSamples: 5_000 })).toBe("plsc_bootstrap");
     expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "wpls" })).toBe("wpls");
     expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "gsca" })).toBe("gsca");
     expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "predict" })).toBe("predict");
@@ -366,10 +507,13 @@ describe("native analysis catalog", () => {
     expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "nca" })).toBe("nca");
     expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "pca" })).toBe("pca");
     expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "cta_pls" })).toBe("cta_pls");
+    expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "pls_sample_size_power" })).toBe("pls_sample_size_power");
   });
 
   it("uses action-specific labels for initial and retry runs", () => {
     expect(nativeAnalysisStartLabel("plsc", false)).toBe("Start consistent PLS");
+    expect(nativeAnalysisStartLabel("plsc_bootstrap", false)).toBe("Start consistent bootstrapping");
+    expect(nativeAnalysisStartLabel("pls_posthoc_technical_minimum_sample_size", false)).toBe("Start post-hoc calculation");
     expect(nativeAnalysisStartLabel("wpls", true)).toBe("Retry weighted PLS");
     expect(nativeAnalysisStartLabel("gsca", false)).toBe("Start GSCA");
     expect(nativeAnalysisStartLabel("cca", false)).toBe("Start composite diagnostics");
@@ -377,6 +521,7 @@ describe("native analysis catalog", () => {
     expect(nativeAnalysisStartLabel("ipma", false)).toBe("Start importance-performance analysis");
     expect(nativeAnalysisStartLabel("cbsem", false)).toBe("Start CB-SEM / CFA");
     expect(nativeAnalysisStartLabel("pls_bootstrap", false)).toBe("Start bootstrapping");
+    expect(nativeAnalysisStartLabel("pls_sample_size_power", false)).toBe("Start prospective power analysis");
     expect(nativeAnalysisStartLabel("mga", false)).toBe("Start group analysis");
     expect(nativeAnalysisStartLabel("nca", true)).toBe("Retry necessary condition analysis");
     expect(nativeAnalysisStartLabel("pca", false)).toBe("Start principal component analysis");

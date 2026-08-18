@@ -23,6 +23,7 @@ import {
 
 const methodLabels: Record<AnalysisMethodId, string> = {
   pls_pm: "PLS path modeling",
+  pls_sample_size_power: "PLS sample-size and power analysis",
   bootstrap: "PLS bootstrapping",
   permutation: "Structural Path Randomization",
   plsc: "Consistent PLS",
@@ -158,7 +159,7 @@ const adaptVariables = (dataset: Dataset, nodes: Array<Node<ConstructData>>): Na
       name: column,
       label: metadata?.label || column,
       type: metadata?.column_type === "text" ? "Text" : metadata?.column_type === "boolean" ? "Boolean" : "Numeric",
-      role: owner ? "Indicator" : metadata?.scale_type === "binary" || metadata?.scale_type === "nominal" ? "Group" : "Candidate",
+      role: owner ? "Indicator" : metadata?.scale_type === "binary" || metadata?.scale_type === "nominal" ? "Group" : "Unassigned",
       missing,
       mean: numberText(mean(values)),
       sd: numberText(sampleSd(values)),
@@ -257,7 +258,7 @@ const adaptSelectedVariable = (dataset: Dataset, nodes: Array<Node<ConstructData
     name: column,
     label: metadata?.label || column,
     type: metadata?.column_type === "text" ? "Text" : metadata?.column_type === "boolean" ? "Boolean" : "Numeric",
-    role: owner ? "Indicator" : "Candidate",
+    role: owner ? "Indicator" : "Unassigned",
     scale: metadata?.scale_type || "continuous",
     missingMarkers: ", NA, N/A, .",
     min: numberText(values.length ? Math.min(...values) : null, 3) || "-",
@@ -371,7 +372,7 @@ const adaptResultSummary = (latestRun: AnalysisRun | undefined, nodes: Array<Nod
     findings,
     interpretationTitle: interpretation.findings[0]?.metric ?? "Run interpretation",
     interpretationBody: interpretation.findings[0]?.interpretation ?? "Select a row to view value-specific interpretation.",
-    reportWording: interpretation.reportParagraphs[0]?.text ?? "The selected run was reviewed within the documented QuickPLS scope.",
+    reportWording: interpretation.reportParagraphs[0]?.text ?? "The selected run was reviewed against its requirements and known limitations.",
   };
 };
 
@@ -389,7 +390,7 @@ const adaptTrustRows = (dataset: Dataset, nodes: Array<Node<ConstructData>>, edg
     .map((item) => [
       item.method.name,
       methodCategoryLabels[item.category],
-      item.status === "recommended" || item.status === "available" ? "Validated scope" : item.status,
+      item.status === "recommended" || item.status === "available" ? "Supported setup" : item.status,
       item.reason,
     ]);
 

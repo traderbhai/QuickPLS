@@ -5,4 +5,4 @@ export const NATIVE_GSCA_ASSESSMENT_WARNING =
 export const NATIVE_GSCA_ENGINE_SCOPE_WARNING =
   "GSCA ALS v2 is bounded to standardized raw data, listwise deletion, disjoint reflective/formative blocks, and recursive single-group structural models; inference and broader GSCA variants are not included.";
 export const NATIVE_GSCA_SCOPE_NOTE =
-  "Joint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, or inference.";
+  "Joint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, GSCA bootstrapping, or other inference.";

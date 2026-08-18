@@ -84,13 +84,18 @@ def test_boundary_comparison_is_identity_aware_and_tolerant_only_for_numeric_dri
     assert not _current_identity(document)
 
 
-def test_release_contract_is_frozen_but_runtime_evidence_remains_fail_closed() -> None:
+def test_release_contract_is_staged_but_stale_runtime_evidence_remains_fail_closed() -> None:
     report = validate_manifest(MANIFEST_PATH, MANIFEST_PATH.parents[2])
     assert not report["passed"], json.dumps(report, indent=2)
-    assert report["declared_state"] == "native_qualified"
-    assert report["derived_state"] == "native_qualified"
+    assert report["declared_state"] == "release_qualified"
+    assert report["derived_state"] == "absent"
     assert report["target_state"] == "release_qualified"
-    assert any("packaged_acceptance.identity.json" in error for error in report["errors"])
+    assert any("source_artifacts" in error for error in report["errors"])
     contract = validate_manifest(MANIFEST_PATH, MANIFEST_PATH.parents[2], verify_evidence=False)
     assert contract["passed"], json.dumps(contract, indent=2)
     assert contract["derived_state"] == "release_qualified"
+
+
+def test_factory_point_estimates_use_the_standard_cli_path() -> None:
+    source = (VALIDATION / "plsc_v2_factory_common.py").read_text(encoding="utf-8")
+    assert '"--allow-experimental"' not in source

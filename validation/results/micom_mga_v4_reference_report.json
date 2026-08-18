@@ -1,0 +1,59 @@
+{
+  "fixed_plan": true,
+  "independence": "NumPy PLS estimator and independently specified SHA-256 case-token and partition plan; no QuickPLS product module import",
+  "ledger_swap_coupled": true,
+  "method_versions": {
+    "mga": "pls_mga_two_group_v4",
+    "micom": "micom_v4",
+    "permutation_mga": "pls_mga_permutation_v4"
+  },
+  "numerical_swap_reference": {
+    "accounting_match": true,
+    "decisions_match": true,
+    "forward_attempted": 5000,
+    "forward_failed": 19,
+    "maximum_signed_residual": 0.0,
+    "maximum_two_tailed_p_delta": 0.0,
+    "passed": true,
+    "reverse_attempted": 5000,
+    "reverse_failed": 19
+  },
+  "passed": true,
+  "permutation_samples": 5000,
+  "promotion_sample_size": true,
+  "quickpls_comparison": {
+    "forward": {
+      "accounting_matches": true,
+      "ledger_matches": true,
+      "maximum_numerical_delta": 1.3322676295501878e-15,
+      "passed": true,
+      "plan_matches": true,
+      "shapes_match": true,
+      "versions_match": true
+    },
+    "product_swap": {
+      "accounting_match": true,
+      "decisions_match": true,
+      "forward_attempted": 5000,
+      "forward_failed": 19,
+      "maximum_signed_residual": 0.0,
+      "maximum_two_tailed_p_delta": 0.0,
+      "passed": true,
+      "reverse_attempted": 5000,
+      "reverse_failed": 19
+    },
+    "reverse": {
+      "accounting_matches": true,
+      "ledger_matches": true,
+      "maximum_numerical_delta": 1.3322676295501878e-15,
+      "passed": true,
+      "plan_matches": true,
+      "shapes_match": true,
+      "versions_match": true
+    }
+  },
+  "retry_policy": "none",
+  "schema_version": 1,
+  "seed": 20260811,
+  "target": "micom_v4_and_pls_mga_permutation_v4_fixed_plan_independent_reference"
+}

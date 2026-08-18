@@ -68,7 +68,7 @@ export function completedStructuralPathRandomizationRun(): AnalysisRun {
       recipe_id: "structural-path-randomization-recipe",
       dataset_fingerprint: DATASET_FINGERPRINT,
       method: "pls_pm",
-      method_version: `pls_pm_v1+pls_mediation_v1+pls_assessment_v7+${NATIVE_STRUCTURAL_PATH_RANDOMIZATION_METHOD_VERSION}`,
+      method_version: `pls_pm_v1+pls_mediation_v1+pls_assessment_v8+${NATIVE_STRUCTURAL_PATH_RANDOMIZATION_METHOD_VERSION}`,
       engine_version: "test",
       seed: SEED,
       settings: engineSettings,

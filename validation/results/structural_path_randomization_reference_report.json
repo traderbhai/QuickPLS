@@ -4,7 +4,7 @@
   "feature_id": "qpls3.inference.structural_path_randomization",
   "method_version": "freedman_lane_permutation_v1",
   "catalogue_snapshot_date": "2026-08-12",
-  "generated_at": "2026-08-13T18:09:30.227375+00:00",
+  "generated_at": "2026-08-18T13:18:19.427372+00:00",
   "passed": true,
   "checks": [
     {
@@ -59,19 +59,19 @@
   "tested_product": {
     "release_cli": {
       "path": "target/release/qpls.exe",
-      "size": 20690432,
-      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-      "modified_utc": "2026-08-13T11:30:31.883365+00:00"
+      "size": 32387072,
+      "sha256": "f376ef9646a016a2ab5e922b49248d0b0667654159253a8ca0428b6c2dc10e05",
+      "modified_utc": "2026-08-18T13:07:54.036633+00:00"
     },
     "commands": [
       [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "run",
-        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-6ssraikv\\workers_1.recipe.json",
+        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-mfbnzi73\\workers_1.recipe.json",
         "--data",
         "D:\\QuickPLS\\validation\\fixtures\\corporate_reputation.csv",
         "--output",
-        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-6ssraikv\\workers_1.result.json",
+        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-mfbnzi73\\workers_1.result.json",
         "--permutation-samples",
         "999",
         "--workers",
@@ -80,11 +80,11 @@
       [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "run",
-        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-6ssraikv\\workers_4.recipe.json",
+        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-mfbnzi73\\workers_4.recipe.json",
         "--data",
         "D:\\QuickPLS\\validation\\fixtures\\corporate_reputation.csv",
         "--output",
-        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-6ssraikv\\workers_4.result.json",
+        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-mfbnzi73\\workers_4.result.json",
         "--permutation-samples",
         "999",
         "--workers",
@@ -94,11 +94,11 @@
     "workers": [
       {
         "workers": 1,
-        "result_id": "8d297b30-b017-4101-b040-d757a4b3292a",
+        "result_id": "717de22e-b14c-4d75-8345-f50d8ac3b717",
         "result_schema_version": 1,
         "recipe_id": "00000000-0000-0000-0000-000000032001",
         "dataset_fingerprint": "v2:75a6f88e3d90b593c433ba8df2de2b4091e5ac1af415bc6ac295db2784b04011",
-        "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1",
+        "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v8+freedman_lane_permutation_v1",
         "parameters": [
           {
             "exceedances": 0,
@@ -126,11 +126,11 @@
       },
       {
         "workers": 4,
-        "result_id": "51dac845-fddb-45ce-a77c-d59dbf6d2405",
+        "result_id": "d910babf-8054-4e31-b35e-67c00f10d93b",
         "result_schema_version": 1,
         "recipe_id": "00000000-0000-0000-0000-000000032004",
         "dataset_fingerprint": "v2:75a6f88e3d90b593c433ba8df2de2b4091e5ac1af415bc6ac295db2784b04011",
-        "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1",
+        "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v8+freedman_lane_permutation_v1",
         "parameters": [
           {
             "exceedances": 0,
@@ -162,8 +162,8 @@
     {
       "path": "validation/structural_path_randomization_reference.py",
       "size": 48644,
-      "sha256": "8946d5525cb1c51012e3788dc0f34ace825e96282b33580622cd10d4960eeb7d",
-      "modified_utc": "2026-08-13T07:59:56.827065+00:00"
+      "sha256": "372e2aaf9bfddb2f7ef8faf6ffed195ae08ffc227fbb3b67d9a94cd66a475c33",
+      "modified_utc": "2026-08-17T23:51:04.093706+00:00"
     },
     {
       "path": "validation/structural_path_randomization_reference.R",
@@ -197,15 +197,15 @@
     },
     {
       "path": "validation/structural_path_randomization_method_promotion_audit.py",
-      "size": 99637,
-      "sha256": "60f067d3255410559592c5c3ff58b77aa877f4052d609bc2a195627bc212e100",
-      "modified_utc": "2026-08-13T17:58:03.006494+00:00"
+      "size": 100198,
+      "sha256": "95fef7b12299ca3bb27afc369ee83af6c7030f9d8b0e04b040681f3d63d8eb32",
+      "modified_utc": "2026-08-18T01:57:03.123878+00:00"
     },
     {
       "path": "validation/test_structural_path_randomization_method_promotion_audit.py",
-      "size": 47059,
-      "sha256": "f2e8cc03de3ca710a840b39a485b29e0352b0ab2414339e3466823b488d209eb",
-      "modified_utc": "2026-08-13T17:58:03.016219+00:00"
+      "size": 47100,
+      "sha256": "8fd8fa30c4c1d507eb3b99777af41f9ae7acfc4fe1685fd30fb40fd9d2caafb8",
+      "modified_utc": "2026-08-18T01:59:19.901163+00:00"
     },
     {
       "path": "validation/inference_publication_audit.py",
@@ -238,13 +238,13 @@
         "path": "validation/results/structural_path_randomization_reference/workers_1.recipe.json",
         "size": 2345,
         "sha256": "cd6592033942ffb3572e85726459b985a54de58f1d61312d975d9c06552d8eed",
-        "modified_utc": "2026-08-13T18:09:30.240372+00:00"
+        "modified_utc": "2026-08-18T13:18:19.462071+00:00"
       },
       {
         "path": "validation/results/structural_path_randomization_reference/workers_4.recipe.json",
         "size": 2345,
         "sha256": "f71a352d3ee3dd9b4660fe2d6f0b9996949e00cefedca9a86ec9dd54616a112c",
-        "modified_utc": "2026-08-13T18:09:30.363498+00:00"
+        "modified_utc": "2026-08-18T13:18:19.516551+00:00"
       }
     ]
   },
@@ -372,19 +372,19 @@
         "path": "validation/results/structural_path_randomization_reference/construct_scores.csv",
         "size": 1002,
         "sha256": "564ab7cba95b6092a941fdff207189c37c17d29b2635888bd2ee189a8ef191bf",
-        "modified_utc": "2026-08-13T18:09:30.891214+00:00"
+        "modified_utc": "2026-08-18T13:18:20.099500+00:00"
       },
       "design": {
         "path": "validation/results/structural_path_randomization_reference/design_manifest.csv",
         "size": 660,
         "sha256": "182993f60701c80f76a6c3b6b970ccdb0fcbced5f306a42bad7610b3b0afc8be",
-        "modified_utc": "2026-08-13T18:09:30.901045+00:00"
+        "modified_utc": "2026-08-18T13:18:20.100665+00:00"
       },
       "indices": {
         "path": "validation/results/structural_path_randomization_reference/permutation_indices.csv",
         "size": 367738,
         "sha256": "5c284306902f69a92738f199d2fd00045244ffed3d811a3fd1ce5dafc84f6465",
-        "modified_utc": "2026-08-13T18:09:30.920631+00:00"
+        "modified_utc": "2026-08-18T13:18:20.117345+00:00"
       }
     },
     "command": [
@@ -429,7 +429,7 @@
       "path": "validation/results/structural_path_randomization_reference/r_coefficients.csv",
       "size": 280522,
       "sha256": "34b9882414757b4899a555675c2a392c3371f9a15f0226f7c21632db1ad0eb72",
-      "modified_utc": "2026-08-13T18:09:32.977986+00:00"
+      "modified_utc": "2026-08-18T13:18:22.313396+00:00"
     }
   },
   "calibration": {

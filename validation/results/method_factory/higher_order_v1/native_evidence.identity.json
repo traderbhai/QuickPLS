@@ -1,0 +1,113 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "checks": {
+      "all_declared_test_sources_exist": true,
+      "prebuilt_engine_identity": {
+        "path": "target/debug/qpls.exe",
+        "sha256": "113abffa82706accfe0b96ff7aee7daf51deba39430e9e43fd29401b71c5945c",
+        "size": 66081792
+      },
+      "targeted_vitest_passed": true,
+      "test_file_count": 5
+    },
+    "execution": {
+      "command": [
+        "npx.cmd",
+        "vitest",
+        "run",
+        "src/domain/resultTables.test.ts",
+        "src/native/NativeHigherOrderDialog.test.tsx",
+        "src/native/nativeExportTables.test.ts",
+        "src/native/nativeHigherOrder.test.ts",
+        "src/native/nativeResults.test.ts"
+      ],
+      "duration_seconds": 11.324,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  5 passed (5)\n      Tests  81 passed (81)\n   Start at  09:17:25\n   Duration  4.39s (transform 4.32s, setup 0ms, import 7.74s, tests 869ms, environment 1ms)\n\n"
+    },
+    "kind": "quickpls_phase3_native_source_gate",
+    "method": "higher_order_v1",
+    "packaged_workflow_not_claimed": true,
+    "passed": true,
+    "path": "validation/results/method_factory/higher_order_v1/native_gate.json",
+    "schema_version": 1,
+    "tests": [
+      "src/domain/resultTables.test.ts",
+      "src/native/NativeHigherOrderDialog.test.tsx",
+      "src/native/nativeExportTables.test.ts",
+      "src/native/nativeHigherOrder.test.ts",
+      "src/native/nativeResults.test.ts"
+    ]
+  },
+  "feature_id": "qpls3.pls.higher_order_two_stage",
+  "generated_at_utc": "2026-08-18T03:47:30.279452Z",
+  "method_version": "pls_pm_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "frontend_report+export_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/domain/resultTables.test.ts",
+      "sha256": "e5c339638fa13efb5b12250b9b2f94642935cb74e9482dded23fc8f43d9ec2f3",
+      "size": 22259
+    },
+    {
+      "path": "src/native/NativeHigherOrderDialog.test.tsx",
+      "sha256": "89f8d975a7871a251a445598fd1d28edd94475e502b9978430c3153f8037d36c",
+      "size": 1671
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "0c09a9a8279bc13b8492b281e5473eb226525da683143904dfc0a68df3f1336a",
+      "size": 44064
+    },
+    {
+      "path": "src/native/nativeHigherOrder.test.ts",
+      "sha256": "89585fe9daf507a4746fa6b3f37cdf2bbddb0a131b43ef73ebec9449430b41f6",
+      "size": 3612
+    },
+    {
+      "path": "src/native/nativeResults.test.ts",
+      "sha256": "3476f90afc93fcb4882e3cbb84bdc487be9d398b04472fe302ef009d1201c268",
+      "size": 173105
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/higher_order_v1.manifest.json",
+      "sha256": "19bd05dfc41e6b36ffd0eb3165dd002594ef46da8493c769b781f3d590835f88",
+      "size": 15861
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "ef5c8d32c4ea502f29666d912ae8103f7eb0e325a838df46dd5647ac07d2c11b",
+      "size": 30813
+    },
+    {
+      "path": "validation/results/method_factory/higher_order_v1/native_gate.json",
+      "sha256": "4732b3c0e142a0c16cbb22c350456b644d6949f66f991323b9775b18f3effdf2",
+      "size": 1377
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "148ba50d641d3ba1b42287e782a00854931f7495c3c938e687f2e72d08546956",
+      "size": 3303
+    }
+  ]
+}

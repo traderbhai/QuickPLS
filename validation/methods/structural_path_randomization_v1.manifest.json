@@ -38,13 +38,23 @@
       {
         "id": "plus_one_probability",
         "expression": "p = (1 + sum_b I(|beta_b| >= |beta_observed|)) / (B + 1)",
-        "variables": ["p", "beta_b", "beta_observed", "B"],
+        "variables": [
+          "p",
+          "beta_b",
+          "beta_observed",
+          "B"
+        ],
         "source_reference_id": "freedman_lane_1983"
       },
       {
         "id": "freedman_lane_response",
         "expression": "y_b = fitted_reduced + permute(residual_reduced, pi_b)",
-        "variables": ["y_b", "fitted_reduced", "residual_reduced", "pi_b"],
+        "variables": [
+          "y_b",
+          "fitted_reduced",
+          "residual_reduced",
+          "pi_b"
+        ],
         "source_reference_id": "freedman_lane_1983"
       }
     ],
@@ -80,7 +90,10 @@
         "purpose": "type_i_error",
         "design": "Paired homoscedastic Gaussian constant-variance null scenarios with the frozen fixed-score contract.",
         "seed_policy": "Indexed deterministic streams with stable replicate ordering.",
-        "metrics": ["rejection_rate", "binomial_confidence_interval"],
+        "metrics": [
+          "rejection_rate",
+          "binomial_confidence_interval"
+        ],
         "acceptance_rule": "The preregistered null-calibration boundary in the reference report must pass."
       },
       {
@@ -88,7 +101,10 @@
         "purpose": "power",
         "design": "Paired homoscedastic Gaussian constant-variance signal scenarios using the same frozen designs as the null calibration.",
         "seed_policy": "Indexed deterministic streams with stable replicate ordering.",
-        "metrics": ["rejection_rate", "null_to_signal_separation"],
+        "metrics": [
+          "rejection_rate",
+          "null_to_signal_separation"
+        ],
         "acceptance_rule": "The preregistered power boundary in the reference report must pass."
       }
     ],
@@ -124,7 +140,7 @@
         "expected_behavior": "Strict project validation rejects the archive."
       }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
     "persistence": {
@@ -186,7 +202,9 @@
       ]
     },
     "export": {
-      "formats": ["xlsx"],
+      "formats": [
+        "xlsx"
+      ],
       "tables": [
         "Structural path randomization",
         "Path coefficients",
@@ -196,7 +214,9 @@
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
+      "platforms": [
+        "windows"
+      ],
       "workflow_steps": [
         "setup",
         "invalid_setup_blocked",
@@ -209,7 +229,11 @@
         "reopen_same_run",
         "cleanup"
       ],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": true,
       "process_cleanup_required": true
@@ -260,6 +284,8 @@
         "validation/test_structural_path_randomization_method_promotion_audit.py",
         "validation/structural_path_randomization_v1_factory_audit.py",
         "validation/legacy_release_adapter_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
         "validation/test_legacy_release_adapters.py"
       ],
       "packaged_acceptance": [
@@ -268,6 +294,8 @@
         "validation/v247_native_desktop_visual_acceptance.mjs",
         "validation/structural_path_randomization_v1_packaged_acceptance.py",
         "validation/legacy_release_adapter_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
         "validation/test_legacy_release_adapters.py"
       ]
     },
@@ -275,20 +303,10 @@
       "engine_only": [
         {
           "path": "validation/results/method_factory/structural_path_randomization_v1/engine_stage.identity.json",
-          "roles": [
-            "method_spec",
-            "independent_reference",
-            "simulation_report",
-            "boundary_report"
-          ],
+          "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {
-              "passed": "/passed",
-              "feature_id": "/feature_id",
-              "method_version": "/method_version",
-              "catalogue_snapshot_date": "/catalogue_snapshot_date"
-            },
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }
@@ -321,34 +339,20 @@
       "release_qualified": [
         {
           "path": "validation/results/method_factory/structural_path_randomization_v1/method_audit.identity.json",
-          "roles": [
-            "method_audit"
-          ],
+          "roles": ["method_audit"],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {
-              "passed": "/passed",
-              "feature_id": "/feature_id",
-              "method_version": "/method_version",
-              "catalogue_snapshot_date": "/catalogue_snapshot_date"
-            },
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }
         },
         {
           "path": "validation/results/method_factory/structural_path_randomization_v1/packaged_acceptance.identity.json",
-          "roles": [
-            "packaged_acceptance"
-          ],
+          "roles": ["packaged_acceptance"],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {
-              "passed": "/passed",
-              "feature_id": "/feature_id",
-              "method_version": "/method_version",
-              "catalogue_snapshot_date": "/catalogue_snapshot_date"
-            },
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }

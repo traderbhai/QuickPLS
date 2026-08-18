@@ -13,7 +13,7 @@ VALIDATION = Path(__file__).resolve().parent
 if str(VALIDATION) not in sys.path:
     sys.path.insert(0, str(VALIDATION))
 
-from wpls_v1_packaged_acceptance import EXPECTED_CUMULATIVE_CHECKS, ROOT, verify_native_report
+from wpls_v1_packaged_acceptance import PACKAGED_ACCEPTANCE_CONTRACT, ROOT, verify_native_report
 
 
 STARTED = datetime(2026, 8, 13, 12, 0, tzinfo=timezone.utc)
@@ -24,6 +24,11 @@ EXPORT = "validation/results/test-wpls.xlsx"
 def valid_report() -> dict:
     zero = {"recipeCount": 0, "resultCount": 0, "runCount": 0, "recipeIds": [], "resultIds": [], "runIds": []}
     checks = {
+        check_id: {"passed": True}
+        for check_set in PACKAGED_ACCEPTANCE_CONTRACT["ordered_check_sets"]
+        for check_id in check_set["required_check_ids"]
+    }
+    checks.update({
         "runtime": {"tauriRuntime": True},
         "wplsInvalidSetup": {"attempted": True, "caseWeightColumn": "", "startEnabled": False, "blockers": ["Choose a positive numeric case-weight variable"], "missingWeightBlocker": True, "archiveBefore": copy.deepcopy(zero), "archiveAfter": copy.deepcopy(zero), "runStateUnchanged": True, "resultCreated": False},
         "wplsDialog": {"selectedMethod": "Weighted PLS", "caseWeightColumn": "case_wt", "standardized": "Standardized (fixed)", "startEnabled": True, "blockers": []},
@@ -32,9 +37,7 @@ def valid_report() -> dict:
         "wpls_weights": {"rows": 4, "caseWeightColumnVisible": True},
         "wplsExport": {"selectedRunId": RUN_ID, "expectedRunId": RUN_ID, "xlsxEnabled": True, "nativeXlsx": {"attempted": True, "targetPath": str((ROOT / EXPORT).resolve()), "file": {"isFile": True, "size": 123}, "workbookSheets": ["WPLS case-weight diagnostics", "Run provenance"], "methodSheetsPresentExactlyOnce": True, "helper": {"completion": {"passed": True, "workbook": {"sha256": "b" * 64, "size": 123, "requiredSharedStrings": ["case_wt"]}}}}},
         "wplsSaveReopen": {"sameRunRestored": True, "expectedRunId": RUN_ID, "selectedRunId": RUN_ID, "pathRows": 1, "diagnosticRows": 4, "immutableLabelsRestored": True, "caseWeightColumnRestored": True},
-    }
-    for index in range(EXPECTED_CUMULATIVE_CHECKS - len(checks)):
-        checks[f"other_{index:03d}"] = {"passed": True}
+    })
     return {"generatedAt": "2026-08-13T12:01:00Z", "passed": True, "focusedRun": {"scope": "regression_bootstrap", "completedAt": "2026-08-13T12:02:00Z"}, "checks": checks, "failures": [], "consoleErrors": []}
 
 

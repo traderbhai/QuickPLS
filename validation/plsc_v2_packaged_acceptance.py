@@ -10,6 +10,12 @@ from typing import Any
 
 from diagnostic_bundle_source_manifest import SourceManifestFailure, validate_build_receipt
 from method_promotion_manifest import _verify_artifact, validate_manifest
+from packaged_windows_acceptance_v2 import (
+    CONTRACT as PACKAGED_ACCEPTANCE_CONTRACT,
+    EXPECTED_CHECK_COUNT,
+    receipt_binds_packaged_acceptance_contract,
+    validate_required_report_checks,
+)
 from plsc_v2_factory_common import (
     MANIFEST_PATH,
     ROOT,
@@ -29,7 +35,7 @@ CUMULATIVE_RECEIPT = ROOT / "validation/results/v247_cumulative_native_acceptanc
 BUILD_RECEIPT = ROOT / "validation/results/diagnostic_bundle_build_receipt.json"
 DESKTOP = ROOT / "target/release/quickpls-desktop.exe"
 RELEASE_CLI = ROOT / "target/release/qpls.exe"
-EXPECTED_CUMULATIVE_CHECKS = 177
+EXPECTED_CUMULATIVE_CHECKS = EXPECTED_CHECK_COUNT
 REQUIRED_VIEWPORTS = {
     "1024x700": {"width": 1024, "height": 700},
     "1280x720": {"width": 1280, "height": 720},
@@ -42,10 +48,12 @@ REQUIRED_XLSX_SHEETS = {
 }
 GATE_SOURCES = {
     SOURCE,
+    "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
     "validation/diagnostic_bundle_source_manifest.py",
     "validation/method_promotion_manifest.py",
     "validation/methods/method_promotion_manifest.schema.json",
     "validation/methods/plsc_v2.manifest.json",
+    "validation/packaged_windows_acceptance_v2.py",
     "validation/plsc_v2_factory_audit.py",
     "validation/plsc_v2_factory_common.py",
     "validation/run_v247_cumulative_native_acceptance.ps1",
@@ -163,14 +171,14 @@ def verify_cumulative_receipt(started: datetime) -> dict[str, Any]:
         completed = _parse_utc(receipt["completed_at_utc"])
         supervisor_started = _parse_utc(receipt["supervisor_started_at_utc"])
         checks = {
-            "receipt_identity": receipt.get("kind") == "quickpls_v247_cumulative_native_acceptance_receipt" and receipt.get("schema_version") == 1,
+            "receipt_identity": receipt.get("kind") == "quickpls_v247_cumulative_native_acceptance_receipt" and receipt_binds_packaged_acceptance_contract(receipt),
             "receipt_passed": receipt.get("passed") is True,
             "fresh_for_invocation": supervisor_started >= started - timedelta(seconds=2) and completed >= started,
             "report_path_exact": receipt.get("report") == repository_path(RAW_REPORT),
             "report_hash_and_size_exact": receipt.get("report_sha256") == report["sha256"] and receipt.get("report_size") == report["size"],
-            "exact_check_count": receipt.get("checks") == EXPECTED_CUMULATIVE_CHECKS and receipt.get("unique_checks") == EXPECTED_CUMULATIVE_CHECKS,
+            "exact_check_contract": receipt_binds_packaged_acceptance_contract(receipt),
             "clean_report": receipt.get("failures") == 0 and receipt.get("console_errors") == 0,
-            "final_scope_exact": receipt.get("final_scope") == "regression_bootstrap",
+            "final_scope_exact": receipt.get("final_scope") == PACKAGED_ACCEPTANCE_CONTRACT["final_scope"],
             "graceful_cleanup_verified": receipt.get("graceful_process_cleanup_verified") is True,
             "one_plsc_export": len(plsc_exports) == 1,
             "plsc_export_exact": export_path.is_file() and export.get("size") == export_path.stat().st_size and export.get("sha256") == sha256_file(export_path),
@@ -202,7 +210,7 @@ def verify_native_report(started: datetime, cumulative: dict[str, Any]) -> dict[
         "fresh_after_invocation_start": _parse_utc(report["generatedAt"]) >= started,
         "raw_report_passed": report.get("passed") is True,
         "current_cumulative_chain": focused.get("scope") == "regression_bootstrap" and _parse_utc(focused["completedAt"]) >= started,
-        "exact_cumulative_check_count": len(checks) == EXPECTED_CUMULATIVE_CHECKS,
+        "exact_cumulative_check_contract": validate_required_report_checks(PACKAGED_ACCEPTANCE_CONTRACT, checks)["passed"],
         "tauri_runtime": runtime.get("tauriRuntime") is True,
         "invalid_scope_blocked": invalid.get("attempted") is True and invalid.get("startEnabled") is False and invalid.get("underspecifiedReflectiveBlocker") is True and bool(invalid.get("blockers")),
         "invalid_scope_created_no_state": invalid.get("runStateUnchanged") is True and invalid.get("resultCreated") is False and all(invalid_before.get(key) == 0 and invalid_after.get(key) == 0 for key in ("recipeCount", "resultCount", "runCount")),
@@ -248,8 +256,8 @@ def verify_visual_report(started: datetime) -> dict[str, Any]:
             and linkage.get("expectedKind") == "plsc"
             and linkage.get("expectedLabel") == "Consistent PLS"
             and linkage.get("linkage") is True
-            and row.get("scopeLabel") == "Validated scope"
-            and row.get("scopeDetail") == "Reflective constructs with at least two indicators each"
+            and row.get("scopeLabel") == "Supported setup"
+            and row.get("scopeDetail") == "Reflective constructs with at least two indicators each; path or factor weighting; raw observations with listwise deletion"
             and row.get("pcaWeightingOptionCount") == 1
             and row.get("pcaWeightingDisabled") is True
             and row.get("startCommandCount") == 1

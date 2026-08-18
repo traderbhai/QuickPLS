@@ -303,7 +303,6 @@ def run_plsc(
             repository_path(csv_path),
             "--output",
             repository_path(output),
-            "--allow-experimental",
         ],
         timeout=600,
     )

@@ -30,9 +30,10 @@ EXPECTED_CR_SLOPE = 13.0 / 14.0
 EXPECTED_CR_INTERCEPT = 10.0 / 7.0
 EXPECTED_CR_EFFECT = 36.0 / 91.0
 EXPECTED_NCA_WARNING = (
-    "NCA v2 is limited to the documented numeric X/Y CE-FDH and CR-FDH scope "
-    "with observed-range bottlenecks; multiple conditions, latent-score NCA, "
-    "cIPMA, and broader ceiling variants remain unsupported."
+    "NCA v2 supports one observed numeric condition/outcome pair with CE-FDH and "
+    "CR-FDH ceilings, seeded one-sided permutation evidence, and observed-range "
+    "bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and additional "
+    "ceiling variants are not available."
 )
 EXPECTED_DIALOG_SCOPE = (
     "Numeric observed-variable CE-FDH and CR-FDH analysis with observed-range "

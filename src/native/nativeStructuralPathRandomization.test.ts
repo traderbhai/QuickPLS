@@ -23,7 +23,7 @@ function clone<T>(value: T): T {
 }
 
 describe("current structural path randomization frontend contract", () => {
-  it("projects the exact method, plan, manifest, and plus-one arithmetic into candidate rows", () => {
+  it("projects the exact method, plan, manifest, and plus-one arithmetic into scoped Standard rows", () => {
     const projection = nativeStructuralPathRandomizationProjection(completedStructuralPathRandomizationRun());
 
     expect(projection).toMatchObject({
@@ -47,7 +47,7 @@ describe("current structural path randomization frontend contract", () => {
     expect(table).toMatchObject({
       id: "permutation",
       title: "Structural path randomization",
-      status: "experimental",
+      status: "validated",
       warning: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
       columns: ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
     });
@@ -94,7 +94,7 @@ describe("current structural path randomization frontend contract", () => {
     const run = completedStructuralPathRandomizationRun();
     const nativeTable = nativeResultTables(run).find((table) => table.id === "permutation");
     expect(nativeTable).toMatchObject({
-      status: "experimental",
+      status: "validated",
       warning: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
       columns: ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
     });
@@ -103,7 +103,7 @@ describe("current structural path randomization frontend contract", () => {
     expect(exportTables.find((table) => table.id === "permutation")).toEqual(nativeTable);
     expect(exportTables[0]).toMatchObject({
       id: "run_provenance",
-      status: "experimental",
+      status: "validated",
       warning: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
     });
     expect(exportTables[0].rows).toEqual(expect.arrayContaining([
@@ -112,10 +112,10 @@ describe("current structural path randomization frontend contract", () => {
       ["Randomized structural paths", "5"],
       ["Randomization estimand", "Structural path coefficients conditional on fixed original PLS construct scores"],
       ["Pathwise probability", "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment"],
-      ["Qualification status", "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"],
+      ["Availability", "Supported within the documented fixed-score scope"],
     ]));
     expect(nativeRunProvenanceTable(run)).toMatchObject({
-      status: "experimental",
+      status: "validated",
       warning: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
     });
 
@@ -126,7 +126,7 @@ describe("current structural path randomization frontend contract", () => {
     expect(nativeRunProvenanceTable(invalid).rows.some(([field]) => field === "Randomization method")).toBe(false);
   });
 
-  it("interprets valid randomization as candidate fixed-score, unadjusted pathwise inference", () => {
+  it("interprets valid randomization as scoped fixed-score, unadjusted pathwise inference", () => {
     const run = completedStructuralPathRandomizationRun();
     const interpretation = buildResultInterpretation({ run });
     const randomization = interpretation.findings.find((finding) => finding.id.startsWith("permutation."));
@@ -145,7 +145,7 @@ describe("current structural path randomization frontend contract", () => {
       "Structural path randomization",
       ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
       ["competence -> satisfaction", "0.403000", "9", "999", "0.01"],
-    )).toContain("candidate Freedman-Lane result");
+    )).toContain("Freedman-Lane fixed-score result");
 
     const invalid = clone(run);
     invalid.permutation!.parameters[0].exceedances = 1_000;

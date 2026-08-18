@@ -64,7 +64,7 @@ export function workflowProgress(input: WorkflowProgressInput): WorkflowStepStat
       detail: !hasData || !hasModel
         ? "Complete Data and Model before calculation setup."
         : readiness.canRun
-          ? "Method setup is ready for the selected documented scope."
+          ? "The selected method's data, model, and settings requirements are satisfied."
           : readiness.blockers[0]?.detail ?? readiness.summary,
       actionLabel: readiness.canRun ? "Review setup" : "Resolve setup",
     },

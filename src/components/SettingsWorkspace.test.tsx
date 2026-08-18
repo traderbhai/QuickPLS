@@ -2,11 +2,16 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DiagnosticStagedContents } from "../services/projectService";
 import { useWorkspace } from "../store";
-import { DiagnosticStagedContentsPreview, SettingsWorkspace } from "./SettingsWorkspace";
+import {
+  DiagnosticStagedContentsPreview,
+  SettingsSchema6LabsSurface,
+  SettingsWorkspace,
+} from "./SettingsWorkspace";
 
 describe("SettingsWorkspace diagnostic bundle controls", () => {
   beforeEach(() => {
     useWorkspace.getState().resetProject();
+    useWorkspace.getState().setUiPreferences({ experimentalLabsEnabled: false });
   });
 
   afterEach(() => {
@@ -27,6 +32,29 @@ describe("SettingsWorkspace diagnostic bundle controls", () => {
     expect(html).toContain('role="status"');
     expect(html).toContain('aria-live="polite"');
     expect(html).not.toContain(">Upload<");
+  });
+
+  it("keeps Experimental Labs disabled by default and explains the separation from Standard", () => {
+    vi.stubGlobal("window", {});
+
+    const html = renderToStaticMarkup(<SettingsWorkspace />);
+
+    expect(useWorkspace.getState().uiPreferences.experimentalLabsEnabled).toBe(false);
+    expect(html).toContain("Enable Experimental Labs");
+    expect(html).toContain("Disabled by default");
+    expect(html).toContain("separate from Standard analyses and product-parity claims");
+    expect(html).toContain('aria-describedby="experimental-labs-description"');
+  });
+
+  it("renders one schema-6 Labs surface when Experimental Labs is enabled", () => {
+    vi.stubGlobal("window", { __TAURI_INTERNALS__: {} });
+
+    const html = renderToStaticMarkup(<SettingsSchema6LabsSurface enabled />);
+
+    expect(html).toContain('data-internal-schema6-session="inactive"');
+    expect(html).toContain("Schema-6 read-only memory session");
+    expect(html).not.toContain('data-internal-schema6-archive-inspector="read-only"');
+    expect(html).not.toContain("Schema-6 archive inspection");
   });
 
   it("explains that diagnostic creation is unavailable outside the native desktop", () => {

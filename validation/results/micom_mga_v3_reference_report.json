@@ -1,0 +1,49 @@
+{
+  "deterministic_stream_reference": {
+    "passed": true,
+    "streams_checked": 5140,
+    "synthetic_failures": 269
+  },
+  "exhaustive_partition_reference": {
+    "observation_range": [
+      5,
+      9
+    ],
+    "partitions_checked": 912,
+    "passed": true
+  },
+  "independence": "NumPy PLS reference plus independently specified canonical permutation coupling; no QuickPLS product module import",
+  "method_versions": {
+    "mga": "pls_mga_two_group_v3",
+    "micom": "micom_v3",
+    "permutation_mga": "pls_mga_permutation_v3"
+  },
+  "numerical_swap_reference": {
+    "accounting_match": true,
+    "decisions_match": true,
+    "forward_attempted": 19,
+    "forward_failed": 0,
+    "maximum_signed_residual": 0.0,
+    "maximum_two_tailed_p_delta": 0.0,
+    "passed": true,
+    "reverse_attempted": 19,
+    "reverse_failed": 0
+  },
+  "passed": true,
+  "permutation_samples": 19,
+  "promotion_ready": false,
+  "promotion_sample_size": false,
+  "qualification_blockers": [
+    "The combined diagnostic replaces failed fits until it reaches the requested usable count.",
+    "MICOM and structural-path permutation MGA require separate scientific contracts and qualification evidence.",
+    "Use validation/micom_v3_oracle.py for the frozen MICOM-only exactly-once no-retry work contract."
+  ],
+  "qualification_ready": false,
+  "quickpls_comparison": null,
+  "reference_passed": true,
+  "retry_policy": "legacy_fill_usable_target",
+  "schema_version": 1,
+  "seed": 20260811,
+  "target": "micom_v3_and_pls_mga_permutation_v3_swap_coupled_independent_reference",
+  "work_evidence_only": true
+}

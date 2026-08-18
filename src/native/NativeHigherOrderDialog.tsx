@@ -79,7 +79,7 @@ export default function NativeHigherOrderDialog({
         <span>{option.label} <small>[{option.shortName}]</small>{option.reason ? <small>{option.reason}</small> : null}</span>
       </label>)}
     </fieldset>
-    <p className="nd-dialog-note">After creation, use the Path tool to add one HOC-to-outcome relationship. The bounded native workflow permits no other structural path and runs with PLS-SEM Algorithm, path weighting, standardized data, and listwise deletion. HOC bootstrapping and permutation inference remain unavailable.</p>
+    <p className="nd-dialog-note">After creation, use the Path tool to add one HOC-to-outcome relationship and no other structural path. This workflow uses PLS-SEM Algorithm, path weighting, standardized data, and listwise deletion. HOC bootstrapping and permutation inference remain unavailable.</p>
     {blocker || visibleProblems.length || creationError ? <div className="nd-form-error" role="alert">{blocker ?? creationError ?? visibleProblems[0]}</div> : null}
     <footer><button type="button" onClick={close}>Cancel</button><button className="primary" type="submit" disabled={Boolean(blocker) || problems.length > 0}>Create higher-order construct</button></footer>
   </form>;

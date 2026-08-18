@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem-exact-case-bootstrap-studentized-phase0-report-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "status", "run_id", "manifest_path", "manifest_sha256", "report_schema_path", "binary_path", "binary_sha256", "rust_example_sha256", "hardware", "physical_memory_bytes", "stop_criteria", "case_receipts", "worker_invariance", "stop_evaluation", "cap_decision"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "cbsem_exact_case_bootstrap_studentized_phase0_report_v1" },
+    "status": { "const": "phase0_measurement_complete_no_caps_or_qualification" },
+    "run_id": { "$ref": "#/$defs/nonEmptyString" },
+    "manifest_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase0_manifest_v1.json" },
+    "manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "report_schema_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase0_report_v1.schema.json" },
+    "binary_path": { "$ref": "#/$defs/nonEmptyString" },
+    "binary_sha256": { "$ref": "#/$defs/sha256" },
+    "rust_example_sha256": { "$ref": "#/$defs/sha256" },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "os_release", "architecture", "processor", "logical_cores", "physical_memory_bytes"],
+      "properties": {
+        "os": { "$ref": "#/$defs/nonEmptyString" },
+        "os_release": { "$ref": "#/$defs/nonEmptyString" },
+        "architecture": { "$ref": "#/$defs/nonEmptyString" },
+        "processor": { "$ref": "#/$defs/nonEmptyString" },
+        "logical_cores": { "type": ["integer", "null"], "minimum": 1 },
+        "physical_memory_bytes": { "type": ["integer", "null"], "minimum": 1 }
+      }
+    },
+    "physical_memory_bytes": { "type": ["integer", "null"], "minimum": 1 },
+    "stop_criteria": { "type": "object" },
+    "case_receipts": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "status", "path", "sha256"],
+        "properties": {
+          "case_id": { "$ref": "#/$defs/id" },
+          "status": { "$ref": "#/$defs/nonEmptyString" },
+          "path": { "$ref": "#/$defs/nonEmptyString" },
+          "sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    "worker_invariance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "case_ids", "scientific_result_sha256"],
+      "properties": {
+        "status": { "enum": ["exact", "drift", "not_evaluated_due_stopped_or_skipped_case"] },
+        "case_ids": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/id" } },
+        "scientific_result_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+      }
+    },
+    "stop_evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reasons"],
+      "properties": {
+        "status": { "enum": ["no_stop_triggered", "stop_triggered"] },
+        "reasons": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true }
+      }
+    },
+    "cap_decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason"],
+      "properties": {
+        "status": { "const": "not_evaluated" },
+        "reason": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

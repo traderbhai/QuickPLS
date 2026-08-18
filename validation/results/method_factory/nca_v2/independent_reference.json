@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "schema_version": 2,
+  "report_scope": "method_specific",
+  "target": "nca_v2 bounded backend qualification",
+  "selected_section": "nca",
+  "tolerance": 1e-06,
+  "checks": {
+    "nca": {
+      "passed": true,
+      "method_version": "nca_v2",
+      "max_abs_difference": 1.7763568394002505e-14,
+      "ce_fdh_peer_count": 14,
+      "ce_fdh_peers_ordered": true,
+      "cr_fdh_regression_checked": true,
+      "all_bottleneck_rows_checked": true,
+      "permutation_p_value_lattice": true,
+      "seeded_repeat_deterministic": true,
+      "exact_standalone_envelope": true,
+      "exact_ceiling_shape": true,
+      "scope": {
+        "observed_numeric_variables": 2,
+        "listwise_complete_rows_minimum": 3,
+        "ceilings": [
+          "ce_fdh",
+          "cr_fdh"
+        ],
+        "latent_score_nca": false,
+        "multiple_conditions": false,
+        "cipma": false
+      }
+    }
+  },
+  "note": "NCA v2 evidence is limited to the documented standalone observed numeric X/Y CE-FDH/CR-FDH scope; packaged-native acceptance and broader method parity are separate gates."
+}

@@ -1,0 +1,178 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "boundary_gate": {
+      "checks": {
+        "dataset_identity_tamper_rejected": true,
+        "metamorphic_and_determinism_covered_by_engine_gate": true,
+        "no_scope_result_written": true,
+        "no_tampered_result_written": true,
+        "prebuilt_cli_only": true,
+        "unsupported_scope_rejected": true
+      },
+      "executions": [
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "validate",
+            "validation/results/method_factory/moderated_mediation_v1/work/boundary_invalid.recipe.json",
+            "--json"
+          ],
+          "duration_seconds": 0.146,
+          "returncode": 1,
+          "stderr_tail": "Error: recipe validation failed\n",
+          "stdout_tail": "[\n  {\n    \"code\": \"moderated_mediation.interaction_required\",\n    \"severity\": \"error\",\n    \"message\": \"Moderated mediation requires at least one interaction term in this experimental release\",\n    \"subject\": null\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"x\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"w\"\n  },\n  {\n    \"code\": \"construct.indicators\",\n    \"severity\": \"error\",\n    \"message\": \"Construct requires at least one indicator\",\n    \"subject\": \"xw\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"m\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"y\"\n  }\n]\n"
+        },
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/moderated_mediation_v1/work/boundary_invalid.recipe.json",
+            "--data",
+            "validation/results/method_factory/moderated_mediation_v1/work/scenario_00/data.csv",
+            "--output",
+            "validation/results/method_factory/moderated_mediation_v1/work/boundary_scope_invalid.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.082,
+          "returncode": 1,
+          "stderr_tail": "Error: moderated_mediation.interaction_required: Moderated mediation requires at least one interaction term in this experimental release\n",
+          "stdout_tail": ""
+        },
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/moderated_mediation_v1/work/boundary_identity_tampered.recipe.json",
+            "--data",
+            "validation/results/method_factory/moderated_mediation_v1/work/scenario_00/data.csv",
+            "--output",
+            "validation/results/method_factory/moderated_mediation_v1/work/boundary_identity_tampered.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.076,
+          "returncode": 1,
+          "stderr_tail": "Error: recipe dataset fingerprint does not match the imported dataset\n",
+          "stdout_tail": ""
+        }
+      ],
+      "kind": "quickpls_phase3_boundary_gate",
+      "method": "moderated_mediation_v1",
+      "passed": true,
+      "path": "validation/results/method_factory/moderated_mediation_v1/boundary_gate.json",
+      "schema_version": 1
+    },
+    "engine_gate": {
+      "checks": {
+        "claim_limited_to": "one first- or second-stage bounded conditional indirect-effect diagnostic",
+        "passed": true,
+        "scenarios": [
+          {
+            "invalid_guard": true,
+            "passed": true,
+            "report": "validation/results/method_factory/moderated_mediation_v1/work/scenario_00/reference_report.json",
+            "report_sha256": "84d606f2766f354d259107ddbd95a1b0ecba749a80ee986894aab018014799dd",
+            "sample_size": 128,
+            "scientific_failures": {},
+            "seed": 20260719,
+            "warning_present": false
+          },
+          {
+            "invalid_guard": true,
+            "passed": true,
+            "report": "validation/results/method_factory/moderated_mediation_v1/work/scenario_01/reference_report.json",
+            "report_sha256": "c7f42d3ec78ff02a8cbd8534f9dfcbdee2c497f1d6fc435787252244a13afb96",
+            "sample_size": 192,
+            "scientific_failures": {},
+            "seed": 20260814,
+            "warning_present": false
+          }
+        ],
+        "scope_warning_gap": "the former generic experimental warning is absent from the engine payload"
+      },
+      "completed_at_utc": "2026-08-18T00:10:51.850994Z",
+      "kind": "quickpls_phase3_current_engine_gate",
+      "method": "moderated_mediation_v1",
+      "passed": true,
+      "path": "validation/results/method_factory/moderated_mediation_v1/engine_gate.json",
+      "prebuilt_cli": {
+        "path": "target/debug/qpls.exe",
+        "sha256": "ad982f935cced0de90627d25d941c38d74adf6b19882364b037ca3b9fb01c8b0",
+        "size": 66081792
+      },
+      "recipe_policy": "historical fixtures copied to explicit schema v3; source fixtures preserved",
+      "schema_version": 1,
+      "started_at_utc": "2026-08-18T00:10:49.394212Z"
+    },
+    "passed": true
+  },
+  "feature_id": "qpls3.pls.moderated_mediation",
+  "generated_at_utc": "2026-08-18T00:10:52.325428Z",
+  "method_version": "pls_moderated_mediation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_MODERATED_MEDIATION_V1.md",
+      "sha256": "b94b54dd4791f15356cf6c290776c43520543b2d91c06274aa67663c8bb387f7",
+      "size": 1997
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/moderated_mediation_v1.manifest.json",
+      "sha256": "7c5943b5a668e97fd00ffae51c47220ac76ca5d666b9601ef50b828bf98444b3",
+      "size": 11019
+    },
+    {
+      "path": "validation/moderated_mediation_boundary_gate.py",
+      "sha256": "a0dbd1d05a35a4b2dfdbec01f24d2b4d15d1407d00a4424294755a6122b0e4ca",
+      "size": 214
+    },
+    {
+      "path": "validation/moderated_mediation_reference.py",
+      "sha256": "87226c67d535f26776f736b88ce087a5212c6e30a665fd12525c5383d807c07e",
+      "size": 10615
+    },
+    {
+      "path": "validation/moderated_mediation_simulation.py",
+      "sha256": "dc58b07c6283ef65319ce169430107a76dcece3c1cd653def7b3b4aa32728e2e",
+      "size": 217
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "ef5c8d32c4ea502f29666d912ae8103f7eb0e325a838df46dd5647ac07d2c11b",
+      "size": 30813
+    },
+    {
+      "path": "validation/results/method_factory/moderated_mediation_v1/boundary_gate.json",
+      "sha256": "2bfdedbf02485f2593ad4ff0a7bf343df7a99ee5653c401635b3d5727024eb44",
+      "size": 3444
+    },
+    {
+      "path": "validation/results/method_factory/moderated_mediation_v1/engine_gate.json",
+      "sha256": "efa5bded217331a46f3056b8e01962160b9f11b36edc5d66ca958565e8f4e374",
+      "size": 1613
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "148ba50d641d3ba1b42287e782a00854931f7495c3c938e687f2e72d08546956",
+      "size": 3303
+    }
+  ]
+}

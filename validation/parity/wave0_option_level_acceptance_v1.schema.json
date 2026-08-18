@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/wave0-option-level-parity-acceptance-v1.schema.json",
+  "title": "QuickPLS Wave 0 Option-level Parity Acceptance Matrix V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "matrix_schema_version",
+    "matrix_id",
+    "matrix_version",
+    "frozen_on",
+    "registry_binding",
+    "official_source_policy",
+    "dimension_contract",
+    "cell_contract",
+    "row_generation_contract",
+    "override_fragments",
+    "overrides",
+    "exclusions"
+  ],
+  "properties": {
+    "matrix_schema_version": { "const": 1 },
+    "matrix_id": { "const": "quickpls.wave0.option_level_parity_acceptance.v1" },
+    "matrix_version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" },
+    "frozen_on": { "type": "string", "format": "date" },
+    "registry_binding": { "$ref": "#/$defs/registryBinding" },
+    "official_source_policy": { "$ref": "#/$defs/officialSourcePolicy" },
+    "dimension_contract": { "$ref": "#/$defs/dimensionContract" },
+    "cell_contract": { "$ref": "#/$defs/cellContract" },
+    "row_generation_contract": { "$ref": "#/$defs/rowGenerationContract" },
+    "override_fragments": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^validation/parity/fragments/[a-z0-9][a-z0-9_.-]*\\.json$"
+      }
+    },
+    "overrides": { "$ref": "#/$defs/overrides" },
+    "exclusions": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/exclusion" }
+    }
+  },
+  "$defs": {
+    "nonemptyString": { "type": "string", "minLength": 1 },
+    "stringList": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonemptyString" }
+    },
+    "registryBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "registry_schema_version",
+        "registry_id",
+        "expected_catalogue_rows",
+        "expected_active_rows",
+        "expected_exclusions"
+      ],
+      "properties": {
+        "path": { "const": "validation/capabilities/capability_registry_v2.json" },
+        "registry_schema_version": { "const": 2 },
+        "registry_id": { "const": "quickpls.capability_registry.v2" },
+        "expected_catalogue_rows": { "const": 45 },
+        "expected_active_rows": { "const": 43 },
+        "expected_exclusions": { "const": 2 }
+      }
+    },
+    "officialSourcePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_scheme",
+        "allowed_host",
+        "catalogue_reference_source",
+        "primary_reference_source",
+        "additional_reference_policy"
+      ],
+      "properties": {
+        "required_scheme": { "const": "https" },
+        "allowed_host": { "const": "smartpls.com" },
+        "catalogue_reference_source": { "const": "registry.catalogue_snapshot.official_catalogue_url" },
+        "primary_reference_source": { "const": "registry.capabilities[].official_url" },
+        "additional_reference_policy": { "$ref": "#/$defs/nonemptyString" }
+      }
+    },
+    "dimensionContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_dimensions",
+        "uncaptured_default",
+        "open_trace_cell_scope",
+        "open_official_reference_scope",
+        "captured_item_rule"
+      ],
+      "properties": {
+        "required_dimensions": {
+          "const": [
+            "settings",
+            "defaults",
+            "model_shapes",
+            "data_inputs",
+            "preprocessing",
+            "outputs",
+            "charts",
+            "failure_conditions",
+            "workflows"
+          ]
+        },
+        "uncaptured_default": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["capture_state", "reason"],
+          "properties": {
+            "capture_state": { "const": "open" },
+            "reason": { "const": "option_level_official_inventory_not_captured" }
+          }
+        },
+        "open_trace_cell_scope": { "const": "all_registry_cells_for_row" },
+        "open_official_reference_scope": { "const": "registry_official_url" },
+        "captured_item_rule": { "$ref": "#/$defs/nonemptyString" }
+      }
+    },
+    "openAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capture_state"],
+      "properties": { "capture_state": { "const": "open" } }
+    },
+    "cellContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity_source",
+        "state_source_precedence",
+        "option_cell_states_are_authoritative",
+        "identity_fields",
+        "uncaptured_defaults",
+        "finalization_active_parity_states",
+        "independence_rule"
+      ],
+      "properties": {
+        "identity_source": { "const": "registry_option_cells_with_qualification_links_fallback" },
+        "state_source_precedence": {
+          "const": ["registry_option_cells", "explicit_open_default"]
+        },
+        "option_cell_states_are_authoritative": { "const": true },
+        "identity_fields": {
+          "const": [
+            "registry_schema_version",
+            "capability_id",
+            "cell_id",
+            "capability_version"
+          ]
+        },
+        "uncaptured_defaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parity_obligation", "coverage", "evidence", "surface"],
+          "properties": {
+            "parity_obligation": { "$ref": "#/$defs/openAssessment" },
+            "coverage": { "$ref": "#/$defs/openAssessment" },
+            "evidence": { "$ref": "#/$defs/openAssessment" },
+            "surface": { "$ref": "#/$defs/openAssessment" }
+          }
+        },
+        "finalization_active_parity_states": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parity_role", "coverage_state", "evidence_state", "surface"],
+          "properties": {
+            "parity_role": { "const": "active_parity" },
+            "coverage_state": { "const": "full" },
+            "evidence_state": { "const": "release_qualified" },
+            "surface": { "const": "standard" }
+          }
+        },
+        "independence_rule": { "$ref": "#/$defs/nonemptyString" }
+      }
+    },
+    "rowGenerationContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "active_row_source",
+        "exclusion_source",
+        "active_row_trace_rule",
+        "duplicate_catalogue_rows"
+      ],
+      "properties": {
+        "active_row_source": { "const": "registry.capabilities[official_lifecycle=active]" },
+        "exclusion_source": { "const": "registry.capabilities[official_lifecycle=legacy and coverage_state=intentionally_excluded]" },
+        "active_row_trace_rule": { "$ref": "#/$defs/nonemptyString" },
+        "duplicate_catalogue_rows": { "$ref": "#/$defs/nonemptyString" }
+      }
+    },
+    "qualificationLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry_schema_version", "capability_id", "cell_id", "capability_version"],
+      "properties": {
+        "registry_schema_version": { "const": 2 },
+        "capability_id": { "type": "string", "pattern": "^smartpls\\.[a-z0-9_]+$" },
+        "cell_id": { "type": "string", "pattern": "^qpls3\\.[a-z0-9_.]+$" },
+        "capability_version": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]*$" }
+      }
+    },
+    "capturedParityObligation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capture_state", "parity_role"],
+      "properties": {
+        "capture_state": { "const": "captured" },
+        "parity_role": { "enum": ["active_parity", "beyond_parity"] }
+      }
+    },
+    "cellAssessmentOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["qualification_link", "parity_obligation"],
+      "properties": {
+        "qualification_link": { "$ref": "#/$defs/qualificationLink" },
+        "parity_obligation": { "$ref": "#/$defs/capturedParityObligation" }
+      }
+    },
+    "acceptanceItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id", "description", "trace_cells", "official_references", "acceptance_criteria"],
+      "properties": {
+        "item_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]*$" },
+        "description": { "$ref": "#/$defs/nonemptyString" },
+        "trace_cells": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/qualificationLink" }
+        },
+        "official_references": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^https://smartpls\\.com/" }
+        },
+        "acceptance_criteria": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "dimensionAssessmentOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability_id", "dimension", "capture_state", "acceptance_items"],
+      "properties": {
+        "capability_id": { "type": "string", "pattern": "^smartpls\\.[a-z0-9_]+$" },
+        "dimension": {
+          "enum": ["settings", "defaults", "model_shapes", "data_inputs", "preprocessing", "outputs", "charts", "failure_conditions", "workflows"]
+        },
+        "capture_state": { "const": "captured" },
+        "acceptance_items": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/acceptanceItem" }
+        }
+      }
+    },
+    "overrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cell_assessments", "dimension_assessments"],
+      "properties": {
+        "cell_assessments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/cellAssessmentOverride" }
+        },
+        "dimension_assessments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/dimensionAssessmentOverride" }
+        }
+      }
+    },
+    "exclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability_id", "decision", "official_reference_scope", "cell_identity_source"],
+      "properties": {
+        "capability_id": { "enum": ["smartpls.blindfolding", "smartpls.gof"] },
+        "decision": { "const": "intentionally_excluded" },
+        "official_reference_scope": { "const": "registry_official_url" },
+        "cell_identity_source": { "const": "registry_qualification_links" }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # Indicator-Level PLSpredict and CVPAT Benchmarks v2
 
-Status: current bounded QuickPLS prediction contract. This method implements indicator-level out-of-sample prediction and benchmark assessment for a deliberately restricted, deterministic PLS-SEM scope. It does not claim complete SmartPLS feature parity or a comparison between separately saved models.
+Status: release-qualified for the current bounded QuickPLS prediction contract. Current packaged evidence includes deterministic cancellation/retry without partial state, result and XLSX inspection, save/reopen, physical viewport coverage, and cleanup. This method implements indicator-level out-of-sample prediction and benchmark assessment for a deliberately restricted PLS-SEM scope; it does not claim complete SmartPLS feature parity or comparison between separately saved models.
 
 ## Versioned result contract
 
@@ -40,6 +40,8 @@ Sorted rows are assigned to folds by balanced round-robin position modulo 10. Th
 ```
 
 This scheme is seed-driven, reproducible without a language-specific random-number generator, and auditable from source-row identities. Each complete case is tested once per repeat. Aggregated prediction metrics therefore contain `complete cases × 10` test predictions per target.
+
+Source-row identity is deliberately part of the fold key, so physically reordering imported rows creates a different auditable plan. The supported metamorphic invariant is a consistent reorder of construct and path declarations while indicator identities, graph semantics, data rows, and source-row identities remain fixed; mapped predictions and CVPAT rows must then agree within the frozen numerical tolerance.
 
 ## Train-only estimation and prediction
 

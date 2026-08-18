@@ -27,8 +27,6 @@ export const NATIVE_PROCESS_RESULT_WARNING =
   "PROCESS v2 is an independently implemented graph-defined observed-variable path-analysis workflow; it does not execute copied numbered templates.";
 export const NATIVE_PROCESS_INFERENCE_WARNING =
   "PROCESS v2 uses raw listwise-complete OLS equations with HC3 covariance and fixed two-sided 95% Student-t inference; unsupported shapes are rejected.";
-export const NATIVE_PROCESS_PROMOTION_PENDING_WARNING =
-  "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.";
 
 export interface NativeProcessGraphAssessment {
   canRun: boolean;
@@ -629,7 +627,7 @@ export function nativeProcessReadiness(
     !dataset.fingerprint?.trim() ? "Import or reopen a fingerprinted dataset before graph-defined path analysis" : null,
     settings.preprocessing !== "unstandardized" ? "PROCESS v2 requires raw unstandardized variables" : null,
     settings.confidenceLevel !== 0.95 ? "PROCESS v2 uses a fixed 95% confidence level" : null,
-    settings.studentizedInnerSamples !== 0 ? "Studentized intervals are outside the PROCESS v2 scope" : null,
+    settings.studentizedInnerSamples !== 0 ? "PROCESS v2 does not support studentized intervals" : null,
     settings.permutationSamples !== 0 ? "PROCESS v2 cannot be combined with permutation inference" : null,
   ].filter((problem): problem is string => Boolean(problem));
 

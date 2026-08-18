@@ -1,0 +1,27 @@
+{
+  "all_predeclared_evidence_accepted": true,
+  "availability_cells": [],
+  "binary_sha256": "459b8845a7ecc4f7f5b18c9e22b70be19752dcd3699608c95d040944d4402482",
+  "coverage_decision": "not_evaluated_conformance",
+  "dataset_count": 2,
+  "failure_summary": [],
+  "kind": "cbsem_exact_cfa_interval_coverage_report_v1",
+  "manifest_sha256": "9a29e710f6a90c5ed4ee12b3392a8e85d20ca87ed604df9a9c42efc699878d88",
+  "primary_cells": [],
+  "qualification_boundary": {
+    "missing_evidence": [
+      "executed_final_3200_dataset_per_dgp_campaign",
+      "executed_paired_b10000_confirmation",
+      "lavaan_first_10_dataset_per_dgp_parity",
+      "independent_scientific_review",
+      "canonical_export_package_and_integration_gates"
+    ],
+    "status": "blocked_not_product_qualification"
+  },
+  "qualification_status": "blocked_not_product_qualification",
+  "rejection_diagnostics": [],
+  "schema_version": 1,
+  "shard_count": 2,
+  "stage": "conformance",
+  "status": "conformance_evidence_passed_coverage_not_evaluated_product_qualification_blocked"
+}

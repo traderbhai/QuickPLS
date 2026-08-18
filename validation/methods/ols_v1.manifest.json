@@ -1,45 +1,323 @@
 {
   "schema_version": 1,
-  "governance": {"contract_frozen_at_utc": "2026-08-13T10:09:13Z", "manifest_path": "validation/methods/ols_v1.manifest.json", "schema_path": "validation/methods/method_promotion_manifest.schema.json", "validator_path": "validation/method_promotion_manifest.py", "focused_test_path": "validation/test_method_promotion_manifest.py"},
-  "feature": {"id": "qpls3.standalone.ols", "label": "Ordinary Least Squares Regression", "method_version": "regression_ols_v1", "method_kind": "deterministic", "catalogue_snapshot_date": "2026-08-12", "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:09:13Z",
+    "manifest_path": "validation/methods/ols_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.standalone.ols",
+    "label": "Ordinary Least Squares Regression",
+    "method_version": "regression_ols_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
   "claim": {
     "supported_scope": "Standalone complete-case ordinary least-squares regression of one numeric outcome on one or more numeric predictors and optional numeric controls, with an intercept and HC3 robust inference.",
     "estimand": "The linear least-squares coefficient vector and bounded model-fit, fitted-value, residual, HC3 standard-error, t-test, and fixed 95-percent confidence-interval summaries.",
-    "assumptions": ["The selected outcome, predictors, and controls are distinct numeric columns with finite complete cases and a full-rank design matrix.", "The model is linear in coefficients and includes an intercept under the frozen complete-case convention.", "HC3 inference uses the documented leverage adjustment and finite residual degrees of freedom."],
-    "exclusions": ["Automatic categorical encoding, survey weights, clustered standard errors, GLS, mixed models, panel models, and regularization are excluded.", "HC0 or HC4 public claims, resampling, logistic regression, and PROCESS are separate contracts.", "Association and model fit do not establish causal effects or eliminate omitted-variable bias."],
-    "warnings": ["HC3 addresses a bounded heteroskedasticity concern but does not repair misspecification, dependence, selection, or endogeneity.", "Coefficient interpretation depends on scale, coding, included variables, and the complete-case population." ]
+    "assumptions": [
+      "The selected outcome, predictors, and controls are distinct numeric columns with finite complete cases and a full-rank design matrix.",
+      "The model is linear in coefficients and includes an intercept under the frozen complete-case convention.",
+      "HC3 inference uses the exact documented leverage adjustment, requires positive residual degrees of freedom, and is defined only for finite leverage, scaled residuals, covariance, and strictly positive covariance diagonals."
+    ],
+    "exclusions": [
+      "Automatic categorical encoding, survey weights, clustered standard errors, GLS, mixed models, panel models, and regularization are excluded.",
+      "HC0 or HC4 public claims, resampling, logistic regression, and PROCESS are separate contracts.",
+      "Association and model fit do not establish causal effects or eliminate omitted-variable bias."
+    ],
+    "warnings": [
+      "HC3 addresses a bounded heteroskedasticity concern but does not repair misspecification, dependence, selection, or endogeneity.",
+      "Coefficient interpretation depends on scale, coding, included variables, and the complete-case population."
+    ]
   },
   "scientific_contract": {
     "equations": [
-      {"id": "ols_coefficients", "expression": "beta_hat = (X'X)^-1 X'y", "variables": ["beta_hat", "X", "y"], "source_reference_id": "gauss_markov_reference"},
-      {"id": "hc3_covariance", "expression": "V_HC3 = (X'X)^-1 X' diag((e_i/(1-h_ii))^2) X (X'X)^-1", "variables": ["V_HC3", "X", "e_i", "h_ii"], "source_reference_id": "mackinnon_white_1985"}
+      {
+        "id": "ols_coefficients",
+        "expression": "beta_hat = (X'X)^-1 X'y",
+        "variables": [
+          "beta_hat",
+          "X",
+          "y"
+        ],
+        "source_reference_id": "gauss_markov_reference"
+      },
+      {
+        "id": "hc3_covariance",
+        "expression": "V_HC3 = (X'X)^-1 X' diag((e_i/(1-h_ii))^2) X (X'X)^-1",
+        "variables": [
+          "V_HC3",
+          "X",
+          "e_i",
+          "h_ii"
+        ],
+        "source_reference_id": "mackinnon_white_1985"
+      }
     ],
     "references": [
-      {"id": "gauss_markov_reference", "kind": "primary_paper", "citation": "Gauss-Markov linear least-squares estimating equations as frozen in the QuickPLS OLS specification", "locator": "docs/methods/REGRESSION_OLS_V1.md", "independence_group": "published_linear_model", "runtime_policy": "no_runtime_dependency"},
-      {"id": "mackinnon_white_1985", "kind": "primary_paper", "citation": "MacKinnon and White (1985), Some Heteroskedasticity-Consistent Covariance Matrix Estimators with Improved Finite Sample Properties", "locator": "docs/methods/REGRESSION_OLS_V1.md", "independence_group": "published_hc3_method", "runtime_policy": "no_runtime_dependency"},
-      {"id": "independent_python_ols", "kind": "independent_python", "citation": "Independent NumPy OLS and HC3 calculation", "locator": "validation/v08_extended_methods_reference.py", "independence_group": "python_reference", "runtime_policy": "development_validation_only"},
-      {"id": "independent_r_ols", "kind": "independent_r", "citation": "Development-only R lm and HC3 comparison fixture", "locator": "validation/results/ols_promotion_reference.R", "independence_group": "r_reference", "runtime_policy": "development_validation_only"}
+      {
+        "id": "gauss_markov_reference",
+        "kind": "primary_paper",
+        "citation": "Gauss-Markov linear least-squares estimating equations as frozen in the QuickPLS OLS specification",
+        "locator": "docs/methods/REGRESSION_OLS_V1.md",
+        "independence_group": "published_linear_model",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "mackinnon_white_1985",
+        "kind": "primary_paper",
+        "citation": "MacKinnon and White (1985), Some Heteroskedasticity-Consistent Covariance Matrix Estimators with Improved Finite Sample Properties",
+        "locator": "docs/methods/REGRESSION_OLS_V1.md",
+        "independence_group": "published_hc3_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_python_ols",
+        "kind": "independent_python",
+        "citation": "Independent NumPy and SciPy OLS, HC3, and Student-t calculation",
+        "locator": "validation/ols_v1_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "id": "independent_r_ols",
+        "kind": "independent_r",
+        "citation": "Development-only R lm and HC3 comparison fixture",
+        "locator": "validation/results/ols_promotion_reference.R",
+        "independence_group": "r_reference",
+        "runtime_policy": "development_validation_only"
+      }
     ],
-    "simulations": [{"id": "ols_parameter_recovery", "purpose": "recovery", "design": "Full-rank numeric designs across sample size, predictor correlation, heteroskedasticity, signal strength, controls, and null coefficients.", "seed_policy": "Frozen indexed data-generation seeds by scenario and replicate; estimation itself is deterministic.", "metrics": ["coefficient_bias", "hc3_standard_error_error", "confidence_interval_coverage", "fit_identity_error"], "acceptance_rule": "Coefficients, HC3 inference, predictions, residuals, and fit identities must match independent equations within 1e-6 and meet preregistered recovery and coverage bounds."}],
+    "simulations": [
+      {
+        "id": "ols_parameter_recovery",
+        "purpose": "recovery",
+        "design": "Full-rank numeric designs across sample size, predictor correlation, heteroskedasticity, signal strength, controls, and null coefficients.",
+        "seed_policy": "Frozen indexed data-generation seeds by scenario and replicate; estimation itself is deterministic.",
+        "metrics": [
+          "coefficient_bias",
+          "hc3_standard_error_error",
+          "confidence_interval_coverage",
+          "fit_identity_error"
+        ],
+        "acceptance_rule": "Coefficients, HC3 inference, predictions, residuals, and fit identities must match independent equations within 1e-6 and meet preregistered recovery and coverage bounds."
+      }
+    ],
     "boundaries": [
-      {"id": "rank_deficient_design", "category": "data_pathology", "case": "The complete-case design is rank deficient, too small, non-finite, or contains a constant selected predictor.", "expected_behavior": "The calculation is blocked or fails explicitly without coefficients."},
-      {"id": "unsupported_regression_scope", "category": "unsupported_scope", "case": "The request includes categorical helpers, weights, clustering, mixed or panel structure, regularization, resampling, or a non-OLS family.", "expected_behavior": "The unsupported request is blocked before estimation."},
-      {"id": "predictor_reorder", "category": "metamorphic", "case": "Predictors and controls are consistently reordered.", "expected_behavior": "Mapped coefficients, inference, fitted values, residuals, and fit summaries remain equal within tolerance."},
-      {"id": "repeat_ols", "category": "determinism", "case": "The same data, roles, and settings are executed repeatedly.", "expected_behavior": "The analytical OLS payload is exactly equal apart from timestamps."},
-      {"id": "ols_archive_tamper", "category": "tamper", "case": "Roles, coefficients, HC3 values, predictions, residuals, fit statistics, or method identity are changed.", "expected_behavior": "Strict project validation rejects the archive."}
+      {
+        "id": "rank_deficient_design",
+        "category": "data_pathology",
+        "case": "The complete-case design is rank deficient or contains a constant predictor; n is no greater than the fitted parameter count; or exact HC3 has nonfinite leverage/scaled residual/covariance, 1-h no greater than 1e-12, or a nonpositive covariance diagonal.",
+        "expected_behavior": "The calculation fails with a typed rank, residual-degrees-of-freedom, or HC3 diagnostic and commits no partial coefficients."
+      },
+      {
+        "id": "unsupported_regression_scope",
+        "category": "unsupported_scope",
+        "case": "The request includes categorical helpers, weights, clustering, mixed or panel structure, regularization, resampling, or a non-OLS family.",
+        "expected_behavior": "The unsupported request is blocked before estimation."
+      },
+      {
+        "id": "predictor_reorder",
+        "category": "metamorphic",
+        "case": "Predictors and controls are consistently reordered.",
+        "expected_behavior": "Mapped coefficients, inference, fitted values, residuals, and fit summaries remain equal within tolerance."
+      },
+      {
+        "id": "repeat_ols",
+        "category": "determinism",
+        "case": "The same data, roles, and settings are executed repeatedly.",
+        "expected_behavior": "The analytical OLS payload is exactly equal apart from timestamps."
+      },
+      {
+        "id": "ols_archive_tamper",
+        "category": "tamper",
+        "case": "Roles, coefficients, HC3 values, predictions, residuals, fit statistics, or method identity are changed.",
+        "expected_behavior": "Strict project validation rejects the archive."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
-    "persistence": {"recipe_schema_version": 3, "result_schema_version": 1, "payload_kind": "pls_pm_v1", "tamper_tests": [
-      {"category": "feature_identity", "expected_behavior": "Reject an archive whose capability identity differs from OLS regression."}, {"category": "method_version", "expected_behavior": "Reject a result relabeled as another regression version."}, {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose dataset fingerprint differs from saved data."}, {"category": "checksum", "expected_behavior": "Reject an archive member whose checksum differs."}, {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid roles, inconsistent coefficients, predictions, residuals, or fit identities."}, {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret an older or different regression-family payload as current OLS evidence."}
-    ], "legacy_policy": "Historical regression results retain their original method identities and cannot satisfy current OLS v1 promotion evidence."},
-    "native": {"setup_controls": ["Numeric outcome", "Numeric predictors", "Optional numeric controls", "Fixed complete-case treatment", "Fixed HC3 inference"], "applicability_blockers": ["Duplicate variable roles", "Rank-deficient design", "Insufficient complete cases", "Nonnumeric or unsupported inputs"], "result_surfaces": ["Coefficient and HC3 inference table", "Model fit", "Fitted values and residuals", "Scope and provenance"], "gui_cli_parity_rule": "GUI and CLI must produce the same coefficients, inference, fit, fitted-value, and residual payload for identical data and roles.", "accessibility_rules": ["Every diagnostic plot has an equivalent accessible data table.", "Coefficient signs, intervals, fit, exclusions, and warnings are available without color alone."]},
-    "export": {"formats": ["csv", "xlsx"], "tables": ["OLS coefficients", "OLS model fit", "OLS fitted values and residuals", "Run provenance"], "same_run_required": true, "provenance_required": true},
-    "packaged": {"platforms": ["windows"], "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"], "viewports": ["1024x700", "1280x720", "1440x900"], "offline_required": true, "cancellation_required": false, "process_cleanup_required": true},
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject an archive whose capability identity differs from OLS regression."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a result relabeled as another regression version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose dataset fingerprint differs from saved data."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject an archive member whose checksum differs."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid roles, inconsistent coefficients, predictions, residuals, or fit identities."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret an older or different regression-family payload as current OLS evidence."
+        }
+      ],
+      "legacy_policy": "Historical regression results retain their original method identities and cannot satisfy current OLS v1 promotion evidence."
+    },
+    "native": {
+      "setup_controls": [
+        "Numeric outcome",
+        "Numeric predictors",
+        "Optional numeric controls",
+        "Fixed complete-case treatment",
+        "Fixed HC3 inference"
+      ],
+      "applicability_blockers": [
+        "Duplicate variable roles",
+        "Rank-deficient design",
+        "Insufficient complete cases",
+        "Undefined exact HC3 covariance",
+        "Nonnumeric or unsupported inputs"
+      ],
+      "result_surfaces": [
+        "Coefficient and HC3 inference table",
+        "Model fit",
+        "Fitted values and residuals",
+        "Scope and provenance"
+      ],
+      "gui_cli_parity_rule": "GUI and CLI must produce the same coefficients, inference, fit, fitted-value, and residual payload for identical data and roles.",
+      "accessibility_rules": [
+        "Every diagnostic plot has an equivalent accessible data table.",
+        "Coefficient signs, intervals, fit, exclusions, and warnings are available without color alone."
+      ]
+    },
+    "export": {
+      "formats": [
+        "csv",
+        "xlsx"
+      ],
+      "tables": [
+        "OLS coefficients",
+        "OLS model fit",
+        "OLS fitted values and residuals",
+        "Run provenance"
+      ],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
+      "offline_required": true,
+      "cancellation_required": false,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
-  "qualification": {"declared_state": "absent", "target_state": "release_qualified", "source_requirements": {
-    "method_spec": ["docs/methods/REGRESSION_OLS_V1.md"], "independent_reference": ["validation/v08_extended_methods_reference.py", "validation/results/ols_promotion_reference.R"], "simulation_report": ["validation/ols_release_simulation.py"], "boundary_report": ["validation/ols_release_boundary_gate.py"], "persistence_report": ["validation/ols_release_persistence_gate.py"], "frontend_report": ["src/native/nativeOls.test.ts"], "export_report": ["src/native/nativeExportTables.test.ts"], "method_audit": ["validation/ols_method_promotion_audit.py"], "packaged_acceptance": ["validation/run_v247_ols_native_acceptance.ps1"]
-  }, "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}}
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": [
+        "docs/methods/REGRESSION_OLS_V1.md"
+      ],
+      "independent_reference": [
+        "validation/ols_v1_reference.py",
+        "crates/qpls-estimation/src/pls.rs",
+        "crates/qpls-runner/src/lib.rs"
+      ],
+      "simulation_report": [
+        "validation/ols_v1_factory.py",
+        "validation/ols_v1_reference.py"
+      ],
+      "boundary_report": [
+        "validation/ols_v1_factory.py",
+        "crates/qpls-runner/src/lib.rs"
+      ],
+      "persistence_report": [
+        "validation/ols_v1_factory.py",
+        "crates/qpls-project/src/lib.rs"
+      ],
+      "frontend_report": [
+        "src/native/nativeOls.ts",
+        "src/native/nativeOls.test.ts",
+        "src/native/nativeAnalysisRecipe.ts",
+        "src/native/nativeAnalysisRecipe.test.ts",
+        "src/native/NativeCalculationDialog.tsx",
+        "src/native/NativeCalculationDialog.test.ts",
+        "src/native/nativeResults.ts",
+        "src/native/nativeResults.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.ts",
+        "src/native/nativeExportTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/ols_v1_factory_audit.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json"
+      ],
+      "packaged_acceptance": [
+        "validation/ols_v1_packaged_acceptance.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/diagnostic_bundle_source_manifest.py",
+        "validation/run_v247_ols_native_acceptance.ps1",
+        "validation/test_ols_v1_packaged_acceptance.py",
+        "validation/v247_native_desktop_visual_acceptance.mjs",
+        "validation/v247_tauri_native_acceptance.mjs"
+      ]
+    },
+    "evidence": {
+      "engine_only": [
+        {"path":"validation/results/method_factory/ols_v1/engine_stage.identity.json","roles":["method_spec","independent_reference","simulation_report","boundary_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
+      ],
+      "archive_qualified": [
+        {"path":"validation/results/method_factory/ols_v1/persistence_report.identity.json","roles":["persistence_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
+      ],
+      "native_qualified": [
+        {"path":"validation/results/method_factory/ols_v1/native_stage.identity.json","roles":["frontend_report","export_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
+      ],
+      "release_qualified": [
+        {"path":"validation/results/method_factory/ols_v1/method_audit.identity.json","roles":["method_audit"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}},
+        {"path":"validation/results/method_factory/ols_v1/packaged_acceptance.identity.json","roles":["packaged_acceptance"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
+      ]
+    }
+  }
 }

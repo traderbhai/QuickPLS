@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "adapter_version": "compiled_recipe_v4_pls_plan_v2_execution_v3",
+    "compilation_receipt": {
+      "schema_version": 1,
+      "recipe_id": "00000000-0000-0000-0000-000000002003",
+      "recipe_document_sha256": "f806b337d5ec0d512bfffed250928445de82a83820a7ad2119e8b7dca5db2bfe",
+      "recipe_analytical_sha256": "5603682cb3b9937bc1b34bdcec7134beebf2514f3149a39021be35e6d93bebc1",
+      "model_id": "00000000-0000-0000-0000-000000001003",
+      "model_document_sha256": "75c0c6b41c9ba467a6a4122087e2eb2fbe9aa997ee1edeaac163793a8bfb719e",
+      "model_scientific_sha256": "75c0c6b41c9ba467a6a4122087e2eb2fbe9aa997ee1edeaac163793a8bfb719e",
+      "dataset_fingerprint": "v2:9b814a8a22eace42776bc479c637de36bc973dfd8a7b3d5b3e60baba98803373",
+      "compiler_target": "pls_plan_v2",
+      "compiler_version": "recipe_v4_to_compiled_pls_plan_v2_v2",
+      "capability_cell": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.pls_algorithm",
+        "cell_id": "qpls3.pls.algorithm",
+        "capability_version": "pls_pm_v1"
+      },
+      "plan_sha256": "694e6ccc0bc410976a6a96e8562b3d534e71f0d2e50a20991d630f468d1abb5d",
+      "analytical_identity_sha256": "3d20717f9f1e63485794592bbbbc35f341d4d76aa38ac4a7fd75c4c2326e7e51"
+    },
+    "projected_recipe_schema_version": 3,
+    "projected_recipe_sha256": "9407eacee3bb551aef9ab25c6792b2ba668dbbd83aa4d96de0d1c6f5f6997d20",
+    "dataset_id": "e2c2c51f-fa09-47e6-9e8c-544592c74727",
+    "estimator_method_version": "pls_pm_v1"
+  },
+  "estimation": {
+    "method_version": "pls_pm_v1",
+    "converged": true,
+    "iterations": 1,
+    "point_estimate_attribution": {
+      "contract_version": "pls_point_estimate_attribution_v1",
+      "preprocessing": "standardized",
+      "indicator_centering": "sample_mean",
+      "indicator_scaling": "sample_standard_deviation",
+      "outer_weights": "preprocessed_indicator_to_unit_variance_construct_score",
+      "outer_loadings": "indicator_construct_score_correlation",
+      "construct_scores": "zero_mean_unit_variance_construct_score",
+      "structural_paths": "standardized_construct_score_regression",
+      "effects": "standardized_structural_path_decomposition"
+    },
+    "used_observations": 6,
+    "omitted_observations": 0,
+    "transforms": [
+      {
+        "indicator": "x1",
+        "mean": 3.5,
+        "scale": 1.8708286933869707
+      },
+      {
+        "indicator": "x2",
+        "mean": 4.5,
+        "scale": 1.8708286933869707
+      },
+      {
+        "indicator": "y1",
+        "mean": 5.166666666666667,
+        "scale": 2.6394443859772205
+      },
+      {
+        "indicator": "y2",
+        "mean": 4.5,
+        "scale": 2.7386127875258306
+      }
+    ],
+    "construct_scores": {
+      "construct:x": [
+        -1.355815361366601,
+        -0.8134892168199607,
+        -3.700743415417188e-17,
+        -3.700743415417188e-17,
+        0.8134892168199607,
+        1.355815361366601
+      ],
+      "construct:y": [
+        -1.2444226384535777,
+        -0.8707513323006058,
+        -0.31368951924013455,
+        0.25026258615831015,
+        0.8073243992187814,
+        1.3712765046172262
+      ]
+    },
+    "outer_estimates": [
+      {
+        "construct": "construct:x",
+        "indicator": "x1",
+        "weight": 0.5072996561958923,
+        "loading": 0.9856107606091623
+      },
+      {
+        "construct": "construct:x",
+        "indicator": "x2",
+        "weight": 0.5072996561958923,
+        "loading": 0.9856107606091623
+      },
+      {
+        "construct": "construct:y",
+        "indicator": "y1",
+        "weight": 0.5022355873277216,
+        "loading": 0.9955487277601801
+      },
+      {
+        "construct": "construct:y",
+        "indicator": "y2",
+        "weight": 0.5022355873277216,
+        "loading": 0.9955487277601802
+      }
+    ],
+    "paths": [
+      {
+        "source": "construct:x",
+        "target": "construct:y",
+        "coefficient": 0.982300318297428
+      }
+    ],
+    "control_estimates": [],
+    "effects": [
+      {
+        "source": "construct:x",
+        "target": "construct:y",
+        "direct": 0.982300318297428,
+        "indirect": 0.0,
+        "total": 0.982300318297428
+      }
+    ],
+    "mediation": {
+      "method_version": "pls_mediation_v1",
+      "tolerance": 1e-12,
+      "estimates": [
+        {
+          "source": "construct:x",
+          "target": "construct:y",
+          "direct": 0.982300318297428,
+          "indirect": 0.0,
+          "total": 0.982300318297428,
+          "variance_accounted_for": 0.0,
+          "classification": "direct_only",
+          "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+        }
+      ],
+      "warnings": [
+        "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
+      ]
+    },
+    "plsc": null,
+    "endogeneity": null,
+    "nonlinear_effects": null,
+    "moderated_mediation": null,
+    "cta_pls": null,
+    "wpls": null,
+    "cca": null,
+    "predict": null,
+    "segmentation": null,
+    "mga": null,
+    "micom": null,
+    "mga_permutation": null,
+    "fimix": null,
+    "ipma": null,
+    "cbsem": null,
+    "pca": null,
+    "regression": null,
+    "nca": null,
+    "gsca": null,
+    "r_squared": {
+      "construct:y": 0.9649139153272281
+    },
+    "warnings": []
+  }
+}

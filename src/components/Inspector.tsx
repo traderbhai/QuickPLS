@@ -1,6 +1,10 @@
 import { ArrowLeftRight, ChevronsLeft, ChevronsRight, Network, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useWorkspace } from "../store";
+import {
+  NativeSemConstructAuthoringFields,
+  NativeSemCovarianceAuthoringFields,
+} from "../native/NativeSemScientificAuthoring";
 import type { MeasurementMode } from "../types";
 
 export function Inspector() {
@@ -10,11 +14,13 @@ export function Inspector() {
   const nodes = useWorkspace((state) => state.nodes);
   const edges = useWorkspace((state) => state.edges);
   const dataset = useWorkspace((state) => state.dataset);
+  const experimentalSemAuthoringEnabled = useWorkspace((state) => state.uiPreferences.experimentalLabsEnabled);
   const node = nodes.find((item) => item.id === selectedNodeId);
   const edge = edges.find((item) => item.id === selectedEdgeId);
   const selectedRun = useWorkspace((state) => state.runs.find((run) => run.id === state.selectedResultRunId) ?? state.runs[0]);
   const updateConstruct = useWorkspace((state) => state.updateConstruct);
   const updateEdge = useWorkspace((state) => state.updateEdge);
+  const setConstructEstimandV4 = useWorkspace((state) => state.setConstructEstimandV4);
   const assignIndicator = useWorkspace((state) => state.assignIndicator);
   const unassignIndicator = useWorkspace((state) => state.unassignIndicator);
   const reverseSelectedPath = useWorkspace((state) => state.reverseSelectedPath);
@@ -40,16 +46,23 @@ export function Inspector() {
     const isControl = edge.data?.role === "control";
     const isCovariance = edge.data?.role === "covariance";
     const controlLabel = typeof edge.data?.controlLabel === "string" ? edge.data.controlLabel : "";
-    if (isCovariance) return <aside className="inspector model-v2-inspector model-v225-inspector" data-v225-model-workbench="property-inspector">
+    if (isCovariance) {
+      return <aside className="inspector model-v2-inspector model-v225-inspector" data-v225-model-workbench="property-inspector">
       {collapseControl}
       <div className="inspector-tabs"><button onClick={() => setSelectedNode(source?.id ?? null)}>Construct</button><button className="active">Covariance</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
-      <div className="path-heading"><Network size={16} /><div><strong>Covariance display</strong><span>{source?.data.shortName} &lt;-&gt; {target?.data.shortName}</span></div></div>
+      <div className="path-heading"><Network size={16} /><div><strong>Covariance</strong><span>{source?.data.shortName} &lt;-&gt; {target?.data.shortName}</span></div></div>
       <label>Left construct<input value={source?.data.label ?? edge.source} readOnly /></label>
       <label>Right construct<input value={target?.data.label ?? edge.target} readOnly /></label>
       <label>Display label<input value={String(edge.label ?? "")} onChange={(event) => updateEdge(edge.id, { label: event.target.value })} /></label>
+      {experimentalSemAuthoringEnabled ? <NativeSemCovarianceAuthoringFields
+        edge={edge}
+        nodes={nodes}
+        edges={edges}
+        onCommit={(authoredEdge) => updateEdge(edge.id, { data: authoredEdge.data })}
+      /> : null}
       <div className="inspector-actions"><button className="secondary-button danger" onClick={removeSelection}><Trash2 size={14} />Delete</button></div>
-      <div className="method-note"><strong>Visual covariance</strong><p>This arc is excluded from PLS recipe paths. CB-SEM covariance estimation remains controlled by the supported method settings and engine schema.</p></div>
     </aside>;
+    }
     return <aside className="inspector model-v2-inspector model-v225-inspector" data-v225-model-workbench="property-inspector">
       {collapseControl}
       <div className="inspector-tabs"><button onClick={() => setSelectedNode(source?.id ?? null)}>Construct</button><button className="active">Path</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
@@ -88,7 +101,7 @@ export function Inspector() {
     </fieldset>
     </details>
     <div className="inspector-actions"><button className="secondary-button" onClick={() => autoLayout("horizontal")}>Arrange model</button></div>
-    <div className="method-note"><strong>Validated QuickPLS scope</strong><p>Supported method outputs are validated only for their documented QuickPLS scope. Unsupported model shapes remain blocked or explicitly marked.</p></div>
+    <div className="method-note"><strong>Supported setup</strong><p>Available outputs depend on the stated model and data requirements. Incompatible model shapes are blocked or explicitly marked.</p></div>
   </aside>;
 
   const update = (patch: Parameters<typeof updateConstruct>[1]) => updateConstruct(node.id, patch);
@@ -134,6 +147,10 @@ export function Inspector() {
     <fieldset><legend>Measurement mode</legend><div className="segmented">
       {(["reflective", "formative"] as MeasurementMode[]).map((mode) => <button key={mode} className={node.data.mode === mode ? "active" : ""} onClick={() => update({ mode })}>{mode}</button>)}
     </div></fieldset>
+    {experimentalSemAuthoringEnabled ? <NativeSemConstructAuthoringFields
+      node={node}
+      onCommit={(specification) => setConstructEstimandV4(node.id, specification)}
+    /> : null}
     <div className="inspector-actions"><button className="secondary-button danger" onClick={removeSelection}><Trash2 size={14} />Delete construct</button></div>
     </details>
     {node.data.semantic === "interaction" && node.data.interaction ? <div className="method-note"><strong>Two-stage interaction</strong><p>{nodes.find((item) => item.id === node.data.interaction?.predictor)?.data.shortName} x {nodes.find((item) => item.id === node.data.interaction?.moderator)?.data.shortName} moderates {nodes.find((item) => item.id === node.data.interaction?.outcome)?.data.shortName}. Estimation is blocked until the v0.5 two-stage engine gate is complete.</p></div> : null}
@@ -182,6 +199,6 @@ export function Inspector() {
     <details className="inspector-section"><summary>Results</summary>
       {selectedRun?.result ? <div className="method-note"><strong>Selected run values</strong><p>R² {node.id}: {selectedRun.result.r_squared[node.id]?.toFixed(4) ?? "N/A"}. Indicator values and path coefficients remain synchronized with the selected result overlay.</p></div> : <div className="indicator-empty">Run or select a compatible result to inspect construct-level values here.</div>}
     </details>
-    <div className="method-note"><strong>Validated QuickPLS scope</strong><p>Mode A/B measurement, supported assessment, inference, prediction, group, regression, and extended methods are validated only within their documented bounded scopes.</p></div>
+    <div className="method-note"><strong>Supported setup</strong><p>Mode A/B measurement, assessment, inference, prediction, group, regression, and extended methods each list their applicable model and data requirements.</p></div>
   </aside>;
 }

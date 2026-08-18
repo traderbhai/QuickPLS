@@ -9,7 +9,7 @@ export const NATIVE_NCA_SCOPE_NOTE =
   "Numeric observed-variable CE-FDH and CR-FDH analysis with observed-range bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and broader ceiling variants are not included.";
 
 export const NATIVE_NCA_ENGINE_SCOPE_WARNING =
-  "NCA v2 is limited to the documented numeric X/Y CE-FDH and CR-FDH scope with observed-range bottlenecks; multiple conditions, latent-score NCA, cIPMA, and broader ceiling variants remain unsupported.";
+  "NCA v2 supports one observed numeric condition/outcome pair with CE-FDH and CR-FDH ceilings, seeded one-sided permutation evidence, and observed-range bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and additional ceiling variants are not available.";
 
 export const NATIVE_STANDALONE_ASSESSMENT_WARNING =
   "PLS assessment is not applicable to standalone raw-data analyses.";

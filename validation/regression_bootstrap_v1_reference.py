@@ -246,6 +246,7 @@ def run_quickpls(
             str(FIXTURE),
             "--output",
             str(output),
+            "--allow-experimental",
         ]
     )
     require_success(completed, f"QuickPLS {model} bootstrap workers={workers}")

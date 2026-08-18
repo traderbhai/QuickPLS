@@ -1,0 +1,206 @@
+{
+  "admission_policy": "candidate descriptor only; separate reviewed attachment is required and cannot occur until every QualificationSpec V2 role is satisfied",
+  "build_fingerprint": "validation-source-contract:2a11fd9e10ca49ed6a05a3535ca9061291064ed54956987c42d490e8d3495767",
+  "capability_id": "smartpls.model_fit",
+  "cell_id": "qpls3.assessment.model_fit",
+  "checks": {
+    "contract_sections_are_frozen_and_nonempty": true,
+    "manifest_state_is_absent_with_no_admitted_evidence": true,
+    "qualification_spec_has_zero_attached_receipts": true,
+    "qualification_spec_is_compatibility_only": true,
+    "qualification_spec_schema_semantics_and_registry_pass": true,
+    "registry_state_remains_truthful_and_nonstandard": true,
+    "required_receipt_roles_are_exact": true,
+    "source_descriptors_are_current": true
+  },
+  "generated_at_utc": "2026-08-14T22:41:24.432491Z",
+  "hardware_fingerprint": {
+    "architecture": "x86_64",
+    "cpu": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "logical_cores": 12,
+    "memory_gib": 15.314,
+    "os": "Windows 11"
+  },
+  "method_version": "pls_model_fit_v2",
+  "passed": true,
+  "promotion_authority": false,
+  "qualification_evidence": true,
+  "qualification_id": "qpls3.assessment.model_fit.exact.qualification_v2",
+  "qualification_ready": false,
+  "receipt_eligible": true,
+  "report_kind": "pls_model_fit_v2_method_contract_qualification_v1",
+  "role": "method_contract",
+  "role_blockers": [],
+  "scenario_set_sha256": "6348da07789538581eb597d4d41d941fa71dcbe6a97081326442c68f01f88739",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-assessment/src/lib.rs",
+      "sha256": "7087b5dbeadcb6b57f665701a8161fa950725d090f9ac365cffe7c0b5f392c00",
+      "size_bytes": 172449
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "c6d6fb3d3d07cb372879cc165bb11920ea55b9fb9be9973fe2e9dd8756a2d4fb",
+      "size_bytes": 786835
+    },
+    {
+      "path": "crates/qpls-resampling/src/pls_model_fit_exact.rs",
+      "sha256": "05a3444522aa7b9c4aa15804c4796f30e611ce71cc9e0f3169bb24e4501ade31",
+      "size_bytes": 63796
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "743256666cedf19bc7248350fb931d2b67ad2e6d517cbe114431318493b15179",
+      "size_bytes": 77804
+    },
+    {
+      "path": "docs/methods/PLS_MODEL_FIT_EXACT_V1.md",
+      "sha256": "7803400ebcb8888cfa65eb9efd23dfdf226397011a4eaeafc34c6e4037bed49c",
+      "size_bytes": 8071
+    },
+    {
+      "path": "docs/methods/PLS_MODEL_FIT_FULL_REFIT_ORACLE_V1.md",
+      "sha256": "b108283ef5fbddfc1297cc6949d40fee0f78b01be23ed22c11d15a0e3495afa6",
+      "size_bytes": 4587
+    },
+    {
+      "path": "docs/methods/PLS_MODEL_FIT_V2.md",
+      "sha256": "8bdc20b26e886086fa4f73b011c224ba73e5880947cf3ad6ab64844a7ad1c369",
+      "size_bytes": 5581
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "b14348c5803c5a8e7a97a88979fdd7bdb798317c876d676ee497c0102d1f2d59",
+      "size_bytes": 19431
+    },
+    {
+      "path": "src/native/nativePlsModelFit.test.ts",
+      "sha256": "3b21cecacd825a0864b406c5d3a5648c72590dc3c3b1ffdfaee4e84669753dd4",
+      "size_bytes": 9966
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.json",
+      "sha256": "86d4270e76a20c3de38e1c5667d4d10649c8792775fc2be3619f66177ed7cc6c",
+      "size_bytes": 305593
+    },
+    {
+      "path": "validation/fixtures/simple_reflective.csv",
+      "sha256": "99f61b1191dab4dfbe3760e9863032cb5a00c9337d7c0497485b840ae21d804e",
+      "size_bytes": 60
+    },
+    {
+      "path": "validation/fixtures/simple_reflective.recipe.json",
+      "sha256": "45ee6d1ef75b692e680c2150df79741824784c3adf483c43813127017587c09e",
+      "size_bytes": 924
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size_bytes": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size_bytes": 15836
+    },
+    {
+      "path": "validation/methods/pls_model_fit_v2.manifest.json",
+      "sha256": "bf372c1eec784ef31706624a4951b423cb9d8c0d83258a648346a25359b07a75",
+      "size_bytes": 17880
+    },
+    {
+      "path": "validation/pls_model_fit_exact_v1_reference.py",
+      "sha256": "7d668951a9d139041edc297fe3bf4440d95bd99b412584a40643e63135072964",
+      "size_bytes": 7515
+    },
+    {
+      "path": "validation/pls_model_fit_full_refit_oracle.py",
+      "sha256": "3a8b53dab4fb2802194bd17fdc85b09a101831d754fc2eef98abca476bf0b69a",
+      "size_bytes": 62654
+    },
+    {
+      "path": "validation/pls_model_fit_full_refit_oracle.schema.json",
+      "sha256": "2e8ca315e66c3851500feece054e8c8b0f727e8edbafbb3aa6d6920fba1b7c81",
+      "size_bytes": 7827
+    },
+    {
+      "path": "validation/pls_model_fit_v2_qualification_evidence.py",
+      "sha256": "cc79fb2a25ca1d41165f7c79e6984ad26e6c47a020abc20a5e7de0e7521c9fe1",
+      "size_bytes": 27252
+    },
+    {
+      "path": "validation/pls_model_fit_v2_qualification_evidence.schema.json",
+      "sha256": "5a076dbd67a414f830ad4306ce22c5097ae00739b5945ab371d3394feeef145e",
+      "size_bytes": 9789
+    },
+    {
+      "path": "validation/pls_model_fit_v2_qualification_factory.py",
+      "sha256": "8ae516caf6813a609df55249a35d3f7d387a5358264edcc2e6621d7fadeb8f45",
+      "size_bytes": 41605
+    },
+    {
+      "path": "validation/pls_model_fit_v2_qualification_factory.schema.json",
+      "sha256": "bd8cb54b437f4b4fa2d6e3165b484d21c0c943b1882272926d4ef3220f3ee8d5",
+      "size_bytes": 11168
+    },
+    {
+      "path": "validation/pls_model_fit_v2_reference.py",
+      "sha256": "dc48a97d128f02675c94788a61c6b12ccb39401b76335b3a9ef292157c6923e1",
+      "size_bytes": 4626
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/pls_model_fit_exact_v1.qualification.json",
+      "sha256": "3d9292e3928f27618140fe4ebaa47ecd783c75e92c9eb062a5f22b55ab30d6e4",
+      "size_bytes": 33411
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/results/pls_quickpls_path_mode_a.json",
+      "sha256": "c83fddc3952b173bad58f34bc5cd2344def86912c72f2755e77dd8cf534f3653",
+      "size_bytes": 14165
+    },
+    {
+      "path": "validation/test_pls_model_fit_exact_v1_qualification.py",
+      "sha256": "ada343112324f7f9ea89423810d8879068f966686cbba4e3c7a71bbd07f9aadb",
+      "size_bytes": 3800
+    },
+    {
+      "path": "validation/test_pls_model_fit_exact_v1_reference.py",
+      "sha256": "28f6e681c2c2ed3a2866ac949da07b6cd40dceef7cf717e70d1da6103afdb28c",
+      "size_bytes": 2766
+    },
+    {
+      "path": "validation/test_pls_model_fit_full_refit_oracle.py",
+      "sha256": "d2118bcf2acfa9bda5fc78329e693f99c5f153a220d28c9b45b6c159eb6db7d2",
+      "size_bytes": 15901
+    },
+    {
+      "path": "validation/test_pls_model_fit_v2_qualification_evidence.py",
+      "sha256": "2b283e9bc253b61c0fa835a8ea848d007c7d26c8173cdac18e7970cdb3f193c3",
+      "size_bytes": 6115
+    },
+    {
+      "path": "validation/test_pls_model_fit_v2_qualification_factory.py",
+      "sha256": "080e012b2b8815367d799e3c324106f97c9136016af3c91be2801208e7890515",
+      "size_bytes": 13479
+    },
+    {
+      "path": "validation/test_pls_model_fit_v2_reference.py",
+      "sha256": "23bbd58733a8db03c6d3aba28f64646b5116f338870943345c87371612695fe2",
+      "size_bytes": 2125
+    }
+  ],
+  "source_set_sha256": "2a11fd9e10ca49ed6a05a3535ca9061291064ed54956987c42d490e8d3495767",
+  "spec_frozen_at_utc": "2026-08-14T18:30:00Z",
+  "stage": "contract"
+}

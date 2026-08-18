@@ -39,13 +39,24 @@
       {
         "id": "sample_covariance",
         "expression": "s_ab = sum_i (a_i - mean(a))(b_i - mean(b)) / (n - 1)",
-        "variables": ["s_ab", "a_i", "b_i", "n"],
+        "variables": [
+          "s_ab",
+          "a_i",
+          "b_i",
+          "n"
+        ],
         "source_reference_id": "gudergan_ringle_wende_will_2008"
       },
       {
         "id": "tetrad_pairing",
         "expression": "tau_ab_cd = s_ab * s_cd - s_ac * s_bd",
-        "variables": ["tau_ab_cd", "s_ab", "s_cd", "s_ac", "s_bd"],
+        "variables": [
+          "tau_ab_cd",
+          "s_ab",
+          "s_cd",
+          "s_ac",
+          "s_bd"
+        ],
         "source_reference_id": "gudergan_ringle_wende_will_2008"
       }
     ],
@@ -73,18 +84,48 @@
         "purpose": "recovery",
         "design": "Eligible four-to-six-indicator blocks spanning vanishing and non-vanishing population tetrads, varied loadings, sample sizes, and bounded nonnormality.",
         "seed_policy": "Frozen scenario-indexed generators; QuickPLS and the independent reference receive identical rows and indicator order.",
-        "metrics": ["tetrad_error", "maximum_tetrad_error", "eligible_block_count", "pairing_completeness"],
+        "metrics": [
+          "tetrad_error",
+          "maximum_tetrad_error",
+          "eligible_block_count",
+          "pairing_completeness"
+        ],
         "acceptance_rule": "Every expected pairing must be present exactly once and mapped signed and absolute tetrads must agree with the independent reference within 1e-6."
       }
     ],
     "boundaries": [
-      {"id": "constant_or_nonfinite_indicator", "category": "data_pathology", "case": "An eligible block contains a constant, nonnumeric, or nonfinite indicator after the declared missing-data policy.", "expected_behavior": "Validation blocks execution or reports the exact ineligible indicator; no partial CTA payload is emitted."},
-      {"id": "insufficient_indicator_block", "category": "unsupported_scope", "case": "No construct contains four or more supported indicators or PCA weighting is selected.", "expected_behavior": "The recipe is rejected before estimation with a CTA-specific applicability message."},
-      {"id": "indicator_reorder", "category": "metamorphic", "case": "Rows or indicators are consistently reordered without changing the block membership.", "expected_behavior": "Canonicalized construct, indicator-set, and pairing results remain equal within the frozen tolerance."},
-      {"id": "repeatability", "category": "determinism", "case": "The same data fingerprint and recipe are executed repeatedly.", "expected_behavior": "The analytical CTA payload is exactly equal apart from operational identifiers and timestamps."},
-      {"id": "tetrad_archive_tamper", "category": "tamper", "case": "A saved indicator identity, covariance convention, tetrad value, block maximum, or method version is altered.", "expected_behavior": "Strict project validation rejects the archive instead of displaying the changed diagnostic."}
+      {
+        "id": "constant_or_nonfinite_indicator",
+        "category": "data_pathology",
+        "case": "An eligible block contains a constant, nonnumeric, or nonfinite indicator after the declared missing-data policy.",
+        "expected_behavior": "Validation blocks execution or reports the exact ineligible indicator; no partial CTA payload is emitted."
+      },
+      {
+        "id": "insufficient_indicator_block",
+        "category": "unsupported_scope",
+        "case": "No construct contains four or more supported indicators or PCA weighting is selected.",
+        "expected_behavior": "The recipe is rejected before estimation with a CTA-specific applicability message."
+      },
+      {
+        "id": "indicator_reorder",
+        "category": "metamorphic",
+        "case": "Rows or indicators are consistently reordered without changing the block membership.",
+        "expected_behavior": "Canonicalized construct, indicator-set, and pairing results remain equal within the frozen tolerance."
+      },
+      {
+        "id": "repeatability",
+        "category": "determinism",
+        "case": "The same data fingerprint and recipe are executed repeatedly.",
+        "expected_behavior": "The analytical CTA payload is exactly equal apart from operational identifiers and timestamps."
+      },
+      {
+        "id": "tetrad_archive_tamper",
+        "category": "tamper",
+        "case": "A saved indicator identity, covariance convention, tetrad value, block maximum, or method version is altered.",
+        "expected_behavior": "Strict project validation rejects the archive instead of displaying the changed diagnostic."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
     "persistence": {
@@ -92,51 +133,147 @@
       "result_schema_version": 1,
       "payload_kind": "pls_pm_v1",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result whose CTA capability identity differs from its recipe."},
-        {"category": "method_version", "expected_behavior": "Reject a CTA payload relabeled with another method version."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a CTA result whose saved dataset fingerprint no longer matches."},
-        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, incomplete pairings, or inconsistent block maxima."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret an unversioned tetrad preview or a broader inferential CTA claim as current v1 evidence."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose CTA capability identity differs from its recipe."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a CTA payload relabeled with another method version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a CTA result whose saved dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any modified archive member whose checksum differs."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, incomplete pairings, or inconsistent block maxima."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret an unversioned tetrad preview or a broader inferential CTA claim as current v1 evidence."
+        }
       ],
       "legacy_policy": "Historical or unversioned tetrad output remains readable only as explicitly non-current preview data."
     },
     "native": {
-      "setup_controls": ["CTA-PLS calculation selection", "PLS weighting and preprocessing", "Eligible indicator-block summary"],
-      "applicability_blockers": ["No block with four indicators", "PCA weighting", "Invalid indicator data", "Unsupported measurement shape"],
-      "result_surfaces": ["CTA-PLS tetrad summary", "Complete tetrad-pairing table", "Assumptions and exclusions", "Run provenance"],
+      "setup_controls": [
+        "CTA-PLS calculation selection",
+        "PLS weighting and preprocessing",
+        "Eligible indicator-block summary"
+      ],
+      "applicability_blockers": [
+        "No block with four indicators",
+        "PCA weighting",
+        "Invalid indicator data",
+        "Unsupported measurement shape"
+      ],
+      "result_surfaces": [
+        "CTA-PLS tetrad summary",
+        "Complete tetrad-pairing table",
+        "Assumptions and exclusions",
+        "Run provenance"
+      ],
       "gui_cli_parity_rule": "For the same recipe, dataset fingerprint, and method version, GUI and CLI tetrad payloads must be exactly equal apart from operational identifiers and timestamps.",
-      "accessibility_rules": ["Every tetrad and block maximum is available in an accessible table.", "Warnings and applicability failures do not rely on color or diagram interaction."]
+      "accessibility_rules": [
+        "Every tetrad and block maximum is available in an accessible table.",
+        "Warnings and applicability failures do not rely on color or diagram interaction."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html"],
-      "tables": ["CTA-PLS tetrad summary", "CTA-PLS tetrads", "Run provenance"],
+      "formats": [
+        "csv",
+        "xlsx",
+        "html"
+      ],
+      "tables": [
+        "CTA-PLS tetrad summary",
+        "CTA-PLS tetrads",
+        "Run provenance"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "observe_application_requests", "record_platform_background_egress", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "observe_application_requests",
+        "record_platform_background_egress",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": false,
       "process_cleanup_required": true
     },
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
   "qualification": {
     "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/PLS_CTA_PLS_V1.md"],
-      "independent_reference": ["validation/cta_pls_reference.py"],
-      "simulation_report": ["validation/cta_pls_simulation.py"],
-      "boundary_report": ["validation/cta_pls_boundary_gate.py"],
-      "persistence_report": ["validation/cta_pls_persistence_gate.py"],
-      "frontend_report": ["src/native/nativeCtaPls.test.ts", "src/native/nativeCtaPlsResults.test.ts", "src/native/nativeAnalysisRecipe.test.ts", "src/native/NativeCalculationDialog.test.ts"],
-      "export_report": ["src/native/nativeCtaPlsExport.test.ts", "src/native/nativeExportTables.test.ts", "src/native/NativeExportDialog.test.ts"],
-      "method_audit": ["validation/cta_pls_v1_factory_audit.py"],
-      "packaged_acceptance": ["validation/run_cta_pls_native_acceptance.ps1", "validation/cta_pls_v1_packaged_acceptance.py", "validation/cta_pls_v1_packaged_acceptance.schema.json"]
+      "method_spec": [
+        "docs/methods/PLS_CTA_PLS_V1.md"
+      ],
+      "independent_reference": [
+        "validation/cta_pls_reference.py"
+      ],
+      "simulation_report": [
+        "validation/cta_pls_simulation.py"
+      ],
+      "boundary_report": [
+        "validation/cta_pls_boundary_gate.py"
+      ],
+      "persistence_report": [
+        "validation/cta_pls_persistence_gate.py"
+      ],
+      "frontend_report": [
+        "src/native/nativeCtaPls.test.ts",
+        "src/native/nativeCtaPlsResults.test.ts",
+        "src/native/nativeAnalysisRecipe.test.ts",
+        "src/native/NativeCalculationDialog.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeCtaPlsExport.test.ts",
+        "src/native/nativeExportTables.test.ts",
+        "src/native/NativeExportDialog.test.ts"
+      ],
+      "method_audit": [
+        "validation/cta_pls_v1_factory_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_cta_pls_native_acceptance.ps1",
+        "validation/cta_pls_v1_packaged_acceptance.py",
+        "validation/cta_pls_v1_packaged_acceptance.schema.json"
+      ]
     },
     "evidence": {
       "engine_only": [

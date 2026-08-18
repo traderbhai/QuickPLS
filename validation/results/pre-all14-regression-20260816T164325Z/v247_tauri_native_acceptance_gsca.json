@@ -1,0 +1,1518 @@
+{
+  "passed": true,
+  "generatedAt": "2026-08-16T13:52:18.825Z",
+  "endpoint": "http://127.0.0.1:9222",
+  "runtime": "tauri-webview2-cdp",
+  "focusedRun": {
+    "scope": "gsca",
+    "priorGeneratedAt": "2026-08-16T13:42:02.360Z",
+    "completedAt": "2026-08-16T13:52:37.121Z"
+  },
+  "checks": {
+    "ncaReferenceFixture": {
+      "path": "D:\\QuickPLS\\validation\\results\\nca_native_reference.csv",
+      "columns": [
+        "x",
+        "y"
+      ],
+      "rows": 1024,
+      "completeCases": 1024,
+      "deterministic": true,
+      "repeatedReferencePattern": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          4
+        ]
+      ],
+      "expected": {
+        "scope": {
+          "minimum_x": 0,
+          "maximum_x": 3,
+          "minimum_y": 1,
+          "maximum_y": 4
+        },
+        "ceFdhPeers": [
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 1,
+            "y": 3
+          },
+          {
+            "x": 3,
+            "y": 4
+          }
+        ],
+        "ceFdhEffectSize": 0.5555555555555556,
+        "crFdh": {
+          "slope": 0.9285714285714286,
+          "intercept": 1.4285714285714286,
+          "effectSize": 0.3956043956043956
+        },
+        "ceiling": "both",
+        "permutationSamples": 9999,
+        "seed": 20260811
+      }
+    },
+    "mgaReferenceFixture": {
+      "path": "D:\\QuickPLS\\validation\\results\\mga_reference.csv",
+      "columns": [
+        "group",
+        "x1",
+        "x2",
+        "z1",
+        "z2",
+        "y1",
+        "y2"
+      ],
+      "rows": 180,
+      "groups": {
+        "A": 90,
+        "B": 90
+      },
+      "deterministic": true
+    },
+    "fixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\wpls_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-methods-1786885739012-42088.qpls",
+      "projectName": "Native Methods Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-methods-1786885739012-42088.qpls",
+      "stderr": ""
+    },
+    "mediationFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\lavaan_latent_mediation_sem.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-1786885739012-42088.qpls",
+      "projectName": "Native Mediation Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-mediation-1786885739012-42088.qpls",
+      "stderr": ""
+    },
+    "moderationFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\moderation_reference_base.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-moderation-1786885739012-42088.qpls",
+      "projectName": "Native Moderation Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-moderation-1786885739012-42088.qpls",
+      "stderr": ""
+    },
+    "mgaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\mga_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-mga-1786885739012-42088.qpls",
+      "projectName": "Native MGA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-mga-1786885739012-42088.qpls",
+      "stderr": ""
+    },
+    "ccaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\cca_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-cca-1786885739012-42088.qpls",
+      "projectName": "Native CCA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-cca-1786885739012-42088.qpls",
+      "stderr": ""
+    },
+    "ipmaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\ipma_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-1786885739012-42088.qpls",
+      "projectName": "Native IPMA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-ipma-1786885739012-42088.qpls",
+      "stderr": ""
+    },
+    "ncaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\nca_native_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-nca-1786885739012-42088.qpls",
+      "projectName": "Native NCA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-nca-1786885739012-42088.qpls",
+      "stderr": "",
+      "initialArchive": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "models": 0,
+        "recipes": 0,
+        "results": 0,
+        "activeModelId": null,
+        "nodes": 0,
+        "edges": 0
+      }
+    },
+    "runtimePreflight": {
+      "passed": true,
+      "expectedOrigin": "http://tauri.localhost",
+      "enumeratedPages": [
+        {
+          "index": 0,
+          "url": "http://tauri.localhost/",
+          "origin": "http://tauri.localhost",
+          "title": "QuickPLS",
+          "shellVisible": true,
+          "tauriRuntime": true
+        }
+      ],
+      "qualifyingPageCount": 1,
+      "preReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "reloadCount": 1,
+      "postReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "sameOrigin": true,
+      "experimentalLabsPreferenceRestored": true
+    },
+    "runtime": {
+      "title": "QuickPLS",
+      "tauriRuntime": true,
+      "viewport": {
+        "width": 1536,
+        "height": 794,
+        "dpr": 1.25
+      },
+      "surface": "launcher"
+    },
+    "bundledSampleGallery": {
+      "passed": true,
+      "sampleIds": [
+        "corporate_reputation",
+        "simple_pls",
+        "mediation"
+      ],
+      "samples": [
+        {
+          "sampleId": "corporate_reputation",
+          "visibleSampleIds": [
+            "corporate_reputation",
+            "simple_pls",
+            "mediation"
+          ],
+          "project": "Corporate Reputation Sample",
+          "dataset": "corporate_reputation.csv",
+          "cases": "12 cases",
+          "renderedConstructs": "4 constructs",
+          "runOptions": [
+            "PLS-SEM Bootstrapping run"
+          ],
+          "selectedRunId": "feb6d9af-4015-4769-8082-7495df878141",
+          "pathTable": "Direct effects",
+          "pathRows": 3,
+          "renderedPaths": 3
+        },
+        {
+          "sampleId": "simple_pls",
+          "visibleSampleIds": [
+            "corporate_reputation",
+            "simple_pls",
+            "mediation"
+          ],
+          "project": "Simple Reflective PLS Sample",
+          "dataset": "simple_reflective.csv",
+          "cases": "6 cases",
+          "renderedConstructs": "2 constructs",
+          "runOptions": [
+            "PLS-SEM Algorithm run"
+          ],
+          "selectedRunId": "9022de42-7490-4e2c-b796-c9ff2e71e936",
+          "pathTable": "Path coefficients",
+          "pathRows": 1,
+          "renderedPaths": 1
+        },
+        {
+          "sampleId": "mediation",
+          "visibleSampleIds": [
+            "corporate_reputation",
+            "simple_pls",
+            "mediation"
+          ],
+          "project": "Mediation Sample",
+          "dataset": "mediation_sample.csv",
+          "cases": "8 cases",
+          "renderedConstructs": "3 constructs",
+          "runOptions": [
+            "PLS-SEM Algorithm run"
+          ],
+          "selectedRunId": "eae6f588-87e5-409d-a2fb-0ec3955e32d2",
+          "pathTable": "Direct effects",
+          "pathRows": 2,
+          "renderedPaths": 2
+        }
+      ],
+      "liveLauncher": true,
+      "typedSelector": true,
+      "completedCanonicalResults": true
+    },
+    "sample": {
+      "project": "Corporate Reputation Sample",
+      "constructs": 4
+    },
+    "recodeDialog": {
+      "source": "COMP1",
+      "browserOnlyNoticeCount": 0,
+      "createEnabled": true
+    },
+    "recodeCompleted": {
+      "versionCountText": "Versions (2)",
+      "derivedVariableVisible": 3
+    },
+    "calculationCommands": {
+      "toolbarGenericCommands": 1,
+      "calculateMenuEntries": [
+        "Calculate…Ctrl+R"
+      ],
+      "methodSpecificMenuEntries": []
+    },
+    "gscaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\v08_extended_methods_fixture.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-1786888338818-65424.qpls",
+      "projectName": "Native GSCA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-gsca-1786888338818-65424.qpls",
+      "stderr": ""
+    },
+    "gscaFixture": {
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-1786888338818-65424.qpls",
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\v08_extended_methods_fixture.csv",
+      "status": "ReadyNative GSCA Acceptancev08_extended_methods_fixture.csv140 cases0 constructsDataOffline",
+      "cases": 140,
+      "columns": [
+        "#",
+        "x",
+        "m",
+        "w",
+        "y",
+        "z",
+        "bin_y",
+        "g1",
+        "g2",
+        "g3",
+        "h1",
+        "h2"
+      ],
+      "initialArchive": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "models": 0,
+        "recipes": 0,
+        "results": 0,
+        "activeModelId": null,
+        "nodes": 0,
+        "edges": 0
+      }
+    },
+    "recentProjectsRestored": true,
+    "gscaInitialModelCreation": {
+      "projectName": "Native GSCA Acceptance",
+      "importedEditableModels": 0,
+      "name": "GSCA Mixed-Block Model",
+      "constructs": 0,
+      "structuralPaths": 0
+    },
+    "gscaInvalidSetup": {
+      "attempted": true,
+      "selectedMethod": "GSCA",
+      "startEnabled": false,
+      "blockers": [
+        "The model does not contain any constructs.",
+        "The model does not contain any assigned indicators.",
+        "Structural validity cannot be checked without constructs.",
+        "GSCA requires at least two component constructs; GSCA requires at least one recursive structural path."
+      ],
+      "emptyModelBlocker": true,
+      "archiveBefore": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveAfter": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveStateUnchanged": true,
+      "resultCreated": false
+    },
+    "gscaModel": {
+      "constructs": 2,
+      "constructLabels": [
+        "G formative component",
+        "H reflective component"
+      ],
+      "assignedIndicators": 5,
+      "structuralPaths": 1,
+      "formativeChecked": true,
+      "reflectiveChecked": true
+    },
+    "gscaDialog": {
+      "catalogCount": 2,
+      "optionLabels": [
+        "GSCA",
+        "Necessary Condition Analysis"
+      ],
+      "selectedMethod": "GSCA",
+      "category": "Component models",
+      "weighting": "Path weighting (fixed)",
+      "resultData": "Standardized (fixed)",
+      "estimator": "EstimatorJoint global least-squares alternating least squares; fixed +1 initialization",
+      "scope": "Supported setupJoint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, or inference.",
+      "unsupportedControls": 0,
+      "blockers": [],
+      "startEnabled": true
+    },
+    "gscaProgress": {
+      "captured": true,
+      "ariaBusy": "true",
+      "status": "queued",
+      "phase": "Queued",
+      "message": "Native engine accepted the calculation job.",
+      "progressValue": "0",
+      "progressMax": "100",
+      "logEntries": 3,
+      "postCapture": {
+        "ariaBusy": "true",
+        "status": "running",
+        "active": true,
+        "terminalTransitionObserved": false,
+        "terminalTransitionAllowed": true
+      },
+      "completedRunProof": {
+        "runId": "dcd2fdf2-e75c-4de8-bc6a-2dc1a5ca786b",
+        "runLabel": "GSCA run",
+        "matched": true
+      }
+    },
+    "gscaResult": {
+      "runId": "dcd2fdf2-e75c-4de8-bc6a-2dc1a5ca786b",
+      "runLabel": "GSCA run",
+      "initialSelectedTable": "gsca_fit",
+      "treeItems": [
+        "Graphical results",
+        "Model estimates",
+        "GSCA component model",
+        "Model fit and convergence",
+        "Structural path coefficients",
+        "Endogenous construct R²",
+        "Measurement loadings",
+        "Component weights",
+        "Analysis details"
+      ],
+      "fit": {
+        "rows": 12,
+        "headers": [
+          "Measure",
+          "Value"
+        ],
+        "values": [
+          [
+            "Global FIT",
+            "0.3693"
+          ],
+          [
+            "Adjusted FIT",
+            "0.3638"
+          ],
+          [
+            "Measurement FIT",
+            "0.3981"
+          ],
+          [
+            "Structural FIT",
+            "0.2972"
+          ],
+          [
+            "GFI",
+            "0.6480"
+          ],
+          [
+            "SRMR",
+            "0.4814"
+          ],
+          [
+            "Objective",
+            "4.4152"
+          ],
+          [
+            "Converged",
+            "Yes"
+          ],
+          [
+            "ALS iterations",
+            "4"
+          ],
+          [
+            "Final objective-and-weight change",
+            "0.0000"
+          ],
+          [
+            "Analyzed observations",
+            "140"
+          ],
+          [
+            "Omitted observations",
+            "0"
+          ]
+        ]
+      },
+      "paths": {
+        "rows": 1,
+        "headers": [
+          "Path",
+          "Coefficient"
+        ],
+        "values": [
+          [
+            "H reflective component ← G formative component",
+            "0.7709"
+          ]
+        ]
+      },
+      "rSquared": {
+        "rows": 1,
+        "headers": [
+          "Endogenous construct",
+          "R²"
+        ],
+        "values": [
+          [
+            "H reflective component",
+            "0.5944"
+          ]
+        ]
+      },
+      "loadings": {
+        "rows": 5,
+        "headers": [
+          "Construct",
+          "Indicator",
+          "Measurement model",
+          "Loading"
+        ],
+        "values": [
+          [
+            "G formative component",
+            "g1",
+            "Formative",
+            "0.9974"
+          ],
+          [
+            "G formative component",
+            "g2",
+            "Formative",
+            "0.9934"
+          ],
+          [
+            "G formative component",
+            "g3",
+            "Formative",
+            "0.9781"
+          ],
+          [
+            "H reflective component",
+            "h1",
+            "Reflective",
+            "0.9973"
+          ],
+          [
+            "H reflective component",
+            "h2",
+            "Reflective",
+            "0.9979"
+          ]
+        ]
+      },
+      "weights": {
+        "rows": 5,
+        "headers": [
+          "Construct",
+          "Indicator",
+          "Measurement model",
+          "Weight"
+        ],
+        "values": [
+          [
+            "G formative component",
+            "g1",
+            "Formative",
+            "0.9745"
+          ],
+          [
+            "G formative component",
+            "g2",
+            "Formative",
+            "0.3887"
+          ],
+          [
+            "G formative component",
+            "g3",
+            "Formative",
+            "-0.3661"
+          ],
+          [
+            "H reflective component",
+            "h1",
+            "Reflective",
+            "0.4716"
+          ],
+          [
+            "H reflective component",
+            "h2",
+            "Reflective",
+            "0.5308"
+          ]
+        ]
+      },
+      "scope": {
+        "rows": 11,
+        "headers": [
+          "Field",
+          "Value"
+        ],
+        "values": [
+          [
+            "Estimator",
+            "Joint global least-squares alternating least squares"
+          ],
+          [
+            "Method version",
+            "gsca_als_v2"
+          ],
+          [
+            "Algorithm version",
+            "alternating_least_squares_v1"
+          ],
+          [
+            "Initialization",
+            "Deterministic +1 block weights"
+          ],
+          [
+            "Maximum iterations",
+            "3,000"
+          ],
+          [
+            "Stop criterion",
+            "1e-7 for both objective and normalized weights"
+          ],
+          [
+            "Input",
+            "Raw case-level data with listwise-standardized numeric indicators"
+          ],
+          [
+            "Measurement models",
+            "Disjoint reflective and formative blocks"
+          ],
+          [
+            "Structural model",
+            "Recursive single-group paths; every construct connected"
+          ],
+          [
+            "Inference",
+            "Point estimates only; no bootstrap or permutation inference"
+          ],
+          [
+            "Supported setup",
+            "Joint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, or inference."
+          ]
+        ]
+      },
+      "fitValues": {
+        "Global FIT": "0.3693",
+        "Adjusted FIT": "0.3638",
+        "Measurement FIT": "0.3981",
+        "Structural FIT": "0.2972",
+        "GFI": "0.6480",
+        "SRMR": "0.4814",
+        "Objective": "4.4152",
+        "Converged": "Yes",
+        "ALS iterations": "4",
+        "Final objective-and-weight change": "0.0000",
+        "Analyzed observations": "140",
+        "Omitted observations": "0"
+      },
+      "scopeValues": {
+        "Estimator": "Joint global least-squares alternating least squares",
+        "Method version": "gsca_als_v2",
+        "Algorithm version": "alternating_least_squares_v1",
+        "Initialization": "Deterministic +1 block weights",
+        "Maximum iterations": "3,000",
+        "Stop criterion": "1e-7 for both objective and normalized weights",
+        "Input": "Raw case-level data with listwise-standardized numeric indicators",
+        "Measurement models": "Disjoint reflective and formative blocks",
+        "Structural model": "Recursive single-group paths; every construct connected",
+        "Inference": "Point estimates only; no bootstrap or permutation inference",
+        "Supported setup": "Joint global least-squares ALS with fixed +1 initialization, 3,000 maximum iterations, a 1e-7 objective-and-weight stop criterion, listwise-standardized numeric indicators, disjoint reflective/formative blocks, and recursive single-group paths. No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, or inference."
+      },
+      "runDetails": {
+        "properties": {
+          "Run": "GSCA run",
+          "Method": "GSCA",
+          "Created": "16/8/2026, 7:22:23 pm",
+          "Dataset fingerprint": "v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb",
+          "Recipe": "bb60b93f-dc81-42ce-82ea-95a6ca926589",
+          "Engine": "2.46.0",
+          "Method version": "gsca_als_v2",
+          "Estimator": "Joint global least-squares ALS",
+          "Algorithm version": "alternating_least_squares_v1",
+          "Complete cases": "140",
+          "Omitted cases": "0",
+          "Converged": "Yes",
+          "ALS iterations": "4",
+          "Global FIT": "0.369258",
+          "Adjusted FIT": "0.363805",
+          "GFI": "0.647993",
+          "SRMR": "0.481400",
+          "Input": "Listwise-standardized raw case data",
+          "Inference": "Point estimates only"
+        },
+        "logEntries": 4
+      },
+      "resultProperties": {
+        "Method": "GSCA",
+        "Status": "Completed",
+        "Estimator": "Joint global least-squares ALS",
+        "Complete cases": "140",
+        "Omitted cases": "0",
+        "Converged": "Yes",
+        "ALS iterations": "4",
+        "Global FIT": "0.369258",
+        "Adjusted FIT": "0.363805",
+        "GFI": "0.647993",
+        "SRMR": "0.481400",
+        "Completed": "16/8/2026, 7:22:23 pm"
+      },
+      "diagram": {
+        "heading": "Model estimates",
+        "imageAlt": "Model estimates for GSCA run"
+      },
+      "noPlaceholder": true,
+      "noGenericPlsOrInference": true
+    },
+    "gscaExport": {
+      "formats": [
+        "CSV tables",
+        "HTML report",
+        "Reviewer pack",
+        "XLSX workbook",
+        "Model diagram",
+        "Print / PDF"
+      ],
+      "buttonTexts": [
+        "CSV tables Current calculation tables",
+        "HTML report Tables and run provenance",
+        "Reviewer pack Diagram, results, and run provenance",
+        "XLSX workbook Native spreadsheet export",
+        "Model diagram SVG with selected run estimates",
+        "Print / PDF Use the Windows print dialog"
+      ],
+      "buttonCount": 6,
+      "everyFormatPresentOnce": true,
+      "xlsxEnabled": true,
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx",
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 22021414,
+              "pid": 21688,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 22021414,
+              "handle": 460474,
+              "pid": 21688,
+              "rootOwner": 22021414,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 22021414,
+              "pid": 21688,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx",
+              "requiredSharedStrings": [
+                "Model fit and convergence",
+                "Structural path coefficients",
+                "Endogenous construct R�",
+                "Measurement loadings",
+                "Component weights",
+                "Analysis details",
+                "Run provenance",
+                "Joint global least-squares alternating least squares",
+                "gsca_als_v2",
+                "alternating_least_squares_v1"
+              ],
+              "requiredSheets": [
+                "Model fit and convergence",
+                "Structural path coefficients",
+                "Endogenous construct R�",
+                "Measurement loadings",
+                "Component weights",
+                "Analysis details",
+                "Run provenance"
+              ],
+              "sha256": "cee830242a0acbcc99f02efc2add1a1f6c5959ddf916ae0b64e506f2ddd08c95",
+              "sheetNames": [
+                "Model fit and convergence",
+                "Structural path coefficients",
+                "Endogenous construct R�",
+                "Measurement loadings",
+                "Component weights",
+                "Analysis details",
+                "Run provenance"
+              ],
+              "size": 11435
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 22021414,
+                    "pid": 21688,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 22021414,
+                    "handle": 460474,
+                    "pid": 21688,
+                    "rootOwner": 22021414,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 22021414,
+                    "pid": 21688,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-gsca-20260816-192214816.xlsx",
+                    "requiredSharedStrings": [
+                      "Model fit and convergence",
+                      "Structural path coefficients",
+                      "Endogenous construct R�",
+                      "Measurement loadings",
+                      "Component weights",
+                      "Analysis details",
+                      "Run provenance",
+                      "Joint global least-squares alternating least squares",
+                      "gsca_als_v2",
+                      "alternating_least_squares_v1"
+                    ],
+                    "requiredSheets": [
+                      "Model fit and convergence",
+                      "Structural path coefficients",
+                      "Endogenous construct R�",
+                      "Measurement loadings",
+                      "Component weights",
+                      "Analysis details",
+                      "Run provenance"
+                    ],
+                    "sha256": "cee830242a0acbcc99f02efc2add1a1f6c5959ddf916ae0b64e506f2ddd08c95",
+                    "sheetNames": [
+                      "Model fit and convergence",
+                      "Structural path coefficients",
+                      "Endogenous construct R�",
+                      "Measurement loadings",
+                      "Component weights",
+                      "Analysis details",
+                      "Run provenance"
+                    ],
+                    "size": 11435
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        },
+        "appFeedback": "Saved v247-native-gsca-20260816-192214816.xlsx.",
+        "file": {
+          "size": 11435,
+          "isFile": true
+        },
+        "workbookSheets": [
+          "Model fit and convergence",
+          "Structural path coefficients",
+          "Endogenous construct R²",
+          "Measurement loadings",
+          "Component weights",
+          "Analysis details",
+          "Run provenance"
+        ]
+      }
+    },
+    "gscaSaveReopen": {
+      "expectedRunId": "dcd2fdf2-e75c-4de8-bc6a-2dc1a5ca786b",
+      "selectedRunId": "dcd2fdf2-e75c-4de8-bc6a-2dc1a5ca786b",
+      "sameRunRestored": true,
+      "fitRows": 12,
+      "loadingRows": 5,
+      "scopeRows": 11,
+      "archive": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "resultId": "dcd2fdf2-e75c-4de8-bc6a-2dc1a5ca786b",
+        "resultStatus": "completed",
+        "provenanceMethod": "gsca",
+        "provenanceMethodVersion": "gsca_als_v2",
+        "provenanceEngineVersion": "2.46.0",
+        "payloadKind": "pls_pm_v1",
+        "estimationMethodVersion": "gsca_als_v2",
+        "usedObservations": 140,
+        "omittedObservations": 0,
+        "converged": true,
+        "iterations": 4,
+        "assessment": {
+          "methodVersion": "assessment_not_applicable_v1",
+          "warnings": [
+            "PLS assessment is not applicable to GSCA ALS component-model estimation."
+          ]
+        },
+        "gsca": {
+          "keys": [
+            "adjusted_fit",
+            "algorithm",
+            "bootstrap_intervals",
+            "converged",
+            "covariance_discrepancy",
+            "covariance_sample_total",
+            "final_change",
+            "fit",
+            "free_parameters",
+            "gfi",
+            "iterations",
+            "loadings",
+            "measurement_fit",
+            "method_version",
+            "objective",
+            "observations",
+            "paths",
+            "r_squared",
+            "srmr",
+            "standardized_residual_sum",
+            "stop_criterion",
+            "structural_fit",
+            "warnings",
+            "weights"
+          ],
+          "methodVersion": "gsca_als_v2",
+          "algorithm": "alternating_least_squares_v1",
+          "converged": true,
+          "iterations": 4,
+          "stopCriterion": 1e-7,
+          "finalChange": 4.677076986814299e-8,
+          "observations": 140,
+          "freeParameters": 6,
+          "metricsMatch": true,
+          "weightsMatch": true,
+          "loadingsMatch": true,
+          "pathsMatch": true,
+          "rSquaredMatch": true,
+          "bootstrapIntervals": [],
+          "warnings": [
+            "GSCA ALS v2 is bounded to standardized raw data, listwise deletion, disjoint reflective/formative blocks, and recursive single-group structural models; inference and broader GSCA variants are not included."
+          ]
+        },
+        "unrelatedPayloads": [],
+        "noPlsArtifacts": true,
+        "recipe": {
+          "status": "validated_gsca_als_v2_bounded_scope",
+          "method": "gsca",
+          "weightingScheme": "path",
+          "preprocessing": "standardized",
+          "missingData": "listwise_deletion",
+          "maxIterations": 3000,
+          "tolerance": 1e-7,
+          "workers": 1,
+          "bootstrapSamples": 0,
+          "studentizedInnerSamples": 0,
+          "permutationSamples": 0,
+          "caseWeightColumn": null,
+          "constructs": 2,
+          "constructIndicators": [
+            {
+              "name": "G formative component",
+              "mode": "formative",
+              "indicators": [
+                "g1",
+                "g2",
+                "g3"
+              ]
+            },
+            {
+              "name": "H reflective component",
+              "mode": "reflective",
+              "indicators": [
+                "h1",
+                "h2"
+              ]
+            }
+          ],
+          "paths": 1,
+          "controls": 0,
+          "interactions": 0,
+          "higherOrderConstructs": 0
+        },
+        "models": 1,
+        "activeModelId": "794b9e1d-ccdb-48d9-97ec-822c68c2ac91",
+        "nodes": 2,
+        "edges": 1,
+        "runModelId": "794b9e1d-ccdb-48d9-97ec-822c68c2ac91",
+        "runSnapshotNodes": 2,
+        "runSnapshotEdges": 1
+      }
+    },
+    "gscaPackagedViewports": {
+      "passed": true,
+      "actualTauriWindow": true,
+      "resizeMechanism": "Browser.setWindowBounds",
+      "targetIdentity": {
+        "targetId": "6A7F70267BE1A73AEFB72DA94659470D",
+        "windowId": 1408386812,
+        "type": "page",
+        "title": "QuickPLS - Native GSCA Acceptance *",
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "lookupCommand": "Browser.getWindowForTarget"
+      },
+      "deviceMetricsOverride": {
+        "clearCommand": "Emulation.clearDeviceMetricsOverride",
+        "cleared": true,
+        "pageSetViewportSizeUsed": false,
+        "emulationOnly": false,
+        "playwrightViewportBefore": null
+      },
+      "method": {
+        "slug": "gsca_als_v2",
+        "version": "gsca_als_v2",
+        "evidenceCheck": "gscaResult",
+        "expectedRunId": "dcd2fdf2-e75c-4de8-bc6a-2dc1a5ca786b",
+        "expectedRunLabel": "GSCA run",
+        "expectedTableId": "gsca_fit"
+      },
+      "outerBoundsBefore": {
+        "left": 0,
+        "top": 23,
+        "width": 1536,
+        "height": 793,
+        "windowState": "normal"
+      },
+      "exactViewports": [
+        {
+          "id": "1024x700",
+          "requestedClientViewport": {
+            "width": 1024,
+            "height": 700
+          },
+          "domInnerDimensions": {
+            "width": 1024,
+            "height": 700
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1536,
+            "height": 793,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1024,
+            "height": 701,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 699,
+                "left": 0,
+                "top": 23
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 46,
+                "width": 1024,
+                "height": 700,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 699
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 701,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1024,
+                "height": 702,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 702
+              }
+            },
+            {
+              "attempt": 3,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 700,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1024,
+                "height": 701,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 700
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "dcd2fdf2-e75c-4de8-bc6a-2dc1a5ca786b",
+          "selectedRunLabel": "GSCA run",
+          "selectedTableId": "gsca_fit",
+          "resultRows": 12,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\146v-tauri-native-gsca-packaged-viewport-1024x700.png",
+          "passed": true
+        },
+        {
+          "id": "1280x720",
+          "requestedClientViewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "domInnerDimensions": {
+            "width": 1280,
+            "height": 720
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1024,
+            "height": 701,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1280,
+            "height": 721,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1280,
+                "height": 721,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1280,
+                "height": 722,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1280,
+                "innerHeight": 722
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1280,
+                "height": 720,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1280,
+                "height": 721,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1280,
+                "innerHeight": 720
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "dcd2fdf2-e75c-4de8-bc6a-2dc1a5ca786b",
+          "selectedRunLabel": "GSCA run",
+          "selectedTableId": "gsca_fit",
+          "resultRows": 12,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\146v-tauri-native-gsca-packaged-viewport-1280x720.png",
+          "passed": true
+        },
+        {
+          "id": "1440x900",
+          "requestedClientViewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "domInnerDimensions": {
+            "width": 1440,
+            "height": 900
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1280,
+            "height": 721,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1440,
+            "height": 901,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1440,
+                "height": 901,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1440,
+                "height": 902,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1440,
+                "innerHeight": 902
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1440,
+                "height": 900,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1440,
+                "height": 901,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1440,
+                "innerHeight": 900
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "dcd2fdf2-e75c-4de8-bc6a-2dc1a5ca786b",
+          "selectedRunLabel": "GSCA run",
+          "selectedTableId": "gsca_fit",
+          "resultRows": 12,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\146v-tauri-native-gsca-packaged-viewport-1440x900.png",
+          "passed": true
+        }
+      ],
+      "restoredFinalWindowState": {
+        "requested": {
+          "left": 0,
+          "top": 23,
+          "width": 1536,
+          "height": 793,
+          "windowState": "normal"
+        },
+        "actual": {
+          "left": 0,
+          "top": 23,
+          "width": 1536,
+          "height": 793,
+          "windowState": "normal"
+        },
+        "passed": true
+      }
+    },
+    "gscaFunctionalOffline": {
+      "passed": true,
+      "analyticalWorkflowRequiresInternet": false,
+      "strictZeroProcessEgressClaimed": false,
+      "platformBackgroundEgressOutsidePageRequestScope": true,
+      "observedRequestCount": 52,
+      "externalRequestCount": 0,
+      "origins": [
+        "http://ipc.localhost",
+        "http://tauri.localhost"
+      ],
+      "externalRequests": []
+    }
+  },
+  "screenshots": [
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\12-tauri-native-launcher-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\12-tauri-native-sample-corporate_reputation-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\12-tauri-native-sample-simple_pls-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\12-tauri-native-sample-mediation-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\13-tauri-native-model-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\14-tauri-native-data-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\15-tauri-native-recode-dialog-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\16-tauri-native-data-version-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\140-tauri-native-gsca-fixture-data-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\140a-tauri-native-gsca-invalid-setup-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\141-tauri-native-gsca-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\142-tauri-native-gsca-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\143-tauri-native-gsca-running-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\144-tauri-native-gsca-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\145-tauri-native-gsca-export-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\146-tauri-native-gsca-reopened-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\146v-tauri-native-gsca-packaged-viewport-1024x700.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\146v-tauri-native-gsca-packaged-viewport-1280x720.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\146v-tauri-native-gsca-packaged-viewport-1440x900.png"
+  ],
+  "screenshotArtifacts": [
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/12-tauri-native-launcher-1440x900.png",
+      "size": 57995,
+      "sha256": "59402e1b7a01ce0885c0333d074731909714194dd67fbc199d75822ea05de11e"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/12-tauri-native-sample-corporate_reputation-1536x794.png",
+      "size": 167468,
+      "sha256": "3ab5165fcc3c2656f445433b09608215d5db40f51b115d15cd7bf04d82621566"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/12-tauri-native-sample-simple_pls-1536x794.png",
+      "size": 141786,
+      "sha256": "dd8087bec36623a2260ab20d0ed681d97708387b05e7b220351f5d3be31e34de"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/12-tauri-native-sample-mediation-1536x794.png",
+      "size": 134495,
+      "sha256": "f97e544537d9d7adb24c6065fc0f6a80de0dcd37129c4a2f3ee407612b5666ca"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/13-tauri-native-model-1440x900.png",
+      "size": 167468,
+      "sha256": "971e7bafdc8e3e2c987fcab3044d9ddb368f12bbfb1ad09283aa480326b66e28"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/14-tauri-native-data-1440x900.png",
+      "size": 107551,
+      "sha256": "278b9ab74d39998cbb96fbbe65cbc6d199fd1923f59b4a7e491c2f4645fd39da"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/15-tauri-native-recode-dialog-1440x900.png",
+      "size": 126997,
+      "sha256": "bfc862210a97f70f5d3ce91ba4649ab6e799ff0b4192ffae8afdcf0dbea2c2c0"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/16-tauri-native-data-version-1440x900.png",
+      "size": 123218,
+      "sha256": "6f17f8e184d21fd85313978255af1b728bf94e1807d314b35e413f208cbfdffa"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/140-tauri-native-gsca-fixture-data-1536x794.png",
+      "size": 293756,
+      "sha256": "e237f9db00cb255e325b1faff82e1d84bbf1a1b5dc63d1a03f4ef70d864349d6"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/140a-tauri-native-gsca-invalid-setup-1536x794.png",
+      "size": 195735,
+      "sha256": "2fa871678b92b431285a914e9753689b467cab368dfdebd4e6f59635c68e8f31"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/141-tauri-native-gsca-model-1536x794.png",
+      "size": 174070,
+      "sha256": "061005501ff35f65d8cd50bc0d71d45ada5aa9a3de2ed10ae18e834cb9c95138"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/142-tauri-native-gsca-dialog-1536x794.png",
+      "size": 189647,
+      "sha256": "cf7f54e251cd5cb5a7b474da1cf68d7d4d697d2ae5f0eec0813fd9b393299149"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/143-tauri-native-gsca-running-1536x794.png",
+      "size": 154480,
+      "sha256": "cfa3d4d200b5ae083088152ac25673174a0f394fe01b60028945a2d4257fd1de"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/144-tauri-native-gsca-results-1536x794.png",
+      "size": 108225,
+      "sha256": "835cdceb0a78ff8593549d1d301d88dc4ef16ad84208bc95ae4c7da4606e3965"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/145-tauri-native-gsca-export-1536x794.png",
+      "size": 136580,
+      "sha256": "9ff06cd21c374f4312bfbc138b044df92ea3a2dbd5515595e485e23e67d88fc6"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/146-tauri-native-gsca-reopened-1536x794.png",
+      "size": 99734,
+      "sha256": "b36cb4b781917b98cfcb3437f8aba6a8f7fce1edc60f45a73fb001fda9118802"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/146v-tauri-native-gsca-packaged-viewport-1024x700.png",
+      "size": 73336,
+      "sha256": "213dfbf6d9673754bc5b5b067c8a90e56967380859ec1a00d09dcae84a7d4d96"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/146v-tauri-native-gsca-packaged-viewport-1280x720.png",
+      "size": 69120,
+      "sha256": "7025849503145be6fa2288e2a8c879285db240f302e077ff1761996abbbbe1ec"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/146v-tauri-native-gsca-packaged-viewport-1440x900.png",
+      "size": 71268,
+      "sha256": "d71af0528bf7617227156f3fb5311c9895beec6dbd3bc315c42f70e374c7de54"
+    }
+  ],
+  "consoleErrors": [],
+  "failures": []
+}

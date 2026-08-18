@@ -1,0 +1,104 @@
+{
+  "acceptance_reasons": [],
+  "aggregates": null,
+  "cancellation": null,
+  "case": {
+    "cancel_after": null,
+    "case_id": "stability_n180_v9_p18_d18_b5000_w12_seed19002",
+    "maximum_p95_elapsed_seconds": null,
+    "maximum_single_run_elapsed_seconds": 38.14902059733868,
+    "mode": "stability",
+    "order": 2,
+    "replicates": 5000,
+    "seed": 19002,
+    "workers": 12
+  },
+  "dimensions": {
+    "d_optimizer_dimensions": 18,
+    "n_complete_cases": 180,
+    "p_free_parameter_rows": 18,
+    "v_observed_variables": 9
+  },
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase1b_case_v1",
+  "ledger": {
+    "attempted_refits": 5000,
+    "base_inference_status": "available",
+    "max_attempts_per_replicate": 1,
+    "minimum_usable_replicates": 4500,
+    "one_sided_95_percent_upper_bound": 0.0009484177700057,
+    "one_sided_bound_method": "clopper_pearson_beta_quantile_one_sided_v1",
+    "one_sided_confidence_level": 0.95,
+    "point_failure_counts_by_kind": {
+      "inadmissible_solution": 0,
+      "moment_matrix_not_positive_definite": 0,
+      "non_convergence": 1,
+      "numerical_failure": 0
+    },
+    "point_failures": [
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 55 iterations (objective 1.731765935535572, gradient norm 0.000012957750642411349)",
+        "replicate_index": 1161,
+        "sample_indices_sha256": "b49c085a10953f64fa91a9e97310eb51f76354e8d56c1b69e4f4f243026fab30",
+        "sampling_positions_sha256": "4d2cf2fa92aea7e9479a79ef1e987bdaceb9d6ea0535cb8022ad39a09f336b8c"
+      }
+    ],
+    "point_failures_count": 1,
+    "point_partition_complete": true,
+    "point_successes": 4999,
+    "replicate_indices_digest_method": "sha256_canonical_json_ordered_u32_array_v1",
+    "requested_replicates": 5000,
+    "retry_policy": "no_retry_fixed_preplanned_primary_draws_v1",
+    "standard_error_available_replicate_indices_sha256": "4d3257f03d8c9d3f661616d946b25c6cc3b56650d6412745412869a52037b45f",
+    "standard_error_partition_complete": true,
+    "standard_error_unavailable": [],
+    "standard_error_unavailable_count": 0,
+    "standard_error_unavailable_counts_by_reason": {
+      "derivative_unavailable": 0,
+      "information_not_positive_definite": 0,
+      "invalid_information_variance_or_standard_error": 0,
+      "numerical_information_failure": 0,
+      "singular_information": 0
+    },
+    "studentized_inference_status": "available",
+    "studentized_usable_refits": 4999,
+    "successful_replicate_indices_sha256": "4d3257f03d8c9d3f661616d946b25c6cc3b56650d6412745412869a52037b45f",
+    "total_studentized_unusable": 1,
+    "total_studentized_unusable_fraction": 0.0002,
+    "upper_bound_threshold": 0.1,
+    "validation_status": "exact_partition_and_typed_outcomes_validated"
+  },
+  "manifest_sha256": "51619f155ebf5921dbf77978fd8726591c3d9059139616fa776d2d0ffbffc256",
+  "measured_runs": [],
+  "probe": {
+    "elapsed_seconds": 17.841687600128353,
+    "exit_code": 0,
+    "index": 0,
+    "orphan_processes": 0,
+    "peak_working_set_bytes": 48295936,
+    "phase": "stability",
+    "progress_values": [],
+    "result_bytes": 9597724,
+    "scientific_result_sha256": "8d0cad16cd83349ee85431d33f5da80d44b8f5614ffb9016681d2886ab725f46"
+  },
+  "qualification_boundary": {
+    "missing_evidence": [
+      "authoritative_canonical_v11_bytes",
+      "authoritative_text_export_v11_bytes",
+      "coverage_and_failure_rate_simulation",
+      "broader_dimension_and_model_axes",
+      "package_and_integration_gates"
+    ],
+    "status": "blocked_not_product_qualification"
+  },
+  "runtime_acceptance": {
+    "evidence_role": "single_independent_stability_seed",
+    "maximum_p95_elapsed_seconds": null,
+    "maximum_single_run_elapsed_seconds": 38.14902059733868,
+    "observed_p95_elapsed_seconds": null
+  },
+  "schema_version": 1,
+  "scientific_result_sha256": "8d0cad16cd83349ee85431d33f5da80d44b8f5614ffb9016681d2886ab725f46",
+  "status": "accepted_resource_candidate_evidence",
+  "warmup_runs": []
+}

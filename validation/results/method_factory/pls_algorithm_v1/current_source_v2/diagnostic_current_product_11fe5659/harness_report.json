@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "report_kind": "pls_algorithm_v1_current_product_harness_v1",
+  "work_evidence_only": true,
+  "qualification_ready": false,
+  "promotion_authority": false,
+  "customer_cli_invoked": false,
+  "customer_registry_admission_invoked": false,
+  "candidate_receipt_descriptors": [],
+  "compiled_identity": {
+    "source_set_sha256": "11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba",
+    "scenario_set_sha256": "594371d9e699ab540ddb561a71d6010207b125c762a732c8a9d1324f7910b4fb",
+    "executable": {
+      "path": "D:\\QuickPLS\\target\\debug\\deps\\quickpls_desktop_lib-57dee36d1d17e086.exe",
+      "size_bytes": 89017344,
+      "sha256": "0c4f1ceea3707a067eb34887cb2453178bbe80438f475146d4e8c9966b1f982d"
+    }
+  },
+  "capability_cell": {
+    "registry_schema_version": 2,
+    "capability_id": "smartpls.pls_algorithm",
+    "cell_id": "qpls3.pls.algorithm",
+    "capability_version": "pls_pm_v1"
+  },
+  "variants": [
+    {
+      "variant": "path_mode_a",
+      "weighting_scheme": "path",
+      "measurement_mode": "mode_a",
+      "recipe_v4_compiled": true,
+      "real_runner_executed": true,
+      "product_canonical_builder_executed": true,
+      "schema6_append_reopened": true,
+      "method_version": "pls_pm_v1",
+      "compilation_receipt_sha256": "a8448a06c8bd450054aefce89b0ad7944900facca37b1dc4d401ba68171d7508",
+      "request": {
+        "path": "requests/path_mode_a.request.json",
+        "size_bytes": 6798,
+        "sha256": "b797ed08862b985122246a628a9d227eb149d06b7d083071feff9ab64e301228"
+      },
+      "compiled_artifact": {
+        "path": "compiled/path_mode_a.compiled.json",
+        "size_bytes": 2540,
+        "sha256": "8d9f4c8b60628b0ed0f051e112b9952f03f897097b0f2be992223f2293c7730b"
+      },
+      "execution": {
+        "path": "executions/path_mode_a.execution.json",
+        "size_bytes": 4845,
+        "sha256": "c73ed7793708b31eeee9cc5062a4dec3bacd4bf8bd38a89bbf02a6f45b418828"
+      },
+      "canonical_document": {
+        "path": "canonical/path_mode_a.canonical.json",
+        "size_bytes": 13314,
+        "sha256": "096bb924099adae5c2b77b3aec4434560d07a22ca20ad7edfd3c48dad7447e6e"
+      },
+      "append_receipt": {
+        "schema_version": 6,
+        "project_id": "4dfb6e08-1bd0-489a-8d39-acea332ceb7f",
+        "archive_path": "\\\\?\\D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\diagnostic_current_product_11fe5659\\current-product.schema6.json",
+        "source_document_sha256": "cc4bf57f15520a6c7180ca0d417083c5adfee7b43ed1be260b5e4a256c857a7a",
+        "updated_document_sha256": "ab515b2d3ad9a443af4fadd6ec54dffe524b64e462ea79ef2482ded2e20b42b9",
+        "canonical_document_id": "result_00000000-0000-0000-0000-000000003000",
+        "run_id": "00000000-0000-0000-0000-000000003000",
+        "canonical_result_document_count": 1,
+        "source_verified_at_commit": true,
+        "post_write_validated": true,
+        "rollback_copy_removed": true
+      }
+    },
+    {
+      "variant": "path_mode_b",
+      "weighting_scheme": "path",
+      "measurement_mode": "mode_b",
+      "recipe_v4_compiled": true,
+      "real_runner_executed": true,
+      "product_canonical_builder_executed": true,
+      "schema6_append_reopened": true,
+      "method_version": "pls_pm_v1",
+      "compilation_receipt_sha256": "bc67918f978654a4b728360122bc08f0d750de3c7d506ed142e4780c1553081c",
+      "request": {
+        "path": "requests/path_mode_b.request.json",
+        "size_bytes": 6794,
+        "sha256": "09f968d4019895e123733ed43ea3e3333291c3d5cef43c1ccfd9cce8031b000c"
+      },
+      "compiled_artifact": {
+        "path": "compiled/path_mode_b.compiled.json",
+        "size_bytes": 2540,
+        "sha256": "452fd747a388a7be6d5c441fdcada71bc20b48d7ff6b1d7d4ef63a4a72325517"
+      },
+      "execution": {
+        "path": "executions/path_mode_b.execution.json",
+        "size_bytes": 4846,
+        "sha256": "ca9e8108e3cf6b1d3a4b6b9984a812e40a93f64b66813703f8a7aefd662fa597"
+      },
+      "canonical_document": {
+        "path": "canonical/path_mode_b.canonical.json",
+        "size_bytes": 13315,
+        "sha256": "fd9e59782677b8c8499f3e1a89b34ee240e07f0eccc2653466fe7fded1752655"
+      },
+      "append_receipt": {
+        "schema_version": 6,
+        "project_id": "4dfb6e08-1bd0-489a-8d39-acea332ceb7f",
+        "archive_path": "\\\\?\\D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\diagnostic_current_product_11fe5659\\current-product.schema6.json",
+        "source_document_sha256": "ab515b2d3ad9a443af4fadd6ec54dffe524b64e462ea79ef2482ded2e20b42b9",
+        "updated_document_sha256": "46102b390e8f3f6b88472f723ae2a0f7b16ac061476f2a7ec8bd4d4300139c82",
+        "canonical_document_id": "result_00000000-0000-0000-0000-000000003001",
+        "run_id": "00000000-0000-0000-0000-000000003001",
+        "canonical_result_document_count": 2,
+        "source_verified_at_commit": true,
+        "post_write_validated": true,
+        "rollback_copy_removed": true
+      }
+    },
+    {
+      "variant": "factor_mode_a",
+      "weighting_scheme": "factor",
+      "measurement_mode": "mode_a",
+      "recipe_v4_compiled": true,
+      "real_runner_executed": true,
+      "product_canonical_builder_executed": true,
+      "schema6_append_reopened": true,
+      "method_version": "pls_pm_v1",
+      "compilation_receipt_sha256": "9a18b96aaa12884218744048191111bb202fbe73466d9548dae6998bf056bd4d",
+      "request": {
+        "path": "requests/factor_mode_a.request.json",
+        "size_bytes": 6802,
+        "sha256": "3ddd7fbe7911ac0133e15d4bd8c1adb9abb86ea381bb9642f43648fd612c626e"
+      },
+      "compiled_artifact": {
+        "path": "compiled/factor_mode_a.compiled.json",
+        "size_bytes": 2540,
+        "sha256": "6a677fb0b407362f3f6af79ca2b5c2c858328cd400d3f5285e36b5e178798603"
+      },
+      "execution": {
+        "path": "executions/factor_mode_a.execution.json",
+        "size_bytes": 4845,
+        "sha256": "eb93ccba4f74cc31301a8c7d0fdff10ffe5d6e816e12cd16b59815a939b234d4"
+      },
+      "canonical_document": {
+        "path": "canonical/factor_mode_a.canonical.json",
+        "size_bytes": 13314,
+        "sha256": "0697b18e78de433d50b5b283186549287b3a05591f69df14a883e11d403abacb"
+      },
+      "append_receipt": {
+        "schema_version": 6,
+        "project_id": "4dfb6e08-1bd0-489a-8d39-acea332ceb7f",
+        "archive_path": "\\\\?\\D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\diagnostic_current_product_11fe5659\\current-product.schema6.json",
+        "source_document_sha256": "46102b390e8f3f6b88472f723ae2a0f7b16ac061476f2a7ec8bd4d4300139c82",
+        "updated_document_sha256": "62d8331b3050042eec298e8092b1df8b1b0ba298ca3daa9d5f8b624467657e87",
+        "canonical_document_id": "result_00000000-0000-0000-0000-000000003002",
+        "run_id": "00000000-0000-0000-0000-000000003002",
+        "canonical_result_document_count": 3,
+        "source_verified_at_commit": true,
+        "post_write_validated": true,
+        "rollback_copy_removed": true
+      }
+    },
+    {
+      "variant": "pca_mode_a",
+      "weighting_scheme": "pca",
+      "measurement_mode": "mode_a",
+      "recipe_v4_compiled": true,
+      "real_runner_executed": true,
+      "product_canonical_builder_executed": true,
+      "schema6_append_reopened": true,
+      "method_version": "pls_pm_v1",
+      "compilation_receipt_sha256": "3d1e0859248ca4dabedd580a9a38f846fde9425fe1458edef2b66080bcb67ffa",
+      "request": {
+        "path": "requests/pca_mode_a.request.json",
+        "size_bytes": 6796,
+        "sha256": "ed2cb03949039d2206397e7bad4fe12bb9a79d7632b886cf652e43b3e93e00d3"
+      },
+      "compiled_artifact": {
+        "path": "compiled/pca_mode_a.compiled.json",
+        "size_bytes": 2540,
+        "sha256": "7f77e088d1de9c8c3b060fb81c8942ef463923de9a9cb71773a2c633af3e48f2"
+      },
+      "execution": {
+        "path": "executions/pca_mode_a.execution.json",
+        "size_bytes": 4844,
+        "sha256": "e5cbdf550cd59c952e6c7354c3698304da77700074b2ad25f2f3615f4e7cdb05"
+      },
+      "canonical_document": {
+        "path": "canonical/pca_mode_a.canonical.json",
+        "size_bytes": 13311,
+        "sha256": "dff12667378ebd2e25881348d3e0de5cef5c52ad1bd128e48d930d53f3dc4ed0"
+      },
+      "append_receipt": {
+        "schema_version": 6,
+        "project_id": "4dfb6e08-1bd0-489a-8d39-acea332ceb7f",
+        "archive_path": "\\\\?\\D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\diagnostic_current_product_11fe5659\\current-product.schema6.json",
+        "source_document_sha256": "62d8331b3050042eec298e8092b1df8b1b0ba298ca3daa9d5f8b624467657e87",
+        "updated_document_sha256": "45ae63e67470ba2cc93a5c7e6d7dd0942e058e57dd76c3abd034c9a2febb3743",
+        "canonical_document_id": "result_00000000-0000-0000-0000-000000003003",
+        "run_id": "00000000-0000-0000-0000-000000003003",
+        "canonical_result_document_count": 4,
+        "source_verified_at_commit": true,
+        "post_write_validated": true,
+        "rollback_copy_removed": true
+      }
+    }
+  ],
+  "archive": {
+    "schema_version": 6,
+    "canonical_result_document_count": 4,
+    "resident_dataset_verified": true,
+    "models_and_recipes_verified": true,
+    "atomic_append_verified": true,
+    "final_reopen_verified": true,
+    "source_archive_preserved_as_absent_fixture": true,
+    "initial_write": {
+      "schema_version": 6,
+      "project_id": "4dfb6e08-1bd0-489a-8d39-acea332ceb7f",
+      "destination_archive_path": "\\\\?\\D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\diagnostic_current_product_11fe5659\\current-product.schema6.json",
+      "document_sha256": "cc4bf57f15520a6c7180ca0d417083c5adfee7b43ed1be260b5e4a256c857a7a",
+      "byte_length": 19464,
+      "post_write_validated": true
+    },
+    "document": {
+      "path": "current-product.schema6.json",
+      "size_bytes": 52765,
+      "sha256": "45ae63e67470ba2cc93a5c7e6d7dd0942e058e57dd76c3abd034c9a2febb3743"
+    }
+  }
+}

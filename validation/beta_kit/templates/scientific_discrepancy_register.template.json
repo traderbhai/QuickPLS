@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "record_type": "quickpls_beta_scientific_discrepancy_register_template",
+  "template_only": true,
+  "records": [],
+  "record_template": {
+    "discrepancy_id": null,
+    "workflow_id": null,
+    "candidate_id": null,
+    "method_id": null,
+    "material": null,
+    "status": null,
+    "privacy_safe_summary": null,
+    "independent_reference_record_id": null,
+    "disposition": null,
+    "opened_at": null,
+    "closed_at": null
+  },
+  "allowed_status_values": [
+    "open",
+    "fixed",
+    "explained",
+    "claim_narrowed",
+    "release_blocking"
+  ],
+  "exit_rule": "Every material discrepancy must be fixed, explained, claim_narrowed, or remain release_blocking",
+  "beta_does_not_replace_method_promotion": true
+}

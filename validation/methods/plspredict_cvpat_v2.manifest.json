@@ -1,48 +1,432 @@
 {
   "schema_version": 1,
-  "governance": {"contract_frozen_at_utc": "2026-08-13T10:09:13Z", "manifest_path": "validation/methods/plspredict_cvpat_v2.manifest.json", "schema_path": "validation/methods/method_promotion_manifest.schema.json", "validator_path": "validation/method_promotion_manifest.py", "focused_test_path": "validation/test_method_promotion_manifest.py"},
-  "feature": {"id": "qpls3.prediction.plspredict_cvpat", "label": "PLSpredict and Single-Model CVPAT", "method_version": "plspredict_indicator_v2", "method_kind": "stochastic", "catalogue_snapshot_date": "2026-08-12", "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:09:13Z",
+    "manifest_path": "validation/methods/plspredict_cvpat_v2.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.prediction.plspredict_cvpat",
+    "label": "PLSpredict and Single-Model CVPAT",
+    "method_version": "plspredict_indicator_v2",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
   "claim": {
     "supported_scope": "Indicator-level seeded repeated 10-fold out-of-sample prediction for supported reflective PLS targets with indicator-average and linear-model benchmarks plus bounded single-model CVPAT loss comparison.",
     "estimand": "Out-of-sample prediction errors and paired loss differences for each supported target indicator under the frozen repeated-fold plan and IA or LM benchmark.",
-    "assumptions": ["Rows are assigned to seeded folds independently of target outcomes and each training fold supports the accepted PLS and benchmark fits.", "Only indicators belonging to supported endogenous reflective targets enter indicator-level prediction.", "Fold plan, repetitions, seed, benchmark definitions, loss metric, failures, and aggregation rules are persisted."],
-    "exclusions": ["Saved competing-model comparison, formative targets, time-series validation, grouped leakage controls, and broader model shapes are excluded.", "The fold assignment is independently specified and is not claimed to reproduce another product's random folds.", "Predictive performance does not establish causal correctness, construct validity, or external validity beyond the sampled design."],
-    "warnings": ["Prediction comparisons are conditional on the data partition, benchmark, loss, preprocessing, and target scope.", "A statistically favorable CVPAT result does not by itself establish practically meaningful predictive improvement."]
+    "assumptions": [
+      "Rows are assigned to seeded folds independently of target outcomes and each training fold supports the accepted PLS and benchmark fits.",
+      "Only indicators belonging to supported endogenous reflective targets enter indicator-level prediction.",
+      "Fold plan, repetitions, seed, benchmark definitions, loss metric, failures, and aggregation rules are persisted."
+    ],
+    "exclusions": [
+      "Saved competing-model comparison, formative targets, time-series validation, grouped leakage controls, and broader model shapes are excluded.",
+      "The fold assignment is independently specified and is not claimed to reproduce another product's random folds.",
+      "Predictive performance does not establish causal correctness, construct validity, or external validity beyond the sampled design."
+    ],
+    "warnings": [
+      "Prediction comparisons are conditional on the data partition, benchmark, loss, preprocessing, and target scope.",
+      "A statistically favorable CVPAT result does not by itself establish practically meaningful predictive improvement."
+    ]
   },
   "scientific_contract": {
     "equations": [
-      {"id": "prediction_rmse", "expression": "RMSE = sqrt(sum_i (y_i - yhat_i)^2 / n_test)", "variables": ["RMSE", "y_i", "yhat_i", "n_test"], "source_reference_id": "shmueli_2019"},
-      {"id": "q2_predict", "expression": "Q2_predict = 1 - sum_i (y_i - yhat_i)^2 / sum_i (y_i - mean_train)^2", "variables": ["Q2_predict", "y_i", "yhat_i", "mean_train"], "source_reference_id": "shmueli_2019"},
-      {"id": "cvpat_loss_difference", "expression": "d_i = loss_model_i - loss_benchmark_i", "variables": ["d_i", "loss_model_i", "loss_benchmark_i"], "source_reference_id": "liengaard_2021"}
+      {
+        "id": "prediction_rmse",
+        "expression": "RMSE = sqrt(sum_i (y_i - yhat_i)^2 / n_test)",
+        "variables": [
+          "RMSE",
+          "y_i",
+          "yhat_i",
+          "n_test"
+        ],
+        "source_reference_id": "shmueli_2019"
+      },
+      {
+        "id": "q2_predict",
+        "expression": "Q2_predict = 1 - sum_i (y_i - yhat_i)^2 / sum_i (y_i - mean_train)^2",
+        "variables": [
+          "Q2_predict",
+          "y_i",
+          "yhat_i",
+          "mean_train"
+        ],
+        "source_reference_id": "shmueli_2019"
+      },
+      {
+        "id": "cvpat_loss_difference",
+        "expression": "d_i = loss_model_i - loss_benchmark_i",
+        "variables": [
+          "d_i",
+          "loss_model_i",
+          "loss_benchmark_i"
+        ],
+        "source_reference_id": "liengaard_2021"
+      }
     ],
     "references": [
-      {"id": "shmueli_2019", "kind": "primary_paper", "citation": "Shmueli et al. (2019), Predictive Model Assessment in PLS-SEM: Guidelines for Using PLSpredict", "locator": "docs/methods/PLSPREDICT_INDICATOR_V2.md", "independence_group": "published_plspredict_method", "runtime_policy": "no_runtime_dependency"},
-      {"id": "liengaard_2021", "kind": "primary_paper", "citation": "Liengaard et al. (2021), Prediction-Oriented Model Selection in Partial Least Squares Path Modeling", "locator": "docs/methods/PLSPREDICT_INDICATOR_V2.md", "independence_group": "published_predictive_comparison", "runtime_policy": "no_runtime_dependency"},
-      {"id": "independent_python_prediction", "kind": "independent_python", "citation": "Independent Python indicator-level repeated-fold prediction and benchmark calculation", "locator": "validation/plspredict_indicator_reference.py", "independence_group": "python_reference", "runtime_policy": "development_validation_only"}
+      {
+        "id": "shmueli_2019",
+        "kind": "primary_paper",
+        "citation": "Shmueli et al. (2019), Predictive Model Assessment in PLS-SEM: Guidelines for Using PLSpredict",
+        "locator": "docs/methods/PLSPREDICT_INDICATOR_V2.md",
+        "independence_group": "published_plspredict_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "liengaard_2021",
+        "kind": "primary_paper",
+        "citation": "Liengaard et al. (2021), Prediction-Oriented Model Selection in Partial Least Squares Path Modeling",
+        "locator": "docs/methods/PLSPREDICT_INDICATOR_V2.md",
+        "independence_group": "published_predictive_comparison",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_python_prediction",
+        "kind": "independent_python",
+        "citation": "Independent Python indicator-level repeated-fold prediction and benchmark calculation",
+        "locator": "validation/plspredict_indicator_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      }
     ],
     "simulations": [
-      {"id": "predictive_recovery", "purpose": "recovery", "design": "Supported reflective predictive models across sample size, signal, indicator reliability, nonlinear misspecification, and benchmark advantage scenarios.", "seed_policy": "Frozen indexed fold plans by recipe seed and repetition, independent of worker order.", "metrics": ["rmse_error", "mae_error", "q2_predict_error", "benchmark_ranking_accuracy"], "acceptance_rule": "Fold membership and every aggregated prediction metric must match the independent reference within 1e-6 and preserve all failed-fold accounting."},
-      {"id": "false_predictive_advantage", "purpose": "false_positive_containment", "design": "Null scenarios where the PLS model has no expected loss advantage over IA or LM benchmarks.", "seed_policy": "Frozen scenario and fold streams with independent generated samples.", "metrics": ["cvpat_false_positive_rate", "loss_difference_bias", "usable_fold_rate"], "acceptance_rule": "The preregistered false-positive interval must contain the nominal rate and no unusable fold may be silently omitted."}
+      {
+        "id": "predictive_recovery",
+        "purpose": "recovery",
+        "design": "Supported reflective predictive models across sample size, signal, indicator reliability, nonlinear misspecification, and benchmark advantage scenarios.",
+        "seed_policy": "Frozen indexed fold plans by recipe seed and repetition, independent of worker order.",
+        "metrics": [
+          "rmse_error",
+          "mae_error",
+          "q2_predict_error",
+          "benchmark_ranking_accuracy"
+        ],
+        "acceptance_rule": "Fold membership and every aggregated prediction metric must match the independent reference within 1e-6 and preserve all failed-fold accounting."
+      },
+      {
+        "id": "false_predictive_advantage",
+        "purpose": "false_positive_containment",
+        "design": "Null scenarios where the PLS model has no expected loss advantage over IA or LM benchmarks.",
+        "seed_policy": "Frozen scenario and fold streams with independent generated samples.",
+        "metrics": [
+          "cvpat_false_positive_rate",
+          "loss_difference_bias",
+          "usable_fold_rate"
+        ],
+        "acceptance_rule": "The preregistered false-positive interval must contain the nominal rate and no unusable fold may be silently omitted."
+      }
     ],
     "boundaries": [
-      {"id": "invalid_fold_training_data", "category": "data_pathology", "case": "A training fold is too small, constant, singular, or non-finite for a supported fit.", "expected_behavior": "The fold failure is explicit and retained under the frozen aggregation rule."},
-      {"id": "unsupported_prediction_scope", "category": "unsupported_scope", "case": "The request includes formative targets, saved-model comparison, grouped or temporal folds, or another unqualified shape.", "expected_behavior": "The setup is blocked before prediction."},
-      {"id": "row_permutation", "category": "metamorphic", "case": "Rows are permuted together with stable row identities under the documented fold-key rule.", "expected_behavior": "Mapped folds and prediction summaries remain invariant."},
-      {"id": "seed_worker_invariance", "category": "determinism", "case": "The same data, settings, and seed execute with different workers.", "expected_behavior": "Fold assignments, predictions, failures, and analytical summaries are exactly equal."},
-      {"id": "prediction_archive_tamper", "category": "tamper", "case": "Fold plan, predictions, benchmark loss, aggregate metric, seed, or method identity is changed.", "expected_behavior": "Strict project validation rejects the archive."}
+      {
+        "id": "invalid_fold_training_data",
+        "category": "data_pathology",
+        "case": "A training fold is too small, constant, singular, or non-finite for a supported fit.",
+        "expected_behavior": "The fold failure is explicit and retained under the frozen aggregation rule."
+      },
+      {
+        "id": "unsupported_prediction_scope",
+        "category": "unsupported_scope",
+        "case": "The request includes formative targets, saved-model comparison, grouped or temporal folds, or another unqualified shape.",
+        "expected_behavior": "The setup is blocked before prediction."
+      },
+      {
+        "id": "declaration_reorder",
+        "category": "metamorphic",
+        "case": "Construct and path declarations are consistently reordered without changing indicator identities, source-row identities, or the graph.",
+        "expected_behavior": "Mapped fold identities, indicator predictions, construct summaries, and CVPAT rows remain invariant within the frozen tolerance."
+      },
+      {
+        "id": "seed_worker_invariance",
+        "category": "determinism",
+        "case": "The same data, settings, and seed execute with different workers.",
+        "expected_behavior": "Fold assignments, predictions, failures, and analytical summaries are exactly equal."
+      },
+      {
+        "id": "prediction_archive_tamper",
+        "category": "tamper",
+        "case": "Fold plan, predictions, benchmark loss, aggregate metric, seed, or method identity is changed.",
+        "expected_behavior": "Strict project validation rejects the archive."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
-    "persistence": {"recipe_schema_version": 3, "result_schema_version": 1, "payload_kind": "pls_pm_v1", "tamper_tests": [
-      {"category": "feature_identity", "expected_behavior": "Reject an archive whose capability identity differs from PLSpredict and CVPAT."}, {"category": "method_version", "expected_behavior": "Reject a prediction result relabeled as another version."}, {"category": "dataset_fingerprint", "expected_behavior": "Reject predictions whose dataset fingerprint differs from saved input."}, {"category": "checksum", "expected_behavior": "Reject any archive entry whose checksum differs."}, {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid fold counts, inconsistent benchmarks, or impossible metrics."}, {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret construct-score holdout v1 as indicator-level v2 evidence."}
-    ], "legacy_policy": "Historical prediction payloads retain their original identities and cannot satisfy current indicator-level v2 promotion evidence."},
-    "native": {"setup_controls": ["Endogenous reflective targets", "Ten folds", "Repetitions", "Seed", "IA and LM benchmarks", "Loss metric"], "applicability_blockers": ["Unsupported target measurement", "Insufficient rows per fold", "Invalid benchmark design", "Unsupported model shape"], "result_surfaces": ["Indicator prediction metrics", "IA and LM benchmark comparison", "CVPAT loss differences", "Fold and failure accounting", "Provenance"], "gui_cli_parity_rule": "For identical data, model, settings, and seed, GUI and CLI must produce the same folds and analytical prediction payload independent of worker count.", "accessibility_rules": ["Every predictive-performance visual has an equivalent accessible table.", "Benchmark direction, failures, counts, and warnings are exposed without color alone."]},
-    "export": {"formats": ["csv", "xlsx"], "tables": ["Indicator prediction metrics", "Benchmark comparison", "CVPAT loss differences", "Fold accounting", "Run provenance"], "same_run_required": true, "provenance_required": true},
-    "packaged": {"platforms": ["windows"], "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"], "viewports": ["1024x700", "1280x720", "1440x900"], "offline_required": true, "cancellation_required": true, "process_cleanup_required": true},
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject an archive whose capability identity differs from PLSpredict and CVPAT."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a prediction result relabeled as another version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject predictions whose dataset fingerprint differs from saved input."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any archive entry whose checksum differs."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid fold counts, inconsistent benchmarks, or impossible metrics."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret construct-score holdout v1 as indicator-level v2 evidence."
+        }
+      ],
+      "legacy_policy": "Historical prediction payloads retain their original identities and cannot satisfy current indicator-level v2 promotion evidence."
+    },
+    "native": {
+      "setup_controls": [
+        "Endogenous reflective targets",
+        "Ten folds",
+        "Repetitions",
+        "Seed",
+        "IA and LM benchmarks",
+        "Loss metric"
+      ],
+      "applicability_blockers": [
+        "Unsupported target measurement",
+        "Insufficient rows per fold",
+        "Invalid benchmark design",
+        "Unsupported model shape"
+      ],
+      "result_surfaces": [
+        "Indicator prediction metrics",
+        "IA and LM benchmark comparison",
+        "CVPAT loss differences",
+        "Fold and failure accounting",
+        "Provenance"
+      ],
+      "gui_cli_parity_rule": "For identical data, model, settings, and seed, GUI and CLI must produce the same folds and analytical prediction payload independent of worker count.",
+      "accessibility_rules": [
+        "Every predictive-performance visual has an equivalent accessible table.",
+        "Benchmark direction, failures, counts, and warnings are exposed without color alone."
+      ]
+    },
+    "export": {
+      "formats": [
+        "csv",
+        "xlsx"
+      ],
+      "tables": [
+        "Indicator prediction metrics",
+        "Benchmark comparison",
+        "CVPAT loss differences",
+        "Fold accounting",
+        "Run provenance"
+      ],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
-  "qualification": {"declared_state": "absent", "target_state": "release_qualified", "source_requirements": {
-    "method_spec": ["docs/methods/PLSPREDICT_INDICATOR_V2.md"], "independent_reference": ["validation/plspredict_indicator_reference.py"], "simulation_report": ["validation/plspredict_release_simulation.py"], "boundary_report": ["validation/plspredict_release_boundary_gate.py"], "persistence_report": ["validation/plspredict_release_persistence_gate.py"], "frontend_report": ["src/native/nativeResults.test.ts"], "export_report": ["src/native/nativeExportTables.test.ts"], "method_audit": ["validation/plspredict_method_promotion_audit.py"], "packaged_acceptance": ["validation/run_v247_prediction_native_acceptance.ps1"]
-  }, "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}}
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": [
+        "docs/methods/PLSPREDICT_INDICATOR_V2.md"
+      ],
+      "independent_reference": [
+        "validation/plspredict_indicator_reference.py",
+        "crates/qpls-estimation/src/pls.rs",
+        "crates/qpls-runner/src/lib.rs"
+      ],
+      "simulation_report": [
+        "validation/plspredict_release_simulation.py",
+        "validation/phase4_high_value_factory.py"
+      ],
+      "boundary_report": [
+        "validation/plspredict_release_boundary_gate.py",
+        "crates/qpls-core/src/validation.rs"
+      ],
+      "persistence_report": [
+        "validation/plspredict_release_persistence_gate.py",
+        "crates/qpls-project/src/lib.rs",
+        "crates/qpls-project/src/archive_integrity.rs"
+      ],
+      "frontend_report": [
+        "src/native/nativeAnalysisCatalog.ts",
+        "src/native/nativeAnalysisRecipe.ts",
+        "src/native/nativePlsReadiness.ts",
+        "src/native/nativeCanonicalProject.ts",
+        "src/native/nativeResults.ts",
+        "src/native/nativeAnalysisCatalog.test.ts",
+        "src/native/nativeAnalysisRecipe.test.ts",
+        "src/native/nativePlsReadiness.test.ts",
+        "src/native/nativeCanonicalProject.test.ts",
+        "src/native/nativeResults.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.ts",
+        "src/native/nativeExportTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/plspredict_cvpat_v2_release_audit.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/test_phase2_release_packaged_common.py"
+      ],
+      "packaged_acceptance": [
+        "validation/plspredict_cvpat_v2_packaged_acceptance.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/run_phase2_release_packaged_closure.ps1",
+        "validation/run_v247_cumulative_native_acceptance.ps1",
+        "validation/v247_tauri_native_acceptance.mjs",
+        "validation/diagnostic_bundle_source_manifest.py",
+        "validation/test_v247_cumulative_native_acceptance_supervisor.py",
+        "validation/test_phase2_release_packaged_common.py"
+      ]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/plspredict_cvpat_v2/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/plspredict_cvpat_v2/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/plspredict_cvpat_v2/native_stage.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/plspredict_cvpat_v2/packaged_acceptance.identity.json",
+          "roles": [
+            "packaged_acceptance"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/plspredict_cvpat_v2/method_audit.identity.json",
+          "roles": [
+            "method_audit"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
+  }
 }

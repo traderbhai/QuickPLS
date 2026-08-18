@@ -1,0 +1,190 @@
+{
+  "artifacts": [
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/current_source_v2/source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba/work/external/csem_simple.csv",
+      "sha256": "6b40d75742c1ada2e80debd9b399f10b4da49dbe430cd57e7aee566af58596f3",
+      "size_bytes": 3644
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/current_source_v2/source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba/work/external/csem_threecommonfactors.data.csv",
+      "sha256": "fe7c7e30c3826d790ba5711501526084cb806ba9d814fd5ebc1ea31f28607650",
+      "size_bytes": 82185
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/current_source_v2/source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba/work/external/csem_threecommonfactors.csv",
+      "sha256": "41009ae882a727de94310e4f5752aab750a241f6cbfcb43f576ac69d310d666f",
+      "size_bytes": 5656
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/current_source_v2/source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba/work/external/python_plspm.json",
+      "sha256": "82432732bb6c44bb5b89aed4a7988a696db16838df55b7327aff661118faf171",
+      "size_bytes": 2993
+    }
+  ],
+  "comparisons": [
+    {
+      "compared_quantity_count": 9,
+      "engine": "R cSEM 0.6.1",
+      "exact_key_membership": true,
+      "max_abs_difference": 4.440892098500626e-16,
+      "missing_from_oracle": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_oracle": [],
+      "variant": "PATH_MODE_A"
+    },
+    {
+      "compared_quantity_count": 5,
+      "engine": "python-plspm 0.5.7",
+      "exact_key_membership": true,
+      "max_abs_difference": 1.7067569579864994e-11,
+      "missing_from_oracle": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_oracle": [],
+      "variant": "PATH_MODE_A"
+    },
+    {
+      "compared_quantity_count": 9,
+      "engine": "R cSEM 0.6.1",
+      "exact_key_membership": true,
+      "max_abs_difference": 1.6332421526321639e-15,
+      "missing_from_oracle": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_oracle": [],
+      "variant": "MODE_B"
+    },
+    {
+      "compared_quantity_count": 5,
+      "engine": "python-plspm 0.5.7",
+      "exact_key_membership": true,
+      "max_abs_difference": 7.848807492827348e-09,
+      "missing_from_oracle": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_oracle": [],
+      "variant": "MODE_B"
+    },
+    {
+      "compared_quantity_count": 9,
+      "engine": "R cSEM 0.6.1",
+      "exact_key_membership": true,
+      "max_abs_difference": 4.440892098500626e-16,
+      "missing_from_oracle": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_oracle": [],
+      "variant": "FACTOR"
+    },
+    {
+      "compared_quantity_count": 5,
+      "engine": "python-plspm 0.5.7",
+      "exact_key_membership": true,
+      "max_abs_difference": 1.7067680602167457e-11,
+      "missing_from_oracle": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_oracle": [],
+      "variant": "FACTOR"
+    },
+    {
+      "compared_quantity_count": 9,
+      "engine": "R cSEM 0.6.1",
+      "exact_key_membership": true,
+      "max_abs_difference": 1.3322676295501878e-15,
+      "missing_from_oracle": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_oracle": [],
+      "variant": "PCA"
+    },
+    {
+      "compared_quantity_count": 21,
+      "engine": "R cSEM 0.6.1 published threecommonfactors",
+      "exact_key_membership": true,
+      "max_abs_difference": 1.6653345369377348e-15,
+      "missing_from_oracle": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_oracle": [],
+      "variant": "PUBLISHED_PATH_MODE_A"
+    }
+  ],
+  "executions": [
+    {
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "validation/Resolve-Rscript.ps1"
+      ],
+      "duration_seconds": 0.725519,
+      "finished_at_utc": "2026-08-15T04:03:25.264446Z",
+      "returncode": 0,
+      "started_at_utc": "2026-08-15T04:03:24.538978Z",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "1f84ec7dfd412494fd834ce8d2048c6f1a2853299314d60e0e92b37c2c7f77c2"
+    },
+    {
+      "command": [
+        "C:\\Users\\mohd.naved\\Documents\\PLS-Sem\\dist-desktop\\r-runtime\\bin\\Rscript.exe",
+        "--vanilla",
+        "D:\\QuickPLS\\validation\\r_csem_reference.R",
+        "D:\\QuickPLS\\validation\\fixtures\\simple_reflective.csv",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba\\work\\external\\csem_simple.csv"
+      ],
+      "duration_seconds": 1.596122,
+      "finished_at_utc": "2026-08-15T04:03:26.862443Z",
+      "returncode": 0,
+      "started_at_utc": "2026-08-15T04:03:25.266338Z",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "C:\\Users\\mohd.naved\\Documents\\PLS-Sem\\dist-desktop\\r-runtime\\bin\\Rscript.exe",
+        "--vanilla",
+        "D:\\QuickPLS\\validation\\r_csem_threecommonfactors_reference.R",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba\\work\\external\\csem_threecommonfactors.data.csv",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba\\work\\external\\csem_threecommonfactors.csv"
+      ],
+      "duration_seconds": 1.456401,
+      "finished_at_utc": "2026-08-15T04:03:28.318885Z",
+      "returncode": 0,
+      "started_at_utc": "2026-08-15T04:03:26.862503Z",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\validation\\.venv\\Scripts\\python.exe",
+        "validation/python_plspm_reference.py",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba\\work\\external\\python_plspm.json"
+      ],
+      "duration_seconds": 6.274489,
+      "finished_at_utc": "2026-08-15T04:03:34.593404Z",
+      "returncode": 0,
+      "started_at_utc": "2026-08-15T04:03:28.318935Z",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "independence": {
+    "computational_groups": [
+      "r_csem_0_6_1",
+      "python_plspm_0_5_7"
+    ],
+    "primary_method_source": "Wold (1982) and Lohmoller (1989)",
+    "quickpls_product_executed": false,
+    "runtime_policy": "development_validation_only_never_packaged"
+  },
+  "passed": true,
+  "promotion_requested": false,
+  "qualification_ready": false,
+  "report_kind": "pls_algorithm_v1_external_oracle_work_v1",
+  "schema_version": 1,
+  "work_evidence_only": true
+}

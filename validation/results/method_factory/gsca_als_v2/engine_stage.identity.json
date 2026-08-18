@@ -1,0 +1,167 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "fresh_boundary_gate": {
+      "passed": true
+    },
+    "fresh_independent_and_simulation_gate": {
+      "passed": true
+    },
+    "method_contract_is_current": {
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "qpls-cli"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.56s\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "--version"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "qpls 2.46.0\n"
+    },
+    {
+      "command": [
+        "C:\\Python313\\python.exe",
+        "validation/gsca_release_reference.py"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"schema_version\": 1,\n  \"method_version\": \"gsca_als_v2\",\n  \"reference\": \"independent_scipy_slsqp_global_gsca_criterion_v1\",\n  \"fixture\": \"validation/results/v08_extended_methods_fixture.csv\",\n  \"recipe\": \"validation/results/method_factory/gsca_als_v2/gsca_als_v2_current.recipe.json\",\n  \"observations\": 140,\n  \"optimizer_iterations\": 101,\n  \"optimizer_message\": \"Optimization terminated successfully\",\n  \"tolerance\": 2e-06,\n  \"deltas\": {\n    \"weights\": 5.858990389517871e-07,\n    \"loadings\": 1.2613354027912749e-08,\n    \"path\": 2.0134764411317008e-08,\n    \"r_squared\": 3.2842806252375567e-10,\n    \"objective\": 4.440892098500626e-15,\n    \"fit\": 1.1102230246251565e-16,\n    \"measurement_fit\": 6.56851240066203e-11,\n    \"structural_fit\": 1.6421264348309705e-10,\n    \"adjusted_fit\": 2.220446049250313e-16,\n    \"gfi\": 1.515019998343803e-08,\n    \"srmr\": 1.0359619384558982e-08,\n    \"covariance_discrepancy\": 2.9922726163533753e-07,\n    \"covariance_sample_total\": 3.552713678800501e-15,\n    \"standardized_residual_sum\": 1.4961363525856086e-07\n  },\n  \"contract_checks\": {\n    \"method\": true,\n    \"provenance\": true,\n    \"outer_version\": true,\n    \"nested_version\": true,\n    \"algorithm\": true,\n    \"assessment_not_applicable\": true,\n    \"no_fabricated_intervals\": true,\n    \"no_pls_effects\": true,\n    \"converged\": true,\n    \"observations\": true,\n    \"free_parameters\": true\n  },\n  \"passed\": true\n}\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-estimation",
+        "gsca_als_v2",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "   Compiling qpls-estimation v2.46.0 (D:\\QuickPLS\\crates\\qpls-estimation)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 39s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_estimation-964bbb5bd1846697.exe)\n",
+      "stdout_tail": "\nrunning 3 tests\ntest pls::tests::gsca_als_v2_honors_cancellation_and_rejects_pls_only_settings ... ok\ntest pls::tests::gsca_als_v2_optimizes_the_global_criterion_without_fabricated_inference ... ok\ntest pls::tests::gsca_als_v2_scientific_shape_matrix_is_deterministic_reorder_invariant_and_fail_closed ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 160 filtered out; finished in 0.04s\n\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-core",
+        "gsca_als_v2",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.87s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_core-4c9e2694292d11bc.exe)\n",
+      "stdout_tail": "\nrunning 2 tests\ntest validation::tests::gsca_als_v2_accepts_the_bounded_recursive_component_model ... ok\ntest validation::tests::gsca_als_v2_rejects_pls_settings_and_unsupported_model_shapes ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 172 filtered out; finished in 0.00s\n\n"
+    }
+  ],
+  "feature_id": "qpls3.gsca.als",
+  "generated_at_utc": "2026-08-17T22:37:58.981463Z",
+  "method_version": "gsca_als_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+      "size": 227427
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+      "size": 100140
+    },
+    {
+      "path": "docs/methods/GSCA_ALS_V2.md",
+      "sha256": "8be879934e2da70a1ed71af67189bcda831bbadd9d8e87cdb3e5d28e71eafafb",
+      "size": 2125
+    },
+    {
+      "path": "validation/established_method_factory_common.py",
+      "sha256": "cbc4eb8e5d7ab329d3a5c1eaae910c43cdac39f6c11fbd26eb774cc65e95c090",
+      "size": 20368
+    },
+    {
+      "path": "validation/gsca_als_v2_reference.py",
+      "sha256": "867e218c4216368d06e413b5e6a11713c23ae21445a4924deab8b9aff6829bfd",
+      "size": 12034
+    },
+    {
+      "path": "validation/gsca_release_boundary_gate.py",
+      "sha256": "debbf9fdb9188537d0b2f16957ab9fdd6b3d52ec391d0423108d8a1a976aaa30",
+      "size": 157
+    },
+    {
+      "path": "validation/gsca_release_reference.py",
+      "sha256": "b3347e04cd1d2a6f30d3803ceb0605b629a70cf766b29e504dafbc8f24c4e4b2",
+      "size": 1821
+    },
+    {
+      "path": "validation/gsca_release_simulation.py",
+      "sha256": "2ed344578c0290b6ff3eb4dd59d83ff2e2e53f1604f910e957df64c4802e4551",
+      "size": 159
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/gsca_als_v2.manifest.json",
+      "sha256": "8de842fcfae6dc7a5589d308e4652d0f9c5c3d0f0aff393ef18d4fc4fd4bca33",
+      "size": 15154
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/results/method_factory/gsca_als_v2/independent_reference.json",
+      "sha256": "dec76b03fe655e374fd78b2441822d1d1658e30912fa4ea297a87a664ee283e4",
+      "size": 1435
+    },
+    {
+      "path": "validation/test_established_method_factory.py",
+      "sha256": "a16157170cc23ffb0fe8a112a2b28b25b9f6f1518a443c6265c9fe993d70ee52",
+      "size": 2917
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

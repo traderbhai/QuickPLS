@@ -1,0 +1,893 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "checks": {
+      "failure_denominator_policy": true,
+      "independent_reference_completed": true,
+      "independent_statistical_agreement": true,
+      "null_calibration": false,
+      "null_contract_recomputed": true,
+      "observed_dataset_values_not_design_inputs": true,
+      "prebuilt_current_cli": true,
+      "qualification_profile_complete": true,
+      "signal_contract_recomputed": true,
+      "signal_grid_nondecreasing": true,
+      "source_stable_during_gate": true
+    },
+    "cli_identity": {
+      "built_by_factory": false,
+      "execution_sources": {
+        "Cargo.lock": {
+          "mtime_ns": 1786655548372779200,
+          "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+          "size": 154279
+        },
+        "crates/qpls-cli/Cargo.toml": {
+          "mtime_ns": 1784436493165886700,
+          "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+          "size": 678
+        },
+        "crates/qpls-cli/src/main.rs": {
+          "mtime_ns": 1786669164612405200,
+          "sha256": "d847875d0c78a734725de9794aa19cc64d97c6ff732b2b6cdb646dce0398406c",
+          "size": 260752
+        },
+        "crates/qpls-core/Cargo.toml": {
+          "mtime_ns": 1784352071986106700,
+          "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+          "size": 363
+        },
+        "crates/qpls-core/src/contract.rs": {
+          "mtime_ns": 1786666077157513700,
+          "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "size": 114179
+        },
+        "crates/qpls-core/src/lib.rs": {
+          "mtime_ns": 1784383048514318800,
+          "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+          "size": 180
+        },
+        "crates/qpls-core/src/validation.rs": {
+          "mtime_ns": 1786667999667406800,
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        "crates/qpls-data/Cargo.toml": {
+          "mtime_ns": 1784364586747181800,
+          "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+          "size": 437
+        },
+        "crates/qpls-data/src/lib.rs": {
+          "mtime_ns": 1786607995478642000,
+          "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+          "size": 44865
+        },
+        "crates/qpls-estimation/Cargo.toml": {
+          "mtime_ns": 1786607995481159200,
+          "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+          "size": 503
+        },
+        "crates/qpls-estimation/src/lib.rs": {
+          "mtime_ns": 1786666091142845700,
+          "sha256": "e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+          "size": 93
+        },
+        "crates/qpls-estimation/src/pls.rs": {
+          "mtime_ns": 1786667991549246500,
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        "crates/qpls-project/Cargo.toml": {
+          "mtime_ns": 1786607995489944600,
+          "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+          "size": 628
+        },
+        "crates/qpls-project/src/archive_integrity.rs": {
+          "mtime_ns": 1786607995492067200,
+          "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+          "size": 31085
+        },
+        "crates/qpls-project/src/lib.rs": {
+          "mtime_ns": 1786669474971285100,
+          "sha256": "53f89d6d381d7c33b1e5f029d978e030a46a28d7d4bd47a2e17dc5b83bcbb387",
+          "size": 719445
+        },
+        "crates/qpls-resampling/Cargo.toml": {
+          "mtime_ns": 1784375063189640300,
+          "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+          "size": 589
+        },
+        "crates/qpls-resampling/src/lib.rs": {
+          "mtime_ns": 1786666206795884300,
+          "sha256": "9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+          "size": 177532
+        },
+        "crates/qpls-resampling/src/power.rs": {
+          "mtime_ns": 1786672581561173000,
+          "sha256": "28bffb50f5fc577f603668d822ef606343eb10f54f6611dcc1e2ef1afcbc3141",
+          "size": 62651
+        },
+        "crates/qpls-runner/Cargo.toml": {
+          "mtime_ns": 1784390064413583300,
+          "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+          "size": 428
+        },
+        "crates/qpls-runner/src/lib.rs": {
+          "mtime_ns": 1786669385548237600,
+          "sha256": "0a3f76ad19f897ff2db63be729a92087d8d1cad6b926e4c6908294cdb62e97e0",
+          "size": 54934
+        }
+      },
+      "mtime_ns": 1786672939833881800,
+      "newer_than_bound_execution_sources": true,
+      "passed": true,
+      "path": "target/debug/qpls.exe",
+      "prebuilt": true,
+      "sha256": "756d8be31a90516f9d0e874c1367e7d7a7a3f2983b2e9dd2ab556f6fed9a4e0c",
+      "size": 55822336
+    },
+    "generated_artifacts": {
+      "null_result": "validation/results/method_factory/pls_sample_size_power_v1/work/qualification_null_calibration.result.json",
+      "null_result_sha256": "9a67e74a7532e065469830771241f53d390c4dde5e5945708d14247a82d1adf8",
+      "signal_result": "validation/results/method_factory/pls_sample_size_power_v1/work/qualification_power_recovery.result.json",
+      "signal_result_sha256": "e39643f55260bad6c548ea8ec14828af01797012cc9d3a69d72ba19359eeca8b"
+    },
+    "null": {
+      "acceptance": {
+        "passed": false,
+        "pooled_preregistered_interval": {
+          "confidence_lower": 0.06625038412839078,
+          "confidence_upper": 0.08705063957200075,
+          "contains_alpha_0_05": false,
+          "rejections": 190,
+          "trials": 2500,
+          "type_i_error": 0.076,
+          "upper_not_above_0_065": false
+        },
+        "pooling_rule": "The two preregistered null grid points have equal replicate counts. Their rejection indicators are pooled once for the frozen binomial calibration interval; each point also has a descriptive 0.08 false-positive guard and 0.99 convergence guard.",
+        "sample_size_points": [
+          {
+            "confidence_lower": 0.06112022967076103,
+            "confidence_upper": 0.09028763572176657,
+            "convergence_rate": 1.0,
+            "descriptive_point_guard_passed": true,
+            "sample_size": 160,
+            "type_i_error": 0.0744
+          },
+          {
+            "confidence_lower": 0.06402897753243124,
+            "confidence_upper": 0.09375927984962625,
+            "convergence_rate": 1.0,
+            "descriptive_point_guard_passed": true,
+            "sample_size": 320,
+            "type_i_error": 0.0776
+          }
+        ]
+      },
+      "contract_recomputation": {
+        "checks": {
+          "decision_recomputed": true,
+          "failure_accounting_typed": true,
+          "identity": true,
+          "ordered_complete_ledger": true,
+          "rows_recomputed": true,
+          "workload_matches": true
+        },
+        "expected_decision": {
+          "status": "not_reached"
+        },
+        "passed": true,
+        "row_checks": [
+          {
+            "expected_confidence_lower": 0.06112022967076103,
+            "expected_confidence_upper": 0.09028763572176657,
+            "failed_replicates": 0,
+            "ledger_count": 1250,
+            "passed": true,
+            "rejections": 93,
+            "sample_size": 160,
+            "successful_replicates": 1250
+          },
+          {
+            "expected_confidence_lower": 0.06402897753243124,
+            "expected_confidence_upper": 0.09375927984962625,
+            "failed_replicates": 0,
+            "ledger_count": 1250,
+            "passed": true,
+            "rejections": 97,
+            "sample_size": 320,
+            "successful_replicates": 1250
+          }
+        ]
+      },
+      "outcome_digest": "b708fe6f163cd10cad5a95cad11fc18c2afb1ffbca3ee8ef1208fc1cba2dd6a5",
+      "recipe": {
+        "alpha": 0.05,
+        "bootstrap_replicates": 99,
+        "capability_id": "qpls3.pls.sample_size_power",
+        "confidence_level": 0.95,
+        "design": {
+          "exogenous_distribution": "standard_normal",
+          "indicator_error_distribution": "standard_normal",
+          "missing_data": "none",
+          "outcome_construct": "y",
+          "outcome_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "population_path": 0.0,
+          "predictor_construct": "x",
+          "predictor_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "structural_disturbance_distribution": "standard_normal"
+        },
+        "estimator": {
+          "max_iterations": 3000,
+          "preprocessing": "standardized",
+          "tolerance": 1e-07,
+          "weighting_scheme": "path"
+        },
+        "inference": "case_bootstrap_normal_reference_two_sided",
+        "master_seed": 20260814,
+        "method_version": "pls_sample_size_power_v1",
+        "monte_carlo_replicates": 1250,
+        "sample_size_grid": [
+          160,
+          320
+        ],
+        "scenario_identity": "qualification_null_calibration",
+        "schema_version": 1,
+        "target_power": 0.5,
+        "workers": 4
+      },
+      "rows": [
+        {
+          "achieved_power": 0.0744,
+          "attempted_replicates": 1250,
+          "confidence_lower": 0.06112022967076103,
+          "confidence_upper": 0.09028763572176657,
+          "failed_replicates": 0,
+          "qualifies": false,
+          "rejections": 93,
+          "requested_replicates": 1250,
+          "sample_size": 160,
+          "successful_replicates": 1250
+        },
+        {
+          "achieved_power": 0.0776,
+          "attempted_replicates": 1250,
+          "confidence_lower": 0.06402897753243124,
+          "confidence_upper": 0.09375927984962625,
+          "failed_replicates": 0,
+          "qualifies": false,
+          "rejections": 97,
+          "requested_replicates": 1250,
+          "sample_size": 320,
+          "successful_replicates": 1250
+        }
+      ]
+    },
+    "passed": false,
+    "power_recovery": {
+      "comparison": {
+        "common_grid": [
+          60,
+          100,
+          140
+        ],
+        "independent_lower_bound_meets_target_at_selection": true,
+        "independent_validation_at_product_selection": {
+          "achieved_power": 0.83,
+          "attempted_replicates": 200,
+          "confidence_lower": 0.7718411637168737,
+          "confidence_upper": 0.8757209208741302,
+          "failed_replicates": 0,
+          "qualifies": true,
+          "rejections": 166,
+          "requested_replicates": 200,
+          "sample_size": 60,
+          "successful_replicates": 200
+        },
+        "passed": true,
+        "product_selected_sample_size": 60,
+        "row_comparisons": [
+          {
+            "absolute_difference": 0.0625,
+            "independent_power": 0.83,
+            "passed": true,
+            "preregistered_tolerance": 0.08619087647483346,
+            "product_power": 0.8925,
+            "sample_size": 60
+          },
+          {
+            "absolute_difference": 0.03500000000000003,
+            "independent_power": 0.945,
+            "passed": true,
+            "preregistered_tolerance": 0.08,
+            "product_power": 0.98,
+            "sample_size": 100
+          },
+          {
+            "absolute_difference": 0.0012499999999999734,
+            "independent_power": 0.995,
+            "passed": true,
+            "preregistered_tolerance": 0.08,
+            "product_power": 0.99625,
+            "sample_size": 140
+          }
+        ]
+      },
+      "independent_recipe": {
+        "alpha": 0.05,
+        "bootstrap_replicates": 99,
+        "capability_id": "qpls3.pls.sample_size_power",
+        "confidence_level": 0.95,
+        "design": {
+          "exogenous_distribution": "standard_normal",
+          "indicator_error_distribution": "standard_normal",
+          "missing_data": "none",
+          "outcome_construct": "y",
+          "outcome_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "population_path": 0.45,
+          "predictor_construct": "x",
+          "predictor_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "structural_disturbance_distribution": "standard_normal"
+        },
+        "estimator": {
+          "max_iterations": 3000,
+          "preprocessing": "standardized",
+          "tolerance": 1e-07,
+          "weighting_scheme": "path"
+        },
+        "inference": "case_bootstrap_normal_reference_two_sided",
+        "master_seed": 20260916,
+        "method_version": "pls_sample_size_power_v1",
+        "monte_carlo_replicates": 200,
+        "sample_size_grid": [
+          60,
+          100,
+          140
+        ],
+        "scenario_identity": "qualification_power_recovery_independent",
+        "schema_version": 1,
+        "target_power": 0.75,
+        "workers": 1
+      },
+      "independent_report": {
+        "decision": {
+          "sample_size": 60,
+          "status": "reached"
+        },
+        "failure_policy": "failed_replicates_count_as_non_rejections_v1",
+        "feature_id": "qpls3.pls.sample_size_power",
+        "inference_method": "pls_pm_case_bootstrap_normal_reference_two_sided_v1",
+        "interval_method": "wilson_score_two_sided_v1",
+        "method_version": "pls_sample_size_power_v1",
+        "monotonicity_violations": 0,
+        "outcome_digest": "78e4d26fa0dfb78dee206d74af10b69f74f9fa93f236a59a6ae42b743e5c0bba",
+        "passed": true,
+        "report_kind": "pls_sample_size_power_independent_python_reference_v1",
+        "rows": [
+          {
+            "achieved_power": 0.83,
+            "attempted_replicates": 200,
+            "confidence_lower": 0.7718411637168737,
+            "confidence_upper": 0.8757209208741302,
+            "failed_replicates": 0,
+            "qualifies": true,
+            "rejections": 166,
+            "requested_replicates": 200,
+            "sample_size": 60,
+            "successful_replicates": 200
+          },
+          {
+            "achieved_power": 0.945,
+            "attempted_replicates": 200,
+            "confidence_lower": 0.9042130012276914,
+            "confidence_upper": 0.9690146582965411,
+            "failed_replicates": 0,
+            "qualifies": true,
+            "rejections": 189,
+            "requested_replicates": 200,
+            "sample_size": 100,
+            "successful_replicates": 200
+          },
+          {
+            "achieved_power": 0.995,
+            "attempted_replicates": 200,
+            "confidence_lower": 0.9722262956021069,
+            "confidence_upper": 0.9991168312843989,
+            "failed_replicates": 0,
+            "qualifies": true,
+            "rejections": 199,
+            "requested_replicates": 200,
+            "sample_size": 140,
+            "successful_replicates": 200
+          }
+        ],
+        "stream_domain": "quickpls/pls_sample_size_power_v1/independent_python"
+      },
+      "product_contract_recomputation": {
+        "checks": {
+          "decision_recomputed": true,
+          "failure_accounting_typed": true,
+          "identity": true,
+          "ordered_complete_ledger": true,
+          "rows_recomputed": true,
+          "workload_matches": true
+        },
+        "expected_decision": {
+          "sample_size": 60,
+          "status": "reached"
+        },
+        "passed": true,
+        "row_checks": [
+          {
+            "expected_confidence_lower": 0.8691296036554871,
+            "expected_confidence_upper": 0.9121189785230571,
+            "failed_replicates": 0,
+            "ledger_count": 800,
+            "passed": true,
+            "rejections": 714,
+            "sample_size": 60,
+            "successful_replicates": 800
+          },
+          {
+            "expected_confidence_lower": 0.9677598954072832,
+            "expected_confidence_upper": 0.9876523834352677,
+            "failed_replicates": 0,
+            "ledger_count": 800,
+            "passed": true,
+            "rejections": 784,
+            "sample_size": 100,
+            "successful_replicates": 800
+          },
+          {
+            "expected_confidence_lower": 0.9890331057925573,
+            "expected_confidence_upper": 0.9987238595733093,
+            "failed_replicates": 0,
+            "ledger_count": 800,
+            "passed": true,
+            "rejections": 797,
+            "sample_size": 140,
+            "successful_replicates": 800
+          }
+        ]
+      },
+      "product_decision": {
+        "sample_size": 60,
+        "status": "reached"
+      },
+      "product_recipe": {
+        "alpha": 0.05,
+        "bootstrap_replicates": 99,
+        "capability_id": "qpls3.pls.sample_size_power",
+        "confidence_level": 0.95,
+        "design": {
+          "exogenous_distribution": "standard_normal",
+          "indicator_error_distribution": "standard_normal",
+          "missing_data": "none",
+          "outcome_construct": "y",
+          "outcome_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "population_path": 0.45,
+          "predictor_construct": "x",
+          "predictor_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "structural_disturbance_distribution": "standard_normal"
+        },
+        "estimator": {
+          "max_iterations": 3000,
+          "preprocessing": "standardized",
+          "tolerance": 1e-07,
+          "weighting_scheme": "path"
+        },
+        "inference": "case_bootstrap_normal_reference_two_sided",
+        "master_seed": 20260815,
+        "method_version": "pls_sample_size_power_v1",
+        "monte_carlo_replicates": 800,
+        "sample_size_grid": [
+          60,
+          100,
+          140
+        ],
+        "scenario_identity": "qualification_power_recovery",
+        "schema_version": 1,
+        "target_power": 0.75,
+        "workers": 4
+      },
+      "product_rows": [
+        {
+          "achieved_power": 0.8925,
+          "attempted_replicates": 800,
+          "confidence_lower": 0.8691296036554871,
+          "confidence_upper": 0.9121189785230571,
+          "failed_replicates": 0,
+          "qualifies": true,
+          "rejections": 714,
+          "requested_replicates": 800,
+          "sample_size": 60,
+          "successful_replicates": 800
+        },
+        {
+          "achieved_power": 0.98,
+          "attempted_replicates": 800,
+          "confidence_lower": 0.9677598954072832,
+          "confidence_upper": 0.9876523834352677,
+          "failed_replicates": 0,
+          "qualifies": true,
+          "rejections": 784,
+          "requested_replicates": 800,
+          "sample_size": 100,
+          "successful_replicates": 800
+        },
+        {
+          "achieved_power": 0.99625,
+          "attempted_replicates": 800,
+          "confidence_lower": 0.9890331057925573,
+          "confidence_upper": 0.9987238595733093,
+          "failed_replicates": 0,
+          "qualifies": true,
+          "rejections": 797,
+          "requested_replicates": 800,
+          "sample_size": 140,
+          "successful_replicates": 800
+        }
+      ]
+    },
+    "preregistered_limits": {
+      "independent_curve_minimum_tolerance": 0.08,
+      "independent_curve_standard_error_multiplier": 3.0,
+      "null_interval_contains": 0.05,
+      "null_interval_upper_max": 0.065,
+      "null_point_false_positive_guard_max": 0.08,
+      "power_target": 0.75,
+      "supported_scope_convergence_min": 0.99
+    },
+    "profile": "qualification",
+    "source_stability": {
+      "after": {
+        "Cargo.lock": {
+          "mtime_ns": 1786655548372779200,
+          "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+          "size": 154279
+        },
+        "crates/qpls-cli/Cargo.toml": {
+          "mtime_ns": 1784436493165886700,
+          "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+          "size": 678
+        },
+        "crates/qpls-cli/src/main.rs": {
+          "mtime_ns": 1786669164612405200,
+          "sha256": "d847875d0c78a734725de9794aa19cc64d97c6ff732b2b6cdb646dce0398406c",
+          "size": 260752
+        },
+        "crates/qpls-core/Cargo.toml": {
+          "mtime_ns": 1784352071986106700,
+          "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+          "size": 363
+        },
+        "crates/qpls-core/src/contract.rs": {
+          "mtime_ns": 1786666077157513700,
+          "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "size": 114179
+        },
+        "crates/qpls-core/src/lib.rs": {
+          "mtime_ns": 1784383048514318800,
+          "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+          "size": 180
+        },
+        "crates/qpls-core/src/validation.rs": {
+          "mtime_ns": 1786667999667406800,
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        "crates/qpls-data/Cargo.toml": {
+          "mtime_ns": 1784364586747181800,
+          "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+          "size": 437
+        },
+        "crates/qpls-data/src/lib.rs": {
+          "mtime_ns": 1786607995478642000,
+          "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+          "size": 44865
+        },
+        "crates/qpls-estimation/Cargo.toml": {
+          "mtime_ns": 1786607995481159200,
+          "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+          "size": 503
+        },
+        "crates/qpls-estimation/src/lib.rs": {
+          "mtime_ns": 1786666091142845700,
+          "sha256": "e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+          "size": 93
+        },
+        "crates/qpls-estimation/src/pls.rs": {
+          "mtime_ns": 1786667991549246500,
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        "crates/qpls-project/Cargo.toml": {
+          "mtime_ns": 1786607995489944600,
+          "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+          "size": 628
+        },
+        "crates/qpls-project/src/archive_integrity.rs": {
+          "mtime_ns": 1786607995492067200,
+          "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+          "size": 31085
+        },
+        "crates/qpls-project/src/lib.rs": {
+          "mtime_ns": 1786669474971285100,
+          "sha256": "53f89d6d381d7c33b1e5f029d978e030a46a28d7d4bd47a2e17dc5b83bcbb387",
+          "size": 719445
+        },
+        "crates/qpls-resampling/Cargo.toml": {
+          "mtime_ns": 1784375063189640300,
+          "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+          "size": 589
+        },
+        "crates/qpls-resampling/src/lib.rs": {
+          "mtime_ns": 1786666206795884300,
+          "sha256": "9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+          "size": 177532
+        },
+        "crates/qpls-resampling/src/power.rs": {
+          "mtime_ns": 1786672581561173000,
+          "sha256": "28bffb50f5fc577f603668d822ef606343eb10f54f6611dcc1e2ef1afcbc3141",
+          "size": 62651
+        },
+        "crates/qpls-runner/Cargo.toml": {
+          "mtime_ns": 1784390064413583300,
+          "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+          "size": 428
+        },
+        "crates/qpls-runner/src/lib.rs": {
+          "mtime_ns": 1786669385548237600,
+          "sha256": "0a3f76ad19f897ff2db63be729a92087d8d1cad6b926e4c6908294cdb62e97e0",
+          "size": 54934
+        }
+      },
+      "changed_sources": [],
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "dataset": "validation/results/method_factory/pls_sample_size_power_v1/work/prospective_power_envelope.csv",
+      "dataset_sha256": "19b6730d505c49a19157e5f0251ad445b24f8df757f2cf43b3ea372a47fc858c",
+      "import": {
+        "command": [
+          "D:\\QuickPLS\\target\\debug\\qpls.exe",
+          "import",
+          "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+          "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.qpls",
+          "--name",
+          "power-v1-envelope"
+        ],
+        "duration_seconds": 0.07,
+        "returncode": 0,
+        "stderr_tail": "",
+        "stdout_tail": "created D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.qpls\n"
+      },
+      "inspect": {
+        "command": [
+          "D:\\QuickPLS\\target\\debug\\qpls.exe",
+          "inspect",
+          "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.qpls",
+          "--json"
+        ],
+        "duration_seconds": 0.038,
+        "returncode": 0,
+        "stderr_tail": "",
+        "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 6,\n      \"fingerprint\": \"v2:1394644bd80cf19b8640d2e7d7ba7c5fc2d02519ed7358e55a196a9634562970\",\n      \"id\": \"832fb35c-25e8-4450-a95d-3a36b9690841\",\n      \"kind\": \"raw\",\n      \"name\": \"prospective_power_envelope.csv\",\n      \"rows\": 48,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"power-v1-envelope\",\n  \"projectId\": \"566f0f71-895b-4a56-a46c-0b7a44b1f232\",\n  \"readOnly\": false,\n  \"recipes\": 0,\n  \"recovered\": false,\n  \"results\": 0,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
+      },
+      "project": "validation/results/method_factory/pls_sample_size_power_v1/work/prospective_power_envelope.qpls",
+      "project_sha256": "c88c2cd224e294cb6171387985c4166ad24f67503f0d36ccbe22a90a66883991"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\qualification_null_calibration.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\qualification_null_calibration.result.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 1045.967,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "wrote analysis result D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\qualification_null_calibration.result.json\n"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\qualification_power_recovery.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\prospective_power_envelope.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\qualification_power_recovery.result.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 228.533,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "wrote analysis result D:\\QuickPLS\\validation\\results\\method_factory\\pls_sample_size_power_v1\\work\\qualification_power_recovery.result.json\n"
+    },
+    {
+      "command": [
+        "C:\\Python313\\python.exe",
+        "validation/pls_sample_size_power_reference.py",
+        "qualification_power_recovery_independent"
+      ],
+      "duration_seconds": 58.839,
+      "implementation": "direct imported independent NumPy function",
+      "returncode": 0
+    }
+  ],
+  "feature_id": "qpls3.pls.sample_size_power",
+  "generated_at_utc": "2026-08-14T02:31:20.499478Z",
+  "method_version": "pls_sample_size_power_v1",
+  "passed": false,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "simulation_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+      "size": 154279
+    },
+    {
+      "path": "crates/qpls-cli/Cargo.toml",
+      "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+      "size": 678
+    },
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "d847875d0c78a734725de9794aa19cc64d97c6ff732b2b6cdb646dce0398406c",
+      "size": 260752
+    },
+    {
+      "path": "crates/qpls-core/Cargo.toml",
+      "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+      "size": 363
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+      "size": 114179
+    },
+    {
+      "path": "crates/qpls-core/src/lib.rs",
+      "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+      "size": 180
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+      "size": 194148
+    },
+    {
+      "path": "crates/qpls-data/Cargo.toml",
+      "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+      "size": 437
+    },
+    {
+      "path": "crates/qpls-data/src/lib.rs",
+      "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+      "size": 44865
+    },
+    {
+      "path": "crates/qpls-estimation/Cargo.toml",
+      "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+      "size": 503
+    },
+    {
+      "path": "crates/qpls-estimation/src/lib.rs",
+      "sha256": "e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+      "size": 93
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+      "size": 653641
+    },
+    {
+      "path": "crates/qpls-project/Cargo.toml",
+      "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+      "size": 628
+    },
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "53f89d6d381d7c33b1e5f029d978e030a46a28d7d4bd47a2e17dc5b83bcbb387",
+      "size": 719445
+    },
+    {
+      "path": "crates/qpls-resampling/Cargo.toml",
+      "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+      "size": 589
+    },
+    {
+      "path": "crates/qpls-resampling/src/lib.rs",
+      "sha256": "9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+      "size": 177532
+    },
+    {
+      "path": "crates/qpls-resampling/src/power.rs",
+      "sha256": "28bffb50f5fc577f603668d822ef606343eb10f54f6611dcc1e2ef1afcbc3141",
+      "size": 62651
+    },
+    {
+      "path": "crates/qpls-runner/Cargo.toml",
+      "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+      "size": 428
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "0a3f76ad19f897ff2db63be729a92087d8d1cad6b926e4c6908294cdb62e97e0",
+      "size": 54934
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_sample_size_power_v1.manifest.json",
+      "sha256": "59cd37e4523e233deb32521c94ad23ca24cabcffeff183933dfc961ff823a9cd",
+      "size": 18815
+    },
+    {
+      "path": "validation/pls_sample_size_power_reference.py",
+      "sha256": "d9d2af7172b88535dfdfe9b536e145f40a8835d4c8dcd4fc4446bf333b2c3d5a",
+      "size": 25408
+    },
+    {
+      "path": "validation/pls_sample_size_power_simulation.py",
+      "sha256": "67c7bd402a730b059682e932f19921048b3f9256af9d1fb8fd22de337904f341",
+      "size": 39018
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "a123eaf4355a92d0c790a61a9e2692ac60e5b308d439b47f8e7e693c917db727",
+      "size": 21242
+    },
+    {
+      "path": "validation/test_pls_sample_size_power_v1.py",
+      "sha256": "b416cd197a0205eda1ee63c47b6e4d92e15464fa85a1ce329d978301d27bf55c",
+      "size": 11741
+    }
+  ]
+}

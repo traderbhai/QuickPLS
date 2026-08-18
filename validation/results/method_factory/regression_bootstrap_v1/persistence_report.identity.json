@@ -2,9 +2,9 @@
   "catalogue_snapshot_date": "2026-08-12",
   "checks": {
     "archive": {
-      "path": "validation/results/v247-native-regression-bootstrap-1786604468092-21920.qpls",
-      "sha256": "38077cf6056b9702cd4d97e4a230c8e845a0381ba283eff8324ecd7f6215de0c",
-      "size": 944342
+      "path": "validation/results/v247-native-regression-bootstrap-1787024410809-5764.qpls",
+      "sha256": "8d0e9770476a5019b69899948ed6382d98267431fee2fff14ab791bf8583471a",
+      "size": 944612
     },
     "archive_identity_token_present": true,
     "archive_origin": "historical packaged workflow; revalidated and reopened by the exact current release CLI",
@@ -12,34 +12,34 @@
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "validate",
-        "C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-e8l5_2p8\\tampered.qpls",
+        "C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-da7s3mzj\\tampered.qpls",
         "--json"
       ],
       "returncode": 1,
-      "stderr_tail": "Error: invalid project C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-e8l5_2p8\\tampered.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
+      "stderr_tail": "Error: invalid project C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-da7s3mzj\\tampered.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
       "stdout_tail": ""
     },
     "current_cli": {
       "path": "target/release/qpls.exe",
-      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-      "size": 20690432
+      "sha256": "f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254",
+      "size": 32373248
     },
     "current_cli_inspect": {
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "inspect",
-        "validation/results/v247-native-regression-bootstrap-1786604468092-21920.qpls",
+        "D:\\QuickPLS\\validation\\results\\v247-native-regression-bootstrap-1787024410809-5764.qpls",
         "--json"
       ],
       "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 11,\n      \"fingerprint\": \"v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb\",\n      \"id\": \"10b2d98d-8a56-4fed-8064-be9cc06133ce\",\n      \"kind\": \"raw\",\n      \"name\": \"v08_extended_methods_fixture.csv\",\n      \"rows\": 140,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"Native Regression Bootstrap Acceptance\",\n  \"projectId\": \"efc2c018-4b52-4da6-bd76-c96d343d8869\",\n  \"readOnly\": false,\n  \"recipes\": 2,\n  \"recovered\": false,\n  \"results\": 2,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
+      "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 11,\n      \"fingerprint\": \"v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb\",\n      \"id\": \"9bb8c11c-4d9e-4762-9363-dd3440ac49ec\",\n      \"kind\": \"raw\",\n      \"name\": \"v08_extended_methods_fixture.csv\",\n      \"rows\": 140,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"Native Regression Bootstrap Acceptance\",\n  \"projectId\": \"901e2d6b-2d6e-484b-a1d6-73e0ff6e4f33\",\n  \"readOnly\": false,\n  \"recipes\": 2,\n  \"recovered\": false,\n  \"results\": 2,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
     },
     "current_cli_validate": {
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "validate",
-        "validation/results/v247-native-regression-bootstrap-1786604468092-21920.qpls",
+        "D:\\QuickPLS\\validation\\results\\v247-native-regression-bootstrap-1787024410809-5764.qpls",
         "--json"
       ],
       "returncode": 0,
@@ -50,7 +50,7 @@
     "passed": true
   },
   "feature_id": "qpls3.standalone.regression_bootstrap",
-  "generated_at_utc": "2026-08-13T19:54:32.040737Z",
+  "generated_at_utc": "2026-08-18T03:57:08.117648Z",
   "method_version": "regression_bootstrap_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -59,13 +59,13 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-project/src/lib.rs",
-      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-      "size": 660277
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
     },
     {
       "path": "validation/legacy_release_factory_migration.py",
-      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
-      "size": 23709
+      "sha256": "b9c5207f9d8aff6c2cd8b243acb017634d26b00355a1f537b3cfa4ad69fa92e7",
+      "size": 24794
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -79,8 +79,8 @@
     },
     {
       "path": "validation/methods/regression_bootstrap_v1.manifest.json",
-      "sha256": "857b25d5822321d8ddfb16255849e5932170f733c11523317210a3a600935d72",
-      "size": 15009
+      "sha256": "f29fdad3a352c9b1fc4a7a942d2485f8a8f90990656f69994f47d5f682b414fe",
+      "size": 16094
     },
     {
       "path": "validation/test_legacy_release_factory_migration.py",
@@ -89,13 +89,13 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_regression_bootstrap_method_promotion_audit.py",
-      "sha256": "0a19fa90478931880257b687835b679afb44e4f7f2200c3e8532290456efedc6",
-      "size": 35116
+      "sha256": "fd832cc05f276324b805b93f1eacc51be8e7782b4f38d77657c5f023a840eb37",
+      "size": 35155
     }
   ]
 }

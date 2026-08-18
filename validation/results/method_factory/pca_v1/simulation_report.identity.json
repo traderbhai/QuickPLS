@@ -52,7 +52,7 @@
         "observations": 30,
         "observed_retained_components": 2,
         "output": "validation/results/method_factory/pca_v1/work/factory_simulation_small_fixed.quickpls.json",
-        "output_sha256": "b5c0acbd3c93f2c611f740d750ad3d2111a8e6faba07d4e2189c4f54873818ff",
+        "output_sha256": "79a5922a60c640b0acb0edc8125126bf6883a79360bd135cd97ec23ebbd983a3",
         "p": 2,
         "passed": true,
         "rule": "fixed",
@@ -79,7 +79,7 @@
         "observations": 60,
         "observed_retained_components": 1,
         "output": "validation/results/method_factory/pca_v1/work/factory_simulation_medium_kaiser.quickpls.json",
-        "output_sha256": "a17e350491f5bd0cc8da1089287245d60d933c53209f2e4215bccbd88b864dbe",
+        "output_sha256": "6dfaed21ee87e208a2487286796daa0de8f1d07c089a6ceda6644d09c3eb3a78",
         "p": 3,
         "passed": true,
         "rule": "kaiser",
@@ -106,7 +106,7 @@
         "observations": 90,
         "observed_retained_components": 3,
         "output": "validation/results/method_factory/pca_v1/work/factory_simulation_near_tie_fixed.quickpls.json",
-        "output_sha256": "915e922514b50eb3566797ef2f19320441302387fdfa27ff93b284fb36c3936e",
+        "output_sha256": "763ae3fa0eb74bccabd81e9ba2d4af2cf5884515373d8f10f62a61eb1e0060e9",
         "p": 4,
         "passed": true,
         "rule": "fixed",
@@ -133,7 +133,7 @@
         "observations": 91,
         "observed_retained_components": 4,
         "output": "validation/results/method_factory/pca_v1/work/factory_simulation_missing_threshold.quickpls.json",
-        "output_sha256": "7a4645d6f75f41c036582b86b8bd161ec4224af9a6e095a44a7b853638d34100",
+        "output_sha256": "a581bc610bf21a685bb765de2e8e570d56b84fab8311a397bc8267ea1e92e918",
         "p": 5,
         "passed": true,
         "rule": "variance_threshold",
@@ -160,7 +160,7 @@
         "observations": 140,
         "observed_retained_components": 3,
         "output": "validation/results/method_factory/pca_v1/work/factory_simulation_nongaussian_fixed.quickpls.json",
-        "output_sha256": "74a9884939f65115ebc0373137e21a44a6c5c0678ec6ab8353eff507bb69486e",
+        "output_sha256": "1b83d77c9c7a514ec2e2d55d1c612bdef07e6ecf519d0760c321d8b96ee3c4ad",
         "p": 5,
         "passed": true,
         "rule": "fixed",
@@ -187,7 +187,7 @@
         "observations": 45,
         "observed_retained_components": 8,
         "output": "validation/results/method_factory/pca_v1/work/factory_simulation_wide_threshold.quickpls.json",
-        "output_sha256": "e77499207252d8e6a7d2cf6e2c9e39ff08b70e11a7e4e1f7151ad6d27e3bb5fd",
+        "output_sha256": "ed1468e348c70b2a6fd5f55d549da7385ba04c6dc4835aa20b61e58b69936022",
         "p": 8,
         "passed": true,
         "rule": "variance_threshold",
@@ -214,7 +214,7 @@
         "observations": 218,
         "observed_retained_components": 1,
         "output": "validation/results/method_factory/pca_v1/work/factory_simulation_large_kaiser.quickpls.json",
-        "output_sha256": "0b8d1a4b789e1bad21df363b2d119cb858eb5a186084250c66060b32696dc88c",
+        "output_sha256": "16faccf33f4d6fd06f650379dd4f38b3f5b40134af6d24cf3b79980cd688a727",
         "p": 6,
         "passed": true,
         "rule": "kaiser",
@@ -224,7 +224,7 @@
     "tolerance": 1e-06
   },
   "feature_id": "qpls3.standalone.pca",
-  "generated_at_utc": "2026-08-13T19:35:36.882232Z",
+  "generated_at_utc": "2026-08-18T03:07:20.885626Z",
   "method_version": "pca_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -233,23 +233,23 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-cli/src/main.rs",
-      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
-      "size": 216983
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
     },
     {
       "path": "crates/qpls-core/src/contract.rs",
-      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
-      "size": 107095
+      "sha256": "51c235a9173d3f9c84e5bfe4c0ce6280268ee26b882e2a41dd01be889a7cdfb5",
+      "size": 144508
     },
     {
       "path": "crates/qpls-estimation/src/pls.rs",
-      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-      "size": 639198
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
     },
     {
       "path": "crates/qpls-runner/src/lib.rs",
-      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
-      "size": 49349
+      "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+      "size": 100140
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -263,8 +263,8 @@
     },
     {
       "path": "validation/methods/pca_v1.manifest.json",
-      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
-      "size": 14506
+      "sha256": "e89c5a6c5c57853c93b207c2c50451bdfab0a80acb30108ffa19a0cd09d6c8c9",
+      "size": 14560
     },
     {
       "path": "validation/pca_simulation.py",
@@ -273,13 +273,13 @@
     },
     {
       "path": "validation/pca_v1_factory_common.py",
-      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
-      "size": 11599
+      "sha256": "88fceff4dd6fb914e2773f0d4fe537b5df3d01fb70066873808ba3980b2e7a1c",
+      "size": 11651
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pca_v1_factory_evidence.py",

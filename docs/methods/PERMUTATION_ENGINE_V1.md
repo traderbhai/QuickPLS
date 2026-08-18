@@ -1,6 +1,6 @@
 # PLS Structural-Score Permutation Specification v1
 
-Status: `release_qualified` evidence for the bounded contract below under the 2026-08-12 catalogue snapshot. QuickPLS retains an explicit conditional/approximate interpretation warning because the statistical assumptions and exclusions remain material. Broader permutation designs outside this contract remain unsupported.
+Status: scoped Standard, backed by `release_qualified` evidence for the bounded contract below under the 2026-08-12 catalogue snapshot. QuickPLS retains an explicit conditional/approximate interpretation warning because the statistical assumptions and exclusions remain material. Broader permutation designs outside this contract remain unsupported.
 
 ## Scope
 

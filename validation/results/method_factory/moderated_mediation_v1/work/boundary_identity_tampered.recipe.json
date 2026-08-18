@@ -1,0 +1,111 @@
+{
+  "created_at": "2026-07-19T00:00:00Z",
+  "dataset_fingerprint": "v2:0000000000000000000000000000000000000000000000000000000000000000",
+  "id": "00000000-0000-0000-0000-000000000009",
+  "metadata": {
+    "fixture": "independent_moderated_mediation_reference",
+    "validation_recipe_migration": "schema_v2_fixture_to_explicit_schema_v3_copy"
+  },
+  "method_config": {
+    "kind": "moderated_mediation"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x"
+        ],
+        "mode": "reflective",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "w",
+        "indicators": [
+          "w"
+        ],
+        "mode": "reflective",
+        "name": "W",
+        "short_name": "W"
+      },
+      {
+        "id": "xw",
+        "indicators": [],
+        "mode": "formative",
+        "name": "X by W",
+        "short_name": "XW"
+      },
+      {
+        "id": "m",
+        "indicators": [
+          "m"
+        ],
+        "mode": "reflective",
+        "name": "M",
+        "short_name": "M"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "00000000-0000-0000-0000-000000000010",
+    "interactions": [
+      {
+        "id": "x_by_w_to_m",
+        "method": "two_stage_product_score",
+        "moderator": "w",
+        "outcome": "m",
+        "predictor": "x",
+        "product_construct": "xw"
+      }
+    ],
+    "name": "First-stage moderated mediation reference",
+    "paths": [
+      {
+        "source": "x",
+        "target": "m"
+      },
+      {
+        "source": "w",
+        "target": "m"
+      },
+      {
+        "source": "xw",
+        "target": "m"
+      },
+      {
+        "source": "m",
+        "target": "y"
+      },
+      {
+        "source": "x",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 3000,
+    "method": "moderated_mediation",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260719,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-07,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

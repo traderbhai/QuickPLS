@@ -21,7 +21,32 @@
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": { "$ref": "#/$defs/artifact" }
+      "items": { "$ref": "#/$defs/artifact" },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": ["path"],
+            "properties": {
+              "path": {
+                "pattern": "^validation/results/method_factory/cta_pls_v1/packaged_screenshots/[0-9a-f]{64}/[^/]+\\.png$"
+              }
+            }
+          },
+          "minContains": 3
+        },
+        {
+          "not": {
+            "contains": {
+              "type": "object",
+              "required": ["path"],
+              "properties": {
+                "path": { "pattern": "^validation/results/screens/" }
+              }
+            }
+          }
+        }
+      ]
     },
     "checks": {
       "type": "object",
@@ -42,7 +67,7 @@
         "same_run": { "$ref": "#/$defs/passedObject" },
         "exact_archive": { "$ref": "#/$defs/passedObject" },
         "exact_xlsx": { "$ref": "#/$defs/passedObject" },
-        "responsive_viewports": { "$ref": "#/$defs/passedObject" },
+        "responsive_viewports": { "$ref": "#/$defs/responsiveViewports" },
         "method_functional_offline": { "$ref": "#/$defs/methodFunctionalOffline" },
         "platform_background_egress_observation": { "$ref": "#/$defs/platformBackgroundEgressObservation" },
         "cleanup": { "$ref": "#/$defs/passedObject" },
@@ -79,6 +104,72 @@
       "type": "object",
       "required": ["passed"],
       "properties": { "passed": { "const": true } }
+    },
+    "responsiveViewports": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "evidence", "screenshot_integrity"],
+      "properties": {
+        "passed": { "const": true },
+        "evidence": { "type": "object" },
+        "screenshot_integrity": { "$ref": "#/$defs/screenshotSnapshot" }
+      }
+    },
+    "screenshotSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed", "storage_policy", "factory_owned", "snapshot_id", "directory",
+        "source_artifact_count", "copied_artifact_count", "required_responsive_screenshots",
+        "artifacts", "paths"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "storage_policy": { "const": "factory_owned_content_addressed_no_overwrite_v1" },
+        "factory_owned": { "const": true },
+        "snapshot_id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "directory": {
+          "type": "string",
+          "pattern": "^validation/results/method_factory/cta_pls_v1/packaged_screenshots/[0-9a-f]{64}$"
+        },
+        "source_artifact_count": { "type": "integer", "minimum": 3 },
+        "copied_artifact_count": { "type": "integer", "minimum": 3 },
+        "required_responsive_screenshots": {
+          "const": [
+            "207-tauri-native-cta-pls-reopened-1024x700.png",
+            "207-tauri-native-cta-pls-reopened-1280x720.png",
+            "207-tauri-native-cta-pls-reopened-1440x900.png"
+          ]
+        },
+        "artifacts": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/screenshotArtifact" }
+        },
+        "paths": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^validation/results/method_factory/cta_pls_v1/packaged_screenshots/[0-9a-f]{64}/[^/]+\\.png$"
+          }
+        }
+      }
+    },
+    "screenshotArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^validation/results/method_factory/cta_pls_v1/packaged_screenshots/[0-9a-f]{64}/[^/]+\\.png$"
+        },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
     },
     "methodFunctionalOffline": {
       "type": "object",

@@ -1,0 +1,142 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "audit_output_not_consumed": true,
+    "passed": true,
+    "release_evidence_contract_passes": true,
+    "semantic_checks": {
+      "exact_packaged_check_set": true,
+      "native_packaged_evidence_passed": true,
+      "prior_factory_stages_passed": true,
+      "responsive_viewports_passed": true,
+      "runner_cleanup_verified": true,
+      "source_freshness_passed": true
+    },
+    "stage_artifacts": [
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/process_v2/engine_stage.identity.json",
+        "roles": [
+          "method_spec",
+          "independent_reference",
+          "simulation_report",
+          "boundary_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/process_v2/persistence_report.identity.json",
+        "roles": [
+          "persistence_report"
+        ],
+        "stage": "archive_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/process_v2/native_stage.identity.json",
+        "roles": [
+          "frontend_report",
+          "export_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/process_v2/packaged_acceptance.identity.json",
+        "roles": [
+          "packaged_acceptance"
+        ],
+        "stage": "release_qualified"
+      }
+    ]
+  },
+  "feature_id": "qpls3.standalone.process",
+  "generated_at_utc": "2026-08-18T14:13:55.898090Z",
+  "method_version": "regression_process_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
+    {
+      "path": "validation/legacy_release_adapter_common.py",
+      "sha256": "01f86f08668ad4ff9aad4cccda10298cc6579af4da748cc998d2aabdf0ec8681",
+      "size": 54379
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/process_v2.manifest.json",
+      "sha256": "24fa47208e6247ef6f76c8c0e5a9ece2271e125111e90a91589ff73d94e73809",
+      "size": 16581
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
+    },
+    {
+      "path": "validation/process_v2_factory_audit.py",
+      "sha256": "93b9eeda14c700cdc6187c77b126516bb934ea6ab864efe2e4c1a3bc9f607525",
+      "size": 199
+    },
+    {
+      "path": "validation/process_v2_method_promotion_audit.py",
+      "sha256": "a530f2f32bb821b7e7fc7be23fa9f680e6122ff28ca229060fcc7bf6ca42e613",
+      "size": 172904
+    },
+    {
+      "path": "validation/results/method_factory/process_v2/engine_stage.identity.json",
+      "sha256": "3f7f16ba259efb434a1aa6dce4e71120730f9ee0d5b787b6ddd8a83e7d8a376f",
+      "size": 8591
+    },
+    {
+      "path": "validation/results/method_factory/process_v2/native_stage.identity.json",
+      "sha256": "e43e2fbc4b25fa39dd60426a0115fa857c8fb4fff0f7d99fb5e156b3a952a17c",
+      "size": 5245
+    },
+    {
+      "path": "validation/results/method_factory/process_v2/packaged_acceptance.identity.json",
+      "sha256": "48fdc4c9798d83514b3d78329423ce1fb52fcf6c6409cfcc693925788910c487",
+      "size": 84465
+    },
+    {
+      "path": "validation/results/method_factory/process_v2/persistence_report.identity.json",
+      "sha256": "837a64abf03c9f710c069f24e9e997f84382c21171d04765934ccb4c32b1d376",
+      "size": 4657
+    },
+    {
+      "path": "validation/test_legacy_release_adapters.py",
+      "sha256": "dbc695bede07f67595a76601614103ac21b9d6fc3512ddd7b26369a3dbc67c51",
+      "size": 15812
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_process_v2_method_promotion_audit.py",
+      "sha256": "5651e94f7cb0f0adf1f68f4752496a7c98618198591da7bcd6f512df3f973902",
+      "size": 148037
+    }
+  ]
+}

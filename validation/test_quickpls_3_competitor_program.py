@@ -90,6 +90,7 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
 
         self.assertTrue(report["passed"], report["errors"])
         self.assertFalse(report["competitor_ready"])
+        self.assertTrue(report["capability_registry_passed"])
         self.assertTrue(report["parity_evidence_passed"])
         self.assertFalse(report["commercial_release_ready"])
         self.assertFalse(report["external_beta_ready"])
@@ -102,10 +103,9 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         self.assertEqual(
             report["status_counts"],
             {
-                "absent": 20,
+                "absent": 39,
                 "deferred": 2,
-                "native-qualified": 20,
-                "release-qualified": 3,
+                "engine-preview": 4,
             },
         )
         self.assertEqual(len(report["pending_non_method_gates"]), 18)
@@ -170,10 +170,10 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         algorithm["state"] = "engine_only"
 
         promoted = deepcopy(self.raw_ledger)
-        algorithm = next(
-            item for item in promoted["features"] if item["id"] == "qpls3.pls.algorithm"
+        process = next(
+            item for item in promoted["features"] if item["id"] == "qpls3.standalone.process"
         )
-        algorithm["state"] = "release_qualified"
+        process["state"] = "release_qualified"
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             directory = Path(temporary_directory)
@@ -187,8 +187,10 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
 
         self.assertTrue(demoted_report["passed"], demoted_report["errors"])
         self.assertFalse(demoted_report["competitor_ready"])
-        self.assertEqual(demoted_report["status_counts"]["native-qualified"], 20)
-        self.assertEqual(demoted_report["status_counts"]["release-qualified"], 3)
+        self.assertEqual(
+            demoted_report["status_counts"],
+            {"absent": 39, "deferred": 2, "engine-preview": 4},
+        )
         self.assertFalse(promoted_report["passed"])
         self.assertFalse(promoted_report["competitor_ready"])
         self.assertTrue(
@@ -197,7 +199,10 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
 
     def test_release_claim_requires_evidence_derived_release_state(self) -> None:
         manifest = deepcopy(self.manifest)
-        method = manifest["methods"][0]
+        method = next(
+            item for item in manifest["methods"]
+            if item["id"] == "smartpls.moderation"
+        )
         method["status"] = "release-qualified"
         method["target_release"] = "current"
 
@@ -205,14 +210,18 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
 
         self.assertFalse(report["passed"])
         self.assertTrue(
-            any("contradicts evidence-derived native-qualified" in error for error in report["errors"])
+            any(
+                "contradicts authoritative Capability Registry V2 status engine-preview"
+                in error
+                for error in report["errors"]
+            )
         )
 
-    def test_future_capability_raw_status_cannot_promote_manifest_state(self) -> None:
+    def test_absent_capability_raw_status_cannot_promote_manifest_state(self) -> None:
         manifest = deepcopy(self.manifest)
         method = next(
             item for item in manifest["methods"]
-            if item["id"] == "smartpls.pls_power_analysis"
+            if item["id"] == "smartpls.pls_model_comparison"
         )
         method["status"] = "release-qualified"
         method["target_release"] = "current"
@@ -222,8 +231,31 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         self.assertFalse(report["passed"])
         self.assertFalse(report["competitor_ready"])
         self.assertTrue(
-            any("contradicts evidence-derived absent" in error for error in report["errors"])
+            any(
+                "contradicts authoritative Capability Registry V2 status absent"
+                in error
+                for error in report["errors"]
+            )
         )
+
+    def test_extended_relationship_rows_match_factory_derived_states(self) -> None:
+        expected = {
+            "smartpls.moderation": "engine-preview",
+            "smartpls.mediation": "engine-preview",
+            "smartpls.nonlinear_relationships": "engine-preview",
+            "smartpls.higher_order_models": "engine-preview",
+            "smartpls.endogeneity_gaussian_copulas": "absent",
+        }
+
+        actual = {
+            method["id"]: method["status"]
+            for method in self.manifest["methods"]
+            if method["id"] in expected
+        }
+
+        self.assertEqual(actual, expected)
+        report = self.validate()
+        self.assertTrue(report["passed"], report["errors"])
 
     def test_borrowed_capability_is_rejected_by_exact_crosswalk(self) -> None:
         manifest = deepcopy(self.manifest)
@@ -238,7 +270,7 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
 
         self.assertFalse(report["passed"])
         self.assertFalse(report["competitor_ready"])
-        self.assertTrue(any("capability mapping differs from frozen crosswalk" in error for error in report["errors"]))
+        self.assertTrue(any("capability mapping differs from Capability Registry V2" in error for error in report["errors"]))
 
     def test_shared_pca_mapping_cannot_be_removed_from_either_context(self) -> None:
         manifest = deepcopy(self.manifest)
@@ -248,7 +280,7 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         report = self.validate(manifest=manifest)
 
         self.assertFalse(report["passed"])
-        self.assertTrue(any("capability mapping differs from frozen crosswalk" in error for error in report["errors"]))
+        self.assertTrue(any("capability mapping differs from Capability Registry V2" in error for error in report["errors"]))
 
     def test_duplicate_capability_mapping_is_rejected(self) -> None:
         manifest = deepcopy(self.manifest)
@@ -274,20 +306,20 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         report = self.validate(manifest=manifest)
 
         self.assertFalse(report["passed"])
-        self.assertTrue(any("not editable implementation paths" in error for error in report["errors"]))
+        self.assertTrue(any("must not declare active implementation evidence" in error for error in report["errors"]))
 
     def test_absent_method_cannot_claim_preview_evidence(self) -> None:
         manifest = deepcopy(self.manifest)
         method = next(
             item for item in manifest["methods"]
-            if item["id"] == "smartpls.pls_power_analysis"
+            if item["id"] == "smartpls.pls_model_comparison"
         )
         method["implementation_evidence"] = ["crates/qpls-estimation/src/pls.rs"]
 
         report = self.validate(manifest=manifest)
 
         self.assertFalse(report["passed"])
-        self.assertTrue(any("not editable implementation paths" in error for error in report["errors"]))
+        self.assertTrue(any("must not declare active implementation evidence" in error for error in report["errors"]))
 
     def test_missing_exact_method_manifest_is_rejected(self) -> None:
         factory_report = deepcopy(self.factory_report)
@@ -303,7 +335,7 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         self.assertFalse(report["passed"])
         self.assertFalse(report["competitor_ready"])
         self.assertTrue(any("missing frozen capabilities" in error for error in report["errors"]))
-        self.assertTrue(any("missing from method-manifest factory" in error for error in report["errors"]))
+        self.assertIn("qpls3.pls.sample_size_power", report["missing_method_manifests"])
 
     def test_unmapped_or_duplicate_factory_capability_is_rejected(self) -> None:
         factory_report = deepcopy(self.factory_report)

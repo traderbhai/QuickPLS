@@ -1,0 +1,144 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "final_release_audit": {
+      "bounded_claim": "Standalone complete-case ordinary least-squares regression of one numeric outcome on one or more numeric predictors and optional numeric controls, with an intercept and HC3 robust inference.",
+      "bounded_packaged_workflow_passes": true,
+      "cumulative_cleanup_passes": true,
+      "excluded_scope": [
+        "Automatic categorical encoding, survey weights, clustered standard errors, GLS, mixed models, panel models, and regularization are excluded.",
+        "HC0 or HC4 public claims, resampling, logistic regression, and PROCESS are separate contracts.",
+        "Association and model fit do not establish causal effects or eliminate omitted-variable bias."
+      ],
+      "functional_offline_not_zero_egress": true,
+      "packaged_identity_passes": true,
+      "passed": true,
+      "prior_factory_native": true,
+      "release_evidence_contract_passes": true,
+      "source_receipt_and_cli_current": true,
+      "three_viewports_pass": true,
+      "verified_artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/ols_v1/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/ols_v1/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/ols_v1/native_stage.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/ols_v1/packaged_acceptance.identity.json",
+          "roles": [
+            "packaged_acceptance"
+          ],
+          "stage": "release_qualified"
+        }
+      ]
+    }
+  },
+  "execution": [],
+  "feature_id": "qpls3.standalone.ols",
+  "generated_at_utc": "2026-08-18T14:16:11.380529Z",
+  "method_version": "regression_ols_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/ols_v1.manifest.json",
+      "sha256": "2d2169c5d1bd25610e0afea667c8356cf758d56077d442e77740e1e938f4cb96",
+      "size": 14630
+    },
+    {
+      "path": "validation/ols_v1_factory.py",
+      "sha256": "0946c32966a27fd05ff92f36885b52df23427f910ff4bf1e0c854130c34aab29",
+      "size": 28653
+    },
+    {
+      "path": "validation/ols_v1_factory_audit.py",
+      "sha256": "064638a0d26994929cd4935852e9b4f976b538ccae48597c224e3f705284354b",
+      "size": 5325
+    },
+    {
+      "path": "validation/ols_v1_reference.py",
+      "sha256": "a6c986e23d7d2811355b6628b5957895cba919ea80b0b69282f31b6f667992b3",
+      "size": 5823
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
+    },
+    {
+      "path": "validation/results/method_factory/ols_v1/engine_stage.identity.json",
+      "sha256": "7ab18fd75a09b4607fc610a2bd81e09326cf77b6117d242bb4fc215a52cdd527",
+      "size": 54662
+    },
+    {
+      "path": "validation/results/method_factory/ols_v1/native_stage.identity.json",
+      "sha256": "7b82b5e46c2a8ae957c51e676268f303ddcd936522ea2da39cb4e3647ad6b8a9",
+      "size": 9275
+    },
+    {
+      "path": "validation/results/method_factory/ols_v1/packaged_acceptance.identity.json",
+      "sha256": "559552b64c114061778583fa77eabb3c7cf323cf2e0940c206a25bd2e1951a13",
+      "size": 19229
+    },
+    {
+      "path": "validation/results/method_factory/ols_v1/persistence_report.identity.json",
+      "sha256": "270e780b4c4364872d9a6f154b4dcfc3e99b89f4f12ebd6ab5c23aac1c01b771",
+      "size": 3454
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_ols_v1_factory.py",
+      "sha256": "0d275275721cc03ef33f38a23be61bc4562adbea796dd1f73cf68b476a4e4d12",
+      "size": 6443
+    }
+  ]
+}

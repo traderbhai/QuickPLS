@@ -1,0 +1,1348 @@
+{
+  "schema_version": "quickpls.diagnostic_bundle_packaged_acceptance.raw.v1",
+  "kind": "quickpls3_packaged_diagnostic_bundle_v1_raw_acceptance",
+  "passed": true,
+  "generated_at_utc": "2026-08-14T03:37:52.168Z",
+  "target": "windows_10_11_x64_packaged_tauri",
+  "runtime": {
+    "node": "v22.14.0",
+    "platform": "win32",
+    "architecture": "x64",
+    "playwright": "chromium-connect-over-cdp"
+  },
+  "endpoint": "http://127.0.0.1:9222",
+  "generator": "validation/diagnostic_bundle_packaged_acceptance.mjs",
+  "tested_product": {
+    "quickpls_desktop_exe": {
+      "path": "target/release/quickpls-desktop.exe",
+      "size": 32046080,
+      "sha256": "a87c2c8119e7f8f006f28d03501fe4d4818e588462d380754ac78efee27a28b9"
+    }
+  },
+  "checks": {
+    "runtime_preflight": {
+      "passed": true,
+      "expected_origin": "http://tauri.localhost",
+      "qualifying_page_count": 1,
+      "pre_reload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shell_visible": true,
+        "tauri_runtime": true
+      },
+      "reload_count": 1,
+      "post_reload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shell_visible": true,
+        "tauri_runtime": true
+      },
+      "same_origin": true
+    },
+    "abandoned_preview_recovery": {
+      "passed": true,
+      "abandoned_preview_count": 7,
+      "backend_capacity": 4,
+      "evicted_oldest_count": 4,
+      "evicted_oldest": [
+        {
+          "preview_id": "5bdbb56b-1881-457e-8779-c44b6bc91a80",
+          "error": "Error: page.evaluate: DIAGNOSTIC_PREVIEW_REQUIRED: This diagnostic preview is absent, expired, or already consumed. Create a new preview."
+        },
+        {
+          "preview_id": "c9ed1a3a-37de-4b59-b8a3-578b4429a177",
+          "error": "Error: page.evaluate: DIAGNOSTIC_PREVIEW_REQUIRED: This diagnostic preview is absent, expired, or already consumed. Create a new preview."
+        },
+        {
+          "preview_id": "0459784b-fb96-4c19-9aab-ea100dfb4795",
+          "error": "Error: page.evaluate: DIAGNOSTIC_PREVIEW_REQUIRED: This diagnostic preview is absent, expired, or already consumed. Create a new preview."
+        },
+        {
+          "preview_id": "10f6f5b8-d3d4-4f17-8f4b-dc09491fef85",
+          "error": "Error: page.evaluate: DIAGNOSTIC_PREVIEW_REQUIRED: This diagnostic preview is absent, expired, or already consumed. Create a new preview."
+        }
+      ],
+      "surviving_abandoned_cancelled_count": 3,
+      "surviving_abandoned_cancelled_ids": [
+        "b7fbe689-f366-406c-b3f3-6fc66b6640c3",
+        "0606dacc-8e42-42e1-aed9-e7bc5a142673",
+        "041ec7d6-9cfd-43b7-8044-8fe44052aaa7"
+      ],
+      "live_ui_recovered_at_capacity": true
+    },
+    "live_settings_preview": {
+      "passed": true,
+      "production_entry": "src/App.tsx -> NativeDesktopApp -> NativeUtilityDialog -> DiagnosticBundlePanel",
+      "dialog_title": "Preferences",
+      "panel_marker": "live",
+      "existing_preferences_preserved": true,
+      "preview_before_save": true,
+      "local_only": true,
+      "network_activity": "none",
+      "entry_count": 3,
+      "event_count": 24,
+      "included_categories": [
+        "QuickPLS build and release identity",
+        "Operating-system family and architecture",
+        "Bounded session diagnostic event codes",
+        "Manifest hashes, sizes, limits, and redaction counts"
+      ],
+      "excluded_categories": [
+        "Dataset rows, values, and variable names",
+        "Project contents, model labels, and project titles",
+        "Results, reports, and exports",
+        "Credentials, environment values, and command lines",
+        "Arbitrary files, registry data, and memory dumps"
+      ],
+      "staged_contents": {
+        "system": {
+          "schemaVersion": 1,
+          "quickplsVersion": "2.46.0",
+          "releaseChannel": "internal",
+          "sourceRevision": "not_provided",
+          "osFamily": "windows",
+          "architecture": "x86_64",
+          "desktopRuntime": "Tauri 2",
+          "locale": "not_collected",
+          "webview2Version": "not_collected",
+          "userDataIncluded": false,
+          "networkAccessed": false
+        },
+        "events": [
+          {
+            "timestamp": "2026-08-14T03:37:32.037Z",
+            "sequence": 1,
+            "severity": "info",
+            "code": "desktop.session.started"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:39.509Z",
+            "sequence": 2,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:39.530Z",
+            "sequence": 3,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:39.543Z",
+            "sequence": 4,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:39.554Z",
+            "sequence": 5,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:39.567Z",
+            "sequence": 6,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:39.584Z",
+            "sequence": 7,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:39.596Z",
+            "sequence": 8,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:40.182Z",
+            "sequence": 9,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:40.536Z",
+            "sequence": 10,
+            "severity": "info",
+            "code": "diagnostic.preview.cancelled"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:40.545Z",
+            "sequence": 11,
+            "severity": "info",
+            "code": "diagnostic.preview.cancelled"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:40.553Z",
+            "sequence": 12,
+            "severity": "info",
+            "code": "diagnostic.preview.cancelled"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:40.915Z",
+            "sequence": 13,
+            "severity": "info",
+            "code": "diagnostic.preview.cancelled"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:41.000Z",
+            "sequence": 14,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:41.316Z",
+            "sequence": 15,
+            "severity": "info",
+            "code": "diagnostic.preview.cancelled"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:41.753Z",
+            "sequence": 16,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:42.104Z",
+            "sequence": 17,
+            "severity": "info",
+            "code": "diagnostic.preview.cancelled"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:42.529Z",
+            "sequence": 18,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:42.851Z",
+            "sequence": 19,
+            "severity": "info",
+            "code": "diagnostic.preview.cancelled"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:43.260Z",
+            "sequence": 20,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:43.582Z",
+            "sequence": 21,
+            "severity": "info",
+            "code": "diagnostic.preview.cancelled"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:43.995Z",
+            "sequence": 22,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:44.331Z",
+            "sequence": 23,
+            "severity": "info",
+            "code": "diagnostic.preview.cancelled"
+          },
+          {
+            "timestamp": "2026-08-14T03:37:44.784Z",
+            "sequence": 24,
+            "severity": "info",
+            "code": "diagnostic.preview.requested"
+          }
+        ],
+        "manifest": {
+          "schemaVersion": 1,
+          "policyVersion": "quickpls-diagnostics-v1",
+          "createdAt": "2026-08-14T03:37:44.784Z",
+          "quickplsVersion": "2.46.0",
+          "entries": [
+            {
+              "name": "metadata/system.json",
+              "sha256": "627b2ae5b16a429adf5f0d3423b30e25e88a1a45690f40c649f0e12d9f3200d0",
+              "bytes": 331
+            },
+            {
+              "name": "logs/events.jsonl",
+              "sha256": "0477444e7e41412acba1bd1ad0681b283aa3838bbc98bee85e526bef22c2bba9",
+              "bytes": 2650
+            }
+          ],
+          "redactionCounts": {
+            "windowsPaths": 0,
+            "emailAddresses": 0,
+            "urlQueriesOrFragments": 0,
+            "bearerTokens": 0
+          },
+          "redactionTotal": 0,
+          "archiveLimits": {
+            "maximumEntries": 3,
+            "maximumEntryBytes": 262144,
+            "maximumUncompressedBytes": 524288,
+            "maximumArchiveBytes": 532480,
+            "compression": "stored"
+          },
+          "localOnly": true,
+          "networkAccessed": false
+        }
+      },
+      "exact_system_labels": [
+        "Metadata schema",
+        "QuickPLS version",
+        "Release channel",
+        "Source revision",
+        "Operating system",
+        "Architecture",
+        "Desktop runtime",
+        "Locale",
+        "WebView2 version",
+        "User data included",
+        "Network accessed"
+      ],
+      "exact_descriptor_names": [
+        "metadata/system.json",
+        "logs/events.jsonl"
+      ],
+      "accessible_regions": [
+        "Redacted diagnostic event rows",
+        "Diagnostic manifest payload descriptors"
+      ],
+      "live_status_region": true
+    },
+    "navigation_cancellation": {
+      "passed": true,
+      "explicit_preview_cancellation": {
+        "passed": true,
+        "preview_id": "04bfd0aa-efd6-4aef-ac26-e893f69c9e2a",
+        "no_file_created_message": true
+      },
+      "unmount_cycles": 5,
+      "every_unmount_recorded": true,
+      "recovery_preview_id": "70cf20f4-8494-4aec-b6d0-226b68aa9e42"
+    },
+    "native_save_dialog": {
+      "passed": true,
+      "target_path": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip",
+      "new_target": true,
+      "local_drive_rooted": true,
+      "helper_ready": {
+        "event": "ready",
+        "mainWindow": {
+          "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+          "handle": 28641288,
+          "pid": 48504,
+          "title": "QuickPLS"
+        },
+        "passed": true,
+        "phase": "main_window_binding",
+        "resultsRoot": "D:\\QuickPLS\\validation\\results",
+        "targetPath": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip"
+      },
+      "helper_completion": {
+        "boundControls": {
+          "filenameEditControlId": 1001,
+          "saveButtonControlId": 1
+        },
+        "bundle": {
+          "entryCompression": [
+            "stored",
+            "stored",
+            "stored"
+          ],
+          "entryNames": [
+            "metadata/system.json",
+            "logs/events.jsonl",
+            "manifest.json"
+          ],
+          "entrySizes": {
+            "logs/events.jsonl": 2650,
+            "manifest.json": 858,
+            "metadata/system.json": 331
+          },
+          "events": [
+            {
+              "code": "desktop.session.started",
+              "sequence": 1,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:32.037Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 2,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:39.509Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 3,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:39.530Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 4,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:39.543Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 5,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:39.554Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 6,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:39.567Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 7,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:39.584Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 8,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:39.596Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 9,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:40.182Z"
+            },
+            {
+              "code": "diagnostic.preview.cancelled",
+              "sequence": 10,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:40.536Z"
+            },
+            {
+              "code": "diagnostic.preview.cancelled",
+              "sequence": 11,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:40.545Z"
+            },
+            {
+              "code": "diagnostic.preview.cancelled",
+              "sequence": 12,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:40.553Z"
+            },
+            {
+              "code": "diagnostic.preview.cancelled",
+              "sequence": 13,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:40.915Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 14,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:41.000Z"
+            },
+            {
+              "code": "diagnostic.preview.cancelled",
+              "sequence": 15,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:41.316Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 16,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:41.753Z"
+            },
+            {
+              "code": "diagnostic.preview.cancelled",
+              "sequence": 17,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:42.104Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 18,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:42.529Z"
+            },
+            {
+              "code": "diagnostic.preview.cancelled",
+              "sequence": 19,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:42.851Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 20,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:43.260Z"
+            },
+            {
+              "code": "diagnostic.preview.cancelled",
+              "sequence": 21,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:43.582Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 22,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:43.995Z"
+            },
+            {
+              "code": "diagnostic.preview.cancelled",
+              "sequence": 23,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:44.331Z"
+            },
+            {
+              "code": "diagnostic.preview.requested",
+              "sequence": 24,
+              "severity": "info",
+              "timestamp": "2026-08-14T03:37:44.784Z"
+            }
+          ],
+          "forbiddenPatternMatches": [],
+          "manifest": {
+            "archiveLimits": {
+              "compression": "stored",
+              "maximumArchiveBytes": 532480,
+              "maximumEntries": 3,
+              "maximumEntryBytes": 262144,
+              "maximumUncompressedBytes": 524288
+            },
+            "createdAt": "2026-08-14T03:37:44.784Z",
+            "entries": [
+              {
+                "bytes": 331,
+                "name": "metadata/system.json",
+                "sha256": "627b2ae5b16a429adf5f0d3423b30e25e88a1a45690f40c649f0e12d9f3200d0"
+              },
+              {
+                "bytes": 2650,
+                "name": "logs/events.jsonl",
+                "sha256": "0477444e7e41412acba1bd1ad0681b283aa3838bbc98bee85e526bef22c2bba9"
+              }
+            ],
+            "localOnly": true,
+            "networkAccessed": false,
+            "policyVersion": "quickpls-diagnostics-v1",
+            "quickplsVersion": "2.46.0",
+            "redactionCounts": {
+              "bearerTokens": 0,
+              "emailAddresses": 0,
+              "urlQueriesOrFragments": 0,
+              "windowsPaths": 0
+            },
+            "redactionTotal": 0,
+            "schemaVersion": 1
+          },
+          "path": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip",
+          "sha256": "8bc1792119a623662a23840a97a7508ddf267c135c0e59824aad5eb7e344c15b",
+          "size": 4189,
+          "system": {
+            "architecture": "x86_64",
+            "desktopRuntime": "Tauri 2",
+            "locale": "not_collected",
+            "networkAccessed": false,
+            "osFamily": "windows",
+            "quickplsVersion": "2.46.0",
+            "releaseChannel": "internal",
+            "schemaVersion": 1,
+            "sourceRevision": "not_provided",
+            "userDataIncluded": false,
+            "webview2Version": "not_collected"
+          },
+          "uncompressedBytes": 3839
+        },
+        "dialog": {
+          "className": "#32770",
+          "directOwner": 28641288,
+          "handle": 12256308,
+          "pid": 48504,
+          "rootOwner": 28641288,
+          "title": "Save As"
+        },
+        "event": "complete",
+        "mainWindow": {
+          "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+          "handle": 28641288,
+          "pid": 48504,
+          "title": "QuickPLS"
+        },
+        "passed": true,
+        "phase": "diagnostic_zip_creation_and_readback",
+        "saveSubmission": {
+          "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip",
+          "filenameBefore": "quickpls-diagnostic-bundle",
+          "filenameVerified": true,
+          "saveButtonEnabled": true,
+          "saveButtonVisible": true,
+          "setAttempts": [
+            {
+              "attempt": 1,
+              "settledReads": [
+                "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip",
+                "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip"
+              ]
+            }
+          ],
+          "submissionMethod": "BM_CLICK",
+          "targetText": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip"
+        },
+        "targetPath": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip",
+        "transport": {
+          "exitCode": 0,
+          "signal": null,
+          "stderr": "",
+          "events": [
+            {
+              "event": "ready",
+              "mainWindow": {
+                "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                "handle": 28641288,
+                "pid": 48504,
+                "title": "QuickPLS"
+              },
+              "passed": true,
+              "phase": "main_window_binding",
+              "resultsRoot": "D:\\QuickPLS\\validation\\results",
+              "targetPath": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip"
+            },
+            {
+              "boundControls": {
+                "filenameEditControlId": 1001,
+                "saveButtonControlId": 1
+              },
+              "bundle": {
+                "entryCompression": [
+                  "stored",
+                  "stored",
+                  "stored"
+                ],
+                "entryNames": [
+                  "metadata/system.json",
+                  "logs/events.jsonl",
+                  "manifest.json"
+                ],
+                "entrySizes": {
+                  "logs/events.jsonl": 2650,
+                  "manifest.json": 858,
+                  "metadata/system.json": 331
+                },
+                "events": [
+                  {
+                    "code": "desktop.session.started",
+                    "sequence": 1,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:32.037Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 2,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:39.509Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 3,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:39.530Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 4,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:39.543Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 5,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:39.554Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 6,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:39.567Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 7,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:39.584Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 8,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:39.596Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 9,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:40.182Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.cancelled",
+                    "sequence": 10,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:40.536Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.cancelled",
+                    "sequence": 11,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:40.545Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.cancelled",
+                    "sequence": 12,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:40.553Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.cancelled",
+                    "sequence": 13,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:40.915Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 14,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:41.000Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.cancelled",
+                    "sequence": 15,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:41.316Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 16,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:41.753Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.cancelled",
+                    "sequence": 17,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:42.104Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 18,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:42.529Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.cancelled",
+                    "sequence": 19,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:42.851Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 20,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:43.260Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.cancelled",
+                    "sequence": 21,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:43.582Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 22,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:43.995Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.cancelled",
+                    "sequence": 23,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:44.331Z"
+                  },
+                  {
+                    "code": "diagnostic.preview.requested",
+                    "sequence": 24,
+                    "severity": "info",
+                    "timestamp": "2026-08-14T03:37:44.784Z"
+                  }
+                ],
+                "forbiddenPatternMatches": [],
+                "manifest": {
+                  "archiveLimits": {
+                    "compression": "stored",
+                    "maximumArchiveBytes": 532480,
+                    "maximumEntries": 3,
+                    "maximumEntryBytes": 262144,
+                    "maximumUncompressedBytes": 524288
+                  },
+                  "createdAt": "2026-08-14T03:37:44.784Z",
+                  "entries": [
+                    {
+                      "bytes": 331,
+                      "name": "metadata/system.json",
+                      "sha256": "627b2ae5b16a429adf5f0d3423b30e25e88a1a45690f40c649f0e12d9f3200d0"
+                    },
+                    {
+                      "bytes": 2650,
+                      "name": "logs/events.jsonl",
+                      "sha256": "0477444e7e41412acba1bd1ad0681b283aa3838bbc98bee85e526bef22c2bba9"
+                    }
+                  ],
+                  "localOnly": true,
+                  "networkAccessed": false,
+                  "policyVersion": "quickpls-diagnostics-v1",
+                  "quickplsVersion": "2.46.0",
+                  "redactionCounts": {
+                    "bearerTokens": 0,
+                    "emailAddresses": 0,
+                    "urlQueriesOrFragments": 0,
+                    "windowsPaths": 0
+                  },
+                  "redactionTotal": 0,
+                  "schemaVersion": 1
+                },
+                "path": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip",
+                "sha256": "8bc1792119a623662a23840a97a7508ddf267c135c0e59824aad5eb7e344c15b",
+                "size": 4189,
+                "system": {
+                  "architecture": "x86_64",
+                  "desktopRuntime": "Tauri 2",
+                  "locale": "not_collected",
+                  "networkAccessed": false,
+                  "osFamily": "windows",
+                  "quickplsVersion": "2.46.0",
+                  "releaseChannel": "internal",
+                  "schemaVersion": 1,
+                  "sourceRevision": "not_provided",
+                  "userDataIncluded": false,
+                  "webview2Version": "not_collected"
+                },
+                "uncompressedBytes": 3839
+              },
+              "dialog": {
+                "className": "#32770",
+                "directOwner": 28641288,
+                "handle": 12256308,
+                "pid": 48504,
+                "rootOwner": 28641288,
+                "title": "Save As"
+              },
+              "event": "complete",
+              "mainWindow": {
+                "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                "handle": 28641288,
+                "pid": 48504,
+                "title": "QuickPLS"
+              },
+              "passed": true,
+              "phase": "diagnostic_zip_creation_and_readback",
+              "saveSubmission": {
+                "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip",
+                "filenameBefore": "quickpls-diagnostic-bundle",
+                "filenameVerified": true,
+                "saveButtonEnabled": true,
+                "saveButtonVisible": true,
+                "setAttempts": [
+                  {
+                    "attempt": 1,
+                    "settledReads": [
+                      "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip",
+                      "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip"
+                    ]
+                  }
+                ],
+                "submissionMethod": "BM_CLICK",
+                "targetText": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip"
+              },
+              "targetPath": "D:\\QuickPLS\\validation\\results\\quickpls-diagnostic-packaged-20260814-090728132.zip"
+            }
+          ],
+          "protocolErrors": []
+        }
+      },
+      "save_result": {
+        "bytes": 4189,
+        "archiveSha256": "8bc1792119a623662a23840a97a7508ddf267c135c0e59824aad5eb7e344c15b"
+      },
+      "app_feedback": "Diagnostic bundle saved locally (5 KiB). QuickPLS did not upload it."
+    },
+    "archive_integrity": {
+      "passed": true,
+      "exact_entry_names": [
+        "metadata/system.json",
+        "logs/events.jsonl",
+        "manifest.json"
+      ],
+      "exact_entry_count": 3,
+      "stored_compression_only": true,
+      "entry_sizes": {
+        "logs/events.jsonl": 2650,
+        "manifest.json": 858,
+        "metadata/system.json": 331
+      },
+      "uncompressed_bytes": 3839,
+      "archive_bytes": 4189,
+      "archive_sha256": "8bc1792119a623662a23840a97a7508ddf267c135c0e59824aad5eb7e344c15b",
+      "manifest_payload_descriptors_exact": true,
+      "preview_archive_exact": true,
+      "redaction_counts": {
+        "bearerTokens": 0,
+        "emailAddresses": 0,
+        "urlQueriesOrFragments": 0,
+        "windowsPaths": 0
+      },
+      "redaction_total": 0,
+      "forbidden_pattern_matches": [],
+      "user_data_included": false,
+      "network_accessed_declared": false
+    },
+    "destination_rejections": {
+      "passed": true,
+      "cases": [
+        {
+          "case_id": "relative",
+          "path": "relative.zip",
+          "expected_code": "DIAGNOSTIC_PATH_NOT_LOCAL_DRIVE",
+          "observed_error": "Error: page.evaluate: DIAGNOSTIC_PATH_NOT_LOCAL_DRIVE: Choose a drive-rooted local Windows destination such as C:\\Support\\bundle.zip.",
+          "preview_consumed": true
+        },
+        {
+          "case_id": "unc",
+          "path": "\\\\server\\share\\bundle.zip",
+          "expected_code": "DIAGNOSTIC_PATH_NAMESPACE_BLOCKED",
+          "observed_error": "Error: page.evaluate: DIAGNOSTIC_PATH_NAMESPACE_BLOCKED: UNC, verbatim, and device namespace destinations are not supported.",
+          "preview_consumed": true
+        },
+        {
+          "case_id": "verbatim_namespace",
+          "path": "\\\\?\\C:\\Support\\bundle.zip",
+          "expected_code": "DIAGNOSTIC_PATH_NAMESPACE_BLOCKED",
+          "observed_error": "Error: page.evaluate: DIAGNOSTIC_PATH_NAMESPACE_BLOCKED: UNC, verbatim, and device namespace destinations are not supported.",
+          "preview_consumed": true
+        },
+        {
+          "case_id": "wrong_extension",
+          "path": "D:\\QuickPLS\\validation\\results\\diagnostic-1786678671852-39488.qpls",
+          "expected_code": "DIAGNOSTIC_EXTENSION_INVALID",
+          "observed_error": "Error: page.evaluate: DIAGNOSTIC_EXTENSION_INVALID: Diagnostic bundles must use the .zip extension.",
+          "preview_consumed": true
+        },
+        {
+          "case_id": "reserved_device",
+          "path": "D:\\QuickPLS\\validation\\results\\NUL.zip",
+          "expected_code": "DIAGNOSTIC_DEVICE_NAME_BLOCKED",
+          "observed_error": "Error: page.evaluate: DIAGNOSTIC_DEVICE_NAME_BLOCKED: Reserved Windows device names are not valid diagnostic destinations.",
+          "preview_consumed": true
+        },
+        {
+          "case_id": "existing_destination",
+          "path": "D:\\QuickPLS\\validation\\results\\diagnostic-existing-1786678671852-39488.zip",
+          "expected_code": "DIAGNOSTIC_DESTINATION_EXISTS",
+          "observed_error": "Error: page.evaluate: DIAGNOSTIC_DESTINATION_EXISTS: Choose a new ZIP filename; diagnostic bundles never overwrite files.",
+          "preview_consumed": true
+        }
+      ],
+      "existing_destination_unchanged": true,
+      "existing_destination_sha256_before": "dda2f6eaca9397354193b893246bac3c24305f2c75497c26182d647c95dcec72",
+      "existing_destination_sha256_after": "dda2f6eaca9397354193b893246bac3c24305f2c75497c26182d647c95dcec72"
+    },
+    "browser_network_observation": {
+      "passed": true,
+      "observation": "playwright_page_request_events_during_reload_preview_cancel_navigation_save_and_negative_paths_v1",
+      "allowed_origins": [
+        "http://ipc.localhost",
+        "http://tauri.localhost"
+      ],
+      "observed_origins": [
+        "http://ipc.localhost",
+        "http://tauri.localhost"
+      ],
+      "request_count": 57,
+      "external_request_count": 0,
+      "external_requests": []
+    }
+  },
+  "artifacts": {
+    "diagnostic_zip": {
+      "path": "validation/results/quickpls-diagnostic-packaged-20260814-090728132.zip",
+      "size": 4189,
+      "sha256": "8bc1792119a623662a23840a97a7508ddf267c135c0e59824aad5eb7e344c15b"
+    },
+    "live_preview_screenshot": {
+      "path": "validation/results/screens/diagnostic-bundle-packaged-acceptance/01-live-preferences-diagnostic-preview.png",
+      "size": 58787,
+      "sha256": "000ce3ffca3f88f7018d593655f97fded833e3eb1db9756e11972d8ec2298acb"
+    },
+    "saved_screenshot": {
+      "path": "validation/results/screens/diagnostic-bundle-packaged-acceptance/02-diagnostic-bundle-saved.png",
+      "size": 27880,
+      "sha256": "bfe4a8d5ae64a24f460f6cd5f7a7b944657be873f2147202a9c5035de41e8edf"
+    }
+  },
+  "browser_requests": [
+    {
+      "url": "http://tauri.localhost/",
+      "origin": "http://tauri.localhost",
+      "method": "GET",
+      "resource_type": "document"
+    },
+    {
+      "url": "http://tauri.localhost/assets/index-Ls57E_wd.js",
+      "origin": "http://tauri.localhost",
+      "method": "GET",
+      "resource_type": "script"
+    },
+    {
+      "url": "http://tauri.localhost/assets/vendor-3AznE2Td.js",
+      "origin": "http://tauri.localhost",
+      "method": "GET",
+      "resource_type": "script"
+    },
+    {
+      "url": "http://tauri.localhost/assets/flow-BN-PNp2v.js",
+      "origin": "http://tauri.localhost",
+      "method": "GET",
+      "resource_type": "script"
+    },
+    {
+      "url": "http://tauri.localhost/assets/tauri-CZBL8huA.js",
+      "origin": "http://tauri.localhost",
+      "method": "GET",
+      "resource_type": "script"
+    },
+    {
+      "url": "http://tauri.localhost/assets/icons-CWW7Ihoi.js",
+      "origin": "http://tauri.localhost",
+      "method": "GET",
+      "resource_type": "script"
+    },
+    {
+      "url": "http://tauri.localhost/assets/flow-BnuhLJ6X.css",
+      "origin": "http://tauri.localhost",
+      "method": "GET",
+      "resource_type": "stylesheet"
+    },
+    {
+      "url": "http://tauri.localhost/assets/index-DpTHova4.css",
+      "origin": "http://tauri.localhost",
+      "method": "GET",
+      "resource_type": "stylesheet"
+    },
+    {
+      "url": "http://ipc.localhost/plugin%3Aevent%7Clisten",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://tauri.localhost/assets/NativeUtilityDialog-DETCjhqE.js",
+      "origin": "http://tauri.localhost",
+      "method": "GET",
+      "resource_type": "script"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/plugin%3Adialog%7Csave",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/save_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/save_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/save_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/save_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/save_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/save_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/preview_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/save_diagnostic_bundle",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    },
+    {
+      "url": "http://ipc.localhost/cancel_diagnostic_bundle_preview",
+      "origin": "http://ipc.localhost",
+      "method": "POST",
+      "resource_type": "fetch"
+    }
+  ],
+  "console_errors": [],
+  "failures": []
+}

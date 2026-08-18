@@ -1,0 +1,407 @@
+{
+    "schema_version":  1,
+    "passed":  false,
+    "root_pid":  48504,
+    "sample_count":  17,
+    "observed_tcp_connection_rows":  143,
+    "remote_connection_count":  32,
+    "remote_connections":  [
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  62252,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               },
+                               {
+                                   "owning_process":  15740,
+                                   "local_address":  "10.1.33.13",
+                                   "local_port":  53131,
+                                   "remote_address":  "52.110.15.150",
+                                   "remote_port":  443,
+                                   "state":  "Established",
+                                   "remote_access":  true
+                               }
+                           ],
+    "allowed_loopback_ports":  [
+                                   9222,
+                                   17846
+                               ],
+    "loopback_allowed_for_cdp":  true,
+    "loopback_allowed_for_proxy":  true,
+    "allowed_loopback_connection_rows":  63,
+    "unexpected_loopback_connection_count":  8,
+    "unexpected_loopback_connections":  [
+                                            {
+                                                "owning_process":  61824,
+                                                "local_address":  "::1",
+                                                "local_port":  55942,
+                                                "remote_address":  "::1",
+                                                "remote_port":  80,
+                                                "state":  "SynSent",
+                                                "remote_access":  false
+                                            },
+                                            {
+                                                "owning_process":  61824,
+                                                "local_address":  "::1",
+                                                "local_port":  55759,
+                                                "remote_address":  "::1",
+                                                "remote_port":  80,
+                                                "state":  "SynSent",
+                                                "remote_access":  false
+                                            },
+                                            {
+                                                "owning_process":  61824,
+                                                "local_address":  "127.0.0.1",
+                                                "local_port":  59602,
+                                                "remote_address":  "127.0.0.1",
+                                                "remote_port":  80,
+                                                "state":  "SynSent",
+                                                "remote_access":  false
+                                            },
+                                            {
+                                                "owning_process":  61824,
+                                                "local_address":  "127.0.0.1",
+                                                "local_port":  50138,
+                                                "remote_address":  "127.0.0.1",
+                                                "remote_port":  80,
+                                                "state":  "SynSent",
+                                                "remote_access":  false
+                                            },
+                                            {
+                                                "owning_process":  61824,
+                                                "local_address":  "::1",
+                                                "local_port":  55942,
+                                                "remote_address":  "::1",
+                                                "remote_port":  80,
+                                                "state":  "SynSent",
+                                                "remote_access":  false
+                                            },
+                                            {
+                                                "owning_process":  61824,
+                                                "local_address":  "::1",
+                                                "local_port":  55759,
+                                                "remote_address":  "::1",
+                                                "remote_port":  80,
+                                                "state":  "SynSent",
+                                                "remote_access":  false
+                                            },
+                                            {
+                                                "owning_process":  61824,
+                                                "local_address":  "127.0.0.1",
+                                                "local_port":  59602,
+                                                "remote_address":  "127.0.0.1",
+                                                "remote_port":  80,
+                                                "state":  "SynSent",
+                                                "remote_access":  false
+                                            },
+                                            {
+                                                "owning_process":  61824,
+                                                "local_address":  "127.0.0.1",
+                                                "local_port":  50138,
+                                                "remote_address":  "127.0.0.1",
+                                                "remote_port":  80,
+                                                "state":  "SynSent",
+                                                "remote_access":  false
+                                            }
+                                        ],
+    "proxy_listener":  {
+                           "owning_process":  48504,
+                           "local_address":  "127.0.0.1",
+                           "local_port":  17846,
+                           "remote_address":  "0.0.0.0",
+                           "remote_port":  0,
+                           "state":  "Listen",
+                           "remote_access":  false
+                       },
+    "proxy_listener_sample_count":  17,
+    "proxy_listener_present_in_every_sample":  true,
+    "cdp_listener":  {
+                         "owning_process":  15740,
+                         "local_address":  "127.0.0.1",
+                         "local_port":  9222,
+                         "remote_address":  "0.0.0.0",
+                         "remote_port":  0,
+                         "state":  "Listen",
+                         "remote_access":  false
+                     },
+    "cdp_listener_sample_count":  17,
+    "cdp_listener_present_in_every_sample":  true,
+    "exact_loopback_allowances":  false,
+    "udp_observation_performed":  false,
+    "packet_capture_performed":  false,
+    "boundary":  "sampled_exact_process_tree_tcp_only_no_udp_or_packet_capture",
+    "observation":  "sampled exact-process-tree TCP endpoint snapshots with a configured 250 ms inter-sample delay; only loopback CDP 9222 and QuickPLS proxy 17846 active paths allowed; zero non-loopback rows required; no UDP or packet-capture claim"
+}

@@ -1,16 +1,18 @@
 import { AlertTriangle, Boxes, CheckCircle2, Database, FlaskConical, Info, Save, Search, Upload } from "lucide-react";
 import Papa from "papaparse";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import validationFixture from "../../validation/fixtures/corporate_reputation.csv?raw";
-import { columnProfile, dataQualitySummary, detectPrefixGroups, filteredColumns, isNumericColumn, type DataColumnFilter, type DataQualitySummary } from "../domain/dataWorkspace";
+import { columnProfile, dataQualitySummary, detectPrefixGroups, filteredColumns, type DataColumnFilter, type DataQualitySummary } from "../domain/dataWorkspace";
 import { dataGuidance } from "../domain/methodApplicability";
-import { importNativeDataset, importNativeValidationFixture, isNativeDesktop, updateNativeColumnMetadata } from "../services/projectService";
+import { applyNativeDatasetTransformation, importNativeDataset, importNativeValidationFixture, isNativeDesktop, recodeNativeDatasetColumn, updateNativeColumnMetadata } from "../services/projectService";
 import { useWorkspace } from "../store";
 import type { ColumnMetadata, Dataset, WorkspaceView } from "../types";
+import { executeDataWorkspaceVersionedAction, sortDataWorkspaceViewRows, type DataWorkspaceVersionedAction, type DataWorkspaceViewSort } from "./dataWorkspaceVersionedActions";
 import { InlineNotice, MetricCard, PageHeader, Panel, WorkspacePage } from "./Ui";
 
 type ImportKind = "raw" | "covariance" | "correlation";
 type DataWorkbenchTab = "data" | "variables" | "import" | "quality" | "notes";
+type DerivedVariableOperation = "reverse" | "add" | "subtract" | "multiply" | "divide" | "sum" | "mean" | "dummy" | "group";
 
 const dataWorkbenchTabs: Array<{ id: DataWorkbenchTab; label: string; detail: string }> = [
   { id: "data", label: "Data View", detail: "Case-by-variable data grid" },
@@ -40,24 +42,6 @@ const status = (message: string, tone: "info" | "success" | "warning" | "error" 
   window.dispatchEvent(new CustomEvent("quickpls:status-message", { detail: { message, tone } }));
 };
 
-const coerceCell = (value: string): string | number | null => {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const numeric = Number(trimmed);
-  return Number.isFinite(numeric) ? numeric : trimmed;
-};
-
-const recomputeMissing = (rows: Dataset["rows"]) =>
-  rows.reduce((sum, row) => sum + Object.values(row).filter((value) => value == null || value === "").length, 0);
-
-const uniqueColumnName = (columns: string[], base: string) => {
-  const cleaned = base.trim().replace(/\s+/g, "_") || "new_column";
-  if (!columns.includes(cleaned)) return cleaned;
-  let index = 2;
-  while (columns.includes(`${cleaned}_${index}`)) index += 1;
-  return `${cleaned}_${index}`;
-};
-
 export function DataWorkspace() {
   const inputRef = useRef<HTMLInputElement>(null);
   const dataset = useWorkspace((state) => state.dataset);
@@ -65,6 +49,7 @@ export function DataWorkspace() {
   const edges = useWorkspace((state) => state.edges);
   const settings = useWorkspace((state) => state.analysisSettings);
   const setDataset = useWorkspace((state) => state.setDataset);
+  const commitDatasetVersion = useWorkspace((state) => state.commitDatasetVersion);
   const setView = useWorkspace((state) => state.setView);
   const addConstructsFromIndicatorGroups = useWorkspace((state) => state.addConstructsFromIndicatorGroups);
   const [importKind, setImportKind] = useState<ImportKind>("raw");
@@ -75,6 +60,20 @@ export function DataWorkspace() {
   const [columnFilter, setColumnFilter] = useState<DataColumnFilter>("all");
   const [showValidationDetails, setShowValidationDetails] = useState(false);
   const [activeTab, setActiveTab] = useState<DataWorkbenchTab>("data");
+  const [transformationNotice, setTransformationNotice] = useState<{ message: string; danger: boolean } | null>(null);
+  const [rowSort, setRowSort] = useState<DataWorkspaceViewSort | null>(null);
+  const [derivedOperation, setDerivedOperation] = useState<DerivedVariableOperation>("reverse");
+  const [derivedOutputName, setDerivedOutputName] = useState("");
+  const [rightColumn, setRightColumn] = useState(dataset.columns[1] ?? dataset.columns[0] ?? "");
+  const [aggregateColumns, setAggregateColumns] = useState(dataset.columns.slice(0, 2).join(", "));
+  const [reverseMinimum, setReverseMinimum] = useState("1");
+  const [reverseMaximum, setReverseMaximum] = useState("5");
+  const [aggregateMissingPolicy, setAggregateMissingPolicy] = useState<"propagate" | "available">("propagate");
+  const [minimumNonMissing, setMinimumNonMissing] = useState("");
+  const [dummyMatchValue, setDummyMatchValue] = useState("");
+  const [dummyMissingPolicy, setDummyMissingPolicy] = useState<"missing" | "zero">("missing");
+  const [groupRules, setGroupRules] = useState("");
+  const [groupUnmatched, setGroupUnmatched] = useState<"missing" | "error">("missing");
   const selectedMetadata = useMemo(() => dataset.columnMetadata?.find((column) => column.name === selectedColumn) ?? defaultMetadata(selectedColumn), [dataset.columnMetadata, selectedColumn]);
   const selectedProfile = useMemo(() => selectedColumn ? columnProfile(dataset, selectedColumn) : null, [dataset, selectedColumn]);
   const [draft, setDraft] = useState<ColumnMetadata>(selectedMetadata);
@@ -87,6 +86,7 @@ export function DataWorkspace() {
   const matrixReady = importKind === "raw" || Boolean(matrixSampleSize && matrixSampleSize >= 2);
   const desktopOnlyMatrix = importKind !== "raw" && !isNativeDesktop();
   const filteredOutCount = Math.max(0, dataset.columns.length - visibleColumns.length);
+  const previewRows = useMemo(() => sortDataWorkspaceViewRows(dataset.rows, rowSort).slice(0, 100), [dataset.rows, rowSort]);
 
   const setParsedDataset = (csv: string, name: string) => {
     Papa.parse<Record<string, string | number | null>>(csv, {
@@ -112,6 +112,10 @@ export function DataWorkspace() {
 
   useEffect(() => { setDraft(selectedMetadata); }, [selectedMetadata]);
   useEffect(() => { if (!dataset.columns.includes(selectedColumn)) setSelectedColumn(dataset.columns[0] ?? ""); }, [dataset.columns, selectedColumn]);
+  useEffect(() => { setRowSort(null); }, [dataset.id]);
+  useEffect(() => {
+    if (!dataset.columns.includes(rightColumn)) setRightColumn(dataset.columns.find((column) => column !== selectedColumn) ?? dataset.columns[0] ?? "");
+  }, [dataset.columns, rightColumn, selectedColumn]);
 
   const importData = async () => {
     if (importKind !== "raw" && !matrixReady) {
@@ -152,11 +156,69 @@ export function DataWorkspace() {
     setView("models");
   };
 
+  const runVersionedAction = useCallback((action: DataWorkspaceVersionedAction) => {
+    void executeDataWorkspaceVersionedAction({
+      dataset,
+      nativeDesktop: isNativeDesktop(),
+      createRecodeVersion: recodeNativeDatasetColumn,
+      createTransformationVersion: applyNativeDatasetTransformation,
+      commitVersion: commitDatasetVersion,
+    }, action).then((result) => {
+      if (result.kind === "blocked") {
+        setTransformationNotice({ message: result.message, danger: false });
+        status(result.message, "warning");
+        return;
+      }
+      setTransformationNotice(null);
+      setSelectedColumn(result.selectedColumn);
+      setActiveTab("data");
+      if (result.kind === "view-only") {
+        setRowSort(result.sort);
+        status(result.message, "info");
+        return;
+      }
+      status(`Immutable dataset version created. ${result.message}`, "success");
+    }).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      setTransformationNotice({ message, danger: true });
+      status(message, "error");
+    });
+  }, [commitDatasetVersion, dataset]);
+
+  const createDerivedVariable = () => {
+    if (derivedOperation === "reverse") {
+      runVersionedAction({ kind: "reverse-scale", column: selectedColumn || null, minimum: reverseMinimum, maximum: reverseMaximum, outputName: derivedOutputName });
+      return;
+    }
+    if (["add", "subtract", "multiply", "divide"].includes(derivedOperation)) {
+      runVersionedAction({
+        kind: "arithmetic",
+        leftColumn: selectedColumn || null,
+        right: { kind: "column", column: rightColumn || null },
+        operator: derivedOperation as "add" | "subtract" | "multiply" | "divide",
+        outputName: derivedOutputName,
+      });
+      return;
+    }
+    if (derivedOperation === "sum" || derivedOperation === "mean") {
+      runVersionedAction({
+        kind: "row-aggregate",
+        columns: aggregateColumns.split(",").map((column) => column.trim()).filter(Boolean),
+        operation: derivedOperation,
+        missingPolicy: aggregateMissingPolicy,
+        minimumNonMissing,
+        outputName: derivedOutputName,
+      });
+      return;
+    }
+    if (derivedOperation === "dummy") {
+      runVersionedAction({ kind: "dummy", column: selectedColumn || null, matchValue: dummyMatchValue, missingPolicy: dummyMissingPolicy, outputName: derivedOutputName });
+      return;
+    }
+    runVersionedAction({ kind: "group-values", column: selectedColumn || null, rules: groupRules, unmatched: groupUnmatched, outputName: derivedOutputName });
+  };
+
   useEffect(() => {
-    const updateDataset = (next: Dataset, message: string) => {
-      setDataset({ ...next, rowCount: next.rows.length, missing: recomputeMissing(next.rows) });
-      status(message, "success");
-    };
     const handleFilter = (event: Event) => {
       setActiveTab("data");
       const detail = (event as CustomEvent<{ query?: string }>).detail;
@@ -167,43 +229,20 @@ export function DataWorkspace() {
     };
     const handleSort = (event: Event) => {
       const detail = (event as CustomEvent<{ column?: string; direction?: "asc" | "desc" }>).detail;
-      const sortColumn = detail?.column ?? selectedColumn;
-      if (!sortColumn) {
-        status("Sort needs a selected data column.", "warning");
-        return;
-      }
-      const direction = detail?.direction ?? "asc";
-      const nextRows = [...dataset.rows].sort((left, right) => {
-        const leftValue = left[sortColumn];
-        const rightValue = right[sortColumn];
-        if (leftValue == null || leftValue === "") return 1;
-        if (rightValue == null || rightValue === "") return -1;
-        const leftNumeric = Number(leftValue);
-        const rightNumeric = Number(rightValue);
-        const comparison = Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric)
-          ? leftNumeric - rightNumeric
-          : String(leftValue).localeCompare(String(rightValue));
-        return direction === "desc" ? -comparison : comparison;
-      });
-      setSelectedColumn(sortColumn);
-      updateDataset({ ...dataset, rows: nextRows }, `Rows sorted by ${sortColumn} (${direction === "desc" ? "descending" : "ascending"}).`);
+      const direction = detail?.direction === "desc" ? "desc" : "asc";
+      runVersionedAction({ kind: "sort", column: detail?.column ?? (selectedColumn || null), direction });
     };
     const handleAddColumn = (event: Event) => {
       const detail = (event as CustomEvent<{ name?: string; value?: string }>).detail;
-      const requested = detail?.name ?? window.prompt("New column name", "NEW_VARIABLE");
-      if (requested == null) return;
-      const name = uniqueColumnName(dataset.columns, requested);
-      const fill = detail?.value ?? window.prompt("Initial value for all rows. Leave blank for missing values.", "");
-      if (fill == null) return;
-      const value = coerceCell(fill);
-      updateDataset({
-        ...dataset,
-        columns: [...dataset.columns, name],
-        rows: dataset.rows.map((row) => ({ ...row, [name]: value })),
-        columnMetadata: [...(dataset.columnMetadata ?? dataset.columns.map(defaultMetadata)), defaultMetadata(name)],
-      }, `Column ${name} added to the project dataset.`);
-      setSelectedColumn(name);
-      setActiveTab("data");
+      if (!isNativeDesktop()) {
+        runVersionedAction({ kind: "add-column", name: detail?.name ?? "", value: detail?.value ?? "" });
+        return;
+      }
+      const name = detail?.name ?? window.prompt("Name for the new immutable column", "new_column");
+      if (name == null) return;
+      const value = detail?.value ?? window.prompt("Constant value for every row. Leave blank for a missing-value column.", "");
+      if (value == null) return;
+      runVersionedAction({ kind: "add-column", name, value });
     };
     const handleRecode = (event: Event) => {
       const detail = (event as CustomEvent<{ column?: string; from?: string; to?: string }>).detail;
@@ -212,72 +251,23 @@ export function DataWorkspace() {
         status("Recode needs a selected data column.", "warning");
         return;
       }
+      if (!isNativeDesktop()) {
+        runVersionedAction({ kind: "recode", column: recodeColumn, from: "", to: "" });
+        return;
+      }
       const from = detail?.from ?? window.prompt(`Recode values in ${recodeColumn}: value to replace`, "");
       if (from == null) return;
       const to = detail?.to ?? window.prompt(`Replacement value for ${recodeColumn}. Leave blank to recode as missing.`, "");
       if (to == null) return;
-      let changed = 0;
-      const replacement = coerceCell(to);
-      const nextRows = dataset.rows.map((row) => {
-        if (String(row[recodeColumn] ?? "") !== from) return row;
-        changed += 1;
-        return { ...row, [recodeColumn]: replacement };
-      });
-      setSelectedColumn(recodeColumn);
-      updateDataset({ ...dataset, rows: nextRows }, `Recode completed for ${recodeColumn}: ${changed} value${changed === 1 ? "" : "s"} changed.`);
+      runVersionedAction({ kind: "recode", column: recodeColumn, from, to });
     };
     const handleMissingValues = (event: Event) => {
       const detail = (event as CustomEvent<{ column?: string | null; markers?: string }>).detail;
-      const markers = detail?.markers ?? window.prompt("Treat these exact values as missing, comma-separated", missingMarkers);
-      if (markers == null) return;
-      const markerSet = new Set(markers.split(",").map((marker) => marker.trim()).filter(Boolean));
-      if (!markerSet.size) {
-        status("No missing-value markers were provided.", "warning");
-        return;
-      }
-      const targetColumns = detail?.column ? [detail.column] : dataset.columns;
-      let changed = 0;
-      const nextRows = dataset.rows.map((row) => {
-        const next = { ...row };
-        for (const column of targetColumns) {
-          if (markerSet.has(String(next[column] ?? ""))) {
-            next[column] = null;
-            changed += 1;
-          }
-        }
-        return next;
-      });
-      const columnMetadata = (dataset.columnMetadata ?? dataset.columns.map(defaultMetadata)).map((column) => targetColumns.includes(column.name)
-        ? { ...column, missing_markers: [...new Set([...column.missing_markers, ...markerSet])] }
-        : column);
-      setMissingMarkers(markers);
-      updateDataset({ ...dataset, rows: nextRows, columnMetadata }, `Missing-value recode completed: ${changed} cell${changed === 1 ? "" : "s"} changed.`);
+      runVersionedAction({ kind: "missing-values", column: detail?.column ?? null, markers: detail?.markers ?? "" });
     };
     const handleTransform = (event: Event) => {
-      const detail = (event as CustomEvent<{ column?: string; outputName?: string }>).detail;
-      const transformColumn = detail?.column ?? selectedColumn;
-      if (!transformColumn || !isNumericColumn(dataset, transformColumn)) {
-        status("Standardize needs a selected numeric column.", "warning");
-        return;
-      }
-      const profile = columnProfile(dataset, transformColumn);
-      if (profile.mean == null || !profile.standardDeviation) {
-        status(`Cannot standardize ${transformColumn}; the column has insufficient numeric variation.`, "warning");
-        return;
-      }
-      const name = uniqueColumnName(dataset.columns, detail?.outputName || `z_${transformColumn}`);
-      const nextRows = dataset.rows.map((row) => {
-        const numeric = Number(row[transformColumn]);
-        return { ...row, [name]: Number.isFinite(numeric) ? (numeric - profile.mean!) / profile.standardDeviation! : null };
-      });
-      updateDataset({
-        ...dataset,
-        columns: [...dataset.columns, name],
-        rows: nextRows,
-        columnMetadata: [...(dataset.columnMetadata ?? dataset.columns.map(defaultMetadata)), { ...defaultMetadata(name), label: `Standardized ${transformColumn}` }],
-      }, `Standardized copy ${name} created from ${transformColumn}.`);
-      setSelectedColumn(name);
-      setActiveTab("data");
+      const detail = (event as CustomEvent<{ column?: string; outputName?: string; transform?: string }>).detail;
+      runVersionedAction({ kind: "z-score", column: detail?.column ?? (selectedColumn || null), outputName: detail?.outputName ?? "" });
     };
     const handleCreateConstructs = () => {
       if (!prefixGroups.length) {
@@ -305,7 +295,7 @@ export function DataWorkspace() {
       window.removeEventListener("quickpls:data-missing-values", handleMissingValues);
       window.removeEventListener("quickpls:data-transform", handleTransform);
     };
-  }, [prefixGroups, addConstructsFromIndicatorGroups, setView, columnQuery, dataset, missingMarkers, selectedColumn, setDataset]);
+  }, [prefixGroups, addConstructsFromIndicatorGroups, setView, columnQuery, runVersionedAction, selectedColumn]);
 
   return <WorkspacePage className="data-page data-v2-workspace data-v211-workspace data-v215-workspace data-v217-workspace data-v224-workbench" data-method-applicability-polish="v2.11.0" data-workflow-method-guidance-triage="v2.15.0" data-v217-mockup-screen="data" data-v224-data-workbench="spss-like-tabs">
     <PageHeader
@@ -315,6 +305,7 @@ export function DataWorkspace() {
       actions={<button className="qpls2-primary-action" disabled={!dataset.columns.length} title={dataset.columns.length ? "Continue to the SEM diagram designer" : "Import a dataset before building the model"} onClick={() => setView("models")}>Open Model Designer</button>}
     />
     {quality.sampleWarning ? <InlineNotice tone="warning" title="Sample-size caution">{quality.sampleWarning}</InlineNotice> : null}
+    {transformationNotice ? <div role="status" aria-live="polite"><InlineNotice tone={transformationNotice.danger ? "danger" : "warning"} title="Versioned transformation required">{transformationNotice.message}</InlineNotice></div> : null}
 
     <nav className="data-v224-tabs" aria-label="Data workbench tabs">
       {dataWorkbenchTabs.map((tab) => <button key={tab.id} type="button" className={activeTab === tab.id ? "active" : ""} onClick={() => setActiveTab(tab.id)}>
@@ -397,11 +388,55 @@ export function DataWorkspace() {
           <select aria-label="Filter variables by metadata" value={columnFilter} onChange={(event) => setColumnFilter(event.target.value as DataColumnFilter)}>
             <option value="all">All columns</option><option value="continuous">Continuous</option><option value="ordinal">Ordinal</option><option value="nominal">Nominal</option><option value="binary">Binary</option><option value="identifier">Identifier</option><option value="nonnumeric">Nonnumeric</option><option value="missing_heavy">Missing-heavy</option>
           </select>
+          <div role="group" aria-label="Preview row order">
+            <label>Sort preview by<select aria-label="Preview sort column" value={selectedColumn} onChange={(event) => setSelectedColumn(event.target.value)}>{dataset.columns.map((column) => <option key={column} value={column}>{column}</option>)}</select></label>
+            <button type="button" aria-pressed={rowSort?.column === selectedColumn && rowSort.direction === "asc"} disabled={!selectedColumn} onClick={() => runVersionedAction({ kind: "sort", column: selectedColumn || null, direction: "asc" })}>Ascending</button>
+            <button type="button" aria-pressed={rowSort?.column === selectedColumn && rowSort.direction === "desc"} disabled={!selectedColumn} onClick={() => runVersionedAction({ kind: "sort", column: selectedColumn || null, direction: "desc" })}>Descending</button>
+            <button type="button" disabled={!rowSort} onClick={() => { setRowSort(null); status("Preview rows restored to source order. The scientific dataset was not changed.", "info"); }}>Source order</button>
+          </div>
         </div>
       </div>
-      <div className="data-scroll-hint">Showing {visibleColumns.length} of {dataset.columns.length} columns{filteredOutCount ? `, ${filteredOutCount} hidden by filter` : ""}. Scroll horizontally to inspect all visible variables.</div>
+      <details className="validation-details" open>
+        <summary>Create an immutable derived variable</summary>
+        <div className="data-table-tools" role="group" aria-label="Immutable derived variable controls">
+          <label>Operation<select aria-label="Derived variable operation" value={derivedOperation} onChange={(event) => setDerivedOperation(event.target.value as DerivedVariableOperation)}>
+            <option value="reverse">Reverse scale</option>
+            <option value="add">Add two variables</option>
+            <option value="subtract">Subtract variables</option>
+            <option value="multiply">Multiply variables</option>
+            <option value="divide">Divide variables</option>
+            <option value="sum">Row-wise sum</option>
+            <option value="mean">Row-wise average</option>
+            <option value="dummy">Dummy variable</option>
+            <option value="group">Group values</option>
+          </select></label>
+          <label>Source variable<select aria-label="Derived source variable" value={selectedColumn} onChange={(event) => setSelectedColumn(event.target.value)}>{dataset.columns.map((column) => <option key={column} value={column}>{column}</option>)}</select></label>
+          {["add", "subtract", "multiply", "divide"].includes(derivedOperation) ? <label>Right-hand variable<select aria-label="Arithmetic right-hand variable" value={rightColumn} onChange={(event) => setRightColumn(event.target.value)}>{dataset.columns.map((column) => <option key={column} value={column}>{column}</option>)}</select></label> : null}
+          {derivedOperation === "reverse" ? <div className="metadata-range">
+            <label>Scale minimum<input aria-label="Reverse scale minimum" type="number" value={reverseMinimum} onChange={(event) => setReverseMinimum(event.target.value)} /></label>
+            <label>Scale maximum<input aria-label="Reverse scale maximum" type="number" value={reverseMaximum} onChange={(event) => setReverseMaximum(event.target.value)} /></label>
+          </div> : null}
+          {derivedOperation === "sum" || derivedOperation === "mean" ? <>
+            <label>Input variables<input aria-label="Aggregate input variables" value={aggregateColumns} placeholder="item1, item2, item3" onChange={(event) => setAggregateColumns(event.target.value)} /></label>
+            <label>Missing values<select aria-label="Aggregate missing policy" value={aggregateMissingPolicy} onChange={(event) => setAggregateMissingPolicy(event.target.value as "propagate" | "available")}><option value="propagate">Require every value</option><option value="available">Use available values</option></select></label>
+            {aggregateMissingPolicy === "available" ? <label>Minimum observed<input aria-label="Minimum non-missing values" type="number" min="1" value={minimumNonMissing} onChange={(event) => setMinimumNonMissing(event.target.value)} /></label> : null}
+          </> : null}
+          {derivedOperation === "dummy" ? <>
+            <label>Value mapped to 1<input aria-label="Dummy match value" value={dummyMatchValue} onChange={(event) => setDummyMatchValue(event.target.value)} /></label>
+            <label>Missing source<select aria-label="Dummy missing policy" value={dummyMissingPolicy} onChange={(event) => setDummyMissingPolicy(event.target.value as "missing" | "zero")}><option value="missing">Keep missing</option><option value="zero">Map to 0</option></select></label>
+          </> : null}
+          {derivedOperation === "group" ? <>
+            <label>Value groups<textarea aria-label="Value group rules" placeholder="A, B = Treatment; C = Control" value={groupRules} onChange={(event) => setGroupRules(event.target.value)} /></label>
+            <label>Unmatched values<select aria-label="Unmatched group policy" value={groupUnmatched} onChange={(event) => setGroupUnmatched(event.target.value as "missing" | "error")}><option value="missing">Set missing</option><option value="error">Reject transformation</option></select></label>
+          </> : null}
+          <label>Output variable<input aria-label="Derived output variable" placeholder="Automatic unique name" value={derivedOutputName} onChange={(event) => setDerivedOutputName(event.target.value)} /></label>
+          <button type="button" className="qpls2-secondary-action" onClick={createDerivedVariable}>Create dataset version</button>
+        </div>
+        <p><Info size={13} />Every operation creates one immutable child dataset with native lineage. Browser preview remains read-only.</p>
+      </details>
+      <div className="data-scroll-hint" role="status" aria-live="polite">Showing {visibleColumns.length} of {dataset.columns.length} columns{filteredOutCount ? `, ${filteredOutCount} hidden by filter` : ""}. {rowSort ? `Preview rows are ${rowSort.direction === "desc" ? "descending" : "ascending"} by ${rowSort.column}; source order is unchanged.` : "Preview rows use source order."} Scroll horizontally to inspect all visible variables.</div>
       <div className="data-workbench">
-        <div className="data-grid" tabIndex={0} role="region" aria-label={`Data preview table for ${dataset.name}`}><table><caption>Data preview: first {Math.min(100, dataset.rows.length)} rows of {dataset.name}</caption><thead><tr><th>#</th>{visibleColumns.map((column) => { const metadata = dataset.columnMetadata?.find((item) => item.name === column); return <th className={selectedColumn === column ? "selected-column" : ""} key={column} onClick={() => setSelectedColumn(column)}><button type="button">{column}</button><small>{metadata?.scale_type ?? metadata?.column_type ?? "Numeric"}</small></th>; })}</tr></thead><tbody>{dataset.rows.slice(0, 100).map((row, index) => <tr key={index}><td>{index + 1}</td>{visibleColumns.map((column) => <td key={column}>{row[column] ?? <span className="missing-value">missing</span>}</td>)}</tr>)}</tbody></table></div>
+        <div className="data-grid" tabIndex={0} role="region" aria-label={`Data preview table for ${dataset.name}`}><table><caption>Data preview: {Math.min(100, dataset.rows.length)} displayed rows of {dataset.name}; row numbers retain source order</caption><thead><tr><th>#</th>{visibleColumns.map((column) => { const metadata = dataset.columnMetadata?.find((item) => item.name === column); const activeSort = rowSort?.column === column ? rowSort.direction === "asc" ? "ascending" : "descending" : "none"; return <th aria-sort={activeSort} className={selectedColumn === column ? "selected-column" : ""} key={column} onClick={() => setSelectedColumn(column)}><button type="button">{column}</button><small>{metadata?.scale_type ?? metadata?.column_type ?? "Numeric"}</small></th>; })}</tr></thead><tbody>{previewRows.map(({ row, sourceIndex }) => <tr key={sourceIndex}><td>{sourceIndex + 1}</td>{visibleColumns.map((column) => <td key={column}>{row[column] ?? <span className="missing-value">missing</span>}</td>)}</tr>)}</tbody></table></div>
         <aside className="metadata-editor" aria-label="Column metadata">
           <div className="metadata-heading"><strong>{selectedColumn || "No column selected"}</strong><span>Selected column metadata</span></div>
           <p className="metadata-help">Select a column header to edit metadata. Import missing markers are applied during import and do not recode already-loaded values.</p>

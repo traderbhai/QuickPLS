@@ -56,7 +56,7 @@
     ]
   },
   "feature_id": "qpls3.inference.structural_path_randomization",
-  "generated_at_utc": "2026-08-13T19:55:16.278624Z",
+  "generated_at_utc": "2026-08-18T13:55:02.162904Z",
   "method_version": "freedman_lane_permutation_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -64,9 +64,14 @@
   "schema_version": 1,
   "source_artifacts": [
     {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
+    {
       "path": "validation/legacy_release_adapter_common.py",
-      "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
-      "size": 51955
+      "sha256": "01f86f08668ad4ff9aad4cccda10298cc6579af4da748cc998d2aabdf0ec8681",
+      "size": 54379
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -80,33 +85,38 @@
     },
     {
       "path": "validation/methods/structural_path_randomization_v1.manifest.json",
-      "sha256": "c4af70fa296449446e4f987c346b82be6c03c82fdaf73e6e2f66e738d8450b2a",
-      "size": 14560
+      "sha256": "84172080609f9e457387d92a1b9abc617e289d1032928cfde8e70c2fa334eb78",
+      "size": 14735
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
     },
     {
       "path": "validation/results/method_factory/structural_path_randomization_v1/engine_stage.identity.json",
-      "sha256": "79db3c3f5c28b0f340f8bcedc55190189f83058a37492155e802e930d510d753",
-      "size": 5170
+      "sha256": "155aae01009e4e19d0bed1926588d2827b54ec2dfa78633bacfae1f1fbebdf0d",
+      "size": 5371
     },
     {
       "path": "validation/results/method_factory/structural_path_randomization_v1/native_stage.identity.json",
-      "sha256": "1082a23f699f4bb2bcf5338dc290c58ff2bf536c519634e2e905eb306fbd8071",
-      "size": 5259
+      "sha256": "5d59b0b700af0baef490cd3f7f3bd35f4ce29ad1856dada9e46a5c5005b9dbbb",
+      "size": 5275
     },
     {
       "path": "validation/results/method_factory/structural_path_randomization_v1/packaged_acceptance.identity.json",
-      "sha256": "98b18b2e60b4e81063983d233a7fea660fcaeccd6cf264b5fefd31bd7b9835d9",
-      "size": 58926
+      "sha256": "199713074b38ed5b81de36fcba0f388a4d070e67d49aebbfa30c1be96937e76e",
+      "size": 79536
     },
     {
       "path": "validation/results/method_factory/structural_path_randomization_v1/persistence_report.identity.json",
-      "sha256": "fc5e9a7fc8640b9757a13c387e1b92e699bd917377d1bbd47500cfbf7297b7b0",
-      "size": 4764
+      "sha256": "6738ee8f3c6e8fecb1d7350df3aa96b23b5989665c19a7778cd9be0a3a1be3c2",
+      "size": 4796
     },
     {
       "path": "validation/structural_path_randomization_method_promotion_audit.py",
-      "sha256": "60f067d3255410559592c5c3ff58b77aa877f4052d609bc2a195627bc212e100",
-      "size": 99637
+      "sha256": "95fef7b12299ca3bb27afc369ee83af6c7030f9d8b0e04b040681f3d63d8eb32",
+      "size": 100198
     },
     {
       "path": "validation/structural_path_randomization_v1_factory_audit.py",
@@ -115,18 +125,18 @@
     },
     {
       "path": "validation/test_legacy_release_adapters.py",
-      "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
-      "size": 13396
+      "sha256": "dbc695bede07f67595a76601614103ac21b9d6fc3512ddd7b26369a3dbc67c51",
+      "size": 15812
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_structural_path_randomization_method_promotion_audit.py",
-      "sha256": "f2e8cc03de3ca710a840b39a485b29e0352b0ab2414339e3466823b488d209eb",
-      "size": 47059
+      "sha256": "8fd8fa30c4c1d507eb3b99777af41f9ae7acfc4fe1685fd30fb40fd9d2caafb8",
+      "size": 47100
     }
   ]
 }

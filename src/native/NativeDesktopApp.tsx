@@ -19,6 +19,7 @@ import {
   Save,
   Search,
   Square,
+  TableProperties,
   UsersRound,
   X,
 } from "lucide-react";
@@ -38,8 +39,12 @@ import {
 } from "react";
 import { ModelCanvas, type ModelCanvasContextMenuRequest } from "../components/ModelCanvas";
 import { NativeDataImportDialog } from "./NativeDataImportDialog";
+import { NativeDatasetTransformDialog } from "./NativeDatasetTransformDialog";
 import { NativeRecodeDialog } from "./NativeRecodeDialog";
 import { NativeDataSurface } from "./NativeDataSurface";
+import { NativeModelInspector } from "./NativeModelInspector";
+import { NativeRecipeV4CbsemWorkspace } from "./NativeRecipeV4CbsemWorkspace";
+import { NativeSemParameterTable } from "./NativeSemParameterTable";
 import NativeWorkspaceExplorer, {
   NativeWorkspaceExplorerDialog,
   type NativeExplorerDialog,
@@ -47,7 +52,6 @@ import NativeWorkspaceExplorer, {
 import { nextNativeWorkspaceModelName } from "./nativeWorkspaceTree";
 import { canAddNativeModeration, nativeModerationCreationError } from "./nativeModeration";
 import { canCreateNativeHigherOrder } from "./nativeHigherOrder";
-import { nativePathDisplayLabel, nativePathLabelPatch, nativePathRolePatch, type NativePathRole } from "./nativePathProperties";
 import {
   nativeDataContextSelection,
   type NativeDataContextMenuRequest,
@@ -56,6 +60,8 @@ import {
 import { NativeDesktopController } from "./NativeDesktopController";
 import {
   NATIVE_ANALYSIS_CATALOG,
+  isNativeEstablishedWorkingAnalysisKindV1,
+  nativeCapabilitySettingsForWorkbenchKindV2,
   nativeAnalysisSettingsForWorkbenchKind,
   nativeWorkbenchAnalysisKindForSettings,
   type NativeWorkbenchAnalysisKind,
@@ -103,24 +109,46 @@ import {
   storeNativeRecentProjects,
   type NativeRecentProject,
 } from "./nativeRecentProjects";
-import { nativePlsReadiness } from "./nativePlsReadiness";
-import { isNativeDesktop, recodeNativeDatasetColumn } from "../services/projectService";
-import { useWorkspace } from "../store";
+import { nativePlsReadiness, type NativePlsReadiness } from "./nativePlsReadiness";
+import {
+  applyNativeDatasetTransformation,
+  getNativeCapabilityRegistryV2,
+  isNativeDesktop,
+  previewNativeDatasetTransformation,
+  recodeNativeDatasetColumn,
+} from "../services/projectService";
+import type { DatasetTransformationSpecV2 } from "../domain/datasetTransformationsV2";
+import { methodCapabilityAvailabilityV2 } from "../domain/methodCapabilityRegistryV2";
+import type { StandardSemModelV4AuthorityRecordV1, StandardSemModelV4EditorIntentV1 } from "../domain/standardSemModelV4Authority";
+import { compareUtf8StringsV1, type SemVariableV4 } from "../domain/semModelV4";
+import { useWorkspace, type StandardSemModelV4AuthorityCommitResult } from "../store";
 import type {
   AnalysisRun,
   AnalysisUiSettings,
-  ConstructData,
+  Dataset,
+  NativeCanonicalModelSpec,
   NativeExplorerSelection,
   NativeProjectExplorerMutation,
   NativeProjectExplorerMutationEventDetail,
   NativeSampleProjectId,
   RecodeColumnSpec,
+  RunMonitorStatus,
 } from "../types";
 import "./nativeDesktop.css";
 import "./nativeCanvas.css";
 
 export type { NativeSurface } from "./nativeCommands";
-type NativeDialog = "new-project" | "import-data" | "recode-data" | "group-setup" | "higher-order" | "moderation" | "calculation" | "export" | "trust" | "settings" | "run-details" | "shortcuts" | "about" | null;
+type NativeDialog = "new-project" | "import-data" | "recode-data" | "derive-variable" | "group-setup" | "higher-order" | "moderation" | "calculation" | "export" | "trust" | "settings" | "run-details" | "shortcuts" | "about" | null;
+
+export function completedRunNavigationTarget(
+  status: RunMonitorStatus,
+  lastRunId: string | null,
+  lastNavigatedCompletedRunId: string | null,
+): string | null {
+  return status === "completed" && lastRunId && lastRunId !== lastNavigatedCompletedRunId
+    ? lastRunId
+    : null;
+}
 declare global {
   interface Window {
     __QUICKPLS_SMOKE__?: {
@@ -131,6 +159,8 @@ declare global {
       loadProcessV2Fixture: () => { variables: number; models: number };
       loadHocFixture: () => { variables: number; models: number };
       loadDiagramFixture: (fixture: string) => unknown | Promise<unknown>;
+      modelCounts: () => { constructs: number; indicators: number };
+      modelPreflight: () => { canRun: boolean; ready: number; blockers: number; warnings: number };
       setView: (nextView: string) => void;
     };
   }
@@ -264,8 +294,10 @@ export function NativeDesktopApp() {
   const projectName = useWorkspace((state) => state.projectName);
   const projectPath = useWorkspace((state) => state.projectPath);
   const dataset = useWorkspace((state) => state.dataset);
+  const datasetDescriptorOnly = useWorkspace((state) => state.datasetDescriptorOnly);
   const projectWritable = useWorkspace((state) => state.projectWritable);
   const projectModels = useWorkspace((state) => state.projectModels);
+  const strictAuthorities = useWorkspace((state) => state.standardSemModelV4Authorities);
   const activeModelId = useWorkspace((state) => state.activeModelId);
   const savedReports = useWorkspace((state) => state.savedReports);
   const explorerSelection = useWorkspace((state) => state.explorerSelection);
@@ -290,10 +322,24 @@ export function NativeDesktopApp() {
   const addTwoStageInteraction = useWorkspace((state) => state.addTwoStageInteraction);
   const addHigherOrderConstruct = useWorkspace((state) => state.addHigherOrderConstruct);
   const pushToast = useWorkspace((state) => state.pushToast);
+  const strictAuthority = useWorkspace((state) => state.activeModelId
+    ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
+    : null);
+  const commitStandardIntent = useWorkspace((state) => state.commitStandardSemModelV4Intent);
   const loadProject = useWorkspace((state) => state.loadProject);
   const setProjectMeta = useWorkspace((state) => state.setProjectMeta);
   const setSelectedResultRun = useWorkspace((state) => state.setSelectedResultRun);
   const selectedResultRunId = useWorkspace((state) => state.selectedResultRunId);
+  const strictIntentCounter = useRef(0);
+  const nextStrictIntentId = (kind: string) => `standard:editor:${kind}:${Date.now()}:${++strictIntentCounter.current}`;
+  const commitStrictDesktopIntent = (intent: StandardSemModelV4EditorIntentV1, label: string) => {
+    void commitStandardIntent(intent).then((result) => {
+      if (result.status === "committed") pushToast({ tone: "success", title: `${label} committed`, detail: "The strict Standard model authority accepted the edit." });
+      else if (result.status === "blocked") pushToast({ tone: "error", title: `${label} blocked`, detail: `${result.diagnostic.message} ${result.diagnostic.correctiveAction}` });
+      else if (result.status === "stale") pushToast({ tone: "warning", title: `${label} stale`, detail: "The active authority changed; review the current model and retry." });
+      else pushToast({ tone: "error", title: `${label} rejected`, detail: result.error instanceof Error ? result.error.message : String(result.error) });
+    });
+  };
   const [surface, setSurface] = useState<NativeSurface>("launcher");
   const [dialog, setDialog] = useState<NativeDialog>(null);
   const [explorerDialog, setExplorerDialog] = useState<NativeExplorerDialog | null>(null);
@@ -303,6 +349,8 @@ export function NativeDesktopApp() {
   const [dialogScope, setDialogScope] = useState(0);
   const recodeBusyRef = useRef(false);
   const [recodeBusy, setRecodeBusy] = useState(false);
+  const deriveBusyRef = useRef(false);
+  const [deriveBusy, setDeriveBusy] = useState(false);
   const [recodeSourceColumn, setRecodeSourceColumn] = useState("");
   const [groupSetupColumn, setGroupSetupColumn] = useState("");
   const dialogReturnFocusRef = useRef<HTMLElement | null>(null);
@@ -330,19 +378,23 @@ export function NativeDesktopApp() {
     }, 0);
   }, []);
   const openDialog = useCallback((next: Exclude<NativeDialog, null>) => {
-    if (currentDialogRef.current === "recode-data" && recodeBusyRef.current) return;
+    if ((currentDialogRef.current === "recode-data" && recodeBusyRef.current)
+      || (currentDialogRef.current === "derive-variable" && deriveBusyRef.current)) return;
     const active = document.activeElement;
     dialogReturnFocusRef.current = active instanceof HTMLElement ? active : document.getElementById("nd-main");
     const nextScope = dialogScopeRef.current + 1;
     dialogScopeRef.current = nextScope;
     currentDialogRef.current = next;
     recodeBusyRef.current = false;
+    deriveBusyRef.current = false;
     setRecodeBusy(false);
+    setDeriveBusy(false);
     setDialogScope(nextScope);
     setDialog(next);
   }, []);
   const closeDialog = useCallback(() => {
-    if (currentDialogRef.current === "recode-data" && recodeBusyRef.current) return;
+    if ((currentDialogRef.current === "recode-data" && recodeBusyRef.current)
+      || (currentDialogRef.current === "derive-variable" && deriveBusyRef.current)) return;
     const closingCalculation = currentDialogRef.current === "calculation";
     currentDialogRef.current = null;
     setDialog(null);
@@ -362,6 +414,19 @@ export function NativeDesktopApp() {
     setDialog(null);
     restoreDialogFocus();
   }, [restoreDialogFocus]);
+  const setScopedDeriveBusy = useCallback((scope: number, busy: boolean) => {
+    if (scope !== dialogScopeRef.current || currentDialogRef.current !== "derive-variable") return;
+    deriveBusyRef.current = busy;
+    setDeriveBusy(busy);
+  }, []);
+  const completeDeriveDialog = useCallback((scope: number) => {
+    if (scope !== dialogScopeRef.current || currentDialogRef.current !== "derive-variable") return;
+    deriveBusyRef.current = false;
+    setDeriveBusy(false);
+    currentDialogRef.current = null;
+    setDialog(null);
+    restoreDialogFocus();
+  }, [restoreDialogFocus]);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<NativeContextMenuState | null>(null);
   const closeContextMenu = useCallback(() => setContextMenu(null), []);
@@ -372,10 +437,23 @@ export function NativeDesktopApp() {
   const [selectedTableId, setSelectedTableId] = useState("model_estimates");
   const [calculationKind, setCalculationKind] = useState<NativeWorkbenchAnalysisKind>(() => nativeWorkbenchAnalysisKindForSettings(analysisSettings));
   const [calculationDraft, setCalculationDraft] = useState<AnalysisUiSettings>(() => ({ ...analysisSettings }));
+  const [experimentalWarningShownSessionKeys, setExperimentalWarningShownSessionKeys] = useState<ReadonlySet<string>>(() => new Set());
+  const [nativeRegistryVerification, setNativeRegistryVerification] = useState<"browser" | "pending" | "verified" | "failed">(
+    () => isNativeDesktop() ? "pending" : "browser",
+  );
   const [newProjectName, setNewProjectName] = useState("Untitled project");
-  const previousRunStatus = useRef(runMonitor.status);
+  const lastNavigatedCompletedRunId = useRef<string | null>(null);
   const [recentProjects, setRecentProjects] = useState<NativeRecentProject[]>(() => loadNativeRecentProjects(window.localStorage));
   const smokeSeeded = useRef(false);
+
+  useEffect(() => {
+    if (!isNativeDesktop()) return;
+    let active = true;
+    void getNativeCapabilityRegistryV2()
+      .then(() => { if (active) setNativeRegistryVerification("verified"); })
+      .catch(() => { if (active) setNativeRegistryVerification("failed"); });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const compactLayout = window.matchMedia(COMPACT_PANE_MEDIA_QUERY);
@@ -397,13 +475,27 @@ export function NativeDesktopApp() {
     [savedReports, selectedRun],
   );
   const activeEditableModelName = useMemo(
-    () => projectModels.find((model) => model.id === activeModelId)?.name ?? "Model",
-    [activeModelId, projectModels],
+    () => strictAuthorities[activeModelId ?? ""]?.model.name
+      ?? projectModels.find((model) => model.id === activeModelId)?.name
+      ?? "Model",
+    [activeModelId, projectModels, strictAuthorities],
   );
+  const explorerModels = useMemo(() => [
+    ...projectModels,
+    ...Object.values(strictAuthorities)
+      .filter((authority) => !projectModels.some((model) => model.id === authority.model.id))
+      .map((authority) => ({
+        id: authority.model.id,
+        name: authority.model.name,
+      } as NativeCanonicalModelSpec)),
+  ], [projectModels, strictAuthorities]);
   const canOpenContextModel = useMemo(() => {
     const modelId = surface === "results" ? selectedRun?.modelId : activeModelId;
-    return Boolean(modelId && projectModels.some((model) => model.id === modelId));
-  }, [activeModelId, projectModels, selectedRun?.modelId, surface]);
+    return Boolean(modelId && (
+      projectModels.some((model) => model.id === modelId)
+      || strictAuthorities[modelId]
+    ));
+  }, [activeModelId, projectModels, selectedRun?.modelId, strictAuthorities, surface]);
   const selectedRunId = selectedRun?.id ?? "";
   const resultNavigation = useMemo(() => navigationWithPrecision(buildNativeResultNavigation(selectedRun), uiPreferences.defaultPrecision), [selectedRun, uiPreferences.defaultPrecision]);
   const resultTables = resultNavigation.tables;
@@ -425,6 +517,18 @@ export function NativeDesktopApp() {
     () => nativePlsReadiness({ dataset, nodes, edges, settings: calculationSettings, nativeDesktop: isNativeDesktop() }),
     [calculationSettings, dataset, edges, nodes],
   );
+  const recordExperimentalWarningShown = useCallback((sessionKeys: readonly string[]) => {
+    setExperimentalWarningShownSessionKeys((current) => {
+      const next = new Set(current);
+      let changed = false;
+      for (const sessionKey of sessionKeys) {
+        if (next.has(sessionKey)) continue;
+        next.add(sessionKey);
+        changed = true;
+      }
+      return changed ? next : current;
+    });
+  }, []);
   const commandContext = useMemo<NativeCommandContext>(() => {
     const selectedConstructs = new Set([
       ...nodes.filter((node) => node.selected).map((node) => node.id),
@@ -448,7 +552,7 @@ export function NativeDesktopApp() {
       hasCompletedRun: completedRuns.length > 0,
       selectedResultSaved,
       canOpenContextModel,
-      canCalculate: modelReadiness.canRun,
+      canCalculate: modelReadiness.canRun && !strictAuthority,
       canUndo: past.length > 0,
       canRedo: future.length > 0,
       canRecode: Boolean(selectedColumn) && projectWritable && (dataset.kind ?? "raw") === "raw",
@@ -462,9 +566,9 @@ export function NativeDesktopApp() {
       selection,
       calculationStatus: runMonitor.status,
     };
-  }, [analysisSettings.groupColumn, canOpenContextModel, completedRuns.length, dataset.columns.length, dataset.kind, explorerSelection, future.length, modelReadiness.canRun, nodes, past.length, projectName, projectWritable, propertiesOpen, runMonitor.status, selectedColumn, selectedEdgeId, selectedNodeId, selectedResultSaved, selectedRun, surface]);
+  }, [analysisSettings.groupColumn, canOpenContextModel, completedRuns.length, dataset.columns.length, dataset.kind, explorerSelection, future.length, modelReadiness.canRun, nodes, past.length, projectName, projectWritable, propertiesOpen, runMonitor.status, selectedColumn, selectedEdgeId, selectedNodeId, selectedResultSaved, selectedRun, strictAuthority, surface]);
 
-  const dataMutationsLocked = isNativeCalculationActive(runMonitor.status);
+  const dataMutationsLocked = datasetDescriptorOnly || isNativeCalculationActive(runMonitor.status);
 
   const navigate = useCallback((next: NativeSurface) => {
     setSurface(next);
@@ -514,13 +618,18 @@ export function NativeDesktopApp() {
   }, [resultNavigation.defaultItemId, resultNavigation.runId]);
 
   useEffect(() => {
-    if (runMonitor.status === "completed" && previousRunStatus.current !== "completed") {
+    const completedRunId = completedRunNavigationTarget(
+      runMonitor.status,
+      runMonitor.lastRunId,
+      lastNavigatedCompletedRunId.current,
+    );
+    if (completedRunId) {
+      lastNavigatedCompletedRunId.current = completedRunId;
       currentDialogRef.current = null;
       setDialog(null);
       navigate("results");
     }
-    previousRunStatus.current = runMonitor.status;
-  }, [runMonitor.status]);
+  }, [navigate, runMonitor.lastRunId, runMonitor.status]);
 
   useEffect(() => {
     if (dialog || explorerDialog) {
@@ -787,13 +896,37 @@ export function NativeDesktopApp() {
         return { variables: 3, models: 0 };
       },
       loadDiagramFixture: async (fixture: string) => {
-        if (fixture !== "large") return undefined;
+        if (fixture !== "large" && fixture !== "large-stress") return undefined;
         const { largeModelSmokeProject } = await import("../data/largeModelSmoke");
-        const project = largeModelSmokeProject();
+        const profile = fixture === "large-stress" ? "stress" : "applied";
+        const project = largeModelSmokeProject(profile);
         loadProject({ ...project, runs: [], diagramMode: "sem" });
-        setProjectMeta("Large model acceptance fixture", null);
+        setProjectMeta(profile === "stress" ? "Stress model acceptance fixture" : "Large model acceptance fixture", null);
         navigate("model");
         return { constructs: project.nodes.length, indicators: project.dataset.columns.length };
+      },
+      modelCounts: () => {
+        const state = useWorkspace.getState();
+        return {
+          constructs: state.nodes.length,
+          indicators: state.nodes.reduce((total, node) => total + node.data.indicators.length, 0),
+        };
+      },
+      modelPreflight: () => {
+        const state = useWorkspace.getState();
+        const readiness = nativePlsReadiness({
+          dataset: state.dataset,
+          nodes: state.nodes,
+          edges: state.edges,
+          settings: nativeAnalysisSettingsForWorkbenchKind(state.analysisSettings, "pls_algorithm"),
+          nativeDesktop: isNativeDesktop(),
+        });
+        return {
+          canRun: readiness.canRun,
+          ready: readiness.items.filter((item) => item.status === "ready").length,
+          blockers: readiness.blockers.length,
+          warnings: readiness.warnings.length,
+        };
       },
       setView: (view: string) => navigate(view === "welcome" || view === "home" ? "launcher" : view === "models" || view === "model" ? "model" : view === "runs" || view === "results" ? "results" : "data"),
     };
@@ -824,6 +957,21 @@ export function NativeDesktopApp() {
     commitDatasetVersion(mutation);
     setSelectedColumn(mutation.version.targetColumn ?? spec.targetColumn);
     pushToast({ tone: "success", title: "Recoded variable created", detail: mutation.version.summary });
+  };
+
+  const previewDerivedVariable = async (spec: DatasetTransformationSpecV2) => {
+    if (!isNativeDesktop()) throw new Error("Derived variables are available only in the installed Windows app.");
+    return previewNativeDatasetTransformation(dataset.id, spec);
+  };
+
+  const createDerivedVariable = async (spec: DatasetTransformationSpecV2, outputDatasetName: string) => {
+    if (!isNativeDesktop()) throw new Error("Derived variables are available only in the installed Windows app.");
+    const mutation = await applyNativeDatasetTransformation(dataset.id, spec, outputDatasetName);
+    commitDatasetVersion(mutation);
+    const firstTarget = spec.kind === "missing_markers" ? spec.columns[0]?.target_column : spec.target_column;
+    setSelectedColumn(mutation.version.targetColumn ?? firstTarget ?? null);
+    pushToast({ tone: "success", title: "Derived dataset created", detail: mutation.version.summary });
+    return mutation;
   };
 
   const dispatchNativeAction = (action: NativeCommandAction, target?: NativeDataContextTarget) => {
@@ -903,6 +1051,7 @@ export function NativeDesktopApp() {
       case "model.add-higher-order": openDialog("higher-order"); return;
       case "model.add-moderating-effect": openDialog("moderation"); return;
       case "model.edit-selection": {
+        window.dispatchEvent(new CustomEvent("quickpls:model-inspector-show-editor"));
         const focusModelSelectionEditor = () => {
           const workspace = useWorkspace.getState();
           const editorId = workspace.selectedNodeId
@@ -1074,7 +1223,7 @@ export function NativeDesktopApp() {
         datasetName={dataset.name}
         datasetRows={dataset.rowCount ?? dataset.rows.length}
         datasetColumns={dataset.columns.length}
-        models={projectModels}
+        models={explorerModels}
         activeModelId={activeModelId}
         reports={savedReports}
         selection={explorerSelection}
@@ -1103,15 +1252,16 @@ export function NativeDesktopApp() {
         mutationsLocked={dataMutationsLocked}
         onNewModel={() => dispatchNativeAction({ id: "explorer.new-model" })}
         onAnalyze={() => dispatchNativeAction({ id: "calculation.open" })}
+        onDerive={() => openDialog("derive-variable")}
         onContextMenuRequest={onDataContextMenuRequest}
       /> : null}
-      {surface === "model" ? <ModelSurface modelName={activeEditableModelName} propertiesOpen={propertiesOpen} onContextMenuRequest={onModelCanvasContextMenuRequest} /> : null}
-      {surface === "results" ? <Suspense fallback={<ResultsSurfaceLoading propertiesOpen={propertiesOpen} />}><NativeResultsSurface runs={completedRuns} selectedRun={selectedRun} selectedRunId={selectedRunId} setSelectedRunId={setSelectedResultRun} navigation={resultNavigation} selectedItem={selectedResultItem} selectedTable={selectedTable} setSelectedTableId={setSelectedTableId} propertiesOpen={propertiesOpen} /></Suspense> : null}
+      {surface === "model" ? <ModelSurface modelName={activeEditableModelName} propertiesOpen={propertiesOpen} readiness={modelReadiness} onContextMenuRequest={onModelCanvasContextMenuRequest} /> : null}
+      {surface === "results" ? <Suspense fallback={<ResultsSurfaceLoading propertiesOpen={propertiesOpen} />}><NativeResultsSurface runs={completedRuns} selectedRun={selectedRun} selectedRunId={selectedRunId} setSelectedRunId={setSelectedResultRun} navigation={resultNavigation} selectedItem={selectedResultItem} selectedTable={selectedTable} setSelectedTableId={setSelectedTableId} propertiesOpen={propertiesOpen} openMethodDetails={() => openDialog("trust")} /></Suspense> : null}
     </div>
     {contextMenu ? <ContextCommandMenu items={contextMenuItems} state={contextMenu} close={closeContextMenu} /> : null}
     <NativeToastStack toasts={toasts} dismiss={dismissToast} />
     <StatusBar surface={surface} projectName={projectName} datasetName={dataset.name} cases={dataset.rowCount ?? dataset.rows.length} constructs={nodes.length} runMonitor={runMonitor} />
-    {dialog ? <DialogHost dialog={dialog} close={closeDialog} title={dialogTitle(dialog)} dismissible={dialog === "recode-data" ? !recodeBusy : dialog !== "calculation" || !["queued", "validating", "running", "cancelling"].includes(runMonitor.status)}>
+    {dialog ? <DialogHost dialog={dialog} close={closeDialog} title={dialogTitle(dialog)} dismissible={dialog === "recode-data" ? !recodeBusy : dialog === "derive-variable" ? !deriveBusy : dialog !== "calculation" || !["queued", "validating", "running", "cancelling"].includes(runMonitor.status)}>
       {dialog === "new-project" ? <NewProjectDialog value={newProjectName} setValue={setNewProjectName} close={closeDialog} create={createProject} /> : null}
       {dialog === "import-data" ? <NativeDataImportDialog close={closeDialog} importData={beginDataImport} /> : null}
       {dialog === "recode-data" ? <NativeRecodeDialog
@@ -1126,6 +1276,21 @@ export function NativeDesktopApp() {
         onBusyChange={setScopedRecodeBusy}
         recode={createRecode}
       /> : null}
+      {dialog === "derive-variable" ? <NativeDatasetTransformDialog
+        key={dialogScope}
+        dataset={dataset}
+        selectedColumn={selectedColumn}
+        nativeDesktop={isNativeDesktop()}
+        projectWritable={projectWritable}
+        mutationsLocked={dataMutationsLocked}
+        datasetResident={isNativeDesktop() || (dataset.rowCount ?? dataset.rows.length) === dataset.rows.length}
+        dialogScope={dialogScope}
+        close={closeDialog}
+        complete={completeDeriveDialog}
+        onBusyChange={setScopedDeriveBusy}
+        previewTransformation={previewDerivedVariable}
+        applyTransformation={createDerivedVariable}
+      /> : null}
       {dialog === "group-setup" ? <Suspense fallback={<UtilityDialogLoading label="Loading complete dataset groups" />}><NativeGroupSetupDialog
         key={dialogScope}
         dataset={dataset}
@@ -1135,12 +1300,32 @@ export function NativeDesktopApp() {
         nativeDesktop={isNativeDesktop()}
         projectWritable={projectWritable}
         apply={(patch) => {
-          setAnalysisSettings(patch);
-          pushToast({
-            tone: "success",
-            title: patch.groupColumn ? "Groups configured" : "Groups cleared",
-            detail: patch.groupColumn ? `${patch.groupColumn}: ${patch.groupAValue} vs ${patch.groupBValue}` : "No grouping variable is configured.",
-          });
+          if (strictAuthority) {
+            const grouping = patch.groupColumn
+              ? strictAuthority.model.variables.find((variable) => variable.kind === "observed" && variable.source_column === patch.groupColumn)
+              : null;
+            if (patch.groupColumn && (!grouping || grouping.kind !== "observed")) {
+              pushToast({ tone: "error", title: "Groups rejected", detail: "The selected grouping variable is not present in the strict model authority." });
+              return;
+            }
+            commitStrictDesktopIntent({
+              kind: "set_group",
+              group: grouping?.kind === "observed"
+                ? {
+                  kind: "observed_groups",
+                  grouping_variable: grouping.id,
+                  levels: [patch.groupAValue, patch.groupBValue].flatMap((value, index) => value ? [{ id: `group-${index + 1}`, value, label: value }] : []),
+                }
+                : { kind: "single_group" },
+            }, patch.groupColumn ? "Groups" : "Group clearing");
+          } else {
+            setAnalysisSettings(patch);
+            pushToast({
+              tone: "success",
+              title: patch.groupColumn ? "Groups configured" : "Groups cleared",
+              detail: patch.groupColumn ? `${patch.groupColumn}: ${patch.groupAValue} vs ${patch.groupBValue}` : "No grouping variable is configured.",
+            });
+          }
         }}
         close={closeDialog}
       /></Suspense> : null}
@@ -1149,6 +1334,20 @@ export function NativeDesktopApp() {
         edges={edges}
         selectedComponentIds={nodes.filter((node) => node.selected || node.id === selectedNodeId).map((node) => node.id)}
         create={(draft) => {
+          if (strictAuthority) {
+            const termId = nextStrictIntentId("higher-order-term");
+            const outputId = nextStrictIntentId("higher-order-output");
+            commitStrictDesktopIntent({
+              kind: "add_higher_order",
+              term_id: termId,
+              output_id: outputId,
+              label: draft.name,
+              components: draft.components,
+              approach: "disjoint_two_stage",
+              measurement_type: "reflective_reflective",
+            }, "Higher-order construct");
+            return { status: "created", constructId: outputId };
+          }
           const result = addHigherOrderConstruct(draft);
           if (result.status === "created") {
             pushToast({ tone: "success", title: "Higher-order construct created", detail: "Use the Path tool to connect it to a measured outcome, then run PLS-SEM Algorithm." });
@@ -1164,6 +1363,22 @@ export function NativeDesktopApp() {
         edges={edges}
         selectedEdgeId={selectedEdgeId}
         create={(predictor, moderator, outcome) => {
+          if (strictAuthority && selectedEdgeId) {
+            const termId = nextStrictIntentId("interaction-term");
+            const outputId = nextStrictIntentId("interaction-output");
+            commitStrictDesktopIntent({
+              kind: "add_interaction",
+              term_id: termId,
+              output_id: outputId,
+              label: `${predictor} × ${moderator}`,
+              predictor,
+              moderator,
+              focal_relation: selectedEdgeId,
+              outcome,
+              method: "two_stage",
+            }, "Moderating effect");
+            return { status: "created", interactionId: outputId };
+          }
           const result = addTwoStageInteraction(predictor, moderator, outcome);
           if (result.status === "created") {
             pushToast({ tone: "success", title: "Moderating effect created", detail: "Two-stage interaction and required main-effect paths were added to the model." });
@@ -1174,12 +1389,35 @@ export function NativeDesktopApp() {
         }}
         close={closeDialog}
       /></Suspense> : null}
-      {dialog === "calculation" ? <Suspense fallback={<UtilityDialogLoading label="Opening calculation setup" />}><NativeCalculationDialog kind={calculationKind} setKind={setCalculationKind} settings={calculationSettings} setSettings={(patch) => setCalculationDraft((current) => ({ ...current, ...patch }))} readiness={calculationReadiness} runMonitor={runMonitor} dataset={dataset} analysisColumns={calculationAnalysisColumns} nodes={nodes} edges={edges} start={startCalculation} cancel={() => commandEvent("cancel-analysis")} close={closeDialog} /></Suspense> : null}
+      {dialog === "calculation" ? <Suspense fallback={<UtilityDialogLoading label="Opening calculation setup" />}><NativeCalculationDialog
+        kind={calculationKind}
+        setKind={setCalculationKind}
+        settings={calculationSettings}
+        setSettings={(patch) => setCalculationDraft((current) => ({ ...current, ...patch }))}
+        readiness={calculationReadiness}
+        runMonitor={runMonitor}
+        dataset={dataset}
+        analysisColumns={calculationAnalysisColumns}
+        nodes={nodes}
+        edges={edges}
+        experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled}
+        experimentalWarningShownSessionKeys={experimentalWarningShownSessionKeys}
+        onExperimentalWarningShown={recordExperimentalWarningShown}
+        openMethodDetails={() => openDialog("trust")}
+        registryUnavailableReason={nativeRegistryVerification === "pending"
+          ? "Checking the installed calculation catalogue."
+          : nativeRegistryVerification === "failed"
+            ? "QuickPLS could not verify the installed calculation catalogue. Restart the app or reinstall this build before calculating."
+            : null}
+        start={startCalculation}
+        cancel={() => commandEvent("cancel-analysis")}
+        close={closeDialog}
+      /></Suspense> : null}
       {dialog === "export" && selectedRun ? <Suspense fallback={<UtilityDialogLoading label="Preparing export options" />}><NativeExportDialog run={selectedRun} tables={resultTables} close={closeDialog} /></Suspense> : null}
       {dialog === "run-details" && selectedRun ? <RunDetailsDialog run={selectedRun} /> : null}
-      {dialog === "trust" || dialog === "settings" ? <Suspense fallback={<UtilityDialogLoading label={dialog === "trust" ? "Opening method scope" : "Opening preferences"} />}><NativeUtilityDialog kind={dialog} close={closeDialog} /></Suspense> : null}
+      {dialog === "trust" || dialog === "settings" ? <Suspense fallback={<UtilityDialogLoading label={dialog === "trust" ? "Opening Method Details" : "Opening preferences"} />}><NativeUtilityDialog kind={dialog} close={closeDialog} run={dialog === "trust" && surface === "results" ? selectedRun : null} /></Suspense> : null}
       {dialog === "shortcuts" ? <ShortcutsDialog /> : null}
-      {dialog === "about" ? <AboutDialog /> : null}
+      {dialog === "about" ? <AboutDialog settings={analysisSettings} experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled} /> : null}
     </DialogHost> : null}
     {explorerDialog ? <NativeWorkspaceExplorerDialog
       dialog={explorerDialog}
@@ -1416,54 +1654,46 @@ export function Launcher({ projectName, projectPath, datasetName, runs, recentPr
   </div>;
 }
 
-function CommitTextInput({ id, value, onCommit, maxLength, allowEmpty = false }: { id?: string; value: string; onCommit: (value: string) => void; maxLength?: number; allowEmpty?: boolean }) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
-  const commit = () => {
-    const next = draft.trim();
-    if ((next || allowEmpty) && next !== value) onCommit(next); else setDraft(value);
-  };
-  return <input id={id} type="text" value={draft} maxLength={maxLength} onChange={(event) => setDraft(event.target.value)} onBlur={commit} onKeyDown={(event) => {
-    if (event.key === "Enter") { event.preventDefault(); event.currentTarget.blur(); } else if (event.key === "Escape") { setDraft(value); event.currentTarget.blur(); }
-  }} />;
-}
-
-function ModelSurface({ modelName, propertiesOpen, onContextMenuRequest }: { modelName: string; propertiesOpen: boolean; onContextMenuRequest: (request: ModelCanvasContextMenuRequest) => void }) {
+function ModelSurface({ modelName, propertiesOpen, readiness, onContextMenuRequest }: { modelName: string; propertiesOpen: boolean; readiness: NativePlsReadiness; onContextMenuRequest: (request: ModelCanvasContextMenuRequest) => void }) {
+  const activeModelId = useWorkspace((state) => state.activeModelId);
+  const experimentalSemAuthoringEnabled = useWorkspace((state) => state.uiPreferences.experimentalLabsEnabled);
   const dataset = useWorkspace((state) => state.dataset);
   const groupingVariable = useWorkspace((state) => state.analysisSettings.groupColumn?.trim() ?? "");
   const nodes = useWorkspace((state) => state.nodes);
-  const edges = useWorkspace((state) => state.edges);
-  const selectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
-  const updateEdge = useWorkspace((state) => state.updateEdge);
-  const reverseSelectedPath = useWorkspace((state) => state.reverseSelectedPath);
-  const setSelectedPathRouting = useWorkspace((state) => state.setSelectedPathRouting);
-  const removeSelection = useWorkspace((state) => state.removeSelection);
-  const diagramLayout = useWorkspace((state) => state.diagramLayout);
   const selectedNodeId = useWorkspace((state) => state.selectedNodeId);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
-  const updateConstruct = useWorkspace((state) => state.updateConstruct);
   const assignIndicator = useWorkspace((state) => state.assignIndicator);
   const addConstruct = useWorkspace((state) => state.addConstruct);
+  const strictAuthority = useWorkspace((state) => state.activeModelId
+    ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
+    : null);
+  const commitStandardIntent = useWorkspace((state) => state.commitStandardSemModelV4Intent);
+  const [authorityStatus, setAuthorityStatus] = useState<string | null>(null);
   const selected = nodes.find((node) => node.id === selectedNodeId);
   const selectedAssignableConstruct = selected?.data.semantic === "interaction" || selected?.data.semantic === "higher_order" ? undefined : selected;
-  const selectedPath = edges.find((edge) => edge.id === selectedEdgeId && !edge.id.startsWith("measurement::"));
-  const source = nodes.find((node) => node.id === selectedPath?.source)?.data.label ?? selectedPath?.source ?? "";
-  const target = nodes.find((node) => node.id === selectedPath?.target)?.data.label ?? selectedPath?.target ?? "";
-  const routing = diagramLayout.edgeLayouts[selectedPath?.id ?? ""]?.routing ?? "straight";
-  const pathRole = selectedPath?.data?.role === "control" || selectedPath?.data?.role === "covariance" ? selectedPath.data.role : "structural";
-  const selectedPathSupportsModeration = selectedPath ? nodes.some((node) => {
-    const interaction = node.data.semantic === "interaction" ? node.data.interaction : undefined;
-    return interaction && [
-      [interaction.predictor, interaction.outcome],
-      [interaction.moderator, interaction.outcome],
-      [node.id, interaction.outcome],
-    ].some(([sourceId, targetId]) => selectedPath.source === sourceId && selectedPath.target === targetId);
-  }) : false;
-  const setPathRole = (role: NativePathRole) => {
-    if (!selectedPath) return;
-    updateEdge(selectedPath.id, nativePathRolePatch(selectedPath, role));
-  };
 
+  type ModelDocumentView = "canvas" | "parameters" | "cbsem_labs";
+  const [documentView, setDocumentView] = useState<ModelDocumentView>("canvas");
+  useEffect(() => setDocumentView("canvas"), [activeModelId, experimentalSemAuthoringEnabled]);
+  const selectDocumentView = (view: ModelDocumentView, moveFocus = false) => {
+    if (view === "parameters" && !experimentalSemAuthoringEnabled) return;
+    setDocumentView(view);
+    if (moveFocus) window.setTimeout(() => document.getElementById({ canvas: "nd-model-canvas-tab", parameters: "nd-model-parameter-tab", cbsem_labs: "nd-model-cbsem-labs-tab" }[view])?.focus(), 0);
+  };
+  const onDocumentTabKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const views: ModelDocumentView[] = experimentalSemAuthoringEnabled ? ["canvas", "parameters", "cbsem_labs"] : ["canvas", "cbsem_labs"];
+    const currentIndex = Math.max(0, views.indexOf(documentView));
+    const nextIndex = event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? views.length - 1
+        : event.key === "ArrowLeft"
+          ? (currentIndex - 1 + views.length) % views.length
+          : (currentIndex + 1) % views.length;
+    selectDocumentView(views[nextIndex], true);
+  };
   const [query, setQuery] = useState("");
   const visibleColumns = dataset.columns.filter((column) => column.toLowerCase().includes(query.trim().toLowerCase()));
   const dragVariable = (event: DragEvent<HTMLButtonElement>, variable: string) => {
@@ -1481,9 +1711,22 @@ function ModelSurface({ modelName, propertiesOpen, onContextMenuRequest }: { mod
       setSelectedNode(owner.id);
       window.dispatchEvent(new CustomEvent("quickpls:focus-construct", { detail: { id: owner.id } }));
     } else if (selectedAssignableConstruct) {
-      assignIndicator(selectedAssignableConstruct.id, variable);
+      if (strictAuthority) {
+        setAuthorityStatus("Committing strict indicator assignment…");
+        void commitStandardIntent({ kind: "assign_indicators", construct_id: selectedAssignableConstruct.id, indicators: [observedForStrictDesktop(strictAuthority, dataset, variable)] })
+          .then((result) => setAuthorityStatus(desktopAuthorityResultMessage(result)));
+      } else assignIndicator(selectedAssignableConstruct.id, variable);
     } else {
-      addConstruct(undefined, [variable]);
+      if (strictAuthority) {
+        setAuthorityStatus("Committing strict construct creation…");
+        void commitStandardIntent({
+          kind: "add_construct",
+          variable_id: `standard:editor:construct:${Date.now()}`,
+          label: variable,
+          representation: { kind: "composite", weighting: { kind: "mode_a" } },
+          indicators: [observedForStrictDesktop(strictAuthority, dataset, variable)],
+        }).then((result) => setAuthorityStatus(desktopAuthorityResultMessage(result)));
+      } else addConstruct(undefined, [variable]);
     }
   };
   return <div className={`nd-three-pane nd-model-workspace${propertiesOpen ? "" : " no-properties"}`}>
@@ -1515,53 +1758,82 @@ function ModelSurface({ modelName, propertiesOpen, onContextMenuRequest }: { mod
           ><Square size={9} fill="currentColor" />{column}{isGroupingVariable ? <small>Group</small> : owner ? <Check size={12} /> : null}</button>;
         })}
       </div>
+      {authorityStatus ? <p className="nd-authority-feedback" role="status" aria-live="polite">{authorityStatus}</p> : null}
       <PaneTitle icon={<Circle size={13} />} title="Constructs" />
       <div className="nd-variable-list">
         {nodes.map((node) => <button key={node.id} className={selectedNodeId === node.id ? "active" : ""} onClick={() => setSelectedNode(node.id)}>{node.data.semantic === "interaction" ? <GitBranch size={11} /> : <Circle size={11} />}{node.data.label}<small>{node.data.semantic === "interaction" ? "INT" : node.data.semantic === "higher_order" ? "HOC" : node.data.indicators.length}</small></button>)}
       </div>
     </aside>
     <section className="nd-document nd-model-document">
-      <div className="nd-document-tab"><GitBranch size={14} /><span title={modelName}>{modelName}</span></div>
-      <div className="nd-canvas-host"><ModelCanvas onContextMenuRequest={onContextMenuRequest} /></div>
+      <div className="nd-model-document-tabs" role="tablist" aria-label={`${modelName} views`}>
+        <span className="nd-model-document-title" title={modelName}><GitBranch size={14} aria-hidden="true" />{modelName}</span>
+        <button
+          id="nd-model-canvas-tab"
+          type="button"
+          role="tab"
+          aria-selected={documentView === "canvas"}
+          aria-controls="nd-model-canvas-panel"
+          tabIndex={documentView === "canvas" ? 0 : -1}
+          onClick={() => selectDocumentView("canvas")}
+          onKeyDown={onDocumentTabKeyDown}
+        ><GitBranch size={13} aria-hidden="true" />Canvas</button>
+        {experimentalSemAuthoringEnabled ? <button
+          id="nd-model-parameter-tab"
+          type="button"
+          role="tab"
+          aria-selected={documentView === "parameters"}
+          aria-controls="nd-model-parameter-panel"
+          tabIndex={documentView === "parameters" ? 0 : -1}
+          onClick={() => selectDocumentView("parameters")}
+         onKeyDown={onDocumentTabKeyDown}
+        ><TableProperties size={13} aria-hidden="true" />Parameter Table <span className="nd-experimental-chip">Experimental</span></button> : null}
+        <button
+          id="nd-model-cbsem-labs-tab"
+          type="button"
+          role="tab"
+          aria-selected={documentView === "cbsem_labs"}
+          aria-controls="nd-model-cbsem-labs-panel"
+          tabIndex={documentView === "cbsem_labs" ? 0 : -1}
+          onClick={() => selectDocumentView("cbsem_labs")}
+          onKeyDown={onDocumentTabKeyDown}
+        ><Calculator size={13} aria-hidden="true" />Exact CB-SEM</button>
+      </div>
+      {documentView === "canvas" ? <div id="nd-model-canvas-panel" className="nd-canvas-host" role="tabpanel" aria-labelledby="nd-model-canvas-tab"><ModelCanvas onContextMenuRequest={onContextMenuRequest} /></div> : null}
+      {experimentalSemAuthoringEnabled && documentView === "parameters" ? <NativeSemParameterTable modelName={modelName} onShowCanvas={() => selectDocumentView("canvas")} /> : null}
+      {documentView === "cbsem_labs" ? <NativeRecipeV4CbsemWorkspace modelName={modelName} experimentalLabsEnabled={false} /> : null}
     </section>
-    {propertiesOpen ? <aside className="nd-properties" aria-label="Model properties">
-      <PaneTitle title={selected ? "Construct" : selectedPath ? "Path" : "Model properties"} />
-      {selected?.data.semantic === "interaction" && selected.data.interaction ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>
-        <label>Name<CommitTextInput id="nd-model-construct-name" value={selected.data.label} onCommit={(label) => updateConstruct(selected.id, { label })} /></label>
-        <dl className="nd-property-list">
-          <div><dt>Predictor</dt><dd>{nodes.find((node) => node.id === selected.data.interaction?.predictor)?.data.label ?? selected.data.interaction.predictor}</dd></div>
-          <div><dt>Moderator</dt><dd>{nodes.find((node) => node.id === selected.data.interaction?.moderator)?.data.label ?? selected.data.interaction.moderator}</dd></div>
-          <div><dt>Outcome</dt><dd>{nodes.find((node) => node.id === selected.data.interaction?.outcome)?.data.label ?? selected.data.interaction.outcome}</dd></div>
-          <div><dt>Method</dt><dd>Two-stage product score</dd></div>
-        </dl>
-        <p className="nd-property-note">Generated interaction terms do not accept manifest indicators.</p>
-        <div className="nd-property-actions"><button type="button" className="danger" onClick={removeSelection}>Delete interaction</button></div>
-      </form> : selected?.data.semantic === "higher_order" && selected.data.higherOrder ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>
-        <label>Name<CommitTextInput id="nd-model-construct-name" value={selected.data.label} onCommit={(label) => updateConstruct(selected.id, { label })} /></label>
-        <label>Short name<CommitTextInput value={selected.data.shortName} maxLength={12} onCommit={(shortName) => updateConstruct(selected.id, { shortName })} /></label>
-        <dl className="nd-property-list">
-          <div><dt>Type</dt><dd>Reflective–reflective HOC</dd></div>
-          <div><dt>Method</dt><dd>Disjoint two-stage</dd></div>
-          <div><dt>Components</dt><dd>{selected.data.higherOrder.components.map((component) => nodes.find((node) => node.id === component)?.data.label ?? component).join(", ")}</dd></div>
-          <div><dt>Indicators</dt><dd>Generated component scores</dd></div>
-        </dl>
-        <p className="nd-property-note">The HOC remains reflective and indicator-free in the editable model. Stage 2 uses lower-order component scores; manifest indicators cannot be assigned directly.</p>
-        <div className="nd-property-actions"><button type="button" className="danger" onClick={removeSelection}>Delete higher-order construct</button></div>
-      </form> : selected ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>
-        <label>Name<CommitTextInput id="nd-model-construct-name" value={selected.data.label} onCommit={(label) => updateConstruct(selected.id, { label })} /></label>
-        <label>Short name<CommitTextInput value={selected.data.shortName} maxLength={12} onCommit={(shortName) => updateConstruct(selected.id, { shortName })} /></label>
-        <fieldset><legend>Measurement model</legend><label><input type="radio" checked={selected.data.mode === "reflective"} onChange={() => updateConstruct(selected.id, { mode: "reflective" })} />Reflective</label><label><input type="radio" checked={selected.data.mode === "formative"} onChange={() => updateConstruct(selected.id, { mode: "formative" })} />Formative</label></fieldset>
-        <div className="nd-indicator-summary"><strong>Indicators</strong>{selected.data.indicators.map((indicator) => <span key={indicator}>{indicator}</span>)}</div>
-      </form> : selectedPath ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>
-        <dl className="nd-property-list"><div><dt>Source</dt><dd>{source}</dd></div><div><dt>Target</dt><dd>{target}</dd></div></dl>
-        <label>Label<CommitTextInput id="nd-model-path-label" allowEmpty value={nativePathDisplayLabel(selectedPath, pathRole)} onCommit={(label) => updateEdge(selectedPath.id, nativePathLabelPatch(selectedPath, pathRole, label))} /></label>
-        <label>Type<select value={pathRole} disabled={selectedPathSupportsModeration} aria-describedby={selectedPathSupportsModeration ? "nd-moderation-path-lock" : undefined} onChange={(event) => setPathRole(event.target.value as NativePathRole)}><option value="structural">Structural path</option><option value="control">Control path</option><option value="covariance">Covariance display</option></select></label>
-        {selectedPathSupportsModeration ? <p id="nd-moderation-path-lock" className="nd-property-note">This relationship is required by the current moderating effect. Deleting it also removes the generated interaction term.</p> : null}
-        <label>Routing<select value={routing} onChange={(event) => setSelectedPathRouting(event.target.value === "orthogonal" ? "smoothstep" : event.target.value === "curved" ? "default" : "straight")}><option value="straight">Straight</option><option value="curved">Curved</option><option value="orthogonal">Orthogonal</option></select></label>
-        <div className="nd-property-actions"><button type="button" disabled={selectedPathSupportsModeration} onClick={reverseSelectedPath}>Reverse</button><button type="button" className="danger" onClick={removeSelection}>{selectedPathSupportsModeration ? "Delete relationship and interaction" : "Delete"}</button></div>
-      </form> : <div className="nd-pane-empty">Select a construct or structural path to edit its properties.</div>}
-    </aside> : null}
+    {propertiesOpen ? <NativeModelInspector readiness={readiness} /> : null}
   </div>;
+}
+
+function observedForStrictDesktop(
+  authority: StandardSemModelV4AuthorityRecordV1,
+  dataset: Dataset,
+  column: string,
+): Extract<SemVariableV4, { kind: "observed" }> {
+  const existing = authority.model.variables.find((variable): variable is Extract<SemVariableV4, { kind: "observed" }> =>
+    variable.kind === "observed" && variable.source_column === column);
+  if (existing) return structuredClone(existing);
+  const metadata = dataset.columnMetadata?.find((item) => item.name === column);
+  return {
+    kind: "observed",
+    id: `observed:${column}`,
+    label: metadata?.label?.trim() || column,
+    source_column: column,
+    scale: metadata?.scale_type ?? "continuous",
+    role: "indicator",
+    categories: Object.keys(metadata?.value_labels ?? {}).sort(compareUtf8StringsV1),
+    value_labels: { ...(metadata?.value_labels ?? {}) },
+    missing_markers: [...new Set((metadata?.missing_markers ?? []).map((value) => value.trim()).filter(Boolean))].sort(compareUtf8StringsV1),
+    transformation_lineage: [],
+  };
+}
+
+function desktopAuthorityResultMessage(result: StandardSemModelV4AuthorityCommitResult): string {
+  if (result.status === "committed") return "Committed to the strict Standard model authority.";
+  if (result.status === "blocked") return `Blocked: ${result.diagnostic.message} ${result.diagnostic.correctiveAction}`;
+  if (result.status === "stale") return "Stale edit ignored because the active authority changed.";
+  return `Rejected: ${result.error instanceof Error ? result.error.message : String(result.error)}`;
 }
 
 function ResultsSurfaceLoading({ propertiesOpen }: { propertiesOpen: boolean }) {
@@ -1736,11 +2008,24 @@ function NativeToastItem({ toast, dismiss }: { toast: ReturnType<typeof useWorks
     </article>;
 }
 function ShortcutsDialog() {
-  const shortcuts = [["Ctrl+N", "New project"], ["Ctrl+O", "Open project"], ["Ctrl+S", "Save"], ["Ctrl+Shift+S", "Save as"], ["Ctrl+R", "Calculate"], ["V", "Select tool"], ["P", "Path tool"], ["F", "Fit model"], ["Enter", "Edit selected construct or path"], ["Delete", "Delete selection"]];
+  const shortcuts = [["Ctrl+N", "New project"], ["Ctrl+O", "Open project"], ["Ctrl+S", "Save"], ["Ctrl+Shift+S", "Save as"], ["Ctrl+R", "Calculate"], ["C", "Create construct"], ["V", "Select tool"], ["P", "Path tool"], ["F", "Fit model"], ["Enter", "Edit selected construct or path"], ["Delete", "Delete selection"], ["Tab", "Navigate model and inspector controls"], ["Arrow keys", "Move between inspector sections"]];
   return <div className="nd-shortcuts" role="list">{shortcuts.map(([keys, label]) => <div role="listitem" key={keys}><kbd>{keys}</kbd><span>{label}</span></div>)}</div>;
 }
-function AboutDialog() {
-  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Calculation methods</dt><dd>{NATIVE_ANALYSIS_CATALOG.map((item) => item.label).join(", ")}</dd></div><div><dt>Conditional result groups</dt><dd>Mediation and two-stage Moderation appear only when the completed model contains those effects.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
+export function aboutVisibleAnalysisLabelsV2(settings: AnalysisUiSettings, experimentalLabsEnabled: boolean): readonly string[] {
+  return NATIVE_ANALYSIS_CATALOG.filter((item) => {
+    const availability = methodCapabilityAvailabilityV2(
+      nativeCapabilitySettingsForWorkbenchKindV2(settings, item.kind),
+      { experimentalLabsEnabled },
+    );
+    return availability.selectable
+      || (experimentalLabsEnabled && isNativeEstablishedWorkingAnalysisKindV1(item.kind));
+  }).map((item) => item.label);
+}
+
+function AboutDialog({ settings, experimentalLabsEnabled }: { settings: AnalysisUiSettings; experimentalLabsEnabled: boolean }) {
+  const visibleMethods = aboutVisibleAnalysisLabelsV2(settings, experimentalLabsEnabled);
+  const mode = experimentalLabsEnabled ? "Experimental Labs" : "Standard";
+  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Calculate mode</dt><dd>{mode}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current mode."}</dd></div><div><dt>Conditional result groups</dt><dd>Mediation and two-stage Moderation appear only when the completed model contains those effects.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
 }
 
 function StatusBar({ surface, projectName, datasetName, cases, constructs, runMonitor }: { surface: NativeSurface; projectName: string; datasetName: string; cases: number; constructs: number; runMonitor: ReturnType<typeof useWorkspace.getState>["runMonitor"] }) {
@@ -1762,12 +2047,13 @@ function dialogTitle(dialog: Exclude<NativeDialog, null>) {
   if (dialog === "new-project") return "New Project";
   if (dialog === "import-data") return "Import Data";
   if (dialog === "recode-data") return "Recode Variable";
+  if (dialog === "derive-variable") return "Derive Variable";
   if (dialog === "group-setup") return "Configure Groups";
   if (dialog === "moderation") return "Create Moderating Effect";
   if (dialog === "higher-order") return "Create Higher-Order Construct";
   if (dialog === "calculation") return "Calculate";
   if (dialog === "export") return "Export Results";
-  if (dialog === "trust") return "Validation and Method Scope";
+  if (dialog === "trust") return "Method Details";
   if (dialog === "settings") return "Preferences";
   if (dialog === "shortcuts") return "Keyboard Shortcuts";
   if (dialog === "about") return "About QuickPLS";

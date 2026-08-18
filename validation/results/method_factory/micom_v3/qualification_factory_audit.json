@@ -1,0 +1,205 @@
+{
+  "attached_receipt_count": 0,
+  "candidate_receipt_descriptors": [],
+  "capability_id": "smartpls.micom",
+  "cell_id": "qpls3.groups.micom_permutation_mga",
+  "checks": {
+    "manifest_remains_absent_with_no_evidence": true,
+    "metamorphic_and_typed_boundaries_pass": true,
+    "micom_is_not_mga_or_consistent_permutation": true,
+    "permutations_are_exactly_once_no_retry": true,
+    "qualification_receipts_empty": true,
+    "qualification_spec_compatibility_only": true,
+    "qualification_spec_valid_and_registry_linked": true,
+    "registry_remains_absent_labs": true,
+    "step1_is_review_only": true,
+    "work_report_passes_but_is_non_promotional": true
+  },
+  "manifest_mutated": false,
+  "method_version": "pls_mga_permutation_v3",
+  "note": "This is source-bound work evidence only. It cannot qualify MICOM, permutation MGA, consistent permutation, or the shared registry cell.",
+  "oracle_work_report": {
+    "passed": true,
+    "path": "validation/results/method_factory/micom_v3/work/independent_oracle.json",
+    "sha256": "b0a97831202ba9b538922465c6f8c9cdca2ef74a831f685620c10079b4a90e0b",
+    "size_bytes": 3250,
+    "work_evidence_only": true
+  },
+  "passed": true,
+  "promotion_allowed": false,
+  "qualification_id": "qpls3.groups.micom.qualification_v2",
+  "qualification_ready": false,
+  "qualification_spec_receipts_mutated": false,
+  "registry_mutated": false,
+  "remaining_blockers": [
+    "A second maintained computational MICOM implementation has not been attached as independent evidence.",
+    "Arbitrary declared-group workflows and deterministic pairwise orchestration beyond one selected A/B comparison remain unqualified.",
+    "Archive, cross-format export, frontend, packaged Windows, accessibility, performance, soak, and independent scientific-review receipts are absent.",
+    "CapabilityRegistryV2 and the v1 manifest still combine MICOM with structural-path permutation MGA; MICOM needs an independently qualified option cell or explicit subcell contract.",
+    "Independent scientific review is not recorded.",
+    "No current QuickPLS product result has been compared with this v3.1 no-retry MICOM oracle.",
+    "No current product result is compared with the independent MICOM v3.1 oracle under the same canonical partition plan.",
+    "No frozen exact-product fixture yet binds micom_v3_1 output to this oracle under the same canonical partition plan.",
+    "No immutable QualificationSpec V2 receipt is attached for any required role.",
+    "Qualification-sized 5,000/10,000-run simulations, calibration, power, and failure-rate evidence are absent.",
+    "Qualification-sized generative calibration, power, failure-rate, adversarial, archive/export, frontend, packaged Windows, accessibility, performance, soak, and independent scientific-review evidence is missing.",
+    "The candidate has not qualified Mode B or mixed composites, controls, interactions, higher-order constructs, missing-data policies, arbitrary declared groups, or deterministic pairwise orchestration.",
+    "The exact micom_v3_1 product path now implements the exactly-once no-retry contract, but no frozen product-to-oracle comparison receipt is attached.",
+    "The source fixture covers one bounded reflective path-weighting model; Mode B/mixed composites, controls, interactions, higher-order constructs, missing-data policies, and broader eligible PLS shapes remain unqualified."
+  ],
+  "report_kind": "micom_v3_qualification_factory_audit",
+  "role_matrix": [
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "No immutable QualificationSpec V2 receipt is attached."
+      ],
+      "role": "method_contract",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for kernel_execution is absent."
+      ],
+      "role": "kernel_execution",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "The transparent oracle is source work, not a current product comparison or immutable qualification execution receipt."
+      ],
+      "role": "oracle_independence",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for generative_recovery is absent."
+      ],
+      "role": "generative_recovery",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Source-level typed boundaries pass, but product, packaged, persistence, and scale boundaries have not run."
+      ],
+      "role": "adversarial_boundaries",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for archive_persistence is absent."
+      ],
+      "role": "archive_persistence",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for cross_format_export is absent."
+      ],
+      "role": "cross_format_export",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for frontend_contract is absent."
+      ],
+      "role": "frontend_contract",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for packaged_windows_e2e is absent."
+      ],
+      "role": "packaged_windows_e2e",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for performance_scale is absent."
+      ],
+      "role": "performance_scale",
+      "status": "blocked"
+    }
+  ],
+  "scenario_set_sha256": "81f4aa60b22e488e495542d1f9d10ec0587aa9dfa8c2c573b02f2a7986555cda",
+  "schema_version": 1,
+  "scientific_review_satisfied": false,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/MICOM_V3.md",
+      "sha256": "5fbbcfb4556aa2d3ab90860e7911391c2421e2994afe84a41e7fdb7aa9d9925a",
+      "size_bytes": 5762
+    },
+    {
+      "path": "validation/micom_v3_oracle.py",
+      "sha256": "fff73cac6fe225b66a90cc550b2631b3c923a61892ee8eb952ba73fa358bdea9",
+      "size_bytes": 38541
+    },
+    {
+      "path": "validation/micom_v3_qualification_factory.py",
+      "sha256": "6c4da1e6be64fd8254e2d10df00b33b8a685e7524cb2dd429261506c3322a6bc",
+      "size_bytes": 40338
+    },
+    {
+      "path": "validation/micom_mga_v3_reference.py",
+      "sha256": "f5166d6f9eeef347676cdf3ae81e5f182f06110aa74d557e6ba4061a8ef6a8fd",
+      "size_bytes": 22195
+    },
+    {
+      "path": "validation/micom_v2_reference.py",
+      "sha256": "bd16c61c53ca8e63104bf8ab77b6997904a36fb1139884cd68215b2c2dadd98e",
+      "size_bytes": 40587
+    },
+    {
+      "path": "validation/results/micom_v2_reference.csv",
+      "sha256": "27778e988ddcfbbc9130438d0a32623e3ed007b1389d1032f2833e97870c7944",
+      "size_bytes": 30219
+    },
+    {
+      "path": "validation/methods/micom_permutation_mga_v3.manifest.json",
+      "sha256": "e39b0aebd1b9d3f199df4b3ed291360e87441d2a0133ca83aa276fbb6cfd35ad",
+      "size_bytes": 10091
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.json",
+      "sha256": "d3e480178a619d0bec28e48ddfd9a2fb1848c083b78e1afe1c51f1b12e980fd9",
+      "size_bytes": 303615
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/micom_v3.qualification.json",
+      "sha256": "17920ce335e6be4903da213aaf57484df403511993eca9ef43ffcfb9e7b510f2",
+      "size_bytes": 37030
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/test_micom_v3_oracle.py",
+      "sha256": "158dfd9c302646e781b74b10fbf21f39531db7263ec1d0d4244339ae8503fc91",
+      "size_bytes": 15855
+    },
+    {
+      "path": "validation/test_micom_v3_qualification_factory.py",
+      "sha256": "52b3734953ab842e34859e30bd00f43b7ab26d9406969b1c8becbcf2c5a6dc91",
+      "size_bytes": 7145
+    }
+  ],
+  "source_set_sha256": "ab0c0f6c8ea41798f62a3abb3c22c895706345a72ccfc6f4c1e6c226c69b5008",
+  "spec_frozen_at_utc": "2026-08-15T06:30:00Z"
+}

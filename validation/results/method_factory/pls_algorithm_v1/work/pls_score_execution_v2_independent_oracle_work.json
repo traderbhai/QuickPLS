@@ -1,0 +1,107 @@
+{
+  "checks": {
+    "fixed_only_scores_match_hand_linear_combinations": true,
+    "fixed_only_zero_iterations": true,
+    "individual_deterministic": true,
+    "initialization_states_differ": true,
+    "initialization_trajectories_differ": true,
+    "metamorphics_within_tolerance": true,
+    "mixed_fixed_weights_never_update": true,
+    "mixed_updates_estimated_only": true,
+    "ordinary_initializations_reach_same_stationary_solution": true,
+    "pathological_start_differs_fail_closed": true,
+    "standard_and_individual_converge": true,
+    "standard_deterministic": true,
+    "typed_boundaries_exact": true
+  },
+  "contract_version": "pls_score_execution_v2",
+  "fixed_and_mixed_cases": {
+    "fixed_only_hand_score_max_abs_difference": 8.881784197001252e-16,
+    "fixed_only_iteration_accounting": {
+      "estimated_block_count": 0,
+      "estimated_block_updates": 0,
+      "fixed_block_count": 2,
+      "maximum_iterations": 3000,
+      "performed_iterations": 0,
+      "stop_criterion": 1e-07
+    },
+    "mixed_fixed_weights_unchanged": true,
+    "mixed_iteration_accounting": {
+      "estimated_block_count": 1,
+      "estimated_block_updates": 4,
+      "fixed_block_count": 2,
+      "maximum_iterations": 3000,
+      "performed_iterations": 4,
+      "stop_criterion": 1e-07
+    }
+  },
+  "initialization_cases": {
+    "converged_solution_max_abs_difference": 1.4362502298581603e-09,
+    "converged_solution_tolerance": 2e-08,
+    "individual_initial_state_sha256": "2fb3cc1be4811d793ff6cbadd43642cff04af13338361fcce95cc1975784ffb1",
+    "individual_iterations": 6,
+    "individual_trace_sha256": "488d51c3dfb75b4a8e26355c57a8dc8c52dfd84ba74886403c9c09f21eeb6b7a",
+    "pathological_individual_failure_code": "pls_score_execution_v2_zero_variance_requested_score",
+    "pathological_standard_converged": true,
+    "standard_initial_state_sha256": "576fed96c92ec35c491bf29a2071a57cb622de91c3296b777fb5bc0ac2ceae29",
+    "standard_iterations": 5,
+    "standard_trace_sha256": "add0a31ec53d51a95d4d4dfe00faa6ab7f234f941f63cc23482f961fa7c51de4"
+  },
+  "metamorphic_max_abs_differences": {
+    "model_declaration_order": 0.0,
+    "positive_affine_rescaling": 1.1102230246251565e-15,
+    "stable_id_renaming": 8.881784197001252e-16,
+    "stable_row_order": 1.1102230246251565e-15,
+    "variable_declaration_order": 0.0
+  },
+  "metamorphic_tolerance": 2e-10,
+  "method_version": "pls_score_execution_v2",
+  "oracle_version": "independent_numpy_pls_score_execution_v2_work_oracle_v1",
+  "passed": true,
+  "product_comparison_performed": false,
+  "promotion_requested": false,
+  "qualification_ready": false,
+  "qualification_spec_v2_alignment": {
+    "admissible_receipt": false,
+    "candidate_oracle_kind": "independent_implementation",
+    "covered_work_estimands": [
+      "resolved_initial_outer_weights",
+      "fixed_unit_variance_score_weights",
+      "construct_scores",
+      "path_coefficients",
+      "iteration_accounting"
+    ],
+    "reason_not_admissible": "no frozen current QuickPLS build was executed against these cases",
+    "runtime_policy": "development_validation_only",
+    "scenario_axes_exercised": [
+      "model_topology",
+      "measurement_model",
+      "data_distribution",
+      "input_type",
+      "workload"
+    ]
+  },
+  "receipt_attached": false,
+  "registry_or_manifest_mutation_requested": false,
+  "remaining_blockers": [
+    "A frozen current QuickPLS product build has not been compared with this oracle.",
+    "Source-set, scenario-set, build-fingerprint, command, and immutable receipt identity are absent.",
+    "Qualification-sized generative, persistence/export, packaged Windows, performance, accessibility, and independent-review evidence remains required.",
+    "Broader result-location, resampling, case-weight, higher-order, and interaction execution remains explicitly outside v2."
+  ],
+  "report_kind": "pls_score_execution_v2_independent_oracle_work_v1",
+  "schema_version": 1,
+  "typed_boundaries": {
+    "bootstrap": true,
+    "case_weights": true,
+    "higher_order": true,
+    "interaction": true,
+    "mean_centered_location": true,
+    "normalization_none": true,
+    "normalization_sum_to_one": true,
+    "permutation": true,
+    "studentized": true,
+    "unstandardized_location": true
+  },
+  "work_evidence_only": true
+}

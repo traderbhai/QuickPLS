@@ -1,0 +1,7 @@
+{
+  "receipt_fixture_schema_version": 1,
+  "fixture_only": true,
+  "role": "oracle_independence",
+  "legacy_artifact": "validation/results/method_factory/pls_algorithm_v1/independent_reference.identity.json",
+  "note": "Compatibility fixture only; this is not product qualification evidence."
+}

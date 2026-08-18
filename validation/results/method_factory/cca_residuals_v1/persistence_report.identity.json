@@ -1,0 +1,77 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "contract_tampering_rejected": {
+      "passed": true
+    },
+    "runner_result_commit_save_reopen": {
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-project",
+        "runner_generated_cca_appends_round_trips_and_rejects_contract_tampering",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.67s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-1c5316a49d695ac2.exe)\n     Running tests\\pls_model_comparison_schema6.rs (target\\debug\\deps\\pls_model_comparison_schema6-9640385ad6045b51.exe)\n     Running tests\\schema6_sem_model_v4_authoring_shapes.rs (target\\debug\\deps\\schema6_sem_model_v4_authoring_shapes-399eb9324137a89e.exe)\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_cca_appends_round_trips_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 0.17s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n"
+    }
+  ],
+  "feature_id": "qpls3.assessment.cca_residuals",
+  "generated_at_utc": "2026-08-18T03:53:21.569841Z",
+  "method_version": "cca_composite_residual_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "persistence_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
+    },
+    {
+      "path": "validation/cca_release_persistence_gate.py",
+      "sha256": "7343d31e2fbb2bdd8da5ddb0dba408d86df9f64ccb3e58933f94fc7f1e24d646",
+      "size": 159
+    },
+    {
+      "path": "validation/established_method_factory_common.py",
+      "sha256": "cbc4eb8e5d7ab329d3a5c1eaae910c43cdac39f6c11fbd26eb774cc65e95c090",
+      "size": 20368
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cca_residuals_v1.manifest.json",
+      "sha256": "16aeffc4136d16fdb0816f7a45eec9cb7a9349a6021761ea3b638476a8c89ff5",
+      "size": 13621
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_established_method_factory.py",
+      "sha256": "a16157170cc23ffb0fe8a112a2b28b25b9f6f1518a443c6265c9fe993d70ee52",
+      "size": 2917
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

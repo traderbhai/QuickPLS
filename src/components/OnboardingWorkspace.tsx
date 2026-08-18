@@ -41,7 +41,7 @@ export function OnboardingWorkspace() {
     <PageHeader
       kicker="Project command center"
       title="Home"
-      description="Continue a research project, import data, build the SEM diagram, run a validated scope, and prepare outputs from one desktop workspace."
+      description="Continue a research project, import data, build the SEM diagram, run a supported analysis, and prepare outputs from one desktop workspace."
       actions={<>
         <button className="qpls2-secondary-action" onClick={() => window.dispatchEvent(new CustomEvent("quickpls:open-project"))}><FolderOpen size={15} />Open project</button>
         <button className="qpls2-primary-action" onClick={() => start(nextStep.view)}><NextIcon size={16} />{nextStep.label}</button>
@@ -62,7 +62,7 @@ export function OnboardingWorkspace() {
         <span>Recommended next step</span>
         <strong>{nextStep.label}</strong>
         <p>{nextStep.detail}</p>
-        <small><ShieldCheck size={13} /> Offline desktop workflow. Scope claims remain tied to validation evidence.</small>
+        <small><ShieldCheck size={13} /> Offline desktop workflow. Review Method Details before reporting results.</small>
       </aside>
     </section>
     <Panel title="Project launcher" description="Common project actions stay visible in the first desktop viewport." className="home-v211-command-panel home-v217-launcher home-v223-start-center">

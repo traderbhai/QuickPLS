@@ -1,6 +1,6 @@
 # GSCA ALS v2
 
-Status: validated for the bounded QuickPLS native `gsca_als_v2` scope.
+Status: Supported in Standard for the exact QuickPLS `gsca_als_v2` scope, including packaged-Tauri setup, invalid-setup protection, results, XLSX export, save/reopen, physical viewport, and cleanup evidence.
 
 ## Executable contract
 

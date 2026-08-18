@@ -1,0 +1,118 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "endogeneity_csv_and_html_exercised": true,
+    "method_scoped_files": [
+      "src/native/nativeEndogeneity.test.ts",
+      "src/native/nativeExportTables.test.ts",
+      "src/native/NativeExportDialog.test.ts"
+    ],
+    "passed": true,
+    "required_formats": [
+      "csv",
+      "xlsx",
+      "html"
+    ],
+    "same_run_export_dialog_exercised": true,
+    "same_tables_sent_to_xlsx_bridge": true,
+    "vitest_summary": {
+      "expected_test_files": 3,
+      "minimum_tests": 12,
+      "observed_test_files_passed": 3,
+      "observed_test_files_total": 3,
+      "observed_tests_passed": 21,
+      "observed_tests_total": 21,
+      "passed": true
+    },
+    "xlsx_table_bridge_exercised": true
+  },
+  "execution": {
+    "command": [
+      "npx.cmd",
+      "vitest",
+      "run",
+      "src/native/nativeEndogeneity.test.ts",
+      "src/native/nativeExportTables.test.ts",
+      "src/native/NativeExportDialog.test.ts",
+      "--reporter=verbose"
+    ],
+    "duration_seconds": 6.041,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n \u00e2\u0153\u201c src/native/nativeEndogeneity.test.ts > bounded native Gaussian-copula workflow > serializes one typed deterministic recipe and clears unrelated resampling 4ms\n \u00e2\u0153\u201c src/native/nativeEndogeneity.test.ts > bounded native Gaussian-copula workflow > fails closed on PCA weighting, missing paths, controls, interactions, and higher-order constructs 3ms\n \u00e2\u0153\u201c src/native/nativeEndogeneity.test.ts > bounded native Gaussian-copula workflow > uses one completed run for accessible results and CSV/HTML/XLSX input tables 11ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact GSCA ALS v2 provenance without PLS or inference settings 8ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports bounded CB-SEM/CFA optimizer, identification, and method-version provenance without resampling fields 2ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports model-free PCA scores and PCA-specific provenance without SEM weighting claims 2ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > builds one truthful provenance table without legacy N/A placeholders 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > omits unavailable optional fields instead of manufacturing a value 0ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports immutable engine settings when native provenance is available 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > omits unused inference settings from descriptive CCA exports 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports the genuine MICOM permutation plan without claiming parallel workers 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact standalone NCA provenance without irrelevant SEM iteration settings 3ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact PLSpredict / CVPAT v2 provenance and the assignment digest 2ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps ordinary completed-run diagram exports and reviewer diagrams 3ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps a standardized model diagram in CB-SEM/CFA reviewer and SVG exports 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps the immutable GSCA model diagram alongside its dedicated result tables 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps candidate Structural Path Randomization model exports visibly scoped 22ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > makes completed MGA exports table-only and never injects a pooled model diagram 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > omits the SVG action from the completed MGA export dialog 3ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > exports standalone NCA as five table-backed formats without a fabricated model diagram 2ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps standalone PCA and binary logistic exports table-only 2ms\n\n Test Files  3 passed (3)\n      Tests  21 passed (21)\n   Start at  12:23:06\n   Duration  1.60s (transform 998ms, setup 0ms, import 2.53s, tests 80ms, environment 1ms)\n\n"
+  },
+  "feature_id": "qpls3.pls.gaussian_copula_endogeneity",
+  "generated_at_utc": "2026-08-14T06:53:08.628881Z",
+  "method_version": "gaussian_copula_endogeneity_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "export_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/domain/resultTables.ts",
+      "sha256": "09e5f3cc8deba90aadde182750c28177242e68356693a91bc63347ead3d75591",
+      "size": 38416
+    },
+    {
+      "path": "src/native/NativeExportDialog.test.ts",
+      "sha256": "7fe0ac9ca5fef80b51e7897ffd6d5c25241e7cff7763faebc944ac035ccad380",
+      "size": 8119
+    },
+    {
+      "path": "src/native/NativeExportDialog.tsx",
+      "sha256": "58fb15c7d3383be2fa2789445cdc50864c92a65592534b6f611d44fa75fdb377",
+      "size": 9657
+    },
+    {
+      "path": "src/native/nativeEndogeneity.test.ts",
+      "sha256": "c58c10c0ebdcec2ef9b5f0da81a321346b1d4ba275af2a6f35c03feaf99695af",
+      "size": 8177
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "7dde0ff853611f936204f9db2ac1fb8b8a8f4755c7b6ab6ff467465c86e533b4",
+      "size": 19426
+    },
+    {
+      "path": "src/native/nativeExportTables.ts",
+      "sha256": "17b083c209481e9ff7f326847298d5f1426dccec659f117c437b4d02b1b172d8",
+      "size": 23340
+    },
+    {
+      "path": "validation/endogeneity_factory_common.py",
+      "sha256": "9ca62fb82ec04b4056d5c138a99e28c1dd5bf00a2c2c12ffa53b49b26bcd85e9",
+      "size": 14111
+    },
+    {
+      "path": "validation/endogeneity_frontend_gate.py",
+      "sha256": "e9cf4a1b148dee8e588249b2a5b8f2223ca87843dcf58b1f688187c5c455806d",
+      "size": 10256
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/gaussian_copula_endogeneity_v1.manifest.json",
+      "sha256": "50e1445c9c8d7131eea334405e5454424982371154ac5d2774e83a5b6fc57320",
+      "size": 14698
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_endogeneity_factory.py",
+      "sha256": "1b2dbb224abd159e0f9179071f67a52dde6b23f227195b75d67cdcd24a203c92",
+      "size": 4689
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    }
+  ]
+}

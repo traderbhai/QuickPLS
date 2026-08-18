@@ -15,7 +15,7 @@
       ],
       "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": "ve result navigation > keeps empty and unavailable assessment capabilities out of the tree 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects disjoint two-stage HOC evidence without leaking generated score indicators 3ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > classifies moderation and control inference once and hides generated product indicators 7ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > returns no navigation for failed or payload-free runs 0ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects only exact GSCA ALS v2 output into dedicated, non-inferential tables 3ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > rejects stale, internally inconsistent, or inference-bearing GSCA payloads 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects only exact current CB-SEM/CFA payloads into method-specific tables and standardized diagrams 5ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > resolves table items without treating the diagram as a table 1ms\n \u00e2\u0153\u201c src/native/NativeProcessSurface.test.tsx > NativeResultsSurface PROCESS v2 plots > assigns collision-free accessible IDs to simultaneous Unicode and punctuation plots 54ms\n \u00e2\u0153\u201c src/native/NativeProcessSurface.test.tsx > NativeResultsSurface PROCESS v2 plots > renders only persisted conditional points alongside the table-backed simple slopes 57ms\n \u00e2\u0153\u201c src/native/NativeProcessSurface.test.tsx > NativeResultsSurface PROCESS v2 plots > gives all nine continuous-by-continuous series distinct non-color style signatures 25ms\n \u00e2\u0153\u201c src/native/NativeProcessSurface.test.tsx > NativeResultsSurface PROCESS v2 plots > renders the persisted 101-point Johnson-Neyman curve without UI inference 19ms\n\n Test Files  4 passed (4)\n      Tests  64 passed (64)\n   Start at  01:24:49\n   Duration  3.13s (transform 2.11s, setup 0ms, import 5.56s, tests 506ms, environment 1ms)\n\n"
+      "stdout_tail": "icators 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > classifies moderation and control inference once and hides generated product indicators 7ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > returns no navigation for failed or payload-free runs 0ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects only exact GSCA ALS v2 output into dedicated, non-inferential tables 4ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > rejects stale, internally inconsistent, or inference-bearing GSCA payloads 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects only exact current CB-SEM/CFA payloads into method-specific tables and standardized diagrams 5ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders exact attributed RMSEA intervals and rejects malformed attribution 4ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders genuine CFA score/LM tests separately and fails closed on tampering 8ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders the exact CFA case-bootstrap family and rejects witness arithmetic tampering 80ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders only complete atomic v11 studentized results and rejects mixed-generation or arithmetic tamper 97ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders only complete atomic v12 BCa results with typed B500 and delete-one failure states 60ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > resolves table items without treating the diagram as a table 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > surfaces exact HTMT inference decisions and rejects contradictory ledgers 6ms\n\n Test Files  4 passed (4)\n      Tests  81 passed (81)\n   Start at  14:24:40\n   Duration  4.84s (transform 5.08s, setup 0ms, import 10.38s, tests 1.09s, environment 1ms)\n\n"
     },
     "method_specific_frontend_present": true,
     "packaged_desktop_execution_claimed": false,
@@ -29,7 +29,7 @@
     "typed_results_projection_present": true
   },
   "feature_id": "qpls3.standalone.process",
-  "generated_at_utc": "2026-08-13T19:54:52.262377Z",
+  "generated_at_utc": "2026-08-18T08:54:45.045319Z",
   "method_version": "regression_process_v2",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -43,8 +43,8 @@
     },
     {
       "path": "src/native/nativeExportTables.test.ts",
-      "sha256": "ab22330e2e6ed7752f748034adaa2c8e653bb4a149a0e91bef21943e2c6964fd",
-      "size": 19426
+      "sha256": "0c09a9a8279bc13b8492b281e5473eb226525da683143904dfc0a68df3f1336a",
+      "size": 44064
     },
     {
       "path": "src/native/nativeProcess.test.ts",
@@ -53,8 +53,8 @@
     },
     {
       "path": "validation/legacy_release_factory_migration.py",
-      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
-      "size": 23709
+      "sha256": "b9c5207f9d8aff6c2cd8b243acb017634d26b00355a1f537b3cfa4ad69fa92e7",
+      "size": 24794
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -68,8 +68,8 @@
     },
     {
       "path": "validation/methods/process_v2.manifest.json",
-      "sha256": "fd20d61294e00bb78ef227c1e719ae9830a569a1657437dcc1cd307b31903d4b",
-      "size": 14818
+      "sha256": "24fa47208e6247ef6f76c8c0e5a9ece2271e125111e90a91589ff73d94e73809",
+      "size": 16581
     },
     {
       "path": "validation/process_v2_frontend_gate.py",
@@ -83,8 +83,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     }
   ]
 }

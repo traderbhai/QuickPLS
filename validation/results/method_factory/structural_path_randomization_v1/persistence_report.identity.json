@@ -12,23 +12,23 @@
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "validate",
-        "C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-h8gwikan\\tampered.qpls",
+        "C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-23__uwll\\tampered.qpls",
         "--json"
       ],
       "returncode": 1,
-      "stderr_tail": "Error: invalid project C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-h8gwikan\\tampered.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
+      "stderr_tail": "Error: invalid project C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-23__uwll\\tampered.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
       "stdout_tail": ""
     },
     "current_cli": {
       "path": "target/release/qpls.exe",
-      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-      "size": 20690432
+      "sha256": "f376ef9646a016a2ab5e922b49248d0b0667654159253a8ca0428b6c2dc10e05",
+      "size": 32387072
     },
     "current_cli_inspect": {
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "inspect",
-        "validation/results/v247-native-structural-path-randomization-1786603559512-56988.qpls",
+        "D:\\QuickPLS\\validation\\results\\v247-native-structural-path-randomization-1786603559512-56988.qpls",
         "--json"
       ],
       "returncode": 0,
@@ -39,7 +39,7 @@
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "validate",
-        "validation/results/v247-native-structural-path-randomization-1786603559512-56988.qpls",
+        "D:\\QuickPLS\\validation\\results\\v247-native-structural-path-randomization-1786603559512-56988.qpls",
         "--json"
       ],
       "returncode": 0,
@@ -50,7 +50,7 @@
     "passed": true
   },
   "feature_id": "qpls3.inference.structural_path_randomization",
-  "generated_at_utc": "2026-08-13T19:54:09.433161Z",
+  "generated_at_utc": "2026-08-18T13:18:52.360226Z",
   "method_version": "freedman_lane_permutation_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -59,8 +59,8 @@
   "source_artifacts": [
     {
       "path": "validation/legacy_release_factory_migration.py",
-      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
-      "size": 23709
+      "sha256": "b9c5207f9d8aff6c2cd8b243acb017634d26b00355a1f537b3cfa4ad69fa92e7",
+      "size": 24794
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -74,8 +74,8 @@
     },
     {
       "path": "validation/methods/structural_path_randomization_v1.manifest.json",
-      "sha256": "c4af70fa296449446e4f987c346b82be6c03c82fdaf73e6e2f66e738d8450b2a",
-      "size": 14560
+      "sha256": "84172080609f9e457387d92a1b9abc617e289d1032928cfde8e70c2fa334eb78",
+      "size": 14735
     },
     {
       "path": "validation/structural_path_randomization_boundary_gate.py",
@@ -89,13 +89,13 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_structural_path_randomization_v1_packaged_acceptance.py",
-      "sha256": "c3ccd9036810bca8ac89f11767432128493614ad17ac64d28ce409bc959ccd6d",
-      "size": 30233
+      "sha256": "f4ed1fb10235a798a541cf7a527952dde6f1a7d2f968019ad2738956e4943450",
+      "size": 30158
     }
   ]
 }

@@ -1,0 +1,95 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "native_setup_results_and_accessibility": {
+      "passed": true
+    },
+    "same_run_export_contract": {
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "src/native/nativeGscaCanonicalIntegration.test.ts",
+        "src/native/nativeExportTables.test.ts"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  2 passed (2)\n      Tests  16 passed (16)\n   Start at  04:08:07\n   Duration  2.39s (transform 1.96s, setup 0ms, import 3.41s, tests 131ms, environment 0ms)\n\n"
+    }
+  ],
+  "feature_id": "qpls3.gsca.als",
+  "generated_at_utc": "2026-08-17T22:38:10.342918Z",
+  "method_version": "gsca_als_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "frontend_report+export_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/native/nativeAnalysisRecipe.ts",
+      "sha256": "57d3c19c60f621d356a5d310ff462dd2056c8785a6aed0f699506a4e820e1d38",
+      "size": 59934
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "0c09a9a8279bc13b8492b281e5473eb226525da683143904dfc0a68df3f1336a",
+      "size": 44064
+    },
+    {
+      "path": "src/native/nativeExportTables.ts",
+      "sha256": "6ce1244a6be88c0035a6113b070f5c876b46807623f96c949f1d41c985aa6ba7",
+      "size": 42765
+    },
+    {
+      "path": "src/native/nativeGsca.ts",
+      "sha256": "b1e88e887c2cff240a9301c5561f75acd587809f840bf2cb746f229db6517b5d",
+      "size": 968
+    },
+    {
+      "path": "src/native/nativeGscaCanonicalIntegration.test.ts",
+      "sha256": "b6fe227542c86a9c7816096d6660ee7b1a45093eee4eb137e5186cf65105fd9f",
+      "size": 3864
+    },
+    {
+      "path": "src/native/nativeResults.ts",
+      "sha256": "86159a6227f9c404ba7056f7002ccc8ccd637c003489e1e4cb1b5328275c4007",
+      "size": 350624
+    },
+    {
+      "path": "validation/established_method_factory_common.py",
+      "sha256": "cbc4eb8e5d7ab329d3a5c1eaae910c43cdac39f6c11fbd26eb774cc65e95c090",
+      "size": 20368
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/gsca_als_v2.manifest.json",
+      "sha256": "8de842fcfae6dc7a5589d308e4652d0f9c5c3d0f0aff393ef18d4fc4fd4bca33",
+      "size": 15154
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_established_method_factory.py",
+      "sha256": "a16157170cc23ffb0fe8a112a2b28b25b9f6f1518a443c6265c9fe993d70ee52",
+      "size": 2917
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

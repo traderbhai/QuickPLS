@@ -1,0 +1,126 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "final_release_audit": {
+      "actual_packaged_viewport_matrix": true,
+      "bounded_claim": "Descriptive observed-versus-reproduced composite-correlation residual diagnostics for a supported recursive standardized composite path model.",
+      "bounded_packaged_workflow": true,
+      "exact_required_check_receipt": true,
+      "excluded_scope": [
+        "Resampled CCA inference, global fit tests, thresholds, and pass or fail classification are excluded.",
+        "Reflective-versus-formative classification and causal interpretation are excluded.",
+        "This bounded residual diagnostic is not a claim of full confirmatory composite analysis parity."
+      ],
+      "invalid_setup_no_state_mutation": true,
+      "packaged_artifact": {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cca_residuals_v1/packaged_acceptance.identity.json"
+      },
+      "packaged_identity_passes": true,
+      "passed": true,
+      "prior_factory_native": true,
+      "release_evidence_contract_passes": true,
+      "required_cancellation_retry": true,
+      "same_run_archive": true,
+      "source_receipt_and_cli_current": true,
+      "verified_prior_artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cca_residuals_v1/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cca_residuals_v1/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cca_residuals_v1/native_stage.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ]
+    }
+  },
+  "feature_id": "qpls3.assessment.cca_residuals",
+  "generated_at_utc": "2026-08-18T14:16:06.344513Z",
+  "method_version": "cca_composite_residual_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
+    {
+      "path": "validation/cca_residuals_v1_packaged_acceptance.py",
+      "sha256": "e4ead990aa284e9e479bc883bb516bb065f6a3fb4798b9307bd54ce2919406fc",
+      "size": 259
+    },
+    {
+      "path": "validation/cca_residuals_v1_release_audit.py",
+      "sha256": "09fe22accbd08f216fade83207ac2d8a21d9ead35071c957e9438ba0787bcf82",
+      "size": 277
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cca_residuals_v1.manifest.json",
+      "sha256": "16aeffc4136d16fdb0816f7a45eec9cb7a9349a6021761ea3b638476a8c89ff5",
+      "size": 13621
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
+    },
+    {
+      "path": "validation/phase2_release_packaged_common.py",
+      "sha256": "ac2e758e49d380ce66d8b5987b0d76e1752fb4bf6ad5e6e65f16b1e4e5b15775",
+      "size": 70975
+    },
+    {
+      "path": "validation/results/method_factory/cca_residuals_v1/packaged_acceptance.identity.json",
+      "sha256": "cf82c52ccbe3af9b6fc9af7319e6b43963f3599bde16e78bbe99cef2993deb3e",
+      "size": 35661
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase2_release_packaged_common.py",
+      "sha256": "e50a98a98d0f3e5f29373801eaa5ec0b0352d8cdeb7d8cc6c71a5b67b87af92d",
+      "size": 38027
+    }
+  ]
+}

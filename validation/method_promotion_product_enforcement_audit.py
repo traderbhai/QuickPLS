@@ -57,23 +57,23 @@ def product_contract_checks(sources: dict[str, str]) -> list[dict]:
         check(
             "catalog_separates_bootstrap_from_structural_randomization",
             contains("src/data/sample.ts", '{ id: "bootstrap", family: "PLS-SEM", name: "Bootstrapping", status: "validated" }')
-            and contains("src/data/sample.ts", '{ id: "permutation", family: "PLS-SEM", name: "Freedman-Lane permutation", status: "experimental" }')
-            and 'status: "validated"' not in permutation_catalog_row,
-            "Bootstrap retains its validated scope while Structural Path Randomization keeps a conservative experimental product label independent of dedicated qualification evidence.",
+            and contains("src/data/sample.ts", '{ id: "permutation", family: "PLS-SEM", name: "Freedman-Lane permutation", status: "validated" }')
+            and 'status: "experimental"' not in permutation_catalog_row,
+            "Bootstrap and the independently qualified bounded Structural Path Randomization workflow are both product-visible as Supported without merging their scientific contracts.",
         ),
         check(
             "regression_status_is_setting_aware",
             contains("src/domain/methodStatus.ts", 'method.id === "regression"')
             and contains("src/domain/methodStatus.ts", 'if (regressionType === "ols" || regressionType === "logistic") return "validated";')
-            and contains("src/domain/methodStatus.ts", 'if (regressionType === "process") return "experimental";')
-            and contains("src/domain/methodStatus.ts", "Graph-defined PROCESS v2 is an implemented bounded candidate pending current promotion evidence; historical PROCESS v1 is archive-only."),
-            "Regression status is setting-aware: OLS/logistic remain validated while current PROCESS v2 and historical PROCESS v1 fail closed in generic product status.",
+            and contains("src/domain/methodStatus.ts", 'if (regressionType === "process") return "validated";')
+            and contains("src/domain/methodStatus.ts", "Supports the graph-defined continuous-outcome PROCESS v2 workflow"),
+            "Regression status is setting-aware: OLS, binary logistic, and exact graph-defined PROCESS v2 are Supported while historical PROCESS v1 remains archive-only.",
         ),
         check(
-            "structural_randomization_status_discloses_bounded_candidate_scope",
-            contains("src/domain/methodStatus.ts", "Candidate fixed-score path inference assumes exchangeable reduced-model residuals")
-            and contains("src/domain/methodStatus.ts", "raw unadjusted pathwise plus-one p values")
-            and contains("src/domain/methodStatus.ts", "current calibration covers homoscedastic Gaussian errors only."),
+            "structural_randomization_status_discloses_bounded_supported_scope",
+            contains("src/domain/methodStatus.ts", "Supports fixed-score path inference under exchangeable reduced-model residuals")
+            and contains("src/domain/methodStatus.ts", "raw, unadjusted, pathwise plus-one p values")
+            and contains("src/domain/methodStatus.ts", "current calibration covers homoscedastic Gaussian errors."),
             "Structural Path Randomization product guidance discloses the fixed-score, exchangeability, unadjusted-probability, and calibration boundaries.",
         ),
         check(
@@ -83,25 +83,27 @@ def product_contract_checks(sources: dict[str, str]) -> list[dict]:
         ),
         check(
             "topbar_uses_effective_status",
-            contains("src/components/TopBar.tsx", "effectiveMethodStatus(selectedMethod, analysisSettings)"),
-            "Top bar method badge uses setting-aware method status.",
+            contains("src/components/TopBar.tsx", "analysisCatalogCapabilityEntriesV2(methods, analysisSettings")
+            and contains("src/components/TopBar.tsx", "selectedAvailabilityStatus")
+            and contains("src/components/TopBar.tsx", "selectedAvailabilityLabel"),
+            "Top bar method badge uses the setting-aware capability-registry availability.",
         ),
         check(
             "result_tables_fail_closed_by_exact_method_identity",
             contains("src/domain/resultTables.ts", 'return regression.method_version === "regression_logistic_v2" ? "validated" : "experimental";')
             and contains("src/domain/resultTables.ts", 'if (resultMethodVersion === "regression_process_v1"')
             and contains("src/domain/resultTables.ts", 'process?.method_version === "regression_process_v1"')
-            and contains("src/domain/resultTables.ts", 'const runStatus = structuralPathRandomization ? "experimental" : resultScopeStatus(run.result);')
-            and contains("src/domain/resultTables.ts", '["Qualification status", "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"]')
+            and contains("src/domain/resultTables.ts", 'const runStatus = structuralPathRandomization ? "validated" : resultScopeStatus(run.result);')
+            and contains("src/domain/resultTables.ts", '["Availability", "Supported within the documented fixed-score scope"]')
             and contains("src/domain/resultTables.ts", 'result.method_version === "regression_logistic_v2"')
             and not contains("src/domain/resultTables.ts", 'result.method_version === "regression_process_v2"'),
-            "Result and export tables validate only exact current identities, keep PROCESS archives fail-closed in generic status, and keep Structural Path Randomization visibly candidate-labelled.",
+            "Result and export tables validate only exact current identities, keep PROCESS archives fail-closed in generic status, and expose only the strict current Structural Path Randomization identity as Supported.",
         ),
         check(
             "engine_warnings_match_current_versions_and_bounds",
-            contains("crates/qpls-estimation/src/pls.rs", "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope")
+            contains("crates/qpls-estimation/src/pls.rs", "Logistic regression v2 requires a binary numeric outcome and numeric complete-case predictors")
             and contains("crates/qpls-estimation/src/pls.rs", "PROCESS v2 is an independently implemented graph-defined observed-variable path-analysis workflow; it does not execute copied numbered templates.")
-            and contains("crates/qpls-estimation/src/pls.rs", "NCA v2 is limited to the documented numeric X/Y CE-FDH and CR-FDH scope with observed-range bottlenecks")
+            and contains("crates/qpls-estimation/src/pls.rs", "NCA v2 supports one observed numeric condition/outcome pair with CE-FDH and CR-FDH ceilings")
             and not contains("crates/qpls-estimation/src/pls.rs", "NCA v1 is validated"),
             "Generated warnings bind current logistic v2 and PROCESS v2 identities and preserve bounded NCA v2 exclusions without presenting legacy identities as current evidence.",
         ),
@@ -119,8 +121,9 @@ def product_contract_checks(sources: dict[str, str]) -> list[dict]:
             and contains("docs/METHOD_COMPATIBILITY.md", "| Regression | Binary logistic regression | Current `regression_logistic_v2`")
             and contains("docs/METHOD_COMPATIBILITY.md", "| Regression | Graph-defined Path Analysis and PROCESS | Current `regression_process_v2`")
             and contains("docs/METHOD_COMPATIBILITY.md", "Structural Path Randomization v1 is separately release-qualified")
+            and contains("docs/METHOD_COMPATIBILITY.md", "scoped Standard")
             and contains("docs/METHOD_COMPATIBILITY.md", "release-qualified bounded v1 evidence with an explicit conditional/approximate interpretation warning"),
-            "Compatibility documentation records current logistic/PROCESS identities and the separately qualified bounded Structural Path Randomization scope without changing conservative product labels.",
+            "Compatibility documentation records current logistic/PROCESS identities and the separately qualified scoped Standard Structural Path Randomization contract.",
         ),
     ]
 
@@ -138,8 +141,8 @@ def main() -> int:
                 "checks": checks,
                 "note": (
                     "Current product surfaces validate exact supported method identities. Structural Path "
-                    "Randomization and PROCESS retain conservative candidate/experimental product labels "
-                    "while their separately scoped 2.46 qualification evidence is tracked without broader claims."
+                    "Randomization is exposed under its release-qualified bounded scope; PROCESS retains its "
+                    "conservative product label while separately scoped qualification evidence is tracked."
                 ),
             },
             indent=2,

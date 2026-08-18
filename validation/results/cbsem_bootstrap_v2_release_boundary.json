@@ -1,0 +1,80 @@
+{
+  "kind": "cbsem_bootstrap_v2_boundary_v1",
+  "passed": true,
+  "feature_id": "qpls3.cbsem.bootstrap",
+  "method_version": "cbsem_bootstrap_v2",
+  "claim_scope": "Static engine and structural archive boundary only; this passing report does not authenticate the semantic truth of stored replicate fits or failure meanings.",
+  "checks": {
+    "v2_identity_separate": true,
+    "legacy_v1_still_separate": true,
+    "runtime_minimum_1000": true,
+    "runtime_maximum_10000": true,
+    "full_ml_refit_api_called": true,
+    "normal_theory_not_used": true,
+    "type7_percentile_explicit": true,
+    "confidence_frozen_95": true,
+    "retry_is_fixed_and_bounded": true,
+    "base_identity_bound": true,
+    "below_threshold_payload_is_retained": true,
+    "workers_not_analytical_field": true,
+    "semantic_replay_claim_boundary_explicit": true,
+    "multigroup_not_implemented": true
+  },
+  "sources": [
+    {
+      "path": "crates/qpls-estimation/src/cbsem_bootstrap_contract.rs",
+      "size": 3429,
+      "sha256": "b99bc90922cae36f347367a51d8fec54d38f00d2bff38b7e796c8f61483a0142"
+    },
+    {
+      "path": "crates/qpls-resampling/src/cbsem_bootstrap.rs",
+      "size": 30373,
+      "sha256": "ab870bb7640f8394e656671056b708883b6dcaac7f774c6a8a1228497435734a"
+    },
+    {
+      "path": "docs/methods/CBSEM_BOOTSTRAP_V2.md",
+      "size": 5809,
+      "sha256": "a0c1551abf22c6cc947594387a9aa4d046673c888fcfafc009d1cc1affda391b"
+    },
+    {
+      "path": "validation/methods/cbsem_bootstrap_v2.manifest.json",
+      "size": 11714,
+      "sha256": "5e360db14720483d2a3acc7c675d5b3227c4a756f2ad754ded8d3ee460b1059b"
+    },
+    {
+      "path": "validation/cbsem_bootstrap_v2_reference.py",
+      "size": 21261,
+      "sha256": "22e919a8231bb2c338400f99c203a775c060137b5d3c80b257ae8e9f3d6ee182"
+    },
+    {
+      "path": "validation/cbsem_bootstrap_v2_release_simulation.py",
+      "size": 14743,
+      "sha256": "7e41cd3d773ad79b5b155197df09e66c137fa4c1ebc5dccce832d9d5146e55c7"
+    },
+    {
+      "path": "validation/cbsem_bootstrap_v2_release_boundary_gate.py",
+      "size": 4609,
+      "sha256": "d1cb2fb94091b6d4111c64a8c144a081f5df3ea87a6121c35620c5cafcbcb34f"
+    },
+    {
+      "path": "validation/cbsem_bootstrap_v2_release_persistence_gate.py",
+      "size": 3426,
+      "sha256": "3838513dfc43aa993b55f6412dc55658c7f0e8ab6940cf3fecf90b5b94d319c6"
+    },
+    {
+      "path": "validation/cbsem_bootstrap_v2_method_promotion_audit.py",
+      "size": 5510,
+      "sha256": "0122fe82c4d6ac3e7ebcb6c0f0b42b08018b46bfed8a6bf566df1ab426160ca8"
+    },
+    {
+      "path": "validation/run_v252_cbsem_bootstrap_v2_native_acceptance.ps1",
+      "size": 2505,
+      "sha256": "33768f19fdcb9dc81e37eb10eed1d71cfaf93dbce7aa3c3c4daf7d8f9842d9a6"
+    },
+    {
+      "path": "src/native/nativeCbsemBootstrap.test.ts",
+      "size": 12078,
+      "sha256": "95914f6ced3e12cd80cdcd7924ba3217ab37ef8a1074c2ec663194861f787ef8"
+    }
+  ]
+}

@@ -1,0 +1,487 @@
+{
+  "attached_receipt_count": 0,
+  "build_fingerprint": "validation-source-contract:49394f5eeb988144c0288612c1452d4b6d29f04a1efde4d57580caa409e354bd",
+  "candidate_receipt_descriptors": [
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/current_source_v2/source_49394f5eeb988144c0288612c1452d4b6d29f04a1efde4d57580caa409e354bd/candidate_receipts/method_contract.qualification.json",
+      "sha256": "4ce3602d977366cd16aa6d15880d8f6c7e7d46cdc77e5bf3855507791f8349d9",
+      "size_bytes": 8251
+    }
+  ],
+  "capability_id": "smartpls.pls_algorithm",
+  "cell_id": "qpls3.pls.algorithm",
+  "coverage_blockers": [
+    "coverage.initial_outer_weights_standard_and_individual_not_qualified",
+    "coverage.sum_scores_and_predefined_weights_not_implemented_or_qualified",
+    "coverage.standard_mean_centered_unstandardized_result_breadth_not_qualified",
+    "coverage.full_supported_sem_model_shapes_and_sem_model_v4_compiler_not_closed",
+    "coverage.complete_location_parameter_and_result_table_breadth_not_qualified"
+  ],
+  "current_build_execution_contract": {
+    "central_commands": [
+      [
+        "cargo",
+        "build",
+        "-p",
+        "qpls-cli"
+      ],
+      [
+        "python",
+        "validation/pls_algorithm_v1_current_build_receipts.py",
+        "--cli",
+        "target/debug/qpls.exe",
+        "--source-set-sha256",
+        "49394f5eeb988144c0288612c1452d4b6d29f04a1efde4d57580caa409e354bd",
+        "--scenario-set-sha256",
+        "594371d9e699ab540ddb561a71d6010207b125c762a732c8a9d1324f7910b4fb",
+        "--write-new-snapshot"
+      ]
+    ],
+    "generator_blocker": "The deterministic current-build generator is intentionally not run or represented as evidence while scientific product sources are active.",
+    "generator_status": "planned_not_executed",
+    "policy": "Central serialized execution only after all product sources freeze. A stale or unbound binary, interactive test result, or historical artifact is rejected.",
+    "required_future_roles": [
+      "kernel_execution",
+      "oracle_independence",
+      "adversarial_boundaries",
+      "archive_persistence"
+    ],
+    "required_product_source_paths": [
+      "Cargo.lock",
+      "Cargo.toml",
+      "crates/qpls-cli/Cargo.toml",
+      "crates/qpls-cli/src/main.rs",
+      "crates/qpls-core/Cargo.toml",
+      "crates/qpls-core/src/contract.rs",
+      "crates/qpls-core/src/validation.rs",
+      "crates/qpls-estimation/Cargo.toml",
+      "crates/qpls-estimation/src/pls.rs",
+      "crates/qpls-project/Cargo.toml",
+      "crates/qpls-project/src/archive_integrity.rs",
+      "crates/qpls-project/src/lib.rs",
+      "crates/qpls-runner/Cargo.toml",
+      "crates/qpls-runner/src/lib.rs"
+    ],
+    "required_scenario_set_sha256": "594371d9e699ab540ddb561a71d6010207b125c762a732c8a9d1324f7910b4fb",
+    "required_source_set_sha256": "49394f5eeb988144c0288612c1452d4b6d29f04a1efde4d57580caa409e354bd"
+  },
+  "evidence_blockers": [
+    "evidence.current_source_product_build_missing",
+    "evidence.product_to_oracle_comparison_receipt_missing",
+    "evidence.qualification_sized_bias_recovery_and_failure_simulation_missing",
+    "evidence.product_adversarial_and_worker_matrix_missing",
+    "evidence.real_runner_schema6_archive_roundtrip_and_tamper_receipt_missing",
+    "evidence.cross_format_semantic_readback_missing",
+    "evidence.frontend_and_packaged_windows_receipts_missing",
+    "evidence.performance_scale_soak_and_cancellation_receipts_missing",
+    "evidence.independent_scientific_review_not_recorded"
+  ],
+  "generated_at_utc": "2026-08-15T01:20:26.988519Z",
+  "local_cli_audit": {
+    "eligible_for_execution_receipts": false,
+    "exists": true,
+    "fresh_for_bound_product_sources": false,
+    "mtime_ns": 1786746251442951800,
+    "newest_bound_product_source_mtime_ns": 1786756539190659300,
+    "path": "target/debug/qpls.exe",
+    "product_source_artifacts": [
+      {
+        "path": "Cargo.lock",
+        "sha256": "f53ed52625c3f8fd57765717dc3fcafa0d83e3ebc9508e7c28d0de04591ec7f9",
+        "size_bytes": 154637
+      },
+      {
+        "path": "Cargo.toml",
+        "sha256": "7b5cc1ab12cb81475cce1227b7ab1381e6278cc22f3b501c3b80858d9b1c749d",
+        "size_bytes": 1503
+      },
+      {
+        "path": "crates/qpls-cli/Cargo.toml",
+        "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+        "size_bytes": 678
+      },
+      {
+        "path": "crates/qpls-cli/src/main.rs",
+        "sha256": "7c0e75ae47bc5e81c6799b30e374450033949edf789c46d2b2a225ba42237845",
+        "size_bytes": 352138
+      },
+      {
+        "path": "crates/qpls-core/Cargo.toml",
+        "sha256": "f3c060597827e18cb29690adab487f96042c0528fc1010f5077f605b2114968e",
+        "size_bytes": 453
+      },
+      {
+        "path": "crates/qpls-core/src/contract.rs",
+        "sha256": "65f79b9dd9516d5677ad07cc6a1a1e0d057789b13cfe38be53af3ccd9065cab0",
+        "size_bytes": 126705
+      },
+      {
+        "path": "crates/qpls-core/src/validation.rs",
+        "sha256": "554f4f77573cee58418c05c9020dfcdb5f145b716eab85efe31296443cad8487",
+        "size_bytes": 214332
+      },
+      {
+        "path": "crates/qpls-estimation/Cargo.toml",
+        "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+        "size_bytes": 503
+      },
+      {
+        "path": "crates/qpls-estimation/src/pls.rs",
+        "sha256": "ee56f30b1853db795d530603d2dbcdadbba0e5ec7cf2cdd15438d1e5feeb44da",
+        "size_bytes": 709236
+      },
+      {
+        "path": "crates/qpls-project/Cargo.toml",
+        "sha256": "f0c6a5ac6405c4efc439268f92e0da19c0fb44aaf7392fbb98473bb2da32f453",
+        "size_bytes": 762
+      },
+      {
+        "path": "crates/qpls-project/src/archive_integrity.rs",
+        "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+        "size_bytes": 31085
+      },
+      {
+        "path": "crates/qpls-project/src/lib.rs",
+        "sha256": "a3ffe33bdd56c5446f8b52266e476782021fe3f5fc4e5296296ac059ecc38fba",
+        "size_bytes": 793391
+      },
+      {
+        "path": "crates/qpls-runner/Cargo.toml",
+        "sha256": "07246ac150eb04ae6cb479201c2292caff1d6c66142d9a476237790a9c2e5571",
+        "size_bytes": 472
+      },
+      {
+        "path": "crates/qpls-runner/src/lib.rs",
+        "sha256": "14f703c9f8f32037ccbf0a2104a8968a55e1299fba44d34e8839564ad0c34255",
+        "size_bytes": 82616
+      }
+    ],
+    "reason": "Local qpls.exe is missing or predates at least one bound product source.",
+    "sha256": "35887c8935124619b74255ba93602c20d87300538b60b30840a62aa304fb3f9b",
+    "size_bytes": 61828608
+  },
+  "manifest_mutated": false,
+  "method_contract_checks": {
+    "archive_and_scale_contract_match_finalization_program": true,
+    "coverage_and_evidence_blockers_are_distinct": true,
+    "manifest_remains_absent_with_no_admitted_evidence": true,
+    "official_current_defaults_are_frozen": true,
+    "qualification_spec_has_zero_attached_receipts": true,
+    "qualification_spec_is_compatibility_only": true,
+    "qualification_spec_schema_semantics_and_registry_pass": true,
+    "registry_remains_partial_absent_labs": true,
+    "required_receipt_roles_are_exact": true,
+    "source_descriptors_are_complete": true
+  },
+  "method_version": "pls_pm_v1",
+  "note": "This source-hash-addressed audit is non-promotional. It supports one method-contract candidate and source-oracle work only; registry evidence state remains absent.",
+  "official_smartpls_snapshot": {
+    "checked_on": "2026-08-15",
+    "core_algorithm_url": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/",
+    "factor_composite_url": "https://smartpls.com/documentation/functionalities/composite-and-common-factor-and-mixed-models/"
+  },
+  "passed": true,
+  "promotion_allowed": false,
+  "qualification_id": "qpls3.pls.algorithm.qualification_v2",
+  "qualification_ready": false,
+  "qualification_spec_receipts_mutated": false,
+  "registry_mutated": false,
+  "remaining_blockers": [
+    "coverage.initial_outer_weights_standard_and_individual_not_qualified",
+    "coverage.sum_scores_and_predefined_weights_not_implemented_or_qualified",
+    "coverage.standard_mean_centered_unstandardized_result_breadth_not_qualified",
+    "coverage.full_supported_sem_model_shapes_and_sem_model_v4_compiler_not_closed",
+    "coverage.complete_location_parameter_and_result_table_breadth_not_qualified",
+    "evidence.current_source_product_build_missing",
+    "evidence.product_to_oracle_comparison_receipt_missing",
+    "evidence.qualification_sized_bias_recovery_and_failure_simulation_missing",
+    "evidence.product_adversarial_and_worker_matrix_missing",
+    "evidence.real_runner_schema6_archive_roundtrip_and_tamper_receipt_missing",
+    "evidence.cross_format_semantic_readback_missing",
+    "evidence.frontend_and_packaged_windows_receipts_missing",
+    "evidence.performance_scale_soak_and_cancellation_receipts_missing",
+    "evidence.independent_scientific_review_not_recorded",
+    "qualification.only_method_contract_candidate_descriptor_exists",
+    "qualification.no_candidate_descriptor_is_attached_to_the_spec"
+  ],
+  "report_kind": "pls_algorithm_v1_current_source_qualification_factory_audit_v1",
+  "role_matrix": [
+    {
+      "candidate_receipt_emitted": true,
+      "reasons": [],
+      "role": "method_contract",
+      "status": "candidate_receipt_emitted"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for kernel_execution is absent."
+      ],
+      "role": "kernel_execution",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Two external implementations agree with the transparent oracle, but no current QuickPLS build was compared."
+      ],
+      "role": "oracle_independence",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for generative_recovery is absent."
+      ],
+      "role": "generative_recovery",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Source-oracle metamorphics and typed failures pass; product, worker, GUI/CLI, and archive adversarial execution is absent."
+      ],
+      "role": "adversarial_boundaries",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for archive_persistence is absent."
+      ],
+      "role": "archive_persistence",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for cross_format_export is absent."
+      ],
+      "role": "cross_format_export",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for frontend_contract is absent."
+      ],
+      "role": "frontend_contract",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for packaged_windows_e2e is absent."
+      ],
+      "role": "packaged_windows_e2e",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for performance_scale is absent."
+      ],
+      "role": "performance_scale",
+      "status": "blocked"
+    }
+  ],
+  "scenario_set_sha256": "594371d9e699ab540ddb561a71d6010207b125c762a732c8a9d1324f7910b4fb",
+  "schema_version": 1,
+  "scientific_review_satisfied": false,
+  "source_artifacts": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "f53ed52625c3f8fd57765717dc3fcafa0d83e3ebc9508e7c28d0de04591ec7f9",
+      "size_bytes": 154637
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "7b5cc1ab12cb81475cce1227b7ab1381e6278cc22f3b501c3b80858d9b1c749d",
+      "size_bytes": 1503
+    },
+    {
+      "path": "crates/qpls-cli/Cargo.toml",
+      "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+      "size_bytes": 678
+    },
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "7c0e75ae47bc5e81c6799b30e374450033949edf789c46d2b2a225ba42237845",
+      "size_bytes": 352138
+    },
+    {
+      "path": "crates/qpls-core/Cargo.toml",
+      "sha256": "f3c060597827e18cb29690adab487f96042c0528fc1010f5077f605b2114968e",
+      "size_bytes": 453
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "65f79b9dd9516d5677ad07cc6a1a1e0d057789b13cfe38be53af3ccd9065cab0",
+      "size_bytes": 126705
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "554f4f77573cee58418c05c9020dfcdb5f145b716eab85efe31296443cad8487",
+      "size_bytes": 214332
+    },
+    {
+      "path": "crates/qpls-estimation/Cargo.toml",
+      "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+      "size_bytes": 503
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "ee56f30b1853db795d530603d2dbcdadbba0e5ec7cf2cdd15438d1e5feeb44da",
+      "size_bytes": 709236
+    },
+    {
+      "path": "crates/qpls-project/Cargo.toml",
+      "sha256": "f0c6a5ac6405c4efc439268f92e0da19c0fb44aaf7392fbb98473bb2da32f453",
+      "size_bytes": 762
+    },
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size_bytes": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "a3ffe33bdd56c5446f8b52266e476782021fe3f5fc4e5296296ac059ecc38fba",
+      "size_bytes": 793391
+    },
+    {
+      "path": "crates/qpls-runner/Cargo.toml",
+      "sha256": "07246ac150eb04ae6cb479201c2292caff1d6c66142d9a476237790a9c2e5571",
+      "size_bytes": 472
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "14f703c9f8f32037ccbf0a2104a8968a55e1299fba44d34e8839564ad0c34255",
+      "size_bytes": 82616
+    },
+    {
+      "path": "docs/methods/PLS_ALGORITHM_V1_QUALIFICATION_STATUS.md",
+      "sha256": "7957aa9d7e255c4c24b76f60044e19cdca569d25a1fb0b63862b157186a5d350",
+      "size_bytes": 3404
+    },
+    {
+      "path": "docs/methods/PLS_PM_V1.md",
+      "sha256": "7937432cb0e831da2fe37bf1bb3981603b7615c018178d4a95600e914f843f60",
+      "size_bytes": 4065
+    },
+    {
+      "path": "validation/Resolve-Rscript.ps1",
+      "sha256": "0248e989b85849f4af535b63878e40dcc559b685926dd71e7b3240c6762f8f5f",
+      "size_bytes": 2288
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.json",
+      "sha256": "d3e480178a619d0bec28e48ddfd9a2fb1848c083b78e1afe1c51f1b12e980fd9",
+      "size_bytes": 303615
+    },
+    {
+      "path": "validation/fixtures/simple_reflective.csv",
+      "sha256": "99f61b1191dab4dfbe3760e9863032cb5a00c9337d7c0497485b840ae21d804e",
+      "size_bytes": 60
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size_bytes": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size_bytes": 15836
+    },
+    {
+      "path": "validation/methods/pls_algorithm_v1.manifest.json",
+      "sha256": "6f9a4e058d35a113ae6220a9544aa2eeee7c55b3196bf451b999c3ce7df9cbc8",
+      "size_bytes": 11868
+    },
+    {
+      "path": "validation/pls_algorithm_v1_current_build_receipts.py",
+      "sha256": "1b8ebdcca9815f4826bc119d0622fc0244b9adcdd4123e0675389d2c83bf0801",
+      "size_bytes": 17254
+    },
+    {
+      "path": "validation/pls_algorithm_v1_current_source_oracle.py",
+      "sha256": "40119011d3b2146b5aa0cf746855f8787fc6c35ed0e5e5ebc6bc52ffc2d401bb",
+      "size_bytes": 26714
+    },
+    {
+      "path": "validation/pls_algorithm_v1_qualification_factory.py",
+      "sha256": "a1a1339e67fe45c62834a312b49659bede52d1f4fcddc5a82ecf889b2da4f181",
+      "size_bytes": 41395
+    },
+    {
+      "path": "validation/python_plspm_reference.py",
+      "sha256": "a1881e3cd77a6e49bd15c024acc77fca155d30f3aabec35071b797b1963b703b",
+      "size_bytes": 1966
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/fixtures/pls_algorithm_v1.migrated.json",
+      "sha256": "3184dda504f70089be871d017516da20bbb336e14965057a4162df0579da1c67",
+      "size_bytes": 37881
+    },
+    {
+      "path": "validation/qualification_v2/pls_algorithm_v1.qualification.json",
+      "sha256": "8a7d0fe0dd186afc0b20a8867b10c5d5cbdadd6db3aa01870905157679570c67",
+      "size_bytes": 28215
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/r_csem_reference.R",
+      "sha256": "4c31759068745ab7022450d1806cd31884d543ad548af98d357b4b5c418dbddd",
+      "size_bytes": 3237
+    },
+    {
+      "path": "validation/r_csem_threecommonfactors_reference.R",
+      "sha256": "d89bc14a6e3531c198f58672b3b79c3e61ab4d0e4ea6c8691806af904c2f9582",
+      "size_bytes": 2262
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_current_source_oracle.py",
+      "sha256": "08af20ef765d0699ac09aebbb3a91a971c2238c66d87e1e879589dda1300d41d",
+      "size_bytes": 3172
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_qualification_factory.py",
+      "sha256": "daac7b22100cf590e043db68984f7570878cf8c0d1307746b0d6e69a1c3a7a7f",
+      "size_bytes": 6833
+    }
+  ],
+  "source_set_sha256": "49394f5eeb988144c0288612c1452d4b6d29f04a1efde4d57580caa409e354bd",
+  "spec_frozen_at_utc": "2026-08-15T01:00:00Z",
+  "supportable_evidence_tier": "source_contract_candidate_only",
+  "work_evidence": {
+    "independent_external_oracles": {
+      "path": "validation/results/method_factory/pls_algorithm_v1/current_source_v2/source_49394f5eeb988144c0288612c1452d4b6d29f04a1efde4d57580caa409e354bd/work/independent_external_oracles.json",
+      "sha256": "6ddf181a05a925e4c3090d170af8439b1af35705ce72dbdd61da48a4c323f60b",
+      "size_bytes": 7679
+    },
+    "transparent_numpy_oracle": {
+      "path": "validation/results/method_factory/pls_algorithm_v1/current_source_v2/source_49394f5eeb988144c0288612c1452d4b6d29f04a1efde4d57580caa409e354bd/work/transparent_numpy_oracle.json",
+      "sha256": "dc2d99b69681cd6857a6f886c57bfb81c48730fba4736aaafdb6cbe52e39672e",
+      "size_bytes": 1731
+    }
+  },
+  "work_evidence_checks": {
+    "deterministic_metamorphics_passed": true,
+    "external_comparisons_have_exact_key_membership": true,
+    "hand_microcase_passed": true,
+    "product_execution_receipts_are_blocked": true,
+    "transparent_numpy_oracle_passed": true,
+    "two_external_computational_groups_passed": true,
+    "typed_boundaries_passed": true
+  }
+}

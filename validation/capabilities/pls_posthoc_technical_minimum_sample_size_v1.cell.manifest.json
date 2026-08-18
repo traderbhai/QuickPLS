@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.pls_power_analysis",
+  "execution_context": "pls_algorithm_result",
+  "feature": {
+    "id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+    "label": "PLS post-hoc technical minimum sample size",
+    "method_version": "pls_posthoc_technical_minimum_sample_size_v1",
+    "method_kind": "deterministic"
+  },
+  "coverage_state": "partial",
+  "evidence_state": "engine_only",
+  "surface": "labs",
+  "availability": "experimental_labs_opt_in",
+  "distinct_from_cell_id": "qpls3.pls.sample_size_power",
+  "method_contract": "docs/methods/PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_V1.md",
+  "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/"
+}

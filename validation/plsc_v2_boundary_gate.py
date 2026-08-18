@@ -188,9 +188,9 @@ def main() -> int:
         paths,
         weighting_scheme="pca",
     )
-    invalid["resampling"] = _invalid_case(
-        "resampling",
-        "plsc.resampling_unsupported",
+    invalid["bootstrap_samples_below_minimum"] = _invalid_case(
+        "bootstrap_samples_below_minimum",
+        "plsc.consistent_bootstrap_samples",
         csv_path,
         baseline_constructs,
         paths,

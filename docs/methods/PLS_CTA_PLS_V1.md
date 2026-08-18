@@ -1,6 +1,6 @@
 # CTA-PLS v1
 
-Status: release-candidate contract for the frozen QuickPLS v1 bounded descriptive scope. It derives `native_qualified` while either packaged identity is absent, stale, or failing, and derives `release_qualified` only when the source-bound Windows packaged acceptance and final method audit both exist and pass. This method state proves a functional offline CTA workflow, not the separate commercial zero-process-egress release gate; broader inferential CTA-PLS decision rules remain unsupported.
+`cta_pls_tetrad_v1` is the scoped Standard QuickPLS workflow for the frozen v1 bounded descriptive contract. Its numerical, archive, native, and packaged identities passed under source-bound qualification; current-build receipts are refreshed at the coordinated release gate. This status proves a functional offline CTA workflow, not the separate commercial zero-process-egress release gate. Broader inferential CTA-PLS decision rules remain unsupported.
 
 `AnalysisMethod::CtaPls` runs the ordinary PLS estimator first, then computes tetrad diagnostics for indicator blocks with four or more indicators. The current result reports `method_version = "cta_pls_tetrad_v1"` and stores a typed `cta_pls` payload.
 
@@ -36,4 +36,4 @@ Validation evidence:
 - Functional offline qualification requires a successful analysis/export/save-reopen chain and application/browser requests confined exactly to `http://tauri.localhost` and `http://ipc.localhost`, with no external application request or runtime network dependency.
 - The same packaged report separately records sampled process-tree TCP rows as `platform_background_egress_observed` and derives `commercial_zero_egress_passed`. Observed WebView2 background egress is preserved with `commercial_zero_egress_passed = false`; it does not fail this bounded method qualification and cannot be represented as commercial zero-egress evidence. The global diagnostics/commercial release gate remains strict and authoritative for that claim.
 
-Publication status: the bounded descriptive calculation is independently checked, but it is not inferential CTA-PLS evidence and does not by itself support a commercial zero-egress claim. Bootstrap/permutation tetrad decision rules and broader CTA interpretation remain unsupported.
+Publication status: Standard within the bounded descriptive contract above. It is not inferential CTA-PLS evidence and does not by itself support a commercial zero-egress claim. Bootstrap/permutation tetrad decision rules and broader CTA interpretation remain unsupported.

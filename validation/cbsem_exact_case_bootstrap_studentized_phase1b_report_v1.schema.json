@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem_exact_case_bootstrap_studentized_phase1b_report_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "run_id", "status", "manifest_path", "manifest_sha256", "source_binding", "validation_binding", "physical_memory_bytes", "hardware", "case_receipts", "acceptance_summary", "qualification_boundary"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "cbsem_exact_case_bootstrap_studentized_phase1b_report_v1" },
+    "run_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+    "status": { "enum": ["phase1b_applied_resource_candidate_evidence_passed_qualification_blocked", "phase1b_applied_resource_candidate_evidence_failed_qualification_blocked"] },
+    "manifest_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_manifest_v1.json" },
+    "manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "source_binding": { "type": "object" },
+    "validation_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runner_path", "runner_sha256", "manifest_schema_path", "manifest_schema_sha256", "case_schema_path", "case_schema_sha256", "report_schema_path", "report_schema_sha256"],
+      "properties": {
+        "runner_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase1b.py" },
+        "runner_sha256": { "$ref": "#/$defs/sha256" },
+        "manifest_schema_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_manifest_v1.schema.json" },
+        "manifest_schema_sha256": { "$ref": "#/$defs/sha256" },
+        "case_schema_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_case_v1.schema.json" },
+        "case_schema_sha256": { "$ref": "#/$defs/sha256" },
+        "report_schema_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_report_v1.schema.json" },
+        "report_schema_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "physical_memory_bytes": { "type": "integer", "minimum": 0 },
+    "hardware": { "type": "object" },
+    "case_receipts": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "prefixItems": [
+        { "allOf": [{ "$ref": "#/$defs/receipt" }, { "properties": { "case_id": { "const": "resource_n180_v9_p18_d18_b5000_w12_seed19001" }, "path": { "pattern": "^validation/results/cbsem_exact_case_bootstrap_studentized_phase1b/[^/]+/cases/resource_n180_v9_p18_d18_b5000_w12_seed19001\\.json$" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/receipt" }, { "properties": { "case_id": { "const": "stability_n180_v9_p18_d18_b5000_w12_seed19002" }, "path": { "pattern": "^validation/results/cbsem_exact_case_bootstrap_studentized_phase1b/[^/]+/cases/stability_n180_v9_p18_d18_b5000_w12_seed19002\\.json$" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/receipt" }, { "properties": { "case_id": { "const": "resource_n180_v9_p18_d18_b10000_w12_seed29001" }, "path": { "pattern": "^validation/results/cbsem_exact_case_bootstrap_studentized_phase1b/[^/]+/cases/resource_n180_v9_p18_d18_b10000_w12_seed29001\\.json$" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/receipt" }, { "properties": { "case_id": { "const": "stability_n180_v9_p18_d18_b10000_w12_seed29002" }, "path": { "pattern": "^validation/results/cbsem_exact_case_bootstrap_studentized_phase1b/[^/]+/cases/stability_n180_v9_p18_d18_b10000_w12_seed29002\\.json$" } } }] },
+        { "allOf": [{ "$ref": "#/$defs/receipt" }, { "properties": { "case_id": { "const": "cancellation_n180_v9_p18_d18_b10000_w12_seed39001" }, "path": { "pattern": "^validation/results/cbsem_exact_case_bootstrap_studentized_phase1b/[^/]+/cases/cancellation_n180_v9_p18_d18_b10000_w12_seed39001\\.json$" } } }] }
+      ],
+      "items": false
+    },
+    "acceptance_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reasons", "accepted_cases", "total_cases"],
+      "properties": {
+        "status": { "enum": ["all_predeclared_cases_accepted", "one_or_more_predeclared_cases_rejected"] },
+        "reasons": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "accepted_cases": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "total_cases": { "const": 5 }
+      }
+    },
+    "qualification_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "missing_evidence"],
+      "properties": {
+        "status": { "const": "blocked_not_product_qualification" },
+        "missing_evidence": { "const": ["authoritative_canonical_v11_bytes", "authoritative_text_export_v11_bytes", "coverage_and_failure_rate_simulation", "broader_dimension_and_model_axes", "package_and_integration_gates"] }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "path", "sha256", "status", "acceptance_reasons"],
+      "properties": {
+        "case_id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "status": { "enum": ["accepted_resource_candidate_evidence", "rejected"] },
+        "acceptance_reasons": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    }
+  }
+}

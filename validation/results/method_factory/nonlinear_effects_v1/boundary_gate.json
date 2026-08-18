@@ -1,0 +1,60 @@
+{
+  "checks": {
+    "dataset_identity_tamper_rejected": true,
+    "metamorphic_and_determinism_covered_by_engine_gate": true,
+    "no_scope_result_written": true,
+    "no_tampered_result_written": true,
+    "prebuilt_cli_only": true,
+    "unsupported_scope_rejected": true
+  },
+  "executions": [
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "validate",
+        "validation/results/method_factory/nonlinear_effects_v1/work/boundary_invalid.recipe.json",
+        "--json"
+      ],
+      "duration_seconds": 0.056,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "[]\n"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "validation/results/method_factory/nonlinear_effects_v1/work/boundary_invalid.recipe.json",
+        "--data",
+        "validation/results/method_factory/nonlinear_effects_v1/work/scenario_00/data.csv",
+        "--output",
+        "validation/results/method_factory/nonlinear_effects_v1/work/boundary_scope_invalid.quickpls.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.07,
+      "returncode": 1,
+      "stderr_tail": "Error: PLS estimation failed: unsupported estimation method: Nonlinear effects currently require path or factor weighting\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "validation/results/method_factory/nonlinear_effects_v1/work/boundary_identity_tampered.recipe.json",
+        "--data",
+        "validation/results/method_factory/nonlinear_effects_v1/work/scenario_00/data.csv",
+        "--output",
+        "validation/results/method_factory/nonlinear_effects_v1/work/boundary_identity_tampered.quickpls.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.072,
+      "returncode": 1,
+      "stderr_tail": "Error: recipe dataset fingerprint does not match the imported dataset\n",
+      "stdout_tail": ""
+    }
+  ],
+  "kind": "quickpls_phase3_boundary_gate",
+  "method": "nonlinear_effects_v1",
+  "passed": true,
+  "schema_version": 1
+}

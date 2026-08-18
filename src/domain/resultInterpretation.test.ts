@@ -199,7 +199,7 @@ describe("result-specific interpretation", () => {
     expect(interpretation.diagramAdvice).toEqual([]);
     expect(interpretation.reportParagraphs).toHaveLength(1);
     expect(interpretation.reportParagraphs[0].section).toBe("Historical archive disclosure");
-    expect(interpretation.reportParagraphs[0].text).toContain("no generic PLS, current PROCESS v2, parity, or fresh validation claim");
+    expect(interpretation.reportParagraphs[0].text).toContain("not reinterpreted as generic PLS or current PROCESS v2 results");
     expect(interpretation.reportParagraphs[0].text).not.toContain("No endogenous R2");
   });
 

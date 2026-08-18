@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "6a30dcb4-5eca-4f78-8961-3acac9e79a64",
+  "id": "2f9ef29b-ea26-4f6f-8ef6-f44ed13cef62",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000030102",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-08-13T15:31:29.683389Z",
-    "completed_at": "2026-08-13T15:31:29.684153400Z"
+    "started_at": "2026-08-18T03:55:43.631817100Z",
+    "completed_at": "2026-08-18T03:55:43.632423Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported."
+      "message": "Logistic regression v2 requires a binary numeric outcome and numeric complete-case predictors; multinomial, ordinal, weighted, clustered, automatic categorical encoding, and Firth-corrected models are not available."
     },
     {
       "code": "estimation.warning",
@@ -1233,14 +1233,14 @@
         "process": null,
         "regression_type": "logistic",
         "warnings": [
-          "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported."
+          "Logistic regression v2 requires a binary numeric outcome and numeric complete-case predictors; multinomial, ordinal, weighted, clustered, automatic categorical encoding, and Firth-corrected models are not available."
         ]
       },
       "segmentation": null,
       "transforms": [],
       "used_observations": 175,
       "warnings": [
-        "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported."
+        "Logistic regression v2 requires a binary numeric outcome and numeric complete-case predictors; multinomial, ordinal, weighted, clustered, automatic categorical encoding, and Firth-corrected models are not available."
       ],
       "wpls": null
     },

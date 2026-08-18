@@ -201,6 +201,7 @@ def run_quickpls():
             str(DATA.relative_to(ROOT)),
             "--output",
             str(QUICKPLS.relative_to(ROOT)),
+            "--allow-internal-qualification",
         ],
         check=True,
         stdout=subprocess.DEVNULL,

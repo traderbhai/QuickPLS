@@ -52,6 +52,7 @@ REFERENCE_CHECK_NAMES = frozenset({
     "single_class_outcome_rejected",
     "rank_deficiency_rejected",
     "complete_separation_rejected",
+    "quasi_separation_rejected",
     "nondefault_worker_count_rejected",
 })
 PACKAGED_CHECK_NAMES = frozenset({

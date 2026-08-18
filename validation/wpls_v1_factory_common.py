@@ -33,6 +33,7 @@ EXECUTION_SOURCES = (
     "crates/qpls-core/src/contract.rs",
     "crates/qpls-core/src/validation.rs",
     "crates/qpls-estimation/src/pls.rs",
+    "crates/qpls-assessment/src/lib.rs",
     "crates/qpls-runner/src/lib.rs",
     "crates/qpls-cli/src/main.rs",
 )
@@ -317,6 +318,7 @@ def run_model(
             "--output",
             repository_path(output),
             "--allow-experimental",
+            "--allow-internal-qualification",
         ],
         timeout=600,
     )

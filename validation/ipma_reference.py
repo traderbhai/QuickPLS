@@ -22,7 +22,7 @@ CLI_EXE = ROOT / "target" / "debug" / "qpls.exe"
 TOLERANCE = 1e-6
 METHOD_VERSION = "ipma_v1"
 PERFORMANCE_SCALE = "min_max_0_100_from_standardized_scores_v1"
-PROVENANCE_METHOD_VERSION = "pls_pm_v1+ipma_v1+pls_mediation_v1+pls_assessment_v7"
+PROVENANCE_METHOD_VERSION = "pls_pm_v1+ipma_v1+pls_mediation_v1+pls_assessment_v8"
 CLI_READY = False
 
 
@@ -156,11 +156,16 @@ def ols(predictors, outcome):
 
 
 def performance(values):
+    if not values or any(not math.isfinite(value) for value in values):
+        raise ValueError("IPMA performance requires a nonempty finite score vector")
     lo = min(values)
     hi = max(values)
-    if abs(hi - lo) <= 1e-12:
-        return 50.0
-    return mean([100.0 * (value - lo) / (hi - lo) for value in values])
+    if abs(hi - lo) <= math.ulp(1.0):
+        raise ValueError("IPMA performance requires a nonconstant observed score range")
+    scaled = mean([100.0 * (value - lo) / (hi - lo) for value in values])
+    if not math.isfinite(scaled):
+        raise ValueError("IPMA performance scaling produced a non-finite value")
+    return scaled
 
 
 def independent_reference(rows):
@@ -201,7 +206,7 @@ def independent_reference(rows):
 
 
 def run_quickpls():
-    qpls(["run", str(RECIPE.relative_to(ROOT)), "--data", str(DATA.relative_to(ROOT)), "--output", str(QUICKPLS.relative_to(ROOT)), "--allow-experimental"], check=True, stdout=subprocess.DEVNULL)
+    qpls(["run", str(RECIPE.relative_to(ROOT)), "--data", str(DATA.relative_to(ROOT)), "--output", str(QUICKPLS.relative_to(ROOT)), "--allow-internal-qualification"], check=True, stdout=subprocess.DEVNULL)
     return json.loads(QUICKPLS.read_text(encoding="utf-8"))
 
 

@@ -1,0 +1,1692 @@
+{
+  "audit_pass_meaning": "Current source bytes reproduce the declared support boundary; this is not a Phase-5 completion or method-promotion claim.",
+  "catalogue_snapshot_date": "2026-08-12",
+  "competitor_claim_for_expanded_cbsem_admissible": false,
+  "errors": [],
+  "generated_at_utc": "2026-08-14T00:48:41.039712Z",
+  "passed": false,
+  "phase5_complete": false,
+  "program_id": "qpls3.program.phase5_cbsem_expansion",
+  "program_version": "phase5_cbsem_expansion_v1",
+  "release_qualified_track_count": 0,
+  "report_kind": "quickpls_phase5_cbsem_expansion_audit",
+  "required_track_count": 10,
+  "safe_current_cbsem_claim": "QuickPLS has a native-qualified bounded single-group continuous reflective raw-data ordinary-ML CB-SEM/CFA foundation. Phase-5 expansion methods remain absent unless separately promoted by their method-factory evidence.",
+  "schema_version": 1,
+  "state_counts": {
+    "absent": 10
+  },
+  "tracks": [
+    {
+      "blockers": [
+        "The method-factory release tier still requires a current method audit and packaged Windows acceptance identity.",
+        "The supported claim remains bounded to continuous reflective single-group raw-data ordinary ML."
+      ],
+      "catalogue_snapshot_date": "2026-08-12",
+      "checks": {
+        "contract_valid": true,
+        "derived_state_matches_contract": false,
+        "forbidden_engine_markers_absent": true,
+        "preview_relabeling_forbidden": true,
+        "promotion_identity_matches": true,
+        "promotion_manifest_valid_or_explicitly_uncreated": false,
+        "source_binding_complete": false,
+        "source_probes_present": true,
+        "untracked_promotion_manifests_absent": true
+      },
+      "declared_current_state": "native_qualified",
+      "dependencies": [],
+      "derived_current_state": "absent",
+      "feature_id": "qpls3.cbsem.ml",
+      "forbidden_engine_markers": [],
+      "generated_at_utc": "2026-08-14T00:48:40.629435Z",
+      "ineligible_preview_versions": [],
+      "method_version": "cbsem_ml_v1",
+      "passed": false,
+      "phase5_track_complete": false,
+      "promotion_manifest_result": {
+        "catalogue_snapshot_date": "2026-08-12",
+        "declared_state": "native_qualified",
+        "derived_state": "absent",
+        "errors": [
+          "validation/results/method_factory/cbsem_ml_v1/method_spec.identity.json: source_artifacts[4] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+          "validation/results/method_factory/cbsem_ml_v1/method_spec.identity.json: source_artifacts[4] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+          "validation/results/method_factory/cbsem_ml_v1/method_spec.identity.json: source_artifacts[6] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+          "validation/results/method_factory/cbsem_ml_v1/method_spec.identity.json: source_artifacts[6] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[5] size mismatch for crates/qpls-cli/src/main.rs: expected 216983, found 257857",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[5] SHA-256 mismatch for crates/qpls-cli/src/main.rs: expected 9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d, found db75ee85e70572b1e6de2f442e0f6ae54d67bf907adfa8b273b9f404bfcf7d96",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[7] size mismatch for crates/qpls-core/src/contract.rs: expected 107095, found 114179",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[7] SHA-256 mismatch for crates/qpls-core/src/contract.rs: expected 6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9, found 47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[9] size mismatch for crates/qpls-core/src/methods.rs: expected 3790, found 3988",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[9] SHA-256 mismatch for crates/qpls-core/src/methods.rs: expected 18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6, found ee3006d22ca24fdec20b673962f4759021e2755f360d73146219fda069d9943f",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[12] size mismatch for crates/qpls-core/src/validation.rs: expected 177352, found 194148",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[12] SHA-256 mismatch for crates/qpls-core/src/validation.rs: expected ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573, found 1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[16] size mismatch for crates/qpls-estimation/src/lib.rs: expected 26, found 93",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[16] SHA-256 mismatch for crates/qpls-estimation/src/lib.rs: expected 901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890, found e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[17] size mismatch for crates/qpls-estimation/src/pls.rs: expected 639198, found 653641",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[17] SHA-256 mismatch for crates/qpls-estimation/src/pls.rs: expected fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc, found 6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[20] size mismatch for crates/qpls-project/src/lib.rs: expected 672412, found 720568",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[20] SHA-256 mismatch for crates/qpls-project/src/lib.rs: expected a11c74d3850d0817cc9fc3becdc8b6a7f0f94cff83ee6e53a2936eee0856bc64, found 33d6e1c3f4eb37beb18e303d40b022ae8a45164040107e5a5a089f5429afb481",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[22] size mismatch for crates/qpls-resampling/src/lib.rs: expected 170900, found 177532",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[22] SHA-256 mismatch for crates/qpls-resampling/src/lib.rs: expected edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0, found 9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[24] size mismatch for crates/qpls-runner/src/lib.rs: expected 49402, found 54774",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[24] SHA-256 mismatch for crates/qpls-runner/src/lib.rs: expected 15947a3c646ae5ede23b5d39c8b562e0ae408a3dc8b28ef0a5be3f2eb5a5c127, found 0f090c77ac321e0a0985ad6fda13cf29a588f4dea54d5527b1682ed57542a02b",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[30] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[30] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[33] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+          "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[33] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705",
+          "validation/results/method_factory/cbsem_ml_v1/simulation_report.identity.json: source_artifacts[4] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+          "validation/results/method_factory/cbsem_ml_v1/simulation_report.identity.json: source_artifacts[4] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+          "validation/results/method_factory/cbsem_ml_v1/simulation_report.identity.json: source_artifacts[7] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+          "validation/results/method_factory/cbsem_ml_v1/simulation_report.identity.json: source_artifacts[7] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[5] size mismatch for crates/qpls-cli/src/main.rs: expected 216983, found 257857",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[5] SHA-256 mismatch for crates/qpls-cli/src/main.rs: expected 9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d, found db75ee85e70572b1e6de2f442e0f6ae54d67bf907adfa8b273b9f404bfcf7d96",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[7] size mismatch for crates/qpls-core/src/contract.rs: expected 107095, found 114179",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[7] SHA-256 mismatch for crates/qpls-core/src/contract.rs: expected 6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9, found 47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[9] size mismatch for crates/qpls-core/src/methods.rs: expected 3790, found 3988",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[9] SHA-256 mismatch for crates/qpls-core/src/methods.rs: expected 18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6, found ee3006d22ca24fdec20b673962f4759021e2755f360d73146219fda069d9943f",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[12] size mismatch for crates/qpls-core/src/validation.rs: expected 177352, found 194148",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[12] SHA-256 mismatch for crates/qpls-core/src/validation.rs: expected ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573, found 1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[16] size mismatch for crates/qpls-estimation/src/lib.rs: expected 26, found 93",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[16] SHA-256 mismatch for crates/qpls-estimation/src/lib.rs: expected 901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890, found e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[17] size mismatch for crates/qpls-estimation/src/pls.rs: expected 639198, found 653641",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[17] SHA-256 mismatch for crates/qpls-estimation/src/pls.rs: expected fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc, found 6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[20] size mismatch for crates/qpls-project/src/lib.rs: expected 672412, found 720568",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[20] SHA-256 mismatch for crates/qpls-project/src/lib.rs: expected a11c74d3850d0817cc9fc3becdc8b6a7f0f94cff83ee6e53a2936eee0856bc64, found 33d6e1c3f4eb37beb18e303d40b022ae8a45164040107e5a5a089f5429afb481",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[22] size mismatch for crates/qpls-resampling/src/lib.rs: expected 170900, found 177532",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[22] SHA-256 mismatch for crates/qpls-resampling/src/lib.rs: expected edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0, found 9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[24] size mismatch for crates/qpls-runner/src/lib.rs: expected 49402, found 54774",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[24] SHA-256 mismatch for crates/qpls-runner/src/lib.rs: expected 15947a3c646ae5ede23b5d39c8b562e0ae408a3dc8b28ef0a5be3f2eb5a5c127, found 0f090c77ac321e0a0985ad6fda13cf29a588f4dea54d5527b1682ed57542a02b",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[28] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[28] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[30] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+          "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[30] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[5] size mismatch for crates/qpls-cli/src/main.rs: expected 216983, found 257857",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[5] SHA-256 mismatch for crates/qpls-cli/src/main.rs: expected 9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d, found db75ee85e70572b1e6de2f442e0f6ae54d67bf907adfa8b273b9f404bfcf7d96",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[7] size mismatch for crates/qpls-core/src/contract.rs: expected 107095, found 114179",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[7] SHA-256 mismatch for crates/qpls-core/src/contract.rs: expected 6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9, found 47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[9] size mismatch for crates/qpls-core/src/methods.rs: expected 3790, found 3988",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[9] SHA-256 mismatch for crates/qpls-core/src/methods.rs: expected 18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6, found ee3006d22ca24fdec20b673962f4759021e2755f360d73146219fda069d9943f",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[12] size mismatch for crates/qpls-core/src/validation.rs: expected 177352, found 194148",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[12] SHA-256 mismatch for crates/qpls-core/src/validation.rs: expected ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573, found 1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[16] size mismatch for crates/qpls-estimation/src/lib.rs: expected 26, found 93",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[16] SHA-256 mismatch for crates/qpls-estimation/src/lib.rs: expected 901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890, found e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[17] size mismatch for crates/qpls-estimation/src/pls.rs: expected 639198, found 653641",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[17] SHA-256 mismatch for crates/qpls-estimation/src/pls.rs: expected fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc, found 6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[20] size mismatch for crates/qpls-project/src/lib.rs: expected 672412, found 720568",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[20] SHA-256 mismatch for crates/qpls-project/src/lib.rs: expected a11c74d3850d0817cc9fc3becdc8b6a7f0f94cff83ee6e53a2936eee0856bc64, found 33d6e1c3f4eb37beb18e303d40b022ae8a45164040107e5a5a089f5429afb481",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[22] size mismatch for crates/qpls-resampling/src/lib.rs: expected 170900, found 177532",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[22] SHA-256 mismatch for crates/qpls-resampling/src/lib.rs: expected edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0, found 9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[24] size mismatch for crates/qpls-runner/src/lib.rs: expected 49402, found 54774",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[24] SHA-256 mismatch for crates/qpls-runner/src/lib.rs: expected 15947a3c646ae5ede23b5d39c8b562e0ae408a3dc8b28ef0a5be3f2eb5a5c127, found 0f090c77ac321e0a0985ad6fda13cf29a588f4dea54d5527b1682ed57542a02b",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[28] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[28] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[30] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+          "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[30] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705",
+          "archive_qualified evidence is orphaned before prior-stage qualification",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[2] size mismatch for src/native/NativeCalculationDialog.test.ts: expected 29849, found 32541",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[2] SHA-256 mismatch for src/native/NativeCalculationDialog.test.ts: expected d0933d36ac7b6966ab8fc2b20a9c36b51481ed8b77831bd0dc3828ce7ffb434e, found 4b8913c139566ad078775a185dd95c98ca403c8b52333ed61679ea900ff475ae",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[3] size mismatch for src/native/NativeCalculationDialog.tsx: expected 71729, found 86616",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[3] SHA-256 mismatch for src/native/NativeCalculationDialog.tsx: expected e99af834fda46a5c0197b26ab504d67b5f4e2fc1ca5874d939013b1e3f54f098, found 518ea567091614d51db5a5423b81da4385c8b6e17333e93cb36634e4796a64d3",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[5] size mismatch for src/native/NativeResultsSurface.tsx: expected 44070, found 45188",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[5] SHA-256 mismatch for src/native/NativeResultsSurface.tsx: expected 061b2f8dec7f88b78900937e382c89451c719ae434c6bd158b5f8785b0831e46, found f6efcff6ea68c1cf7d2dd6289e08305abf6e3c89836e00ba488cb1c425375d71",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[6] size mismatch for src/native/nativeAnalysisCatalog.test.ts: expected 18488, found 24431",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[6] SHA-256 mismatch for src/native/nativeAnalysisCatalog.test.ts: expected 47b525b7c3ac28a66ac730c6741d9f2eeec43263234819049122bc4500d03ba0, found 331f7c8e27b26e66c18c8b834b1a3011babcc1f03f84ad09219878677f2f70af",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[7] size mismatch for src/native/nativeAnalysisCatalog.ts: expected 19693, found 22597",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[7] SHA-256 mismatch for src/native/nativeAnalysisCatalog.ts: expected b80ee2f04d704a89c42f05d9a99005efb7faf0251c4467e4e2b96d9f802d130b, found 0b8bd8707e27195bc9f3ffab6bb3a604aba336170b5344002fc7e8e898c78054",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[8] size mismatch for src/native/nativeAnalysisRecipe.test.ts: expected 37911, found 37916",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[8] SHA-256 mismatch for src/native/nativeAnalysisRecipe.test.ts: expected f09b36ffbeabe578cc75dd93567dcbab830e6c87bc48ee3fcc388a8e96d664c7, found f9be8b8b52bda6a7ff7c4048f508e03bf1012f441004dd69f195f70becccaf90",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[9] size mismatch for src/native/nativeAnalysisRecipe.ts: expected 42990, found 49798",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[9] SHA-256 mismatch for src/native/nativeAnalysisRecipe.ts: expected 7710fb0689253b59bb22195838179c9f55ad8d73d19069ce45b9d7768cc39222, found 99506b33253b5032e35ecae1140ab0de8391fda8f24ae0d4a66cbbba910ec707",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[11] size mismatch for src/native/nativeResults.test.ts: expected 120937, found 122091",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[11] SHA-256 mismatch for src/native/nativeResults.test.ts: expected de86e071dd0948df07b15b9a5c0505bef3c29440fe2ef58679b7e0d5794eeade, found beab538ebf63a742b8562fa31ab994e83a1707d2ec46d16ba9d25fe2663c8c51",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[12] size mismatch for src/native/nativeResults.ts: expected 215176, found 227134",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[12] SHA-256 mismatch for src/native/nativeResults.ts: expected d09a2cf6fc62b2289fd6d9573e4b304f3ad0f2070935701f539c1d1891dcb06a, found 64e21ccd4b02943779b4d58073ae402817fc55ac393d1d70b0502f560783c097",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[16] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[16] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[18] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+          "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[18] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[3] size mismatch for src/native/NativeExportDialog.tsx: expected 9603, found 9657",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[3] SHA-256 mismatch for src/native/NativeExportDialog.tsx: expected 51944e6ef72be0cafb2db9ab6b7be77e9aa648d8dc4f45f344acb63d9d14ff0c, found 58fb15c7d3383be2fa2789445cdc50864c92a65592534b6f611d44fa75fdb377",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[4] SHA-256 mismatch for src/native/nativeExportTables.test.ts: expected ab22330e2e6ed7752f748034adaa2c8e653bb4a149a0e91bef21943e2c6964fd, found 7dde0ff853611f936204f9db2ac1fb8b8a8f4755c7b6ab6ff467465c86e533b4",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[5] size mismatch for src/native/nativeExportTables.ts: expected 20407, found 23201",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[5] SHA-256 mismatch for src/native/nativeExportTables.ts: expected ca8ebea6a2607152bd539a56ca73a7178f2e4270b7b3284ff62bd88c20562c88, found a3aa0e77ecfb5e4a480cf9b531953b2c4aa31edddbe7e983758a8089d548ea9e",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[6] size mismatch for src/native/nativeResults.ts: expected 215176, found 227134",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[6] SHA-256 mismatch for src/native/nativeResults.ts: expected d09a2cf6fc62b2289fd6d9573e4b304f3ad0f2070935701f539c1d1891dcb06a, found 64e21ccd4b02943779b4d58073ae402817fc55ac393d1d70b0502f560783c097",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[10] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[10] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[12] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+          "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[12] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705",
+          "native_qualified evidence is orphaned before prior-stage qualification",
+          "evidence file is missing: validation/results/method_factory/cbsem_ml_v1/packaged_acceptance.identity.json",
+          "evidence file is missing: validation/results/method_factory/cbsem_ml_v1/method_audit.identity.json",
+          "release_qualified evidence is orphaned before prior-stage qualification",
+          "declared native_qualified but current evidence derives only absent"
+        ],
+        "feature_id": "qpls3.cbsem.ml",
+        "method_version": "cbsem_ml_v1",
+        "passed": false,
+        "path": "D:\\QuickPLS\\validation\\methods\\cbsem_ml_v1.manifest.json",
+        "stage_results": [
+          {
+            "artifacts": [
+              {
+                "errors": [
+                  "validation/results/method_factory/cbsem_ml_v1/method_spec.identity.json: source_artifacts[4] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+                  "validation/results/method_factory/cbsem_ml_v1/method_spec.identity.json: source_artifacts[4] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+                  "validation/results/method_factory/cbsem_ml_v1/method_spec.identity.json: source_artifacts[6] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+                  "validation/results/method_factory/cbsem_ml_v1/method_spec.identity.json: source_artifacts[6] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705"
+                ],
+                "passed": false,
+                "path": "validation/results/method_factory/cbsem_ml_v1/method_spec.identity.json",
+                "roles": [
+                  "method_spec"
+                ]
+              },
+              {
+                "errors": [
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[5] size mismatch for crates/qpls-cli/src/main.rs: expected 216983, found 257857",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[5] SHA-256 mismatch for crates/qpls-cli/src/main.rs: expected 9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d, found db75ee85e70572b1e6de2f442e0f6ae54d67bf907adfa8b273b9f404bfcf7d96",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[7] size mismatch for crates/qpls-core/src/contract.rs: expected 107095, found 114179",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[7] SHA-256 mismatch for crates/qpls-core/src/contract.rs: expected 6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9, found 47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[9] size mismatch for crates/qpls-core/src/methods.rs: expected 3790, found 3988",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[9] SHA-256 mismatch for crates/qpls-core/src/methods.rs: expected 18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6, found ee3006d22ca24fdec20b673962f4759021e2755f360d73146219fda069d9943f",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[12] size mismatch for crates/qpls-core/src/validation.rs: expected 177352, found 194148",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[12] SHA-256 mismatch for crates/qpls-core/src/validation.rs: expected ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573, found 1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[16] size mismatch for crates/qpls-estimation/src/lib.rs: expected 26, found 93",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[16] SHA-256 mismatch for crates/qpls-estimation/src/lib.rs: expected 901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890, found e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[17] size mismatch for crates/qpls-estimation/src/pls.rs: expected 639198, found 653641",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[17] SHA-256 mismatch for crates/qpls-estimation/src/pls.rs: expected fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc, found 6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[20] size mismatch for crates/qpls-project/src/lib.rs: expected 672412, found 720568",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[20] SHA-256 mismatch for crates/qpls-project/src/lib.rs: expected a11c74d3850d0817cc9fc3becdc8b6a7f0f94cff83ee6e53a2936eee0856bc64, found 33d6e1c3f4eb37beb18e303d40b022ae8a45164040107e5a5a089f5429afb481",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[22] size mismatch for crates/qpls-resampling/src/lib.rs: expected 170900, found 177532",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[22] SHA-256 mismatch for crates/qpls-resampling/src/lib.rs: expected edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0, found 9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[24] size mismatch for crates/qpls-runner/src/lib.rs: expected 49402, found 54774",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[24] SHA-256 mismatch for crates/qpls-runner/src/lib.rs: expected 15947a3c646ae5ede23b5d39c8b562e0ae408a3dc8b28ef0a5be3f2eb5a5c127, found 0f090c77ac321e0a0985ad6fda13cf29a588f4dea54d5527b1682ed57542a02b",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[30] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[30] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[33] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+                  "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json: source_artifacts[33] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705"
+                ],
+                "passed": false,
+                "path": "validation/results/method_factory/cbsem_ml_v1/independent_reference.identity.json",
+                "roles": [
+                  "independent_reference"
+                ]
+              },
+              {
+                "errors": [
+                  "validation/results/method_factory/cbsem_ml_v1/simulation_report.identity.json: source_artifacts[4] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+                  "validation/results/method_factory/cbsem_ml_v1/simulation_report.identity.json: source_artifacts[4] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+                  "validation/results/method_factory/cbsem_ml_v1/simulation_report.identity.json: source_artifacts[7] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+                  "validation/results/method_factory/cbsem_ml_v1/simulation_report.identity.json: source_artifacts[7] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705"
+                ],
+                "passed": false,
+                "path": "validation/results/method_factory/cbsem_ml_v1/simulation_report.identity.json",
+                "roles": [
+                  "simulation_report"
+                ]
+              },
+              {
+                "errors": [
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[5] size mismatch for crates/qpls-cli/src/main.rs: expected 216983, found 257857",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[5] SHA-256 mismatch for crates/qpls-cli/src/main.rs: expected 9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d, found db75ee85e70572b1e6de2f442e0f6ae54d67bf907adfa8b273b9f404bfcf7d96",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[7] size mismatch for crates/qpls-core/src/contract.rs: expected 107095, found 114179",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[7] SHA-256 mismatch for crates/qpls-core/src/contract.rs: expected 6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9, found 47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[9] size mismatch for crates/qpls-core/src/methods.rs: expected 3790, found 3988",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[9] SHA-256 mismatch for crates/qpls-core/src/methods.rs: expected 18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6, found ee3006d22ca24fdec20b673962f4759021e2755f360d73146219fda069d9943f",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[12] size mismatch for crates/qpls-core/src/validation.rs: expected 177352, found 194148",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[12] SHA-256 mismatch for crates/qpls-core/src/validation.rs: expected ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573, found 1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[16] size mismatch for crates/qpls-estimation/src/lib.rs: expected 26, found 93",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[16] SHA-256 mismatch for crates/qpls-estimation/src/lib.rs: expected 901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890, found e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[17] size mismatch for crates/qpls-estimation/src/pls.rs: expected 639198, found 653641",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[17] SHA-256 mismatch for crates/qpls-estimation/src/pls.rs: expected fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc, found 6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[20] size mismatch for crates/qpls-project/src/lib.rs: expected 672412, found 720568",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[20] SHA-256 mismatch for crates/qpls-project/src/lib.rs: expected a11c74d3850d0817cc9fc3becdc8b6a7f0f94cff83ee6e53a2936eee0856bc64, found 33d6e1c3f4eb37beb18e303d40b022ae8a45164040107e5a5a089f5429afb481",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[22] size mismatch for crates/qpls-resampling/src/lib.rs: expected 170900, found 177532",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[22] SHA-256 mismatch for crates/qpls-resampling/src/lib.rs: expected edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0, found 9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[24] size mismatch for crates/qpls-runner/src/lib.rs: expected 49402, found 54774",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[24] SHA-256 mismatch for crates/qpls-runner/src/lib.rs: expected 15947a3c646ae5ede23b5d39c8b562e0ae408a3dc8b28ef0a5be3f2eb5a5c127, found 0f090c77ac321e0a0985ad6fda13cf29a588f4dea54d5527b1682ed57542a02b",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[28] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[28] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[30] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+                  "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json: source_artifacts[30] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705"
+                ],
+                "passed": false,
+                "path": "validation/results/method_factory/cbsem_ml_v1/boundary_report.identity.json",
+                "roles": [
+                  "boundary_report"
+                ]
+              }
+            ],
+            "missing_roles": [],
+            "passed": false,
+            "state": "engine_only"
+          },
+          {
+            "artifacts": [
+              {
+                "errors": [
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[5] size mismatch for crates/qpls-cli/src/main.rs: expected 216983, found 257857",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[5] SHA-256 mismatch for crates/qpls-cli/src/main.rs: expected 9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d, found db75ee85e70572b1e6de2f442e0f6ae54d67bf907adfa8b273b9f404bfcf7d96",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[7] size mismatch for crates/qpls-core/src/contract.rs: expected 107095, found 114179",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[7] SHA-256 mismatch for crates/qpls-core/src/contract.rs: expected 6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9, found 47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[9] size mismatch for crates/qpls-core/src/methods.rs: expected 3790, found 3988",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[9] SHA-256 mismatch for crates/qpls-core/src/methods.rs: expected 18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6, found ee3006d22ca24fdec20b673962f4759021e2755f360d73146219fda069d9943f",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[12] size mismatch for crates/qpls-core/src/validation.rs: expected 177352, found 194148",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[12] SHA-256 mismatch for crates/qpls-core/src/validation.rs: expected ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573, found 1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[16] size mismatch for crates/qpls-estimation/src/lib.rs: expected 26, found 93",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[16] SHA-256 mismatch for crates/qpls-estimation/src/lib.rs: expected 901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890, found e8f07a3a03d210537f29af4c6da16e49db0e487328190986d67200d87e330d7a",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[17] size mismatch for crates/qpls-estimation/src/pls.rs: expected 639198, found 653641",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[17] SHA-256 mismatch for crates/qpls-estimation/src/pls.rs: expected fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc, found 6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[20] size mismatch for crates/qpls-project/src/lib.rs: expected 672412, found 720568",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[20] SHA-256 mismatch for crates/qpls-project/src/lib.rs: expected a11c74d3850d0817cc9fc3becdc8b6a7f0f94cff83ee6e53a2936eee0856bc64, found 33d6e1c3f4eb37beb18e303d40b022ae8a45164040107e5a5a089f5429afb481",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[22] size mismatch for crates/qpls-resampling/src/lib.rs: expected 170900, found 177532",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[22] SHA-256 mismatch for crates/qpls-resampling/src/lib.rs: expected edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0, found 9f136678b0da508851b8cdbcb1b4a9da797545d4286aca6a772de1cfce2ea8ba",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[24] size mismatch for crates/qpls-runner/src/lib.rs: expected 49402, found 54774",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[24] SHA-256 mismatch for crates/qpls-runner/src/lib.rs: expected 15947a3c646ae5ede23b5d39c8b562e0ae408a3dc8b28ef0a5be3f2eb5a5c127, found 0f090c77ac321e0a0985ad6fda13cf29a588f4dea54d5527b1682ed57542a02b",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[28] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[28] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[30] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+                  "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json: source_artifacts[30] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705"
+                ],
+                "passed": false,
+                "path": "validation/results/method_factory/cbsem_ml_v1/persistence_report.identity.json",
+                "roles": [
+                  "persistence_report"
+                ]
+              }
+            ],
+            "missing_roles": [],
+            "passed": false,
+            "state": "archive_qualified"
+          },
+          {
+            "artifacts": [
+              {
+                "errors": [
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[2] size mismatch for src/native/NativeCalculationDialog.test.ts: expected 29849, found 32541",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[2] SHA-256 mismatch for src/native/NativeCalculationDialog.test.ts: expected d0933d36ac7b6966ab8fc2b20a9c36b51481ed8b77831bd0dc3828ce7ffb434e, found 4b8913c139566ad078775a185dd95c98ca403c8b52333ed61679ea900ff475ae",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[3] size mismatch for src/native/NativeCalculationDialog.tsx: expected 71729, found 86616",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[3] SHA-256 mismatch for src/native/NativeCalculationDialog.tsx: expected e99af834fda46a5c0197b26ab504d67b5f4e2fc1ca5874d939013b1e3f54f098, found 518ea567091614d51db5a5423b81da4385c8b6e17333e93cb36634e4796a64d3",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[5] size mismatch for src/native/NativeResultsSurface.tsx: expected 44070, found 45188",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[5] SHA-256 mismatch for src/native/NativeResultsSurface.tsx: expected 061b2f8dec7f88b78900937e382c89451c719ae434c6bd158b5f8785b0831e46, found f6efcff6ea68c1cf7d2dd6289e08305abf6e3c89836e00ba488cb1c425375d71",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[6] size mismatch for src/native/nativeAnalysisCatalog.test.ts: expected 18488, found 24431",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[6] SHA-256 mismatch for src/native/nativeAnalysisCatalog.test.ts: expected 47b525b7c3ac28a66ac730c6741d9f2eeec43263234819049122bc4500d03ba0, found 331f7c8e27b26e66c18c8b834b1a3011babcc1f03f84ad09219878677f2f70af",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[7] size mismatch for src/native/nativeAnalysisCatalog.ts: expected 19693, found 22597",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[7] SHA-256 mismatch for src/native/nativeAnalysisCatalog.ts: expected b80ee2f04d704a89c42f05d9a99005efb7faf0251c4467e4e2b96d9f802d130b, found 0b8bd8707e27195bc9f3ffab6bb3a604aba336170b5344002fc7e8e898c78054",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[8] size mismatch for src/native/nativeAnalysisRecipe.test.ts: expected 37911, found 37916",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[8] SHA-256 mismatch for src/native/nativeAnalysisRecipe.test.ts: expected f09b36ffbeabe578cc75dd93567dcbab830e6c87bc48ee3fcc388a8e96d664c7, found f9be8b8b52bda6a7ff7c4048f508e03bf1012f441004dd69f195f70becccaf90",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[9] size mismatch for src/native/nativeAnalysisRecipe.ts: expected 42990, found 49798",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[9] SHA-256 mismatch for src/native/nativeAnalysisRecipe.ts: expected 7710fb0689253b59bb22195838179c9f55ad8d73d19069ce45b9d7768cc39222, found 99506b33253b5032e35ecae1140ab0de8391fda8f24ae0d4a66cbbba910ec707",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[11] size mismatch for src/native/nativeResults.test.ts: expected 120937, found 122091",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[11] SHA-256 mismatch for src/native/nativeResults.test.ts: expected de86e071dd0948df07b15b9a5c0505bef3c29440fe2ef58679b7e0d5794eeade, found beab538ebf63a742b8562fa31ab994e83a1707d2ec46d16ba9d25fe2663c8c51",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[12] size mismatch for src/native/nativeResults.ts: expected 215176, found 227134",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[12] SHA-256 mismatch for src/native/nativeResults.ts: expected d09a2cf6fc62b2289fd6d9573e4b304f3ad0f2070935701f539c1d1891dcb06a, found 64e21ccd4b02943779b4d58073ae402817fc55ac393d1d70b0502f560783c097",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[16] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[16] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[18] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+                  "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json: source_artifacts[18] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705"
+                ],
+                "passed": false,
+                "path": "validation/results/method_factory/cbsem_ml_v1/frontend_report.identity.json",
+                "roles": [
+                  "frontend_report"
+                ]
+              },
+              {
+                "errors": [
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[3] size mismatch for src/native/NativeExportDialog.tsx: expected 9603, found 9657",
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[3] SHA-256 mismatch for src/native/NativeExportDialog.tsx: expected 51944e6ef72be0cafb2db9ab6b7be77e9aa648d8dc4f45f344acb63d9d14ff0c, found 58fb15c7d3383be2fa2789445cdc50864c92a65592534b6f611d44fa75fdb377",
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[4] SHA-256 mismatch for src/native/nativeExportTables.test.ts: expected ab22330e2e6ed7752f748034adaa2c8e653bb4a149a0e91bef21943e2c6964fd, found 7dde0ff853611f936204f9db2ac1fb8b8a8f4755c7b6ab6ff467465c86e533b4",
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[5] size mismatch for src/native/nativeExportTables.ts: expected 20407, found 23201",
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[5] SHA-256 mismatch for src/native/nativeExportTables.ts: expected ca8ebea6a2607152bd539a56ca73a7178f2e4270b7b3284ff62bd88c20562c88, found a3aa0e77ecfb5e4a480cf9b531953b2c4aa31edddbe7e983758a8089d548ea9e",
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[6] size mismatch for src/native/nativeResults.ts: expected 215176, found 227134",
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[6] SHA-256 mismatch for src/native/nativeResults.ts: expected d09a2cf6fc62b2289fd6d9573e4b304f3ad0f2070935701f539c1d1891dcb06a, found 64e21ccd4b02943779b4d58073ae402817fc55ac393d1d70b0502f560783c097",
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[10] size mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 12466, found 13769",
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[10] SHA-256 mismatch for validation/methods/cbsem_ml_v1.manifest.json: expected 66a34c3841dbe3e8d3a1a097f03b6d753102796639a37a5a5f351b64d209fc61, found 71196b6aa46164b27f0f0397eb274594dde3f12f393105d1c85a6c6c9376fc97",
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[12] size mismatch for validation/test_cbsem_ml_v1_factory.py: expected 7368, found 10391",
+                  "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json: source_artifacts[12] SHA-256 mismatch for validation/test_cbsem_ml_v1_factory.py: expected 95d6072bf7a04a57f8da69a94989f9b7a7ae75172de6d3eb636bfb23ac090159, found f383a93a5890a110e2af0c1e8c6e30259aef8e88a5929514e65c700649495705"
+                ],
+                "passed": false,
+                "path": "validation/results/method_factory/cbsem_ml_v1/export_report.identity.json",
+                "roles": [
+                  "export_report"
+                ]
+              }
+            ],
+            "missing_roles": [],
+            "passed": false,
+            "state": "native_qualified"
+          },
+          {
+            "artifacts": [
+              {
+                "errors": [
+                  "evidence file is missing: validation/results/method_factory/cbsem_ml_v1/packaged_acceptance.identity.json"
+                ],
+                "passed": false,
+                "path": "validation/results/method_factory/cbsem_ml_v1/packaged_acceptance.identity.json",
+                "roles": [
+                  "packaged_acceptance"
+                ]
+              },
+              {
+                "errors": [
+                  "evidence file is missing: validation/results/method_factory/cbsem_ml_v1/method_audit.identity.json"
+                ],
+                "passed": false,
+                "path": "validation/results/method_factory/cbsem_ml_v1/method_audit.identity.json",
+                "roles": [
+                  "method_audit"
+                ]
+              }
+            ],
+            "missing_roles": [],
+            "passed": false,
+            "state": "release_qualified"
+          }
+        ],
+        "target_state": "release_qualified"
+      },
+      "report_kind": "quickpls_phase5_support_boundary_report",
+      "schema_version": 1,
+      "source_artifacts": [],
+      "source_binding_error": "FileNotFoundError: required Phase-5 source is missing: validation/results/method_factory/cbsem_ml_v1/method_audit.identity.json",
+      "source_probes": [
+        {
+          "error": null,
+          "found": true,
+          "needle": "CB-SEM/CFA ML v1 is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective ML scope",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        }
+      ],
+      "support_classification": "bounded_native_foundation",
+      "target_state": "release_qualified",
+      "track_id": "cbsem_ml_baseline",
+      "unexpected_promotion_manifests": []
+    },
+    {
+      "blockers": [
+        "The v1 payload computes estimate plus or minus 1.96 analytical standard errors; it does not resample rows or refit the model.",
+        "No v2 full-refit engine, failure ledger, seed-worker invariant replicate stream, simulation qualification, archive contract, native workflow, or packaged acceptance exists.",
+        "The v1 preview is permanently ineligible for v2 promotion evidence."
+      ],
+      "catalogue_snapshot_date": "2026-08-12",
+      "checks": {
+        "contract_valid": true,
+        "derived_state_matches_contract": true,
+        "forbidden_engine_markers_absent": true,
+        "preview_relabeling_forbidden": true,
+        "promotion_identity_matches": true,
+        "promotion_manifest_valid_or_explicitly_uncreated": true,
+        "source_binding_complete": true,
+        "source_probes_present": true,
+        "untracked_promotion_manifests_absent": true
+      },
+      "declared_current_state": "absent",
+      "dependencies": [
+        "cbsem_ml_baseline"
+      ],
+      "derived_current_state": "absent",
+      "feature_id": "qpls3.cbsem.bootstrap",
+      "forbidden_engine_markers": [],
+      "generated_at_utc": "2026-08-14T00:48:40.657356Z",
+      "ineligible_preview_versions": [
+        "cbsem_bootstrap_v1"
+      ],
+      "method_version": "cbsem_bootstrap_v2",
+      "passed": true,
+      "phase5_track_complete": false,
+      "promotion_manifest_result": {
+        "catalogue_snapshot_date": "2026-08-12",
+        "declared_state": "absent",
+        "derived_state": "absent",
+        "errors": [],
+        "feature_id": "qpls3.cbsem.bootstrap",
+        "method_version": "cbsem_bootstrap_v2",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation\\methods\\cbsem_bootstrap_v2.manifest.json",
+        "stage_results": [
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "boundary_report",
+              "independent_reference",
+              "method_spec",
+              "simulation_report"
+            ],
+            "passed": false,
+            "state": "engine_only"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "persistence_report"
+            ],
+            "passed": false,
+            "state": "archive_qualified"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "export_report",
+              "frontend_report"
+            ],
+            "passed": false,
+            "state": "native_qualified"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "method_audit",
+              "packaged_acceptance"
+            ],
+            "passed": false,
+            "state": "release_qualified"
+          }
+        ],
+        "target_state": "release_qualified"
+      },
+      "report_kind": "quickpls_phase5_support_boundary_report",
+      "schema_version": 1,
+      "source_artifacts": [
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        {
+          "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+          "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+          "size": 5176
+        },
+        {
+          "path": "validation/method_promotion_manifest.py",
+          "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+          "size": 34283
+        },
+        {
+          "path": "validation/methods/cbsem_bootstrap_v2.manifest.json",
+          "sha256": "327afa408d672725cb4198cb3df3667775f9c8f8b6270e6a7fb6ffd96ef41226",
+          "size": 10453
+        },
+        {
+          "path": "validation/methods/method_promotion_manifest.schema.json",
+          "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+          "size": 15836
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_audit.py",
+          "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+          "size": 19268
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_contract.json",
+          "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+          "size": 13256
+        },
+        {
+          "path": "validation/test_method_promotion_manifest.py",
+          "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+          "size": 21222
+        },
+        {
+          "path": "validation/test_phase5_cbsem_expansion_audit.py",
+          "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+          "size": 6382
+        }
+      ],
+      "source_binding_error": null,
+      "source_probes": [
+        {
+          "error": null,
+          "found": true,
+          "needle": "pub const CBSEM_BOOTSTRAP_METHOD_VERSION: &str = \"cbsem_bootstrap_v1\";",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "let width = parameter.standard_error.unwrap_or(0.0) * 1.96;",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "cbsem.bootstrap_unsupported",
+          "path": "crates/qpls-core/src/validation.rs"
+        }
+      ],
+      "support_classification": "ineligible_preview_only",
+      "target_state": "release_qualified",
+      "track_id": "cbsem_bootstrap",
+      "unexpected_promotion_manifests": []
+    },
+    {
+      "blockers": [
+        "The v1 invariance steps arithmetically alter pooled-fit statistics and do not fit configural, metric, or scalar constrained group models.",
+        "The current validated CB-SEM recipe blocks group and invariance metadata.",
+        "No identified scalar mean structure, named constraint/release ledger, hierarchy recovery simulation, strict archive, or native workflow exists."
+      ],
+      "catalogue_snapshot_date": "2026-08-12",
+      "checks": {
+        "contract_valid": true,
+        "derived_state_matches_contract": true,
+        "forbidden_engine_markers_absent": true,
+        "preview_relabeling_forbidden": true,
+        "promotion_identity_matches": true,
+        "promotion_manifest_valid_or_explicitly_uncreated": true,
+        "source_binding_complete": true,
+        "source_probes_present": true,
+        "untracked_promotion_manifests_absent": true
+      },
+      "declared_current_state": "absent",
+      "dependencies": [
+        "cbsem_ml_baseline",
+        "cbsem_equality_constraints"
+      ],
+      "derived_current_state": "absent",
+      "feature_id": "qpls3.cbsem.measurement_invariance",
+      "forbidden_engine_markers": [],
+      "generated_at_utc": "2026-08-14T00:48:40.683818Z",
+      "ineligible_preview_versions": [
+        "cbsem_invariance_v1"
+      ],
+      "method_version": "cbsem_invariance_v2",
+      "passed": true,
+      "phase5_track_complete": false,
+      "promotion_manifest_result": {
+        "catalogue_snapshot_date": "2026-08-12",
+        "declared_state": "absent",
+        "derived_state": "absent",
+        "errors": [],
+        "feature_id": "qpls3.cbsem.measurement_invariance",
+        "method_version": "cbsem_invariance_v2",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation\\methods\\cbsem_invariance_v2.manifest.json",
+        "stage_results": [
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "boundary_report",
+              "independent_reference",
+              "method_spec",
+              "simulation_report"
+            ],
+            "passed": false,
+            "state": "engine_only"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "persistence_report"
+            ],
+            "passed": false,
+            "state": "archive_qualified"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "export_report",
+              "frontend_report"
+            ],
+            "passed": false,
+            "state": "native_qualified"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "method_audit",
+              "packaged_acceptance"
+            ],
+            "passed": false,
+            "state": "release_qualified"
+          }
+        ],
+        "target_state": "release_qualified"
+      },
+      "report_kind": "quickpls_phase5_support_boundary_report",
+      "schema_version": 1,
+      "source_artifacts": [
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        {
+          "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+          "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+          "size": 5176
+        },
+        {
+          "path": "validation/method_promotion_manifest.py",
+          "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+          "size": 34283
+        },
+        {
+          "path": "validation/methods/cbsem_invariance_v2.manifest.json",
+          "sha256": "72f39c764a26968bb67d6713b15a0dd1bf7e8e68362b60e5ee85b207a3d01a40",
+          "size": 10245
+        },
+        {
+          "path": "validation/methods/method_promotion_manifest.schema.json",
+          "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+          "size": 15836
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_audit.py",
+          "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+          "size": 19268
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_contract.json",
+          "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+          "size": 13256
+        },
+        {
+          "path": "validation/test_method_promotion_manifest.py",
+          "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+          "size": 21222
+        },
+        {
+          "path": "validation/test_phase5_cbsem_expansion_audit.py",
+          "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+          "size": 6382
+        }
+      ],
+      "source_binding_error": null,
+      "source_probes": [
+        {
+          "error": null,
+          "found": true,
+          "needle": "pub const CBSEM_INVARIANCE_METHOD_VERSION: &str = \"cbsem_invariance_v1\";",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "let chi = fit.chi_square + index as f64 * groups.len() as f64;",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "cbsem.multigroup_unsupported",
+          "path": "crates/qpls-core/src/validation.rs"
+        }
+      ],
+      "support_classification": "ineligible_preview_only",
+      "target_state": "release_qualified",
+      "track_id": "cbsem_measurement_invariance",
+      "unexpected_promotion_manifests": []
+    },
+    {
+      "blockers": [
+        "The v1 group summaries apportion one pooled fit by group size instead of fitting group-specific and equality-constrained ML models.",
+        "No qualified metric-invariance prerequisite, target-path equality likelihood-ratio test, stratified bootstrap, group failure policy, or v2 persistence/native workflow exists.",
+        "The v1 preview is permanently ineligible for v2 promotion evidence."
+      ],
+      "catalogue_snapshot_date": "2026-08-12",
+      "checks": {
+        "contract_valid": true,
+        "derived_state_matches_contract": true,
+        "forbidden_engine_markers_absent": true,
+        "preview_relabeling_forbidden": true,
+        "promotion_identity_matches": true,
+        "promotion_manifest_valid_or_explicitly_uncreated": true,
+        "source_binding_complete": true,
+        "source_probes_present": true,
+        "untracked_promotion_manifests_absent": true
+      },
+      "declared_current_state": "absent",
+      "dependencies": [
+        "cbsem_ml_baseline",
+        "cbsem_bootstrap",
+        "cbsem_measurement_invariance"
+      ],
+      "derived_current_state": "absent",
+      "feature_id": "qpls3.cbsem.multigroup",
+      "forbidden_engine_markers": [],
+      "generated_at_utc": "2026-08-14T00:48:40.706501Z",
+      "ineligible_preview_versions": [
+        "cbsem_multigroup_v1"
+      ],
+      "method_version": "cbsem_multigroup_v2",
+      "passed": true,
+      "phase5_track_complete": false,
+      "promotion_manifest_result": {
+        "catalogue_snapshot_date": "2026-08-12",
+        "declared_state": "absent",
+        "derived_state": "absent",
+        "errors": [],
+        "feature_id": "qpls3.cbsem.multigroup",
+        "method_version": "cbsem_multigroup_v2",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation\\methods\\cbsem_multigroup_v2.manifest.json",
+        "stage_results": [
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "boundary_report",
+              "independent_reference",
+              "method_spec",
+              "simulation_report"
+            ],
+            "passed": false,
+            "state": "engine_only"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "persistence_report"
+            ],
+            "passed": false,
+            "state": "archive_qualified"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "export_report",
+              "frontend_report"
+            ],
+            "passed": false,
+            "state": "native_qualified"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "method_audit",
+              "packaged_acceptance"
+            ],
+            "passed": false,
+            "state": "release_qualified"
+          }
+        ],
+        "target_state": "release_qualified"
+      },
+      "report_kind": "quickpls_phase5_support_boundary_report",
+      "schema_version": 1,
+      "source_artifacts": [
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        {
+          "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+          "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+          "size": 5176
+        },
+        {
+          "path": "validation/method_promotion_manifest.py",
+          "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+          "size": 34283
+        },
+        {
+          "path": "validation/methods/cbsem_multigroup_v2.manifest.json",
+          "sha256": "61818835bfeef328a28ff668a6f19ed13cfeb23d93666433049c0bef1dba0a3b",
+          "size": 9927
+        },
+        {
+          "path": "validation/methods/method_promotion_manifest.schema.json",
+          "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+          "size": 15836
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_audit.py",
+          "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+          "size": 19268
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_contract.json",
+          "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+          "size": 13256
+        },
+        {
+          "path": "validation/test_method_promotion_manifest.py",
+          "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+          "size": 21222
+        },
+        {
+          "path": "validation/test_phase5_cbsem_expansion_audit.py",
+          "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+          "size": 6382
+        }
+      ],
+      "source_binding_error": null,
+      "source_probes": [
+        {
+          "error": null,
+          "found": true,
+          "needle": "pub const CBSEM_MULTIGROUP_METHOD_VERSION: &str = \"cbsem_multigroup_v1\";",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "chi_square: fit.chi_square * share",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        }
+      ],
+      "support_classification": "ineligible_preview_only",
+      "target_state": "release_qualified",
+      "track_id": "cbsem_multigroup",
+      "unexpected_promotion_manifests": []
+    },
+    {
+      "blockers": [
+        "Individual CB-SEM results expose AIC and BIC, but no typed two-model comparison recipe or comparison result exists.",
+        "No shared-row/data identity check, mechanical nesting validator, constrained refit, likelihood-ratio result, comparison archive, UI/export, or packaged workflow exists.",
+        "Subtracting displayed fit fields manually is not method implementation or promotion evidence."
+      ],
+      "catalogue_snapshot_date": "2026-08-12",
+      "checks": {
+        "contract_valid": true,
+        "derived_state_matches_contract": true,
+        "forbidden_engine_markers_absent": true,
+        "preview_relabeling_forbidden": true,
+        "promotion_identity_matches": true,
+        "promotion_manifest_valid_or_explicitly_uncreated": true,
+        "source_binding_complete": true,
+        "source_probes_present": true,
+        "untracked_promotion_manifests_absent": true
+      },
+      "declared_current_state": "absent",
+      "dependencies": [
+        "cbsem_ml_baseline",
+        "cbsem_equality_constraints"
+      ],
+      "derived_current_state": "absent",
+      "feature_id": "qpls3.cbsem.model_comparison",
+      "forbidden_engine_markers": [
+        {
+          "absent": true,
+          "locations": [],
+          "marker": "CBSEM_MODEL_COMPARISON_METHOD_VERSION"
+        }
+      ],
+      "generated_at_utc": "2026-08-14T00:48:40.735810Z",
+      "ineligible_preview_versions": [],
+      "method_version": "cbsem_model_comparison_v1",
+      "passed": true,
+      "phase5_track_complete": false,
+      "promotion_manifest_result": {
+        "catalogue_snapshot_date": "2026-08-12",
+        "declared_state": "absent",
+        "derived_state": "absent",
+        "errors": [],
+        "feature_id": "qpls3.cbsem.model_comparison",
+        "method_version": "cbsem_model_comparison_v1",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation\\methods\\cbsem_model_comparison_v1.manifest.json",
+        "stage_results": [
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "boundary_report",
+              "independent_reference",
+              "method_spec",
+              "simulation_report"
+            ],
+            "passed": false,
+            "state": "engine_only"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "persistence_report"
+            ],
+            "passed": false,
+            "state": "archive_qualified"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "export_report",
+              "frontend_report"
+            ],
+            "passed": false,
+            "state": "native_qualified"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "method_audit",
+              "packaged_acceptance"
+            ],
+            "passed": false,
+            "state": "release_qualified"
+          }
+        ],
+        "target_state": "release_qualified"
+      },
+      "report_kind": "quickpls_phase5_support_boundary_report",
+      "schema_version": 1,
+      "source_artifacts": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "size": 114179
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        {
+          "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+          "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+          "size": 5176
+        },
+        {
+          "path": "validation/method_promotion_manifest.py",
+          "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+          "size": 34283
+        },
+        {
+          "path": "validation/methods/cbsem_model_comparison_v1.manifest.json",
+          "sha256": "8adc19f22cdc373505336a8d1447b867a4c7d79ebe236404eb60f626a36879c6",
+          "size": 10028
+        },
+        {
+          "path": "validation/methods/method_promotion_manifest.schema.json",
+          "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+          "size": 15836
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_audit.py",
+          "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+          "size": 19268
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_contract.json",
+          "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+          "size": 13256
+        },
+        {
+          "path": "validation/test_method_promotion_manifest.py",
+          "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+          "size": 21222
+        },
+        {
+          "path": "validation/test_phase5_cbsem_expansion_audit.py",
+          "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+          "size": 6382
+        }
+      ],
+      "source_binding_error": null,
+      "source_probes": [
+        {
+          "error": null,
+          "found": true,
+          "needle": "pub aic: f64",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "pub bic: f64",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        }
+      ],
+      "support_classification": "absent_contract_scaffold_only",
+      "target_state": "release_qualified",
+      "track_id": "cbsem_model_comparison",
+      "unexpected_promotion_manifests": []
+    },
+    {
+      "blockers": [
+        "The current validated CB-SEM engine and recipe validation reject interactions.",
+        "PLS two-stage moderation and PROCESS OLS moderation are different estimators and cannot evidence CB-SEM LMS moderation.",
+        "No LMS raw-data likelihood, quadrature/mixture diagnostics, simple-slope covariance, bootstrap refits, persistence, native workflow, or packaged acceptance exists."
+      ],
+      "catalogue_snapshot_date": "2026-08-12",
+      "checks": {
+        "contract_valid": true,
+        "derived_state_matches_contract": true,
+        "forbidden_engine_markers_absent": true,
+        "preview_relabeling_forbidden": true,
+        "promotion_identity_matches": true,
+        "promotion_manifest_valid_or_explicitly_uncreated": true,
+        "source_binding_complete": true,
+        "source_probes_present": true,
+        "untracked_promotion_manifests_absent": true
+      },
+      "declared_current_state": "absent",
+      "dependencies": [
+        "cbsem_ml_baseline",
+        "cbsem_bootstrap"
+      ],
+      "derived_current_state": "absent",
+      "feature_id": "qpls3.cbsem.moderator",
+      "forbidden_engine_markers": [
+        {
+          "absent": true,
+          "locations": [],
+          "marker": "CBSEM_MODERATOR_METHOD_VERSION"
+        },
+        {
+          "absent": true,
+          "locations": [],
+          "marker": "Latent Moderated Structural Equations"
+        }
+      ],
+      "generated_at_utc": "2026-08-14T00:48:40.769713Z",
+      "ineligible_preview_versions": [],
+      "method_version": "cbsem_moderator_v1",
+      "passed": true,
+      "phase5_track_complete": false,
+      "promotion_manifest_result": {
+        "catalogue_snapshot_date": "2026-08-12",
+        "declared_state": "absent",
+        "derived_state": "absent",
+        "errors": [],
+        "feature_id": "qpls3.cbsem.moderator",
+        "method_version": "cbsem_moderator_v1",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation\\methods\\cbsem_moderator_v1.manifest.json",
+        "stage_results": [
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "boundary_report",
+              "independent_reference",
+              "method_spec",
+              "simulation_report"
+            ],
+            "passed": false,
+            "state": "engine_only"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "persistence_report"
+            ],
+            "passed": false,
+            "state": "archive_qualified"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "export_report",
+              "frontend_report"
+            ],
+            "passed": false,
+            "state": "native_qualified"
+          },
+          {
+            "artifacts": [],
+            "missing_roles": [
+              "method_audit",
+              "packaged_acceptance"
+            ],
+            "passed": false,
+            "state": "release_qualified"
+          }
+        ],
+        "target_state": "release_qualified"
+      },
+      "report_kind": "quickpls_phase5_support_boundary_report",
+      "schema_version": 1,
+      "source_artifacts": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "size": 114179
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        {
+          "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+          "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+          "size": 5176
+        },
+        {
+          "path": "validation/method_promotion_manifest.py",
+          "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+          "size": 34283
+        },
+        {
+          "path": "validation/methods/cbsem_moderator_v1.manifest.json",
+          "sha256": "8566796f66e138c4d7f216e2302441070211d87f1691f73028f7e735ac61d646",
+          "size": 9843
+        },
+        {
+          "path": "validation/methods/method_promotion_manifest.schema.json",
+          "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+          "size": 15836
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_audit.py",
+          "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+          "size": 19268
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_contract.json",
+          "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+          "size": 13256
+        },
+        {
+          "path": "validation/test_method_promotion_manifest.py",
+          "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+          "size": 21222
+        },
+        {
+          "path": "validation/test_phase5_cbsem_expansion_audit.py",
+          "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+          "size": 6382
+        }
+      ],
+      "source_binding_error": null,
+      "source_probes": [
+        {
+          "error": null,
+          "found": true,
+          "needle": "CB-SEM ML v1 does not support interactions or higher-order constructs",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "cbsem.interactions_unsupported",
+          "path": "crates/qpls-core/src/validation.rs"
+        }
+      ],
+      "support_classification": "absent_contract_scaffold_only",
+      "target_state": "release_qualified",
+      "track_id": "cbsem_moderator",
+      "unexpected_promotion_manifests": []
+    },
+    {
+      "blockers": [
+        "A typed RobustMl selection exists, but validated recipe rules reject every estimator other than ordinary ML.",
+        "No sandwich/scaled statistic implementation, robust difference test, independent numerical reference, nonnormal simulation, archive identity, native workflow, or method manifest exists.",
+        "An enum value is configuration scaffolding, not engine support."
+      ],
+      "catalogue_snapshot_date": "2026-08-12",
+      "checks": {
+        "contract_valid": true,
+        "derived_state_matches_contract": true,
+        "forbidden_engine_markers_absent": true,
+        "preview_relabeling_forbidden": true,
+        "promotion_identity_matches": true,
+        "promotion_manifest_valid_or_explicitly_uncreated": true,
+        "source_binding_complete": true,
+        "source_probes_present": true,
+        "untracked_promotion_manifests_absent": true
+      },
+      "declared_current_state": "absent",
+      "dependencies": [
+        "cbsem_ml_baseline",
+        "cbsem_equality_constraints"
+      ],
+      "derived_current_state": "absent",
+      "feature_id": "qpls3.cbsem.robust_ml",
+      "forbidden_engine_markers": [
+        {
+          "absent": true,
+          "locations": [],
+          "marker": "CBSEM_ROBUST_ML_METHOD_VERSION"
+        }
+      ],
+      "generated_at_utc": "2026-08-14T00:48:40.861083Z",
+      "ineligible_preview_versions": [],
+      "method_version": "cbsem_robust_ml_v1",
+      "passed": true,
+      "phase5_track_complete": false,
+      "promotion_manifest_result": null,
+      "report_kind": "quickpls_phase5_support_boundary_report",
+      "schema_version": 1,
+      "source_artifacts": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "size": 114179
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        {
+          "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+          "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+          "size": 5176
+        },
+        {
+          "path": "validation/method_promotion_manifest.py",
+          "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+          "size": 34283
+        },
+        {
+          "path": "validation/methods/method_promotion_manifest.schema.json",
+          "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+          "size": 15836
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_audit.py",
+          "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+          "size": 19268
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_contract.json",
+          "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+          "size": 13256
+        },
+        {
+          "path": "validation/test_method_promotion_manifest.py",
+          "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+          "size": 21222
+        },
+        {
+          "path": "validation/test_phase5_cbsem_expansion_audit.py",
+          "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+          "size": 6382
+        }
+      ],
+      "source_binding_error": null,
+      "source_probes": [
+        {
+          "error": null,
+          "found": true,
+          "needle": "RobustMl",
+          "path": "crates/qpls-core/src/contract.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "cbsem.ml_required",
+          "path": "crates/qpls-core/src/validation.rs"
+        }
+      ],
+      "support_classification": "absent_contract_scaffold_only",
+      "target_state": "release_qualified",
+      "track_id": "cbsem_robust_ml",
+      "unexpected_promotion_manifests": []
+    },
+    {
+      "blockers": [
+        "A typed Wlsmv selection exists, but validated recipe rules reject it and the engine contains no ordinal threshold or polychoric-correlation estimator.",
+        "No category coding contract, thresholds, weight matrix, mean/variance correction, sparse-cell failure policy, independent reference, simulation, archive, native workflow, or method manifest exists.",
+        "Treating ordinal codes as continuous ML data is outside this capability."
+      ],
+      "catalogue_snapshot_date": "2026-08-12",
+      "checks": {
+        "contract_valid": true,
+        "derived_state_matches_contract": true,
+        "forbidden_engine_markers_absent": true,
+        "preview_relabeling_forbidden": true,
+        "promotion_identity_matches": true,
+        "promotion_manifest_valid_or_explicitly_uncreated": true,
+        "source_binding_complete": true,
+        "source_probes_present": true,
+        "untracked_promotion_manifests_absent": true
+      },
+      "declared_current_state": "absent",
+      "dependencies": [
+        "cbsem_ml_baseline",
+        "cbsem_equality_constraints"
+      ],
+      "derived_current_state": "absent",
+      "feature_id": "qpls3.cbsem.ordinal_wlsmv",
+      "forbidden_engine_markers": [
+        {
+          "absent": true,
+          "locations": [],
+          "marker": "CBSEM_ORDINAL_WLSMV_METHOD_VERSION"
+        },
+        {
+          "absent": true,
+          "locations": [],
+          "marker": "polychoric_correlation"
+        }
+      ],
+      "generated_at_utc": "2026-08-14T00:48:40.917992Z",
+      "ineligible_preview_versions": [],
+      "method_version": "cbsem_ordinal_wlsmv_v1",
+      "passed": true,
+      "phase5_track_complete": false,
+      "promotion_manifest_result": null,
+      "report_kind": "quickpls_phase5_support_boundary_report",
+      "schema_version": 1,
+      "source_artifacts": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "size": 114179
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        {
+          "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+          "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+          "size": 5176
+        },
+        {
+          "path": "validation/method_promotion_manifest.py",
+          "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+          "size": 34283
+        },
+        {
+          "path": "validation/methods/method_promotion_manifest.schema.json",
+          "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+          "size": 15836
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_audit.py",
+          "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+          "size": 19268
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_contract.json",
+          "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+          "size": 13256
+        },
+        {
+          "path": "validation/test_method_promotion_manifest.py",
+          "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+          "size": 21222
+        },
+        {
+          "path": "validation/test_phase5_cbsem_expansion_audit.py",
+          "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+          "size": 6382
+        }
+      ],
+      "source_binding_error": null,
+      "source_probes": [
+        {
+          "error": null,
+          "found": true,
+          "needle": "Wlsmv",
+          "path": "crates/qpls-core/src/contract.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "cbsem.ml_required",
+          "path": "crates/qpls-core/src/validation.rs"
+        }
+      ],
+      "support_classification": "absent_contract_scaffold_only",
+      "target_state": "release_qualified",
+      "track_id": "cbsem_ordinal_wlsmv",
+      "unexpected_promotion_manifests": []
+    },
+    {
+      "blockers": [
+        "The typed missing-data policy exposes only listwise deletion and the validated CB-SEM rule requires it.",
+        "No case-pattern likelihood, missingness diagnostics, auxiliary-variable policy, independent reference, MAR simulation, archive, native workflow, or method manifest exists.",
+        "Mean imputation or listwise deletion cannot be relabeled as FIML."
+      ],
+      "catalogue_snapshot_date": "2026-08-12",
+      "checks": {
+        "contract_valid": true,
+        "derived_state_matches_contract": true,
+        "forbidden_engine_markers_absent": true,
+        "preview_relabeling_forbidden": true,
+        "promotion_identity_matches": true,
+        "promotion_manifest_valid_or_explicitly_uncreated": true,
+        "source_binding_complete": true,
+        "source_probes_present": true,
+        "untracked_promotion_manifests_absent": true
+      },
+      "declared_current_state": "absent",
+      "dependencies": [
+        "cbsem_ml_baseline"
+      ],
+      "derived_current_state": "absent",
+      "feature_id": "qpls3.cbsem.fiml",
+      "forbidden_engine_markers": [
+        {
+          "absent": true,
+          "locations": [],
+          "marker": "CBSEM_FIML_METHOD_VERSION"
+        },
+        {
+          "absent": true,
+          "locations": [],
+          "marker": "MissingDataPolicy::Fiml"
+        }
+      ],
+      "generated_at_utc": "2026-08-14T00:48:40.980971Z",
+      "ineligible_preview_versions": [],
+      "method_version": "cbsem_fiml_v1",
+      "passed": true,
+      "phase5_track_complete": false,
+      "promotion_manifest_result": null,
+      "report_kind": "quickpls_phase5_support_boundary_report",
+      "schema_version": 1,
+      "source_artifacts": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "size": 114179
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        {
+          "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+          "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+          "size": 5176
+        },
+        {
+          "path": "validation/method_promotion_manifest.py",
+          "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+          "size": 34283
+        },
+        {
+          "path": "validation/methods/method_promotion_manifest.schema.json",
+          "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+          "size": 15836
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_audit.py",
+          "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+          "size": 19268
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_contract.json",
+          "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+          "size": 13256
+        },
+        {
+          "path": "validation/test_method_promotion_manifest.py",
+          "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+          "size": 21222
+        },
+        {
+          "path": "validation/test_phase5_cbsem_expansion_audit.py",
+          "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+          "size": 6382
+        }
+      ],
+      "source_binding_error": null,
+      "source_probes": [
+        {
+          "error": null,
+          "found": true,
+          "needle": "pub enum MissingDataPolicy",
+          "path": "crates/qpls-core/src/contract.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "ListwiseDeletion",
+          "path": "crates/qpls-core/src/contract.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "cbsem.listwise_required",
+          "path": "crates/qpls-core/src/validation.rs"
+        }
+      ],
+      "support_classification": "absent_contract_scaffold_only",
+      "target_state": "release_qualified",
+      "track_id": "cbsem_fiml",
+      "unexpected_promotion_manifests": []
+    },
+    {
+      "blockers": [
+        "The CB-SEM recipe has no general fixed/equality constraint objects, labels, bounds, or release ledger.",
+        "The optimizer parameter plan treats supported parameters as individually free or marker-fixed and has no equality mapping across free parameters.",
+        "Invariance-step names and synthetic v1 deltas are not a general constrained optimizer; no independent reference, simulation, persistence, native workflow, or method manifest exists."
+      ],
+      "catalogue_snapshot_date": "2026-08-12",
+      "checks": {
+        "contract_valid": true,
+        "derived_state_matches_contract": true,
+        "forbidden_engine_markers_absent": true,
+        "preview_relabeling_forbidden": true,
+        "promotion_identity_matches": true,
+        "promotion_manifest_valid_or_explicitly_uncreated": true,
+        "source_binding_complete": true,
+        "source_probes_present": true,
+        "untracked_promotion_manifests_absent": true
+      },
+      "declared_current_state": "absent",
+      "dependencies": [
+        "cbsem_ml_baseline"
+      ],
+      "derived_current_state": "absent",
+      "feature_id": "qpls3.cbsem.equality_constraints",
+      "forbidden_engine_markers": [
+        {
+          "absent": true,
+          "locations": [],
+          "marker": "CBSEM_EQUALITY_CONSTRAINTS_METHOD_VERSION"
+        },
+        {
+          "absent": true,
+          "locations": [],
+          "marker": "CbsemEqualityConstraint"
+        }
+      ],
+      "generated_at_utc": "2026-08-14T00:48:41.039514Z",
+      "ineligible_preview_versions": [],
+      "method_version": "cbsem_equality_constraints_v1",
+      "passed": true,
+      "phase5_track_complete": false,
+      "promotion_manifest_result": null,
+      "report_kind": "quickpls_phase5_support_boundary_report",
+      "schema_version": 1,
+      "source_artifacts": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+          "size": 114179
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+          "size": 194148
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+          "size": 653641
+        },
+        {
+          "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+          "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+          "size": 5176
+        },
+        {
+          "path": "validation/method_promotion_manifest.py",
+          "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+          "size": 34283
+        },
+        {
+          "path": "validation/methods/method_promotion_manifest.schema.json",
+          "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+          "size": 15836
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_audit.py",
+          "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+          "size": 19268
+        },
+        {
+          "path": "validation/phase5_cbsem_expansion_contract.json",
+          "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+          "size": 13256
+        },
+        {
+          "path": "validation/test_method_promotion_manifest.py",
+          "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+          "size": 21222
+        },
+        {
+          "path": "validation/test_phase5_cbsem_expansion_audit.py",
+          "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+          "size": 6382
+        }
+      ],
+      "source_binding_error": null,
+      "source_probes": [
+        {
+          "error": null,
+          "found": true,
+          "needle": "invariance_steps: Vec<CbsemInvarianceStep>",
+          "path": "crates/qpls-core/src/contract.rs"
+        },
+        {
+          "error": null,
+          "found": true,
+          "needle": "enum CbsemFreeParameter",
+          "path": "crates/qpls-estimation/src/pls.rs"
+        }
+      ],
+      "support_classification": "absent_contract_scaffold_only",
+      "target_state": "release_qualified",
+      "track_id": "cbsem_equality_constraints",
+      "unexpected_promotion_manifests": []
+    }
+  ]
+}

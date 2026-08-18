@@ -9,6 +9,9 @@ import { buildNativeResultNavigation, nativeGscaResultProjection } from "./nativ
 describe("native canonical GSCA ALS v2 release gate", () => {
   it("rehydrates the exact model-bound result with labels, tables, and provenance intact", () => {
     const source = completedGscaRun();
+    const engineScopeWarning = "GSCA ALS v2 is bounded to standardized raw data, listwise deletion, disjoint reflective/formative blocks, and recursive single-group structural models; inference and broader GSCA variants are not included.";
+    expect(source.result?.warnings).toEqual([engineScopeWarning]);
+    expect(source.result?.gsca?.warnings).toEqual([engineScopeWarning]);
     const recipe: NativeCanonicalAnalysisRecipe = {
       schema_version: 2,
       id: source.provenance!.recipe_id,

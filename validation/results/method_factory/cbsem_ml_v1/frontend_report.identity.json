@@ -1,0 +1,158 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "accessible_dialog_exercised": true,
+    "catalog_and_bounded_setup_exercised": true,
+    "method_scoped_files": [
+      "src/native/nativeAnalysisCatalog.test.ts",
+      "src/native/nativeAnalysisRecipe.test.ts",
+      "src/native/NativeCalculationDialog.test.ts",
+      "src/native/nativeResults.test.ts",
+      "src/native/NativeResultsSurface.test.tsx"
+    ],
+    "passed": true,
+    "test_files_surfaced": {
+      "NativeCalculationDialog.test.ts": true,
+      "NativeResultsSurface.test.tsx": true,
+      "nativeAnalysisCatalog.test.ts": true,
+      "nativeAnalysisRecipe.test.ts": true,
+      "nativeResults.test.ts": true
+    },
+    "typed_result_and_surface_exercised": true,
+    "vitest_summary": {
+      "expected_test_files": 5,
+      "minimum_tests": 100,
+      "observed_test_files_passed": 5,
+      "observed_test_files_total": 5,
+      "observed_tests_passed": 154,
+      "observed_tests_total": 154,
+      "passed": true
+    }
+  },
+  "execution": {
+    "command": [
+      "npx.cmd",
+      "vitest",
+      "run",
+      "src/native/nativeAnalysisCatalog.test.ts",
+      "src/native/nativeAnalysisRecipe.test.ts",
+      "src/native/NativeCalculationDialog.test.ts",
+      "src/native/nativeResults.test.ts",
+      "src/native/NativeResultsSurface.test.tsx",
+      "--reporter=verbose"
+    ],
+    "duration_seconds": 8.787,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": " navigation > keeps complete v2 output archive-readable with an explicit non-current warning 3ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > rejects a coordinated current-v4 result when MICOM decisions or measurement evidence are altered 10ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > selects only completed runs backed by a result payload 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > honors the newly completed run selected by the calculation lifecycle 0ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > normalizes rounded negative zero in IPMA tables and table-backed exports 6ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > derives a graphical item and every genuine core, quality, and inference capability 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > discloses ordinary PLS bootstrap accounting, typed failures, and unavailable BCa rows 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders only the selected null-centered one-sided count and plus-one probability 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > surfaces genuine direct, specific indirect, total indirect, total, and matched bootstrap mediation output 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > uses immutable run-snapshot labels for mediation effects and inference without changing engine identities 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > maps ordinary model, quality, and known parameter identities while retaining indicator and unknown identities 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > disambiguates duplicate snapshot labels while preserving legacy ID fallback 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > falls back for conflicting duplicate IDs and disambiguates a label from an unmatched raw ID 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > enumerates parallel and serial specific indirect paths from genuine structural coefficients 0ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > retains a zero aggregate and matched inference when parallel specific paths cancel 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > bounds dense-DAG specific-path enumeration deterministically and discloses truncation 64ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > hides mediation and mediation inference sections when their typed outputs are unavailable 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > never emits an empty table or an N/A placeholder 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > uses PLSc corrected loadings and weights and exposes only nonduplicative correction diagnostics 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > keeps WPLS weighted common results and adds genuine case-weight diagnostics 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > opens finite-only CCA residual diagnostics by default using immutable model labels 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > does not fall back to uncorrected or placeholder method output when PLSc/WPLS payload rows are unavailable 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > keeps v1 prediction archives visibly legacy instead of relabeling them as current CVPAT 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders exact v2 indicator prediction, null MAPE, CVPAT benchmark status, and assignment provenance 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > keeps empty and unavailable assessment capabilities out of the tree 0ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects disjoint two-stage HOC evidence without leaking generated score indicators 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > classifies moderation and control inference once and hides generated product indicators 5ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > returns no navigation for failed or payload-free runs 0ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects only exact GSCA ALS v2 output into dedicated, non-inferential tables 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > rejects stale, internally inconsistent, or inference-bearing GSCA payloads 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects only exact current CB-SEM/CFA payloads into method-specific tables and standardized diagrams 3ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders exact attributed RMSEA intervals and rejects malformed attribution 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders genuine CFA score/LM tests separately and fails closed on tampering 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders the exact CFA case-bootstrap family and rejects witness arithmetic tampering 37ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders only complete atomic v11 studentized results and rejects mixed-generation or arithmetic tamper 47ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders only complete atomic v12 BCa results with typed B500 and delete-one failure states 32ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > resolves table items without treating the diagram as a table 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > surfaces exact HTMT inference decisions and rejects contradictory ledgers 4ms\n\n Test Files  5 passed (5)\n      Tests  154 passed (154)\n   Start at  18:46:36\n   Duration  3.90s (transform 5.32s, setup 0ms, import 10.34s, tests 1.37s, environment 1ms)\n\n"
+  },
+  "feature_id": "qpls3.cbsem.ml",
+  "generated_at_utc": "2026-08-18T13:16:40.287250Z",
+  "method_version": "cbsem_ml_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "frontend_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "package-lock.json",
+      "sha256": "065d6ca621abf68ce5fca8c28258890d54396e80516922d6114b928ef2d92280",
+      "size": 94575
+    },
+    {
+      "path": "package.json",
+      "sha256": "40efbe8c8a3055f3e5623fb74349f8151856210c4c5c8aa546ab604bad7f81ab",
+      "size": 69044
+    },
+    {
+      "path": "src/native/NativeCalculationDialog.test.ts",
+      "sha256": "4294e5ee8618b090289ef68f1c77a1d3fe3902c830b4aa5972a5516a35b8c8b7",
+      "size": 52360
+    },
+    {
+      "path": "src/native/NativeCalculationDialog.tsx",
+      "sha256": "0ebb537485efa93f1877b7452c00c66026c4a9f524cf24866440d4675a35da97",
+      "size": 100621
+    },
+    {
+      "path": "src/native/NativeResultsSurface.test.tsx",
+      "sha256": "eb4f7b2cf0b1699ebb7cc0a36ea25aef099d3717e84cf84cfafc9bc5ec5d82f1",
+      "size": 10249
+    },
+    {
+      "path": "src/native/NativeResultsSurface.tsx",
+      "sha256": "3fe3b65bd14102b0e868e8107f970f442ebf1f60ea2f9f7c2d9bd58c75cd8272",
+      "size": 45395
+    },
+    {
+      "path": "src/native/nativeAnalysisCatalog.test.ts",
+      "sha256": "fe0af2e3b3afef31c1dddaab8152bdc390edc0f3f6f6ed2aae1f445da1ecb9ec",
+      "size": 26813
+    },
+    {
+      "path": "src/native/nativeAnalysisCatalog.ts",
+      "sha256": "b5908a2a77913c18e22f5464ded91dbb4b32304e14af44219f82c1d38c271b67",
+      "size": 26802
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.test.ts",
+      "sha256": "f0f8e969bb79b09cfebf69dce7904b607409aeb1e2781d4656f964bf029feae5",
+      "size": 51721
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.ts",
+      "sha256": "57d3c19c60f621d356a5d310ff462dd2056c8785a6aed0f699506a4e820e1d38",
+      "size": 59934
+    },
+    {
+      "path": "src/native/nativeCbsem.testFixture.ts",
+      "sha256": "272f47b29b9a89d166574e5f5834e5403ca9ecfc4821692efb292b7e62d3a11e",
+      "size": 5903
+    },
+    {
+      "path": "src/native/nativeResults.test.ts",
+      "sha256": "3476f90afc93fcb4882e3cbb84bdc487be9d398b04472fe302ef009d1201c268",
+      "size": 173105
+    },
+    {
+      "path": "src/native/nativeResults.ts",
+      "sha256": "86159a6227f9c404ba7056f7002ccc8ccd637c003489e1e4cb1b5328275c4007",
+      "size": 350624
+    },
+    {
+      "path": "validation/cbsem_ml_v1_factory_common.py",
+      "sha256": "b07b75e9f66d481bd2190ab94a03cb42d56768e0bf830c67be9f94e2d1422245",
+      "size": 13364
+    },
+    {
+      "path": "validation/cbsem_ml_v1_factory_evidence.py",
+      "sha256": "c91277b2ccbcec5d4f3ccbe4779376f0533d1e1a85343e615f314d24915d3813",
+      "size": 7351
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cbsem_ml_v1.manifest.json",
+      "sha256": "d94429dd105bc9c993a0c5e90c88d639ab51c92625d89df8751a14321f71ff10",
+      "size": 17158
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_cbsem_ml_v1_factory.py",
+      "sha256": "78fc5f355c6c98e1432b51978f8d0631ae5622680a458473e6ba54056d82387f",
+      "size": 11304
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

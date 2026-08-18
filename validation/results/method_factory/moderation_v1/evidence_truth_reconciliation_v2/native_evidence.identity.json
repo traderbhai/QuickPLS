@@ -1,0 +1,113 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "checks": {
+      "all_declared_test_sources_exist": true,
+      "prebuilt_engine_identity": {
+        "path": "target/debug/qpls.exe",
+        "sha256": "ad982f935cced0de90627d25d941c38d74adf6b19882364b037ca3b9fb01c8b0",
+        "size": 66081792
+      },
+      "targeted_vitest_passed": true,
+      "test_file_count": 5
+    },
+    "execution": {
+      "command": [
+        "npx.cmd",
+        "vitest",
+        "run",
+        "src/domain/resultTables.test.ts",
+        "src/native/NativeModerationDialog.test.tsx",
+        "src/native/nativeExportTables.test.ts",
+        "src/native/nativeModeration.test.ts",
+        "src/native/nativeResults.test.ts"
+      ],
+      "duration_seconds": 9.725,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  5 passed (5)\n      Tests  81 passed (81)\n   Start at  06:03:58\n   Duration  4.18s (transform 3.54s, setup 0ms, import 6.61s, tests 737ms, environment 1ms)\n\n"
+    },
+    "kind": "quickpls_phase3_native_source_gate",
+    "method": "moderation_v1",
+    "packaged_workflow_not_claimed": true,
+    "passed": true,
+    "path": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/native_gate.json",
+    "schema_version": 1,
+    "tests": [
+      "src/domain/resultTables.test.ts",
+      "src/native/NativeModerationDialog.test.tsx",
+      "src/native/nativeExportTables.test.ts",
+      "src/native/nativeModeration.test.ts",
+      "src/native/nativeResults.test.ts"
+    ]
+  },
+  "feature_id": "qpls3.pls.moderation",
+  "generated_at_utc": "2026-08-18T00:34:02.448325Z",
+  "method_version": "pls_two_stage_moderation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "frontend_report+export_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/domain/resultTables.test.ts",
+      "sha256": "e5c339638fa13efb5b12250b9b2f94642935cb74e9482dded23fc8f43d9ec2f3",
+      "size": 22259
+    },
+    {
+      "path": "src/native/NativeModerationDialog.test.tsx",
+      "sha256": "fffb174012a4a5573affd1d1727b7e615d3fa0d82a4b2ceb10da7c230a532551",
+      "size": 1871
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "0c09a9a8279bc13b8492b281e5473eb226525da683143904dfc0a68df3f1336a",
+      "size": 44064
+    },
+    {
+      "path": "src/native/nativeModeration.test.ts",
+      "sha256": "1bf11a14510321139845eca7f8fb2748d014625a6a6c539f6661979c3da8df49",
+      "size": 2625
+    },
+    {
+      "path": "src/native/nativeResults.test.ts",
+      "sha256": "d1f2b6e375aa4f9cfaab39f0922d31e4b34cb913cf6736f16e8f85a7e70492db",
+      "size": 173105
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/moderation_v1.manifest.json",
+      "sha256": "130474213ff5e5d481b8fd26db9038852c8e221e6d85c5444c942d373688b88a",
+      "size": 14197
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "ef5c8d32c4ea502f29666d912ae8103f7eb0e325a838df46dd5647ac07d2c11b",
+      "size": 30813
+    },
+    {
+      "path": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/native_gate.json",
+      "sha256": "4d1791b256742d2c785496057a3bc0c48a9af2997e01cf1db120bf785c453889",
+      "size": 1370
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "148ba50d641d3ba1b42287e782a00854931f7495c3c938e687f2e72d08546956",
+      "size": 3303
+    }
+  ]
+}

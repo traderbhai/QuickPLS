@@ -1,10 +1,12 @@
 {
   "checks": {
     "coefficient_delta": 2.8486223102586194e-09,
-    "has_experimental_warning": true,
+    "has_diagnostic_scope_warning": true,
     "method_version": true,
     "p_values_in_range": true,
     "payload_version": true,
+    "provenance_method": true,
+    "provenance_method_version": true,
     "skewness_delta": 1.0930145677434666e-13,
     "standard_error_delta": 5.868893149241217e-10,
     "t_delta": 5.544559353309886e-09

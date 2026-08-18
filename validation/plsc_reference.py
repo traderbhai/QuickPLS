@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "validation" / "results"
 DATA = RESULTS / "plsc_reference.csv"
 RECIPE = RESULTS / "plsc_reference.recipe.json"
+EXECUTION_RECIPE = RESULTS / "plsc_reference.execution.recipe.json"
 QUICKPLS = RESULTS / "plsc_reference_quickpls.json"
 OUTPUT = RESULTS / "plsc_reference_report.json"
 CLI_EXE = ROOT / "target" / "debug" / "qpls.exe"
@@ -194,6 +195,14 @@ def main():
     fingerprint = dataset_fingerprint()
     recipe = recipe_payload(fingerprint)
     RECIPE.write_text(json.dumps(recipe, indent=2) + "\n", encoding="utf-8")
+    execution_recipe = {
+        **recipe,
+        "schema_version": 3,
+        "method_config": {"kind": "plsc"},
+    }
+    EXECUTION_RECIPE.write_text(
+        json.dumps(execution_recipe, indent=2) + "\n", encoding="utf-8"
+    )
 
     columns = {name: np.asarray([float(row[name]) for row in rows], dtype=float) for name in rows[0]}
     reference = estimate_pls(columns, recipe)
@@ -228,7 +237,7 @@ def main():
     qpls_cli(
         [
             "run",
-            str(RECIPE.relative_to(ROOT)),
+            str(EXECUTION_RECIPE.relative_to(ROOT)),
             "--data",
             str(DATA.relative_to(ROOT)),
             "--output",

@@ -7,13 +7,14 @@
       "passed": true,
       "path": "target/debug/qpls.exe",
       "prebuilt": true,
-      "sha256": "52bba4c791625dd8da51e949683855c2e2f3a83b1cbb83879ff39c4c534ef0d0",
+      "sha256": "ad982f935cced0de90627d25d941c38d74adf6b19882364b037ca3b9fb01c8b0",
       "source_mtime_ns": {
-        "crates/qpls-cli/src/main.rs": 1786607995455877000,
-        "crates/qpls-core/src/contract.rs": 1786607995461617100,
-        "crates/qpls-core/src/validation.rs": 1786620129020320300,
-        "crates/qpls-estimation/src/pls.rs": 1786617342744705100,
-        "crates/qpls-runner/src/lib.rs": 1786620129040430400
+        "crates/qpls-assessment/src/lib.rs": 1787002994858928000,
+        "crates/qpls-cli/src/main.rs": 1787000828418698500,
+        "crates/qpls-core/src/contract.rs": 1786997348571231100,
+        "crates/qpls-core/src/validation.rs": 1786995968383587500,
+        "crates/qpls-estimation/src/pls.rs": 1786993733812215700,
+        "crates/qpls-runner/src/lib.rs": 1786996467995192100
       }
     },
     "current_payload_identity": {
@@ -39,8 +40,8 @@
       {
         "passed": true,
         "path": "validation/results/method_factory/wpls_v1/work/factory_independent_reference.quickpls.json",
-        "sha256": "d61082c22d66331e666d087aeb3513fa4fa285a733f61628ff10f03033fe1797",
-        "size": 22981
+        "sha256": "535b453a4c6e44bf000e1073989dad51a0e65c28dd5022defe1359ccf0e10d0c",
+        "size": 26925
       }
     ],
     "independence": {
@@ -76,15 +77,16 @@
       "validation/results/method_factory/wpls_v1/work/independent_reference.csv",
       "--output",
       "validation/results/method_factory/wpls_v1/work/factory_independent_reference.quickpls.json",
-      "--allow-experimental"
+      "--allow-experimental",
+      "--allow-internal-qualification"
     ],
-    "duration_seconds": 0.045,
+    "duration_seconds": 0.119,
     "returncode": 0,
     "stderr_tail": "",
     "stdout_tail": "wrote analysis result validation/results/method_factory/wpls_v1/work/factory_independent_reference.quickpls.json\n"
   },
   "feature_id": "qpls3.pls.weighted",
-  "generated_at_utc": "2026-08-13T19:01:21.546228Z",
+  "generated_at_utc": "2026-08-17T21:54:48.940671Z",
   "method_version": "wpls_case_weighted_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -92,29 +94,34 @@
   "schema_version": 1,
   "source_artifacts": [
     {
+      "path": "crates/qpls-assessment/src/lib.rs",
+      "sha256": "910a3c42edde1db2dcff8b283a9d7acb388b4eb6b30f88c55201624610c2e341",
+      "size": 187841
+    },
+    {
       "path": "crates/qpls-cli/src/main.rs",
-      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
-      "size": 216983
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
     },
     {
       "path": "crates/qpls-core/src/contract.rs",
-      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
-      "size": 107095
+      "sha256": "51c235a9173d3f9c84e5bfe4c0ce6280268ee26b882e2a41dd01be889a7cdfb5",
+      "size": 144508
     },
     {
       "path": "crates/qpls-core/src/validation.rs",
-      "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
-      "size": 177352
+      "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+      "size": 227427
     },
     {
       "path": "crates/qpls-estimation/src/pls.rs",
-      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-      "size": 639198
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
     },
     {
       "path": "crates/qpls-runner/src/lib.rs",
-      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
-      "size": 49349
+      "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+      "size": 100140
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -128,28 +135,28 @@
     },
     {
       "path": "validation/methods/wpls_v1.manifest.json",
-      "sha256": "3daca54776596694059dab1bb9ee9f732d910b69e481feea817f780ba6ef4d42",
-      "size": 15256
+      "sha256": "6c8a6b2fa9c212941161f4783ea9b0006284ae41d3eb9a33c70b40f16c757266",
+      "size": 17100
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_wpls_v1_factory_evidence.py",
-      "sha256": "5080160efdf8190400f7a946cb7c25ea297182faf7577b4a386420dab3be6884",
-      "size": 4238
+      "sha256": "1efb7101f150d398b0fcbe97af81c8a0359bc1c1d074e2f6f4188b163daf25ff",
+      "size": 4306
     },
     {
       "path": "validation/wpls_reference.py",
-      "sha256": "44cd7eca6b17bdeab236749002f647849adbbb18f9656a82ba5509fe98e8af92",
+      "sha256": "cc2811eaf20c4d3861f12da421249d4d81485a50662b31bb89d78e7a5259f8ab",
       "size": 13821
     },
     {
       "path": "validation/wpls_v1_factory_common.py",
-      "sha256": "c4e3afed2f83563f3667b1ac2d03d8a9e9d6aab35253a1fb339218581f2390ad",
-      "size": 14019
+      "sha256": "fe2894e8f858fd0c563bebadd615ca5ffd2942c1d6173ccd0f926ea4682a9ea1",
+      "size": 14106
     },
     {
       "path": "validation/wpls_v1_factory_evidence.py",

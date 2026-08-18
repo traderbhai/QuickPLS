@@ -549,7 +549,7 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
   },
   {
     id: "method-scope",
-    label: "Validation and Method Scope…",
+    label: "Method Details…",
     action: { id: "utility.open", utility: "method-scope" },
     menu: { menu: "tools", order: 10 },
   },

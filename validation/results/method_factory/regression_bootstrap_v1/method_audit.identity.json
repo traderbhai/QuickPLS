@@ -56,7 +56,7 @@
     ]
   },
   "feature_id": "qpls3.standalone.regression_bootstrap",
-  "generated_at_utc": "2026-08-13T19:55:26.684056Z",
+  "generated_at_utc": "2026-08-18T14:16:16.565328Z",
   "method_version": "regression_bootstrap_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -64,9 +64,14 @@
   "schema_version": 1,
   "source_artifacts": [
     {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
+    {
       "path": "validation/legacy_release_adapter_common.py",
-      "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
-      "size": 51955
+      "sha256": "01f86f08668ad4ff9aad4cccda10298cc6579af4da748cc998d2aabdf0ec8681",
+      "size": 54379
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -80,13 +85,18 @@
     },
     {
       "path": "validation/methods/regression_bootstrap_v1.manifest.json",
-      "sha256": "857b25d5822321d8ddfb16255849e5932170f733c11523317210a3a600935d72",
-      "size": 15009
+      "sha256": "f29fdad3a352c9b1fc4a7a942d2485f8a8f90990656f69994f47d5f682b414fe",
+      "size": 16094
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
     },
     {
       "path": "validation/regression_bootstrap_method_promotion_audit.py",
-      "sha256": "48e1169a2942c83341ce9444fd84683dbd83c1c427e99df36ef44933c7ba0e6b",
-      "size": 51034
+      "sha256": "894ae6bd5580538c70e97c61b665aa3a86ab515d388ed3a9020ee99b33afc756",
+      "size": 51737
     },
     {
       "path": "validation/regression_bootstrap_v1_factory_audit.py",
@@ -95,38 +105,38 @@
     },
     {
       "path": "validation/results/method_factory/regression_bootstrap_v1/engine_stage.identity.json",
-      "sha256": "02186a55f968b5ddb0e58901a0e6db7d6c2a70f5ef6b64673573a0c81533e272",
-      "size": 5232
+      "sha256": "490dc4ad4ca9b085b4cdaf3d43e37a85f70e7d1174d2e2dcee50f0c75015f0e9",
+      "size": 7425
     },
     {
       "path": "validation/results/method_factory/regression_bootstrap_v1/native_stage.identity.json",
-      "sha256": "f1f98342ba23edca17220beda418e0b2cd68180cdb82f729c0ff978e0dfc58a5",
-      "size": 5026
+      "sha256": "a08c63e3fac416396494b14a0d0a6b26cdd7c5066f7eff04ab596d2b0143d9ad",
+      "size": 5042
     },
     {
       "path": "validation/results/method_factory/regression_bootstrap_v1/packaged_acceptance.identity.json",
-      "sha256": "f9e3ebb3154b91fd5dec4a642e813d0464cece5565fb560155e70c02c9776694",
-      "size": 63348
+      "sha256": "575a5d75137192fe7cabff8e7688c40fc1c19343ad083ae2251f8930c49609c6",
+      "size": 83976
     },
     {
       "path": "validation/results/method_factory/regression_bootstrap_v1/persistence_report.identity.json",
-      "sha256": "580206f357e9ccd63c28b4c0f10b245d108e38f7fa250c59445c41f92d35c0ec",
-      "size": 4691
+      "sha256": "0f9045ac8d4f3d73edc74ae61f3f738a785f12d52e0b65b32db3186a9959e506",
+      "size": 4720
     },
     {
       "path": "validation/test_legacy_release_adapters.py",
-      "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
-      "size": 13396
+      "sha256": "dbc695bede07f67595a76601614103ac21b9d6fc3512ddd7b26369a3dbc67c51",
+      "size": 15812
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_regression_bootstrap_method_promotion_audit.py",
-      "sha256": "0a19fa90478931880257b687835b679afb44e4f7f2200c3e8532290456efedc6",
-      "size": 35116
+      "sha256": "fd832cc05f276324b805b93f1eacc51be8e7782b4f38d77657c5f023a840eb37",
+      "size": 35155
     }
   ]
 }

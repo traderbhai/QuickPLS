@@ -1,0 +1,59 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "focused_windows_workflow_passed": {
+      "passed": true
+    },
+    "save_reopen_and_xlsx_evidence_present": {
+      "passed": true
+    },
+    "zero_console_errors": {
+      "passed": true
+    }
+  },
+  "execution": [],
+  "feature_id": "qpls3.groups.micom_permutation_mga",
+  "generated_at_utc": "2026-08-18T13:59:53.298004Z",
+  "method_version": "pls_mga_permutation_v4",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "packaged_acceptance",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/micom_permutation_mga_v4.manifest.json",
+      "sha256": "b6e1f6d7762e5d2ed707f7cb1abf3ea3648a7204e8a22c6d0baa3adbc94ff28d",
+      "size": 11973
+    },
+    {
+      "path": "validation/results/v247_tauri_native_acceptance_mga.json",
+      "sha256": "1d04ffee875c456e576bb8c888cd8d9e5374b67b51102c01c6b0ee99418e6eff",
+      "size": 90493
+    },
+    {
+      "path": "validation/run_v247_mga_native_acceptance.ps1",
+      "sha256": "99e73a0d0bb1ee901f7eaab6a6cd63d33af4617db50e704fd31bea336729a674",
+      "size": 2232
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/v247_tauri_native_acceptance.mjs",
+      "sha256": "952061138db0e6e3beb4f858f7e8c359b9763561980920e67a918d729eaf1c34",
+      "size": 981471
+    }
+  ]
+}

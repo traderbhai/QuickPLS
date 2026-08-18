@@ -19,7 +19,13 @@ import {
   saveNativeProject,
   startNativePlsJob,
 } from "../services/projectService";
-import { hasUnsavedNativeProjectChanges, nativeProjectSignature, nativeSavedProjectSignature } from "./nativeProjectLifecycle";
+import {
+  hasUnsavedNativeProjectChanges,
+  nativeLegacyProjectOperationBlocker,
+  nativeProjectSignature,
+  nativeSavedProjectSignature,
+  nativeSchema6BoundWorkspaceReplacementBlocker,
+} from "./nativeProjectLifecycle";
 import {
   buildNativeAnalysisRecipe,
   buildNativeRecipeModel,
@@ -45,6 +51,7 @@ import {
 import { nativePlsReadiness } from "./nativePlsReadiness";
 import { nativeLogisticReadiness } from "./nativeLogistic";
 import { nativeProcessReadiness } from "./nativeProcess";
+import { nativePlsSampleSizePowerRecipeFromCanonical } from "./nativePlsSampleSizePower";
 import { createAnalysisModelSnapshot } from "./nativeRunModelSnapshot";
 import {
   isStructuralPathRandomizationIdentityPresent,
@@ -52,6 +59,7 @@ import {
   nativeStructuralPathRandomizationRecipeMatches,
 } from "./nativeStructuralPathRandomization";
 import { useWorkspace } from "../store";
+import { useInternalProjectArchiveV6Session } from "../internalProjectArchiveV6SessionStore";
 import type {
   AnalysisRun,
   AnalysisUiSettings,
@@ -191,7 +199,10 @@ export function NativeDesktopController() {
   const replacementPromptOpenRef = useRef(false);
   const autosaveFailureSignatureRef = useRef<string | null>(null);
   const dirtyRef = useRef(false);
+  const authorityOperationPendingRef = useRef(false);
+  const schema6SourceBindingRef = useRef({ bound: false, dirty: false });
   const calculationActiveRef = useRef(false);
+  const calculationCancellationRequestedRef = useRef(false);
   const projectSignatureRef = useRef("");
   const projectPathRef = useRef<string | null>(null);
   const projectNameRef = useRef(OPEN_PROJECT_PLACEHOLDER);
@@ -202,6 +213,17 @@ export function NativeDesktopController() {
   const [projectWritable, setProjectWritable] = useState(true);
 
   const dataset = useWorkspace((state) => state.dataset);
+  const strictAuthorityActive = useWorkspace((state) => Object.keys(state.standardSemModelV4Authorities).length > 0);
+  const strictAuthorityDirty = useWorkspace((state) => {
+    const modelIds = Object.keys(state.standardSemModelV4Authorities);
+    if (!modelIds.length) return false;
+    const captured = state.captureStandardSemModelV4SaveAuthorities(modelIds);
+    return !captured || Object.values(captured).some((authority) => authority.dirty);
+  });
+  const standardActivationPending = useInternalProjectArchiveV6Session((state) => state.standardActivationPending);
+  const saveCopyPending = useInternalProjectArchiveV6Session((state) => state.saveCopyPending);
+  const schema6SourceBound = useInternalProjectArchiveV6Session((state) => Boolean(state.session?.standardActivation));
+  const schema6SourceDirty = useInternalProjectArchiveV6Session((state) => state.dirty);
   const datasetCatalog = useWorkspace((state) => state.datasetCatalog);
   const datasetVersions = useWorkspace((state) => state.datasetVersions);
   const projectModels = useWorkspace((state) => state.projectModels);
@@ -275,10 +297,17 @@ export function NativeDesktopController() {
     runs,
   ]);
   const projectOpen = projectName !== OPEN_PROJECT_PLACEHOLDER;
-  const isDirty = hasUnsavedNativeProjectChanges(projectOpen, cleanSignature, projectSignature);
+  const authorityOperationPending = standardActivationPending || saveCopyPending;
+  const isDirty = hasUnsavedNativeProjectChanges(projectOpen, cleanSignature, projectSignature, {
+    active: strictAuthorityActive,
+    dirty: strictAuthorityDirty,
+    operationPending: authorityOperationPending,
+  });
   const calculationActive = isCalculationActive(runMonitorStatus);
 
   dirtyRef.current = isDirty;
+  authorityOperationPendingRef.current = authorityOperationPending;
+  schema6SourceBindingRef.current = { bound: schema6SourceBound, dirty: schema6SourceDirty };
   calculationActiveRef.current = calculationActive;
   projectSignatureRef.current = projectSignature;
   projectPathRef.current = projectPath;
@@ -312,6 +341,22 @@ export function NativeDesktopController() {
   const confirmWorkspaceReplacement = async (action: string): Promise<boolean> => {
     if (calculationActiveRef.current) {
       pushToast({ tone: "warning", title: "Calculation in progress", detail: `Finish or cancel the calculation before ${action}.` });
+      return false;
+    }
+    if (authorityOperationPendingRef.current) {
+      pushToast({ tone: "warning", title: "Schema-6 operation in progress", detail: `Wait for Standard activation or validated save-copy to finish before ${action}.` });
+      return false;
+    }
+    const schema6BindingBlocker = nativeSchema6BoundWorkspaceReplacementBlocker(
+      schema6SourceBindingRef.current.bound,
+      schema6SourceBindingRef.current.dirty,
+    );
+    if (schema6BindingBlocker) {
+      pushToast({
+        tone: "warning",
+        title: "Schema-6 Standard project still bound",
+        detail: `${schema6BindingBlocker} before ${action}.`,
+      });
       return false;
     }
     if (!dirtyRef.current) return true;
@@ -446,6 +491,11 @@ export function NativeDesktopController() {
 
   const saveProject = async (saveAs: boolean): Promise<boolean> => {
     const currentState = useWorkspace.getState();
+    const lifecycleBlocker = nativeLegacyProjectOperationBlocker(currentState, "schema5_save");
+    if (lifecycleBlocker) {
+      pushToast({ tone: "warning", title: "Schema-6 save required", detail: lifecycleBlocker });
+      return false;
+    }
     const nativeDesktop = isNativeDesktop();
     const shouldPersistModel = currentState.nodes.length > 0 || currentState.activeModelId !== null;
     const modelId = shouldPersistModel
@@ -643,6 +693,13 @@ export function NativeDesktopController() {
       return false;
     }
 
+    const serializationBlocker = useWorkspace.getState()
+      .standardSemModelV4OperationBlocker("legacy_graph_serialization");
+    if (serializationBlocker) {
+      pushToast({ tone: "warning", title: "Schema-6 workflow required", detail: serializationBlocker });
+      return false;
+    }
+
     if (!isNativeDesktop()) {
       applyBrowserExplorerMutation(mutation);
     } else {
@@ -665,7 +722,11 @@ export function NativeDesktopController() {
 
     const nextState = useWorkspace.getState();
     const nextSignature = currentProjectSignature();
-    dirtyRef.current = hasUnsavedNativeProjectChanges(true, cleanSignature, nextSignature);
+    dirtyRef.current = hasUnsavedNativeProjectChanges(true, cleanSignature, nextSignature, {
+      active: strictAuthorityActive,
+      dirty: strictAuthorityDirty,
+      operationPending: authorityOperationPendingRef.current,
+    });
     projectSignatureRef.current = nextSignature;
     const affectedModelId = "modelId" in mutation ? mutation.modelId : nextState.activeModelId;
     const affectedResultId = "resultId" in mutation ? mutation.resultId : null;
@@ -692,6 +753,22 @@ export function NativeDesktopController() {
   };
 
   const runAnalysis = async (request: NativeCalculationRequest) => {
+    calculationCancellationRequestedRef.current = false;
+    const lifecycleBlocker = nativeLegacyProjectOperationBlocker(useWorkspace.getState(), "calculation");
+    if (lifecycleBlocker) {
+      transitionRunMonitor({
+        status: "blocked",
+        phase: "Blocked",
+        message: lifecycleBlocker,
+        completedUnits: 0,
+        totalUnits: 0,
+        startedAt: null,
+        completedAt: null,
+        activeJobId: null,
+        error: lifecycleBlocker,
+      }, { phase: "Blocked", message: lifecycleBlocker, tone: "warning" });
+      return;
+    }
     const submittedSettings = request.settings;
     const readiness = nativePlsReadiness({ dataset, nodes, edges, settings: submittedSettings, nativeDesktop: isNativeDesktop() });
     const logisticDispatch = request.kind === "regression" && submittedSettings.regressionType === "logistic";
@@ -748,7 +825,7 @@ export function NativeDesktopController() {
     transitionRunMonitor({
       status: "queued",
       phase: "Queued",
-      message: methodName + " is waiting for validation.",
+      message: methodName + " is waiting for preflight checks.",
       completedUnits: 0,
       totalUnits: 5,
       startedAt,
@@ -762,11 +839,11 @@ export function NativeDesktopController() {
 
     transitionRunMonitor({
       status: "validating",
-      phase: "Validating",
-      message: "Checking dataset, model, method scope, and calculation settings.",
+      phase: "Checking",
+      message: "Checking the dataset, model, method requirements, and calculation settings.",
       completedUnits: 1,
       totalUnits: 5,
-    }, { phase: "Validating", message: "Frontend readiness checks passed.", tone: "success" });
+    }, { phase: "Checking", message: "Frontend readiness checks passed.", tone: "success" });
 
     const recipeId = crypto.randomUUID();
     const currentState = useWorkspace.getState();
@@ -799,9 +876,16 @@ export function NativeDesktopController() {
     });
 
     let job = await startNativePlsJob(recipe);
+    if (calculationCancellationRequestedRef.current) {
+      job = await cancelNativePlsJob(job.id);
+    }
     setActiveJob(job);
     transitionRunMonitor({
-      status: job.state === "queued" ? "queued" : "running",
+      status: job.state === "cancelling"
+        ? "cancelling"
+        : job.state === "queued"
+          ? "queued"
+          : "running",
       phase: job.phase || "Engine",
       message: job.message ?? "Native engine accepted the calculation job.",
       completedUnits: job.completed_units,
@@ -831,6 +915,7 @@ export function NativeDesktopController() {
     if (job.state === "cancelled") {
       await dismissNativePlsJob(job.id);
       setActiveJob(null);
+      calculationCancellationRequestedRef.current = false;
       transitionRunMonitor({
         status: "cancelled",
         phase: "Cancelled",
@@ -848,11 +933,60 @@ export function NativeDesktopController() {
 
     const envelope = await getNativePlsJobResult(job.id);
     setActiveJob(null);
+    calculationCancellationRequestedRef.current = false;
     transitionRunMonitor({
       status: useWorkspace.getState().runMonitor.status,
       activeJobId: null,
     });
     if (!envelope || envelope.payload.kind === "legacy") throw new Error("The completed job did not return a compatible result.");
+    if (
+      envelope.payload.kind === "pls_sample_size_power_v1"
+      || envelope.payload.kind === "pls_sample_size_power_v2"
+    ) {
+      if (recipe.method_config.kind !== "pls_sample_size_power") {
+        throw new Error("The completed power result does not match its typed prospective recipe.");
+      }
+      const method = "PLS-SEM Sample Size and Power Analysis";
+      const completedRun: AnalysisRun = {
+        id: envelope.id,
+        modelId,
+        name: `${method} run`,
+        method,
+        createdAt: envelope.provenance.completed_at,
+        seed: envelope.provenance.seed,
+        status: "completed",
+        warnings: envelope.diagnostics.filter((item) => item.level === "warning").map((item) => item.message),
+        logs: [
+          ...useWorkspace.getState().runMonitor.logs,
+          {
+            id: `run-${envelope.id}-completed`,
+            timestamp: envelope.provenance.completed_at,
+            phase: "Completed",
+            message: `${method} completed successfully.`,
+            tone: "success",
+          },
+        ],
+        fingerprint: envelope.provenance.dataset_fingerprint.slice(0, 12),
+        ...(modelSnapshot ? { modelSnapshot } : {}),
+        plsSampleSizePower: envelope.payload.analysis,
+        plsSampleSizePowerRecipe: nativePlsSampleSizePowerRecipeFromCanonical(recipe.method_config, recipe.settings),
+        provenance: envelope.provenance,
+      };
+      addRun(completedRun);
+      transitionRunMonitor({
+        status: "completed",
+        phase: "Completed",
+        message: `${method} completed successfully.`,
+        completedUnits: job.total_units,
+        totalUnits: job.total_units,
+        completedAt: envelope.provenance.completed_at,
+        activeJobId: null,
+        lastRunId: envelope.id,
+        error: null,
+      }, { phase: "Completed", message: "Completed power run saved.", tone: "success" });
+      pushToast({ tone: "success", title: "Calculation completed", detail: method });
+      return;
+    }
     const { estimation: result, assessment } = envelope.payload;
     const bootstrap = envelope.payload.kind === "pls_pm_v2"
       ? envelope.payload.bootstrap
@@ -881,7 +1015,7 @@ export function NativeDesktopController() {
         },
       ],
       fingerprint: envelope.provenance.dataset_fingerprint.slice(0, 12),
-      ...(modelSnapshot ? { modelSnapshot } : {}),
+      ...(!standalone && modelSnapshot ? { modelSnapshot } : {}),
       result,
       assessment,
       bootstrap,
@@ -936,15 +1070,19 @@ export function NativeDesktopController() {
   };
 
   const cancelAnalysis = async () => {
-    if (!activeJob) return;
+    const monitor = useWorkspace.getState().runMonitor;
+    if (!isCalculationActive(monitor.status)) return;
+    calculationCancellationRequestedRef.current = true;
+    const jobId = activeJob?.id ?? monitor.activeJobId;
     transitionRunMonitor({
       status: "cancelling",
       phase: "Cancelling",
       message: "Waiting for the engine to stop safely.",
-      activeJobId: activeJob.id,
+      activeJobId: jobId,
     }, { phase: "Cancelling", message: "Cancellation requested.", tone: "warning" });
+    if (!jobId) return;
     try {
-      setActiveJob(await cancelNativePlsJob(activeJob.id));
+      setActiveJob(await cancelNativePlsJob(jobId));
     } catch (error) {
       const message = errorMessage(error);
       if (useWorkspace.getState().runMonitor.status === "cancelling") {
@@ -978,7 +1116,7 @@ export function NativeDesktopController() {
   useEffect(() => {
     if (isNativeDesktop()) return;
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (!dirtyRef.current) return;
+      if (!dirtyRef.current && !authorityOperationPendingRef.current) return;
       event.preventDefault();
       event.returnValue = "";
     };
@@ -1004,6 +1142,13 @@ export function NativeDesktopController() {
         || projectPathRef.current !== projectPath
       ) return;
       const state = useWorkspace.getState();
+      const lifecycleBlocker = nativeLegacyProjectOperationBlocker(state, "schema5_autosave");
+      if (lifecycleBlocker) {
+        if (autosaveFailureSignatureRef.current === scheduledSignature) return;
+        autosaveFailureSignatureRef.current = scheduledSignature;
+        pushToast({ tone: "warning", title: "Recovery save blocked", detail: lifecycleBlocker });
+        return;
+      }
       const shouldPersistModel = state.nodes.length > 0 || state.activeModelId !== null;
       const modelId = shouldPersistModel
         ? state.activeModelId ?? crypto.randomUUID()
@@ -1041,7 +1186,13 @@ export function NativeDesktopController() {
     let unlisten: (() => void) | undefined;
 
     void appWindow.onCloseRequested(async (event) => {
-      if (closeBypassRef.current || !dirtyRef.current) return;
+      if (closeBypassRef.current) return;
+      if (authorityOperationPendingRef.current) {
+        event.preventDefault();
+        pushToast({ tone: "warning", title: "Schema-6 operation in progress", detail: "Wait for Standard activation or validated save-copy to finish before closing." });
+        return;
+      }
+      if (!dirtyRef.current) return;
       event.preventDefault();
       if (closePromptOpenRef.current) return;
       closePromptOpenRef.current = true;

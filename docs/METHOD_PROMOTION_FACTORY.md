@@ -96,10 +96,11 @@ Bootstrapping. Graph-defined PROCESS v2 derives `native_qualified`; the other 30
 contracts remain `absent`. These states come from the strict evidence validator,
 not from this inventory paragraph.
 
-`pls_sample_size_power_v1.manifest.json` is one example of a complete future
-contract that truthfully remains `absent` until its implementation evidence is
-produced. Planned contracts retain exact source requirements and empty evidence
-ladders; they cannot inherit qualification from legacy reports or UI labels.
+`history/pls_sample_size_power_v1.manifest.json` preserves the preregistered
+failed-calibration v1 contract as a historical, non-promotional record. The
+active `pls_sample_size_power_v2.manifest.json` owns current qualification for
+the stable capability ID. Historical contracts cannot inherit current receipts,
+and current contracts cannot relabel historical payloads.
 
 The existing parity ledger retains its own qualification state and validation
 rules. Factory promotion requires newly generated, factory-bound reports; it

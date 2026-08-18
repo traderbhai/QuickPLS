@@ -4,6 +4,12 @@ This protocol turns external beta into a measurable, privacy-safe release gate.
 It does not claim that a beta has run. The current machine contract is
 `planned`, and QuickPLS remains ineligible for competitor-grade stable claims.
 
+The executable pre-beta forms, pseudonymization and deletion procedure,
+six-journey scoring rubric, candidate/lifecycle placeholder, and exit checklist
+are documented in [`QUICKPLS_3_BETA_OPERATIONS_KIT.md`](QUICKPLS_3_BETA_OPERATIONS_KIT.md).
+Passing that kit's dry run validates preparation only; it cannot create beta
+evidence or make `beta_ready` true.
+
 ## Entry conditions
 
 - Every publicly advertised beta capability has current method-factory evidence.
@@ -61,6 +67,8 @@ every threshold and approval is genuine.
 Commands:
 
 ```powershell
+python validation/quickpls_beta_operations_kit.py
+python -m unittest validation.test_quickpls_beta_operations_kit
 python validation/quickpls_external_beta.py
 python validation/quickpls_external_beta.py --require-ready
 python -m unittest validation.test_quickpls_external_beta

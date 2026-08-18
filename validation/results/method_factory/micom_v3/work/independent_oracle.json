@@ -1,0 +1,70 @@
+{
+  "accounting": {
+    "attempted_permutations": 39,
+    "requested_permutations": 39,
+    "retry_policy": "none",
+    "step2_failed_permutations": 0,
+    "step2_usable_permutations": 39,
+    "step3_failed_permutations": 0,
+    "step3_usable_permutations": 39
+  },
+  "boundary_codes": {
+    "degenerate_indicator": "micom.degenerate_indicator",
+    "empty_group": "micom.empty_group",
+    "extreme_imbalance": "micom.extreme_group_imbalance",
+    "missing_configural_review": "micom.configural_review_required",
+    "small_group": "micom.group_too_small"
+  },
+  "checks": {
+    "construct_declaration_reorder_invariant": true,
+    "different_seed_changes_plan": true,
+    "exact_no_retry_accounting": true,
+    "group_swap_decisions_equal": true,
+    "group_swap_partition_and_accounting_equal": true,
+    "group_swap_probabilities_equal": true,
+    "group_swap_signed_reversal": true,
+    "micom_only_scope": true,
+    "row_reorder_invariant": true,
+    "same_seed_repeat_exact": true,
+    "step1_is_review_not_computation": true,
+    "typed_boundaries_exact": true
+  },
+  "fixture_path": "validation/results/micom_v2_reference.csv",
+  "maximum_group_swap_probability_delta": 0.0,
+  "maximum_group_swap_signed_residual": 0.0,
+  "method_version": "micom_v3",
+  "oracle_version": "micom_numpy_oracle_v3.1.0",
+  "passed": true,
+  "permutations": 39,
+  "promotion_requested": false,
+  "qualification_ready": false,
+  "references": [
+    {
+      "citation": "Henseler, Ringle, and Sarstedt (2016), DOI 10.1108/IMR-09-2014-0304",
+      "kind": "primary",
+      "url": "https://doi.org/10.1108/IMR-09-2014-0304"
+    },
+    {
+      "citation": "SmartPLS Measurement Invariance Assessment (MICOM)",
+      "kind": "official_current_behavior",
+      "url": "https://smartpls.com/documentation/algorithms-and-techniques/heterogeneity-and-multigroup/micom/"
+    },
+    {
+      "citation": "SmartPLS Permutation",
+      "kind": "official_current_resampling",
+      "url": "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"
+    }
+  ],
+  "remaining_blockers": [
+    "No current QuickPLS product result has been compared with this v3.1 no-retry MICOM oracle.",
+    "No frozen exact-product fixture yet binds micom_v3_1 output to this oracle under the same canonical partition plan.",
+    "The source fixture covers one bounded reflective path-weighting model; Mode B/mixed composites, controls, interactions, higher-order constructs, missing-data policies, and broader eligible PLS shapes remain unqualified.",
+    "Arbitrary declared-group workflows and deterministic pairwise orchestration beyond one selected A/B comparison remain unqualified.",
+    "Qualification-sized 5,000/10,000-run simulations, calibration, power, and failure-rate evidence are absent.",
+    "A second maintained computational MICOM implementation has not been attached as independent evidence.",
+    "Archive, cross-format export, frontend, packaged Windows, accessibility, performance, soak, and independent scientific-review receipts are absent."
+  ],
+  "report_kind": "micom_v3_independent_oracle_work_report",
+  "schema_version": 1,
+  "work_evidence_only": true
+}

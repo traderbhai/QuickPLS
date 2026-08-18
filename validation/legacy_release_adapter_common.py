@@ -26,6 +26,12 @@ from diagnostic_bundle_source_manifest import (
     validate_build_receipt,
 )
 from method_promotion_manifest import _verify_artifact, validate_manifest
+from packaged_windows_acceptance_v2 import (
+    CONTRACT as PACKAGED_ACCEPTANCE_CONTRACT,
+    EXPECTED_CHECK_COUNT,
+    receipt_binds_packaged_acceptance_contract,
+    validate_required_report_checks,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +43,7 @@ RELEASE_CLI = "target/release/qpls.exe"
 VISUAL_REPORT = "validation/results/v247_native_desktop_visual_acceptance.json"
 CUMULATIVE_REPORT = "validation/results/v247_tauri_native_acceptance.json"
 CUMULATIVE_RECEIPT = "validation/results/v247_cumulative_native_acceptance_receipt.json"
+EXPECTED_CUMULATIVE_CHECKS = EXPECTED_CHECK_COUNT
 EXPECTED_VIEWPORTS = {
     "1024x700": {"width": 1024, "height": 700},
     "1280x720": {"width": 1280, "height": 720},
@@ -212,6 +219,10 @@ METHODS: dict[str, dict[str, Any]] = {
             "validation/monitor_quickpls_process_tree.ps1",
             "validation/process_v2_reference.py",
         ),
+        "postprocess_runtime_sources": (
+            "validation/run_v247_process_v2_native_acceptance.ps1",
+        ),
+        "postprocess_evidence_report": "validation/results/process_v2_resource_report.json",
     },
 }
 
@@ -794,7 +805,7 @@ def verify_cumulative_receipt(method: str, not_before: datetime, packaged: dict[
         supervisor_source = _safe_path("validation/run_v247_cumulative_native_acceptance.ps1")
         supervisor_mtime = datetime.fromtimestamp(supervisor_source.stat().st_mtime, timezone.utc)
         checks = {
-            "schema_and_kind": receipt.get("schema_version") == 1
+            "schema_and_kind": receipt_binds_packaged_acceptance_contract(receipt)
             and receipt.get("kind") == "quickpls_v247_cumulative_native_acceptance_receipt",
             "receipt_passed_cleanly": receipt.get("passed") is True
             and receipt.get("failures") == 0
@@ -807,19 +818,23 @@ def verify_cumulative_receipt(method: str, not_before: datetime, packaged: dict[
             "exact_report_path": receipt.get("report") == CUMULATIVE_REPORT,
             "exact_report_bytes": receipt.get("report_sha256") == report_actual["sha256"]
             and receipt.get("report_size") == report_actual["size"],
-            "exact_177_checks": receipt.get("checks") == 177
-            and receipt.get("unique_checks") == 177
-            and len(report.get("checks", {})) == 177,
-            "final_scope_regression_bootstrap": receipt.get("final_scope") == "regression_bootstrap"
-            and report.get("focusedRun", {}).get("scope") == "regression_bootstrap",
+            "exact_required_checks": receipt_binds_packaged_acceptance_contract(receipt)
+            and validate_required_report_checks(PACKAGED_ACCEPTANCE_CONTRACT, report.get("checks"))["passed"],
+            "final_scope_regression_bootstrap": receipt.get("final_scope") == PACKAGED_ACCEPTANCE_CONTRACT["final_scope"]
+            and report.get("focusedRun", {}).get("scope") == PACKAGED_ACCEPTANCE_CONTRACT["final_scope"],
             "graceful_cleanup_verified": receipt.get("graceful_process_cleanup_verified") is True,
             "export_roles_unique": len(roles) == len(set(roles)),
             "method_exports_exact_and_bound": all(row["passed"] for row in exact_exports.values()),
         }
         if method == "regression_bootstrap_v1":
             scoped = descriptor(_safe_path(config["raw_report"]))
-            checks["final_scoped_report_byte_identical"] = (
-                scoped["size"] == report_actual["size"] and scoped["sha256"] == report_actual["sha256"]
+            assembly_sources = report.get("cumulativeAssembly", {}).get("sources", [])
+            regression_sources = [
+                row for row in assembly_sources
+                if isinstance(row, dict) and row.get("scope") == "regression_bootstrap"
+            ]
+            checks["final_scoped_report_bound_to_cumulative_assembly"] = len(regression_sources) == 1 and all(
+                regression_sources[0].get(key) == scoped.get(key) for key in ("path", "size", "sha256")
             )
         return {
             "passed": all(checks.values()),
@@ -833,6 +848,22 @@ def verify_cumulative_receipt(method: str, not_before: datetime, packaged: dict[
         return {"passed": False, "error": f"{type(error).__name__}: {error}"}
 
 
+def _runtime_source_freshness_cutoff(
+    config: dict[str, Any],
+    relative: str,
+    *,
+    packaged_generated: datetime,
+    raw_generated: datetime,
+    postprocess_generated: datetime,
+) -> tuple[str, datetime]:
+    postprocess_sources = set(config.get("postprocess_runtime_sources", ()))
+    if not postprocess_sources:
+        return "packaged", packaged_generated
+    if relative in postprocess_sources:
+        return "postprocess", postprocess_generated
+    return "application", raw_generated
+
+
 def verify_packaged_evidence(method: str, not_before: datetime, freshness: dict[str, Any]) -> dict[str, Any]:
     config = METHODS[method]
     try:
@@ -844,12 +875,29 @@ def verify_packaged_evidence(method: str, not_before: datetime, freshness: dict[
         scoped = evaluate_scoped_documents(method, packaged, raw, not_before, build_finished)
 
         runtime_generated = _parse_utc(packaged.get("generated_at_utc"))
+        raw_generated = _parse_utc(raw.get("generatedAt"))
+        postprocess_sources = set(config.get("postprocess_runtime_sources", ()))
+        if not postprocess_sources.issubset(set(config["runtime_sources"])):
+            raise ValueError("postprocess runtime sources must also be bound runtime sources")
+        postprocess_generated = runtime_generated
+        if postprocess_sources:
+            postprocess_report = strict_load_json(_safe_path(config["postprocess_evidence_report"]))
+            postprocess_generated = _parse_utc(postprocess_report.get("generated_at_utc"))
         runtime_sources: list[dict[str, Any]] = []
         for relative in config["runtime_sources"]:
             row = descriptor(_safe_path(relative), include_mtime=True)
+            freshness_role, freshness_cutoff = _runtime_source_freshness_cutoff(
+                config,
+                relative,
+                packaged_generated=runtime_generated,
+                raw_generated=raw_generated,
+                postprocess_generated=postprocess_generated,
+            )
+            row["freshness_role"] = freshness_role
+            row["freshness_cutoff_utc"] = freshness_cutoff.isoformat().replace("+00:00", "Z")
             row["not_newer_than_report"] = datetime.fromtimestamp(
                 row["mtime_ns"] / 1_000_000_000, timezone.utc
-            ) <= runtime_generated + timedelta(seconds=2)
+            ) <= freshness_cutoff + timedelta(seconds=2)
             runtime_sources.append(row)
 
         reported_artifacts = packaged.get("artifacts")

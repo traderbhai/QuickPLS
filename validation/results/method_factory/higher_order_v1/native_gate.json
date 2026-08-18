@@ -1,0 +1,40 @@
+{
+  "checks": {
+    "all_declared_test_sources_exist": true,
+    "prebuilt_engine_identity": {
+      "path": "target/debug/qpls.exe",
+      "sha256": "113abffa82706accfe0b96ff7aee7daf51deba39430e9e43fd29401b71c5945c",
+      "size": 66081792
+    },
+    "targeted_vitest_passed": true,
+    "test_file_count": 5
+  },
+  "execution": {
+    "command": [
+      "npx.cmd",
+      "vitest",
+      "run",
+      "src/domain/resultTables.test.ts",
+      "src/native/NativeHigherOrderDialog.test.tsx",
+      "src/native/nativeExportTables.test.ts",
+      "src/native/nativeHigherOrder.test.ts",
+      "src/native/nativeResults.test.ts"
+    ],
+    "duration_seconds": 11.324,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  5 passed (5)\n      Tests  81 passed (81)\n   Start at  09:17:25\n   Duration  4.39s (transform 4.32s, setup 0ms, import 7.74s, tests 869ms, environment 1ms)\n\n"
+  },
+  "kind": "quickpls_phase3_native_source_gate",
+  "method": "higher_order_v1",
+  "packaged_workflow_not_claimed": true,
+  "passed": true,
+  "schema_version": 1,
+  "tests": [
+    "src/domain/resultTables.test.ts",
+    "src/native/NativeHigherOrderDialog.test.tsx",
+    "src/native/nativeExportTables.test.ts",
+    "src/native/nativeHigherOrder.test.ts",
+    "src/native/nativeResults.test.ts"
+  ]
+}

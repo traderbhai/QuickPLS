@@ -98,8 +98,8 @@ describe("native PROCESS v2 result projection", () => {
       "process_bootstrap_bca",
       "process_scope",
     ]);
-    expect(tables.every((table) => table.status === "experimental")).toBe(true);
-    expect(tables.every((table) => table.warning?.includes("release qualification remains pending"))).toBe(true);
+    expect(tables.every((table) => table.status === "validated")).toBe(true);
+    expect(tables.every((table) => !table.warning?.includes("final reporting"))).toBe(true);
     expect(tables.find((table) => table.id === "process_simple_slopes")?.rows).toHaveLength(3);
     const referenceEffects = tables.find((table) => table.id === "process_reference_effects");
     expect(referenceEffects?.columns).toEqual([
@@ -121,6 +121,7 @@ describe("native PROCESS v2 result projection", () => {
       "-0.750000",
     ]);
     expect(tables.find((table) => table.id === "process_johnson_neyman")?.rows[0]).toContain("Significant Positive");
+    expect(tables.find((table) => table.id === "process_scope")?.title).toBe("Scope and provenance");
     const johnsonNeymanPoints = tables.find((table) => table.id === "process_johnson_neyman_curve_points");
     expect(johnsonNeymanPoints?.rows).toHaveLength(101);
     expect(johnsonNeymanPoints?.rows[0]).toEqual([

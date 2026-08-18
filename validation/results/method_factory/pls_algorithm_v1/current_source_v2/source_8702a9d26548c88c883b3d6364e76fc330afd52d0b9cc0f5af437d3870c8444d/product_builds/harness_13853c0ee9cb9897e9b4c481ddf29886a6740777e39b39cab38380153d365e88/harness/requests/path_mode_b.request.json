@@ -1,0 +1,254 @@
+{
+  "surface": "internal_labs",
+  "experimentalLabsEnabled": true,
+  "residentData": "project_resident",
+  "datasetId": "e2c2c51f-fa09-47e6-9e8c-544592c74727",
+  "datasetFingerprint": "v2:9b814a8a22eace42776bc479c637de36bc973dfd8a7b3d5b3e60baba98803373",
+  "recipe": {
+    "schema_version": 4,
+    "id": "00000000-0000-0000-0000-000000002001",
+    "created_at": "2026-08-15T00:00:01Z",
+    "dataset_fingerprint": "v2:9b814a8a22eace42776bc479c637de36bc973dfd8a7b3d5b3e60baba98803373",
+    "model_binding": {
+      "kind": "project_sem_model_v4_reference",
+      "model_id": "00000000-0000-0000-0000-000000001001",
+      "scientific_sha256": "ae24f28a210c328607be1e29eb466d66ccc5c265c04a09102eb646c7fee9cb92"
+    },
+    "estimand_confirmation": "confirmed_composite",
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260815,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "method_config": {
+      "kind": "pls_algorithm"
+    },
+    "metadata": {
+      "qualification_use": "current_product_work_evidence_only"
+    },
+    "legacy_source": {
+      "source_schema_version": 3,
+      "source_recipe_sha256": "328371a825852c261ff4410d01f2abdeb4ea7c9d3966c5bcaacfb88fc2a5b6ad"
+    }
+  },
+  "model": {
+    "schema_version": 4,
+    "id": "00000000-0000-0000-0000-000000001001",
+    "name": "PLS current-product path_mode_b",
+    "variables": [
+      {
+        "kind": "composite",
+        "id": "construct:x",
+        "label": "X",
+        "weighting": {
+          "kind": "mode_b"
+        }
+      },
+      {
+        "kind": "composite",
+        "id": "construct:y",
+        "label": "Y",
+        "weighting": {
+          "kind": "mode_b"
+        }
+      },
+      {
+        "kind": "observed",
+        "id": "observed:x1",
+        "label": "x1",
+        "source_column": "x1",
+        "scale": "continuous",
+        "role": "indicator",
+        "categories": [],
+        "value_labels": {},
+        "missing_markers": [],
+        "transformation_lineage": []
+      },
+      {
+        "kind": "observed",
+        "id": "observed:x2",
+        "label": "x2",
+        "source_column": "x2",
+        "scale": "continuous",
+        "role": "indicator",
+        "categories": [],
+        "value_labels": {},
+        "missing_markers": [],
+        "transformation_lineage": []
+      },
+      {
+        "kind": "observed",
+        "id": "observed:y1",
+        "label": "y1",
+        "source_column": "y1",
+        "scale": "continuous",
+        "role": "indicator",
+        "categories": [],
+        "value_labels": {},
+        "missing_markers": [],
+        "transformation_lineage": []
+      },
+      {
+        "kind": "observed",
+        "id": "observed:y2",
+        "label": "y2",
+        "source_column": "y2",
+        "scale": "continuous",
+        "role": "indicator",
+        "categories": [],
+        "value_labels": {},
+        "missing_markers": [],
+        "transformation_lineage": []
+      }
+    ],
+    "relations": [
+      {
+        "kind": "measurement_causal",
+        "id": "measurement_78_7831",
+        "indicator": "observed:x1",
+        "composite": "construct:x",
+        "parameter": "parameter_78_7831"
+      },
+      {
+        "kind": "measurement_causal",
+        "id": "measurement_78_7832",
+        "indicator": "observed:x2",
+        "composite": "construct:x",
+        "parameter": "parameter_78_7832"
+      },
+      {
+        "kind": "measurement_causal",
+        "id": "measurement_79_7931",
+        "indicator": "observed:y1",
+        "composite": "construct:y",
+        "parameter": "parameter_79_7931"
+      },
+      {
+        "kind": "measurement_causal",
+        "id": "measurement_79_7932",
+        "indicator": "observed:y2",
+        "composite": "construct:y",
+        "parameter": "parameter_79_7932"
+      },
+      {
+        "kind": "structural",
+        "id": "structural_78_79",
+        "source": "construct:x",
+        "target": "construct:y",
+        "parameter": "regression_78_79",
+        "intercept_parameter": null
+      }
+    ],
+    "parameters": [
+      {
+        "kind": "free",
+        "id": "parameter_78_7831",
+        "label": "x1 -> X",
+        "target": {
+          "kind": "weight",
+          "indicator": "observed:x1",
+          "composite": "construct:x"
+        },
+        "start": null,
+        "lower": null,
+        "upper": null,
+        "equality_label": null,
+        "group_overrides": []
+      },
+      {
+        "kind": "free",
+        "id": "parameter_78_7832",
+        "label": "x2 -> X",
+        "target": {
+          "kind": "weight",
+          "indicator": "observed:x2",
+          "composite": "construct:x"
+        },
+        "start": null,
+        "lower": null,
+        "upper": null,
+        "equality_label": null,
+        "group_overrides": []
+      },
+      {
+        "kind": "free",
+        "id": "parameter_79_7931",
+        "label": "y1 -> Y",
+        "target": {
+          "kind": "weight",
+          "indicator": "observed:y1",
+          "composite": "construct:y"
+        },
+        "start": null,
+        "lower": null,
+        "upper": null,
+        "equality_label": null,
+        "group_overrides": []
+      },
+      {
+        "kind": "free",
+        "id": "parameter_79_7932",
+        "label": "y2 -> Y",
+        "target": {
+          "kind": "weight",
+          "indicator": "observed:y2",
+          "composite": "construct:y"
+        },
+        "start": null,
+        "lower": null,
+        "upper": null,
+        "equality_label": null,
+        "group_overrides": []
+      },
+      {
+        "kind": "free",
+        "id": "regression_78_79",
+        "label": "x -> y",
+        "target": {
+          "kind": "regression",
+          "source": "construct:x",
+          "target": "construct:y"
+        },
+        "start": null,
+        "lower": null,
+        "upper": null,
+        "equality_label": null,
+        "group_overrides": []
+      }
+    ],
+    "constraints": [],
+    "derived_terms": [],
+    "group": {
+      "kind": "single_group"
+    },
+    "data_binding": {
+      "kind": "raw",
+      "dataset_id": "e2c2c51f-fa09-47e6-9e8c-544592c74727",
+      "missing_data": "listwise_deletion",
+      "weight": null,
+      "cluster_variable": null,
+      "strata_variable": null
+    },
+    "annotations": [],
+    "presentation": {
+      "kind": "none"
+    }
+  },
+  "compilerTarget": "pls_plan_v2",
+  "capabilityCell": {
+    "registry_schema_version": 2,
+    "capability_id": "smartpls.pls_algorithm",
+    "cell_id": "qpls3.pls.algorithm",
+    "capability_version": "pls_pm_v1"
+  }
+}

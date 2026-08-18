@@ -1,0 +1,995 @@
+{
+  "schema_version": 1,
+  "id": "05797289-8091-44f2-9faa-28d3cd8f7b56",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "d0f07b48-1a48-54c7-8d99-2b5212973310",
+    "dataset_fingerprint": "v2:1ce2525b301064ac3d53647f26a4df6fd61eb474320bb4a29583aae46e9e176d",
+    "method": "endogeneity",
+    "method_version": "pls_pm_v1+gaussian_copula_endogeneity_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "2.46.0",
+    "seed": 20260814,
+    "settings": {
+      "method": "endogeneity",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260814,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-08-14T06:51:49.256139900Z",
+    "completed_at": "2026-08-14T06:51:49.299469Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "z -> y has near-symmetric predictor scores; interpret Gaussian-copula diagnostics cautiously"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Gaussian-copula endogeneity diagnostics are validated for the documented QuickPLS v1.2.3 diagnostic scope and assume nonnormal predictor scores; use as a diagnostic, not proof of causality."
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cbsem": null,
+      "cca": null,
+      "construct_scores": {
+        "x": [
+          -0.5332596139267002,
+          -0.5894402579180235,
+          0.9249536204137607,
+          -0.352381464178445,
+          0.20001889121953526,
+          -0.14543107263983837,
+          1.2679179807358485,
+          0.2514333621609665,
+          -0.2000633245907289,
+          0.9369076795614776,
+          -0.4985644112932058,
+          -1.0258433721778168,
+          -0.3163983142792778,
+          -0.3737414171956976,
+          -0.13473756839165885,
+          -0.499448427531043,
+          -0.09274257095919433,
+          -0.9145473423490198,
+          -0.47589463250676023,
+          -0.9384025803706469,
+          -0.32576186199383866,
+          0.9556625402332644,
+          -0.3950783617809466,
+          -0.9819384105825267,
+          0.8367670673767194,
+          -0.9289291383004298,
+          -0.9957620213713747,
+          -0.49636814384461303,
+          -0.2500372307265116,
+          0.2254167811059164,
+          -0.8815750419744521,
+          -0.7963076395261875,
+          1.9402607937105802,
+          -0.521292725501188,
+          -0.04744507922871905,
+          -0.02181680261339477,
+          -0.17007348799444943,
+          -0.3647548533839407,
+          -0.6398198913884671,
+          -0.6792311774457863,
+          -0.3906344341899855,
+          -0.10411323769452102,
+          -0.7959585415086734,
+          0.9592039216618152,
+          -1.0541504813605698,
+          -0.4984899451962354,
+          -0.5481282101053372,
+          -0.48461619003952594,
+          4.804051657466807,
+          0.44395402052642813,
+          -0.37316733933716845,
+          -0.7012667420846458,
+          -0.8033128115471868,
+          0.9459930559610144,
+          -0.9658859521160146,
+          -0.5546399443177431,
+          -0.45555676061491246,
+          1.0916753887451849,
+          2.332530630934715,
+          -0.6349315644408856,
+          0.00511454489324613,
+          0.29126194320984483,
+          0.9906156810697003,
+          -0.7137493648796562,
+          -1.041574220741303,
+          -0.5624525558641623,
+          1.7379973316925712,
+          -0.7101221167194632,
+          -1.0788396426765605,
+          0.7379839907324962,
+          0.9831435714120766,
+          0.28982457667893213,
+          -0.1226718898061357,
+          -0.9741956470516938,
+          0.03691869721023837,
+          -1.1187330442292824,
+          0.7213852518353191,
+          1.6962652598256,
+          -0.5484911897507289,
+          0.03157933053086434,
+          0.6791377206061414,
+          -0.914287512893832,
+          -0.6449436157803062,
+          0.13952243308746912,
+          -0.36124097518925985,
+          0.8188701313318263,
+          -0.930592531930273,
+          -0.35696837117578445,
+          0.7478572042995039,
+          -0.20158748727468292,
+          -0.9098345817262117,
+          0.010922937473869654,
+          -0.00374579049029516,
+          -0.1453263950362411,
+          -0.6281560837480727,
+          -0.21497664024126134,
+          -0.5845870916309798,
+          -0.6031043270119331,
+          0.17852752610470804,
+          -0.2533279740889412,
+          0.9849232410521664,
+          -0.6942689310700266,
+          -0.9207055696108114,
+          1.0761883820251466,
+          0.6150148825462753,
+          2.177977815138744,
+          -0.0659905861798604,
+          4.463537966184678,
+          0.04138233809729146,
+          0.49399064539479864,
+          1.5434296289047469,
+          -0.5993530271958867,
+          -0.8509237593451078,
+          0.13801381455814773,
+          -0.2628086695733924,
+          2.164346002709005,
+          -0.7796677307419491,
+          -0.830108042028735,
+          -0.6646218132783872,
+          1.3314173310600645
+        ],
+        "y": [
+          -0.24939598912047112,
+          -0.1438665369187214,
+          0.8114021251148201,
+          -0.4391687203231822,
+          2.0110011604650473,
+          0.4636491514631834,
+          0.7919570436871447,
+          -0.2055755609369135,
+          -0.9136827797709974,
+          0.6142833345568405,
+          0.18807947131688602,
+          -0.6455834518090643,
+          -0.10636651302169814,
+          -0.004564694249696506,
+          -0.7389925528895359,
+          -0.44805650927331875,
+          0.7562597007521483,
+          -2.12179067605595,
+          -0.276674723375023,
+          -0.5448280897329086,
+          -0.41620966066689363,
+          1.1533640916992425,
+          -0.7981799799955618,
+          -0.6071990670670023,
+          0.21839907822768112,
+          -1.4548574007475754,
+          -1.062785477423857,
+          -0.4273646557851295,
+          -1.031998021584202,
+          1.4438388763470453,
+          -0.8458299083849312,
+          -2.0821472206642984,
+          2.7021630797562617,
+          -0.3924276450079427,
+          0.16148280751487537,
+          0.03790188392235219,
+          -0.017245746707606743,
+          -0.3739883331148321,
+          -0.3445152925607112,
+          -0.7955597764947319,
+          -0.646907151863051,
+          -0.33741186268110474,
+          -1.034150024819713,
+          -0.24807051093022808,
+          -1.8864925816653895,
+          -0.0369919092701377,
+          -0.49463447791716963,
+          -0.3418615197369757,
+          1.7103772014432437,
+          0.5276693605751581,
+          0.31118592400103856,
+          -0.7178275068274419,
+          -0.7198013049355382,
+          1.447749755210589,
+          -1.324097020515532,
+          -0.15635531301128003,
+          -0.6005178362818698,
+          2.3409504821286604,
+          2.069861423486687,
+          -0.8102036338849152,
+          0.3475566538755214,
+          -0.5293181551988638,
+          -0.02187723874184266,
+          -0.45905233341200025,
+          -0.9387999576195847,
+          0.5766220790845991,
+          1.490509108989442,
+          -0.41545112236902537,
+          -2.3935082822949343,
+          1.0356883936188623,
+          1.020915077259162,
+          0.36725891384797765,
+          0.22081336136839402,
+          -1.0929212711347018,
+          -0.3374527067082324,
+          -2.862622964484453,
+          2.234017472838779,
+          0.323244924854613,
+          0.593902841075847,
+          -0.25306804103094815,
+          0.6392877014662862,
+          -0.23087789111330775,
+          -0.6834448840971062,
+          0.399056007199873,
+          -0.09829583944062092,
+          1.064988270128376,
+          0.1356362271690808,
+          0.18005888651562227,
+          0.7422784497380809,
+          0.9596523759119598,
+          -1.9728757450179844,
+          -0.10024797274222386,
+          1.525344864960843,
+          0.09512458134274485,
+          -0.4294521020272357,
+          -0.43180533398204657,
+          -0.2241666302491156,
+          -0.5775795820729651,
+          0.4371331022677535,
+          -0.9775224441236942,
+          1.511685722689362,
+          -0.0711561505396335,
+          -0.5463287042735329,
+          -0.07796678618023789,
+          1.1165754077749852,
+          1.3601029613847946,
+          -0.19680850013035447,
+          2.488821825098235,
+          -0.32613999755226425,
+          1.1791378239203567,
+          1.5117162358358098,
+          -0.4129891022325495,
+          -1.0725262590782223,
+          0.3502370522940515,
+          -0.17756094673704206,
+          1.031658557701525,
+          -0.22475593409663658,
+          -0.559849320704345,
+          0.34086998858308265,
+          0.4991290169438802
+        ],
+        "z": [
+          -1.2076774251075113,
+          1.400011715895935,
+          0.09691935338651647,
+          -0.5419665420200144,
+          1.443047031915285,
+          0.6590749334352946,
+          -0.6839779851703406,
+          0.22796215019520624,
+          -0.7060845883916436,
+          -0.48637610146181814,
+          1.0933261202753508,
+          -0.9798674491733552,
+          -2.6792281431378875,
+          -0.21169987128736628,
+          -0.7541405333644036,
+          0.858859122091578,
+          0.3904149449614804,
+          -0.8504757287803184,
+          -0.043751410985002105,
+          -0.8437838359835155,
+          -0.24700561326729392,
+          -1.0559025462743699,
+          -0.02472926091744302,
+          0.2883391088977381,
+          0.5723549021019838,
+          1.1791892010312794,
+          0.6313905137941451,
+          -0.44025371520753026,
+          -1.0705308413674262,
+          0.8392944479712777,
+          -0.47879415754573623,
+          -1.169598902866268,
+          0.355579317056344,
+          -0.6101600526288173,
+          -1.413870410007528,
+          -0.13299346602400486,
+          -0.5292873359803978,
+          -0.6829382006791302,
+          0.4747840480599046,
+          -1.5005760151212229,
+          -1.6854653781969693,
+          -0.399875279452855,
+          -1.5095429627902726,
+          -0.3655790266237492,
+          -1.0060788132986158,
+          -1.6851937836752762,
+          -1.1288750533917251,
+          1.5687897093900807,
+          -0.006913311037592686,
+          0.18403778051126238,
+          -0.17152077291529286,
+          0.20059642824433838,
+          -0.8814809615096222,
+          -0.1437552610235582,
+          -1.1973077412315085,
+          -0.6568923677667462,
+          0.048874243096568626,
+          0.4291541761743754,
+          -0.4640911888635964,
+          -0.8490254826875447,
+          1.3270642886938435,
+          0.13799135749202102,
+          1.0060251764798989,
+          2.2047293312096516,
+          -1.1511100506981031,
+          -0.33937903170771005,
+          -0.1597481950059426,
+          -1.6064084284234768,
+          -0.06393893785780141,
+          0.7371356025391758,
+          1.0394181923543766,
+          -1.228495555800258,
+          0.6749469810197247,
+          1.8334651063074667,
+          -0.2686954630761706,
+          -0.7710736200333508,
+          1.2008070002453932,
+          0.2567135223705347,
+          1.489872789291459,
+          0.8748091376343323,
+          0.8908721833946756,
+          1.5522347283125508,
+          -1.810639289120241,
+          2.1386821945060794,
+          0.12879728444134073,
+          -1.1714485629816265,
+          0.03920163880401838,
+          0.9291786449902084,
+          -0.10639799247356165,
+          1.8783211518029277,
+          -1.5783885659935881,
+          -0.8606410364838861,
+          1.6198467570829143,
+          0.02591283196372028,
+          0.744555048420437,
+          0.46217266091705195,
+          -0.002662232083987195,
+          -0.20862648418024313,
+          -0.7128434002467259,
+          -0.8042170951184342,
+          0.39447201833565687,
+          0.6284610065683811,
+          0.6168500708965874,
+          2.0994156703229745,
+          1.0461834414163043,
+          -1.9103074663195878,
+          0.2206715526484361,
+          0.43680117239539157,
+          0.9507595379565628,
+          -1.4894508562265758,
+          1.2532573243156349,
+          1.4770039239234631,
+          -0.27420526174656334,
+          0.6240704157404885,
+          1.1975964632383873,
+          0.5650951751012331,
+          0.6876908898883299,
+          -0.9890515358044027,
+          0.2689642855422844,
+          0.40295077154764364
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [
+        {
+          "direct": 0.7170596097630634,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.7170596097630634
+        },
+        {
+          "direct": 0.20564930878343254,
+          "indirect": 0.0,
+          "source": "z",
+          "target": "y",
+          "total": 0.20564930878343254
+        }
+      ],
+      "endogeneity": {
+        "estimates": [
+          {
+            "applicable": true,
+            "copula_coefficient": 0.6503296458947451,
+            "p_value_two_sided": 1.220629426645914e-6,
+            "path_coefficient": 0.7170596097630634,
+            "predictor_skewness": 2.049079727265911,
+            "source": "x",
+            "standard_error": 0.12692740951583018,
+            "t_statistic": 5.123634433062601,
+            "target": "y",
+            "warning": null
+          },
+          {
+            "applicable": false,
+            "copula_coefficient": -0.14152245854129838,
+            "p_value_two_sided": 0.867451441268587,
+            "path_coefficient": 0.20564930878343254,
+            "predictor_skewness": 0.014569178940438746,
+            "source": "z",
+            "standard_error": 0.846072313138621,
+            "t_statistic": -0.16726993230200557,
+            "target": "y",
+            "warning": "Predictor score skewness is below the experimental applicability threshold; Gaussian-copula evidence is weak for near-normal predictors."
+          }
+        ],
+        "method_version": "gaussian_copula_endogeneity_v1",
+        "transform": "rankit_inverse_normal_v1",
+        "warnings": [
+          "z -> y has near-symmetric predictor scores; interpret Gaussian-copula diagnostics cautiously",
+          "Gaussian-copula endogeneity diagnostics are validated for the documented QuickPLS v1.2.3 diagnostic scope and assume nonnormal predictor scores; use as a diagnostic, not proof of causality."
+        ]
+      },
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
+      "iterations": 3,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.7170596097630634,
+            "indirect": 0.0,
+            "source": "x",
+            "target": "y",
+            "total": 0.7170596097630634,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          },
+          {
+            "classification": "direct_only",
+            "direct": 0.20564930878343254,
+            "indirect": 0.0,
+            "source": "z",
+            "target": "y",
+            "total": 0.20564930878343254,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "gaussian_copula_endogeneity_v1",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
+      "nca": null,
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9994282130898345,
+          "weight": 0.49886972628768145
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9994346461344068,
+          "weight": 0.5016991584502827
+        },
+        {
+          "construct": "z",
+          "indicator": "z1",
+          "loading": 0.9982466737494687,
+          "weight": 0.5059798354753992
+        },
+        {
+          "construct": "z",
+          "indicator": "z2",
+          "loading": 0.9981739625078406,
+          "weight": 0.4958126848039203
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9990276531477088,
+          "weight": 0.5039640809008513
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9990002908712675,
+          "weight": 0.4970228252424637
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.7170596097630634,
+          "source": "x",
+          "target": "y"
+        },
+        {
+          "coefficient": 0.20564930878343254,
+          "source": "z",
+          "target": "y"
+        }
+      ],
+      "pca": null,
+      "plsc": null,
+      "predict": null,
+      "r_squared": {
+        "y": 0.5897483295438573
+      },
+      "regression": null,
+      "segmentation": null,
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 0.16944822954205002,
+          "scale": 1.3451394726699661
+        },
+        {
+          "indicator": "x2",
+          "mean": 0.15089901431345834,
+          "scale": 1.2821821121758459
+        },
+        {
+          "indicator": "z1",
+          "mean": 0.060686172895858356,
+          "scale": 1.0013031784467377
+        },
+        {
+          "indicator": "z2",
+          "mean": 0.0501072916894083,
+          "scale": 0.9269954606462173
+        },
+        {
+          "indicator": "y1",
+          "mean": 0.17759879483180005,
+          "scale": 1.063341274981042
+        },
+        {
+          "indicator": "y2",
+          "mean": 0.16705336708535834,
+          "scale": 1.0297395431192746
+        }
+      ],
+      "used_observations": 120,
+      "warnings": [
+        "z -> y has near-symmetric predictor scores; interpret Gaussian-copula diagnostics cautiously",
+        "Gaussian-copula endogeneity diagnostics are validated for the documented QuickPLS v1.2.3 diagnostic scope and assume nonnormal predictor scores; use as a diagnostic, not proof of causality."
+      ],
+      "wpls": null
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 288.77364743357333,
+            "prediction_error_sum_squares": 124.33594055423843,
+            "q_squared": 0.5694346016014517
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9988631825068733,
+          "construct": "x",
+          "cronbach_alpha": 0.9988618977829373,
+          "normalized_weight_norm_squared": 0.5005730493960681,
+          "off_diagonal_denominator": 0.12528268149204957,
+          "off_diagonal_numerator": 0.499426950603932,
+          "rho_a": 0.9988858514013546,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9994312679811769,
+          "score_variance_before_normalization": 1.0
+        },
+        {
+          "ave": 0.9964238405402411,
+          "construct": "z",
+          "cronbach_alpha": 0.996411375352861,
+          "normalized_weight_norm_squared": 0.5018458123201834,
+          "off_diagonal_denominator": 0.12587273873466287,
+          "off_diagonal_numerator": 0.4981541876798167,
+          "rho_a": 0.9967189443953112,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9982087173114872,
+          "score_variance_before_normalization": 1.0000000000000007
+        },
+        {
+          "ave": 0.9980289164573479,
+          "construct": "y",
+          "cronbach_alpha": 0.9980251185778128,
+          "normalized_weight_norm_squared": 0.5010114836502405,
+          "off_diagonal_denominator": 0.12548211528603165,
+          "off_diagonal_numerator": 0.4989885163497596,
+          "rho_a": 0.9981690063370131,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9990134859777123,
+          "score_variance_before_normalization": 0.9999999999999998
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9994282130898344
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "z",
+          "indicator": "x1",
+          "loading": 0.10917595240557534
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.7377480890709194
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9994346461344068
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "z",
+          "indicator": "x2",
+          "loading": 0.11637435405692019
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.7419323641653963
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "x",
+          "indicator": "z1",
+          "loading": 0.11019166095725526
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "z",
+          "indicator": "z1",
+          "loading": 0.9982466737494681
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "y",
+          "indicator": "z1",
+          "loading": 0.28892977432013983
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "x",
+          "indicator": "z2",
+          "loading": 0.1151538398618922
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "z",
+          "indicator": "z2",
+          "loading": 0.9981739625078402
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "y",
+          "indicator": "z2",
+          "loading": 0.283124024084578
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.7448089831936054
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "z",
+          "indicator": "y1",
+          "loading": 0.2876325659948954
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9990276531477087
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.734191744922379
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "z",
+          "indicator": "y2",
+          "loading": 0.2849218048697435
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9990002908712673
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.08212186179178083,
+          "f_squared": 1.2373538106198725,
+          "included_r_squared": 0.5897483295438573,
+          "source_construct": "x",
+          "target_construct": "y"
+        },
+        {
+          "excluded_r_squared": 0.5479952756944768,
+          "f_squared": 0.10177424458249458,
+          "included_r_squared": 0.5897483295438573,
+          "source_construct": "z",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "z",
+          "y"
+        ],
+        "values": [
+          [
+            0.9994314296172966,
+            0.11284949298931846,
+            0.7402670299928774
+          ],
+          [
+            0.11284949298931846,
+            0.9982103187907051,
+            0.28656912218831265
+          ],
+          [
+            0.7402670299928774,
+            0.28656912218831265,
+            0.9990139721031673
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.11313200988100272
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7413783127466455
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.11313200988100272
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.28732964624978025
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7413783127466455
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.28732964624978025
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "z",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.11313200988100272
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7413783127466455
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.11313200988100272
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.28732964624978025
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7413783127466455
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.28732964624978025
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "z",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.00026471329409553284,
+          "srmr": 0.0035504077169995754
+        },
+        "saturated": {
+          "d_uls": 0.0002647132940955328,
+          "srmr": 0.003550407716999575
+        }
+      },
+      "r_squared": {
+        "y": 0.5897483295438573
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.5827354804762308,
+          "construct": "y",
+          "predictor_count": 2,
+          "r_squared": 0.5897483295438573
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.012899280509303
+        },
+        {
+          "predictor_construct": "z",
+          "target_construct": "y",
+          "vif": 1.012899280509303
+        }
+      ],
+      "warnings": [
+        "rho_a.two_indicator_limited_information for construct 'x'",
+        "rho_a.two_indicator_limited_information for construct 'z'",
+        "rho_a.two_indicator_limited_information for construct 'y'"
+      ]
+    }
+  }
+}

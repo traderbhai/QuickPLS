@@ -66,11 +66,12 @@ describe("NativeGroupSetupDialog", () => {
     expect(markup).toContain("12 complete of 12");
     expect(markup).toContain("Complete model cases");
     expect(markup).toContain("Group A − Group B");
-    expect(markup).toContain("MICOM Step 1 confirmation");
-    expect(markup).toContain("joint MICOM/MGA permutation plan");
+    expect(markup).toContain("combined MICOM and structural-path permutation MGA workflow");
+    expect(markup).toContain("Step 1 confirmation");
+    expect(markup).toContain("shared permutation plan");
     expect(markup).not.toContain('<option value="x"');
     expect(markup).not.toContain('<option value="y"');
-    expect(markup).toMatch(/type="submit"[^>]*>Apply Groups/);
+    expect(markup).toMatch(/type="submit">Apply Groups/);
   });
 
   it("blocks Apply when either selected group has fewer than ten complete model cases", () => {

@@ -6,25 +6,26 @@
     "current_cli_binding": {
       "current_cli": {
         "path": "target/release/qpls.exe",
-        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-        "size": 20690432
+        "sha256": "f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254",
+        "size": 32373248
       },
       "execution_binding": "reference script executed in this evidence run with QUICKPLS_CLI_PATH set to current_cli",
       "explicit_report_binding": true,
       "passed": true,
       "reference_report_cli": {
         "path": "target/release/qpls.exe",
-        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-        "size": 20690432
+        "sha256": "f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254",
+        "size": 32373248
       }
     },
     "current_reference_execution": {
       "command": [
-        "not_rerun"
+        "python",
+        "validation/process_v2_reference.py"
       ],
-      "returncode": null,
+      "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": ""
+      "stdout_tail": "e\": \"finite_and_strictly_positive_across_tested_range\"\n      },\n      \"binary_endogenous_outcome\": {\n        \"passed\": true,\n        \"reason_code\": \"binary_process_equation_outcome\",\n        \"rejected_outcomes\": [\n          \"M1\",\n          \"Y\"\n        ],\n        \"original_sample_only\": true\n      },\n      \"collapsed_probe_grid\": {\n        \"passed\": true,\n        \"reason_code\": \"collapsed_process_probe_grid\",\n        \"semantic_assignment\": \"canonical_grid_index_primary_outer_conditioning_inner\"\n      }\n    },\n    \"reference_condition\": {\n      \"passed\": true,\n      \"column\": \"Reference condition\",\n      \"value\": \"Continuous moderators are evaluated at their original complete-sample raw means (coded 0); binary moderators are evaluated at 0.\",\n      \"continuous_coded_value\": 0,\n      \"binary_raw_value\": 0\n    }\n  },\n  \"comparison_thresholds\": {\n    \"mean_pooled_se_units\": 0.4,\n    \"standard_error_relative\": 0.35,\n    \"percentile_endpoint_pooled_se_units\": 0.85\n  },\n  \"artifacts\": {\n    \"fixture\": {\n      \"path\": \"validation/results/process_v2_reference_fixture.csv\",\n      \"size\": 24843,\n      \"sha256\": \"34bdf2753edbbcec3adb3f1818d8309fa4612365343e694911406743282948fe\"\n    },\n    \"r_script\": {\n      \"path\": \"validation/process_v2_reference.R\",\n      \"size\": 30941,\n      \"sha256\": \"e578c5ca9c1a4b4d9d53229a4c5ad6f51343e6ba7e56393332e4f4b18b3137bd\"\n    },\n    \"tested_cli\": {\n      \"path\": \"target/release/qpls.exe\",\n      \"size\": 32373248,\n      \"sha256\": \"f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254\"\n    },\n    \"recipe\": \"validation/results/process_v2_reference.recipe.json\",\n    \"quickpls_result\": \"validation/results/process_v2_quickpls.json\",\n    \"r_report\": {\n      \"path\": \"validation/results/process_v2_r_reference.json\",\n      \"size\": 18934,\n      \"sha256\": \"85ee00cd4ec98297fb9d9a7706e25caf127c092029310b7f211fba8a8fbaad45\"\n    }\n  },\n  \"runtime_boundary\": \"Python, NumPy, SciPy, and R are validation-only and are not bundled or required at runtime.\"\n}\n"
     },
     "expected_checks": [
       "binary_endogenous_outcome_rejected_in_original_sample",
@@ -61,7 +62,7 @@
         "validation.test_process_v2_reference"
       ],
       "returncode": 0,
-      "stderr_tail": "..............\n----------------------------------------------------------------------\nRan 14 tests in 0.188s\n\nOK\n",
+      "stderr_tail": "..............\n----------------------------------------------------------------------\nRan 14 tests in 0.157s\n\nOK\n",
       "stdout_tail": ""
     },
     "observed_passed_checks": [
@@ -95,13 +96,13 @@
     "reference_identity_exact": true,
     "reference_report": {
       "path": "validation/results/process_v2_reference_report.json",
-      "sha256": "dd7ced9a771c250951fc80551d7c283202360c67b569ee7632a964c5d6f3dae3",
+      "sha256": "39060435e1969e51cae55099378c4732f6a249e5ac88696103604a9586f26e43",
       "size": 255108
     },
     "required_check_set_exact": true
   },
   "feature_id": "qpls3.standalone.process",
-  "generated_at_utc": "2026-08-13T19:54:41.033682Z",
+  "generated_at_utc": "2026-08-18T08:54:30.348587Z",
   "method_version": "regression_process_v2",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -110,13 +111,13 @@
   "source_artifacts": [
     {
       "path": "docs/methods/PROCESS_V2.md",
-      "sha256": "4c558d77d912c3034379dc9fbb2fb47a012a4aba031fb62b467f4fe65ade66dc",
-      "size": 11315
+      "sha256": "34959b629f497c95557dd695b9d0c627e92cd5bb215f0946582eca8e325ca0ad",
+      "size": 11743
     },
     {
       "path": "validation/legacy_release_factory_migration.py",
-      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
-      "size": 23709
+      "sha256": "b9c5207f9d8aff6c2cd8b243acb017634d26b00355a1f537b3cfa4ad69fa92e7",
+      "size": 24794
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -130,13 +131,13 @@
     },
     {
       "path": "validation/methods/process_v2.manifest.json",
-      "sha256": "fd20d61294e00bb78ef227c1e719ae9830a569a1657437dcc1cd307b31903d4b",
-      "size": 14818
+      "sha256": "24fa47208e6247ef6f76c8c0e5a9ece2271e125111e90a91589ff73d94e73809",
+      "size": 16581
     },
     {
       "path": "validation/process_v2_boundary_gate.py",
-      "sha256": "5f9fa9cc8b628883053b7d284a19d30bb6f04d4cbac68b083b54c8c62b0226f5",
-      "size": 9023
+      "sha256": "3f9f22c26228658ece7afd5dfc7efa926449a99dd07a1409246d6159c8476ca7",
+      "size": 9105
     },
     {
       "path": "validation/process_v2_reference.R",
@@ -145,8 +146,8 @@
     },
     {
       "path": "validation/process_v2_reference.py",
-      "sha256": "7d6bd0865c4618c17b3472b714f7d450bbee7754676491a144245225897443d7",
-      "size": 88214
+      "sha256": "1538d6f81cff3d0b2f3c70957692c3a69208ddc76f078982118ec61607c6ab07",
+      "size": 88193
     },
     {
       "path": "validation/test_legacy_release_factory_migration.py",
@@ -155,13 +156,13 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_process_v2_reference.py",
-      "sha256": "9e89905ec2c4548dd58daf789e5f5b510736d57fe3a51beb946bbf5adb783981",
-      "size": 15684
+      "sha256": "49e311bffe66a95e93f33efb04c21fdce1af96af81f354f3d25cb145aa8d9e13",
+      "size": 15616
     }
   ]
 }

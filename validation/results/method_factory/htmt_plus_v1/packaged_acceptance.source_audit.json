@@ -1,0 +1,143 @@
+{
+  "admission_policy": "identity_report_requires_separate_manifest_admission_and_review",
+  "blockers": [
+    "installed_package_matrix_not_executed",
+    "offline_cancellation_cleanup_and_reopen_runs_not_executed",
+    "portable_package_matrix_not_executed",
+    "real_windows_accessibility_and_pointer_runs_not_executed"
+  ],
+  "capability_id": "smartpls.htmt",
+  "catalogue_snapshot_date": "2026-08-12",
+  "cell_id": "qpls3.assessment.htmt",
+  "checks": {
+    "source_contract": {
+      "checks": {
+        "accessible_tables_required": true,
+        "four_required_scale_factors": true,
+        "installed_and_portable": true,
+        "keyboard_required": true,
+        "no_partial_results": true,
+        "offline_required": true,
+        "one_second_cancellation": true,
+        "real_pointer_required": true,
+        "three_required_viewports": true
+      },
+      "passed": true,
+      "required_case_count": 38,
+      "required_case_ids": [
+        "installed_1024x700_100_success",
+        "installed_1024x700_125_success",
+        "installed_1024x700_150_success",
+        "installed_1024x700_200_success",
+        "installed_1280x720_100_success",
+        "installed_1280x720_125_success",
+        "installed_1280x720_150_success",
+        "installed_1280x720_200_success",
+        "installed_1440x900_100_success",
+        "installed_1440x900_125_success",
+        "installed_1440x900_150_success",
+        "installed_1440x900_200_success",
+        "portable_1024x700_100_success",
+        "portable_1024x700_125_success",
+        "portable_1024x700_150_success",
+        "portable_1024x700_200_success",
+        "portable_1280x720_100_success",
+        "portable_1280x720_125_success",
+        "portable_1280x720_150_success",
+        "portable_1280x720_200_success",
+        "portable_1440x900_100_success",
+        "portable_1440x900_125_success",
+        "portable_1440x900_150_success",
+        "portable_1440x900_200_success",
+        "invalid_setup_blocked",
+        "same_run_save_close_reopen",
+        "same_run_export_readback",
+        "offline_no_network_dependency",
+        "keyboard_only_workflow",
+        "real_pointer_diagram_workflow",
+        "accessible_tables_and_dialogs",
+        "cancel_within_one_second",
+        "cancel_no_partial_visible_result",
+        "cancel_no_partial_committed_result",
+        "cancel_archive_unchanged",
+        "retry_same_settings",
+        "clean_process_exit",
+        "no_orphan_process_or_listener"
+      ]
+    }
+  },
+  "declared_manifest_state": "absent",
+  "feature_id": "qpls3.assessment.htmt",
+  "generated_at_utc": "2026-08-14T17:11:47.022835Z",
+  "manifest_sha256": "58b1977b129a7be7b0b55b24e7fbd736850daa6899c820b21e798463dcada6aa",
+  "method_version": "ringle_et_al_htmt_plus_v1",
+  "passed": true,
+  "qualification_evidence": false,
+  "qualification_id": "qpls3.assessment.htmt.qualification_v2",
+  "qualification_ready": false,
+  "qualification_spec_sha256": "42c84a28ec9ab2ea45a273a74f967ed60be98f6131294ba048ead8464f6e6151",
+  "report_kind": "quickpls_htmt_qualification_identity_report",
+  "role": "packaged_acceptance",
+  "scenario_set_sha256": "b99c7bfa0b50e4a6d5d8f6615a734c490494f7eb68592ba61fe0de4e7eb0abdb",
+  "schema_version": 2,
+  "source_artifacts": [
+    {
+      "path": "validation/htmt_packaged_acceptance.py",
+      "sha256": "1616554b3b1376b56ed01923d21e163d1c6080c905f4c52756ffec720e8987ee",
+      "size_bytes": 5373
+    },
+    {
+      "path": "validation/htmt_plus_v1_factory_common.py",
+      "sha256": "1c08afa6230f67707d0ed09be93c1cd734f0db7f9f43c222f662a6d86b65c194",
+      "size_bytes": 13629
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size_bytes": 34283
+    },
+    {
+      "path": "validation/methods/htmt_plus_v1.manifest.json",
+      "sha256": "58b1977b129a7be7b0b55b24e7fbd736850daa6899c820b21e798463dcada6aa",
+      "size_bytes": 11390
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size_bytes": 15836
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/htmt_plus_v1.qualification.json",
+      "sha256": "42c84a28ec9ab2ea45a273a74f967ed60be98f6131294ba048ead8464f6e6151",
+      "size_bytes": 33223
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/run_v248_htmt_native_acceptance.ps1",
+      "sha256": "cbb47762c38edd7c4e4d2f225dd36bb503bd38cad6b93503718d0dd08ada5df6",
+      "size_bytes": 302
+    },
+    {
+      "path": "validation/test_htmt_qualification_v2.py",
+      "sha256": "dd9d6e5ff360ff60f16d5e8520c94bf5a03d909173954d5f9720ddfee14452bb",
+      "size_bytes": 7091
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size_bytes": 21334
+    }
+  ],
+  "source_set_sha256": "c4e693a8365aac2e92c1f8a6b8d02480f9425d88e43a97c35b7264e8dd392164",
+  "spec_frozen_at_utc": "2026-08-14T16:00:00Z",
+  "stage": "packaged_windows"
+}

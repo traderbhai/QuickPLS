@@ -6,25 +6,26 @@
     "current_cli_binding": {
       "current_cli": {
         "path": "target/release/qpls.exe",
-        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-        "size": 20690432
+        "sha256": "f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254",
+        "size": 32373248
       },
       "execution_binding": "reference script executed in this evidence run with QUICKPLS_CLI_PATH set to current_cli",
       "explicit_report_binding": true,
       "passed": true,
       "reference_report_cli": {
         "path": "target/release/qpls.exe",
-        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-        "size": 20690432
+        "sha256": "f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254",
+        "size": 32373248
       }
     },
     "current_reference_execution": {
       "command": [
-        "not_rerun"
+        "python",
+        "validation/regression_bootstrap_v1_reference.py"
       ],
-      "returncode": null,
+      "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": ""
+      "stdout_tail": "7657428715\n          },\n          {\n            \"term\": \"z\",\n            \"mean_pooled_se_units\": 0.03667835828402343,\n            \"standard_error_relative\": 0.016949297195541675,\n            \"percentile_endpoint_pooled_se_units\": 0.15726553090366552,\n            \"bca_endpoint_pooled_se_units\": 0.040232430271314935,\n            \"odds_ratio_log_endpoint_pooled_se_units\": 0.15726611483175137\n          },\n          {\n            \"term\": \"w\",\n            \"mean_pooled_se_units\": 0.01327540405508344,\n            \"standard_error_relative\": 0.015377120563018678,\n            \"percentile_endpoint_pooled_se_units\": 0.127797158892524,\n            \"bca_endpoint_pooled_se_units\": 0.06564383027920744,\n            \"odds_ratio_log_endpoint_pooled_se_units\": 0.1277989319581919\n          }\n        ]\n      }\n    },\n    \"artifact\": \"validation/results/regression_bootstrap_v1_r_reference.json\"\n  },\n  \"comparison_thresholds\": {\n    \"mean_pooled_se_units\": 0.35,\n    \"standard_error_relative\": 0.3,\n    \"percentile_endpoint_pooled_se_units\": 0.75,\n    \"bca_endpoint_pooled_se_units\": 0.9,\n    \"odds_ratio_log_endpoint_pooled_se_units\": 0.75\n  },\n  \"artifacts\": {\n    \"fixture\": \"validation/results/v08_extended_methods_fixture.csv\",\n    \"r_script\": \"validation/regression_bootstrap_v1_reference.R\",\n    \"tested_cli\": {\n      \"path\": \"target/release/qpls.exe\",\n      \"size\": 32373248,\n      \"sha256\": \"f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254\"\n    },\n    \"ols\": {\n      \"recipe\": \"validation/results/regression_bootstrap_v1_ols.recipe.json\",\n      \"quickpls_result\": \"validation/results/regression_bootstrap_v1_ols_quickpls.json\"\n    },\n    \"logistic\": {\n      \"recipe\": \"validation/results/regression_bootstrap_v1_logistic.recipe.json\",\n      \"quickpls_result\": \"validation/results/regression_bootstrap_v1_logistic_quickpls.json\"\n    }\n  },\n  \"runtime_boundary\": \"Python, NumPy, SciPy, R, boot, and jsonlite are validation-only references and are not bundled or required by QuickPLS.\"\n}\n"
     },
     "expected_checks": [
       "deterministic_worker_invariant_logistic",
@@ -49,7 +50,7 @@
         "validation.test_regression_bootstrap_v1_reference"
       ],
       "returncode": 0,
-      "stderr_tail": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.009s\n\nOK\n",
+      "stderr_tail": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.006s\n\nOK\n",
       "stdout_tail": ""
     },
     "observed_passed_checks": [
@@ -71,13 +72,13 @@
     "reference_identity_exact": true,
     "reference_report": {
       "path": "validation/results/regression_bootstrap_v1_reference_report.json",
-      "sha256": "f50c3a2e2a80b4e5a21f215f69e2df908c073cc2a8a5b6ecabdab209d7f21e6c",
+      "sha256": "850dc6832f00f27c34dc3500587ab4d6bd2199b6b4fdb46695ad5802008132f3",
       "size": 28934
     },
     "required_check_set_exact": true
   },
   "feature_id": "qpls3.standalone.regression_bootstrap",
-  "generated_at_utc": "2026-08-13T19:54:31.074907Z",
+  "generated_at_utc": "2026-08-18T03:57:07.161766Z",
   "method_version": "regression_bootstrap_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -86,13 +87,13 @@
   "source_artifacts": [
     {
       "path": "docs/methods/REGRESSION_BOOTSTRAP_V1.md",
-      "sha256": "b1b47af36bc1aee50e75c55f83ac210552e3470442cc7b60d5405fca79312a42",
-      "size": 6776
+      "sha256": "a2136646c7a89ca015424b6078c5a8f69b5da316971a86d5276fe0046364e3d2",
+      "size": 7149
     },
     {
       "path": "validation/legacy_release_factory_migration.py",
-      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
-      "size": 23709
+      "sha256": "b9c5207f9d8aff6c2cd8b243acb017634d26b00355a1f537b3cfa4ad69fa92e7",
+      "size": 24794
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -106,13 +107,13 @@
     },
     {
       "path": "validation/methods/regression_bootstrap_v1.manifest.json",
-      "sha256": "857b25d5822321d8ddfb16255849e5932170f733c11523317210a3a600935d72",
-      "size": 15009
+      "sha256": "f29fdad3a352c9b1fc4a7a942d2485f8a8f90990656f69994f47d5f682b414fe",
+      "size": 16094
     },
     {
       "path": "validation/regression_bootstrap_failure_boundary_gate.py",
-      "sha256": "56a7df4db38e439be1584cb325c44e1f4f0d306be653d469cee1e29d092066b9",
-      "size": 7139
+      "sha256": "a4f6faf5a1079dbd82ee935307a0749eb14968ac41da66e6478c5ab38b5e934e",
+      "size": 7212
     },
     {
       "path": "validation/regression_bootstrap_v1_reference.R",
@@ -121,8 +122,8 @@
     },
     {
       "path": "validation/regression_bootstrap_v1_reference.py",
-      "sha256": "593d313bc81ee4c5e7c99f07da0983a24c38daab37cf5ecf189efcd51d59a03e",
-      "size": 49672
+      "sha256": "260d55c1942018660b6048dfe8426b655853303beedee7e80836e9efd9f260c2",
+      "size": 49708
     },
     {
       "path": "validation/test_legacy_release_factory_migration.py",
@@ -131,8 +132,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_regression_bootstrap_v1_reference.py",

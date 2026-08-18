@@ -12,7 +12,12 @@ import type { AnalysisRun, DiagramLayoutState } from "../types";
 import { nativeCbsemDiagramRun } from "./nativeResults";
 import { nativeStructuralPathRandomizationProjection } from "./nativeStructuralPathRandomization";
 import { resolveAnalysisModel } from "./nativeRunModelSnapshot";
-import { nativeOlsPredictionExportTable, nativePcaScoreExportTable, nativeRunProvenanceTable } from "./nativeExportTables";
+import {
+  nativeNcaCeFdhPeerExportTable,
+  nativeOlsPredictionExportTable,
+  nativePcaScoreExportTable,
+  nativeRunProvenanceTable,
+} from "./nativeExportTables";
 import { isStandaloneNativeAnalysis } from "./nativeStandaloneAnalysis";
 
 interface NativeExportDialogProps {
@@ -37,7 +42,7 @@ export interface NativeExportScope {
 export function nativeExportScope(run: Pick<AnalysisRun, "result" | "provenance">): NativeExportScope {
   const isGroupComparison = Boolean(run.result?.mga);
   const isStandalone = isStandaloneNativeAnalysis(run.provenance?.method);
-  const tablesOnly = isGroupComparison || isStandalone;
+  const tablesOnly = isGroupComparison || isStandalone || run.provenance?.method === "pls_sample_size_power";
   return {
     includeModelDiagram: !tablesOnly,
     reviewerPackDetail: tablesOnly
@@ -108,8 +113,19 @@ export default function NativeExportDialog({ run, tables, close }: NativeExportD
     () => {
       const pcaScores = nativePcaScoreExportTable(run);
       const olsPredictions = nativeOlsPredictionExportTable(run);
+      const ncaCeFdhPeers = nativeNcaCeFdhPeerExportTable(run);
+      const selectedRunTables = tables
+        .filter((table) => table.id !== "run_provenance"
+          && table.id !== "pca_scores"
+          && table.id !== "ols_fitted_residuals")
+        .flatMap((table) => table.id === "nca_ce_fdh_peers"
+          ? ncaCeFdhPeers ? [ncaCeFdhPeers] : []
+          : [table]);
+      if (ncaCeFdhPeers && !tables.some((table) => table.id === "nca_ce_fdh_peers")) {
+        selectedRunTables.push(ncaCeFdhPeers);
+      }
       return [
-        ...tables.filter((table) => table.id !== "run_provenance" && table.id !== "pca_scores" && table.id !== "ols_fitted_residuals"),
+        ...selectedRunTables,
         ...(pcaScores ? [pcaScores] : []),
         ...(olsPredictions ? [olsPredictions] : []),
         nativeRunProvenanceTable(run, provenanceStatus),

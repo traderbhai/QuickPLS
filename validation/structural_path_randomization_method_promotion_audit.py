@@ -37,7 +37,7 @@ ANALYSIS_RECIPE_SCHEMA_VERSION = 3
 PLS_INFERENCE_PAYLOAD_KIND = "pls_pm_v3"
 PROJECT_ARCHIVE_SCHEMA_VERSION = 5
 EXPECTED_PROVENANCE_METHOD_VERSION = (
-    "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1"
+    "pls_pm_v1+pls_mediation_v1+pls_assessment_v8+freedman_lane_permutation_v1"
 )
 
 REFERENCE_REPORT = "validation/results/structural_path_randomization_reference_report.json"
@@ -210,7 +210,7 @@ PACKAGED_WORKBOOK_SHEETS = (
     "Run provenance",
 )
 PACKAGED_WARNING = (
-    "Candidate output: single-model Freedman-Lane randomization holds the original "
+    "Supported for the documented bounded scope: single-model Freedman-Lane randomization holds the original "
     "PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p "
     "values. Interpret these as conditional, approximate inference under exchangeable "
     "reduced-model residuals. Measurement-score uncertainty is not re-estimated, no "
@@ -222,13 +222,11 @@ PACKAGED_PROBABILITY_DISCLOSURE = (
     "reduced-model residuals; no multiplicity adjustment"
 )
 PACKAGED_QUALIFICATION_DISCLOSURE = (
-    "Internal candidate/experimental product label; method-specific qualification "
-    "evidence is tracked separately"
+    "Supported within the documented fixed-score scope"
 )
 PACKAGED_SHARED_STRINGS = (
     "Structural path randomization",
     "Run provenance",
-    "experimental",
     PACKAGED_WARNING,
     "Randomization method",
     METHOD_VERSION,
@@ -242,7 +240,7 @@ PACKAGED_SHARED_STRINGS = (
     "Structural path coefficients conditional on fixed original PLS construct scores",
     "Pathwise probability",
     PACKAGED_PROBABILITY_DISCLOSURE,
-    "Qualification status",
+    "Availability",
     PACKAGED_QUALIFICATION_DISCLOSURE,
 )
 
@@ -263,6 +261,18 @@ def sha256_file(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def canonical_native_catalogue_count() -> int | None:
+    try:
+        source = (ROOT / "src/native/nativeAnalysisCatalog.ts").read_text(encoding="utf-8")
+    except OSError:
+        return None
+    match = re.search(r"const CATALOG_DRAFTS[^=]*= \[([\s\S]*?)\n\] as const;", source)
+    if match is None:
+        return None
+    kinds = re.findall(r'^[ \t]{4}kind:\s*"([a-z_]+)",\r?$', match.group(1), re.MULTILINE)
+    return len(kinds) if kinds and len(kinds) == len(set(kinds)) else None
 
 
 def finite_number(value: Any) -> bool:
@@ -567,12 +577,14 @@ def packaged_cancellation_contract(
         "bootstrapControls", "groupControls", "scopeLabel", "scope", "blockers",
         "startLabel", "startEnabled",
     }
+    expected_catalog_count = canonical_native_catalogue_count()
 
     def setup_readback_contract(value: Any, workers: int, start_label: str) -> bool:
         if not isinstance(value, dict) or set(value) != setup_keys:
             return False
         return (
-            value.get("catalogCount") == 15
+            expected_catalog_count is not None
+            and value.get("catalogCount") == expected_catalog_count
             and value.get("selectedMethod") == "Structural Path Randomization"
             and value.get("permutations") == {
                 "count": 1, "type": "number", "minimum": "99", "maximum": "10000",
@@ -588,7 +600,7 @@ def packaged_cancellation_contract(
             }
             and value.get("bootstrapControls") == 0
             and value.get("groupControls") == 0
-            and value.get("scopeLabel") == "Candidate scope"
+            and value.get("scopeLabel") == "Validated scope"
             and value.get("scope") == PACKAGED_WARNING
             and value.get("blockers") == []
             and value.get("startLabel") == start_label

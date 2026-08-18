@@ -1,14 +1,14 @@
 # PLS Higher-Order Constructs v1
 
-Status: validated for the documented QuickPLS v1.2.3 bounded repeated-indicator, two-stage, and hybrid higher-order construct scope.
+Product status: Standard for one reflective-reflective disjoint two-stage, point-estimate higher-order construct formed from at least two measured, measurement-only lower-order components and connected by exactly one HOC-to-measured-outcome path.
 
-Native desktop status: packaged acceptance is complete for the narrower reflective-reflective disjoint two-stage point-estimate workflow. The desktop does not expose repeated-indicator or hybrid authoring and does not expose HOC resampling inference.
+The Standard desktop/CLI contract uses PLS-SEM Algorithm, path weighting, standardized listwise data, no case weights, and no HOC bootstrap or permutation inference. Performance is the measured outcome in the acceptance fixture; Capability and Resources are the selected lower-order components.
 
-This document freezes the QuickPLS recipe contract for higher-order constructs and the repeated-indicator, two-stage, and hybrid execution behavior promoted in v1.2.3. Unsupported HOC variants remain blocked or excluded.
+Repeated-indicator and hybrid execution remain backend compatibility/reference capabilities. They are not part of the Standard product claim, and broader, formative, nested, multiple-HOC, incoming-HOC-path, and resampled HOC workflows remain excluded.
 
 ## Scope
 
-The `ModelSpec.higher_order_constructs` field records constructs that should later be estimated as higher-order constructs. Each entry contains:
+The `ModelSpec.higher_order_constructs` field records constructs that should later be estimated as higher-order constructs. The Standard product accepts exactly one `two_stage` entry in the shape above. The backend representation also preserves historical/reference declarations with these fields:
 
 - `id`: the existing construct id that represents the higher-order construct.
 - `components`: two or more existing lower-order construct ids.
@@ -24,7 +24,7 @@ The validator enforces recipe integrity:
 - a construct cannot include itself as a component;
 - components must be unique within a higher-order declaration.
 
-Every higher-order declaration is validated only inside this bounded scope. Empty HOC placeholder constructs are allowed and emit `higher_order.indicators.generated`, because supported HOC methods can generate the HOC measurement block from lower-order components.
+Empty HOC placeholder constructs are allowed because supported backend methods generate the HOC measurement block from lower-order components. Product availability is narrower: the CLI and native workbench route only the exact disjoint two-stage point-estimate shape through the Standard cell; other executable backend shapes require explicit Labs opt-in.
 
 ## Repeated-Indicator Estimation Behavior
 
@@ -51,11 +51,13 @@ Example with two indicators per component:
 - component `x`: `x1` remains on `x`; `x2` becomes a HOC indicator.
 - component `z`: `z1` remains on `z`; `z2` becomes a HOC indicator.
 
-The original project recipe remains typed as a hybrid HOC declaration. The execution recipe is split before ordinary PLS estimation, and assessment uses the same split so deterministic quality tables assess the same measurement blocks as estimation. Recipe validation emits `higher_order.hybrid_component_indicators` when any hybrid component has fewer than two indicators. Stable exports may report HOC output as validated only inside this documented v1.2.3 bounded scope.
+The original project recipe remains typed as a hybrid HOC declaration. The execution recipe is split before ordinary PLS estimation, and assessment uses the same split so deterministic quality tables assess the same measurement blocks as estimation. Recipe validation emits `higher_order.hybrid_component_indicators` when any hybrid component has fewer than two indicators. This backend behavior does not promote hybrid HOC authoring or results to Standard.
 
 ## Acceptance Evidence
 
-Native workbench acceptance additionally requires a data-only 120-case project to create and persist three measured constructs, author one indicator-free HOC from two measurement-only components, add exactly one HOC-to-outcome path, and complete PLS Algorithm with path weighting, standardized preprocessing, and listwise deletion. Results must open on `Higher-order component relationships`, also expose `Higher-order structural paths` and `Higher-order calculation scope`, omit `__qpls_hoc_` identities and `N/A`, export those tables plus provenance through the real Windows XLSX Save dialog, save the canonical recipe/result, and restore the same run after reopen. This packaged evidence is recorded in `validation/results/v247_tauri_native_acceptance.json`; responsive dialog evidence is recorded in `validation/results/v247_native_desktop_visual_acceptance.json`.
+Native workbench acceptance requires a data-only 120-case project to create and persist Capability, Resources, and Performance; select Capability and Resources while leaving Performance unselected as the measured outcome; author one indicator-free HOC; add exactly one HOC-to-Performance path; block the path-free invalid setup without adding a recipe, run, or result; and complete PLS Algorithm with path weighting, standardized preprocessing, and listwise deletion. Results must open on `Higher-order component relationships`, also expose `Higher-order structural paths` and `Higher-order calculation scope`, omit `__qpls_hoc_` identities and `N/A`, export those tables plus provenance through the real Windows XLSX Save dialog, save the canonical recipe/result, and restore the same run after reopen.
+
+The focused packaged report is `validation/results/v247_tauri_native_acceptance_hoc.json`; its append-only supervisor receipt is `validation/results/v247_hoc_scoped_native_acceptance_receipt_v1.json`. The same selected run must also pass actual Tauri window checks at 1024×700, 1280×720, and 1440×900, functional-offline browser/app request observation, exact process cleanup, archive checksum validation, and method-scoped release identity generation. Source-level responsive authoring evidence remains in `validation/results/v247_native_desktop_visual_acceptance.json`.
 
 The schema is accepted when `cargo test -p qpls-core` proves valid repeated-indicator, two-stage, and hybrid declarations, generated HOC indicator placeholders, duplicate ids, unknown constructs, insufficient components, self-components, unknown components, duplicate components, hybrid component split feasibility, and scoped validation warnings.
 

@@ -1,0 +1,30 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "current_candidate_desktop": {
+    "mtime_ns": 1787021919357667100,
+    "path": "target/release/quickpls-desktop.exe",
+    "sha256": "dc0f072a0ab89460385682aedf8e8dddba46f8d18d0d42bb3849091b024cb8b1",
+    "size": 49971712
+  },
+  "exact_current_desktop_binding": true,
+  "feature_id": "qpls3.standalone.regression_bootstrap",
+  "generated_at_utc": "2026-08-18T03:57:16.029800Z",
+  "highest_current_factory_state": "engine_only",
+  "kind": "quickpls_method_factory_release_candidate_gap",
+  "legacy_packaged_report": {
+    "path": "validation/results/regression_bootstrap_v1_packaged_acceptance.json",
+    "sha256": "b17d1dd1382361706a57783ff2fa958f513236d89a145fde62ce91074f542235",
+    "size": 15536
+  },
+  "legacy_report_passed": true,
+  "legacy_tested_desktop": {
+    "path": "target/release/quickpls-desktop.exe",
+    "sha256": "dc0f072a0ab89460385682aedf8e8dddba46f8d18d0d42bb3849091b024cb8b1",
+    "size": 49971712
+  },
+  "method_version": "regression_bootstrap_v1",
+  "passed": false,
+  "release_qualification_blocker": "Dedicated packaged acceptance has not been rerun against the exact current release executable.",
+  "required_runtime_command": "powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v247_regression_bootstrap_native_acceptance.ps1",
+  "schema_version": 1
+}

@@ -1,0 +1,167 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "fresh_boundary_gate": {
+      "passed": true
+    },
+    "fresh_independent_and_simulation_gate": {
+      "passed": true
+    },
+    "method_contract_is_current": {
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "qpls-cli"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.01s\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "--version"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "qpls 2.46.0\n"
+    },
+    {
+      "command": [
+        "C:\\Python313\\python.exe",
+        "validation/consistent_bootstrap_v1_release_reference.py"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "validation/results/method_factory/consistent_bootstrap_v1/independent_reference.json\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-resampling",
+        "consistent_bootstrap::tests::consistent_bootstrap_fully_refits_plsc_and_is_worker_invariant",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "   Compiling qpls-resampling v2.46.0 (D:\\QuickPLS\\crates\\qpls-resampling)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 46s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-b2b9382888ef1d5a.exe)\n",
+      "stdout_tail": "\nrunning 1 test\ntest consistent_bootstrap::tests::consistent_bootstrap_fully_refits_plsc_and_is_worker_invariant ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 105 filtered out; finished in 11.79s\n\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-resampling",
+        "consistent_bootstrap::tests::consistent_bootstrap_rejects_ordinary_pls_point_results_and_bad_counts",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.47s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-b2b9382888ef1d5a.exe)\n",
+      "stdout_tail": "\nrunning 1 test\ntest consistent_bootstrap::tests::consistent_bootstrap_rejects_ordinary_pls_point_results_and_bad_counts ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 105 filtered out; finished in 0.03s\n\n"
+    }
+  ],
+  "feature_id": "qpls3.inference.consistent_bootstrap",
+  "generated_at_utc": "2026-08-18T06:59:59.412124Z",
+  "method_version": "plsc_bootstrap_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "51c235a9173d3f9c84e5bfe4c0ce6280268ee26b882e2a41dd01be889a7cdfb5",
+      "size": 144508
+    },
+    {
+      "path": "crates/qpls-resampling/src/consistent_bootstrap.rs",
+      "sha256": "fc0091c9078588a1743d37f20381c36200669832b9d40d1c10583a302b74792b",
+      "size": 56561
+    },
+    {
+      "path": "docs/methods/CONSISTENT_BOOTSTRAP_V1.md",
+      "sha256": "31088517a020530c5593323caaa009aff950b59e0b302ec5589c16682bd38f9c",
+      "size": 7520
+    },
+    {
+      "path": "validation/consistent_bootstrap_v1_reference.R",
+      "sha256": "8106994b148ccca0c1e811188dc3fe1ef8f999af4ad4af5c13be107cc4b98994",
+      "size": 2920
+    },
+    {
+      "path": "validation/consistent_bootstrap_v1_reference.py",
+      "sha256": "cd5e0257d750f2aee29901d8633b14b9a9d5496f942baf0c40b42dd92bd1a142",
+      "size": 23759
+    },
+    {
+      "path": "validation/consistent_bootstrap_v1_release_reference.py",
+      "sha256": "9e01d2dbb404b15394a85b6d8a831594c16c06e2772b387047423ef7531c10dc",
+      "size": 2912
+    },
+    {
+      "path": "validation/established_method_factory_common.py",
+      "sha256": "cbc4eb8e5d7ab329d3a5c1eaae910c43cdac39f6c11fbd26eb774cc65e95c090",
+      "size": 20368
+    },
+    {
+      "path": "validation/fixtures/consistent_bootstrap_v1_microcases.json",
+      "sha256": "91143447127d9411d24e0b6eaeb68e1a4d272c7fcecbdaa9c3f9a56985bc048e",
+      "size": 12186
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/consistent_bootstrap_v1.manifest.json",
+      "sha256": "5a7e77d0adfbb942ba0ff051a3975f0e9c64432b1d7950e9eda7334ccd50132a",
+      "size": 16647
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/plsc_reference.py",
+      "sha256": "15e42a8e57d6e84b2877e1527af6028cf0efa7e0a3dedc4c72a733a3a1c3db33",
+      "size": 11329
+    },
+    {
+      "path": "validation/results/method_factory/consistent_bootstrap_v1/independent_reference.json",
+      "sha256": "9c0719f08d193da9fccbb603a36c32518553289d1df9b8ff8e46aa7a1836df01",
+      "size": 1526
+    },
+    {
+      "path": "validation/test_consistent_bootstrap_v1_qualification.py",
+      "sha256": "b6c0360030582fb1602c8aa4974818492cd1d4319a837146d4bc5d1c9379e40b",
+      "size": 11958
+    },
+    {
+      "path": "validation/test_established_method_factory.py",
+      "sha256": "a16157170cc23ffb0fe8a112a2b28b25b9f6f1518a443c6265c9fe993d70ee52",
+      "size": 2917
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "checks": {
+    "all_modeled_nulls_filled": true,
+    "all_rows_retained": true,
+    "column_specific_means": true,
+    "fully_missing_modeled_row_retained": true,
+    "idempotent_second_pass_has_zero_replacements": true,
+    "metamorphics_within_tolerance": true,
+    "no_complete_input_rows_required": true,
+    "repeat_deterministic": true,
+    "typed_boundaries_exact": true,
+    "variance_identity": true,
+    "warning_boundaries_present": true
+  },
+  "contract_version": "pls_indicator_mean_replacement_v1",
+  "fixture_summary": {
+    "input_sha256": "7a6017aff137da1e2f8a6c66884b226d60bd61a8766ba704d0ace04740a80650",
+    "missing_mask_sha256": "1d368de38251e061b9513e7677f00e787c4c14c2fd6e839da24b1bd9470fb85f",
+    "omitted_observations": 0,
+    "prepared_matrix_sha256": "0a0ae6ae00abddf3edc5ff5df7dd1ba3e947401428fd6e597e053ba19abd99ec",
+    "replacement_means": {
+      "indicator:x": 9.0,
+      "indicator:y": 36.0,
+      "indicator:z": 122.0
+    },
+    "total_missing_after": 0,
+    "total_missing_before": 3,
+    "used_observations": 6,
+    "warnings": [
+      "pls_mean_replacement_v1_case_missing_above_15_percent",
+      "pls_mean_replacement_v1_indicator_missing_above_15_percent",
+      "pls_mean_replacement_v1_indicator_missing_at_least_5_percent",
+      "pls_mean_replacement_v1_variance_attenuation"
+    ]
+  },
+  "mean_tolerance": 2e-13,
+  "metamorphic_max_abs_differences": {
+    "binding_declaration_order": 0.0,
+    "idempotence": 0.0,
+    "physical_column_order": 0.0,
+    "positive_affine_standardization": 0.0,
+    "row_order": 0.0,
+    "stable_id_renaming": 0.0,
+    "unused_column_independence": 0.0
+  },
+  "method_version": "pls_indicator_mean_replacement_v1",
+  "no_complete_row_case": {
+    "fully_missing_row_completed_values": [
+      3.0,
+      30.0
+    ],
+    "omitted_observations": 0,
+    "prepared_matrix_sha256": "f9c132a764b6cf50c86c430ce2f7a238ba63737a20dcb896b8e99f3a06884576",
+    "used_observations": 5
+  },
+  "oracle_source_sha256": "e3bf2a7ccca9eb93ef7aa6e693145d8db6f46186cd605d09862c549d17f79df8",
+  "oracle_version": "independent_pls_mean_replacement_v1_work_oracle_v1",
+  "passed": true,
+  "product_comparison_performed": false,
+  "promotion_allowed": false,
+  "promotion_requested": false,
+  "qualification_ready": false,
+  "qualification_spec_v2_alignment": {
+    "admissible_receipt": false,
+    "candidate_oracle_kind": "independent_implementation",
+    "covered_work_estimands": [
+      "per_indicator_observed_mean",
+      "completed_analytical_matrix",
+      "per_indicator_missing_diagnostics",
+      "per_case_missing_diagnostics",
+      "row_retention",
+      "variance_attenuation_identity"
+    ],
+    "reason_not_admissible": "no frozen current QuickPLS build was executed against these cases",
+    "runtime_policy": "development_validation_only"
+  },
+  "receipt_attached": false,
+  "registry_or_manifest_mutation_requested": false,
+  "remaining_blockers": [
+    "A frozen current QuickPLS product build has not been compared with this oracle.",
+    "Source-set, scenario-set, executable, command, and immutable receipt identities are absent.",
+    "Archive, native, export, packaged Windows, accessibility, performance, soak, and independent-review evidence remains required.",
+    "Weights, multiple groups, resampling, prediction, matrix input, and noncontinuous indicators remain explicitly outside v1."
+  ],
+  "report_kind": "pls_mean_replacement_v1_independent_oracle_work_v1",
+  "schema_version": 1,
+  "typed_boundaries": {
+    "all_missing": true,
+    "constant": true,
+    "groups": true,
+    "insufficient_n": true,
+    "matrix_input": true,
+    "noncontinuous": true,
+    "nonfinite": true,
+    "policy_substitution": true,
+    "prediction": true,
+    "resampling": true,
+    "weights": true
+  },
+  "variance_identity_max_abs_difference": 0.0,
+  "variance_tolerance": 5e-13,
+  "work_evidence_only": true
+}

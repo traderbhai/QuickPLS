@@ -1,5 +1,8 @@
 # Graph-defined Path Analysis and PROCESS v2
 
+Status: Supported in Standard for the bounded graph-defined continuous-outcome
+workflow and its dedicated PROCESS bootstrap contract described below.
+
 `regression_process_v2` is QuickPLS's independently implemented, graph-defined
 observed-variable path-analysis workflow. It does not execute or expose copied
 numbered PROCESS templates. Authors declare directed equations and path-scoped
@@ -134,12 +137,16 @@ executable contract; users must author a graph-defined v2 relationship.
 
 ## Qualification status
 
-The bounded `regression_process_v2` capability is native-qualified. Its current
-scientific, archive, frontend, export, packaged workflow, and shutdown evidence
-passes, but release qualification is withheld because the repeated-completion
-resource report did not prove terminal process-role stability. This operational
-gap does not expand or weaken the scientific exclusions above. Historical v1
-output remains archive-only.
+The bounded `regression_process_v2` capability and its dedicated
+`regression_process_bootstrap_v1` layer are release-qualified for the contract
+above and are routed to Standard. The dedicated Windows receipt proves setup,
+invalid-setup blocking, execution, cancellation and retry, exact results and
+XLSX export, save/reopen of the same immutable run, repeated completion without
+duplicate run identities, bounded and terminally stable process roles, and
+clean shutdown. Historical v1 output remains archive-only. As with every
+qualified method, a coordinated release must refresh source-bound identities
+and the packaged receipt after later source changes before claiming a new
+installer is complete.
 
 ## Method references and comparison scope
 

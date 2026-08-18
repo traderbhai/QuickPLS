@@ -4,8 +4,8 @@ import { profileNativeDatasetGroups } from "../services/projectService";
 import type { AnalysisUiSettings, Dataset, DatasetGroupProfile } from "../types";
 import {
   nativeEligibleGroupColumns,
+  nativeGroupSelectionAssessment,
   nativeGroupOptionLabel,
-  nativeMgaProfileAssessment,
   residentDatasetGroupProfile,
 } from "./nativeMga";
 
@@ -150,13 +150,11 @@ export default function NativeGroupSetupDialog({
     if (effectiveB !== groupBValue) setGroupBValue(effectiveB);
   }, [groupAValue, groupBValue, profile]);
 
-  const assessment = nativeMgaProfileAssessment(profile, {
+  const assessment = nativeGroupSelectionAssessment(profile, {
     ...settings,
     groupColumn: groupColumn || null,
     groupAValue,
     groupBValue,
-    // This dialog configures groups only. Calculation setup owns permutation settings.
-    groupPermutationSamples: 5_000,
   });
   const groupColumnEligible = Boolean(groupColumn && eligibleColumns.includes(groupColumn));
   const canApply = projectWritable
@@ -249,7 +247,7 @@ export default function NativeGroupSetupDialog({
         {assessment.blockers.length ? <div className="nd-form-error" role="alert"><strong>Groups cannot be applied</strong><ul>{assessment.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}</ul></div> : null}
       </> : null}
 
-      <p className="nd-group-scope"><UsersRound size={14} aria-hidden="true" /><span><strong>Two-group scope</strong> This screen selects Group A and Group B; results report Group A − Group B. MICOM Step 1 confirmation and the joint MICOM/MGA permutation plan are completed in Calculate.</span></p>
+      <p className="nd-group-scope"><UsersRound size={14} aria-hidden="true" /><span><strong>Two-group scope</strong> This screen selects Group A and Group B; results report Group A − Group B. Configure the combined MICOM and structural-path permutation MGA workflow in Calculate, including Step 1 confirmation and the shared permutation plan.</span></p>
     </div>
     <footer>
       {configuredColumn ? <button type="button" className="danger" disabled={!projectWritable} onClick={clear}>Clear groups</button> : null}

@@ -1,0 +1,350 @@
+{
+  "binary_sha256": "459b8845a7ecc4f7f5b18c9e22b70be19752dcd3699608c95d040944d4402482",
+  "cancellation": {
+    "bootstrap_seed": 13168175097069679967,
+    "data_sha256": "c89aa6501c26519d4604cdde499c001b38686af752358be2ae69260707532ce4",
+    "dataset_index": 0,
+    "dgp_id": "dgp_a_one_factor_n150",
+    "maximum_orphan_processes": 0,
+    "maximum_terminal_latency_seconds": 1.0,
+    "orphan_processes": 0,
+    "phase": "bootstrap",
+    "reasons": [],
+    "status": "accepted",
+    "terminal_latency_seconds": 0.0002738
+  },
+  "dataset_receipts": [
+    {
+      "coverage_evaluated": false,
+      "data_sha256": "c89aa6501c26519d4604cdde499c001b38686af752358be2ae69260707532ce4",
+      "dataset_index": 0,
+      "dgp_id": "dgp_a_one_factor_n150",
+      "digest_authentication": {
+        "checks": {
+          "base_point_result": 1,
+          "bootstrap_schedule_positions": 500,
+          "bootstrap_source_rows": 500,
+          "compiler_analytical_identity": 1,
+          "complete_case_universe": 1,
+          "delete_one_sampling_positions": 150,
+          "delete_one_source_rows": 150,
+          "model_scientific_identity": 1,
+          "original_sampling_positions": 1,
+          "original_source_rows": 1,
+          "outer_recipe_analytical_identity": 1,
+          "plan": 1,
+          "scientific_result": 1,
+          "source_dataset_fingerprint": 1
+        },
+        "compact_evidence_typed_sha256": "d116b4f98fe1a21a7fe76ffd3c90fdc24fbbd42beb98eea5804b922f9786ec5b",
+        "data_sha256": "c89aa6501c26519d4604cdde499c001b38686af752358be2ae69260707532ce4",
+        "document_typed_sha256": "ad9e15f1b322a572a88dbd8c6c76fb1910ead444ded814671146270003297f45",
+        "kind": "cbsem_exact_cfa_interval_coverage_digest_verification_receipt_v1",
+        "method": "bound_rust_exact_schedule_and_source_verifier_v1",
+        "reasons": [],
+        "schema_version": 1,
+        "scientific_result_sha256": "30cc6fd92835674d10be0219c7671c39e8764467594d7d089d6c28eb806bd941",
+        "source_dataset_fingerprint": "b50d9723d39251d57fedf3b5b541982a167f1051f20856f4d2e42dc97b4a4f6d",
+        "status": "accepted"
+      },
+      "integrity_reasons": [],
+      "ledger": {
+        "delete_one_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "failure_rate_inference_unit": "dataset_not_bootstrap_replicate",
+        "point_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "point_failures": 0,
+        "point_successes": 500,
+        "requested_replicates": 500,
+        "standard_error_unavailable": 0,
+        "standard_error_unavailable_counts_by_reason": {
+          "derivative_unavailable": 0,
+          "information_not_positive_definite": 0,
+          "invalid_information_variance_or_standard_error": 0,
+          "numerical_information_failure": 0,
+          "singular_information": 0
+        },
+        "studentized_usable": 500
+      },
+      "manifest_sha256": "9a29e710f6a90c5ed4ee12b3392a8e85d20ca87ed604df9a9c42efc699878d88",
+      "methods": [
+        {
+          "available": false,
+          "method": "percentile",
+          "parameters": [
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": false,
+          "method": "studentized",
+          "parameters": [
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": false,
+          "method": "bca",
+          "parameters": [
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": false,
+              "covered_conditional": null,
+              "covered_unconditional": null,
+              "interval_lower": null,
+              "interval_upper": null,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "arithmetic_checks": 0,
+        "base_inference_available": false,
+        "bca_inference_available": false,
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "endpoint_checks": 0,
+        "endpoint_relative_tolerance": 1e-12,
+        "kind": "cbsem_exact_cfa_interval_coverage_oracle_receipt_v1",
+        "parameter_count": 6,
+        "point_failures": 0,
+        "point_successes": 500,
+        "reasons": [],
+        "requested_replicates": 500,
+        "schema_version": 1,
+        "status": "accepted",
+        "studentized_inference_available": false,
+        "studentized_usable": 500
+      },
+      "scientific_result_sha256": "30cc6fd92835674d10be0219c7671c39e8764467594d7d089d6c28eb806bd941",
+      "seeds": {
+        "bootstrap": 13168175097069679967,
+        "data": 3324661327777498169,
+        "oracle": 14295253035839127755
+      },
+      "stage": "conformance",
+      "status": "accepted"
+    }
+  ],
+  "environment": {
+    "architecture": "AMD64",
+    "logical_cores": 12,
+    "numpy": "1.26.4",
+    "os": "Windows",
+    "os_release": "11",
+    "python": "3.13.1"
+  },
+  "kind": "cbsem_exact_cfa_interval_coverage_shard_case_v1",
+  "manifest_sha256": "9a29e710f6a90c5ed4ee12b3392a8e85d20ca87ed604df9a9c42efc699878d88",
+  "qualification_status": "blocked_not_product_qualification",
+  "retained_full_audit_results": [
+    {
+      "artifact_kind": "dataset",
+      "dataset_index": 0,
+      "path": "validation/results/cbsem_exact_cfa_interval_coverage_v1/coverage-conformance-20260816-a/shards/conformance-dgp_a_one_factor_n150-s00/audit/dataset-000000.json",
+      "sha256": "ab02f567e81836e20cc2bd2e3488f1553c7915644ffe0d23ba9342aa90551dd2"
+    }
+  ],
+  "retention_policy": {
+    "append_only_outputs": true,
+    "compact_receipts_for_other_datasets": true,
+    "full_audit_results_per_shard": 1,
+    "retain_all_integrity_failures": true
+  },
+  "schema_version": 1,
+  "shard": {
+    "dataset_indices": [
+      0
+    ],
+    "dgp_id": "dgp_a_one_factor_n150",
+    "executable": true,
+    "replicates": 500,
+    "shard_id": "conformance-dgp_a_one_factor_n150-s00",
+    "shard_ordinal": 0,
+    "stage": "conformance",
+    "workers": 12
+  },
+  "status": "accepted_validation_shard",
+  "worker_replay": {
+    "dataset_index": 0,
+    "digest_authentication": {
+      "checks": {
+        "base_point_result": 1,
+        "bootstrap_schedule_positions": 500,
+        "bootstrap_source_rows": 500,
+        "compiler_analytical_identity": 1,
+        "complete_case_universe": 1,
+        "delete_one_sampling_positions": 150,
+        "delete_one_source_rows": 150,
+        "model_scientific_identity": 1,
+        "original_sampling_positions": 1,
+        "original_source_rows": 1,
+        "outer_recipe_analytical_identity": 1,
+        "plan": 1,
+        "scientific_result": 1,
+        "source_dataset_fingerprint": 1
+      },
+      "compact_evidence_typed_sha256": "d116b4f98fe1a21a7fe76ffd3c90fdc24fbbd42beb98eea5804b922f9786ec5b",
+      "data_sha256": "c89aa6501c26519d4604cdde499c001b38686af752358be2ae69260707532ce4",
+      "document_typed_sha256": "67edb4e271574344e69a6235040cc5bc44e2f18b9ee9a58beb07ab6b5a4bc1b6",
+      "kind": "cbsem_exact_cfa_interval_coverage_digest_verification_receipt_v1",
+      "method": "bound_rust_exact_schedule_and_source_verifier_v1",
+      "reasons": [],
+      "schema_version": 1,
+      "scientific_result_sha256": "30cc6fd92835674d10be0219c7671c39e8764467594d7d089d6c28eb806bd941",
+      "source_dataset_fingerprint": "b50d9723d39251d57fedf3b5b541982a167f1051f20856f4d2e42dc97b4a4f6d",
+      "status": "accepted"
+    },
+    "primary_scientific_result_sha256": "30cc6fd92835674d10be0219c7671c39e8764467594d7d089d6c28eb806bd941",
+    "primary_workers": 12,
+    "reasons": [],
+    "replay_scientific_result_sha256": "30cc6fd92835674d10be0219c7671c39e8764467594d7d089d6c28eb806bd941",
+    "replay_workers": 1,
+    "status": "accepted"
+  }
+}

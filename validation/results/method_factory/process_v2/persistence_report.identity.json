@@ -2,9 +2,9 @@
   "catalogue_snapshot_date": "2026-08-12",
   "checks": {
     "archive": {
-      "path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
-      "sha256": "416975b5f094e942f9e89295bb79f61a2aa69b77c337d28d52045a1fef082d57",
-      "size": 2317833
+      "path": "validation/results/v247-native-process-v2-1787038710929-63008.qpls",
+      "sha256": "89b366a8cd1e1c06f040c98bbb4f4f4c9bc53d73da7709d7a4c0f1780a5c7203",
+      "size": 2317976
     },
     "archive_identity_token_present": true,
     "archive_origin": "historical packaged workflow; revalidated and reopened by the exact current release CLI",
@@ -12,34 +12,34 @@
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "validate",
-        "C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-57n0ys2d\\tampered.qpls",
+        "C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-7in9bhxr\\tampered.qpls",
         "--json"
       ],
       "returncode": 1,
-      "stderr_tail": "Error: invalid project C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-57n0ys2d\\tampered.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
+      "stderr_tail": "Error: invalid project C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-7in9bhxr\\tampered.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
       "stdout_tail": ""
     },
     "current_cli": {
       "path": "target/release/qpls.exe",
-      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-      "size": 20690432
+      "sha256": "f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254",
+      "size": 32373248
     },
     "current_cli_inspect": {
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "inspect",
-        "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
+        "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-1787038710929-63008.qpls",
         "--json"
       ],
       "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 9,\n      \"fingerprint\": \"v2:e5ab73ab7739ecb1b4d365073ebd6b2c5f25c452fad11b5c41858a9f98958e01\",\n      \"id\": \"4fdd8591-97a2-4a52-a7e4-e5e8ec40b37c\",\n      \"kind\": \"raw\",\n      \"name\": \"process_v2_native_reference.csv\",\n      \"rows\": 180,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"Native Graph-Defined PROCESS v2 Acceptance\",\n  \"projectId\": \"f3d26194-6388-445b-a7b3-18e35810fe43\",\n  \"readOnly\": false,\n  \"recipes\": 2,\n  \"recovered\": true,\n  \"results\": 2,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
+      "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 9,\n      \"fingerprint\": \"v2:e5ab73ab7739ecb1b4d365073ebd6b2c5f25c452fad11b5c41858a9f98958e01\",\n      \"id\": \"55a1ca72-5945-4822-bf41-fe44934175ea\",\n      \"kind\": \"raw\",\n      \"name\": \"process_v2_native_reference.csv\",\n      \"rows\": 180,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"Native Graph-Defined PROCESS v2 Acceptance\",\n  \"projectId\": \"79a245cd-5685-4564-9141-08be88723c75\",\n  \"readOnly\": false,\n  \"recipes\": 2,\n  \"recovered\": true,\n  \"results\": 2,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
     },
     "current_cli_validate": {
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "validate",
-        "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
+        "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-1787038710929-63008.qpls",
         "--json"
       ],
       "returncode": 0,
@@ -50,7 +50,7 @@
     "passed": true
   },
   "feature_id": "qpls3.standalone.process",
-  "generated_at_utc": "2026-08-13T19:54:43.587078Z",
+  "generated_at_utc": "2026-08-18T08:54:32.828230Z",
   "method_version": "regression_process_v2",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -59,13 +59,13 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-project/src/lib.rs",
-      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-      "size": 660277
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
     },
     {
       "path": "validation/legacy_release_factory_migration.py",
-      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
-      "size": 23709
+      "sha256": "b9c5207f9d8aff6c2cd8b243acb017634d26b00355a1f537b3cfa4ad69fa92e7",
+      "size": 24794
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -79,8 +79,8 @@
     },
     {
       "path": "validation/methods/process_v2.manifest.json",
-      "sha256": "fd20d61294e00bb78ef227c1e719ae9830a569a1657437dcc1cd307b31903d4b",
-      "size": 14818
+      "sha256": "24fa47208e6247ef6f76c8c0e5a9ece2271e125111e90a91589ff73d94e73809",
+      "size": 16581
     },
     {
       "path": "validation/test_legacy_release_factory_migration.py",
@@ -89,13 +89,13 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_process_v2_method_promotion_audit.py",
-      "sha256": "372a03ae7e2cb12bbd70cb74d53cbadde4991606c5555a8b2dcd12a44de0c3ba",
-      "size": 137595
+      "sha256": "5651e94f7cb0f0adf1f68f4752496a7c98618198591da7bcd6f512df3f973902",
+      "size": 148037
     }
   ]
 }

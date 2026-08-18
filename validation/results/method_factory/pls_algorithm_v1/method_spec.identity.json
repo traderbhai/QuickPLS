@@ -20,7 +20,7 @@
     }
   },
   "feature_id": "qpls3.pls.algorithm",
-  "generated_at_utc": "2026-08-13T19:17:35.666817Z",
+  "generated_at_utc": "2026-08-17T22:14:24.784170Z",
   "method_version": "pls_pm_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -29,8 +29,8 @@
   "source_artifacts": [
     {
       "path": "docs/methods/PLS_PM_V1.md",
-      "sha256": "576658ac9b2b00938ffa794ac175792c3242c7db039a6eb8aa66aa6e9ac02087",
-      "size": 3592
+      "sha256": "0f14fb4cae1c0f25e0a8d31660b3a49c80123793bb8f1c7167fa777fa7593b18",
+      "size": 4705
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -44,13 +44,13 @@
     },
     {
       "path": "validation/methods/pls_algorithm_v1.manifest.json",
-      "sha256": "ec18270309bd1dce2b5064e2f727893d03a44eaa04376efcd99a6dee57dc1ead",
-      "size": 15592
+      "sha256": "983eac3d5605fe49a414fe203f719d02618a610ecdb07a74cc380cd9193fa04c",
+      "size": 15718
     },
     {
       "path": "validation/pls_algorithm_v1_factory_common.py",
-      "sha256": "2047408b08f5a7d0f0955ffc5902d063820551d0a37c6c3e595c9441591df3d7",
-      "size": 12465
+      "sha256": "cc3030d40c551240ddc535a4715fe78183738ec068b8146a70ed08decc5576c2",
+      "size": 12700
     },
     {
       "path": "validation/pls_algorithm_v1_factory_evidence.py",
@@ -59,13 +59,13 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pls_algorithm_v1_factory_evidence.py",
-      "sha256": "3296d72e15da0d8bf6c7c87d7e1a74c7db3cdb40d49d807374953cdf1c98499f",
-      "size": 12583
+      "sha256": "648186a17c4c7e153e8b35f0b198b852c7b4a4b171f145a15b3646b699e31c13",
+      "size": 13781
     }
   ]
 }

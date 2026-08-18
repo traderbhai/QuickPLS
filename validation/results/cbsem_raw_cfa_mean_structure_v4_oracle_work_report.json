@@ -1,0 +1,239 @@
+{
+  "blockers": [
+    "no_second_independently_maintained_sem_implementation_compared",
+    "no_qualification_sized_monte_carlo_coverage_campaign",
+    "archive_export_packaged_windows_performance_and_scientific_review_open"
+  ],
+  "coverage_or_evidence_state_changed": false,
+  "explicit_exclusions": [
+    "general_sem_structural_intercepts",
+    "groups",
+    "ordinal_thresholds",
+    "weights",
+    "matrix_means",
+    "effects_coding",
+    "fixed_variance_latent_mean_identification",
+    "bootstrap_or_other_resampling"
+  ],
+  "identity_contract": {
+    "estimator": "cbsem_ml_exact_parameter_table_v4",
+    "moment_adapter": "cbsem_ml_compiled_moment_input_v4",
+    "moment_result_schema_version": 3,
+    "runner_adapter": "compiled_recipe_v4_cbsem_plan_v2_execution_v3"
+  },
+  "independent_checks_passed": true,
+  "input_contract": {
+    "covariance_denominator": "maximum_likelihood_n",
+    "covariance_ml": [
+      [
+        135.47127500000002,
+        107.41712500000001,
+        64.96625000000002
+      ],
+      [
+        107.41712500000001,
+        88.91187500000001,
+        53.663250000000005
+      ],
+      [
+        64.96625000000002,
+        53.663250000000005,
+        34.367999999999995
+      ]
+    ],
+    "means": [
+      3.0149999999999997,
+      4.325,
+      0.45000000000000007
+    ],
+    "raw_sha256": "5544141c7bd6bee163d5b3308a3aa75988653070f0cf01b3dc5fce3dceffd227",
+    "sample_size": 40,
+    "variables": [
+      "x1",
+      "x2",
+      "x3"
+    ]
+  },
+  "oracle_version": "cbsem_raw_cfa_mean_structure_v4_oracle_v1",
+  "primary_method_reference": {
+    "citation": "Bollen, K. A. (1989), Structural Equations with Latent Variables, Wiley",
+    "doi": "10.1002/9781118619179",
+    "expected_information": "n/2 tr(Sigma^-1 dSigma_i Sigma^-1 dSigma_j) + n dmu_i' Sigma^-1 dmu_j",
+    "joint_ml_discrepancy": "F_cov + (xbar-mu)' Sigma^-1 (xbar-mu)"
+  },
+  "product_fixture_comparison": {
+    "converged_passed": true,
+    "gradient_within_product_convergence_contract": true,
+    "implied_means_passed": true,
+    "input_checks": {
+      "covariance_ml": true,
+      "means": true
+    },
+    "objective_passed": true,
+    "parameter_checks": [
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "construct:f=~x1",
+        "stable_id": "parameter_66_7831",
+        "standard_error_passed": true
+      },
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "construct:f=~x2",
+        "stable_id": "parameter_66_7832",
+        "standard_error_passed": true
+      },
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "construct:f=~x3",
+        "stable_id": "parameter_66_7833",
+        "standard_error_passed": true
+      },
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "construct:f~~construct:f",
+        "stable_id": "variance_66",
+        "standard_error_passed": true
+      },
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "x1~~x1",
+        "stable_id": "residual_variance_7831",
+        "standard_error_passed": true
+      },
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "x2~~x2",
+        "stable_id": "residual_variance_7832",
+        "standard_error_passed": true
+      },
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "x3~~x3",
+        "stable_id": "residual_variance_7833",
+        "standard_error_passed": true
+      },
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "x1~1",
+        "stable_id": "parameter:intercept:x1",
+        "standard_error_passed": true
+      },
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "x2~1",
+        "stable_id": "parameter:intercept:x2",
+        "standard_error_passed": true
+      },
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "x3~1",
+        "stable_id": "parameter:intercept:x3",
+        "standard_error_passed": true
+      },
+      {
+        "estimate_passed": true,
+        "fixed_passed": true,
+        "name": "construct:f~1",
+        "stable_id": "parameter:factor_mean:f",
+        "standard_error_passed": true
+      }
+    ],
+    "passed": true
+  },
+  "promotion_requested": false,
+  "qualification_role_satisfied": false,
+  "receipt_eligible": false,
+  "reference": {
+    "implementation": "transparent_numpy_scipy_marker_cfa_mean_structure",
+    "installation_attempted": false,
+    "numpy_version": "1.26.4",
+    "product_code_imported": false,
+    "product_executable_invoked": false,
+    "scipy_version": "1.15.2",
+    "source": "validation/cbsem_raw_cfa_mean_structure_v4_oracle.py",
+    "source_sha256": "b9abc8ff742920612de3c7a7ac86194422bc410da199ba5d2f44e8b04bcc2d41"
+  },
+  "report_kind": "cbsem_raw_cfa_mean_structure_v4_oracle_work_report",
+  "schema_version": 1,
+  "stable_parameter_ids": {
+    "construct:f=~x1": "parameter_66_7831",
+    "construct:f=~x2": "parameter_66_7832",
+    "construct:f=~x3": "parameter_66_7833",
+    "construct:f~1": "parameter:factor_mean:f",
+    "construct:f~~construct:f": "variance_66",
+    "x1~1": "parameter:intercept:x1",
+    "x1~~x1": "residual_variance_7831",
+    "x2~1": "parameter:intercept:x2",
+    "x2~~x2": "residual_variance_7832",
+    "x3~1": "parameter:intercept:x3",
+    "x3~~x3": "residual_variance_7833"
+  },
+  "surface": "internal_labs_only",
+  "typed_failures": [
+    {
+      "expected": "latent_mean_marker_intercept_must_be_fixed",
+      "observed": "latent_mean_marker_intercept_must_be_fixed",
+      "passed": true,
+      "scenario": "free_marker_intercept"
+    },
+    {
+      "expected": "latent_mean_marker_intercept_must_be_fixed",
+      "observed": "latent_mean_marker_intercept_must_be_fixed",
+      "passed": true,
+      "scenario": "nonzero_marker_intercept"
+    },
+    {
+      "expected": "mean_structure_raw_input_required",
+      "observed": "mean_structure_raw_input_required",
+      "passed": true,
+      "scenario": "matrix_means"
+    },
+    {
+      "expected": "mean_structure_cfa_required",
+      "observed": "mean_structure_cfa_required",
+      "passed": true,
+      "scenario": "structural_intercept"
+    },
+    {
+      "expected": "mean_structure_single_group_required",
+      "observed": "mean_structure_single_group_required",
+      "passed": true,
+      "scenario": "multiple_groups"
+    },
+    {
+      "expected": "mean_structure_continuous_required",
+      "observed": "mean_structure_continuous_required",
+      "passed": true,
+      "scenario": "ordinal"
+    },
+    {
+      "expected": "mean_structure_weights_unsupported",
+      "observed": "mean_structure_weights_unsupported",
+      "passed": true,
+      "scenario": "weights"
+    },
+    {
+      "expected": "sample_covariance_not_positive_definite",
+      "observed": "sample_covariance_not_positive_definite",
+      "passed": true,
+      "scenario": "non_positive_definite"
+    },
+    {
+      "expected": "local_underidentification",
+      "observed": "local_underidentification",
+      "passed": true,
+      "scenario": "underidentified_two_indicator"
+    }
+  ]
+}

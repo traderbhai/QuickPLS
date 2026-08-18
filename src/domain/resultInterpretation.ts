@@ -131,7 +131,7 @@ export function rowSpecificInterpretation(title: string, columns: string[], row:
   const values = Object.fromEntries(columns.map((column, index) => [column.toLowerCase(), row[index] ?? ""]));
   if (/structural path randomization/i.test(title)) {
     const probability = Number(values["raw two-sided p"]);
-    return `${values.path || "This structural path"} has raw pathwise two-sided plus-one p ${Number.isFinite(probability) ? probability.toFixed(4) : "unavailable"}. This candidate Freedman-Lane result conditions on fixed original PLS construct scores, assumes exchangeable reduced-model residuals, and is unadjusted for multiplicity.`;
+    return `${values.path || "This structural path"} has raw pathwise two-sided plus-one p ${Number.isFinite(probability) ? probability.toFixed(4) : "unavailable"}. This Freedman-Lane fixed-score result conditions on fixed original PLS construct scores, assumes exchangeable reduced-model residuals, and is unadjusted for multiplicity.`;
   }
   if (/path coefficients/i.test(title)) {
     const coefficient = Number(values.coefficient);
@@ -185,7 +185,7 @@ function pathFindings(run: AnalysisRun, result: PlsResult): InterpretationFindin
     path: { source: strongest.source, target: strongest.target },
     interpretation: `${pathName(strongest.source, strongest.target)} is the strongest direct path in this run by absolute coefficient (${strongest.coefficient.toFixed(4)}).`,
     recommendedAction: structuralPathRandomization
-      ? "Review the corresponding raw pathwise randomization p value and candidate fixed-score disclosure before reporting inference."
+      ? "Review the corresponding raw pathwise randomization p value and fixed-score assumptions before reporting inference."
       : run.bootstrap
         ? "Review the corresponding inference interval before reporting the direction as supported."
         : "Enable bootstrap or structural path randomization before reporting significance for this path.",
@@ -524,7 +524,7 @@ function inferenceFindings(run: AnalysisRun): InterpretationFinding[] {
         value: smallest.pValueTwoSided.toFixed(4),
         thresholdGuide: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
         path: { source: smallest.source, target: smallest.target },
-        interpretation: `${pathName(smallest.source, smallest.target)} has the smallest raw pathwise two-sided plus-one p value in this run (${smallest.pValueTwoSided.toFixed(4)} across ${smallest.permutations} permutations). The candidate test conditions on fixed original PLS construct scores, assumes exchangeable reduced-model residuals, and is unadjusted for multiplicity.`,
+        interpretation: `${pathName(smallest.source, smallest.target)} has the smallest raw pathwise two-sided plus-one p value in this run (${smallest.pValueTwoSided.toFixed(4)} across ${smallest.permutations} permutations). The test conditions on fixed original PLS construct scores, assumes exchangeable reduced-model residuals, and is unadjusted for multiplicity.`,
         recommendedAction: "Report the path, exceedance count, permutation count, seed, fixed-score estimand, residual-exchangeability assumption, and lack of multiplicity adjustment; do not describe this as measurement-model re-estimation or a group comparison.",
         reportSentence: `${pathName(smallest.source, smallest.target)} had raw pathwise two-sided randomization p = ${smallest.pValueTwoSided.toFixed(4)} (${smallest.exceedances} exceedances in ${smallest.permutations} permutations), conditional on fixed original PLS construct scores and exchangeable reduced-model residuals, without multiplicity adjustment.`,
         linkedObject: pathObject(smallest.source, smallest.target),
@@ -612,13 +612,13 @@ function methodPayloadFindings(result: PlsResult): InterpretationFinding[] {
   const findings: InterpretationFinding[] = [];
   if (result.micom) findings.push(genericPayloadFinding("micom", "MICOM", "groups", "Review configural, compositional, mean, and variance invariance before group comparisons."));
   if (result.mga || result.mga_permutation) findings.push(genericPayloadFinding("mga", "MGA", "groups", "Interpret group path differences only after checking MICOM and permutation settings."));
-  if (result.fimix) findings.push(genericPayloadFinding("fimix", "FIMIX-style diagnostic preview", "groups", "Treat inverse-distance memberships and pseudo-likelihood criteria as bounded diagnostics, not posterior probabilities or full finite-mixture EM/FIMIX-PLS evidence."));
-  if (result.segmentation) findings.push(genericPayloadFinding("pls_pos", "PLS-POS-style diagnostic preview", "groups", "Review objective history, segment size, and path stability only within the frozen deterministic score-space routine; unrestricted published PLS-POS equivalence is not claimed."));
+  if (result.fimix) findings.push(genericPayloadFinding("fimix", "Experimental FIMIX-style diagnostic", "groups", "Treat inverse-distance memberships and pseudo-likelihood criteria as diagnostics, not posterior probabilities or full finite-mixture EM/FIMIX-PLS results."));
+  if (result.segmentation) findings.push(genericPayloadFinding("pls_pos", "Experimental PLS-POS-style diagnostic", "groups", "Review objective history, segment size, and path stability only within the deterministic score-space routine; this is not a full published PLS-POS implementation."));
   if (result.ipma) findings.push(genericPayloadFinding("ipma", "IPMA", "groups", "Prioritize high-importance, lower-performance constructs or indicators for managerial interpretation."));
-  if (result.regression) findings.push(genericPayloadFinding("regression", result.regression.regression_type === "logistic" ? "Logistic regression" : "Regression", "diagnostics", "Report coefficients with standard errors, intervals, fit metrics, and scope status."));
-  if (result.nca) findings.push(genericPayloadFinding("nca", "NCA", "diagnostics", "Interpret necessity effect sizes and bottleneck rows only for the documented numeric X/Y scope."));
+  if (result.regression) findings.push(genericPayloadFinding("regression", result.regression.regression_type === "logistic" ? "Logistic regression" : "Regression", "diagnostics", "Report coefficients with standard errors, intervals, fit metrics, and any analysis requirements or cautions."));
+  if (result.nca) findings.push(genericPayloadFinding("nca", "NCA", "diagnostics", "Interpret necessity effect sizes and bottleneck rows only for numeric X/Y CE-FDH and CR-FDH analyses using observed ranges."));
   if (result.cbsem) findings.push(genericPayloadFinding("cbsem", "CB-SEM/CFA", "diagnostics", "Review ML convergence, fit indices, standardized solution, residuals, and modification-index diagnostics."));
-  if (result.gsca) findings.push(genericPayloadFinding("gsca", "GSCA", "diagnostics", "Review component estimates, fit diagnostics, and warnings within the bounded GSCA scope."));
+  if (result.gsca) findings.push(genericPayloadFinding("gsca", "GSCA", "diagnostics", "Review component estimates, fit diagnostics, and the reported limitations."));
   if (result.pca) findings.push(genericPayloadFinding("pca", "PCA", "diagnostics", "Interpret retained components through eigenvalues, explained variance, and loadings."));
   return findings;
 }
@@ -741,7 +741,7 @@ function reportParagraphs(run: AnalysisRun, result: PlsResult, findings: Interpr
   return [
     {
       section: "Model and provenance",
-      text: `${run.name} was estimated with ${run.method} using ${result.used_observations} observations, seed ${run.seed}, and fingerprint ${run.fingerprint}. Scope status: ${scopeText(run)}.`,
+      text: `${run.name} was estimated with ${run.method} using ${result.used_observations} observations, seed ${run.seed}, and fingerprint ${run.fingerprint}. Analysis details: ${scopeText(run)}.`,
       sourceFindingIds: [],
     },
     {
@@ -820,10 +820,10 @@ function historicalProcessFinding(
     tab: "overview",
     metric: "Historical PROCESS v1 interpretation",
     value: "read-only",
-    thresholdGuide: "Historical regression_process_v1 output remains readable under its original label and is never reinterpreted as current graph-defined PROCESS evidence.",
+    thresholdGuide: "Historical regression_process_v1 output remains readable under its original label and is never reinterpreted as current graph-defined PROCESS output.",
     interpretation: `This ${process.model.replaceAll("_", " ")} result is a historical PROCESS v1 archive. QuickPLS displays its recorded values without applying generic PLS or current PROCESS v2 interpretation rules.`,
-    recommendedAction: "Create and run a graph-defined PROCESS v2 recipe when current evidence or interpretation is required.",
-    reportSentence: "Historical PROCESS v1 output was retained as readable, read-only archive evidence and was not reinterpreted under current methods.",
+    recommendedAction: "Create and run a graph-defined PROCESS v2 analysis when a current interpretation is required.",
+    reportSentence: "Historical PROCESS v1 output was retained as a readable, read-only archive and was not reinterpreted under current methods.",
   });
 }
 
@@ -833,7 +833,7 @@ function historicalProcessReportParagraphs(
 ) {
   return [{
     section: "Historical archive disclosure",
-    text: `${run.name} contains historical ${process.methodVersion} ${process.model.replaceAll("_", " ")} output. Recorded effect and slope rows remain readable under their original version label, but no generic PLS, current PROCESS v2, parity, or fresh validation claim is made.`,
+    text: `${run.name} contains historical ${process.methodVersion} ${process.model.replaceAll("_", " ")} output. Recorded effect and slope rows remain readable under their original version label, but they are not reinterpreted as generic PLS or current PROCESS v2 results.`,
     sourceFindingIds: ["process_v1.historical_read_only"],
   }];
 }
@@ -853,12 +853,12 @@ function processReportParagraphs(
   return [
     {
       section: "Model and provenance",
-      text: `${run.name} used graph-defined PROCESS v2 with ${process.observations} global complete cases, ${process.omittedObservations} omitted rows, ${process.graph.equations.length} OLS equation(s), HC3 covariance, seed ${run.seed}, and fingerprint ${run.fingerprint}. Scope status: candidate graph-defined PROCESS evidence.`,
+      text: `${run.name} used the graph-defined PROCESS v2 workflow with ${process.observations} global complete cases, ${process.omittedObservations} omitted rows, ${process.graph.equations.length} OLS equation(s), HC3 covariance, seed ${run.seed}, and fingerprint ${run.fingerprint}.`,
       sourceFindingIds: [],
     },
     {
       section: "Graph-defined path analysis",
-      text: `${equationSummary || "No validated equation-fit rows were available."}${direct ? ` Reference direct effect ${direct.effect_id} was ${direct.estimate.toFixed(4)}.` : ""}${totalIndirect ? ` Reference total indirect effect was ${totalIndirect.estimate.toFixed(4)}.` : ""} Reference effects are evaluated at the persisted original-sample moderator conditions disclosed in the result tables.`,
+      text: `${equationSummary || "No supported equation-fit rows were available."}${direct ? ` Reference direct effect ${direct.effect_id} was ${direct.estimate.toFixed(4)}.` : ""}${totalIndirect ? ` Reference total indirect effect was ${totalIndirect.estimate.toFixed(4)}.` : ""} Reference effects are evaluated at the persisted original-sample moderator conditions disclosed in the result tables.`,
       sourceFindingIds: findings.filter((item) => item.tab === "structural").map((item) => item.id),
     },
     {
@@ -886,10 +886,10 @@ function genericPayloadFinding(id: string, label: string, tab: ResultWorkspaceTa
     tab,
     metric: label,
     value: "available",
-    thresholdGuide: "Use the method-specific documented QuickPLS scope and warnings.",
+    thresholdGuide: "Use the method-specific requirements and warnings.",
     interpretation: `${label} output is present in this run.`,
     recommendedAction: action,
-    reportSentence: `${label} results were reviewed within the documented QuickPLS scope.`,
+    reportSentence: `${label} results were reviewed according to the listed requirements.`,
   });
 }
 
@@ -1051,9 +1051,9 @@ function formatCode(code: string) {
 
 function scopeText(run: AnalysisRun) {
   if (nativeStructuralPathRandomizationProjection(run)) {
-    return "candidate single-model fixed-score structural path randomization with conditional, approximate inference under exchangeable reduced-model residuals; method-specific qualification evidence is tracked separately";
+    return "Supported single-model fixed-score structural path randomization with conditional, approximate inference under exchangeable reduced-model residuals; see Method Details for assumptions and limitations";
   }
-  return (run.warnings[0] ?? "Validated for documented QuickPLS scope.").replace(/QuickPLS v\d+\.\d+\.\d+ supported scope/g, "documented QuickPLS supported scope");
+  return (run.warnings[0] ?? "See Method Details for requirements and known limitations.").replace(/QuickPLS v\d+\.\d+\.\d+ supported scope/g, "the supported setup for this method"); // customer-copy-lint: allow-internal
 }
 
 function severityLabel(severity: InterpretationSeverity) {

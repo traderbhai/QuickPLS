@@ -1,0 +1,171 @@
+{
+  "current_state": {
+    "legacy_row_status": "absent",
+    "manifest_declared_state": "absent",
+    "manifest_derived_state": "absent",
+    "migration_status": "compatibility_only",
+    "receipt_count": 0,
+    "registry": {
+      "capability_version": "plsc_bootstrap_v1",
+      "coverage_state": "partial",
+      "evidence_state": "absent",
+      "surface": "labs"
+    }
+  },
+  "decision": "BLOCK_PROMOTION_KEEP_EVIDENCE_ABSENT",
+  "errors": [],
+  "evidence_requirements": [
+    {
+      "admission_condition": "Freeze equations, PLSc parameter families, preprocessing, supported predicates, settings, interval and failure semantics, exact result schema, and official parity references; obtain independent method-family review.",
+      "role": "method_contract",
+      "scaffold_artifacts": [
+        "validation/qualification_v2/consistent_bootstrap_v1.qualification.json",
+        "validation/fixtures/consistent_bootstrap_v1_microcases.json",
+        "docs/methods/CONSISTENT_BOOTSTRAP_V1_QUALIFICATION.md"
+      ],
+      "status": "scaffold_only"
+    },
+    {
+      "admission_condition": "Execute full-refit plsc_v2 at 1,000 through 10,000 indexed case resamples and full delete-one refits; bind source set, scenario set, build fingerprint, exact ledger, result payload, and typed failures in an immutable receipt.",
+      "role": "kernel_execution",
+      "scaffold_artifacts": [
+        "validation/consistent_bootstrap_v1_reference.py",
+        "validation/fixtures/consistent_bootstrap_v1_microcases.json"
+      ],
+      "status": "missing_evidence"
+    },
+    {
+      "admission_condition": "Compare every PLSc parameter family and interval to two independently maintained full-reestimation implementations, or approve and document the stricter oracle exception allowed by QualificationSpec V2.",
+      "role": "oracle_independence",
+      "scaffold_artifacts": [
+        "validation/consistent_bootstrap_v1_reference.py",
+        "validation/consistent_bootstrap_v1_reference.R"
+      ],
+      "status": "missing_evidence"
+    },
+    {
+      "admission_condition": "Run preregistered bias, standard-error, percentile/BCa coverage, Type-I error, power, and failure-rate simulations with failed fits retained in every denominator and 95% Monte Carlo half-width at most one percentage point unless justified.",
+      "role": "generative_recovery",
+      "scaffold_artifacts": [],
+      "status": "missing_evidence"
+    },
+    {
+      "admission_condition": "Execute every declared boundary plus row/declaration reorder, sign alignment, worker-count, seed-repeat, save/reopen, GUI/CLI, nonfinite, collinear, small-sample, and cancellation mutations; accept only correct output or a specific typed failure.",
+      "role": "adversarial_boundaries",
+      "scaffold_artifacts": [
+        "validation/fixtures/consistent_bootstrap_v1_microcases.json"
+      ],
+      "status": "inventory_only"
+    },
+    {
+      "admission_condition": "Run through the real project runner; append atomically; save, close, reopen, and compare canonical payloads; cover schema 1-5, future read-only, interrupted save/recovery, checksum/duplicate-key/member/method/dataset/ledger/interval tampering, and explicitly resolve replayability of successful replicate parameter digests.",
+      "role": "archive_persistence",
+      "scaffold_artifacts": [],
+      "status": "missing_evidence"
+    },
+    {
+      "admission_condition": "Export the same canonical run to CSV, XLSX, HTML, SVG, PDF, and PNG; semantically read back CSV, XLSX, HTML, SVG, and PDF; compare table IDs, cells, precision, missing values, ordering, warnings, provenance, chart data, and source-run identity.",
+      "role": "cross_format_export",
+      "scaffold_artifacts": [],
+      "status": "missing_evidence"
+    },
+    {
+      "admission_condition": "Prove exact GUI/CLI/native recipe equivalence, actionable unsupported-state diagnostics, fail-closed malformed payload handling, accessible result/failure tables, cancellation/retry, and continued non-selectability while registry evidence is absent.",
+      "role": "frontend_contract",
+      "scaffold_artifacts": [
+        "src/native/nativeConsistentBootstrap.test.ts"
+      ],
+      "status": "missing_evidence"
+    },
+    {
+      "admission_condition": "Exercise installed and portable offline Windows builds at every required viewport and scaling level, including keyboard/pointer access, invalid setup, execute, cancel/retry, save/reopen, export/readback, clean exit, and no orphan process/listener.",
+      "role": "packaged_windows_e2e",
+      "scaffold_artifacts": [],
+      "status": "missing_evidence"
+    },
+    {
+      "admission_condition": "Measure five post-warmup runs on standard and workstation hardware for micro, applied, large, each maximum axis, and compound stress; enforce elapsed, memory, result-size, cancellation-latency, soak, and 20% regression gates.",
+      "role": "performance_scale",
+      "scaffold_artifacts": [],
+      "status": "missing_evidence"
+    }
+  ],
+  "generated_at_utc": "2026-08-14T16:30:00Z",
+  "identity": {
+    "capability_id": "smartpls.consistent_bootstrapping",
+    "cell_id": "qpls3.inference.consistent_bootstrap",
+    "method_version": "plsc_bootstrap_v1",
+    "qualification_id": "qpls3.inference.consistent_bootstrap.qualification_v2"
+  },
+  "passed": false,
+  "promotion_allowed": false,
+  "promotion_blockers": [
+    "coverage.selectable_test_direction_missing",
+    "coverage.selectable_interval_family_missing",
+    "coverage.complete_measurement_assessment_inference_missing",
+    "coverage.broader_plsc_model_shapes_and_defaults_missing",
+    "evidence.full_plsc_independent_oracle_missing",
+    "evidence.second_independently_maintained_full_plsc_oracle_missing",
+    "evidence.preregistered_bias_coverage_and_failure_simulation_not_run",
+    "evidence.adversarial_and_metamorphic_matrix_not_run",
+    "evidence.archive_and_cross_format_readback_receipts_missing",
+    "evidence.gui_cli_native_equivalence_receipt_missing",
+    "evidence.packaged_windows_accessibility_matrix_not_run",
+    "evidence.performance_scale_and_soak_not_run",
+    "evidence.independent_scientific_review_not_recorded",
+    "oracle.base_r_microreference_not_executed_in_this_scaffold_gate",
+    "persistence.successful_replicate_vectors_not_replayable_from_archive",
+    "method.minimum_usable_fraction_requires_independent_justification",
+    "qualification.compatibility_only_migration_not_complete",
+    "qualification.all_ten_immutable_evidence_roles_have_zero_admitted_receipts"
+  ],
+  "qualification_ready": false,
+  "scaffold_checks": {
+    "legacy_manifest": {
+      "declared_state": "absent",
+      "derived_state": "absent",
+      "errors": [],
+      "passed": true
+    },
+    "microreference": {
+      "boundary_case_count": 36,
+      "checks": [
+        "archive_stable_parameter_digest_ordering",
+        "ordered_failure_ledger_and_exact_accounting",
+        "sample_and_parameter_sha256_contract",
+        "sample_standard_error",
+        "type7_percentile_interval",
+        "two_sided_normal_reference",
+        "midrank_full_delete_one_bca_arithmetic",
+        "degenerate_se_and_bca_fail_closed",
+        "boundary_and_failure_case_inventory"
+      ],
+      "errors": [],
+      "fixture_only": true,
+      "method_version": "plsc_bootstrap_v1",
+      "microcase_count": 2,
+      "passed": true,
+      "qualification_evidence": false
+    },
+    "missing_files": [],
+    "qualification_spec": {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "cell_id": "qpls3.inference.consistent_bootstrap",
+      "errors": [],
+      "method_version": "plsc_bootstrap_v1",
+      "passed": true,
+      "qualification_id": "qpls3.inference.consistent_bootstrap.qualification_v2",
+      "qualification_ready": false,
+      "receipts_verified": false,
+      "registry_verified": true,
+      "schema_valid": true,
+      "semantic_valid": true,
+      "warnings": [
+        "immutable receipt bytes were not verified in this validation pass"
+      ]
+    },
+    "r_microreference_present_but_not_executed": true
+  },
+  "scaffold_valid": true,
+  "schema_version": 1
+}

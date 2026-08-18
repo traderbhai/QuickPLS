@@ -3,7 +3,7 @@ use arrow::{
     datatypes::{DataType, Field, Schema},
     record_batch::RecordBatch,
 };
-use faer::{Mat, prelude::*};
+use faer::{Mat, Side, prelude::*};
 use qpls_core::{
     AnalysisRecipe, Construct, DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION, HigherOrderMethod,
     MeasurementMode, RhoABoundaryWarning, RhoAEquationError, ValidatedExecutionRecipe,
@@ -12,8 +12,8 @@ use qpls_core::{
 use qpls_data::{DataKind, Dataset};
 use qpls_estimation::{
     CBSEM_ML_METHOD_VERSION, CCA_METHOD_VERSION, CFA_ML_METHOD_VERSION, CTA_PLS_METHOD_VERSION,
-    EstimationError, EstimationPhase, EstimationProgress,
-    GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION, IPMA_METHOD_VERSION,
+    CcaCorrelation, EstimationError, EstimationPhase, EstimationProgress,
+    GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION, IPMA_METHOD_VERSION, MICOM_METHOD_VERSION,
     MODERATED_MEDIATION_METHOD_VERSION, NONLINEAR_EFFECTS_METHOD_VERSION, PLS_METHOD_VERSION,
     PLS_MGA_METHOD_VERSION, PLS_PREDICT_METHOD_VERSION, PLSC_METHOD_VERSION, PlsResult,
     WPLS_METHOD_VERSION, estimate_pls_validated_with_control,
@@ -31,10 +31,20 @@ pub const ASSESSMENT_METHOD_VERSION_V3: &str = "pls_assessment_v3";
 pub const ASSESSMENT_METHOD_VERSION_V4: &str = "pls_assessment_v4";
 pub const ASSESSMENT_METHOD_VERSION_V5: &str = "pls_assessment_v5";
 pub const ASSESSMENT_METHOD_VERSION_V6: &str = "pls_assessment_v6";
-pub const ASSESSMENT_METHOD_VERSION: &str = "pls_assessment_v7";
+pub const ASSESSMENT_METHOD_VERSION_V7: &str = "pls_assessment_v7";
+pub const ASSESSMENT_METHOD_VERSION: &str = "pls_assessment_v8";
 pub const RHO_A_METHOD_VERSION: &str = DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION;
 pub const HTMT_PLUS_METHOD_VERSION: &str = "ringle_et_al_htmt_plus_v1";
 pub const HTMT_ORIGINAL_METHOD_VERSION: &str = "henseler_et_al_htmt_v1";
+pub const PLS_MODEL_FIT_METHOD_VERSION: &str = "pls_model_fit_v2";
+pub const PLS_MODEL_FIT_MATRIX_CONVENTION: &str =
+    "indicator_correlation_lower_triangle_including_diagonal";
+pub const PLS_MODEL_FIT_GEODESIC_LOGARITHM: &str = "natural_logarithm";
+pub const PLS_MODEL_FIT_EXACT_INFERENCE_PROCEDURE: &str =
+    "adapted_bollen_stine_saturated_and_estimated";
+pub const CCA_RESIDUAL_DIAGNOSTICS_METHOD_VERSION: &str = "cca_residual_diagnostics_v1";
+pub const CCA_RESIDUAL_DIAGNOSTICS_MATRIX_CONVENTION: &str =
+    "construct_correlation_lower_triangle_excluding_diagonal_v1";
 const NESTED_PROGRESS_SCALE: u64 = 1_000_000;
 
 #[derive(Debug, Error, PartialEq)]
@@ -47,6 +57,8 @@ pub enum AssessmentError {
     DatasetMismatch,
     #[error("assessment requires a converged PLS-PM v1 result")]
     InvalidEstimationResult,
+    #[error("assessment does not support estimation method version '{0}'")]
+    UnsupportedEstimationMethod(String),
     #[error("unknown or nonnumeric indicator: {0}")]
     InvalidIndicator(String),
     #[error("estimation result is inconsistent with the recipe: {0}")]
@@ -179,6 +191,20 @@ pub struct HtmtAssessment {
     pub cells: Vec<Vec<HtmtCell>>,
 }
 
+/// Exact point-estimate HTMT artifacts shared by the assessment report and
+/// complete PLS bootstrap inference. Keeping both sign policies in this
+/// object prevents a resampling caller from silently relabelling original
+/// signed HTMT as the absolute-correlation HTMT+ estimand.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct HtmtArtifacts {
+    pub htmt_plus_method_version: String,
+    pub htmt_plus: HtmtAssessment,
+    pub htmt_original_method_version: String,
+    pub htmt_original: HtmtAssessment,
+    pub warnings: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct StructuralQuality {
     pub construct: String,
@@ -211,15 +237,142 @@ pub struct StructuralEffectSize {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct FitMeasures {
-    pub srmr: f64,
-    pub d_uls: f64,
+#[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
+pub enum CcaResidualDiagnosticCell {
+    Available {
+        pair_index: usize,
+        left: String,
+        right: String,
+        observed: f64,
+        reproduced: f64,
+        residual: f64,
+        absolute_residual: f64,
+    },
+    Unavailable {
+        pair_index: usize,
+        left: String,
+        right: String,
+        reason_code: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CcaResidualDiagnosticFailure {
+    pub pair_index: Option<usize>,
+    pub left: Option<String>,
+    pub right: Option<String>,
+    pub source_row_count: usize,
+    pub reason_code: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CcaResidualDiagnostics {
+    pub method_version: String,
+    pub estimator_method_version: String,
+    pub model: String,
+    pub construct_order: Vec<String>,
+    pub matrix_convention: String,
+    pub expected_pair_count: usize,
+    pub available_pair_count: usize,
+    pub unavailable_pair_count: usize,
+    pub cells: Vec<CcaResidualDiagnosticCell>,
+    pub failures: Vec<CcaResidualDiagnosticFailure>,
+    pub max_absolute_residual: Option<f64>,
+    pub source_max_absolute_residual: Option<f64>,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
+pub enum FitCriterionValue {
+    Available { value: f64 },
+    Unavailable { reason_code: String },
+}
+
+impl Default for FitCriterionValue {
+    fn default() -> Self {
+        Self::Unavailable {
+            reason_code: "model_fit.legacy_not_recorded".into(),
+        }
+    }
+}
+
+impl FitCriterionValue {
+    pub fn value(&self) -> Option<f64> {
+        match self {
+            Self::Available { value } => Some(*value),
+            Self::Unavailable { .. } => None,
+        }
+    }
+
+    pub fn reason_code(&self) -> Option<&str> {
+        match self {
+            Self::Available { .. } => None,
+            Self::Unavailable { reason_code } => Some(reason_code),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct PlsExactFitInferenceContract {
+    pub procedure: String,
+    pub status: String,
+    pub reason_code: String,
+}
+
+impl Default for PlsExactFitInferenceContract {
+    fn default() -> Self {
+        Self {
+            procedure: String::new(),
+            status: "unavailable".into(),
+            reason_code: "model_fit.legacy_not_recorded".into(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct FitMeasures {
+    pub srmr: f64,
+    pub d_uls: f64,
+    #[serde(default)]
+    pub d_g: FitCriterionValue,
+    #[serde(default)]
+    pub chi_square: FitCriterionValue,
+    #[serde(default)]
+    pub degrees_of_freedom: FitCriterionValue,
+    #[serde(default)]
+    pub nfi: FitCriterionValue,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct PlsModelFit {
+    #[serde(default)]
+    pub method_version: String,
+    #[serde(default)]
+    pub analytical_sample_size: usize,
+    #[serde(default)]
+    pub indicator_order: Vec<String>,
+    #[serde(default)]
+    pub matrix_convention: String,
+    #[serde(default)]
+    pub geodesic_logarithm: String,
+    #[serde(default)]
+    pub observed_correlation: Vec<Vec<f64>>,
+    #[serde(default)]
+    pub saturated_implied_correlation: Vec<Vec<f64>>,
+    #[serde(default)]
+    pub estimated_implied_correlation: Vec<Vec<f64>>,
+    #[serde(default)]
+    pub null_model_chi_square: FitCriterionValue,
     pub saturated: FitMeasures,
     pub estimated: FitMeasures,
+    #[serde(default)]
+    pub exact_fit_inference: PlsExactFitInferenceContract,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -272,6 +425,8 @@ pub struct AssessmentResult {
     pub f_squared: Vec<StructuralEffectSize>,
     #[serde(default)]
     pub model_fit: Option<PlsModelFit>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cca_residual_diagnostics: Option<CcaResidualDiagnostics>,
     #[serde(default)]
     pub blindfolding: Option<BlindfoldingResult>,
     pub warnings: Vec<String>,
@@ -303,6 +458,41 @@ pub fn assess_pls_with_control(
             other => AssessmentError::ResultMismatch(other.to_string()),
         })?;
     assess_pls_validated_with_control(dataset, &execution, estimation, control)
+}
+
+/// Computes only the exact original-HTMT and HTMT+ point artifacts through
+/// the same complete-case, higher-order, and cancellation path as the full
+/// PLS assessment. Complete bootstrap inference calls this on each indexed
+/// resample; no PLS score or loading is used by the ordinary reflective-block
+/// HTMT formula itself.
+pub fn assess_htmt_validated_with_control(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    estimation: &PlsResult,
+    mut control: impl FnMut(AssessmentProgress) -> bool,
+) -> Result<HtmtArtifacts, AssessmentError> {
+    let effective_recipe = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| match error {
+            qpls_core::ExecutionRecipeError::DatasetFingerprintMismatch => {
+                AssessmentError::DatasetMismatch
+            }
+            other => AssessmentError::ResultMismatch(other.to_string()),
+        })?;
+    let execution_recipe = expand_higher_order_for_assessment(effective_recipe)?;
+    validate_inputs(dataset, &execution_recipe, estimation)?;
+    let mut complete_columns = complete_case_columns(dataset, effective_recipe, &mut control)?;
+    add_two_stage_higher_order_columns(&mut complete_columns, effective_recipe, estimation)?;
+    if complete_columns.values().next().map(Vec::len) != Some(estimation.used_observations) {
+        return Err(AssessmentError::ResultMismatch(
+            "complete-case observation count differs from estimator output".into(),
+        ));
+    }
+    calculate_htmt_artifacts(
+        &execution_recipe.model.constructs,
+        &complete_columns,
+        &mut control,
+    )
 }
 
 /// Assesses an opaque no-resampling recipe capability that has passed the
@@ -571,53 +761,9 @@ pub fn assess_pls_validated_with_control(
         matrix_units as u64,
     )?;
 
-    let empty_htmt_cell = HtmtCell {
-        value: None,
-        status: HtmtStatus::Unavailable,
-        reason: Some("htmt.uninitialized".into()),
-    };
-    let mut htmt_plus =
-        vec![vec![empty_htmt_cell.clone(); construct_ids.len()]; construct_ids.len()];
-    let mut htmt_original = vec![vec![empty_htmt_cell; construct_ids.len()]; construct_ids.len()];
-    let htmt_units = construct_ids.len() * construct_ids.len();
-    for row in 0..construct_ids.len() {
-        for column in 0..construct_ids.len() {
-            checkpoint(
-                &mut control,
-                AssessmentPhase::Htmt,
-                (row * construct_ids.len() + column) as u64,
-                htmt_units as u64,
-            )?;
-            let left = &recipe.model.constructs[row];
-            let right = &recipe.model.constructs[column];
-            htmt_plus[row][column] =
-                htmt_cell(left, right, &complete_columns, row == column, true)?;
-            htmt_original[row][column] =
-                htmt_cell(left, right, &complete_columns, row == column, false)?;
-            if row < column {
-                for (label, cell) in [
-                    ("HTMT+", &htmt_plus[row][column]),
-                    ("original HTMT", &htmt_original[row][column]),
-                ] {
-                    if cell.status == HtmtStatus::Unavailable {
-                        warnings.push(format!(
-                            "{} is unavailable for '{}' and '{}': {}",
-                            label,
-                            left.id,
-                            right.id,
-                            cell.reason.as_deref().unwrap_or("unknown reason")
-                        ));
-                    }
-                }
-            }
-        }
-    }
-    checkpoint(
-        &mut control,
-        AssessmentPhase::Htmt,
-        htmt_units as u64,
-        htmt_units as u64,
-    )?;
+    let htmt_artifacts =
+        calculate_htmt_artifacts(&recipe.model.constructs, &complete_columns, &mut control)?;
+    warnings.extend(htmt_artifacts.warnings.iter().cloned());
 
     let endogenous = recipe
         .model
@@ -873,6 +1019,7 @@ pub fn assess_pls_validated_with_control(
         )?;
     }
 
+    let cca_residual_diagnostics = calculate_cca_residual_diagnostics(recipe, estimation)?;
     let model_fit = Some(calculate_model_fit(
         recipe,
         estimation,
@@ -899,39 +1046,200 @@ pub fn assess_pls_validated_with_control(
             values: matrix,
         },
         htmt: None,
-        htmt_plus_method_version: Some(HTMT_PLUS_METHOD_VERSION.into()),
-        htmt_plus: Some(HtmtAssessment {
-            constructs: recipe
-                .model
-                .constructs
-                .iter()
-                .map(|construct| construct.id.clone())
-                .collect(),
-            correlation_type: "pearson".into(),
-            absolute_correlations: true,
-            cells: htmt_plus,
-        }),
-        htmt_original_method_version: Some(HTMT_ORIGINAL_METHOD_VERSION.into()),
-        htmt_original: Some(HtmtAssessment {
-            constructs: recipe
-                .model
-                .constructs
-                .iter()
-                .map(|construct| construct.id.clone())
-                .collect(),
-            correlation_type: "pearson".into(),
-            absolute_correlations: false,
-            cells: htmt_original,
-        }),
+        htmt_plus_method_version: Some(htmt_artifacts.htmt_plus_method_version),
+        htmt_plus: Some(htmt_artifacts.htmt_plus),
+        htmt_original_method_version: Some(htmt_artifacts.htmt_original_method_version),
+        htmt_original: Some(htmt_artifacts.htmt_original),
         r_squared: estimation.r_squared.clone(),
         structural_quality,
         structural_vif,
         formative_indicator_vif,
         f_squared,
         model_fit,
+        cca_residual_diagnostics,
         blindfolding,
         warnings,
     })
+}
+
+fn calculate_cca_residual_diagnostics(
+    recipe: &AnalysisRecipe,
+    estimation: &PlsResult,
+) -> Result<Option<CcaResidualDiagnostics>, AssessmentError> {
+    if estimation.method_version != CCA_METHOD_VERSION {
+        return Ok(None);
+    }
+    let source = estimation.cca.as_ref().ok_or_else(|| {
+        AssessmentError::ResultMismatch(
+            "CCA estimation result omits its residual-correlation analysis".into(),
+        )
+    })?;
+    if source.method_version != CCA_METHOD_VERSION {
+        return Err(AssessmentError::ResultMismatch(format!(
+            "CCA residual analysis method version '{}' is not current",
+            source.method_version
+        )));
+    }
+    if source.model.trim().is_empty() {
+        return Err(AssessmentError::ResultMismatch(
+            "CCA residual analysis omits its model identity".into(),
+        ));
+    }
+
+    let construct_order = recipe
+        .model
+        .constructs
+        .iter()
+        .map(|construct| construct.id.clone())
+        .collect::<Vec<_>>();
+    let expected_pairs = (1..construct_order.len())
+        .flat_map(|row| (0..row).map(move |column| (column, row)))
+        .collect::<Vec<_>>();
+    let expected_identities = expected_pairs
+        .iter()
+        .map(|(left, right)| {
+            (
+                construct_order[*left].clone(),
+                construct_order[*right].clone(),
+            )
+        })
+        .collect::<HashSet<_>>();
+    let mut rows = BTreeMap::<(String, String), Vec<&CcaCorrelation>>::new();
+    for row in &source.correlations {
+        rows.entry((row.left.clone(), row.right.clone()))
+            .or_default()
+            .push(row);
+    }
+
+    let mut cells = Vec::with_capacity(expected_pairs.len());
+    let mut failures = Vec::new();
+    let mut max_absolute_residual: Option<f64> = None;
+    for (pair_index, (left_index, right_index)) in expected_pairs.iter().enumerate() {
+        let left = construct_order[*left_index].clone();
+        let right = construct_order[*right_index].clone();
+        let identity = (left.clone(), right.clone());
+        let source_rows = rows.remove(&identity).unwrap_or_default();
+        let reason_code = if source_rows.is_empty() {
+            Some("cca_diagnostics.source_pair_missing")
+        } else if source_rows.len() != 1 {
+            Some("cca_diagnostics.source_pair_duplicate")
+        } else {
+            cca_residual_row_failure(source_rows[0])
+        };
+        if let Some(reason_code) = reason_code {
+            cells.push(CcaResidualDiagnosticCell::Unavailable {
+                pair_index,
+                left: left.clone(),
+                right: right.clone(),
+                reason_code: reason_code.into(),
+            });
+            failures.push(CcaResidualDiagnosticFailure {
+                pair_index: Some(pair_index),
+                left: Some(left),
+                right: Some(right),
+                source_row_count: source_rows.len(),
+                reason_code: reason_code.into(),
+            });
+            continue;
+        }
+        let row = source_rows[0];
+        max_absolute_residual = Some(
+            max_absolute_residual
+                .unwrap_or(0.0)
+                .max(row.absolute_residual),
+        );
+        cells.push(CcaResidualDiagnosticCell::Available {
+            pair_index,
+            left,
+            right,
+            observed: row.observed,
+            reproduced: row.reproduced,
+            residual: row.residual,
+            absolute_residual: row.absolute_residual,
+        });
+    }
+    for ((left, right), unexpected_rows) in rows {
+        let reason_code = if expected_identities.contains(&(left.clone(), right.clone())) {
+            "cca_diagnostics.source_pair_duplicate"
+        } else {
+            "cca_diagnostics.source_pair_unexpected"
+        };
+        for _ in unexpected_rows {
+            failures.push(CcaResidualDiagnosticFailure {
+                pair_index: None,
+                left: Some(left.clone()),
+                right: Some(right.clone()),
+                source_row_count: 1,
+                reason_code: reason_code.into(),
+            });
+        }
+    }
+
+    let source_max_absolute_residual = source
+        .max_absolute_residual
+        .is_finite()
+        .then_some(source.max_absolute_residual);
+    let summary_matches = match (max_absolute_residual, source_max_absolute_residual) {
+        (Some(recomputed), Some(reported)) => cca_values_match(recomputed, reported),
+        (None, Some(reported)) => cca_values_match(reported, 0.0),
+        (_, None) => false,
+    };
+    if !summary_matches {
+        failures.push(CcaResidualDiagnosticFailure {
+            pair_index: None,
+            left: None,
+            right: None,
+            source_row_count: 0,
+            reason_code: "cca_diagnostics.source_max_absolute_residual_mismatch".into(),
+        });
+    }
+    let available_pair_count = cells
+        .iter()
+        .filter(|cell| matches!(cell, CcaResidualDiagnosticCell::Available { .. }))
+        .count();
+    let unavailable_pair_count = cells.len() - available_pair_count;
+
+    Ok(Some(CcaResidualDiagnostics {
+        method_version: CCA_RESIDUAL_DIAGNOSTICS_METHOD_VERSION.into(),
+        estimator_method_version: source.method_version.clone(),
+        model: source.model.clone(),
+        construct_order,
+        matrix_convention: CCA_RESIDUAL_DIAGNOSTICS_MATRIX_CONVENTION.into(),
+        expected_pair_count: expected_pairs.len(),
+        available_pair_count,
+        unavailable_pair_count,
+        cells,
+        failures,
+        max_absolute_residual,
+        source_max_absolute_residual,
+        warnings: source.warnings.clone(),
+    }))
+}
+
+fn cca_residual_row_failure(row: &CcaCorrelation) -> Option<&'static str> {
+    if [
+        row.observed,
+        row.reproduced,
+        row.residual,
+        row.absolute_residual,
+    ]
+    .iter()
+    .any(|value| !value.is_finite())
+    {
+        return Some("cca_diagnostics.source_pair_non_finite");
+    }
+    if !cca_values_match(row.residual, row.observed - row.reproduced) {
+        return Some("cca_diagnostics.source_pair_residual_mismatch");
+    }
+    if !cca_values_match(row.absolute_residual, row.residual.abs()) {
+        return Some("cca_diagnostics.source_pair_absolute_residual_mismatch");
+    }
+    None
+}
+
+fn cca_values_match(left: f64, right: f64) -> bool {
+    let tolerance = 64.0 * f64::EPSILON * left.abs().max(right.abs()).max(1.0);
+    (left - right).abs() <= tolerance
 }
 
 fn calculate_model_fit(
@@ -1023,9 +1331,46 @@ fn calculate_model_fit(
         (indicator_count * indicator_count * 3) as u64,
         (indicator_count * indicator_count * 3) as u64,
     )?;
+    let null_model_chi_square =
+        maximum_likelihood_discrepancy(&observed, &identity_matrix(indicator_count))
+            .map(|distance| {
+                available_fit_value((estimation.used_observations - 1) as f64 * distance)
+            })
+            .unwrap_or_else(unavailable_fit_value);
+    let saturated_degrees_of_freedom = pls_model_fit_degrees_of_freedom(recipe, true);
+    let estimated_degrees_of_freedom = pls_model_fit_degrees_of_freedom(recipe, false);
     Ok(PlsModelFit {
-        saturated: fit_measures(&observed, &saturated),
-        estimated: fit_measures(&observed, &estimated),
+        method_version: PLS_MODEL_FIT_METHOD_VERSION.into(),
+        analytical_sample_size: estimation.used_observations,
+        indicator_order: indicators
+            .iter()
+            .map(|(_, indicator)| (*indicator).clone())
+            .collect(),
+        matrix_convention: PLS_MODEL_FIT_MATRIX_CONVENTION.into(),
+        geodesic_logarithm: PLS_MODEL_FIT_GEODESIC_LOGARITHM.into(),
+        observed_correlation: observed.clone(),
+        saturated_implied_correlation: saturated.clone(),
+        estimated_implied_correlation: estimated.clone(),
+        saturated: fit_measures(
+            &observed,
+            &saturated,
+            estimation.used_observations,
+            saturated_degrees_of_freedom,
+            &null_model_chi_square,
+        ),
+        estimated: fit_measures(
+            &observed,
+            &estimated,
+            estimation.used_observations,
+            estimated_degrees_of_freedom,
+            &null_model_chi_square,
+        ),
+        null_model_chi_square,
+        exact_fit_inference: PlsExactFitInferenceContract {
+            procedure: PLS_MODEL_FIT_EXACT_INFERENCE_PROCEDURE.into(),
+            status: "unavailable".into(),
+            reason_code: "model_fit.adapted_bollen_stine_not_implemented".into(),
+        },
     })
 }
 
@@ -1157,7 +1502,256 @@ fn implied_indicator_correlations(
     implied
 }
 
-fn fit_measures(observed: &[Vec<f64>], implied: &[Vec<f64>]) -> FitMeasures {
+fn available_fit_value(value: f64) -> FitCriterionValue {
+    if value.is_finite() {
+        FitCriterionValue::Available { value }
+    } else {
+        unavailable_fit_value("model_fit.non_finite_criterion")
+    }
+}
+
+fn unavailable_fit_value(reason_code: impl Into<String>) -> FitCriterionValue {
+    FitCriterionValue::Unavailable {
+        reason_code: reason_code.into(),
+    }
+}
+
+fn identity_matrix(count: usize) -> Vec<Vec<f64>> {
+    (0..count)
+        .map(|row| {
+            (0..count)
+                .map(|column| if row == column { 1.0 } else { 0.0 })
+                .collect()
+        })
+        .collect()
+}
+
+/// Counts the free correlation-model parameters under the frozen, standardized
+/// QuickPLS PLS-fit contract. Reflective blocks are represented as common
+/// factors and formative blocks as composites. The count follows the
+/// postulated-model accounting used in cSEM: off-diagonal indicator moments
+/// minus structural/correlation and measurement parameters.
+pub fn pls_model_fit_degrees_of_freedom(
+    recipe: &AnalysisRecipe,
+    saturated: bool,
+) -> FitCriterionValue {
+    let indicator_count = recipe
+        .model
+        .constructs
+        .iter()
+        .map(|construct| construct.indicators.len())
+        .sum::<usize>();
+    let construct_count = recipe.model.constructs.len();
+    if indicator_count < 2 || construct_count == 0 {
+        return unavailable_fit_value("model_fit.degrees_of_freedom_insufficient_model");
+    }
+    let indicator_moments = indicator_count * (indicator_count - 1) / 2;
+    let structural_parameters = if saturated {
+        construct_count * (construct_count - 1) / 2
+    } else {
+        let endogenous = recipe
+            .model
+            .paths
+            .iter()
+            .map(|path| path.target.as_str())
+            .collect::<HashSet<_>>();
+        let exogenous_count = recipe
+            .model
+            .constructs
+            .iter()
+            .filter(|construct| !endogenous.contains(construct.id.as_str()))
+            .count();
+        exogenous_count * (exogenous_count - 1) / 2 + recipe.model.paths.len()
+    };
+    let measurement_parameters = recipe
+        .model
+        .constructs
+        .iter()
+        .map(|construct| match construct.mode {
+            MeasurementMode::Reflective => construct.indicators.len(),
+            MeasurementMode::Formative => {
+                let indicators = construct.indicators.len();
+                indicators.saturating_sub(1) + indicators * indicators.saturating_sub(1) / 2
+            }
+        })
+        .sum::<usize>();
+    let free_parameters = structural_parameters.saturating_add(measurement_parameters);
+    if free_parameters > indicator_moments {
+        unavailable_fit_value("model_fit.degrees_of_freedom_nonpositive")
+    } else {
+        available_fit_value((indicator_moments - free_parameters) as f64)
+    }
+}
+
+fn validate_square_symmetric_matrix(matrix: &[Vec<f64>], matrix_name: &str) -> Result<(), String> {
+    if matrix.is_empty() || matrix.iter().any(|row| row.len() != matrix.len()) {
+        return Err(format!("model_fit.{matrix_name}_matrix_not_square"));
+    }
+    for row in 0..matrix.len() {
+        for column in 0..matrix.len() {
+            let value = matrix[row][column];
+            if !value.is_finite() {
+                return Err(format!("model_fit.{matrix_name}_matrix_non_finite"));
+            }
+            if (value - matrix[column][row]).abs() > 1e-10 {
+                return Err(format!("model_fit.{matrix_name}_matrix_not_symmetric"));
+            }
+            if (row == column && (value - 1.0).abs() > 1e-10)
+                || (row != column && value.abs() > 1.0 + 1e-10)
+            {
+                return Err(format!("model_fit.{matrix_name}_matrix_not_correlation"));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn cholesky_lower(matrix: &[Vec<f64>], matrix_name: &str) -> Result<Vec<Vec<f64>>, String> {
+    validate_square_symmetric_matrix(matrix, matrix_name)?;
+    let count = matrix.len();
+    let mut lower = vec![vec![0.0; count]; count];
+    for row in 0..count {
+        for column in 0..=row {
+            let correction = (0..column)
+                .map(|index| lower[row][index] * lower[column][index])
+                .sum::<f64>();
+            if row == column {
+                let pivot = matrix[row][row] - correction;
+                if !pivot.is_finite() || pivot <= 1e-12 {
+                    return Err(format!(
+                        "model_fit.{matrix_name}_matrix_not_positive_definite"
+                    ));
+                }
+                lower[row][column] = pivot.sqrt();
+            } else {
+                lower[row][column] = (matrix[row][column] - correction) / lower[column][column];
+            }
+        }
+    }
+    Ok(lower)
+}
+
+fn solve_cholesky(lower: &[Vec<f64>], right_hand_side: &[f64]) -> Vec<f64> {
+    let count = lower.len();
+    let mut forward = vec![0.0; count];
+    for row in 0..count {
+        let correction = (0..row)
+            .map(|column| lower[row][column] * forward[column])
+            .sum::<f64>();
+        forward[row] = (right_hand_side[row] - correction) / lower[row][row];
+    }
+    let mut solution = vec![0.0; count];
+    for row in (0..count).rev() {
+        let correction = ((row + 1)..count)
+            .map(|column| lower[column][row] * solution[column])
+            .sum::<f64>();
+        solution[row] = (forward[row] - correction) / lower[row][row];
+    }
+    solution
+}
+
+fn log_determinant_from_cholesky(lower: &[Vec<f64>]) -> f64 {
+    2.0 * (0..lower.len())
+        .map(|index| lower[index][index].ln())
+        .sum::<f64>()
+}
+
+fn maximum_likelihood_discrepancy(
+    observed: &[Vec<f64>],
+    implied: &[Vec<f64>],
+) -> Result<f64, String> {
+    validate_square_symmetric_matrix(observed, "observed")?;
+    validate_square_symmetric_matrix(implied, "implied")?;
+    if observed.len() != implied.len() {
+        return Err("model_fit.matrix_dimension_mismatch".into());
+    }
+    let observed_lower = cholesky_lower(observed, "observed")?;
+    let implied_lower = cholesky_lower(implied, "implied")?;
+    let mut trace = 0.0;
+    for column in 0..observed.len() {
+        let right_hand_side = observed.iter().map(|row| row[column]).collect::<Vec<_>>();
+        trace += solve_cholesky(&implied_lower, &right_hand_side)[column];
+    }
+    let discrepancy = trace - log_determinant_from_cholesky(&observed_lower)
+        + log_determinant_from_cholesky(&implied_lower)
+        - observed.len() as f64;
+    if !discrepancy.is_finite() || discrepancy < -1e-10 {
+        return Err("model_fit.maximum_likelihood_discrepancy_invalid".into());
+    }
+    Ok(discrepancy.max(0.0))
+}
+
+fn inverse_lower_triangular(lower: &[Vec<f64>]) -> Vec<Vec<f64>> {
+    let count = lower.len();
+    let mut inverse = vec![vec![0.0; count]; count];
+    for column in 0..count {
+        let mut unit = vec![0.0; count];
+        unit[column] = 1.0;
+        for row in 0..count {
+            let correction = (0..row)
+                .map(|index| lower[row][index] * inverse[index][column])
+                .sum::<f64>();
+            inverse[row][column] = (unit[row] - correction) / lower[row][row];
+        }
+    }
+    inverse
+}
+
+fn geodesic_discrepancy(observed: &[Vec<f64>], implied: &[Vec<f64>]) -> Result<f64, String> {
+    validate_square_symmetric_matrix(observed, "observed")?;
+    validate_square_symmetric_matrix(implied, "implied")?;
+    if observed.len() != implied.len() {
+        return Err("model_fit.matrix_dimension_mismatch".into());
+    }
+    let observed_lower = cholesky_lower(observed, "observed")?;
+    cholesky_lower(implied, "implied")?;
+    let inverse_lower = inverse_lower_triangular(&observed_lower);
+    let count = observed.len();
+    let mut left_product = vec![vec![0.0; count]; count];
+    for row in 0..count {
+        for column in 0..count {
+            left_product[row][column] = (0..count)
+                .map(|index| inverse_lower[row][index] * implied[index][column])
+                .sum();
+        }
+    }
+    let whitened = Mat::from_fn(count, count, |row, column| {
+        let value = (0..count)
+            .map(|index| left_product[row][index] * inverse_lower[column][index])
+            .sum::<f64>();
+        let reverse = (0..count)
+            .map(|index| left_product[column][index] * inverse_lower[row][index])
+            .sum::<f64>();
+        0.5 * (value + reverse)
+    });
+    let eigenvalues = whitened
+        .self_adjoint_eigenvalues(Side::Lower)
+        .map_err(|_| "model_fit.geodesic_eigendecomposition_failed".to_owned())?;
+    if eigenvalues
+        .iter()
+        .any(|value| !value.is_finite() || *value <= 1e-12)
+    {
+        return Err("model_fit.geodesic_nonpositive_eigenvalue".into());
+    }
+    let discrepancy = 0.5
+        * eigenvalues
+            .iter()
+            .map(|value| value.ln().powi(2))
+            .sum::<f64>();
+    if discrepancy.is_finite() {
+        Ok(discrepancy.max(0.0))
+    } else {
+        Err("model_fit.geodesic_non_finite".into())
+    }
+}
+
+fn fit_measures(
+    observed: &[Vec<f64>],
+    implied: &[Vec<f64>],
+    sample_size: usize,
+    degrees_of_freedom: FitCriterionValue,
+    null_model_chi_square: &FitCriterionValue,
+) -> FitMeasures {
     let count = observed.len();
     let mut d_uls = 0.0;
     for row in 0..count {
@@ -1165,10 +1759,121 @@ fn fit_measures(observed: &[Vec<f64>], implied: &[Vec<f64>]) -> FitMeasures {
             d_uls += (observed[row][column] - implied[row][column]).powi(2);
         }
     }
+    let d_g = geodesic_discrepancy(observed, implied)
+        .map(available_fit_value)
+        .unwrap_or_else(unavailable_fit_value);
+    let chi_square = maximum_likelihood_discrepancy(observed, implied)
+        .map(|distance| available_fit_value((sample_size - 1) as f64 * distance))
+        .unwrap_or_else(unavailable_fit_value);
+    let nfi = match (chi_square.value(), null_model_chi_square.value()) {
+        (Some(model), Some(null_model)) if null_model > f64::EPSILON => {
+            available_fit_value(1.0 - model / null_model)
+        }
+        (Some(_), Some(_)) => unavailable_fit_value("model_fit.null_model_chi_square_zero"),
+        (None, _) => unavailable_fit_value(
+            chi_square
+                .reason_code()
+                .unwrap_or("model_fit.chi_square_unavailable"),
+        ),
+        (_, None) => unavailable_fit_value(
+            null_model_chi_square
+                .reason_code()
+                .unwrap_or("model_fit.null_model_chi_square_unavailable"),
+        ),
+    };
     FitMeasures {
         srmr: (d_uls / (count * (count + 1) / 2) as f64).sqrt(),
         d_uls,
+        d_g,
+        chi_square,
+        degrees_of_freedom,
+        nfi,
     }
+}
+
+fn fit_value_matches(left: &FitCriterionValue, right: &FitCriterionValue) -> bool {
+    match (left, right) {
+        (
+            FitCriterionValue::Available { value: left },
+            FitCriterionValue::Available { value: right },
+        ) => (left - right).abs() <= 1e-10 * left.abs().max(right.abs()).max(1.0),
+        (
+            FitCriterionValue::Unavailable { reason_code: left },
+            FitCriterionValue::Unavailable { reason_code: right },
+        ) => left == right,
+        _ => false,
+    }
+}
+
+/// Recomputes every matrix-derived PLS model-fit v2 criterion from the stored
+/// observed and implied correlation matrices. Project persistence calls this
+/// to reject semantic tampering instead of trusting duplicated scalar values.
+pub fn pls_model_fit_matches_v2_contract(fit: &PlsModelFit, sample_size: usize) -> bool {
+    let count = fit.indicator_order.len();
+    let unique_indicator_count = fit.indicator_order.iter().collect::<HashSet<_>>().len();
+    let matrix_shape_is_exact = count > 0
+        && [
+            &fit.observed_correlation,
+            &fit.saturated_implied_correlation,
+            &fit.estimated_implied_correlation,
+        ]
+        .iter()
+        .all(|matrix| matrix.len() == count && matrix.iter().all(|row| row.len() == count));
+    if fit.method_version != PLS_MODEL_FIT_METHOD_VERSION
+        || fit.analytical_sample_size != sample_size
+        || fit.matrix_convention != PLS_MODEL_FIT_MATRIX_CONVENTION
+        || fit.geodesic_logarithm != PLS_MODEL_FIT_GEODESIC_LOGARITHM
+        || fit
+            .indicator_order
+            .iter()
+            .any(|indicator| indicator.trim().is_empty())
+        || unique_indicator_count != count
+        || !matrix_shape_is_exact
+        || sample_size < 2
+        || fit.exact_fit_inference.procedure != PLS_MODEL_FIT_EXACT_INFERENCE_PROCEDURE
+        || fit.exact_fit_inference.status != "unavailable"
+        || fit.exact_fit_inference.reason_code != "model_fit.adapted_bollen_stine_not_implemented"
+    {
+        return false;
+    }
+    if [
+        &fit.observed_correlation,
+        &fit.saturated_implied_correlation,
+        &fit.estimated_implied_correlation,
+    ]
+    .iter()
+    .any(|matrix| validate_square_symmetric_matrix(matrix, "stored").is_err())
+    {
+        return false;
+    }
+    let expected_null =
+        maximum_likelihood_discrepancy(&fit.observed_correlation, &identity_matrix(count))
+            .map(|distance| available_fit_value((sample_size - 1) as f64 * distance))
+            .unwrap_or_else(unavailable_fit_value);
+    if !fit_value_matches(&fit.null_model_chi_square, &expected_null) {
+        return false;
+    }
+    [
+        (&fit.saturated, &fit.saturated_implied_correlation),
+        (&fit.estimated, &fit.estimated_implied_correlation),
+    ]
+    .iter()
+    .all(|(stored, implied)| {
+        let expected = fit_measures(
+            &fit.observed_correlation,
+            implied,
+            sample_size,
+            stored.degrees_of_freedom.clone(),
+            &expected_null,
+        );
+        (stored.srmr - expected.srmr).abs()
+            <= 1e-10 * stored.srmr.abs().max(expected.srmr.abs()).max(1.0)
+            && (stored.d_uls - expected.d_uls).abs()
+                <= 1e-10 * stored.d_uls.abs().max(expected.d_uls.abs()).max(1.0)
+            && fit_value_matches(&stored.d_g, &expected.d_g)
+            && fit_value_matches(&stored.chi_square, &expected.chi_square)
+            && fit_value_matches(&stored.nfi, &expected.nfi)
+    })
 }
 
 fn calculate_blindfolding(
@@ -1669,6 +2374,86 @@ fn htmt_ratio(
     Ok(cell.value)
 }
 
+fn calculate_htmt_artifacts(
+    constructs: &[qpls_core::Construct],
+    columns: &BTreeMap<String, Vec<f64>>,
+    control: &mut impl FnMut(AssessmentProgress) -> bool,
+) -> Result<HtmtArtifacts, AssessmentError> {
+    let construct_ids = constructs
+        .iter()
+        .map(|construct| construct.id.clone())
+        .collect::<Vec<_>>();
+    let empty = HtmtCell {
+        value: None,
+        status: HtmtStatus::Unavailable,
+        reason: Some("htmt.uninitialized".into()),
+    };
+    let mut plus = vec![vec![empty.clone(); constructs.len()]; constructs.len()];
+    let mut original = vec![vec![empty; constructs.len()]; constructs.len()];
+    let total = constructs.len() * constructs.len();
+    let mut warnings = Vec::new();
+    for row in 0..constructs.len() {
+        for column in 0..constructs.len() {
+            checkpoint(
+                control,
+                AssessmentPhase::Htmt,
+                (row * constructs.len() + column) as u64,
+                total as u64,
+            )?;
+            // HTMT is definitionally symmetric. Computing both directions
+            // independently changes the floating-point accumulation order
+            // when the two blocks have different indicator counts, which can
+            // create last-bit differences and an archive payload that is not
+            // bit-symmetric. Keep the upper triangle canonical and mirror it.
+            if row > column {
+                let plus_mirror = plus[column][row].clone();
+                let original_mirror = original[column][row].clone();
+                plus[row][column] = plus_mirror;
+                original[row][column] = original_mirror;
+                continue;
+            }
+            let left = &constructs[row];
+            let right = &constructs[column];
+            plus[row][column] = htmt_cell(left, right, columns, row == column, true)?;
+            original[row][column] = htmt_cell(left, right, columns, row == column, false)?;
+            if row < column {
+                for (label, cell) in [
+                    ("HTMT+", &plus[row][column]),
+                    ("original HTMT", &original[row][column]),
+                ] {
+                    if cell.status == HtmtStatus::Unavailable {
+                        warnings.push(format!(
+                            "{} is unavailable for '{}' and '{}': {}",
+                            label,
+                            left.id,
+                            right.id,
+                            cell.reason.as_deref().unwrap_or("unknown reason")
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    checkpoint(control, AssessmentPhase::Htmt, total as u64, total as u64)?;
+    Ok(HtmtArtifacts {
+        htmt_plus_method_version: HTMT_PLUS_METHOD_VERSION.into(),
+        htmt_plus: HtmtAssessment {
+            constructs: construct_ids.clone(),
+            correlation_type: "pearson".into(),
+            absolute_correlations: true,
+            cells: plus,
+        },
+        htmt_original_method_version: HTMT_ORIGINAL_METHOD_VERSION.into(),
+        htmt_original: HtmtAssessment {
+            constructs: construct_ids,
+            correlation_type: "pearson".into(),
+            absolute_correlations: false,
+            cells: original,
+        },
+        warnings,
+    })
+}
+
 fn htmt_cell(
     left: &qpls_core::Construct,
     right: &qpls_core::Construct,
@@ -1882,22 +2667,27 @@ fn validate_inputs(
     if dataset.fingerprint.0 != recipe.dataset_fingerprint {
         return Err(AssessmentError::DatasetMismatch);
     }
-    if !estimation.converged
-        || !(estimation.method_version == PLS_METHOD_VERSION
-            || estimation.method_version == PLSC_METHOD_VERSION
-            || estimation.method_version == GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION
-            || estimation.method_version == NONLINEAR_EFFECTS_METHOD_VERSION
-            || estimation.method_version == MODERATED_MEDIATION_METHOD_VERSION
-            || estimation.method_version == CTA_PLS_METHOD_VERSION
-            || estimation.method_version == WPLS_METHOD_VERSION
-            || estimation.method_version == CCA_METHOD_VERSION
-            || estimation.method_version == PLS_MGA_METHOD_VERSION
-            || estimation.method_version == IPMA_METHOD_VERSION
-            || estimation.method_version == CFA_ML_METHOD_VERSION
-            || estimation.method_version == CBSEM_ML_METHOD_VERSION
-            || estimation.method_version == PLS_PREDICT_METHOD_VERSION)
-    {
+    if !estimation.converged {
         return Err(AssessmentError::InvalidEstimationResult);
+    }
+    if !(estimation.method_version == PLS_METHOD_VERSION
+        || estimation.method_version == PLSC_METHOD_VERSION
+        || estimation.method_version == GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION
+        || estimation.method_version == NONLINEAR_EFFECTS_METHOD_VERSION
+        || estimation.method_version == MODERATED_MEDIATION_METHOD_VERSION
+        || estimation.method_version == CTA_PLS_METHOD_VERSION
+        || estimation.method_version == WPLS_METHOD_VERSION
+        || estimation.method_version == CCA_METHOD_VERSION
+        || estimation.method_version == PLS_MGA_METHOD_VERSION
+        || estimation.method_version == MICOM_METHOD_VERSION
+        || estimation.method_version == IPMA_METHOD_VERSION
+        || estimation.method_version == CFA_ML_METHOD_VERSION
+        || estimation.method_version == CBSEM_ML_METHOD_VERSION
+        || estimation.method_version == PLS_PREDICT_METHOD_VERSION)
+    {
+        return Err(AssessmentError::UnsupportedEstimationMethod(
+            estimation.method_version.clone(),
+        ));
     }
     for construct in &recipe.model.constructs {
         let score = estimation
@@ -2085,6 +2875,29 @@ fn complete_case_columns(
             Ok(((*indicator).clone(), position))
         })
         .collect::<Result<Vec<_>, _>>()?;
+    let case_weight_position = if recipe.settings.method == qpls_core::AnalysisMethod::Wpls {
+        recipe
+            .settings
+            .case_weight_column
+            .as_ref()
+            .map(|column| {
+                let position = dataset
+                    .batch
+                    .schema()
+                    .index_of(column)
+                    .map_err(|_| AssessmentError::InvalidIndicator(column.clone()))?;
+                let array = dataset.batch.column(position);
+                if array.as_any().downcast_ref::<Float64Array>().is_none()
+                    && array.as_any().downcast_ref::<Int64Array>().is_none()
+                {
+                    return Err(AssessmentError::InvalidIndicator(column.clone()));
+                }
+                Ok(position)
+            })
+            .transpose()?
+    } else {
+        None
+    };
     let row_count = dataset.batch.num_rows();
     let mut complete_rows = Vec::with_capacity(row_count);
     for row in 0..row_count {
@@ -2096,10 +2909,15 @@ fn complete_case_columns(
                 row_count as u64,
             )?;
         }
-        if positions.iter().all(|(_, position)| {
+        let indicators_complete = positions.iter().all(|(_, position)| {
             let array = dataset.batch.column(*position);
             !array.is_null(row) && numeric_value(array.as_ref(), row).is_some_and(f64::is_finite)
-        }) {
+        });
+        let case_weight_complete = case_weight_position.is_none_or(|position| {
+            let array = dataset.batch.column(position);
+            !array.is_null(row) && numeric_value(array.as_ref(), row).is_some_and(f64::is_finite)
+        });
+        if indicators_complete && case_weight_complete {
             complete_rows.push(row);
         }
     }
@@ -2565,6 +3383,122 @@ mod tests {
             metadata: BTreeMap::new(),
         };
         (dataset, recipe)
+    }
+
+    fn cca_fixture() -> (Dataset, AnalysisRecipe) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/cca_reference.csv"),
+            "cca_reference.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let source: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/cca_reference.recipe.json"
+        ))
+        .unwrap();
+        let mut recipe = if source.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION {
+            source
+        } else {
+            source.migrated_v3().unwrap()
+        };
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        (dataset, recipe)
+    }
+
+    #[test]
+    fn cca_residual_diagnostics_are_complete_typed_and_ledger_source_failures() {
+        let (dataset, recipe) = cca_fixture();
+        let estimation = estimate_pls(&dataset, &recipe).unwrap();
+        let assessment = assess_pls(&dataset, &recipe, &estimation).unwrap();
+        let diagnostics = assessment.cca_residual_diagnostics.unwrap();
+        assert_eq!(
+            diagnostics.method_version,
+            CCA_RESIDUAL_DIAGNOSTICS_METHOD_VERSION
+        );
+        assert_eq!(diagnostics.estimator_method_version, CCA_METHOD_VERSION);
+        assert_eq!(diagnostics.construct_order, ["x", "z", "y"]);
+        assert_eq!(diagnostics.expected_pair_count, 3);
+        assert_eq!(diagnostics.available_pair_count, 3);
+        assert_eq!(diagnostics.unavailable_pair_count, 0);
+        assert!(diagnostics.failures.is_empty());
+        assert_eq!(diagnostics.cells.len(), 3);
+        for (expected_index, cell) in diagnostics.cells.iter().enumerate() {
+            let CcaResidualDiagnosticCell::Available {
+                pair_index,
+                observed,
+                reproduced,
+                residual,
+                absolute_residual,
+                ..
+            } = cell
+            else {
+                panic!("valid CCA fixture must expose every expected residual pair")
+            };
+            assert_eq!(*pair_index, expected_index);
+            assert!(cca_values_match(*residual, *observed - *reproduced));
+            assert!(cca_values_match(*absolute_residual, residual.abs()));
+        }
+        assert!(cca_values_match(
+            diagnostics.max_absolute_residual.unwrap(),
+            diagnostics.source_max_absolute_residual.unwrap()
+        ));
+
+        let mut missing = estimation.clone();
+        missing.cca.as_mut().unwrap().correlations.remove(0);
+        let missing = calculate_cca_residual_diagnostics(&recipe, &missing)
+            .unwrap()
+            .unwrap();
+        assert_eq!(missing.available_pair_count, 2);
+        assert_eq!(missing.unavailable_pair_count, 1);
+        assert_eq!(missing.failures.len(), 1);
+        assert_eq!(missing.failures[0].pair_index, Some(0));
+        assert_eq!(missing.failures[0].source_row_count, 0);
+        assert_eq!(
+            missing.failures[0].reason_code,
+            "cca_diagnostics.source_pair_missing"
+        );
+
+        let mut duplicate = estimation.clone();
+        let repeated = duplicate.cca.as_ref().unwrap().correlations[0].clone();
+        duplicate.cca.as_mut().unwrap().correlations.push(repeated);
+        let duplicate = calculate_cca_residual_diagnostics(&recipe, &duplicate)
+            .unwrap()
+            .unwrap();
+        assert_eq!(duplicate.available_pair_count, 2);
+        assert_eq!(duplicate.unavailable_pair_count, 1);
+        assert_eq!(duplicate.failures.len(), 1);
+        assert_eq!(duplicate.failures[0].source_row_count, 2);
+        assert_eq!(
+            duplicate.failures[0].reason_code,
+            "cca_diagnostics.source_pair_duplicate"
+        );
+
+        let mut non_finite = estimation;
+        non_finite.cca.as_mut().unwrap().correlations[0].observed = f64::NAN;
+        let non_finite = calculate_cca_residual_diagnostics(&recipe, &non_finite)
+            .unwrap()
+            .unwrap();
+        assert_eq!(non_finite.available_pair_count, 2);
+        assert_eq!(non_finite.unavailable_pair_count, 1);
+        assert_eq!(non_finite.failures.len(), 1);
+        assert_eq!(non_finite.failures[0].source_row_count, 1);
+        assert_eq!(
+            non_finite.failures[0].reason_code,
+            "cca_diagnostics.source_pair_non_finite"
+        );
+
+        let (dataset, recipe) = fixture();
+        let estimation = estimate_pls(&dataset, &recipe).unwrap();
+        let assessment = assess_pls(&dataset, &recipe, &estimation).unwrap();
+        let encoded = serde_json::to_value(&assessment).unwrap();
+        assert!(encoded.get("cca_residual_diagnostics").is_none());
+        assert_eq!(
+            serde_json::from_value::<AssessmentResult>(encoded)
+                .unwrap()
+                .cca_residual_diagnostics,
+            None
+        );
     }
 
     #[test]
@@ -3101,9 +4035,150 @@ mod tests {
     fn fit_measures_match_hand_calculated_triangle_residuals() {
         let observed = vec![vec![1.0, 0.4], vec![0.4, 1.0]];
         let implied = vec![vec![1.0, 0.1], vec![0.1, 1.0]];
-        let fit = fit_measures(&observed, &implied);
+        let null_chi_square = available_fit_value(17.26098532733302);
+        let fit = fit_measures(
+            &observed,
+            &implied,
+            100,
+            available_fit_value(1.0),
+            &null_chi_square,
+        );
         assert_abs_diff_eq!(fit.d_uls, 0.09, epsilon = 1e-14);
         assert_abs_diff_eq!(fit.srmr, (0.09_f64 / 3.0).sqrt(), epsilon = 1e-14);
+        assert_abs_diff_eq!(
+            fit.d_g.value().unwrap(),
+            0.11128054577065873,
+            epsilon = 1e-12
+        );
+        assert_abs_diff_eq!(
+            fit.chi_square.value().unwrap(),
+            10.266002077836372,
+            epsilon = 1e-12
+        );
+        assert_abs_diff_eq!(
+            fit.nfi.value().unwrap(),
+            0.4052482008903624,
+            epsilon = 1e-12
+        );
+        assert_eq!(fit.degrees_of_freedom.value(), Some(1.0));
+    }
+
+    #[test]
+    fn advanced_fit_criteria_fail_closed_for_non_positive_definite_input() {
+        let singular = vec![vec![1.0, 1.0], vec![1.0, 1.0]];
+        let identity = identity_matrix(2);
+        assert_eq!(
+            geodesic_discrepancy(&singular, &identity),
+            Err("model_fit.observed_matrix_not_positive_definite".into())
+        );
+        assert_eq!(
+            maximum_likelihood_discrepancy(&singular, &identity),
+            Err("model_fit.observed_matrix_not_positive_definite".into())
+        );
+    }
+
+    #[test]
+    fn complete_point_fit_family_is_invariant_to_consistent_indicator_permutation() {
+        let observed = vec![
+            vec![1.0, 0.25, -0.10],
+            vec![0.25, 1.0, 0.30],
+            vec![-0.10, 0.30, 1.0],
+        ];
+        let implied = vec![
+            vec![1.0, 0.20, -0.05],
+            vec![0.20, 1.0, 0.22],
+            vec![-0.05, 0.22, 1.0],
+        ];
+        let null = maximum_likelihood_discrepancy(&observed, &identity_matrix(3))
+            .map(|value| available_fit_value(249.0 * value))
+            .unwrap();
+        let baseline = fit_measures(&observed, &implied, 250, available_fit_value(2.0), &null);
+        let permutation = [2usize, 0, 1];
+        let permute = |matrix: &[Vec<f64>]| {
+            permutation
+                .iter()
+                .map(|row| {
+                    permutation
+                        .iter()
+                        .map(|column| matrix[*row][*column])
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        };
+        let reordered_observed = permute(&observed);
+        let reordered_implied = permute(&implied);
+        let reordered_null =
+            maximum_likelihood_discrepancy(&reordered_observed, &identity_matrix(3))
+                .map(|value| available_fit_value(249.0 * value))
+                .unwrap();
+        let reordered = fit_measures(
+            &reordered_observed,
+            &reordered_implied,
+            250,
+            available_fit_value(2.0),
+            &reordered_null,
+        );
+
+        assert_abs_diff_eq!(baseline.srmr, reordered.srmr, epsilon = 1e-12);
+        assert_abs_diff_eq!(baseline.d_uls, reordered.d_uls, epsilon = 1e-12);
+        assert!(fit_value_matches(&baseline.d_g, &reordered.d_g));
+        assert!(fit_value_matches(
+            &baseline.chi_square,
+            &reordered.chi_square
+        ));
+        assert!(fit_value_matches(&baseline.nfi, &reordered.nfi));
+    }
+
+    #[test]
+    fn model_fit_v2_records_identity_scope_and_dormant_exact_fit_contract() {
+        let (dataset, recipe) = fixture();
+        let estimation = estimate_pls(&dataset, &recipe).unwrap();
+        let assessment = assess_pls(&dataset, &recipe, &estimation).unwrap();
+        assert_eq!(assessment.method_version, ASSESSMENT_METHOD_VERSION);
+        let fit = assessment.model_fit.unwrap();
+        assert_eq!(fit.method_version, PLS_MODEL_FIT_METHOD_VERSION);
+        assert_eq!(fit.analytical_sample_size, estimation.used_observations);
+        assert_eq!(fit.matrix_convention, PLS_MODEL_FIT_MATRIX_CONVENTION);
+        assert_eq!(fit.geodesic_logarithm, PLS_MODEL_FIT_GEODESIC_LOGARITHM);
+        assert_eq!(fit.indicator_order, ["x1", "x2", "y1", "y2"]);
+        assert_eq!(
+            fit.exact_fit_inference,
+            PlsExactFitInferenceContract {
+                procedure: PLS_MODEL_FIT_EXACT_INFERENCE_PROCEDURE.into(),
+                status: "unavailable".into(),
+                reason_code: "model_fit.adapted_bollen_stine_not_implemented".into(),
+            }
+        );
+        for row in [&fit.saturated, &fit.estimated] {
+            assert!(row.d_g.value().is_some());
+            assert!(row.chi_square.value().is_some());
+            assert!(row.nfi.value().is_some());
+        }
+        assert!(fit.null_model_chi_square.value().is_some());
+        assert!(pls_model_fit_matches_v2_contract(
+            &fit,
+            estimation.used_observations
+        ));
+        let mut tampered_scalar = fit.clone();
+        tampered_scalar.estimated.d_g =
+            available_fit_value(tampered_scalar.estimated.d_g.value().unwrap() + 0.25);
+        assert!(!pls_model_fit_matches_v2_contract(
+            &tampered_scalar,
+            estimation.used_observations
+        ));
+        let mut tampered_matrix = fit.clone();
+        tampered_matrix.estimated_implied_correlation[0][1] += 0.05;
+        tampered_matrix.estimated_implied_correlation[1][0] += 0.05;
+        assert!(!pls_model_fit_matches_v2_contract(
+            &tampered_matrix,
+            estimation.used_observations
+        ));
+        let mut duplicate_indicator = fit;
+        duplicate_indicator.indicator_order[1] = duplicate_indicator.indicator_order[0].clone();
+        assert!(!pls_model_fit_matches_v2_contract(
+            &duplicate_indicator,
+            estimation.used_observations
+        ));
     }
 
     #[test]
@@ -3556,6 +4631,37 @@ mod tests {
         );
     }
 
+    #[test]
+    fn htmt_mixed_block_matrices_are_bit_exactly_symmetric_for_archives() {
+        let (dataset, recipe) = corporate_reputation_fixture();
+        assert!(
+            recipe
+                .model
+                .constructs
+                .iter()
+                .map(|construct| construct.indicators.len())
+                .collect::<std::collections::BTreeSet<_>>()
+                .len()
+                > 1,
+            "regression fixture must retain mixed indicator-block sizes"
+        );
+        let estimation = estimate_pls(&dataset, &recipe).unwrap();
+        let assessment = assess_pls(&dataset, &recipe, &estimation).unwrap();
+        for matrix in [
+            assessment.htmt_plus.as_ref().unwrap(),
+            assessment.htmt_original.as_ref().unwrap(),
+        ] {
+            for row in 0..matrix.cells.len() {
+                for column in 0..matrix.cells.len() {
+                    assert_eq!(
+                        matrix.cells[row][column], matrix.cells[column][row],
+                        "HTMT archive matrix differs at ({row}, {column})"
+                    );
+                }
+            }
+        }
+    }
+
     fn assert_htmt_matches_reference(
         actual: &HtmtAssessment,
         expected: &serde_json::Value,
@@ -3752,6 +4858,22 @@ mod tests {
             assess_pls(&dataset, &recipe, &invalid),
             Err(AssessmentError::ResultMismatch(_))
         ));
+    }
+
+    #[test]
+    fn micom_v31_estimation_method_version_is_assessable_and_unknown_versions_are_typed() {
+        let (dataset, recipe) = fixture();
+        let mut estimation = estimate_pls(&dataset, &recipe).unwrap();
+        estimation.method_version = MICOM_METHOD_VERSION.into();
+        assert!(assess_pls(&dataset, &recipe, &estimation).is_ok());
+
+        estimation.method_version = "unknown_pls_family_method".into();
+        assert_eq!(
+            assess_pls(&dataset, &recipe, &estimation),
+            Err(AssessmentError::UnsupportedEstimationMethod(
+                "unknown_pls_family_method".into()
+            ))
+        );
     }
 
     #[test]

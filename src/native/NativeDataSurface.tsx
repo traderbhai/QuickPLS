@@ -11,6 +11,7 @@ import {
   FileText,
   History,
   LoaderCircle,
+  Plus,
   RefreshCw,
   Search,
   Square,
@@ -58,6 +59,7 @@ interface NativeDataSurfaceProps {
   mutationsLocked: boolean;
   onNewModel: () => void;
   onAnalyze: () => void;
+  onDerive: () => void;
   onContextMenuRequest: (request: NativeDataContextMenuRequest) => boolean;
 }
 type NativeDataMode = "data" | "variables" | "quality" | "import";
@@ -91,6 +93,7 @@ export function NativeDataSurface({
   mutationsLocked,
   onNewModel,
   onAnalyze,
+  onDerive,
   onContextMenuRequest,
 }: NativeDataSurfaceProps) {
   const dataset = useWorkspace((state) => state.dataset);
@@ -137,6 +140,17 @@ export function NativeDataSurface({
   const totalCells = rowCount * dataset.columns.length;
   const completePercent = totalCells > 0 ? Math.max(0, Math.min(100, ((totalCells - dataset.missing) / totalCells) * 100)) : 0;
   const dataKindLabel = dataset.kind === "covariance" ? "Covariance matrix" : dataset.kind === "correlation" ? "Correlation matrix" : "Raw data";
+  const deriveDisabledReason = !nativeRuntime
+    ? "Derived variables are available in the installed Windows app."
+    : !projectWritable
+      ? "Save a writable copy before deriving a variable."
+      : mutationsLocked
+        ? "Finish or cancel the active calculation before deriving a variable."
+        : (dataset.kind ?? "raw") !== "raw"
+          ? "Choose a raw-observation dataset before deriving a variable."
+          : !dataset.columns.length
+            ? "Import data before deriving a variable."
+            : null;
   const pageReady = !nativeRuntime || currentNativePage?.status === "ready";
   const pageError = currentNativePage?.status === "error" ? currentNativePage.error : null;
   const versionItems = useMemo(
@@ -311,7 +325,7 @@ export function NativeDataSurface({
     </aside>
 
     <section className="nd-document nd-data-document">
-      <div className="nd-document-tab"><Table2 size={14} /><span>{dataset.name}</span></div>
+      <div className="nd-document-tab nd-data-document-tab"><Table2 size={14} /><span>{dataset.name}</span><button type="button" disabled={Boolean(deriveDisabledReason)} title={deriveDisabledReason ?? "Create a non-destructive derived variable"} onClick={onDerive}><Plus size={13} aria-hidden="true" />Derive variable…</button></div>
       {dataset.columns.length > 0 && !hasEditableModel ? <section className="nd-data-next-actions" aria-labelledby="nd-data-next-actions-title">
         <div>
           <strong id="nd-data-next-actions-title">Choose what to do next</strong>

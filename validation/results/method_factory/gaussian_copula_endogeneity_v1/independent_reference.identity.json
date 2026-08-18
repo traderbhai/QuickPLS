@@ -1,0 +1,108 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "execution": {
+      "command": [
+        "python",
+        "validation/endogeneity_reference.py"
+      ],
+      "duration_seconds": 2.699,
+      "returncode": 0,
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.69s\n",
+      "stdout_tail": "wrote D:\\QuickPLS\\validation\\results\\endogeneity_reference_report.json | passed=True | max_delta=5.54e-09\n"
+    },
+    "independent_reference_report": "validation/results/endogeneity_reference_report.json",
+    "passed": true,
+    "reference_passed": true,
+    "tolerance": 1e-06
+  },
+  "execution": {
+    "command": [
+      "python",
+      "validation/endogeneity_reference.py"
+    ],
+    "duration_seconds": 2.699,
+    "returncode": 0,
+    "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.69s\n",
+    "stdout_tail": "wrote D:\\QuickPLS\\validation\\results\\endogeneity_reference_report.json | passed=True | max_delta=5.54e-09\n"
+  },
+  "feature_id": "qpls3.pls.gaussian_copula_endogeneity",
+  "generated_at_utc": "2026-08-14T06:51:43.347450Z",
+  "method_version": "gaussian_copula_endogeneity_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "independent_reference",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "d847875d0c78a734725de9794aa19cc64d97c6ff732b2b6cdb646dce0398406c",
+      "size": 260752
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+      "size": 114179
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+      "size": 653641
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "0a3f76ad19f897ff2db63be729a92087d8d1cad6b926e4c6908294cdb62e97e0",
+      "size": 54934
+    },
+    {
+      "path": "validation/endogeneity_factory_common.py",
+      "sha256": "9ca62fb82ec04b4056d5c138a99e28c1dd5bf00a2c2c12ffa53b49b26bcd85e9",
+      "size": 14111
+    },
+    {
+      "path": "validation/endogeneity_frontend_gate.py",
+      "sha256": "e9cf4a1b148dee8e588249b2a5b8f2223ca87843dcf58b1f688187c5c455806d",
+      "size": 10256
+    },
+    {
+      "path": "validation/endogeneity_reference.py",
+      "sha256": "8115798565d2284a770d4b4c5b74ee913f4957fd75b99eb99369c9befc3d0985",
+      "size": 12156
+    },
+    {
+      "path": "validation/higher_order_reference.py",
+      "sha256": "1467a6bf96b1bd84f15d6042ff8bfe8a9605f3fb6826ae8b63428abc614cc66f",
+      "size": 15607
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/gaussian_copula_endogeneity_v1.manifest.json",
+      "sha256": "50e1445c9c8d7131eea334405e5454424982371154ac5d2774e83a5b6fc57320",
+      "size": 14698
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/results/endogeneity_reference_report.json",
+      "sha256": "29054f375e9dc0e41d04e2065114a992621b34376afb75e2a436301d8d81ae42",
+      "size": 1439
+    },
+    {
+      "path": "validation/test_endogeneity_factory.py",
+      "sha256": "1b2dbb224abd159e0f9179071f67a52dde6b23f227195b75d67cdcd24a203c92",
+      "size": 4689
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    }
+  ]
+}

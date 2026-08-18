@@ -20,10 +20,10 @@
             "qpls-project",
             "tests::runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering"
           ],
-          "duration_seconds": 1.845,
+          "duration_seconds": 2.105,
           "returncode": 0,
-          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.66s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
-          "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.04s\n\n"
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.69s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-1c5316a49d695ac2.exe)\n     Running tests\\pls_model_comparison_schema6.rs (target\\debug\\deps\\pls_model_comparison_schema6-9640385ad6045b51.exe)\n     Running tests\\schema6_sem_model_v4_authoring_shapes.rs (target\\debug\\deps\\schema6_sem_model_v4_authoring_shapes-399eb9324137a89e.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 0.05s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n"
         },
         "passed": true,
         "test": "tests::runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering"
@@ -37,10 +37,10 @@
             "qpls-project",
             "tests::changed_payload_is_rejected_by_its_manifest_checksum"
           ],
-          "duration_seconds": 1.64,
+          "duration_seconds": 2.052,
           "returncode": 0,
-          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.42s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
-          "stdout_tail": "\nrunning 1 test\ntest tests::changed_payload_is_rejected_by_its_manifest_checksum ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.04s\n\n"
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.66s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-1c5316a49d695ac2.exe)\n     Running tests\\pls_model_comparison_schema6.rs (target\\debug\\deps\\pls_model_comparison_schema6-9640385ad6045b51.exe)\n     Running tests\\schema6_sem_model_v4_authoring_shapes.rs (target\\debug\\deps\\schema6_sem_model_v4_authoring_shapes-399eb9324137a89e.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::changed_payload_is_rejected_by_its_manifest_checksum ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 0.04s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n"
         },
         "passed": true,
         "test": "tests::changed_payload_is_rejected_by_its_manifest_checksum"
@@ -49,7 +49,7 @@
     "passed": true
   },
   "feature_id": "qpls3.standalone.pca",
-  "generated_at_utc": "2026-08-13T19:35:44.509497Z",
+  "generated_at_utc": "2026-08-18T03:07:41.376165Z",
   "method_version": "pca_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -63,8 +63,8 @@
     },
     {
       "path": "crates/qpls-project/src/lib.rs",
-      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-      "size": 660277
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -78,8 +78,8 @@
     },
     {
       "path": "validation/methods/pca_v1.manifest.json",
-      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
-      "size": 14506
+      "sha256": "e89c5a6c5c57853c93b207c2c50451bdfab0a80acb30108ffa19a0cd09d6c8c9",
+      "size": 14560
     },
     {
       "path": "validation/pca_persistence_gate.py",
@@ -88,13 +88,13 @@
     },
     {
       "path": "validation/pca_v1_factory_common.py",
-      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
-      "size": 11599
+      "sha256": "88fceff4dd6fb914e2773f0d4fe537b5df3d01fb70066873808ba3980b2e7a1c",
+      "size": 11651
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pca_v1_factory_evidence.py",

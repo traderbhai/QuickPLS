@@ -10,9 +10,15 @@ import {
   reportModelForRun,
   reportMethodId,
   reportScopeStatus,
+  reportTableStatusLabel,
 } from "./ReportsWorkspace";
 
 describe("ReportsWorkspace run truth", () => {
+  it("translates internal table states into customer-facing result labels", () => {
+    expect(reportTableStatusLabel("validated")).toBe("Supported result");
+    expect(reportTableStatusLabel("experimental")).toBe("Experimental result");
+  });
+
   it("falls back from a newer failed run to a completed result-backed PROCESS run", () => {
     const process = processV2Run(true);
     const failed = {
@@ -25,7 +31,7 @@ describe("ReportsWorkspace run truth", () => {
     const available = reportableRuns([failed, process]);
     expect(available.map((run) => run.id)).toEqual([process.id]);
     const tables = runExportTables(available[0]);
-    expect(reportScopeStatus(tables)).toBe("experimental");
+    expect(reportScopeStatus(tables)).toBe("validated");
     expect(tables.map((table) => table.id)).toContain("process_reference_effects");
   });
 
@@ -35,7 +41,7 @@ describe("ReportsWorkspace run truth", () => {
     expect(reportMethodId(undefined, "pls_pm")).toBe("pls_pm");
   });
 
-  it("binds a strict Structural Path Randomization run to its experimental method identity", () => {
+  it("binds a strict Structural Path Randomization run to its scoped Standard identity", () => {
     const randomization = completedStructuralPathRandomizationRun();
     const archivedNode: Parameters<typeof reportDiagramSvgForRun>[1][number] = {
       id: "archived-randomization-construct",
@@ -50,11 +56,11 @@ describe("ReportsWorkspace run truth", () => {
     };
     randomization.modelSnapshot = { nodes: [archivedNode], edges: [], diagramLayout: defaultDiagramLayout([archivedNode], []) };
     expect(reportMethodId(randomization, "pls_pm")).toBe("permutation");
-    expect(reportScopeStatus(runExportTables(randomization))).toBe("experimental");
+    expect(reportScopeStatus(runExportTables(randomization))).toBe("validated");
     const svg = reportDiagramSvgForRun(randomization, [unrelatedLiveNode], [], { showValidationWatermark: false }, randomization.modelSnapshot.diagramLayout);
     expect(svg).toContain("Archived randomization construct");
     expect(svg).not.toContain("Unrelated live construct");
-    expect(svg).toContain("Candidate output: single-model Freedman-Lane randomization");
+    expect(svg).toContain("Supported for the documented bounded scope: single-model Freedman-Lane randomization");
     expect(svg).not.toContain("Validated for documented QuickPLS supported scope");
     expect(reportModelForRun(randomization, [unrelatedLiveNode], [], randomization.modelSnapshot.diagramLayout).nodes)
       .toEqual([archivedNode]);
@@ -108,7 +114,7 @@ describe("ReportsWorkspace run truth", () => {
     ]);
     expect(tables.every((table) => table.status === "experimental")).toBe(true);
     expect(tables.find((table) => table.id === "legacy_process_scope")?.rows)
-      .toContainEqual(["Status", "Readable historical output only; create a graph-defined PROCESS v2 recipe for current evidence."]);
+      .toContainEqual(["Status", "Readable historical output only; create a graph-defined PROCESS v2 analysis for a current interpretation."]);
     const unrelatedLegacyCanvas: Parameters<typeof reportDiagramSvgForRun>[1] = [{
       id: "unrelated-legacy-live-construct",
       type: "construct",

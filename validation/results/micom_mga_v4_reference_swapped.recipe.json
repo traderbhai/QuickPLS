@@ -1,0 +1,103 @@
+{
+  "created_at": "2026-08-11T00:00:00Z",
+  "dataset_fingerprint": "v2:55a1b7a387d2958f7985e7a458d07601cc7d740b54f480262ed4d48242dd148a",
+  "id": "00000000-0000-0000-0000-000000000281",
+  "metadata": {
+    "status": "validated_micom_v4_and_permutation_mga_v4_fixed_plan_scope"
+  },
+  "method_config": {
+    "configural_invariance_confirmed": true,
+    "group_a": "B",
+    "group_b": "A",
+    "group_column": "group",
+    "kind": "mga",
+    "methods": [
+      "micom",
+      "mga_permutation"
+    ],
+    "permutation_samples": 5000
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x1",
+          "x2",
+          "x3"
+        ],
+        "mode": "reflective",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "z",
+        "indicators": [
+          "z1",
+          "z2",
+          "z3"
+        ],
+        "mode": "reflective",
+        "name": "Z",
+        "short_name": "Z"
+      },
+      {
+        "id": "r",
+        "indicators": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "mode": "reflective",
+        "name": "R",
+        "short_name": "R"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y1",
+          "y2",
+          "y3"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "00000000-0000-0000-0000-000000000282",
+    "interactions": [],
+    "name": "MICOM v2 independent reference",
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "z",
+        "target": "y"
+      },
+      {
+        "source": "r",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 3000,
+    "method": "mga",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260811,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-10,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

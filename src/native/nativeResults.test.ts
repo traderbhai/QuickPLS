@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
 import { tablesToCsv } from "../domain/resultTables";
 import { buildResultInterpretation } from "../domain/resultInterpretation";
-import type { AnalysisResultEnvelope, AnalysisRun, NativeCanonicalAnalysisRecipe } from "../types";
+import type { AnalysisResultEnvelope, AnalysisRun, HtmtAssessment, HtmtBootstrapInference, NativeCanonicalAnalysisRecipe } from "../types";
 import { NATIVE_NCA_ENGINE_SCOPE_WARNING, NATIVE_STANDALONE_ASSESSMENT_WARNING } from "./nativeNca";
 import { NATIVE_PCA_ENGINE_SCOPE_WARNING } from "./nativePca";
 import { NATIVE_OLS_ENGINE_SCOPE_WARNING } from "./nativeOls";
@@ -21,10 +21,12 @@ import { nativeRunFromCanonicalResult } from "./nativeCanonicalProject";
 import {
   buildNativeResultNavigation,
   completedResultRuns,
+  NATIVE_NCA_CE_FDH_PEER_SOURCE_NOTE,
   nativeModerationPlot,
   nativeCbsemDiagramRun,
   nativeCbsemResultProjection,
   nativeGscaResultProjection,
+  nativeNcaCeFdhPeerTable,
   nativeNcaPlot,
   nativeNcaResultProjection,
   nativePcaResultProjection,
@@ -43,6 +45,276 @@ const DISPLAY_LABELS: Record<string, string> = {
   satisfaction: "Customer Fulfilment",
   loyalty: "Customer Retention",
 };
+
+function completedExactCbsemBootstrapRun(): AnalysisRun {
+  const run = completedCbsemRun("cfa");
+  const analysis = run.result!.cbsem!;
+  analysis.fit.rmsea_interval_attribution = {
+    method_version: "rmsea_noncentral_chi_square_inversion_90_n_minus_one_v1",
+    confidence_level: 0.9,
+  };
+  analysis.score_lm = {
+    method_version: "cbsem_cfa_score_lm_v1",
+    scope: "covariance_only_declared_zero_residual_covariances",
+    rows: [{
+      parameter_id: "parameter:residual_covariance:x1:x2", kind: "residual_covariance", lhs: "x1", rhs: "x2",
+      outcome: { status: "available", score: 0, efficient_score: 0, candidate_information: 1, efficient_information: 1, modification_index: 0, expected_parameter_change: 0, p_value: 1 },
+    }],
+  };
+  analysis.modification_indices = [];
+  const successes = Array.from({ length: 1000 }, (_, replicate_index) => ({
+    replicate_index,
+    sampling_positions_sha256: "1".repeat(64), sample_indices_sha256: "2".repeat(64),
+    parameter_estimates: [2], iterations: 2, objective: 0.1, gradient_norm: 0.01,
+  }));
+  analysis.exact_case_bootstrap = {
+    method_version: "cbsem_exact_case_bootstrap_v1", estimator_method_version: "cbsem_ml_exact_parameter_table_v3",
+    source_dataset_id: "dataset-1", source_dataset_fingerprint: run.provenance!.dataset_fingerprint,
+    outer_recipe_analytical_identity_sha256: "3".repeat(64), base_point_result_sha256: "4".repeat(64),
+    compiler_analytical_identity_sha256: "5".repeat(64), plan_sha256: "6".repeat(64), model_scientific_sha256: "7".repeat(64),
+    complete_case_sample_size: analysis.sample_size,
+    complete_case_universe_digest_method: "sha256_source_fingerprint_and_ordered_complete_case_u64_indices_v1",
+    complete_case_universe_sha256: "8".repeat(64), covariance_denominator: "maximum_likelihood_n",
+    sample_indices_digest_method: "sha256_source_fingerprint_and_ordered_u64_indices_v1",
+    sampling_positions_digest_method: "sha256_stream_seed_replicate_complete_case_n_and_ordered_sampling_positions_v1",
+    interval_method: "percentile_type7_v1", confidence_level: 0.95, requested_replicates: 1000,
+    attempted_refits: 1000, usable_replicates: 1000, failed_replicates: 0,
+    minimum_usable_fraction: 0.9, minimum_usable_replicates: 1000, seed: run.provenance!.seed,
+    stream_token: "quickpls_cbsem_exact_cfa_ml_case_bootstrap_v1",
+    retry_policy: "no_retry_fixed_preplanned_primary_draws_v1", max_attempts_per_replicate: 1,
+    parameter_ids: ["parameter:loading:x:x1"], inference: { status: "available" },
+    intervals: [{ parameter_id: "parameter:loading:x:x1", original: 1, bootstrap_mean: 2, bias: 1, standard_error: 0, percentile_lower: 2, percentile_upper: 2, usable_replicates: 1000 }],
+    hypothesis_tests: {
+      method_version: "cbsem_exact_case_bootstrap_null_centered_test_tail_v1",
+      null_hypothesis: "compiled_free_parameter_equals_zero_v1",
+      statistic: "unstudentized_null_centered_parameter_estimate_v1",
+      tie_policy: "inclusive_ieee_comparison_v1",
+      probability_method: "plus_one_over_usable_plus_one_v1",
+      decision_rule: "selected_p_value_less_than_or_equal_alpha_v1",
+      selected_test_tail: "two_sided", null_value: 0, significance_level: 0.05,
+      usable_replicates: 1000, inference: { status: "available" },
+      parameters: [{
+        parameter_id: "parameter:loading:x:x1",
+        outcome: {
+          status: "available", point_estimate: 1, two_sided_exceedances: 1000,
+          greater_or_equal_exceedances: 1000, less_or_equal_exceedances: 1000,
+          p_value_two_sided: 1, p_value_greater: 1, p_value_less: 1,
+          selected_exceedances: 1000, selected_p_value: 1, reject_null: false,
+        },
+      }],
+    },
+    successful_refits: successes, failed_refits: [],
+  };
+  run.provenance!.method_version = run.provenance!.method_version
+    .replace("cbsem_modification_indices_v1", "cbsem_cfa_score_lm_v1+cbsem_exact_case_bootstrap_v1");
+  return run;
+}
+
+function completedStudentizedCbsemBootstrapRun(): AnalysisRun {
+  const run = completedExactCbsemBootstrapRun();
+  const analysis = run.result!.cbsem!;
+  const base = analysis.exact_case_bootstrap!;
+  delete analysis.exact_case_bootstrap;
+  analysis.exact_case_bootstrap_studentized = {
+    base,
+    studentized: {
+      method_version: "cbsem_exact_case_bootstrap_analytic_studentized_interval_v1",
+      standard_error_method_version: "cbsem_exact_case_bootstrap_refit_standard_errors_v1",
+      expected_information_method: "cbsem_ml_expected_information_delta_method_v1",
+      pivot_method: "outer_estimate_minus_point_estimate_over_outer_analytic_standard_error_v1",
+      quantile_method: "percentile_type7_v1",
+      interval_method: "reversed_type7_studentized_pivot_v1",
+      archive_validation_scope: "ledger_and_arithmetic_only_no_raw_refit_or_expected_information_replay_v1",
+      confidence_level: 0.95,
+      minimum_usable_fraction: 0.9,
+      minimum_usable_replicates: 1000,
+      studentized_usable_replicates: 1000,
+      parameter_ids: ["parameter:loading:x:x1"],
+      point_standard_errors: {
+        method_version: "cbsem_exact_case_bootstrap_refit_standard_errors_v1",
+        outcome: {
+          status: "available",
+          information_method: "cbsem_ml_expected_information_delta_method_v1",
+          parameters: [{ parameter_id: "parameter:loading:x:x1", standard_error: 0.5 }],
+        },
+      },
+      inference: { status: "available" },
+      intervals: [{
+        parameter_id: "parameter:loading:x:x1",
+        outcome: {
+          status: "available",
+          point_estimate: 1,
+          point_standard_error: 0.5,
+          lower_pivot_quantile: 1,
+          upper_pivot_quantile: 1,
+          interval_lower: 0.5,
+          interval_upper: 0.5,
+          usable_replicates: 1000,
+        },
+      }],
+      refit_standard_errors: base.successful_refits.map((refit) => ({
+        replicate_index: refit.replicate_index,
+        outcome: {
+          status: "available" as const,
+          information_method: "cbsem_ml_expected_information_delta_method_v1" as const,
+          standard_errors: [1],
+        },
+      })),
+    },
+  };
+  return run;
+}
+
+function completedStudentizedCbsemBootstrapPilotRun(): AnalysisRun {
+  const run = completedStudentizedCbsemBootstrapRun();
+  const wrapper = run.result!.cbsem!.exact_case_bootstrap_studentized!;
+  const { base, studentized } = wrapper;
+  base.requested_replicates = 500;
+  base.attempted_refits = 500;
+  base.usable_replicates = 500;
+  base.successful_refits.splice(500);
+  base.inference = {
+    status: "unavailable",
+    reason_code: "insufficient_usable_refits",
+    message: "The 500-draw pilot is below the required 1,000 usable refits.",
+  };
+  base.intervals = [];
+  base.hypothesis_tests!.usable_replicates = 500;
+  base.hypothesis_tests!.inference = {
+    status: "unavailable",
+    reason_code: "insufficient_usable_refits",
+    message: "The 500-draw pilot is below the required 1,000 usable refits.",
+  };
+  base.hypothesis_tests!.parameters[0].outcome = {
+    status: "unavailable",
+    reason: "insufficient_usable_replicates",
+  };
+  studentized.studentized_usable_replicates = 500;
+  studentized.refit_standard_errors.splice(500);
+  studentized.inference = {
+    status: "unavailable",
+    reason: "insufficient_studentized_usable_replicates",
+    message: "Analytically studentized inference is unavailable because 500 whole-vector usable refits are below the required 1000.",
+  };
+  studentized.intervals[0].outcome = {
+    status: "unavailable",
+    reason: "insufficient_studentized_usable_replicates",
+  };
+  return run;
+}
+
+function completedBcaCbsemBootstrapRun(): AnalysisRun {
+  const run = completedExactCbsemBootstrapRun();
+  const analysis = run.result!.cbsem!;
+  const base = analysis.exact_case_bootstrap!;
+  delete analysis.exact_case_bootstrap;
+  const successfulDeleteOneRefits = Array.from({ length: analysis.sample_size }, (_, position) => ({
+    omitted_complete_case_position: position,
+    omitted_source_row_index: position,
+    retained_sampling_positions_sha256: "9".repeat(64),
+    retained_sample_indices_sha256: "a".repeat(64),
+    parameter_estimates: [position % 2 === 0 ? 0.5 : 1.5],
+    iterations: 2,
+    objective: 0.1,
+    gradient_norm: 0.01,
+  }));
+  analysis.exact_case_bootstrap_bca = {
+    base,
+    bca: {
+      method_version: "cbsem_exact_case_bootstrap_bca_interval_v1",
+      base_bootstrap_method_version: "cbsem_exact_case_bootstrap_v1",
+      outer_recipe_analytical_identity_sha256: base.outer_recipe_analytical_identity_sha256,
+      base_point_result_sha256: base.base_point_result_sha256,
+      compiler_analytical_identity_sha256: base.compiler_analytical_identity_sha256,
+      plan_sha256: base.plan_sha256,
+      model_scientific_sha256: base.model_scientific_sha256,
+      delete_one_refit_method_version: "cbsem_exact_case_bootstrap_delete_one_refit_v1",
+      bias_correction_method: "midrank_less_plus_half_ties_no_clamp_v1",
+      acceleration_method: "complete_delete_one_jackknife_neumaier_mean_squares_cubes_acceleration_v2",
+      adjusted_probability_method: "efron_bca_statrs_inverse_normal_libm_erfc_cdf_adjustment_v2",
+      quantile_method: "percentile_type7_v1",
+      retry_policy: "no_retry_exactly_one_fit_per_omitted_case_v1",
+      confidence_level: 0.95,
+      bootstrap_usable_replicates: 1000,
+      minimum_bootstrap_usable_replicates: 1000,
+      delete_one_case_count: analysis.sample_size,
+      parameter_ids: ["parameter:loading:x:x1"],
+      inference: { status: "available" },
+      intervals: [{
+        parameter_id: "parameter:loading:x:x1",
+        outcome: {
+          status: "available",
+          point_estimate: 1,
+          bias_correction: 0,
+          acceleration: 0,
+          adjusted_lower_probability: 0.025000000000000022,
+          adjusted_upper_probability: 0.975,
+          interval_lower: 2,
+          interval_upper: 2,
+          usable_replicates: 1000,
+        },
+      }],
+      successful_delete_one_refits: successfulDeleteOneRefits,
+      failed_delete_one_refits: [],
+    },
+  };
+  return run;
+}
+
+function completedBcaCbsemBootstrapPilotRun(): AnalysisRun {
+  const run = completedBcaCbsemBootstrapRun();
+  const wrapper = run.result!.cbsem!.exact_case_bootstrap_bca!;
+  const { base, bca } = wrapper;
+  base.requested_replicates = 500;
+  base.attempted_refits = 500;
+  base.usable_replicates = 500;
+  base.successful_refits.splice(500);
+  base.inference = {
+    status: "unavailable",
+    reason_code: "insufficient_usable_refits",
+    message: "The 500-draw pilot is below the required 1,000 usable refits.",
+  };
+  base.intervals = [];
+  base.hypothesis_tests!.usable_replicates = 500;
+  base.hypothesis_tests!.inference = {
+    status: "unavailable",
+    reason_code: "insufficient_usable_refits",
+    message: "The 500-draw pilot is below the required 1,000 usable refits.",
+  };
+  base.hypothesis_tests!.parameters[0].outcome = {
+    status: "unavailable",
+    reason: "insufficient_usable_replicates",
+  };
+  bca.bootstrap_usable_replicates = 500;
+  bca.inference = {
+    status: "unavailable",
+    reason: "base_inference_unavailable",
+    message: "BCa inference is unavailable because 500 successful bootstrap point refits are below the bound minimum 1000.",
+  };
+  bca.intervals[0].outcome = { status: "unavailable", reason: "base_inference_unavailable" };
+  return run;
+}
+
+function completedBcaCbsemBootstrapDeleteOneFailureRun(): AnalysisRun {
+  const run = completedBcaCbsemBootstrapRun();
+  const bca = run.result!.cbsem!.exact_case_bootstrap_bca!.bca;
+  const failed = bca.successful_delete_one_refits.pop()!;
+  bca.failed_delete_one_refits.push({
+    omitted_complete_case_position: failed.omitted_complete_case_position,
+    omitted_source_row_index: failed.omitted_source_row_index,
+    retained_sampling_positions_sha256: failed.retained_sampling_positions_sha256,
+    retained_sample_indices_sha256: failed.retained_sample_indices_sha256,
+    kind: "non_convergence",
+    message: "Did not converge.",
+  });
+  bca.inference = {
+    status: "unavailable",
+    reason: "incomplete_delete_one_ledger",
+    message: `BCa inference is unavailable because 1 of ${bca.delete_one_case_count} mandatory delete-one fits failed.`,
+  };
+  bca.intervals[0].outcome = { status: "unavailable", reason: "incomplete_delete_one_ledger" };
+  return run;
+}
 
 function labelledModelSnapshot(
   labels: Record<string, string> = DISPLAY_LABELS,
@@ -63,7 +335,136 @@ function labelledModelSnapshot(
   };
 }
 
-function completedMgaRun(): AnalysisRun {
+function completedHtmtInferenceRun(): AnalysisRun {
+  const base = completedSamplePlsRun();
+  const point = (absoluteCorrelations: boolean): HtmtAssessment => ({
+    constructs: ["competence", "likeability"],
+    correlation_type: "pearson",
+    absolute_correlations: absoluteCorrelations,
+    cells: [
+      [
+        { value: 1, status: "available", reason: null },
+        { value: 0.75, status: "available", reason: null },
+      ],
+      [
+        { value: 0.75, status: "available", reason: null },
+        { value: 1, status: "available", reason: null },
+      ],
+    ],
+  });
+  const inference = (
+    absoluteCorrelations: boolean,
+    methodVersion: string,
+    pointMethodVersion: string,
+  ): HtmtBootstrapInference => {
+    const diagonal = {
+      status: "not_applicable" as const,
+      reason: "htmt.bootstrap.diagonal_not_inferred",
+      original: 1,
+      bootstrap_mean: null,
+      bias: null,
+      standard_error: null,
+      bias_correction: null,
+      lower: null,
+      upper: null,
+      usable_replicates: 0,
+      failed_replicates: 0,
+      below_original: 0,
+      tied_original: 0,
+      replicate_min: null,
+      replicate_max: null,
+      upper_bound_below_critical_value: null,
+      usable_replicate_indices_sha256: null,
+      pair_unavailable_replicates: [],
+    };
+    const pair = {
+      status: "available" as const,
+      reason: null,
+      original: 0.75,
+      bootstrap_mean: 0.755,
+      bias: 0.005,
+      standard_error: 0.05,
+      bias_correction: -0.10,
+      lower: 0.64,
+      upper: 0.84,
+      usable_replicates: 10,
+      failed_replicates: 0,
+      below_original: 4,
+      tied_original: 0,
+      replicate_min: 0.61,
+      replicate_max: 0.91,
+      upper_bound_below_critical_value: true,
+      usable_replicate_indices_sha256: "01".repeat(32),
+      pair_unavailable_replicates: [],
+    };
+    return {
+      method_version: methodVersion,
+      point_method_version: pointMethodVersion,
+      constructs: ["competence", "likeability"],
+      correlation_type: "pearson",
+      absolute_correlations: absoluteCorrelations,
+      interval_method: "bias_corrected_percentile_type7_v1",
+      test_type: "one_tailed_upper",
+      significance_level: 0.05,
+      equivalent_two_sided_confidence_level: 0.9,
+      critical_value: 0.9,
+      decision_rule: "bias_corrected_upper_bound_strictly_below_critical_value_v1",
+      replicate_index_digest_method: "sha256_u32_le_v1",
+      requested_replicates: 10,
+      minimum_usable_replicates: 9,
+      retry_policy: "no_retry_fixed_preplanned_primary_draws_v1",
+      cells: [[diagonal, pair], [pair, diagonal]],
+    };
+  };
+  return {
+    ...base,
+    assessment: {
+      ...base.assessment!,
+      htmt_plus_method_version: "ringle_et_al_htmt_plus_v1",
+      htmt_plus: point(true),
+      htmt_original_method_version: "henseler_et_al_htmt_v1",
+      htmt_original: point(false),
+    },
+    bootstrap: {
+      ...base.bootstrap!,
+      plan: { replicates: 10, master_seed: 42, operation: "pls_pm_bootstrap_v1" },
+      usable_replicates: 10,
+      failed_replicates: [],
+      htmt_inference: {
+        method_version: "htmt_bias_corrected_bootstrap_inference_v1",
+        htmt_plus: inference(true, "ringle_et_al_htmt_plus_bias_corrected_bootstrap_v1", "ringle_et_al_htmt_plus_v1"),
+        htmt_original: inference(false, "henseler_et_al_htmt_bias_corrected_bootstrap_v1", "henseler_et_al_htmt_v1"),
+      },
+    },
+    provenance: {
+      recipe_id: "htmt-recipe",
+      dataset_fingerprint: "htmt-dataset",
+      method: "bootstrap",
+      method_version: "pls_pm_v1+indexed_resampling_v4+htmt_bias_corrected_bootstrap_inference_v1",
+      engine_version: "test",
+      seed: 42,
+      settings: {
+        method: "bootstrap",
+        weighting_scheme: "path",
+        tolerance: 1e-7,
+        max_iterations: 300,
+        bootstrap_samples: 10,
+        studentized_inner_samples: 0,
+        permutation_samples: 0,
+        seed: 42,
+        workers: 2,
+        confidence_level: 0.95,
+        preprocessing: "standardized",
+        missing_data: "listwise_deletion",
+        case_weight_column: null,
+      },
+      started_at: "2026-08-14T00:00:00Z",
+      completed_at: "2026-08-14T00:00:01Z",
+    },
+  };
+}
+
+function completedArchivedMgaV3Run(): AnalysisRun {
   const base = completedSamplePlsRun();
   return {
     ...base,
@@ -77,7 +478,7 @@ function completedMgaRun(): AnalysisRun {
     result: {
       ...base.result!,
       mga: {
-        method_version: "pls_mga_two_group_v2",
+        method_version: "pls_mga_two_group_v3",
         group_column: "market",
         groups: [
           {
@@ -131,7 +532,7 @@ function completedMgaRun(): AnalysisRun {
         warnings: ["Two unselected group values were excluded from this analysis."],
       },
       mga_permutation: {
-        method_version: "pls_mga_permutation_v2",
+        method_version: "pls_mga_permutation_v3",
         group_column: "market",
         permutation_samples: 5_000,
         usable_permutations: 5_000,
@@ -164,7 +565,7 @@ function completedMgaRun(): AnalysisRun {
         ],
       },
       micom: {
-        method_version: "micom_v2",
+        method_version: "micom_v3",
         group_column: "market",
         permutation_samples: 5_000,
         usable_permutations: 5_000,
@@ -222,6 +623,134 @@ function completedMgaRun(): AnalysisRun {
         ],
         warnings: [],
       },
+    },
+  };
+}
+
+function completedMgaRun(): AnalysisRun {
+  const archived = completedArchivedMgaV3Run();
+  const requested = 5_000;
+  const planDigest = `sha256:${"b".repeat(64)}`;
+  const ledger = Array.from({ length: requested }, (_, replicate) => ({
+    replicate,
+    partition_sha256: replicate.toString(16).padStart(64, "0"),
+    group_a_rows: 54,
+    group_b_rows: 49,
+    step2_status: "usable" as const,
+    step2_failure_code: null,
+    step3_status: "usable" as const,
+    step3_failure_code: null,
+  }));
+  return {
+    ...archived,
+    provenance: {
+      recipe_id: "mga-v4-recipe",
+      dataset_fingerprint: "sha256:mga-v4-dataset",
+      method: "mga",
+      method_version: "pls_mga_two_group_v4+pls_mga_permutation_v4+micom_v4+pls_assessment_v7",
+      engine_version: "test",
+      seed: archived.seed,
+      settings: {
+        method: "mga",
+        weighting_scheme: "path",
+        tolerance: 1e-7,
+        max_iterations: 300,
+        bootstrap_samples: 0,
+        studentized_inner_samples: 0,
+        permutation_samples: requested,
+        seed: archived.seed,
+        workers: 2,
+        confidence_level: 0.95,
+        preprocessing: "standardized",
+        missing_data: "listwise_deletion",
+        case_weight_column: null,
+      },
+      started_at: "2026-08-14T00:00:00Z",
+      completed_at: "2026-08-14T00:00:01Z",
+    },
+    result: {
+      ...archived.result!,
+      mga: {
+        ...archived.result!.mga!,
+        method_version: "pls_mga_two_group_v4",
+      },
+      mga_permutation: {
+        ...archived.result!.mga_permutation!,
+        method_version: "pls_mga_permutation_v4",
+        attempted_permutations: requested,
+        usable_permutations: requested,
+        failed_permutations: 0,
+        retry_policy: "none",
+        permutation_plan_sha256: planDigest,
+        permutation_ledger: ledger,
+        warnings: [],
+      },
+      micom: {
+        ...archived.result!.micom!,
+        method_version: "micom_v4",
+        attempted_permutations: requested,
+        usable_permutations: requested,
+        failed_permutations: 0,
+        retry_policy: "none",
+        step1_status: "confirmed_by_researcher_review",
+        step1_computed: false,
+        step2_usable_permutations: requested,
+        step2_failed_permutations: 0,
+        step3_usable_permutations: requested,
+        step3_failed_permutations: 0,
+        permutation_plan_sha256: planDigest,
+        permutation_ledger: ledger,
+        warnings: [],
+      },
+    },
+  };
+}
+
+function completedStandaloneMicomRun(): AnalysisRun {
+  const legacy = completedMgaRun();
+  const requested = 5_000;
+  const micom = {
+    ...legacy.result!.micom!,
+    method_version: "micom_v3_1",
+    permutation_samples: requested,
+    usable_permutations: requested,
+    attempted_permutations: requested,
+    failed_permutations: 0,
+    retry_policy: "none",
+    step1_status: "confirmed_by_researcher_review",
+    step1_computed: false,
+    step2_usable_permutations: requested,
+    step2_failed_permutations: 0,
+    step3_usable_permutations: requested,
+    step3_failed_permutations: 0,
+    permutation_plan_sha256: `sha256:${"a".repeat(64)}`,
+    permutation_ledger: Array.from({ length: requested }, (_, replicate) => ({
+      replicate,
+      partition_sha256: replicate.toString(16).padStart(64, "0"),
+      group_a_rows: 54,
+      group_b_rows: 49,
+      step2_status: "usable" as const,
+      step2_failure_code: null,
+      step3_status: "usable" as const,
+      step3_failure_code: null,
+    })),
+    warnings: [],
+  };
+  return {
+    ...legacy,
+    id: "standalone-micom-v3-1-run",
+    name: "MICOM v3.1 run",
+    method: "MICOM v3.1",
+    result: {
+      ...legacy.result!,
+      mga: null,
+      mga_permutation: null,
+      micom,
+    },
+    provenance: {
+      ...legacy.provenance!,
+      method: "mga",
+      method_version: "pls_pm_v1+micom_v3_1",
     },
   };
 }
@@ -787,6 +1316,9 @@ function canonicalRegressionBootstrapReopen(run: AnalysisRun): AnalysisRun {
 
 describe("native result navigation", () => {
   it("projects exact nca_v2 output into standalone tables and an accessible ceiling plot", () => {
+    expect(NATIVE_NCA_ENGINE_SCOPE_WARNING).toBe(
+      "NCA v2 supports one observed numeric condition/outcome pair with CE-FDH and CR-FDH ceilings, seeded one-sided permutation evidence, and observed-range bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and additional ceiling variants are not available.",
+    );
     const run = completedNcaRun();
     const projection = nativeNcaResultProjection(run);
     const navigation = buildNativeResultNavigation(run);
@@ -800,6 +1332,12 @@ describe("native result navigation", () => {
       ceiling: "both",
       permutationSamples: 19,
       usablePermutations: 19,
+      ceFdhPeers: [
+        { peerIdentity: "CE-FDH peer 1", conditionVariable: "condition", conditionValue: 1, outcomeVariable: "outcome", outcomeValue: 1 },
+        { peerIdentity: "CE-FDH peer 2", conditionVariable: "condition", conditionValue: 3, outcomeVariable: "outcome", outcomeValue: 2.5 },
+        { peerIdentity: "CE-FDH peer 3", conditionVariable: "condition", conditionValue: 6, outcomeVariable: "outcome", outcomeValue: 7 },
+        { peerIdentity: "CE-FDH peer 4", conditionVariable: "condition", conditionValue: 8, outcomeVariable: "outcome", outcomeValue: 9 },
+      ],
     });
     expect(nativeNcaPlot(run)).toMatchObject({
       xLabel: "condition",
@@ -812,6 +1350,7 @@ describe("native result navigation", () => {
     expect(navigation.groups[0].title).toBe("Necessary conditions");
     expect(navigation.groups[0].items.map((item) => item.id)).toEqual([
       "nca_ceiling_effects",
+      "nca_ce_fdh_peers",
       "nca_cr_line",
       "nca_bottlenecks",
       "nca_scope",
@@ -820,6 +1359,19 @@ describe("native result navigation", () => {
       title: "Ceiling effect sizes and permutation inference",
       columns: ["Ceiling line", "Effect size", "Permutation p"],
       rows: [["CE-FDH", "0.3125", "0.0500"], ["CR-FDH", "0.2813", "0.1000"]],
+    });
+    expect(table("nca_ce_fdh_peers")).toEqual({
+      id: "nca_ce_fdh_peers",
+      title: "CE-FDH frontier peers",
+      status: "validated",
+      warning: NATIVE_NCA_CE_FDH_PEER_SOURCE_NOTE,
+      columns: ["Peer identity", "Condition variable (X)", "Condition value", "Outcome variable (Y)", "Outcome value"],
+      rows: [
+        ["CE-FDH peer 1", "condition", "1.000000", "outcome", "1.000000"],
+        ["CE-FDH peer 2", "condition", "3.000000", "outcome", "2.500000"],
+        ["CE-FDH peer 3", "condition", "6.000000", "outcome", "7.000000"],
+        ["CE-FDH peer 4", "condition", "8.000000", "outcome", "9.000000"],
+      ],
     });
     expect(table("nca_cr_line")?.rows).toEqual([["CR-FDH", "1.000000", "0.000000"]]);
     expect(table("nca_bottlenecks")).toMatchObject({
@@ -847,7 +1399,16 @@ describe("native result navigation", () => {
     const ceOnly = completedNcaRun("ce_fdh");
     const ceNavigation = buildNativeResultNavigation(ceOnly);
     expect(ceNavigation.tables.some((table) => table.id === "nca_cr_line")).toBe(false);
+    expect(ceNavigation.tables.some((table) => table.id === "nca_ce_fdh_peers")).toBe(true);
     expect(nativeNcaPlot(ceOnly)?.crFdh).toBeNull();
+
+    const crOnly = completedNcaRun("cr_fdh");
+    expect(buildNativeResultNavigation(crOnly).tables.some((table) => table.id === "nca_ce_fdh_peers")).toBe(false);
+
+    const immutable = completedNcaRun();
+    const before = structuredClone(immutable);
+    expect(nativeNcaCeFdhPeerTable(immutable)?.rows).toHaveLength(4);
+    expect(immutable).toEqual(before);
 
     const missingBottleneck = completedNcaRun();
     missingBottleneck.result!.nca!.bottlenecks.pop();
@@ -892,8 +1453,10 @@ describe("native result navigation", () => {
       ["Selected variables", "a, b"],
       ["Retention rule", "Cumulative variance threshold"],
       ["Stored component scores", "6"],
+      ["Validated scope", "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling."],
       ["Method version", "pca_v1"],
     ]));
+    expect(table("pca_scope")?.title).toBe("Calculation scope");
     expect(navigation.groups.some((group) => group.id === "graphical" || group.id === "quality_criteria")).toBe(false);
     expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
 
@@ -928,8 +1491,10 @@ describe("native result navigation", () => {
       ["Outcome", "y"],
       ["Predictors", "x"],
       ["Controls", "m"],
+      ["Validated scope", "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included."],
       ["Method version", "regression_ols_v1"],
     ]));
+    expect(navigation.tables.find((table) => table.id === "ols_scope")?.title).toBe("Calculation scope");
     expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
 
     const tampered = completedOlsRun();
@@ -1122,8 +1687,10 @@ describe("native result navigation", () => {
       ["Controls", "None"],
       ["Execution", "Deterministic Newton IRLS; one worker"],
       ["Classification interpretation", "In-sample descriptive classification; not out-of-sample predictive performance."],
+      ["Validated scope", "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included."],
       ["Method version", "regression_logistic_v2"],
     ]));
+    expect(table("logistic_scope")?.title).toBe("Calculation scope");
     expect(navigation.groups.some((group) => group.id === "graphical" || group.id === "quality_criteria")).toBe(false);
     expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
   });
@@ -1184,7 +1751,7 @@ describe("native result navigation", () => {
       "legacy_logistic_scope",
     ]);
     expect(navigation.tables.some((table) => table.id.includes("classification") || table.id.includes("convergence"))).toBe(false);
-    expect(navigation.tables.every((table) => table.warning?.includes("not reinterpreted as current v2 evidence"))).toBe(true);
+    expect(navigation.tables.every((table) => table.warning?.includes("not reinterpreted as current v2 output"))).toBe(true);
     expect(navigation.tables.find((table) => table.id === "legacy_logistic_scope")?.rows).toEqual(expect.arrayContaining([
       ["Recorded historical preprocessing", "standardized"],
       ["Historical preprocessing handling", "Recorded for archive provenance only; non-operative for this preserved v1 result"],
@@ -1197,8 +1764,8 @@ describe("native result navigation", () => {
     expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
   });
 
-  it("projects exact MICOM v2 and permutation MGA v2 output into truthful group tables", () => {
-    const navigation = buildNativeResultNavigation(completedMgaRun());
+  it("keeps the archived combined MICOM v3 and permutation MGA v3 result readable", () => {
+    const navigation = buildNativeResultNavigation(completedArchivedMgaV3Run());
     const group = navigation.groups.find((candidate) => candidate.id === "groups");
     const table = (id: string) => navigation.tables.find((candidate) => candidate.id === id);
 
@@ -1299,7 +1866,104 @@ describe("native result navigation", () => {
     expect(tablesToCsv(navigation.tables)).toContain("MICOM Step 2 - compositional invariance");
   });
 
-  it("keeps descriptive archived MGA output but gates all current inference on exact v2 contracts", () => {
+  it("projects current v4 MGA from one fixed shared partition ledger", () => {
+    const run = completedMgaRun();
+    const navigation = buildNativeResultNavigation(run);
+    const accounting = navigation.tables.find((table) => table.id === "mga_permutation_accounting");
+
+    expect(navigation.defaultItemId).toBe("micom_summary");
+    expect(navigation.groups.find((group) => group.id === "groups")?.items.map((item) => item.id))
+      .toContain("mga_permutation_accounting");
+    expect(accounting?.rows).toEqual([
+      ["MGA method version", "pls_mga_two_group_v4"],
+      ["Permutation method version", "pls_mga_permutation_v4"],
+      ["MICOM method version", "micom_v4"],
+      ["Requested partitions", "5000"],
+      ["Attempted partitions", "5000"],
+      ["Usable MGA partitions", "5000"],
+      ["Failed MGA partitions", "0"],
+      ["Retry policy", "none"],
+      ["Partition plan digest", `sha256:${"b".repeat(64)}`],
+      ["Seed", String(run.provenance!.settings.seed)],
+    ]);
+    expect(run.result!.mga_permutation!.permutation_ledger)
+      .toBe(run.result!.micom!.permutation_ledger);
+  });
+
+  it("projects standalone MICOM v3.1 with no-retry Step 2 and Step 3 accounting", () => {
+    const run = completedStandaloneMicomRun();
+    const navigation = buildNativeResultNavigation(run);
+    const table = (id: string) => navigation.tables.find((candidate) => candidate.id === id);
+
+    expect(navigation.defaultItemId).toBe("micom_summary");
+    expect(navigation.groups.map((group) => group.id)).toEqual(["groups"]);
+    expect(navigation.groups[0].items.map((item) => item.id)).toEqual([
+      "micom_summary",
+      "micom_configural",
+      "micom_composition",
+      "micom_means",
+      "micom_variances",
+      "micom_permutation_accounting",
+    ]);
+    expect(table("micom_permutation_accounting")?.rows).toEqual([
+      ["Step 1", "Confirmed by researcher review; not computed from the data"],
+      ["Requested permutations", "5000"],
+      ["Attempted permutations", "5000"],
+      ["Retry policy", "none"],
+      ["Step 2 usable", "5000"],
+      ["Step 2 failed", "0"],
+      ["Step 3 usable", "5000"],
+      ["Step 3 failed", "0"],
+      ["Ledger rows", "5000"],
+      ["Permutation plan", `sha256:${"a".repeat(64)}`],
+    ]);
+    expect(table("micom_summary")?.rows[0]).toEqual([
+      "Technical Capability", "Confirmed", "Established", "Established", "Equal", "Equal", "Established", "95.0%", "5000",
+    ]);
+  });
+
+  it("accepts independently accounted MICOM steps and rejects tampered retry or ledger data", () => {
+    const partiallyFailed = completedStandaloneMicomRun();
+    const micom = partiallyFailed.result!.micom!;
+    micom.permutation_ledger![0] = {
+      ...micom.permutation_ledger![0],
+      step2_status: "failed",
+      step2_failure_code: "micom.orientation_undefined",
+    };
+    micom.step2_usable_permutations = 4_999;
+    micom.step2_failed_permutations = 1;
+    micom.usable_permutations = 4_999;
+    micom.failed_permutations = 1;
+    expect(nativeResultTables(partiallyFailed).find((table) => table.id === "micom_permutation_accounting")?.rows)
+      .toEqual(expect.arrayContaining([
+        ["Step 2 usable", "4999"],
+        ["Step 2 failed", "1"],
+        ["Step 3 usable", "5000"],
+        ["Step 3 failed", "0"],
+      ]));
+
+    const retrying = completedStandaloneMicomRun();
+    retrying.result!.micom!.retry_policy = "replacement_until_usable_legacy";
+    expect(nativeResultTables(retrying)).toEqual([]);
+
+    const missingLedgerRow = completedStandaloneMicomRun();
+    missingLedgerRow.result!.micom!.permutation_ledger!.pop();
+    expect(nativeResultTables(missingLedgerRow)).toEqual([]);
+
+    const unknownFailure = completedStandaloneMicomRun();
+    unknownFailure.result!.micom!.permutation_ledger![0] = {
+      ...unknownFailure.result!.micom!.permutation_ledger![0],
+      step2_status: "failed",
+      step2_failure_code: "unknown_failure",
+    };
+    unknownFailure.result!.micom!.step2_usable_permutations = 4_999;
+    unknownFailure.result!.micom!.step2_failed_permutations = 1;
+    unknownFailure.result!.micom!.usable_permutations = 4_999;
+    unknownFailure.result!.micom!.failed_permutations = 1;
+    expect(nativeResultTables(unknownFailure)).toEqual([]);
+  });
+
+  it("keeps descriptive v1 MGA output but gates all current inference on exact v4 contracts", () => {
     const run = completedMgaRun();
     const archived: AnalysisRun = {
       ...run,
@@ -1323,17 +1987,36 @@ describe("native result navigation", () => {
     expect(navigation.groups.some((group) => group.id === "graphical")).toBe(false);
   });
 
-  it("omits inconsistent MICOM decisions and measurement inference instead of fabricating cells", () => {
+  it("keeps complete v2 output archive-readable with an explicit non-current warning", () => {
+    const run = completedMgaRun();
+    const archived: AnalysisRun = {
+      ...run,
+      result: run.result ? {
+        ...run.result,
+        mga: run.result.mga ? { ...run.result.mga, method_version: "pls_mga_two_group_v2" } : null,
+        mga_permutation: run.result.mga_permutation
+          ? { ...run.result.mga_permutation, method_version: "pls_mga_permutation_v2" }
+          : null,
+        micom: run.result.micom ? { ...run.result.micom, method_version: "micom_v2" } : null,
+      } : undefined,
+    };
+
+    const navigation = buildNativeResultNavigation(archived);
+    expect(navigation.tables.some((table) => table.id === "mga_permutation")).toBe(true);
+    expect(navigation.tables.some((table) => table.id === "micom_summary")).toBe(true);
+    expect(navigation.tables.find((table) => table.id === "mga_group_summary")?.warning)
+      .toContain("Historical MICOM/permutation-MGA v2 result");
+    expect(navigation.tables.find((table) => table.id === "mga_group_summary")?.warning)
+      .toContain("do not interpret it as a current v4 result");
+  });
+
+  it("rejects a coordinated current-v4 result when MICOM decisions or measurement evidence are altered", () => {
     const run = completedMgaRun();
     run.result!.micom!.constructs[0].full_invariance = false;
     run.result!.mga_permutation!.measurement_comparisons![0].original_difference = 99;
 
     const navigation = buildNativeResultNavigation(run);
-    expect(navigation.tables.some((table) => table.id.startsWith("micom_"))).toBe(false);
-    expect(navigation.tables.find((table) => table.id === "mga_permutation_loadings")?.rows).toEqual([
-      ["Customer Fulfilment", "SAT1", "0.040000", "0.2000", "0.9000", "5000", "5000"],
-    ]);
-    expect(navigation.tables.flatMap((table) => table.rows).flat()).not.toContain("N/A");
+    expect(navigation.tables.filter((table) => table.id.startsWith("micom_") || table.id.startsWith("mga_"))).toEqual([]);
   });
 
   it("selects only completed runs backed by a result payload", () => {
@@ -1428,6 +2111,123 @@ describe("native result navigation", () => {
       "total_effects",
       "mediation_bootstrap",
     ]);
+  });
+
+  it("discloses ordinary PLS bootstrap accounting, typed failures, and unavailable BCa rows", () => {
+    const run = structuredClone(completedSamplePlsRun());
+    const bootstrap = run.bootstrap!;
+    bootstrap.usable_replicates = 998;
+    bootstrap.failed_replicates = [{
+      replicate_index: 3,
+      reason_code: "constant_indicator",
+      message: "constant indicator: competence_1",
+    }];
+    for (const row of bootstrap.percentile.parameters) row.usable_replicates = 998;
+    bootstrap.bca!.parameters.push({
+      parameter: "[\"path\",[\"competence\",\"satisfaction\"]]",
+      bias_correction: null,
+      acceleration: null,
+      lower: null,
+      upper: null,
+      unavailable_reason: "incomplete_jackknife",
+    });
+
+    const navigation = buildNativeResultNavigation(run);
+    const table = (id: string) => navigation.tables.find((candidate) => candidate.id === id);
+    expect(table("bootstrap_accounting")?.rows).toEqual([
+      ["Requested case resamples", "999"],
+      ["Attempted preplanned PLS refits", "999"],
+      ["Usable PLS refits", "998"],
+      ["Failed PLS refits", "1"],
+      ["Retry policy", "No retry or replacement draw"],
+    ]);
+    expect(table("bootstrap_failures")?.rows).toEqual([[
+      "4", "constant_indicator", "constant indicator: competence_1",
+    ]]);
+    expect(table("bootstrap_bca_unavailable")?.rows).toEqual([[
+      "Path: competence → satisfaction",
+      "Unavailable",
+      "incomplete_jackknife",
+    ]]);
+    expect(navigation.groups.find((group) => group.id === "inference")?.items.map((item) => item.id))
+      .toEqual(expect.arrayContaining([
+        "bootstrap_accounting",
+        "bootstrap_failures",
+        "bootstrap_bca_unavailable",
+      ]));
+
+    const exported = tablesToCsv([
+      table("bootstrap_accounting")!,
+      table("bootstrap_failures")!,
+      table("bootstrap_bca_unavailable")!,
+    ]);
+    expect(exported).toContain("constant_indicator");
+    expect(exported).toContain("incomplete_jackknife");
+  });
+
+  it("renders only the selected null-centered one-sided count and plus-one probability", () => {
+    const base = completedSamplePlsRun();
+    const makeRun = (selected: "one_sided_greater" | "one_sided_less"): AnalysisRun => ({
+      ...base,
+      bootstrap: {
+        ...base.bootstrap!,
+        test_tail_inference: {
+          method_version: "pls_bootstrap_null_centered_test_tail_v1",
+          selected_test_tail: selected,
+          parameters: base.bootstrap!.percentile.parameters.map((row, index) => ({
+            parameter: row.parameter,
+            usable_replicates: 999,
+            two_sided_exceedances: index + 2,
+            greater_or_equal_exceedances: index + 3,
+            less_or_equal_exceedances: index + 1,
+            p_value_two_sided: (index + 3) / 1_000,
+            p_value_greater: (index + 4) / 1_000,
+            p_value_less: (index + 2) / 1_000,
+          })),
+        },
+      },
+      provenance: {
+        recipe_id: "one-sided-recipe",
+        dataset_fingerprint: "one-sided-dataset",
+        method: "pls_pm",
+        method_version: "pls_pm_v1+indexed_resampling_v4+pls_bootstrap_null_centered_test_tail_v1",
+        engine_version: "test",
+        seed: base.seed,
+        settings: {
+          method: "pls_pm",
+          weighting_scheme: "path",
+          tolerance: 1e-7,
+          max_iterations: 3_000,
+          bootstrap_samples: 999,
+          bootstrap_test_tail: selected,
+          studentized_inner_samples: 99,
+          permutation_samples: 0,
+          seed: base.seed,
+          workers: 1,
+          confidence_level: 0.95,
+          preprocessing: "standardized",
+          missing_data: "listwise_deletion",
+          case_weight_column: null,
+        },
+        started_at: base.createdAt,
+        completed_at: base.createdAt,
+      },
+    });
+
+    for (const selected of ["one_sided_greater", "one_sided_less"] as const) {
+      const table = nativeResultTables(makeRun(selected))
+        .find((candidate) => candidate.id === "bootstrap_one_sided_test_tail");
+      expect(table?.warning).toContain("Null-centered bootstrap differences");
+      expect(table?.warning).toContain("(count + 1) / (usable + 1)");
+      expect(table?.columns[1]).toContain(selected === "one_sided_greater" ? "≥" : "≤");
+      expect(table?.rows[0]?.slice(1)).toEqual(selected === "one_sided_greater"
+        ? ["3", "999", "0.0040"]
+        : ["1", "999", "0.0020"]);
+    }
+
+    const tampered = makeRun("one_sided_greater");
+    tampered.bootstrap!.test_tail_inference!.parameters[0].p_value_greater = 0.9;
+    expect(nativeResultTables(tampered)).toEqual([]);
   });
 
   it("surfaces genuine direct, specific indirect, total indirect, total, and matched bootstrap mediation output", () => {
@@ -2318,6 +3118,8 @@ describe("native result navigation", () => {
     expect(cvpat.rows[1][cvpat.columns.indexOf("Supported conclusion")]).toBe("");
     expect(cvpat.rows[1][cvpat.columns.indexOf("Status")]).toBe("Benchmark unavailable");
     expect(navigation.tables.find((table) => table.id === "plspredict_validation_plan")?.rows[0]).toContain(digest);
+    expect(navigation.tables.find((table) => table.id === "plspredict_validation_plan")?.title)
+      .toBe("Prediction validation plan");
     expect(navigation.tables.flatMap((table) => table.rows).flat()).not.toContain("N/A");
 
     for (const repeatedPatch of [
@@ -2415,6 +3217,10 @@ describe("native result navigation", () => {
       },
       assessment: base.assessment ? {
         ...base.assessment,
+        model_fit: base.assessment.model_fit ? {
+          ...base.assessment.model_fit,
+          method_version: "pls_model_fit_v2",
+        } : undefined,
         construct_quality: [
           { construct: "x", cronbach_alpha: 0.8, rho_a: 0.81, rho_c: 0.88, ave: 0.7 },
           { construct: "z", cronbach_alpha: 0.79, rho_a: 0.8, rho_c: 0.87, ave: 0.68 },
@@ -2450,6 +3256,9 @@ describe("native result navigation", () => {
       ["Organizational strength", "Resources", "Disjoint two-stage", "0.900000", "0.550000"],
     ]);
     expect(table("hoc_structural_paths")?.rows).toEqual([["Organizational strength → Performance", "0.740000"]]);
+    expect(table("hoc_scope")?.title).toBe("Higher-order calculation scope");
+    expect(table("hoc_scope")?.rows[0]?.at(-1)).toContain("HOC bootstrapping and permutation inference remain unavailable");
+    expect(table("model_fit")).toBeUndefined();
     expect(table("outer_loadings")?.rows).toEqual([
       ["Capability", "x1", "0.910000"],
       ["Resources", "z1", "0.890000"],
@@ -2574,7 +3383,7 @@ describe("native result navigation", () => {
         recipe_id: "moderation-randomization-recipe",
         dataset_fingerprint: "sha256:moderation-randomization-fixture",
         method: "pls_pm",
-        method_version: `pls_pm_v1+pls_mediation_v1+pls_two_stage_moderation_v1+pls_assessment_v7+${NATIVE_STRUCTURAL_PATH_RANDOMIZATION_METHOD_VERSION}`,
+        method_version: `pls_pm_v1+pls_mediation_v1+pls_two_stage_moderation_v1+pls_assessment_v8+${NATIVE_STRUCTURAL_PATH_RANDOMIZATION_METHOD_VERSION}`,
         engine_version: "test",
         seed: 7,
         settings: {
@@ -2743,6 +3552,7 @@ describe("native result navigation", () => {
       ["Analyzed observations", "120"],
       ["Unsupported in this workflow", expect.stringContaining("robust/ordinal/FIML")],
     ]));
+    expect(navigation.tables.find((table) => table.id === "cbsem_scope")?.title).toBe("Calculation scope");
     expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
     expect(navigation.tables.map((table) => table.id)).not.toEqual(expect.arrayContaining(["path_coefficients", "outer_loadings", "construct_reliability"]));
 
@@ -2759,9 +3569,334 @@ describe("native result navigation", () => {
     })).toBeNull();
   });
 
+  it("renders exact attributed RMSEA intervals and rejects malformed attribution", () => {
+    const run = completedCbsemRun("sem");
+    run.result!.cbsem!.fit.rmsea_interval_attribution = {
+      method_version: "rmsea_noncentral_chi_square_inversion_90_n_minus_one_v1",
+      confidence_level: 0.9,
+    };
+    expect(nativeCbsemResultProjection(run)).not.toBeNull();
+    expect(nativeResultTables(run).find((table) => table.id === "cbsem_fit")?.rows)
+      .toEqual(expect.arrayContaining([
+        ["RMSEA interval method", "Noncentral chi-square inversion (N - 1 denominator)"],
+        ["RMSEA interval confidence", "90.0%"],
+        ["RMSEA lower bound", "0.021000"],
+        ["RMSEA upper bound", "0.121000"],
+      ]));
+
+    const signedZero = structuredClone(run);
+    signedZero.result!.cbsem!.fit.rmsea = -0;
+    signedZero.result!.cbsem!.fit.rmsea_ci_lower = -0;
+    signedZero.result!.cbsem!.fit.rmsea_ci_upper = 0;
+    expect(nativeCbsemResultProjection(signedZero)).not.toBeNull();
+
+    const wrongMethod = structuredClone(run);
+    (wrongMethod.result!.cbsem!.fit.rmsea_interval_attribution as { method_version: string })
+      .method_version = "wrong";
+    expect(nativeCbsemResultProjection(wrongMethod)).toBeNull();
+
+    const wrongConfidence = structuredClone(run);
+    (wrongConfidence.result!.cbsem!.fit.rmsea_interval_attribution as { confidence_level: number })
+      .confidence_level = 0.95;
+    expect(nativeCbsemResultProjection(wrongConfidence)).toBeNull();
+
+    const missingLower = structuredClone(run);
+    missingLower.result!.cbsem!.fit.rmsea_ci_lower = null;
+    expect(nativeCbsemResultProjection(missingLower)).toBeNull();
+
+    const reversed = structuredClone(run);
+    reversed.result!.cbsem!.fit.rmsea_ci_lower = 0.08;
+    expect(nativeCbsemResultProjection(reversed)).toBeNull();
+  });
+
+  it("renders genuine CFA score\/LM tests separately and fails closed on tampering", () => {
+    const run = completedCbsemRun("cfa");
+    run.result!.cbsem!.score_lm = {
+      method_version: "cbsem_cfa_score_lm_v1",
+      scope: "covariance_only_declared_zero_residual_covariances",
+      rows: [
+        {
+          parameter_id: "parameter:residual_covariance:x1:x2",
+          kind: "residual_covariance",
+          lhs: "x1",
+          rhs: "x2",
+          outcome: { status: "available", score: 0, efficient_score: 0, candidate_information: 1, efficient_information: 1, modification_index: 0, expected_parameter_change: 0, p_value: 1 },
+        },
+        {
+          parameter_id: "parameter:residual_covariance:y1:y2",
+          kind: "residual_covariance",
+          lhs: "y1",
+          rhs: "y2",
+          outcome: { status: "unavailable", reason: "nuisance_information_unavailable" },
+        },
+      ],
+    };
+    run.result!.cbsem!.modification_indices = [];
+    run.provenance!.method_version = run.provenance!.method_version
+      .replace("cbsem_modification_indices_v1", "cbsem_cfa_score_lm_v1");
+    expect(nativeCbsemResultProjection(run)).not.toBeNull();
+    const table = nativeResultTables(run).find((candidate) => candidate.id === "modification_index_score_tests");
+    expect(table?.rows).toEqual([
+      ["x1 ↔ x2", "Residual covariance fixed to zero", "Available", "0.000000", "0.000000", "1.000000", "1.000000", "0.000000", "0.000000", "1", "1.0000", ""],
+      ["y1 ↔ y2", "Residual covariance fixed to zero", "Unavailable", "", "", "", "", "", "", "", "", "Nuisance information unavailable"],
+    ]);
+    expect(nativeResultTables(run).find((candidate) => candidate.id === "cbsem_modification_diagnostics"))
+      .toBeUndefined();
+
+    const arithmetic = structuredClone(run);
+    const available = arithmetic.result!.cbsem!.score_lm!.rows[0]!.outcome;
+    if (available.status === "available") available.modification_index = 1;
+    expect(nativeCbsemResultProjection(arithmetic)).toBeNull();
+
+    const signedZero = structuredClone(run);
+    const signedOutcome = signedZero.result!.cbsem!.score_lm!.rows[0]!.outcome;
+    if (signedOutcome.status === "available") signedOutcome.score = -0;
+    expect(nativeCbsemResultProjection(signedZero)).toBeNull();
+
+    const sem = completedCbsemRun("sem");
+    sem.result!.cbsem!.score_lm = structuredClone(run.result!.cbsem!.score_lm);
+    sem.result!.cbsem!.modification_indices = [];
+    sem.provenance!.method_version = sem.provenance!.method_version
+      .replace("cbsem_modification_indices_v1", "cbsem_cfa_score_lm_v1");
+    expect(nativeCbsemResultProjection(sem)).toBeNull();
+  });
+
+  it("renders the exact CFA case-bootstrap family and rejects witness arithmetic tampering", () => {
+    const run = completedExactCbsemBootstrapRun();
+    expect(nativeCbsemResultProjection(run)).not.toBeNull();
+    const tables = nativeResultTables(run);
+    expect(tables.map((table) => table.id)).toEqual(expect.arrayContaining([
+      "cbsem_exact_bootstrap_intervals", "cbsem_exact_bootstrap_successful_refits",
+      "cbsem_exact_bootstrap_failures", "cbsem_exact_bootstrap_settings",
+      "cbsem_exact_bootstrap_hypothesis_tests",
+    ]));
+    const hypothesis = tables.find((table) => table.id === "cbsem_exact_bootstrap_hypothesis_tests");
+    expect(hypothesis?.title).toContain("Two-sided: parameter differs from zero");
+    expect(hypothesis?.warning).toContain("(count + 1) / (usable + 1)");
+    expect(hypothesis?.rows[0]).toEqual(expect.arrayContaining([
+      "parameter:loading:x:x1", "Available", "1.0000", "1.0000", "Do not reject zero null",
+    ]));
+    expect(tables.find((table) => table.id === "cbsem_exact_bootstrap_settings")?.rows)
+      .toEqual(expect.arrayContaining([
+        ["Interval method", "Percentile Type-7 with sample-SD standard errors"],
+        ["Failure handling", "Failed fits retained; no retry or replacement draw"],
+        ["Archive validation", expect.stringContaining("Rust schedule were not replayed")],
+      ]));
+
+    const tampered = structuredClone(run);
+    tampered.result!.cbsem!.exact_case_bootstrap!.intervals[0].bias = -0;
+    expect(nativeCbsemResultProjection(tampered)).toBeNull();
+
+    const missingWitness = structuredClone(run);
+    missingWitness.result!.cbsem!.exact_case_bootstrap!.successful_refits.pop();
+    expect(nativeCbsemResultProjection(missingWitness)).toBeNull();
+
+    const countTamper = structuredClone(run);
+    const outcome = countTamper.result!.cbsem!.exact_case_bootstrap!.hypothesis_tests!.parameters[0].outcome;
+    if (outcome.status === "available") outcome.greater_or_equal_exceedances = 999;
+    expect(nativeCbsemResultProjection(countTamper)).toBeNull();
+
+    const historicalV9 = structuredClone(run);
+    delete historicalV9.result!.cbsem!.exact_case_bootstrap!.hypothesis_tests;
+    expect(nativeCbsemResultProjection(historicalV9)).not.toBeNull();
+    expect(nativeResultTables(historicalV9).find((table) => table.id === "cbsem_exact_bootstrap_hypothesis_tests"))
+      .toBeUndefined();
+  });
+
+  it("renders only complete atomic v11 studentized results and rejects mixed-generation or arithmetic tamper", () => {
+    const run = completedStudentizedCbsemBootstrapRun();
+    expect(nativeCbsemResultProjection(run)).not.toBeNull();
+    const tables = nativeResultTables(run);
+    expect(tables.map((table) => table.id)).toEqual(expect.arrayContaining([
+      "cbsem_exact_bootstrap_intervals",
+      "cbsem_exact_bootstrap_hypothesis_tests",
+      "cbsem_exact_bootstrap_successful_refits",
+      "cbsem_exact_bootstrap_failures",
+      "cbsem_exact_bootstrap_settings",
+      "exact_case_bootstrap_studentized_summary",
+      "exact_case_bootstrap_studentized_point_standard_errors",
+      "exact_case_bootstrap_studentized_parameter_intervals",
+      "exact_case_bootstrap_studentized_refit_standard_errors",
+    ]));
+    expect(tables.find((table) => table.id === "exact_case_bootstrap_studentized_summary")?.columns)
+      .toEqual([
+        "method_version", "standard_error_method_version", "expected_information_method", "pivot_method",
+        "quantile_method", "interval_method", "archive_validation_scope", "confidence_level",
+        "minimum_usable_fraction", "minimum_usable_replicates", "studentized_usable_replicates",
+        "parameter_ids_json", "inference_status", "unavailable_reason_code", "unavailable_message",
+      ]);
+    const intervals = tables.find((table) => table.id === "exact_case_bootstrap_studentized_parameter_intervals");
+    expect(intervals?.columns).toEqual([
+      "parameter_id", "status", "point_estimate", "point_standard_error", "lower_pivot_quantile",
+      "upper_pivot_quantile", "interval_lower", "interval_upper", "usable_replicates", "unavailable_reason",
+    ]);
+    expect(intervals?.rows[0]).toEqual([
+      "parameter:loading:x:x1", "available", "1.000000", "0.500000", "1.000000",
+      "1.000000", "0.500000", "0.500000", "1000", "",
+    ]);
+    expect(intervals?.warning).toContain("ledger and interval arithmetic only");
+    expect(intervals?.warning).toContain("does not replay raw refits or expected-information calculations");
+
+    const pilot = completedStudentizedCbsemBootstrapPilotRun();
+    expect(nativeCbsemResultProjection(pilot)).not.toBeNull();
+    expect(nativeResultTables(pilot)
+      .find((table) => table.id === "exact_case_bootstrap_studentized_parameter_intervals")?.rows[0])
+      .toEqual([
+        "parameter:loading:x:x1", "unavailable", "", "", "", "", "", "", "",
+        "insufficient_studentized_usable_replicates",
+      ]);
+
+    const mixed = structuredClone(run);
+    mixed.result!.cbsem!.exact_case_bootstrap = mixed.result!.cbsem!.exact_case_bootstrap_studentized!.base;
+    expect(nativeCbsemResultProjection(mixed)).toBeNull();
+
+    const missingHypothesis = structuredClone(run);
+    delete missingHypothesis.result!.cbsem!.exact_case_bootstrap_studentized!.base.hypothesis_tests;
+    expect(nativeCbsemResultProjection(missingHypothesis)).toBeNull();
+
+    const pointTamper = structuredClone(run);
+    const pointOutcome = pointTamper.result!.cbsem!.exact_case_bootstrap_studentized!
+      .studentized.point_standard_errors.outcome;
+    if (pointOutcome.status === "available") pointOutcome.parameters[0].standard_error = 0;
+    expect(nativeCbsemResultProjection(pointTamper)).toBeNull();
+
+    const refitOrderTamper = structuredClone(run);
+    refitOrderTamper.result!.cbsem!.exact_case_bootstrap_studentized!
+      .studentized.refit_standard_errors[1].replicate_index = 0;
+    expect(nativeCbsemResultProjection(refitOrderTamper)).toBeNull();
+
+    const pivotTamper = structuredClone(run);
+    const intervalOutcome = pivotTamper.result!.cbsem!.exact_case_bootstrap_studentized!
+      .studentized.intervals[0].outcome;
+    if (intervalOutcome.status === "available") intervalOutcome.interval_lower = 0.4;
+    expect(nativeCbsemResultProjection(pivotTamper)).toBeNull();
+
+    const notCompleted = structuredClone(run);
+    notCompleted.status = "failed";
+    expect(nativeResultTables(notCompleted)).toEqual([]);
+  });
+
+  it("renders only complete atomic v12 BCa results with typed B500 and delete-one failure states", () => {
+    const run = completedBcaCbsemBootstrapRun();
+    expect(nativeCbsemResultProjection(run)).not.toBeNull();
+    const tables = nativeResultTables(run);
+    expect(tables.map((table) => table.id)).toEqual(expect.arrayContaining([
+      "cbsem_exact_bootstrap_intervals",
+      "cbsem_exact_bootstrap_hypothesis_tests",
+      "cbsem_exact_bootstrap_successful_refits",
+      "cbsem_exact_bootstrap_failures",
+      "cbsem_exact_bootstrap_settings",
+      "exact_case_bootstrap_bca_summary",
+      "exact_case_bootstrap_bca_parameter_intervals",
+      "exact_case_bootstrap_bca_successful_delete_one_refits",
+      "exact_case_bootstrap_bca_failures",
+    ]));
+    const summary = tables.find((table) => table.id === "exact_case_bootstrap_bca_summary")!;
+    expect(summary.columns).toEqual([
+      "method_version", "base_bootstrap_method_version", "outer_recipe_analytical_identity_sha256",
+      "base_point_result_sha256", "compiler_analytical_identity_sha256", "plan_sha256",
+      "model_scientific_sha256", "delete_one_refit_method_version",
+      "delete_one_sampling_positions_digest_method", "delete_one_sample_indices_digest_method",
+      "bias_correction_method", "acceleration_method", "adjusted_probability_method", "quantile_method",
+      "retry_policy", "archive_validation_scope", "confidence_level", "bootstrap_usable_replicates",
+      "minimum_bootstrap_usable_replicates", "delete_one_case_count", "successful_delete_one_refits",
+      "failed_delete_one_refits", "parameter_ids_json", "inference_status", "unavailable_reason_code",
+      "unavailable_message",
+    ]);
+    expect(summary.rows[0]?.[15]).toBe(
+      "ledger_identity_digest_and_arithmetic_replay_only_no_raw_base_or_delete_one_ml_replay_v1",
+    );
+    expect(summary.warning).toContain("does not replay raw base or delete-one ML fits");
+    const intervals = tables.find((table) => table.id === "exact_case_bootstrap_bca_parameter_intervals")!;
+    expect(intervals.rows[0]).toEqual([
+      "parameter:loading:x:x1", "available", "1.000000", "0.000000", "0.000000",
+      "0.025000", "0.975000", "2.000000", "2.000000", "1000", "",
+    ]);
+    expect(tables.find((table) => table.id === "exact_case_bootstrap_bca_successful_delete_one_refits")?.rows)
+      .toHaveLength(run.result!.cbsem!.sample_size);
+
+    const pilot = completedBcaCbsemBootstrapPilotRun();
+    expect(nativeCbsemResultProjection(pilot)).not.toBeNull();
+    const pilotTables = nativeResultTables(pilot);
+    expect(pilotTables.find((table) => table.id === "exact_case_bootstrap_bca_summary")?.rows[0])
+      .toEqual(expect.arrayContaining(["unavailable", "base_inference_unavailable",
+        "BCa inference is unavailable because 500 successful bootstrap point refits are below the bound minimum 1000."]));
+    expect(pilotTables.find((table) => table.id === "exact_case_bootstrap_bca_parameter_intervals")?.rows[0])
+      .toEqual(["parameter:loading:x:x1", "unavailable", "", "", "", "", "", "", "", "", "Base inference unavailable"]);
+
+    const deleteOneFailure = completedBcaCbsemBootstrapDeleteOneFailureRun();
+    expect(nativeCbsemResultProjection(deleteOneFailure)).not.toBeNull();
+    const failedTables = nativeResultTables(deleteOneFailure);
+    expect(failedTables.find((table) => table.id === "exact_case_bootstrap_bca_summary")?.rows[0])
+      .toEqual(expect.arrayContaining(["unavailable", "incomplete_delete_one_ledger",
+        `BCa inference is unavailable because 1 of ${deleteOneFailure.result!.cbsem!.sample_size} mandatory delete-one fits failed.`]));
+    expect(failedTables.find((table) => table.id === "exact_case_bootstrap_bca_failures")?.rows[0])
+      .toEqual(expect.arrayContaining(["Non convergence", "Did not converge."]));
+
+    const mixed = structuredClone(run);
+    mixed.result!.cbsem!.exact_case_bootstrap = mixed.result!.cbsem!.exact_case_bootstrap_bca!.base;
+    expect(nativeCbsemResultProjection(mixed)).toBeNull();
+
+    const methodTamper = structuredClone(run);
+    (methodTamper.result!.cbsem!.exact_case_bootstrap_bca!.bca as { method_version: string }).method_version = "bca";
+    expect(nativeCbsemResultProjection(methodTamper)).toBeNull();
+
+    const orderTamper = structuredClone(run);
+    orderTamper.result!.cbsem!.exact_case_bootstrap_bca!.bca.successful_delete_one_refits[1]
+      .omitted_complete_case_position = 0;
+    expect(nativeCbsemResultProjection(orderTamper)).toBeNull();
+
+    const arithmeticTamper = structuredClone(run);
+    const outcome = arithmeticTamper.result!.cbsem!.exact_case_bootstrap_bca!.bca.intervals[0].outcome;
+    if (outcome.status === "available") outcome.interval_lower = 1.9;
+    expect(nativeCbsemResultProjection(arithmeticTamper)).toBeNull();
+
+    const notCompleted = structuredClone(run);
+    notCompleted.status = "failed";
+    expect(nativeResultTables(notCompleted)).toEqual([]);
+  });
+
   it("resolves table items without treating the diagram as a table", () => {
     const navigation = buildNativeResultNavigation(completedSamplePlsRun());
     expect(resultTableForItem(navigation, "direct_effects")?.title).toBe("Direct effects");
     expect(resultTableForItem(navigation, "model_estimates")).toBeUndefined();
+  });
+
+  it("surfaces exact HTMT inference decisions and rejects contradictory ledgers", () => {
+    const run = completedHtmtInferenceRun();
+    const tables = nativeResultTables(run);
+    const plus = tables.find((table) => table.id === "htmt_plus_bootstrap");
+    expect(plus?.columns).toContain("Decision at 0.90");
+    expect(plus?.columns).toContain("Usable-index digest");
+    expect(plus?.rows[0]).toEqual(expect.arrayContaining([
+      "Established: upper bound < 0.90",
+      "10",
+      "0",
+      "01".repeat(32),
+    ]));
+    expect(plus?.warning).toContain("strictly below 0.90");
+
+    const provenance = nativeRunProvenanceTable(run);
+    expect(provenance.rows).toEqual(expect.arrayContaining([
+      ["HTMT interval", "Bias-corrected percentile (Type 7); not BCa"],
+      ["HTMT critical value", "0.9"],
+      ["HTMT decision rule", "Documented inference: bias-corrected upper bound strictly below 0.90"],
+    ]));
+
+    const contradictoryDecision = structuredClone(run);
+    contradictoryDecision.bootstrap!.htmt_inference!.htmt_plus.cells[0][1].upper_bound_below_critical_value = false;
+    contradictoryDecision.bootstrap!.htmt_inference!.htmt_plus.cells[1][0].upper_bound_below_critical_value = false;
+    expect(nativeResultTables(contradictoryDecision)).toEqual([]);
+
+    const duplicateUnavailable = structuredClone(run);
+    const pair = duplicateUnavailable.bootstrap!.htmt_inference!.htmt_plus.cells[0][1];
+    pair.usable_replicates = 8;
+    pair.failed_replicates = 2;
+    pair.pair_unavailable_replicates = [
+      { replicate_index: 2, reason_code: "htmt.zero_monotrait_denominator" },
+      { replicate_index: 2, reason_code: "htmt.zero_monotrait_denominator" },
+    ];
+    duplicateUnavailable.bootstrap!.htmt_inference!.htmt_plus.cells[1][0] = structuredClone(pair);
+    expect(nativeResultTables(duplicateUnavailable)).toEqual([]);
   });
 });

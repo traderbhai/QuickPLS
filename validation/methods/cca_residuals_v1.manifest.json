@@ -38,7 +38,11 @@
       {
         "id": "composite_residual",
         "expression": "R_residual = R_observed - R_implied",
-        "variables": ["R_residual", "R_observed", "R_implied"],
+        "variables": [
+          "R_residual",
+          "R_observed",
+          "R_implied"
+        ],
         "source_reference_id": "henseler_2014"
       }
     ],
@@ -66,18 +70,47 @@
         "purpose": "recovery",
         "design": "Supported recursive composite models with exact-fit, mild misspecification, and strong misspecification scenarios across sample sizes and indicator orderings.",
         "seed_policy": "Every stochastic fixture uses a frozen scenario seed; deterministic fixture calculations use no random stream.",
-        "metrics": ["maximum_absolute_residual", "root_mean_squared_residual", "matrix_symmetry"],
+        "metrics": [
+          "maximum_absolute_residual",
+          "root_mean_squared_residual",
+          "matrix_symmetry"
+        ],
         "acceptance_rule": "QuickPLS residual matrices must match the independent calculation within 1e-6 and preserve exact symmetry and diagonal conventions."
       }
     ],
     "boundaries": [
-      {"id": "constant_composite", "category": "data_pathology", "case": "A composite score has zero or non-finite variance.", "expected_behavior": "The calculation is blocked with the affected construct identified."},
-      {"id": "unsupported_inference", "category": "unsupported_scope", "case": "A user requests inferential CCA or a pass/fail classification.", "expected_behavior": "The workflow remains descriptive and does not fabricate a threshold or p value."},
-      {"id": "construct_reorder", "category": "metamorphic", "case": "Constructs and indicators are consistently reordered.", "expected_behavior": "The mapped residual matrix remains numerically equal within tolerance."},
-      {"id": "repeat_run", "category": "determinism", "case": "The same data, model, and settings are executed repeatedly.", "expected_behavior": "The analytical residual payload is exactly equal apart from operational timestamps."},
-      {"id": "residual_archive_tamper", "category": "tamper", "case": "A saved residual, method identity, or model fingerprint is changed.", "expected_behavior": "Strict archive validation rejects the result rather than displaying altered diagnostics."}
+      {
+        "id": "constant_composite",
+        "category": "data_pathology",
+        "case": "A composite score has zero or non-finite variance.",
+        "expected_behavior": "The calculation is blocked with the affected construct identified."
+      },
+      {
+        "id": "unsupported_inference",
+        "category": "unsupported_scope",
+        "case": "A user requests inferential CCA or a pass/fail classification.",
+        "expected_behavior": "The workflow remains descriptive and does not fabricate a threshold or p value."
+      },
+      {
+        "id": "construct_reorder",
+        "category": "metamorphic",
+        "case": "Constructs and indicators are consistently reordered.",
+        "expected_behavior": "The mapped residual matrix remains numerically equal within tolerance."
+      },
+      {
+        "id": "repeat_run",
+        "category": "determinism",
+        "case": "The same data, model, and settings are executed repeatedly.",
+        "expected_behavior": "The analytical residual payload is exactly equal apart from operational timestamps."
+      },
+      {
+        "id": "residual_archive_tamper",
+        "category": "tamper",
+        "case": "A saved residual, method identity, or model fingerprint is changed.",
+        "expected_behavior": "Strict archive validation rejects the result rather than displaying altered diagnostics."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
     "persistence": {
@@ -85,47 +118,220 @@
       "result_schema_version": 1,
       "payload_kind": "pls_pm_v1",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject an archive whose capability identity differs from the CCA residual contract."},
-        {"category": "method_version", "expected_behavior": "Reject a residual payload relabeled as another method version."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose dataset fingerprint no longer matches."},
-        {"category": "checksum", "expected_behavior": "Reject any archive member whose checksum differs from the manifest."},
-        {"category": "malformed_payload", "expected_behavior": "Reject unknown fields, duplicate keys, non-finite values, nonsymmetric matrices, or inconsistent dimensions."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret historical assessment output as current CCA residual evidence."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject an archive whose capability identity differs from the CCA residual contract."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a residual payload relabeled as another method version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any archive member whose checksum differs from the manifest."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject unknown fields, duplicate keys, non-finite values, nonsymmetric matrices, or inconsistent dimensions."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret historical assessment output as current CCA residual evidence."
+        }
       ],
       "legacy_policy": "Historical assessment payloads remain readable only under their original version and cannot satisfy this promotion contract."
     },
     "native": {
-      "setup_controls": ["Supported PLS model", "Standardized preprocessing", "CCA residual diagnostics selection"],
-      "applicability_blockers": ["Unsupported model shape", "Non-finite or constant composite scores", "Unavailable accepted PLS solution"],
-      "result_surfaces": ["Observed composite correlations", "Implied composite correlations", "Residual correlation matrix", "Scope and provenance"],
+      "setup_controls": [
+        "Supported PLS model",
+        "Standardized preprocessing",
+        "CCA residual diagnostics selection"
+      ],
+      "applicability_blockers": [
+        "Unsupported model shape",
+        "Non-finite or constant composite scores",
+        "Unavailable accepted PLS solution"
+      ],
+      "result_surfaces": [
+        "Observed composite correlations",
+        "Implied composite correlations",
+        "Residual correlation matrix",
+        "Scope and provenance"
+      ],
       "gui_cli_parity_rule": "The GUI and CLI must return the same residual matrix and method identity for the same accepted model and data.",
-      "accessibility_rules": ["Every residual matrix has an accessible table representation.", "Signs and magnitudes are available without relying on color."]
+      "accessibility_rules": [
+        "Every residual matrix has an accessible table representation.",
+        "Signs and magnitudes are available without relying on color."
+      ]
     },
-    "export": {"formats": ["csv", "xlsx"], "tables": ["CCA residual matrix", "Observed and implied correlations", "Run provenance"], "same_run_required": true, "provenance_required": true},
+    "export": {
+      "formats": [
+        "csv",
+        "xlsx"
+      ],
+      "tables": [
+        "CCA residual matrix",
+        "Observed and implied correlations",
+        "Run provenance"
+      ],
+      "same_run_required": true,
+      "provenance_required": true
+    },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": false,
       "process_cleanup_required": true
     },
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
   "qualification": {
-    "declared_state": "absent",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/PLS_CCA_V1.md", "docs/methods/CCA_V1.md"],
-      "independent_reference": ["validation/cca_reference.py"],
-      "simulation_report": ["validation/cca_release_simulation.py"],
-      "boundary_report": ["validation/cca_release_boundary_gate.py"],
-      "persistence_report": ["validation/cca_release_persistence_gate.py"],
-      "frontend_report": ["src/native/nativeCcaCanonicalIntegration.test.ts"],
-      "export_report": ["src/native/nativeExportTables.test.ts"],
-      "method_audit": ["validation/cca_method_promotion_audit.py"],
-      "packaged_acceptance": ["validation/run_v247_cumulative_native_acceptance.ps1"]
+      "method_spec": [
+        "docs/methods/PLS_CCA_V1.md",
+        "docs/methods/CCA_V1.md"
+      ],
+      "independent_reference": [
+        "validation/cca_reference.py",
+        "validation/cca_release_reference.py",
+        "crates/qpls-cli/src/main.rs",
+        "crates/qpls-estimation/src/pls.rs",
+        "crates/qpls-runner/src/lib.rs"
+      ],
+      "simulation_report": [
+        "validation/cca_release_simulation.py",
+        "validation/established_method_factory_common.py"
+      ],
+      "boundary_report": [
+        "validation/cca_release_boundary_gate.py",
+        "crates/qpls-core/src/validation.rs"
+      ],
+      "persistence_report": [
+        "validation/cca_release_persistence_gate.py",
+        "crates/qpls-project/src/lib.rs"
+      ],
+      "frontend_report": [
+        "src/native/nativeAnalysisRecipe.ts",
+        "src/native/nativeResults.ts",
+        "src/native/nativeCcaCanonicalIntegration.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.ts",
+        "src/native/nativeExportTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/cca_residuals_v1_release_audit.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/test_phase2_release_packaged_common.py"
+      ],
+      "packaged_acceptance": [
+        "validation/cca_residuals_v1_packaged_acceptance.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/run_phase2_release_packaged_closure.ps1",
+        "validation/run_v247_cumulative_native_acceptance.ps1",
+        "validation/v247_tauri_native_acceptance.mjs",
+        "validation/diagnostic_bundle_source_manifest.py",
+        "validation/test_v247_cumulative_native_acceptance_supervisor.py",
+        "validation/test_phase2_release_packaged_common.py"
+      ]
     },
-    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/cca_residuals_v1/engine_stage.identity.json",
+          "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/cca_residuals_v1/persistence_report.identity.json",
+          "roles": ["persistence_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/cca_residuals_v1/native_stage.identity.json",
+          "roles": ["frontend_report", "export_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/cca_residuals_v1/packaged_acceptance.identity.json",
+          "roles": ["packaged_acceptance"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/cca_residuals_v1/method_audit.identity.json",
+          "roles": ["method_audit"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
   }
 }

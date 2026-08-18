@@ -1,0 +1,164 @@
+{
+  "$schema": "established_methods_v1.schema.json",
+  "schema_version": 1,
+  "contract_id": "quickpls.established_method_integration.v1",
+  "registry": "validation/capabilities/capability_registry_v2.json",
+  "methods": [
+    {
+      "factory_key": "cca",
+      "manifest": "validation/methods/cca_residuals_v1.manifest.json",
+      "runtime": {
+        "analysis_method": "cca",
+        "method_config_kind": "cca",
+        "workbench_kind": "cca",
+        "result_discriminator": "cca"
+      },
+      "capability_requirements": [
+        {
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "option": "pls_algorithm",
+          "role": "base"
+        },
+        {
+          "capability_id": "smartpls.cca",
+          "cell_id": "qpls3.assessment.cca_residuals",
+          "option": "cca",
+          "role": "primary"
+        }
+      ],
+      "canonical_table_rules": [
+        {
+          "match": "prefix",
+          "value": "cca_",
+          "owner_options": [
+            "cca"
+          ]
+        }
+      ],
+      "factory": {
+        "output": "cca_residuals_v1",
+        "reference_script": "validation/cca_release_reference.py",
+        "reference_report": "validation/results/method_factory/cca_residuals_v1/independent_reference.json",
+        "reference_version_pointer": "/method_version",
+        "simulation_test_filter": "cca_non_saturated_residuals",
+        "boundary_test_filter": "cca_bounded_scope",
+        "persistence_test_filter": "runner_generated_cca_appends_round_trips_and_rejects_contract_tampering"
+      }
+    },
+    {
+      "factory_key": "gsca",
+      "manifest": "validation/methods/gsca_als_v2.manifest.json",
+      "runtime": {
+        "analysis_method": "gsca",
+        "method_config_kind": "gsca",
+        "workbench_kind": "gsca",
+        "result_discriminator": "gsca"
+      },
+      "capability_requirements": [
+        {
+          "capability_id": "smartpls.gsca",
+          "cell_id": "qpls3.gsca.als",
+          "option": "gsca",
+          "role": "primary"
+        }
+      ],
+      "canonical_table_rules": [
+        {
+          "match": "prefix",
+          "value": "gsca_",
+          "owner_options": [
+            "gsca"
+          ]
+        }
+      ],
+      "factory": {
+        "output": "gsca_als_v2",
+        "reference_script": "validation/gsca_release_reference.py",
+        "reference_report": "validation/results/method_factory/gsca_als_v2/independent_reference.json",
+        "reference_version_pointer": "/method_version",
+        "simulation_test_filter": "gsca_als_v2",
+        "boundary_test_filter": "gsca_als_v2",
+        "persistence_test_filter": "runner_generated_gsca_als_v2_commits_saves_reopens_and_rejects_contract_tampering"
+      }
+    },
+    {
+      "factory_key": "ipma",
+      "manifest": "validation/methods/ipma_v1.manifest.json",
+      "runtime": {
+        "analysis_method": "ipma",
+        "method_config_kind": "ipma",
+        "workbench_kind": "ipma",
+        "result_discriminator": "ipma"
+      },
+      "capability_requirements": [
+        {
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "option": "pls_algorithm",
+          "role": "base"
+        },
+        {
+          "capability_id": "smartpls.ipma",
+          "cell_id": "qpls3.assessment.ipma",
+          "option": "ipma",
+          "role": "primary"
+        }
+      ],
+      "canonical_table_rules": [
+        {
+          "match": "prefix",
+          "value": "ipma_",
+          "owner_options": [
+            "ipma"
+          ]
+        }
+      ],
+      "factory": {
+        "output": "ipma_v1",
+        "reference_script": "validation/ipma_release_reference.py",
+        "reference_report": "validation/results/method_factory/ipma_v1/independent_reference.json",
+        "reference_version_pointer": "/method_version",
+        "simulation_test_filter": "bounded_ipma",
+        "boundary_test_filter": "bounded_ipma",
+        "persistence_test_filter": "runner_generated_ipma_commits_saves_reopens_and_rejects_contract_tampering"
+      }
+    },
+    {
+      "factory_key": "nca",
+      "manifest": "validation/methods/nca_v2.manifest.json",
+      "runtime": {
+        "analysis_method": "nca",
+        "method_config_kind": "nca",
+        "workbench_kind": "nca",
+        "result_discriminator": "nca"
+      },
+      "capability_requirements": [
+        {
+          "capability_id": "smartpls.nca",
+          "cell_id": "qpls3.standalone.nca",
+          "option": "nca",
+          "role": "primary"
+        }
+      ],
+      "canonical_table_rules": [
+        {
+          "match": "prefix",
+          "value": "nca_",
+          "owner_options": [
+            "nca"
+          ]
+        }
+      ],
+      "factory": {
+        "output": "nca_v2",
+        "reference_script": "validation/nca_release_reference.py",
+        "reference_report": "validation/results/method_factory/nca_v2/independent_reference.json",
+        "reference_version_pointer": "/checks/nca/method_version",
+        "simulation_test_filter": "nca_v2",
+        "boundary_test_filter": "bounded_nca_v2",
+        "persistence_test_filter": "runner_generated_nca_v2_commits_saves_reopens_and_rejects_contract_tampering"
+      }
+    }
+  ]
+}

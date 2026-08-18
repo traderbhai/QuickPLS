@@ -1,0 +1,791 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/qualification-spec-v2.json",
+  "title": "QuickPLS QualificationSpec V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "identity",
+    "migration",
+    "scientific_contract",
+    "scenario_contract",
+    "comparison_contract",
+    "operational_contract",
+    "evidence_contract"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "identity": { "$ref": "#/$defs/identity" },
+    "migration": { "$ref": "#/$defs/migration" },
+    "scientific_contract": { "$ref": "#/$defs/scientific_contract" },
+    "scenario_contract": { "$ref": "#/$defs/scenario_contract" },
+    "comparison_contract": { "$ref": "#/$defs/comparison_contract" },
+    "operational_contract": { "$ref": "#/$defs/operational_contract" },
+    "evidence_contract": { "$ref": "#/$defs/evidence_contract" }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.:-]*$"
+    },
+    "non_empty_string": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "repository_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![A-Za-z]:)(?![/\\\\])(?!.*(?:^|[/\\\\])\\.\\.(?:[/\\\\]|$))[^\\\\]+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "unique_strings": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/non_empty_string" }
+    },
+    "capability_cell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry_schema_version",
+        "capability_id",
+        "capability_version",
+        "cell_id"
+      ],
+      "properties": {
+        "registry_schema_version": { "const": 2 },
+        "capability_id": { "$ref": "#/$defs/id" },
+        "capability_version": { "$ref": "#/$defs/id" },
+        "cell_id": { "$ref": "#/$defs/id" }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualification_id",
+        "method_version",
+        "execution_kind",
+        "potentially_long_running",
+        "spec_frozen_at_utc",
+        "capability_cell"
+      ],
+      "properties": {
+        "qualification_id": { "$ref": "#/$defs/id" },
+        "method_version": { "$ref": "#/$defs/id" },
+        "execution_kind": {
+          "enum": ["deterministic", "stochastic", "iterative", "hybrid"]
+        },
+        "potentially_long_running": { "type": "boolean" },
+        "spec_frozen_at_utc": { "type": "string", "format": "date-time" },
+        "capability_cell": { "$ref": "#/$defs/capability_cell" }
+      }
+    },
+    "migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_kind",
+        "source_schema_version",
+        "source_manifest_path",
+        "status",
+        "unresolved_items"
+      ],
+      "properties": {
+        "source_kind": {
+          "enum": ["native_v2", "qualification_v1_manifest"]
+        },
+        "source_schema_version": { "type": "integer", "minimum": 1 },
+        "source_manifest_path": {
+          "oneOf": [
+            { "$ref": "#/$defs/repository_path" },
+            { "type": "null" }
+          ]
+        },
+        "status": { "enum": ["native", "completed", "compatibility_only"] },
+        "unresolved_items": { "$ref": "#/$defs/unique_strings" }
+      }
+    },
+    "estimand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "definition", "unit", "output_ids"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "label": { "$ref": "#/$defs/non_empty_string" },
+        "definition": { "$ref": "#/$defs/non_empty_string" },
+        "unit": { "$ref": "#/$defs/non_empty_string" },
+        "output_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "preprocessing_step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "order", "operation", "parameters", "applies_to"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "order": { "type": "integer", "minimum": 0 },
+        "operation": { "$ref": "#/$defs/non_empty_string" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": { "type": ["string", "number", "integer", "boolean", "null"] }
+        },
+        "applies_to": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/non_empty_string" }
+        }
+      }
+    },
+    "predicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "expression", "on_violation", "diagnostic_code"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "expression": { "$ref": "#/$defs/non_empty_string" },
+        "on_violation": { "enum": ["error", "not_applicable", "warning"] },
+        "diagnostic_code": { "$ref": "#/$defs/id" }
+      }
+    },
+    "oracle_implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "maintainer"],
+      "properties": {
+        "name": { "$ref": "#/$defs/non_empty_string" },
+        "version": { "$ref": "#/$defs/non_empty_string" },
+        "maintainer": { "$ref": "#/$defs/non_empty_string" }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "citation",
+        "locator",
+        "independence_group",
+        "runtime_policy",
+        "implementation",
+        "covered_estimand_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": {
+          "enum": [
+            "primary_literature",
+            "published_fixture",
+            "hand_calculation",
+            "independent_implementation"
+          ]
+        },
+        "citation": { "$ref": "#/$defs/non_empty_string" },
+        "locator": { "$ref": "#/$defs/non_empty_string" },
+        "independence_group": { "$ref": "#/$defs/id" },
+        "runtime_policy": {
+          "enum": ["no_runtime_dependency", "development_validation_only"]
+        },
+        "implementation": {
+          "oneOf": [
+            { "$ref": "#/$defs/oracle_implementation" },
+            { "type": "null" }
+          ]
+        },
+        "covered_estimand_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "oracle_exception": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason", "approved_by", "approved_at_utc", "compensating_evidence"],
+      "properties": {
+        "reason": { "$ref": "#/$defs/non_empty_string" },
+        "approved_by": { "$ref": "#/$defs/non_empty_string" },
+        "approved_at_utc": { "type": "string", "format": "date-time" },
+        "compensating_evidence": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/non_empty_string" }
+        }
+      }
+    },
+    "scientific_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "estimands",
+        "preprocessing",
+        "model_predicates",
+        "data_predicates",
+        "oracles",
+        "oracle_exception"
+      ],
+      "properties": {
+        "estimands": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/estimand" }
+        },
+        "preprocessing": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/preprocessing_step" }
+        },
+        "model_predicates": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/predicate" }
+        },
+        "data_predicates": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/predicate" }
+        },
+        "oracles": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/oracle" }
+        },
+        "oracle_exception": {
+          "oneOf": [
+            { "$ref": "#/$defs/oracle_exception" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "axis_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "description": { "$ref": "#/$defs/non_empty_string" }
+      }
+    },
+    "scenario_axis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "values"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "label": { "$ref": "#/$defs/non_empty_string" },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/axis_value" }
+        }
+      }
+    },
+    "workload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows",
+        "indicators",
+        "constructs",
+        "resamples",
+        "groups",
+        "candidate_models"
+      ],
+      "properties": {
+        "rows": { "type": ["integer", "null"], "minimum": 0 },
+        "indicators": { "type": ["integer", "null"], "minimum": 0 },
+        "constructs": { "type": ["integer", "null"], "minimum": 0 },
+        "resamples": { "type": ["integer", "null"], "minimum": 0 },
+        "groups": { "type": ["integer", "null"], "minimum": 0 },
+        "candidate_models": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "complexity_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "applicability", "not_applicable_reason", "workload"],
+      "properties": {
+        "id": {
+          "enum": ["micro_exact", "applied", "large", "maximum_axis", "compound_stress"]
+        },
+        "description": { "$ref": "#/$defs/non_empty_string" },
+        "applicability": { "enum": ["required", "not_applicable"] },
+        "not_applicable_reason": { "type": ["string", "null"] },
+        "workload": { "$ref": "#/$defs/workload" }
+      }
+    },
+    "selection_map": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": { "$ref": "#/$defs/id" }
+      }
+    },
+    "mandatory_combination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "profile_id", "coverage", "purpose", "stressed_dimensions", "selections"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "profile_id": {
+          "enum": ["micro_exact", "applied", "large", "maximum_axis", "compound_stress"]
+        },
+        "coverage": { "enum": ["pairwise", "targeted", "compound"] },
+        "purpose": { "$ref": "#/$defs/non_empty_string" },
+        "stressed_dimensions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["rows", "indicators", "constructs", "resamples", "groups", "candidate_models"]
+          }
+        },
+        "selections": { "$ref": "#/$defs/selection_map" }
+      }
+    },
+    "monte_carlo_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confidence_level", "maximum_half_width", "failed_fits_in_denominator"],
+      "properties": {
+        "confidence_level": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+        "maximum_half_width": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 0.5 },
+        "failed_fits_in_denominator": { "const": true }
+      }
+    },
+    "scenario_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["axes", "complexity_profiles", "mandatory_combinations", "monte_carlo_policy"],
+      "properties": {
+        "axes": {
+          "type": "array",
+          "minItems": 7,
+          "items": { "$ref": "#/$defs/scenario_axis" }
+        },
+        "complexity_profiles": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/complexity_profile" }
+        },
+        "mandatory_combinations": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "$ref": "#/$defs/mandatory_combination" }
+        },
+        "monte_carlo_policy": { "$ref": "#/$defs/monte_carlo_policy" }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["output_id", "rule", "rationale"],
+      "properties": {
+        "output_id": { "$ref": "#/$defs/id" },
+        "rule": {
+          "enum": [
+            "exact",
+            "abs_relative",
+            "matrix_norm",
+            "sign_orientation",
+            "subspace",
+            "label_permutation",
+            "monte_carlo_interval"
+          ]
+        },
+        "rationale": { "$ref": "#/$defs/non_empty_string" },
+        "absolute_tolerance": { "type": "number", "minimum": 0 },
+        "relative_tolerance": { "type": "number", "minimum": 0 },
+        "norm": { "enum": ["frobenius", "spectral", "maximum"] },
+        "elementwise_tolerance": { "type": "number", "minimum": 0 },
+        "orientation_keys": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/non_empty_string" }
+        },
+        "maximum_principal_angle_degrees": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "projector_tolerance": { "type": "number", "minimum": 0 },
+        "assignment_metric": { "enum": ["hungarian_l1", "hungarian_l2", "maximum_overlap"] },
+        "confidence_level": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+        "maximum_half_width": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 0.5 },
+        "acceptance_interval": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" }
+        }
+      }
+    },
+    "comparison_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outputs"],
+      "properties": {
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/comparison" }
+        }
+      }
+    },
+    "hardware_class": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "os_family", "architecture", "minimum_logical_cores", "minimum_memory_gib", "notes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "os_family": { "const": "windows" },
+        "architecture": { "const": "x86_64" },
+        "minimum_logical_cores": { "type": "integer", "minimum": 1 },
+        "minimum_memory_gib": { "type": "number", "exclusiveMinimum": 0 },
+        "notes": { "$ref": "#/$defs/non_empty_string" }
+      }
+    },
+    "baseline_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "warmup_runs",
+        "measured_runs",
+        "statistic",
+        "maximum_runtime_regression_percent",
+        "maximum_memory_regression_percent"
+      ],
+      "properties": {
+        "warmup_runs": { "type": "integer", "minimum": 1 },
+        "measured_runs": { "type": "integer", "minimum": 5 },
+        "statistic": { "enum": ["median", "p95"] },
+        "maximum_runtime_regression_percent": { "type": "number", "minimum": 0 },
+        "maximum_memory_regression_percent": { "type": "number", "minimum": 0 }
+      }
+    },
+    "performance_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_id",
+        "hardware_class_id",
+        "maximum_elapsed_seconds",
+        "maximum_peak_working_set_bytes",
+        "maximum_result_bytes",
+        "maximum_cancellation_latency_seconds"
+      ],
+      "properties": {
+        "profile_id": {
+          "enum": ["micro_exact", "applied", "large", "maximum_axis", "compound_stress"]
+        },
+        "hardware_class_id": { "$ref": "#/$defs/id" },
+        "maximum_elapsed_seconds": { "type": "number", "exclusiveMinimum": 0 },
+        "maximum_peak_working_set_bytes": { "type": "integer", "minimum": 1 },
+        "maximum_result_bytes": { "type": "integer", "minimum": 1 },
+        "maximum_cancellation_latency_seconds": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "performance_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hardware_classes", "baseline_policy", "budgets"],
+      "properties": {
+        "hardware_classes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/hardware_class" }
+        },
+        "baseline_policy": { "$ref": "#/$defs/baseline_policy" },
+        "budgets": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/performance_budget" }
+        }
+      }
+    },
+    "archive_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current_schema_version",
+        "readable_schema_versions",
+        "writable_schema_versions",
+        "future_schema_policy",
+        "corruption_cases"
+      ],
+      "properties": {
+        "current_schema_version": { "type": "integer", "minimum": 1 },
+        "readable_schema_versions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "writable_schema_versions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "future_schema_policy": { "const": "verified_read_only" },
+        "corruption_cases": {
+          "type": "array",
+          "minItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "feature_identity",
+              "method_version",
+              "dataset_fingerprint",
+              "checksum",
+              "duplicate_entry",
+              "malformed_payload",
+              "legacy_reinterpretation",
+              "interrupted_save"
+            ]
+          }
+        }
+      }
+    },
+    "export_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "formats",
+        "semantic_readback_formats",
+        "canonical_projection_id",
+        "same_run_required",
+        "provenance_required",
+        "validation_witness_excluded"
+      ],
+      "properties": {
+        "formats": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["csv", "xlsx", "html", "svg", "pdf", "png"] }
+        },
+        "semantic_readback_formats": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["csv", "xlsx", "html", "svg", "pdf", "png"] }
+        },
+        "canonical_projection_id": { "$ref": "#/$defs/id" },
+        "same_run_required": { "const": true },
+        "provenance_required": { "const": true },
+        "validation_witness_excluded": { "const": true }
+      }
+    },
+    "windows_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package_kinds",
+        "viewports",
+        "display_scale_percent",
+        "offline_required",
+        "keyboard_only_required",
+        "accessible_tables_required",
+        "real_pointer_required"
+      ],
+      "properties": {
+        "package_kinds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["installed", "portable"] }
+        },
+        "viewports": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[1-9][0-9]{2,4}x[1-9][0-9]{2,4}$" }
+        },
+        "display_scale_percent": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 100, "maximum": 400 }
+        },
+        "offline_required": { "const": true },
+        "keyboard_only_required": { "const": true },
+        "accessible_tables_required": { "const": true },
+        "real_pointer_required": { "const": true }
+      }
+    },
+    "cancellation_phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "applicability", "not_applicable_reason"],
+      "properties": {
+        "phase": { "enum": ["validate", "estimate", "resample", "compare", "export"] },
+        "applicability": { "enum": ["required", "not_applicable"] },
+        "not_applicable_reason": { "type": ["string", "null"] }
+      }
+    },
+    "cancellation_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_for_potentially_long_operations",
+        "maximum_latency_seconds",
+        "phases",
+        "no_partial_visible_result",
+        "no_partial_committed_result",
+        "archive_unchanged",
+        "same_settings_retry"
+      ],
+      "properties": {
+        "required_for_potentially_long_operations": { "const": true },
+        "maximum_latency_seconds": { "type": "number", "exclusiveMinimum": 0 },
+        "phases": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/$defs/cancellation_phase" }
+        },
+        "no_partial_visible_result": { "const": true },
+        "no_partial_committed_result": { "const": true },
+        "archive_unchanged": { "const": true },
+        "same_settings_retry": { "const": true }
+      }
+    },
+    "operational_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["performance", "archive", "export", "windows", "cancellation"],
+      "properties": {
+        "performance": { "$ref": "#/$defs/performance_contract" },
+        "archive": { "$ref": "#/$defs/archive_contract" },
+        "export": { "$ref": "#/$defs/export_contract" },
+        "windows": { "$ref": "#/$defs/windows_contract" },
+        "cancellation": { "$ref": "#/$defs/cancellation_contract" }
+      }
+    },
+    "hardware_fingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "architecture", "cpu", "logical_cores", "memory_gib"],
+      "properties": {
+        "os": { "$ref": "#/$defs/non_empty_string" },
+        "architecture": { "const": "x86_64" },
+        "cpu": { "$ref": "#/$defs/non_empty_string" },
+        "logical_cores": { "type": "integer", "minimum": 1 },
+        "memory_gib": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "stage",
+        "evidence_class",
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "path",
+        "size_bytes",
+        "sha256",
+        "generated_at_utc",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "build_fingerprint",
+        "hardware_fingerprint"
+      ],
+      "properties": {
+        "role": { "$ref": "#/$defs/id" },
+        "stage": {
+          "enum": [
+            "contract",
+            "kernel",
+            "oracle",
+            "generative",
+            "adversarial",
+            "persistence_export",
+            "packaged_windows",
+            "scale_reliability"
+          ]
+        },
+        "evidence_class": { "enum": ["qualification", "compatibility_fixture"] },
+        "qualification_id": { "$ref": "#/$defs/id" },
+        "capability_id": { "$ref": "#/$defs/id" },
+        "cell_id": { "$ref": "#/$defs/id" },
+        "method_version": { "$ref": "#/$defs/id" },
+        "path": { "$ref": "#/$defs/repository_path" },
+        "size_bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "generated_at_utc": { "type": "string", "format": "date-time" },
+        "source_set_sha256": { "$ref": "#/$defs/sha256" },
+        "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+        "build_fingerprint": { "$ref": "#/$defs/non_empty_string" },
+        "hardware_fingerprint": { "$ref": "#/$defs/hardware_fingerprint" }
+      }
+    },
+    "receipt_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hash_algorithm",
+        "identity_fields",
+        "source_descriptors_required",
+        "hardware_fingerprint_required",
+        "scenario_set_hash_required"
+      ],
+      "properties": {
+        "hash_algorithm": { "const": "sha256" },
+        "identity_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "qualification_id",
+              "capability_id",
+              "cell_id",
+              "method_version",
+              "source_set_sha256",
+              "scenario_set_sha256",
+              "build_fingerprint"
+            ]
+          }
+        },
+        "source_descriptors_required": { "const": true },
+        "hardware_fingerprint_required": { "const": true },
+        "scenario_set_hash_required": { "const": true }
+      }
+    },
+    "evidence_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_roles", "receipt_contract", "receipts"],
+      "properties": {
+        "required_roles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "receipt_contract": { "$ref": "#/$defs/receipt_contract" },
+        "receipts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/receipt" }
+        }
+      }
+    }
+  }
+}

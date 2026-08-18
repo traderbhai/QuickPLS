@@ -21,10 +21,22 @@ rand_chacha = "0.9"
 rayon = "1.10"
 rust_xlsxwriter = "0.96"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+# Canonical analytical documents are hashed before archive persistence.  The
+# parser therefore must recover the exact IEEE-754 value emitted by the JSON
+# serializer; the default fast parser can differ by one ULP for valid decimals.
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
 sha2 = "0.10"
 statrs = "0.18"
 thiserror = "2.0"
 tempfile = "3.20"
 uuid = { version = "1.11", features = ["v4", "serde"] }
 zip = { version = "6", default-features = false, features = ["deflate"] }
+
+# QuickPLS has a large Windows Rust workspace. Incremental artifacts previously
+# grew beyond 80 GiB during parallel validation lanes, so keep the shared dev
+# and test targets reproducible and disk-bounded. Release builds are unchanged.
+[profile.dev]
+incremental = false
+
+[profile.test]
+incremental = false

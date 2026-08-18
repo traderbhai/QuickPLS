@@ -2,8 +2,8 @@
   "schema_version": "quickpls.packaged_acceptance.v1",
   "kind": "quickpls3_scoped_tauri_regression_bootstrap_v1_acceptance",
   "passed": true,
-  "generated_at_utc": "2026-08-13T19:15:24.423Z",
-  "completed_at_utc": "2026-08-13T19:17:09.144Z",
+  "generated_at_utc": "2026-08-18T13:35:18.532Z",
+  "completed_at_utc": "2026-08-18T13:37:05.391Z",
   "feature_id": "qpls3.standalone.regression_bootstrap",
   "method_version": "regression_bootstrap_v1",
   "catalogue_snapshot_date": "2026-08-12",
@@ -14,54 +14,49 @@
   "tested_product": {
     "quickpls_desktop_exe": {
       "path": "target/release/quickpls-desktop.exe",
-      "size": 30507008,
-      "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277"
+      "size": 49983488,
+      "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476"
     },
     "dist_bundle": {
       "path": "dist",
-      "size": 1191494,
+      "size": 2281438,
       "file_count": 19,
-      "sha256": "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
+      "sha256": "0993f32dfcb90fbd8b9643f5d169162457b747ce935e500f52126951b26a3d29",
       "manifest": [
         {
-          "path": "assets/NativeCalculationDialog-CekKsDqn.js",
-          "size": 51101,
-          "sha256": "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694"
+          "path": "assets/NativeCalculationDialog-DUmbxsTj.js",
+          "size": 67846,
+          "sha256": "f372826a4a196668ef0bda364ee447b4a81a6c504d734ea3b36fd422604a1626"
         },
         {
-          "path": "assets/NativeExportDialog-CTZOLsrg.js",
-          "size": 6432,
-          "sha256": "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2"
+          "path": "assets/NativeExportDialog-CMnug-uT.js",
+          "size": 5329,
+          "sha256": "3e582cdb4f489aa86ddb2fb7f2d694b82da493358c917785b7e977aa2d5aa5dc"
         },
         {
-          "path": "assets/NativeGroupSetupDialog-DncLahbL.js",
-          "size": 6779,
-          "sha256": "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190"
+          "path": "assets/NativeGroupSetupDialog-B-zMqU4I.js",
+          "size": 6807,
+          "sha256": "882bfd8cab7eb5c3d8c1d51d75587385106f4a646e8c40ed9e622678eb041a9b"
         },
         {
-          "path": "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
-          "size": 2948,
-          "sha256": "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609"
+          "path": "assets/NativeHigherOrderDialog-DXoMqdTP.js",
+          "size": 2921,
+          "sha256": "f77ee4364421f29a7d1fe0c4af2d4948e95bf15383fb74c2cfd21a466a4d10fd"
         },
         {
-          "path": "assets/NativeModerationDialog-D2IfblSQ.js",
-          "size": 3081,
-          "sha256": "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840"
+          "path": "assets/NativeModerationDialog-DAf_lZbj.js",
+          "size": 3070,
+          "sha256": "020ee7e2c4d17b99ea43929d093ba2232819a1e280a894e9ace79764bd6a01b0"
         },
         {
-          "path": "assets/NativeResultsSurface-Bv7Fchdi.js",
-          "size": 31251,
-          "sha256": "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f"
+          "path": "assets/NativeResultsSurface-DzKE0-53.js",
+          "size": 32644,
+          "sha256": "9431738fbd3da01babd5a1a1d262e68da515a85a0d77929b03b5597a9b77f3e9"
         },
         {
-          "path": "assets/NativeUtilityDialog-B_BR7mw4.js",
-          "size": 12164,
-          "sha256": "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06"
-        },
-        {
-          "path": "assets/flow-BN-PNp2v.js",
-          "size": 83921,
-          "sha256": "e96e69cde521273e387064b0ff3ea9f94e29834ea085646f0b8e1fe9e0ea8fde"
+          "path": "assets/NativeUtilityDialog-DF4n3ckD.js",
+          "size": 24365,
+          "sha256": "f889bbbdbd3951b5157c0db1da89dcc6c5ab70eb39ffd8104114569002f40ee7"
         },
         {
           "path": "assets/flow-BnuhLJ6X.css",
@@ -69,39 +64,44 @@
           "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
         },
         {
-          "path": "assets/icons-CWW7Ihoi.js",
-          "size": 20835,
-          "sha256": "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6"
+          "path": "assets/flow-DG_yhx79.js",
+          "size": 84113,
+          "sha256": "bc613b2f8b6af00ce0d183175180163e8d5c915dbfbe86518a803d95d7d44ba3"
         },
         {
-          "path": "assets/index-DBKNtbUu.js",
-          "size": 528769,
-          "sha256": "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7"
+          "path": "assets/icons-Y9nJPltI.js",
+          "size": 23471,
+          "sha256": "44155ca0d3836bdee82cfa6034cd25738f5ae4688b880e896908a218ada17721"
         },
         {
-          "path": "assets/index-DpTHova4.css",
-          "size": 74714,
-          "sha256": "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182"
+          "path": "assets/index-BvBkp0W8.js",
+          "size": 1552889,
+          "sha256": "a40515133f3b5658585c7d771f0d8082e718aad930d884880b698bec5c28a5e6"
         },
         {
-          "path": "assets/largeModelSmoke-PEBccAlJ.js",
-          "size": 880,
-          "sha256": "a4977bf130c85a688b570fb1f17f8dac958787116a585c9300f3d4c3fbd6b535"
+          "path": "assets/index-ClBrB-uD.css",
+          "size": 107701,
+          "sha256": "38d93b5265523c9836ac53141d9ebeca8e1609f3c42f8e1baade66dcfd9f9074"
         },
         {
-          "path": "assets/nativeMga-DgYeq6DN.js",
-          "size": 3108,
-          "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
+          "path": "assets/largeModelSmoke-ChuXLqDH.js",
+          "size": 983,
+          "sha256": "fb24e9dddb7e5a48ae648cf23391b83a80e40d05f57cc3ef1f025cb6fbf1d22d"
         },
         {
-          "path": "assets/publicationDiagram-BlkNs4Z4.js",
-          "size": 8648,
-          "sha256": "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df"
+          "path": "assets/nativeMga-CQPrK7Ua.js",
+          "size": 3745,
+          "sha256": "e14a6c3728b9d157839875d8de4ae3128abce2f863458d143b8b3860520eb0fd"
         },
         {
-          "path": "assets/smokeRun-CMXwsrTO.js",
-          "size": 7141,
-          "sha256": "33388a0e9df739d8812f2a03c2980f00a3f49046375ae48c9a854d8f94f7f962"
+          "path": "assets/publicationDiagram-BkF94kBm.js",
+          "size": 8679,
+          "sha256": "d442211ac93704f176b57036ce8eb758e951fd72f6763394ceb282de9e7a0beb"
+        },
+        {
+          "path": "assets/smokeRun-DsBvJjQf.js",
+          "size": 7145,
+          "sha256": "e2b3a0beddc1838c8975b86fe64d9eb33af8f0ad4669b58db797ecef2214c718"
         },
         {
           "path": "assets/tauri-CZBL8huA.js",
@@ -109,14 +109,14 @@
           "sha256": "8fbb85b9879fc37af89bc405134891d8b7dec19829e03c6d7900ba79f71dbe77"
         },
         {
-          "path": "assets/vendor-3AznE2Td.js",
-          "size": 317214,
-          "sha256": "7dadeaa73f481ffd1ab52c5247997462fd195062a4dbe10353701ffbbc45711f"
+          "path": "assets/vendor-DAfPu0rL.js",
+          "size": 317222,
+          "sha256": "61f10878d1ededa46b28c7b00d59492a03bbc88f903ea4a7a4fd5b5818d1d1c2"
         },
         {
           "path": "index.html",
           "size": 821,
-          "sha256": "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50"
+          "sha256": "88071d1a5c606db7a34b5995a808895b5fc3d714597a51f2c674205ede153e0e"
         }
       ]
     }
@@ -194,7 +194,7 @@
         "worksheet_row_counts": {
           "xl/worksheets/sheet1.xml": 8,
           "xl/worksheets/sheet2.xml": 5,
-          "xl/worksheets/sheet3.xml": 15,
+          "xl/worksheets/sheet3.xml": 16,
           "xl/worksheets/sheet4.xml": 21,
           "xl/worksheets/sheet5.xml": 8,
           "xl/worksheets/sheet6.xml": 8,
@@ -205,7 +205,7 @@
         "forbidden_matches": [],
         "extraction_errors": []
       },
-      "artifact_sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
+      "artifact_sha256": "0b4b386090fdb6227aa5d03626763eaa4491b683e2f973fbeb4fd77602c154e7",
       "source_check": "regressionBootstrapOlsExport"
     },
     "logistic_export": {
@@ -275,7 +275,7 @@
           "xl/worksheets/sheet4.xml": 5,
           "xl/worksheets/sheet5.xml": 5,
           "xl/worksheets/sheet6.xml": 144,
-          "xl/worksheets/sheet7.xml": 15,
+          "xl/worksheets/sheet7.xml": 16,
           "xl/worksheets/sheet8.xml": 21,
           "xl/worksheets/sheet9.xml": 8,
           "xl/worksheets/sheet10.xml": 8,
@@ -286,7 +286,7 @@
         "forbidden_matches": [],
         "extraction_errors": []
       },
-      "artifact_sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
+      "artifact_sha256": "303c21da98fa88a66d90b6a06ec61f48ce50bd6312b22ecf6536f69979ee581d",
       "source_check": "regressionBootstrapLogisticExport"
     },
     "save_reopen": {
@@ -297,7 +297,7 @@
       "logistic_initial_selected_table": "regression_bootstrap_summary",
       "project_checksum_matches": true,
       "archive_witness_validated": true,
-      "archive_sha256": "238aa6217f22e5eb911c01958a27afb3a4081b28a5ec250793e0b622a45c093d",
+      "archive_sha256": "7fea15b74ce197f0c34ff309c9cfd71f1df2b463be38ddfdce345faede6c38e1",
       "source_check": "regressionBootstrapSaveReopen"
     },
     "cancellation": {
@@ -319,80 +319,80 @@
   },
   "artifacts": {
     "ols_xlsx": {
-      "path": "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
-      "size": 18281,
-      "sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367"
+      "path": "validation/results/v247-native-regression-bootstrap-ols-20260818-185148319-41048-0399187a.xlsx",
+      "size": 18429,
+      "sha256": "0b4b386090fdb6227aa5d03626763eaa4491b683e2f973fbeb4fd77602c154e7"
     },
     "logistic_xlsx": {
-      "path": "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
-      "size": 21909,
-      "sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa"
+      "path": "validation/results/v247-native-regression-bootstrap-logistic-20260818-185148319-41048-0399187a.xlsx",
+      "size": 22041,
+      "sha256": "303c21da98fa88a66d90b6a06ec61f48ce50bd6312b22ecf6536f69979ee581d"
     },
     "project_archive": {
-      "path": "validation/results/v247-native-regression-bootstrap-1786648524414-57288.qpls",
-      "size": 944352,
-      "sha256": "238aa6217f22e5eb911c01958a27afb3a4081b28a5ec250793e0b622a45c093d"
+      "path": "validation/results/v247-native-regression-bootstrap-1787060118529-30856.qpls",
+      "size": 944491,
+      "sha256": "7fea15b74ce197f0c34ff309c9cfd71f1df2b463be38ddfdce345faede6c38e1"
     },
     "screenshots": [
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/160-tauri-native-regression-bootstrap-fixture-data-1536x794.png",
-        "size": 293913,
-        "sha256": "93818582b7e4d6bb9279d101e7ed103d9916766847aec4ae0bacb7a150bab5ff"
+        "size": 295238,
+        "sha256": "88841364d2132bf282c9c1ffebbca2fe044b748d4bc36ee44dfa3fe6f820f011"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/161-tauri-native-regression-bootstrap-cancellation-running-1536x794.png",
-        "size": 232032,
-        "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a"
+        "size": 232088,
+        "sha256": "1971b88487f056886fe6988ea20d03d69d1078447cf9468736d07120fbddb49f"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/162-tauri-native-regression-bootstrap-cancelled-1536x794.png",
-        "size": 284306,
-        "sha256": "dd6ec983a2df778dd3cdab4a1c845f559090cd4f145b389f91f7969ac4a7c036"
+        "size": 286260,
+        "sha256": "3598c832fe88a548f32ba716f68b17aee7a389f790b298d63532be03c755e8e7"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/163-tauri-native-regression-bootstrap-ols-dialog-1536x794.png",
-        "size": 299690,
-        "sha256": "7ecf52821dc59f125aaeef326835046bbae7eba9ca4c4f081e3fad8fa4223aa7"
+        "size": 299999,
+        "sha256": "bf341cb6f6a973981c03442378e590b03175e59334e562457af5f980ede18741"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/164-tauri-native-regression-bootstrap-ols-running-1536x794.png",
-        "size": 232032,
-        "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a"
+        "size": 232088,
+        "sha256": "1971b88487f056886fe6988ea20d03d69d1078447cf9468736d07120fbddb49f"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/165-tauri-native-regression-bootstrap-ols-results-1536x794.png",
-        "size": 111851,
-        "sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907"
+        "size": 112543,
+        "sha256": "446b0458d383db9e3bb7ceaada3fdcadf8ac3601d89336f4de10c01666981d5d"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/166-tauri-native-regression-bootstrap-ols-export-1536x794.png",
-        "size": 111851,
-        "sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907"
+        "size": 112543,
+        "sha256": "446b0458d383db9e3bb7ceaada3fdcadf8ac3601d89336f4de10c01666981d5d"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/167-tauri-native-regression-bootstrap-logistic-dialog-1536x794.png",
-        "size": 306791,
-        "sha256": "efe800431cf09999a0d4c5ea10442b4f598f4429e1e6306444c2b46a9ffac377"
+        "size": 307380,
+        "sha256": "cda8493353e26329beda30270b1d27e15387bc26b0d31fe2be67d174e25bb026"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/168-tauri-native-regression-bootstrap-logistic-running-1536x794.png",
-        "size": 232032,
-        "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a"
+        "size": 232088,
+        "sha256": "1971b88487f056886fe6988ea20d03d69d1078447cf9468736d07120fbddb49f"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/169-tauri-native-regression-bootstrap-logistic-results-1536x794.png",
-        "size": 117547,
-        "sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46"
+        "size": 118423,
+        "sha256": "9492566372fbd6d7820b5a86cc8c1ae7ab17d87ee2ae9652a873d03ae251aba2"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/170-tauri-native-regression-bootstrap-logistic-export-1536x794.png",
-        "size": 117547,
-        "sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46"
+        "size": 118423,
+        "sha256": "9492566372fbd6d7820b5a86cc8c1ae7ab17d87ee2ae9652a873d03ae251aba2"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/171-tauri-native-regression-bootstrap-reopened-1536x794.png",
-        "size": 115831,
-        "sha256": "1ae3e6877243898b2df2e7accc9e3b103d3e179d3f63ea32e857c53c156cad09"
+        "size": 116698,
+        "sha256": "7b3a0c095adc2ac0e160261808c7db0883330195d1e6a56ca7dd345a28d4ed56"
       }
     ]
   },

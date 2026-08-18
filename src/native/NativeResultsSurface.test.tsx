@@ -54,6 +54,7 @@ describe("native Results tree accessibility", () => {
       selectedTable={selectedTable}
       setSelectedTableId={vi.fn()}
       propertiesOpen
+      openMethodDetails={vi.fn()}
     />);
 
     expect(markup).toContain("GSCA component model");
@@ -65,6 +66,7 @@ describe("native Results tree accessibility", () => {
     expect(markup).toContain("GFI</dt><dd>0.647993");
     expect(markup).not.toContain("Recorded seed");
     expect(markup).not.toContain("<dt>Iterations</dt>");
+    expect(markup).toContain(">Method Details</button>");
   });
 
   it("renders CB-SEM/CFA run information from the ML payload rather than generic PLS iterations", () => {

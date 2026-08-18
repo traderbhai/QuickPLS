@@ -1,6 +1,6 @@
 # CCA Composite Residual Diagnostics v1
 
-Numerical status: validated only for the bounded descriptive contract below. Native workflow promotion additionally requires a current packaged-Tauri run, export, save, and reopen acceptance artifact.
+Status: Supported in Standard and release-qualified only for the bounded descriptive contract below. Current packaged-Tauri evidence binds invalid-setup protection, a genuine run, export, save/reopen, physical viewport coverage, and cleanup; this is not full confirmatory composite analysis.
 
 `AnalysisMethod::Cca` runs the ordinary QuickPLS estimator and then compares observed composite-score correlations with correlations reproduced by one recursive standardized composite path model. It emits:
 

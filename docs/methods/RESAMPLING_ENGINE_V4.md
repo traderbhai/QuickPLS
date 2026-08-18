@@ -1,8 +1,12 @@
 # Indexed Resampling Engine Specification v4
 
-Status: implemented experimental inference; publication-ready promotion still requires the frozen simulation, independent-reference, and performance gates.
+Status: release-qualified for the bounded PLS-PM scope registered as `qpls3.inference.bootstrap`. Qualification remains source-bound and must be refreshed after relevant engine, archive, native, export, or packaged-source changes.
 
 V4 inherits indexed bootstrap, Hyndman-Fan Type 7 quantiles for percentile and BCa bounds, normal-reference tests, fixed complete-case sampling, canonical identities, sign alignment, deterministic aggregation, and legacy compatibility from v3. It adds the optional compact `nested_studentized_v1` artifact specified in `STUDENTIZED_BOOTSTRAP_V1.md`.
+
+Every requested primary draw is attempted exactly once. The persisted accounting therefore satisfies `requested = attempted = usable + failed`; there are no retries or replacement draws. New v4 results retain every failed replicate with its zero-based index, a stable typed reason code, and the estimator message. Historical payloads that predate typed reasons remain readable under the explicit `legacy_unclassified_failure` category. Current reason categories are `cancelled`, `insufficient_observations`, `constant_indicator`, `rank_deficient_inner_model`, `isolated_construct`, `non_convergence`, `invalid_indicator`, `score_execution_contract`, `numerical_failure`, and the bounded fallback `estimation_failure`.
+
+The selected immutable run exposes requested, attempted, usable, and failed counts in the native result tree and run provenance. Failed-refit rows expose the typed category and message. BCa parameters that cannot be computed remain visible as unavailable rows with their stored reason; they are not dropped from results or same-run CSV/XLSX exports.
 
 Studentization is disabled when `studentized_inner_samples = 0`. Enabling it requires at least 999 primary replicates and an odd inner count from 99 through 999. Each inner stream is derived independently from the master seed, primary replicate index, and inner replicate index. Inner solutions align to their immediate primary parent; primary solutions remain aligned to the original result.
 

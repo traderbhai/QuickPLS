@@ -2,20 +2,44 @@ use anyhow::{Context, Result, bail};
 use chrono::Utc;
 use clap::{Parser, Subcommand, ValueEnum};
 use qpls_assessment::{
-    ASSESSMENT_METHOD_VERSION, HTMT_ORIGINAL_METHOD_VERSION, HTMT_PLUS_METHOD_VERSION,
-    RHO_A_METHOD_VERSION,
+    ASSESSMENT_METHOD_VERSION, AssessmentResult, FitCriterionValue, HTMT_ORIGINAL_METHOD_VERSION,
+    HTMT_PLUS_METHOD_VERSION, HtmtAssessment, HtmtStatus, PLS_MODEL_FIT_METHOD_VERSION,
+    PlsModelFit, RHO_A_METHOD_VERSION, pls_model_fit_matches_v2_contract,
 };
 use qpls_core::{
     ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisPayload, AnalysisRecipe,
-    AnalysisResult, AnalysisSettings, Construct, GateStatus, METHOD_CAPABILITIES, MeasurementMode,
-    MethodConfig, ModelSpec, RunStatus, Severity, SliceStatus, StructuralPath,
+    AnalysisResult, AnalysisSettings, CapabilityOptionCellV2, CapabilityRegistryV2, Construct,
+    GateStatus, METHOD_CAPABILITIES, MeasurementMode, MethodConfig, ModelSpec,
+    PlsBootstrapTestTail, ProductSurfaceV2, RunStatus, Severity, SliceStatus, StructuralPath,
     ValidatedExecutionRecipe, development_slice_registry, validate_recipe, validate_slice_registry,
 };
 use qpls_data::{DataKind, ImportOptions, import_path};
 use qpls_project::{Project, load_project_with_autosave, save_project};
 use qpls_resampling::{
-    PERMUTATION_METHOD_VERSION, RESAMPLING_METHOD_VERSION, ResamplingPhase,
-    STUDENTIZED_METHOD_VERSION, bootstrap_pls, permutation_pls,
+    HTMT_BOOTSTRAP_CRITICAL_VALUE, HTMT_BOOTSTRAP_DECISION_RULE,
+    HTMT_BOOTSTRAP_EQUIVALENT_TWO_SIDED_CONFIDENCE_LEVEL, HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION,
+    HTMT_BOOTSTRAP_INTERVAL_METHOD, HTMT_BOOTSTRAP_REPLICATE_INDEX_DIGEST_METHOD,
+    HTMT_BOOTSTRAP_SIGNIFICANCE_LEVEL, HTMT_BOOTSTRAP_TEST_TYPE,
+    HTMT_ORIGINAL_BOOTSTRAP_METHOD_VERSION, HTMT_PLUS_BOOTSTRAP_METHOD_VERSION,
+    HtmtBootstrapInference, HtmtBootstrapInferenceBundle, HtmtBootstrapInferenceStatus,
+    PERMUTATION_METHOD_VERSION, PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION,
+    PLS_MODEL_FIT_EXACT_METHOD_VERSION, PLS_MODEL_FIT_EXACT_RECIPE_SELECTOR,
+    PLS_SAMPLE_SIZE_POWER_CAPABILITY_ID, PLS_SAMPLE_SIZE_POWER_FAILURE_POLICY,
+    PLS_SAMPLE_SIZE_POWER_INFERENCE_METHOD, PLS_SAMPLE_SIZE_POWER_INFERENCE_METHOD_V2,
+    PLS_SAMPLE_SIZE_POWER_INTERVAL_METHOD, PLS_SAMPLE_SIZE_POWER_METHOD_VERSION,
+    PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2, PLS_SAMPLE_SIZE_POWER_RESULT_SCHEMA_VERSION,
+    PLS_SAMPLE_SIZE_POWER_RESULT_SCHEMA_VERSION_V2, PLS_SAMPLE_SIZE_POWER_STREAM_DOMAIN,
+    PLS_SAMPLE_SIZE_POWER_STREAM_DOMAIN_V2, PLSC_CONSISTENT_BOOTSTRAP_METHOD_VERSION,
+    PLSC_CONSISTENT_PERMUTATION_METHOD_VERSION, PLSC_CONSISTENT_PERMUTATION_SCHEDULER_VERSION,
+    PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION, PlsBootstrapResult,
+    PlsBootstrapTestTailInference, PlsModelFitExactCriterion, PlsModelFitExactInference,
+    PlsModelFitExactReplicateStatus, PlsModelFitExactStatus, PlsModelFitExactVariantInference,
+    PlsPowerGridDecisionV1, PlsResamplingParameterFamily, PlsResamplingParameterIdentity,
+    PlsSampleSizePowerResultV1, PlscConsistentBootstrapResult, PlscConsistentPermutationResult,
+    RESAMPLING_METHOD_VERSION, ResamplingPhase, STUDENTIZED_METHOD_VERSION, bootstrap_pls,
+    permutation_pls, validate_pls_bootstrap_test_tail_contract,
+    validate_pls_model_fit_exact_inference_for_settings, validate_plsc_consistent_bootstrap_result,
+    validate_plsc_consistent_permutation_result_for_settings,
 };
 use serde_json::json;
 use std::{
@@ -126,6 +150,7 @@ enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// List exact Capability Registry V2 option cells and customer availability.
     Methods {
         #[arg(long)]
         json: bool,
@@ -169,10 +194,15 @@ enum Command {
         recipe_id: Option<String>,
         #[arg(long)]
         output: PathBuf,
-        // Retained as a hidden no-op so existing validation automation keeps
-        // working after bounded PLS inference was promoted to validated.
+        // Hidden compatibility switch used only for capability cells that the
+        // embedded registry currently exposes through Experimental Labs.
         #[arg(long, hide = true)]
         allow_experimental: bool,
+        // Validation-only escape hatch for rebuilding source-tier evidence for
+        // the generated established-method contracts. Release builds reject
+        // this flag and it never changes the embedded product Registry.
+        #[arg(long, hide = true)]
+        allow_internal_qualification: bool,
         #[arg(long)]
         bootstrap_samples: Option<u32>,
         #[arg(long)]
@@ -241,19 +271,7 @@ fn main() -> Result<()> {
             output,
             json,
         } => migrate_recipe(&input, &output, json),
-        Command::Methods { json } => {
-            if json {
-                println!("{}", serde_json::to_string_pretty(METHOD_CAPABILITIES)?);
-            } else {
-                for method in METHOD_CAPABILITIES {
-                    println!(
-                        "{:<14} {:<18} {:?}",
-                        method.id, method.family, method.status
-                    );
-                }
-            }
-            Ok(())
-        }
+        Command::Methods { json } => list_capability_registry(json),
         Command::Roadmap { json, release } => roadmap(json, release.as_deref()),
         Command::Gate { slice_id, json } => gate(&slice_id, json),
         Command::Qualify {
@@ -284,6 +302,7 @@ fn main() -> Result<()> {
             recipe_id,
             output,
             allow_experimental,
+            allow_internal_qualification,
             bootstrap_samples,
             studentized_inner_samples,
             permutation_samples,
@@ -294,6 +313,8 @@ fn main() -> Result<()> {
             recipe_id.as_deref(),
             &output,
             allow_experimental,
+            allow_internal_qualification,
+            false,
             bootstrap_samples,
             studentized_inner_samples,
             permutation_samples,
@@ -306,6 +327,85 @@ fn main() -> Result<()> {
             include_experimental,
         } => export_result(&result, format, output.as_deref(), include_experimental),
     }
+}
+
+fn customer_availability(cell: &CapabilityOptionCellV2) -> &'static str {
+    if cell.standard_available() {
+        "Standard"
+    } else if cell.labs_available() {
+        "Experimental Labs"
+    } else if cell.surface == ProductSurfaceV2::Legacy {
+        "Legacy reopen only"
+    } else {
+        "Unavailable"
+    }
+}
+
+fn capability_registry_cli_json(registry: &CapabilityRegistryV2) -> serde_json::Value {
+    json!({
+        "schema_version": 2,
+        "projection": "cli_option_cell_availability_v2",
+        "registry_id": registry.registry_id,
+        "registry_version": registry.registry_version,
+        "source_sha256": registry.source_sha256,
+        "catalogue_snapshot": registry.catalogue_snapshot,
+        "capabilities": registry.capabilities.iter().map(|row| json!({
+            "catalogue_position": row.catalogue_position,
+            "capability_id": row.capability_id,
+            "official_family": row.official_family,
+            "official_method": row.official_method,
+            "official_lifecycle": row.official_lifecycle,
+            "official_url": row.official_url,
+            "option_cells": row.option_cells.iter().map(|cell| json!({
+                "registry_schema_version": 2,
+                "capability_id": cell.capability_id,
+                "cell_id": cell.cell_id,
+                "capability_version": cell.capability_version,
+                "coverage_state": cell.coverage_state,
+                "evidence_state": cell.evidence_state,
+                "surface": cell.surface,
+                "customer_availability": customer_availability(cell),
+            })).collect::<Vec<_>>(),
+        })).collect::<Vec<_>>(),
+    })
+}
+
+fn capability_registry_cli_text(registry: &CapabilityRegistryV2) -> String {
+    let mut lines = vec![format!(
+        "QuickPLS capability registry {} | source sha256:{}",
+        registry.registry_version, registry.source_sha256
+    )];
+    for row in &registry.capabilities {
+        for cell in &row.option_cells {
+            lines.push(format!(
+                "{:>2} | {} | {} | {} | coverage={} evidence={} surface={} | {}",
+                row.catalogue_position,
+                row.official_method,
+                cell.cell_id,
+                cell.capability_version,
+                cell.coverage_state,
+                cell.evidence_state,
+                cell.surface,
+                customer_availability(cell),
+            ));
+        }
+    }
+    lines.join("\n")
+}
+
+fn list_capability_registry(as_json: bool) -> Result<()> {
+    let registry = CapabilityRegistryV2::embedded().context(
+        "the embedded Capability Registry V2 is invalid; method availability cannot be reported",
+    )?;
+    if as_json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&capability_registry_cli_json(&registry))?
+        );
+    } else {
+        println!("{}", capability_registry_cli_text(&registry));
+    }
+    Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -329,10 +429,13 @@ fn export_result(
         &fs::read(result_path).with_context(|| format!("cannot read {}", result_path.display()))?,
     )
     .context("invalid analysis result JSON")?;
-    let rows = if include_experimental {
-        experimental_pls_export_rows(&result)?
-    } else {
-        v03_estimator_export_rows(&result)?
+    let rows = match &result.payload {
+        AnalysisPayload::PlsSampleSizePowerV1 { analysis }
+        | AnalysisPayload::PlsSampleSizePowerV2 { analysis } => {
+            pls_sample_size_power_export_rows(&result, analysis)?
+        }
+        _ if include_experimental => experimental_pls_export_rows(&result)?,
+        _ => v03_estimator_export_rows(&result)?,
     };
     let output_path = output
         .map(Path::to_path_buf)
@@ -347,7 +450,13 @@ fn export_result(
     }
     println!(
         "wrote {} export {}",
-        if include_experimental {
+        if matches!(
+            &result.payload,
+            AnalysisPayload::PlsSampleSizePowerV1 { .. }
+                | AnalysisPayload::PlsSampleSizePowerV2 { .. }
+        ) {
+            "typed PLS sample-size/power"
+        } else if include_experimental {
             "watermarked experimental"
         } else {
             "v0.3 estimator-only"
@@ -363,6 +472,472 @@ fn default_export_extension(format: ExportFormat) -> &'static str {
         ExportFormat::Html => "estimator.html",
         ExportFormat::Xlsx => "estimator.xlsx",
     }
+}
+
+fn pls_sample_size_power_export_rows(
+    result: &AnalysisResult,
+    analysis: &serde_json::Value,
+) -> Result<Vec<ExportRow>> {
+    if result.status != RunStatus::Completed {
+        bail!("only completed analysis results can be exported");
+    }
+    if result.provenance.method != AnalysisMethod::PlsSampleSizePower {
+        bail!("typed PLS sample-size/power payload has incompatible method provenance");
+    }
+    let power: PlsSampleSizePowerResultV1 = serde_json::from_value(analysis.clone())
+        .context("invalid typed PLS sample-size/power result payload")?;
+    validate_standalone_power_result_for_export(result, &power)?;
+
+    let mut rows = Vec::new();
+    push_metadata_rows(result, &mut rows);
+    rows.push(row(
+        "metadata",
+        "",
+        "",
+        "",
+        "",
+        "export_scope",
+        "typed PLS sample-size/power result tables and complete ordered replicate ledger".into(),
+    ));
+    rows.push(row(
+        "metadata",
+        "",
+        "",
+        "",
+        "",
+        "standalone_integrity_scope",
+        "Typed shape, frozen identities, accounting, row summaries, ledger ordering, and grid decision were checked. The standalone result does not contain the scientific recipe, so recipe_digest, outcome_digest, and indexed stream identities are exported as stored provenance and cannot be independently recomputed by this command.".into(),
+    ));
+    for (metric, value) in [
+        ("schema_version", power.schema_version.to_string()),
+        ("capability_id", power.capability_id.clone()),
+        ("method_version", power.method_version.clone()),
+        ("recipe_digest", power.recipe_digest.clone()),
+        ("outcome_digest", power.outcome_digest.clone()),
+        ("stream_domain", power.stream_domain.clone()),
+        ("failure_policy", power.failure_policy.clone()),
+        ("interval_method", power.interval_method.clone()),
+        ("inference_method", power.inference_method.clone()),
+        ("pls_method_version", power.pls_method_version.clone()),
+        (
+            "resampling_method_version",
+            power.resampling_method_version.clone(),
+        ),
+        (
+            "monotonicity_violations",
+            power.monotonicity_violations.to_string(),
+        ),
+    ] {
+        rows.push(row("pls_power_provenance", "", "", "", "", metric, value));
+    }
+    let decision = match power.decision {
+        PlsPowerGridDecisionV1::Reached { sample_size } => sample_size.to_string(),
+        PlsPowerGridDecisionV1::NotReached => "not_reached_on_evaluated_grid".into(),
+    };
+    rows.push(row(
+        "pls_power_decision",
+        "",
+        "",
+        "",
+        "",
+        "minimum_qualified_sample_size",
+        decision,
+    ));
+    for (metric, value) in [
+        ("grid_points", power.workload.grid_points),
+        ("planned_datasets", power.workload.planned_datasets),
+        ("estimated_pls_fits", power.workload.estimated_pls_fits),
+        (
+            "estimated_pls_case_fits",
+            power.workload.estimated_pls_case_fits,
+        ),
+    ] {
+        rows.push(row(
+            "pls_power_workload",
+            "",
+            "",
+            "",
+            "",
+            metric,
+            value.to_string(),
+        ));
+    }
+    for summary in &power.rows {
+        let sample_size = summary.sample_size.to_string();
+        for (metric, value) in [
+            (
+                "requested_replicates",
+                summary.requested_replicates.to_string(),
+            ),
+            (
+                "attempted_replicates",
+                summary.attempted_replicates.to_string(),
+            ),
+            (
+                "successful_replicates",
+                summary.successful_replicates.to_string(),
+            ),
+            ("failed_replicates", summary.failed_replicates.to_string()),
+            ("rejections", summary.rejections.to_string()),
+            ("achieved_power", summary.achieved_power.to_string()),
+            ("confidence_lower", summary.confidence_lower.to_string()),
+            ("confidence_upper", summary.confidence_upper.to_string()),
+            ("qualifies", summary.qualifies.to_string()),
+        ] {
+            rows.push(row(
+                "pls_power_by_sample_size",
+                &sample_size,
+                "",
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+    }
+    for outcome in &power.outcomes {
+        let sample_size = outcome.sample_size.to_string();
+        let replicate = outcome.replicate_index.to_string();
+        for (metric, value) in [
+            ("stream_identity", outcome.stream_identity.clone()),
+            ("attempted", outcome.attempted.to_string()),
+            ("successful", outcome.successful.to_string()),
+            ("converged", outcome.converged.to_string()),
+            (
+                "target_estimate",
+                outcome
+                    .target_estimate
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "p_value_two_sided",
+                outcome
+                    .p_value_two_sided
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "bootstrap_requested_replicates",
+                outcome
+                    .bootstrap_requested_replicates
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "bootstrap_usable_replicates",
+                outcome
+                    .bootstrap_usable_replicates
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "bootstrap_failed_replicates",
+                outcome
+                    .bootstrap_failed_replicates
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "bootstrap_two_sided_exceedances",
+                outcome
+                    .bootstrap_two_sided_exceedances
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            ("rejected", outcome.rejected.to_string()),
+            (
+                "failure_code",
+                outcome.failure_code.clone().unwrap_or_default(),
+            ),
+            (
+                "failure_message",
+                outcome.failure_message.clone().unwrap_or_default(),
+            ),
+        ] {
+            rows.push(row(
+                "pls_power_replicate_ledger",
+                &sample_size,
+                &replicate,
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+        if !outcome.successful {
+            for (metric, value) in [
+                ("stream_identity", outcome.stream_identity.clone()),
+                (
+                    "failure_code",
+                    outcome.failure_code.clone().unwrap_or_default(),
+                ),
+                (
+                    "failure_message",
+                    outcome.failure_message.clone().unwrap_or_default(),
+                ),
+            ] {
+                rows.push(row(
+                    "pls_power_failure",
+                    &sample_size,
+                    &replicate,
+                    "",
+                    "",
+                    metric,
+                    value,
+                ));
+            }
+        }
+    }
+    for warning in &power.warnings {
+        rows.push(row(
+            "pls_power_warning",
+            "",
+            "",
+            "",
+            "",
+            "warning",
+            warning.clone(),
+        ));
+    }
+    for exclusion in &power.exclusions {
+        rows.push(row(
+            "pls_power_exclusion",
+            "",
+            "",
+            "",
+            "",
+            "exclusion",
+            exclusion.clone(),
+        ));
+    }
+    push_result_diagnostics(result, &mut rows);
+    Ok(rows)
+}
+
+fn validate_standalone_power_result_for_export(
+    analysis_result: &AnalysisResult,
+    power: &PlsSampleSizePowerResultV1,
+) -> Result<()> {
+    let (expected_schema, expected_method, expected_stream, expected_inference, is_v2) =
+        match &analysis_result.payload {
+            AnalysisPayload::PlsSampleSizePowerV1 { .. } => (
+                PLS_SAMPLE_SIZE_POWER_RESULT_SCHEMA_VERSION,
+                PLS_SAMPLE_SIZE_POWER_METHOD_VERSION,
+                PLS_SAMPLE_SIZE_POWER_STREAM_DOMAIN,
+                PLS_SAMPLE_SIZE_POWER_INFERENCE_METHOD,
+                false,
+            ),
+            AnalysisPayload::PlsSampleSizePowerV2 { .. } => (
+                PLS_SAMPLE_SIZE_POWER_RESULT_SCHEMA_VERSION_V2,
+                PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2,
+                PLS_SAMPLE_SIZE_POWER_STREAM_DOMAIN_V2,
+                PLS_SAMPLE_SIZE_POWER_INFERENCE_METHOD_V2,
+                true,
+            ),
+            _ => bail!("typed PLS sample-size/power validator received another payload family"),
+        };
+    if analysis_result.provenance.method_version != power.method_version
+        || power.schema_version != expected_schema
+        || power.capability_id != PLS_SAMPLE_SIZE_POWER_CAPABILITY_ID
+        || power.method_version != expected_method
+        || power.stream_domain != expected_stream
+        || power.failure_policy != PLS_SAMPLE_SIZE_POWER_FAILURE_POLICY
+        || power.interval_method != PLS_SAMPLE_SIZE_POWER_INTERVAL_METHOD
+        || power.inference_method != expected_inference
+        || power.pls_method_version != qpls_estimation::PLS_METHOD_VERSION
+        || power.resampling_method_version != RESAMPLING_METHOD_VERSION
+    {
+        bail!("typed PLS sample-size/power payload has an incompatible frozen identity");
+    }
+    if !is_sha256_hex(&power.recipe_digest) || !is_sha256_hex(&power.outcome_digest) {
+        bail!("typed PLS sample-size/power payload has an invalid stored digest");
+    }
+    if power.rows.len() as u64 != power.workload.grid_points
+        || power.outcomes.len() as u64 != power.workload.planned_datasets
+        || power.workload.estimated_pls_fits < power.workload.planned_datasets
+        || power.workload.estimated_pls_case_fits < power.workload.planned_datasets
+    {
+        bail!("typed PLS sample-size/power workload does not match its stored tables");
+    }
+
+    let mut prior_sample_size = None;
+    let mut planned = 0_u64;
+    for summary in &power.rows {
+        if !(100..=10_000).contains(&summary.requested_replicates)
+            || !(30..=5_000).contains(&summary.sample_size)
+            || summary.attempted_replicates != summary.requested_replicates
+            || summary
+                .successful_replicates
+                .checked_add(summary.failed_replicates)
+                != Some(summary.requested_replicates)
+            || summary.rejections > summary.successful_replicates
+            || !summary.achieved_power.is_finite()
+            || !summary.confidence_lower.is_finite()
+            || !summary.confidence_upper.is_finite()
+            || !(0.0..=1.0).contains(&summary.achieved_power)
+            || !(0.0..=1.0).contains(&summary.confidence_lower)
+            || !(0.0..=1.0).contains(&summary.confidence_upper)
+            || summary.confidence_lower > summary.confidence_upper
+            || !float_matches(
+                summary.achieved_power,
+                summary.rejections as f64 / summary.requested_replicates as f64,
+            )
+            || prior_sample_size.is_some_and(|prior| summary.sample_size <= prior)
+        {
+            bail!(
+                "typed PLS sample-size/power summary for sample size {} is inconsistent",
+                summary.sample_size
+            );
+        }
+        prior_sample_size = Some(summary.sample_size);
+        planned += u64::from(summary.requested_replicates);
+    }
+    if planned != power.workload.planned_datasets {
+        bail!("typed PLS sample-size/power row counts do not match planned datasets");
+    }
+
+    let ledger_order_matches = power
+        .rows
+        .iter()
+        .flat_map(|summary| {
+            (0..summary.requested_replicates)
+                .map(move |replicate_index| (summary.sample_size, replicate_index))
+        })
+        .zip(&power.outcomes)
+        .all(|((sample_size, replicate_index), outcome)| {
+            outcome.sample_size == sample_size && outcome.replicate_index == replicate_index
+        });
+    if !ledger_order_matches {
+        bail!("typed PLS sample-size/power ledger is not in strict grid and replicate order");
+    }
+    let mut outcomes_by_sample = std::collections::BTreeMap::new();
+    for outcome in &power.outcomes {
+        let rows = outcomes_by_sample
+            .entry(outcome.sample_size)
+            .or_insert_with(Vec::new);
+        if outcome.replicate_index != rows.len() as u32
+            || outcome.stream_identity.trim().is_empty()
+            || !outcome.attempted
+            || outcome.successful != outcome.failure_code.is_none()
+            || outcome.successful != outcome.failure_message.is_none()
+            || (outcome.successful
+                && (!outcome.converged
+                    || outcome.target_estimate.is_none()
+                    || outcome.p_value_two_sided.is_none()))
+            || (!outcome.successful
+                && (outcome.converged
+                    || outcome.target_estimate.is_some()
+                    || outcome.p_value_two_sided.is_some()
+                    || outcome.rejected
+                    || outcome
+                        .failure_code
+                        .as_deref()
+                        .is_none_or(|value| value.trim().is_empty())
+                    || outcome
+                        .failure_message
+                        .as_deref()
+                        .is_none_or(|value| value.trim().is_empty())))
+            || outcome
+                .target_estimate
+                .is_some_and(|value| !value.is_finite())
+            || outcome
+                .p_value_two_sided
+                .is_some_and(|value| !value.is_finite() || !(0.0..=1.0).contains(&value))
+            || (outcome.rejected && !outcome.successful)
+        {
+            bail!(
+                "typed PLS sample-size/power replicate {} at sample size {} is inconsistent",
+                outcome.replicate_index,
+                outcome.sample_size
+            );
+        }
+        let tail_fields = (
+            outcome.bootstrap_requested_replicates,
+            outcome.bootstrap_usable_replicates,
+            outcome.bootstrap_failed_replicates,
+            outcome.bootstrap_two_sided_exceedances,
+        );
+        if is_v2 && outcome.successful {
+            let (Some(requested), Some(usable), Some(failed), Some(exceedances)) = tail_fields else {
+                bail!(
+                    "typed PLS sample-size/power v2 replicate {} omits exact tail accounting",
+                    outcome.replicate_index
+                );
+            };
+            let expected_probability =
+                (f64::from(exceedances) + 1.0) / (f64::from(usable) + 1.0);
+            if usable.saturating_add(failed) != requested
+                || exceedances > usable
+                || outcome
+                    .p_value_two_sided
+                    .is_none_or(|value| value.to_bits() != expected_probability.to_bits())
+            {
+                bail!(
+                    "typed PLS sample-size/power v2 replicate {} has inconsistent exact tail accounting",
+                    outcome.replicate_index
+                );
+            }
+        } else if tail_fields != (None, None, None, None) {
+            bail!(
+                "typed PLS sample-size/power replicate {} has tail accounting incompatible with its identity or status",
+                outcome.replicate_index
+            );
+        }
+        rows.push(outcome);
+    }
+    for summary in &power.rows {
+        let outcomes = outcomes_by_sample
+            .get(&summary.sample_size)
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "typed PLS sample-size/power ledger omits sample size {}",
+                    summary.sample_size
+                )
+            })?;
+        let successful = outcomes.iter().filter(|outcome| outcome.successful).count() as u32;
+        let rejected = outcomes.iter().filter(|outcome| outcome.rejected).count() as u32;
+        if outcomes.len() as u32 != summary.requested_replicates
+            || successful != summary.successful_replicates
+            || summary.requested_replicates - successful != summary.failed_replicates
+            || rejected != summary.rejections
+        {
+            bail!(
+                "typed PLS sample-size/power ledger does not reproduce sample size {} accounting",
+                summary.sample_size
+            );
+        }
+    }
+    if outcomes_by_sample.len() != power.rows.len() {
+        bail!("typed PLS sample-size/power ledger contains an undeclared sample size");
+    }
+    let first_qualified = power.rows.iter().find(|row| row.qualifies);
+    match (&power.decision, first_qualified) {
+        (PlsPowerGridDecisionV1::Reached { sample_size }, Some(summary))
+            if *sample_size == summary.sample_size => {}
+        (PlsPowerGridDecisionV1::NotReached, None) => {}
+        _ => bail!("typed PLS sample-size/power grid decision does not match stored rows"),
+    }
+    let violations = power
+        .rows
+        .windows(2)
+        .filter(|pair| pair[1].achieved_power + 1e-12 < pair[0].achieved_power)
+        .count() as u32;
+    if violations != power.monotonicity_violations {
+        bail!("typed PLS sample-size/power monotonicity count does not match stored rows");
+    }
+    Ok(())
+}
+
+fn is_sha256_hex(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+}
+
+fn float_matches(left: f64, right: f64) -> bool {
+    (left - right).abs() <= 1e-12 * left.abs().max(right.abs()).max(1.0)
 }
 
 fn v03_estimator_export_rows(result: &AnalysisResult) -> Result<Vec<ExportRow>> {
@@ -382,10 +957,23 @@ fn v03_estimator_export_rows(result: &AnalysisResult) -> Result<Vec<ExportRow>> 
         AnalysisPayload::PlsPmV1 { estimation, .. }
         | AnalysisPayload::PlsPmV2 { estimation, .. }
         | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
+        AnalysisPayload::PlsSampleSizePowerV1 { .. }
+        | AnalysisPayload::PlsSampleSizePowerV2 { .. } => {
+            bail!("PLS sample-size/power results require the typed power export path")
+        }
         AnalysisPayload::Legacy { .. } => bail!("legacy result payloads cannot be exported"),
     };
     let mut rows = Vec::new();
     push_metadata_rows(result, &mut rows);
+    rows.push(row(
+        "metadata",
+        "",
+        "",
+        "",
+        "",
+        "export_scope",
+        "v0.3 estimator only; assessment and resampling are excluded".into(),
+    ));
     push_scalar_estimate(estimation, "summary", "converged", "converged", &mut rows);
     push_scalar_estimate(estimation, "summary", "iterations", "iterations", &mut rows);
     push_scalar_estimate(
@@ -404,6 +992,7 @@ fn v03_estimator_export_rows(result: &AnalysisResult) -> Result<Vec<ExportRow>> 
     );
     push_outer_estimates(estimation, &mut rows);
     push_path_coefficients(estimation, &mut rows);
+    push_posthoc_minimum_sample_size(result, estimation, &mut rows)?;
     push_effects(estimation, &mut rows);
     push_r_squared(estimation, &mut rows);
     push_result_diagnostics(result, &mut rows);
@@ -418,6 +1007,10 @@ fn experimental_pls_export_rows(result: &AnalysisResult) -> Result<Vec<ExportRow
         AnalysisPayload::PlsPmV1 { estimation, .. }
         | AnalysisPayload::PlsPmV2 { estimation, .. }
         | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
+        AnalysisPayload::PlsSampleSizePowerV1 { .. }
+        | AnalysisPayload::PlsSampleSizePowerV2 { .. } => {
+            bail!("PLS sample-size/power results require the typed power export path")
+        }
         AnalysisPayload::Legacy { .. } => bail!("legacy result payloads cannot be exported"),
     };
     let mut rows = Vec::new();
@@ -429,7 +1022,7 @@ fn experimental_pls_export_rows(result: &AnalysisResult) -> Result<Vec<ExportRow
         "",
         "",
         "export_scope",
-        "supplemental method export; values are validated only inside the documented QuickPLS v1.0.0 supported scope".into(),
+        "supplemental method export; see Method Details for model and data requirements".into(),
     ));
     rows.push(row(
         "scope_warning",
@@ -438,7 +1031,8 @@ fn experimental_pls_export_rows(result: &AnalysisResult) -> Result<Vec<ExportRow
         "",
         "",
         "publication_status",
-        "Validated for the documented QuickPLS v1.0.0 supported scope where covered by publication audits; unsupported or unaudited payload fields remain outside the release scope.".into(),
+        "Supported result fields are included; incompatible or unavailable fields are omitted."
+            .into(),
     ));
     push_scalar_estimate(estimation, "summary", "converged", "converged", &mut rows);
     push_scalar_estimate(estimation, "summary", "iterations", "iterations", &mut rows);
@@ -458,11 +1052,2021 @@ fn experimental_pls_export_rows(result: &AnalysisResult) -> Result<Vec<ExportRow
     );
     push_outer_estimates(estimation, &mut rows);
     push_path_coefficients(estimation, &mut rows);
+    push_posthoc_minimum_sample_size(result, estimation, &mut rows)?;
     push_effects(estimation, &mut rows);
     push_r_squared(estimation, &mut rows);
+    push_pls_bootstrap_test_tail(result, &mut rows)?;
+    push_plsc_consistent_bootstrap(result, estimation, &mut rows)?;
+    push_plsc_consistent_permutation(result, estimation, &mut rows)?;
+    push_pls_model_fit_and_exact(result, estimation, &mut rows)?;
+    push_htmt_assessment_and_inference(result, &mut rows)?;
+    push_cbsem_bootstrap_v2(result, estimation, &mut rows)?;
     push_experimental_method_payloads(estimation, &mut rows);
     push_result_diagnostics(result, &mut rows);
     Ok(rows)
+}
+
+fn push_pls_bootstrap_test_tail(result: &AnalysisResult, rows: &mut Vec<ExportRow>) -> Result<()> {
+    let marker = result
+        .provenance
+        .method_version
+        .split('+')
+        .any(|version| version == PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION);
+    let bootstrap = match &result.payload {
+        AnalysisPayload::PlsPmV2 { bootstrap, .. } => Some(bootstrap),
+        AnalysisPayload::PlsPmV3 { bootstrap, .. } => bootstrap.as_ref(),
+        _ => None,
+    };
+    let declares_receipt =
+        bootstrap.is_some_and(|value| value.get("test_tail_inference").is_some());
+    if result.provenance.method != AnalysisMethod::PlsPm {
+        if marker
+            || declares_receipt
+            || result.provenance.settings.bootstrap_test_tail != PlsBootstrapTestTail::TwoSided
+        {
+            bail!("PLS bootstrap test-tail payload and method attribution disagree");
+        }
+        return Ok(());
+    }
+    let Some(bootstrap_value) = bootstrap else {
+        if marker
+            || result.provenance.settings.bootstrap_test_tail != PlsBootstrapTestTail::TwoSided
+        {
+            bail!("PLS bootstrap test-tail attribution requires a bootstrap payload");
+        }
+        return Ok(());
+    };
+    let receipt = bootstrap_value
+        .get("test_tail_inference")
+        .map(|value| serde_json::from_value::<PlsBootstrapTestTailInference>(value.clone()))
+        .transpose()
+        .context("malformed PLS bootstrap test-tail receipt")?;
+    let bootstrap: PlsBootstrapResult = serde_json::from_value(bootstrap_value.clone())
+        .context("invalid PLS bootstrap payload for test-tail export")?;
+    validate_pls_bootstrap_test_tail_contract(
+        &bootstrap,
+        receipt.as_ref(),
+        result.provenance.settings.bootstrap_test_tail,
+        marker,
+    )
+    .map_err(anyhow::Error::new)
+    .context("PLS bootstrap test-tail export contract failed")?;
+
+    let Some(receipt) = receipt else {
+        return Ok(());
+    };
+    rows.push(row(
+        "pls_bootstrap_test_tail_contract",
+        "",
+        "",
+        "",
+        "",
+        "method_version",
+        receipt.method_version.clone(),
+    ));
+    rows.push(row(
+        "pls_bootstrap_test_tail_contract",
+        "",
+        "",
+        "",
+        "",
+        "selected_test_tail",
+        serde_json::to_value(receipt.selected_test_tail)?
+            .as_str()
+            .expect("typed tail serializes as a string")
+            .into(),
+    ));
+    for parameter in &receipt.parameters {
+        let (construct, indicator, source, target) =
+            pls_bootstrap_parameter_dimensions(&parameter.parameter);
+        let (selected_count, selected_probability) = match receipt.selected_test_tail {
+            PlsBootstrapTestTail::TwoSided => {
+                (parameter.two_sided_exceedances, parameter.p_value_two_sided)
+            }
+            PlsBootstrapTestTail::OneSidedGreater => (
+                parameter.greater_or_equal_exceedances,
+                parameter.p_value_greater,
+            ),
+            PlsBootstrapTestTail::OneSidedLess => {
+                (parameter.less_or_equal_exceedances, parameter.p_value_less)
+            }
+        };
+        for (metric, value) in [
+            ("usable_replicates", parameter.usable_replicates.to_string()),
+            ("selected_exceedances", selected_count.to_string()),
+            ("selected_p_value", selected_probability.to_string()),
+        ] {
+            rows.push(row(
+                "pls_bootstrap_test_tail_parameter",
+                &construct,
+                &indicator,
+                &source,
+                &target,
+                metric,
+                value,
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn pls_bootstrap_parameter_dimensions(parameter: &str) -> (String, String, String, String) {
+    let identity = PlsResamplingParameterIdentity::decode(parameter)
+        .expect("the strict test-tail validator checked canonical parameter identities");
+    let components = identity.components();
+    match identity.family() {
+        PlsResamplingParameterFamily::OuterLoading | PlsResamplingParameterFamily::OuterWeight => (
+            components[0].clone(),
+            components[1].clone(),
+            String::new(),
+            String::new(),
+        ),
+        PlsResamplingParameterFamily::RSquared => (
+            components[0].clone(),
+            String::new(),
+            String::new(),
+            String::new(),
+        ),
+        PlsResamplingParameterFamily::Path
+        | PlsResamplingParameterFamily::DirectEffect
+        | PlsResamplingParameterFamily::IndirectEffect
+        | PlsResamplingParameterFamily::TotalEffect => (
+            String::new(),
+            String::new(),
+            components[0].clone(),
+            components[1].clone(),
+        ),
+    }
+}
+
+fn push_plsc_consistent_permutation(
+    result: &AnalysisResult,
+    estimation: &serde_json::Value,
+    rows: &mut Vec<ExportRow>,
+) -> Result<()> {
+    let has_method_marker = result
+        .provenance
+        .method_version
+        .split('+')
+        .any(|version| version == PLSC_CONSISTENT_PERMUTATION_METHOD_VERSION);
+    let has_scheduler_marker = result
+        .provenance
+        .method_version
+        .split('+')
+        .any(|version| version == PLSC_CONSISTENT_PERMUTATION_SCHEDULER_VERSION);
+    let selected_tail_marker_count = result
+        .provenance
+        .method_version
+        .split('+')
+        .filter(|version| *version == PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION)
+        .count();
+    let has_selected_tail_marker = selected_tail_marker_count != 0;
+    let permutation = match &result.payload {
+        AnalysisPayload::PlsPmV3 { permutation, .. } => permutation.as_ref(),
+        _ => None,
+    };
+    let artifact_declares_method = permutation
+        .and_then(|value| value.get("method_version"))
+        .and_then(serde_json::Value::as_str)
+        == Some(PLSC_CONSISTENT_PERMUTATION_METHOD_VERSION);
+    let artifact_declares_selected_tail =
+        permutation.is_some_and(|value| value.get("selected_tail_inference").is_some());
+    let expected = result.provenance.method == AnalysisMethod::Plsc
+        && result.provenance.settings.permutation_samples > 0;
+    if !expected {
+        if has_method_marker
+            || has_scheduler_marker
+            || has_selected_tail_marker
+            || artifact_declares_method
+            || artifact_declares_selected_tail
+        {
+            bail!("PLSc consistent-permutation payload and recipe attribution disagree");
+        }
+        return Ok(());
+    }
+    if !has_method_marker || !has_scheduler_marker || !artifact_declares_method {
+        bail!("PLSc permutation result is missing exact consistent-permutation attribution");
+    }
+    if has_selected_tail_marker != artifact_declares_selected_tail || selected_tail_marker_count > 1
+    {
+        bail!("PLSc selected-tail receipt and runner method attribution disagree");
+    }
+
+    let point: qpls_estimation::PlsResult = serde_json::from_value(estimation.clone())
+        .context("invalid PLSc point payload for consistent-permutation export")?;
+    let permutation: PlscConsistentPermutationResult = serde_json::from_value(
+        permutation
+            .expect("expected PLSc consistent-permutation payload was checked")
+            .clone(),
+    )
+    .context("invalid PLSc consistent-permutation payload for export")?;
+    validate_plsc_consistent_permutation_result_for_settings(
+        &permutation,
+        &point,
+        &result.provenance.settings,
+    )
+    .map_err(anyhow::Error::msg)
+    .context("PLSc consistent-permutation export contract failed")?;
+
+    if let Some(selected) = &permutation.selected_tail_inference {
+        for (metric, value) in [
+            ("method_version", selected.method_version.clone()),
+            ("orientation", selected.orientation.clone()),
+            (
+                "selected_test_tail",
+                serde_json::to_value(selected.selected_test_tail)?
+                    .as_str()
+                    .expect("typed PLSc selected tail serializes as text")
+                    .to_owned(),
+            ),
+        ] {
+            rows.push(row(
+                "plsc_permutation_selected_tail",
+                "",
+                "",
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+        for parameter in &selected.parameters {
+            let dimensions = plsc_bootstrap_parameter_dimensions(&parameter.parameter);
+            for (metric, value) in [
+                (
+                    "selected_exceedances",
+                    parameter.selected_exceedances.to_string(),
+                ),
+                ("selected_p_value", parameter.selected_p_value.to_string()),
+                ("usable_permutations", parameter.permutations.to_string()),
+            ] {
+                rows.push(row(
+                    "plsc_permutation_selected_tail_parameter",
+                    &dimensions.0,
+                    &dimensions.1,
+                    &dimensions.2,
+                    &dimensions.3,
+                    metric,
+                    value,
+                ));
+            }
+        }
+    }
+
+    for (metric, value) in [
+        ("method_version", permutation.method_version.clone()),
+        (
+            "estimator_method_version",
+            permutation.estimator_method_version.clone(),
+        ),
+        (
+            "scheduler_method_version",
+            permutation.scheduler_method_version.clone(),
+        ),
+        ("operation", permutation.plan.operation.clone()),
+        ("test_method", permutation.test_method.clone()),
+        (
+            "significance_level",
+            permutation.significance_level.to_string(),
+        ),
+        (
+            "requested_permutations",
+            permutation.plan.permutations.to_string(),
+        ),
+        ("master_seed", permutation.plan.master_seed.to_string()),
+        (
+            "minimum_usable_fraction",
+            permutation.minimum_usable_fraction.to_string(),
+        ),
+        ("retry_policy", permutation.retry_policy.clone()),
+        ("group_column", permutation.group_column.clone()),
+        (
+            "pooled_parameter_values_sha256",
+            permutation.pooled_parameter_values_sha256.clone(),
+        ),
+        (
+            "usable_permutations",
+            permutation.usable_permutations.to_string(),
+        ),
+        (
+            "failed_permutations",
+            permutation.failed_permutations.len().to_string(),
+        ),
+    ] {
+        rows.push(row(
+            "plsc_permutation_accounting",
+            "",
+            "",
+            "",
+            "",
+            metric,
+            value,
+        ));
+    }
+    if let Some(directional) = &permutation.directional_inference {
+        for (metric, value) in [
+            (
+                "directional_method_version",
+                directional.method_version.clone(),
+            ),
+            ("directional_test_method", directional.test_method.clone()),
+        ] {
+            rows.push(row(
+                "plsc_permutation_accounting",
+                "",
+                "",
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+    }
+    for (role, group) in [
+        ("group_a", &permutation.group_a),
+        ("group_b", &permutation.group_b),
+    ] {
+        for (metric, value) in [
+            ("group", group.group.clone()),
+            ("observations", group.observations.to_string()),
+            (
+                "parameter_values_sha256",
+                group.parameter_values_sha256.clone(),
+            ),
+        ] {
+            rows.push(row(
+                "plsc_permutation_group",
+                role,
+                &group.group,
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+    }
+    for (parameter_index, parameter) in permutation.parameters.iter().enumerate() {
+        let dimensions = plsc_bootstrap_parameter_dimensions(&parameter.parameter);
+        let family = serde_json::to_value(parameter.family)?
+            .as_str()
+            .expect("PLSc permutation parameter family serializes as a string")
+            .to_owned();
+        for (metric, value) in [
+            ("family", family),
+            ("estimate_a", parameter.estimate_a.to_string()),
+            ("estimate_b", parameter.estimate_b.to_string()),
+            ("difference_a_minus_b", parameter.original.to_string()),
+            ("exceedances", parameter.exceedances.to_string()),
+            ("p_value_two_sided", parameter.p_value_two_sided.to_string()),
+            ("usable_permutations", parameter.permutations.to_string()),
+        ] {
+            rows.push(row(
+                "plsc_permutation_parameter",
+                &dimensions.0,
+                &dimensions.1,
+                &dimensions.2,
+                &dimensions.3,
+                metric,
+                value,
+            ));
+        }
+        if let Some(directional) = permutation
+            .directional_inference
+            .as_ref()
+            .map(|inference| &inference.parameters[parameter_index])
+        {
+            for (metric, value) in [
+                ("greater_or_equal", directional.greater_or_equal.to_string()),
+                ("less_or_equal", directional.less_or_equal.to_string()),
+                ("p_value_greater", directional.p_value_greater.to_string()),
+                ("p_value_less", directional.p_value_less.to_string()),
+            ] {
+                rows.push(row(
+                    "plsc_permutation_parameter",
+                    &dimensions.0,
+                    &dimensions.1,
+                    &dimensions.2,
+                    &dimensions.3,
+                    metric,
+                    value,
+                ));
+            }
+        }
+    }
+    for entry in &permutation.permutation_ledger {
+        let status = serde_json::to_value(entry.status)?
+            .as_str()
+            .expect("PLSc permutation status serializes as a string")
+            .to_owned();
+        for (metric, value) in [
+            ("status", status),
+            (
+                "label_assignment_sha256",
+                entry.label_assignment_sha256.clone(),
+            ),
+            (
+                "parameter_values_sha256",
+                entry.parameter_values_sha256.clone().unwrap_or_default(),
+            ),
+            ("reason_code", entry.reason_code.clone().unwrap_or_default()),
+            ("message", entry.message.clone().unwrap_or_default()),
+        ] {
+            rows.push(row(
+                "plsc_permutation_ledger",
+                &entry.permutation_index.to_string(),
+                "",
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+    }
+    for warning in &permutation.warnings {
+        rows.push(row(
+            "plsc_permutation_warning",
+            "",
+            "",
+            "",
+            "",
+            "warning",
+            warning.clone(),
+        ));
+    }
+    Ok(())
+}
+
+fn push_plsc_consistent_bootstrap(
+    result: &AnalysisResult,
+    estimation: &serde_json::Value,
+    rows: &mut Vec<ExportRow>,
+) -> Result<()> {
+    let marker = result
+        .provenance
+        .method_version
+        .split('+')
+        .any(|version| version == PLSC_CONSISTENT_BOOTSTRAP_METHOD_VERSION);
+    let bootstrap = match &result.payload {
+        AnalysisPayload::PlsPmV2 { bootstrap, .. } => Some(bootstrap),
+        _ => None,
+    };
+    let artifact_declares_method = bootstrap
+        .and_then(|value| value.get("method_version"))
+        .and_then(|value| value.as_str())
+        == Some(PLSC_CONSISTENT_BOOTSTRAP_METHOD_VERSION);
+    let expected = result.provenance.method == AnalysisMethod::Plsc
+        && result.provenance.settings.bootstrap_samples > 0;
+    if !expected {
+        if marker || artifact_declares_method {
+            bail!("PLSc consistent-bootstrap payload and recipe attribution disagree");
+        }
+        return Ok(());
+    }
+    if !marker || !artifact_declares_method {
+        bail!("PLSc bootstrap result is missing exact consistent-bootstrap attribution");
+    }
+
+    let point: qpls_estimation::PlsResult = serde_json::from_value(estimation.clone())
+        .context("invalid PLSc point payload for consistent-bootstrap export")?;
+    let bootstrap: PlscConsistentBootstrapResult = serde_json::from_value(
+        bootstrap
+            .expect("expected PLSc bootstrap payload was checked")
+            .clone(),
+    )
+    .context("invalid PLSc consistent-bootstrap payload for export")?;
+    validate_plsc_consistent_bootstrap_result(&bootstrap, &point, &result.provenance.settings)
+        .map_err(anyhow::Error::msg)
+        .context("PLSc consistent-bootstrap export contract failed")?;
+
+    for (metric, value) in [
+        ("method_version", bootstrap.method_version.clone()),
+        (
+            "estimator_method_version",
+            bootstrap.estimator_method_version.clone(),
+        ),
+        (
+            "resampling_method_version",
+            bootstrap.resampling_method_version.clone(),
+        ),
+        ("operation", bootstrap.plan.operation.clone()),
+        (
+            "requested_replicates",
+            bootstrap.plan.replicates.to_string(),
+        ),
+        (
+            "attempted_replicates",
+            bootstrap.plan.replicates.to_string(),
+        ),
+        ("master_seed", bootstrap.plan.master_seed.to_string()),
+        (
+            "minimum_usable_fraction",
+            bootstrap.minimum_usable_fraction.to_string(),
+        ),
+        ("retry_policy", bootstrap.retry_policy.clone()),
+        (
+            "original_parameter_values_sha256",
+            bootstrap.original_parameter_values_sha256.clone(),
+        ),
+        ("usable_replicates", bootstrap.usable_replicates.to_string()),
+        (
+            "successful_replicate_witnesses",
+            bootstrap.successful_replicates.len().to_string(),
+        ),
+        (
+            "failed_replicates",
+            bootstrap.failed_replicates.len().to_string(),
+        ),
+        (
+            "jackknife_case_count",
+            bootstrap
+                .bca
+                .as_ref()
+                .map(|artifact| artifact.jackknife_case_count.to_string())
+                .unwrap_or_default(),
+        ),
+        (
+            "failed_jackknife_cases",
+            bootstrap.failed_jackknife_cases.len().to_string(),
+        ),
+        (
+            "successful_jackknife_witnesses",
+            bootstrap.successful_jackknife_cases.len().to_string(),
+        ),
+    ] {
+        rows.push(row(
+            "plsc_bootstrap_accounting",
+            "",
+            "",
+            "",
+            "",
+            metric,
+            value,
+        ));
+    }
+
+    for parameter in &bootstrap.percentile.parameters {
+        let dimensions = plsc_bootstrap_parameter_dimensions(&parameter.parameter);
+        for (metric, value) in [
+            ("original", parameter.original.to_string()),
+            ("bootstrap_mean", parameter.bootstrap_mean.to_string()),
+            ("bias", parameter.bias.to_string()),
+            ("standard_error", parameter.standard_error.to_string()),
+            ("lower", parameter.lower.to_string()),
+            ("upper", parameter.upper.to_string()),
+            ("usable_replicates", parameter.usable_replicates.to_string()),
+            (
+                "t_statistic",
+                parameter
+                    .t_statistic
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "p_value_two_sided",
+                parameter
+                    .p_value_two_sided
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+        ] {
+            rows.push(row(
+                "plsc_bootstrap_percentile",
+                &dimensions.0,
+                &dimensions.1,
+                &dimensions.2,
+                &dimensions.3,
+                metric,
+                value,
+            ));
+        }
+    }
+
+    if let Some(bca) = &bootstrap.bca {
+        for parameter in &bca.parameters {
+            let dimensions = plsc_bootstrap_parameter_dimensions(&parameter.parameter);
+            for (metric, value) in [
+                (
+                    "bias_correction",
+                    parameter
+                        .bias_correction
+                        .map(|value| value.to_string())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "acceleration",
+                    parameter
+                        .acceleration
+                        .map(|value| value.to_string())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "lower",
+                    parameter
+                        .lower
+                        .map(|value| value.to_string())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "upper",
+                    parameter
+                        .upper
+                        .map(|value| value.to_string())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "unavailable_reason",
+                    parameter.unavailable_reason.clone().unwrap_or_default(),
+                ),
+            ] {
+                rows.push(row(
+                    "plsc_bootstrap_bca",
+                    &dimensions.0,
+                    &dimensions.1,
+                    &dimensions.2,
+                    &dimensions.3,
+                    metric,
+                    value,
+                ));
+            }
+        }
+    }
+
+    for failure in &bootstrap.failed_replicates {
+        for (metric, value) in [
+            ("reason_code", failure.reason_code.clone()),
+            ("message", failure.message.clone()),
+            (
+                "sample_indices_sha256",
+                failure.sample_indices_sha256.clone(),
+            ),
+        ] {
+            rows.push(row(
+                "plsc_bootstrap_failure",
+                &failure.replicate_index.to_string(),
+                "",
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+    }
+    for failure in &bootstrap.failed_jackknife_cases {
+        for (metric, value) in [
+            ("reason_code", failure.reason_code.clone()),
+            ("message", failure.message.clone()),
+        ] {
+            rows.push(row(
+                "plsc_bootstrap_jackknife_failure",
+                &failure.omitted_case.to_string(),
+                "",
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+    }
+    for warning in &bootstrap.warnings {
+        rows.push(row(
+            "plsc_bootstrap_warning",
+            "",
+            "",
+            "",
+            "",
+            "warning",
+            warning.clone(),
+        ));
+    }
+    Ok(())
+}
+
+fn plsc_bootstrap_parameter_dimensions(parameter: &str) -> (String, String, String, String) {
+    let Ok((kind, parts)) = serde_json::from_str::<(String, Vec<String>)>(parameter) else {
+        return (
+            parameter.into(),
+            String::new(),
+            String::new(),
+            String::new(),
+        );
+    };
+    match (kind.as_str(), parts.as_slice()) {
+        ("plsc_outer_loading" | "plsc_outer_weight", [construct, indicator]) => (
+            construct.clone(),
+            indicator.clone(),
+            String::new(),
+            String::new(),
+        ),
+        ("plsc_rho_a" | "plsc_r_squared", [construct]) => (
+            construct.clone(),
+            String::new(),
+            String::new(),
+            String::new(),
+        ),
+        (
+            "plsc_construct_correlation"
+            | "plsc_path"
+            | "plsc_direct_effect"
+            | "plsc_indirect_effect"
+            | "plsc_total_effect",
+            [source, target],
+        ) => (String::new(), String::new(), source.clone(), target.clone()),
+        _ => (
+            parameter.into(),
+            String::new(),
+            String::new(),
+            String::new(),
+        ),
+    }
+}
+
+fn push_pls_model_fit_and_exact(
+    result: &AnalysisResult,
+    estimation: &serde_json::Value,
+    rows: &mut Vec<ExportRow>,
+) -> Result<()> {
+    let (assessment, bootstrap) = match &result.payload {
+        AnalysisPayload::PlsPmV1 { assessment, .. } => (assessment, None),
+        AnalysisPayload::PlsPmV2 {
+            assessment,
+            bootstrap,
+            ..
+        } => (assessment, Some(bootstrap)),
+        AnalysisPayload::PlsPmV3 {
+            assessment,
+            bootstrap,
+            ..
+        } => (assessment, bootstrap.as_ref()),
+        _ => return Ok(()),
+    };
+    let assessment: AssessmentResult = serde_json::from_value(assessment.clone())
+        .context("invalid PLS assessment payload for model-fit export")?;
+    let raw_exact = bootstrap
+        .and_then(|value| value.get("model_fit_exact_inference"))
+        .filter(|value| !value.is_null());
+    let has_exact_marker = result
+        .provenance
+        .method_version
+        .split('+')
+        .any(|version| version == PLS_MODEL_FIT_EXACT_METHOD_VERSION);
+    let Some(point_fit) = assessment.model_fit.as_ref() else {
+        if raw_exact.is_some() || has_exact_marker {
+            bail!("PLS model-fit exact payload has no linked point model-fit result");
+        }
+        return Ok(());
+    };
+
+    // Historical assessment payloads predate the matrix-backed v2 contract.
+    // Keep their descriptive SRMR/d_ULS values exportable without attributing
+    // v2 or exact-fit semantics to them.
+    if point_fit.method_version.is_empty() {
+        if raw_exact.is_some() || has_exact_marker {
+            bail!("PLS model-fit exact payload cannot be linked to a historical point result");
+        }
+        push_pls_model_fit_legacy_rows(point_fit, rows);
+        return Ok(());
+    }
+    if point_fit.method_version != PLS_MODEL_FIT_METHOD_VERSION {
+        bail!("PLS model-fit point payload has an unsupported method identity");
+    }
+
+    let point: qpls_estimation::PlsResult = serde_json::from_value(estimation.clone())
+        .context("invalid PLS point payload for model-fit export")?;
+    if !pls_model_fit_matches_v2_contract(point_fit, point.used_observations) {
+        bail!("PLS model-fit v2 payload failed matrix-backed semantic validation");
+    }
+
+    let exact = raw_exact
+        .map(|value| {
+            serde_json::from_value::<PlsModelFitExactInference>(value.clone())
+                .context("invalid PLS model-fit exact inference payload")
+        })
+        .transpose()?;
+    match (exact.as_ref(), has_exact_marker) {
+        (Some(exact), true) => {
+            let expected_bootstrap_method = match result.provenance.settings.method {
+                AnalysisMethod::PlsPm => RESAMPLING_METHOD_VERSION,
+                AnalysisMethod::Plsc => PLSC_CONSISTENT_BOOTSTRAP_METHOD_VERSION,
+                _ => bail!("PLS model-fit exact inference has incompatible method provenance"),
+            };
+            if bootstrap
+                .and_then(|value| value.get("method_version"))
+                .and_then(serde_json::Value::as_str)
+                != Some(expected_bootstrap_method)
+            {
+                bail!("PLS model-fit exact inference has incompatible outer bootstrap identity");
+            }
+            validate_pls_model_fit_exact_inference_for_settings(
+                exact,
+                point_fit,
+                &point,
+                &result.provenance.settings,
+            )
+            .map_err(anyhow::Error::msg)
+            .context("PLS model-fit exact export contract failed")?;
+        }
+        (None, false) => {}
+        _ => bail!("PLS model-fit exact payload and provenance identity disagree"),
+    }
+
+    push_pls_model_fit_v2_rows(point_fit, exact.as_ref(), rows);
+    if let Some(exact) = exact.as_ref() {
+        push_pls_model_fit_exact_rows(exact, rows);
+    }
+    Ok(())
+}
+
+fn push_pls_model_fit_legacy_rows(fit: &PlsModelFit, rows: &mut Vec<ExportRow>) {
+    for (variant, measures) in [("saturated", &fit.saturated), ("estimated", &fit.estimated)] {
+        for (metric, value) in [("srmr", measures.srmr), ("d_uls", measures.d_uls)] {
+            rows.push(row(
+                "pls_model_fit_legacy",
+                variant,
+                "",
+                "",
+                "",
+                metric,
+                value.to_string(),
+            ));
+        }
+    }
+}
+
+fn push_pls_model_fit_v2_rows(
+    fit: &PlsModelFit,
+    exact: Option<&PlsModelFitExactInference>,
+    rows: &mut Vec<ExportRow>,
+) {
+    for (metric, value) in [
+        ("method_version", fit.method_version.clone()),
+        (
+            "analytical_sample_size",
+            fit.analytical_sample_size.to_string(),
+        ),
+        ("indicator_count", fit.indicator_order.len().to_string()),
+        ("indicator_order", fit.indicator_order.join("|")),
+        ("matrix_convention", fit.matrix_convention.clone()),
+        ("geodesic_logarithm", fit.geodesic_logarithm.clone()),
+        (
+            "exact_fit_inference",
+            if exact.is_some() {
+                "available_in_experimental_run".into()
+            } else {
+                "unavailable_for_run".into()
+            },
+        ),
+    ] {
+        rows.push(row("pls_model_fit_detail", "", "", "", "", metric, value));
+    }
+    push_pls_fit_criterion_value("null", "chi_square", &fit.null_model_chi_square, rows);
+    for (variant, measures) in [("saturated", &fit.saturated), ("estimated", &fit.estimated)] {
+        for (metric, value) in [("srmr", measures.srmr), ("d_uls", measures.d_uls)] {
+            rows.push(row(
+                "pls_model_fit",
+                variant,
+                "",
+                "",
+                "",
+                metric,
+                value.to_string(),
+            ));
+        }
+        for (metric, value) in [
+            ("d_g", &measures.d_g),
+            ("chi_square", &measures.chi_square),
+            ("degrees_of_freedom", &measures.degrees_of_freedom),
+            ("nfi", &measures.nfi),
+        ] {
+            push_pls_fit_criterion_value(variant, metric, value, rows);
+        }
+    }
+}
+
+fn push_pls_fit_criterion_value(
+    variant: &str,
+    metric: &str,
+    value: &FitCriterionValue,
+    rows: &mut Vec<ExportRow>,
+) {
+    match value {
+        FitCriterionValue::Available { value } => {
+            rows.push(row(
+                "pls_model_fit",
+                variant,
+                "",
+                "",
+                "",
+                metric,
+                value.to_string(),
+            ));
+            rows.push(row(
+                "pls_model_fit",
+                variant,
+                "",
+                "",
+                "",
+                &format!("{metric}_status"),
+                "available".into(),
+            ));
+        }
+        FitCriterionValue::Unavailable { reason_code } => {
+            rows.push(row(
+                "pls_model_fit",
+                variant,
+                "",
+                "",
+                "",
+                metric,
+                String::new(),
+            ));
+            rows.push(row(
+                "pls_model_fit",
+                variant,
+                "",
+                "",
+                "",
+                &format!("{metric}_status"),
+                "unavailable".into(),
+            ));
+            rows.push(row(
+                "pls_model_fit",
+                variant,
+                "",
+                "",
+                "",
+                &format!("{metric}_reason_code"),
+                reason_code.clone(),
+            ));
+        }
+    }
+}
+
+fn push_pls_model_fit_exact_rows(exact: &PlsModelFitExactInference, rows: &mut Vec<ExportRow>) {
+    for (metric, value) in [
+        ("method_version", exact.method_version.clone()),
+        (
+            "point_fit_method_version",
+            exact.point_fit_method_version.clone(),
+        ),
+        (
+            "estimator_method_version",
+            exact.estimator_method_version.clone(),
+        ),
+        (
+            "resampling_method_version",
+            exact.resampling_method_version.clone(),
+        ),
+        ("procedure", exact.procedure.clone()),
+        ("transformation", exact.transformation.clone()),
+        ("matrix_power", exact.matrix_power.clone()),
+        ("quantile_method", exact.quantile_method.clone()),
+        ("decision_rule", exact.decision_rule.clone()),
+        ("retry_policy", exact.retry_policy.clone()),
+        ("sample_digest_method", exact.sample_digest_method.clone()),
+        (
+            "usable_index_digest_method",
+            exact.usable_index_digest_method.clone(),
+        ),
+        ("matrix_digest_method", exact.matrix_digest_method.clone()),
+        ("status", pls_model_fit_exact_status(exact.status).into()),
+        (
+            "analytical_sample_size",
+            exact.analytical_sample_size.to_string(),
+        ),
+        ("master_seed", exact.master_seed.to_string()),
+        (
+            "requested_replicates_per_model",
+            exact.requested_replicates.to_string(),
+        ),
+        (
+            "minimum_usable_fraction",
+            exact.minimum_usable_fraction.to_string(),
+        ),
+        (
+            "observed_correlation_sha256",
+            exact.observed_correlation_sha256.clone(),
+        ),
+    ] {
+        rows.push(row(
+            "pls_model_fit_exact_detail",
+            "",
+            "",
+            "",
+            "",
+            metric,
+            value,
+        ));
+    }
+    push_pls_model_fit_exact_variant_rows(&exact.saturated, rows);
+    push_pls_model_fit_exact_variant_rows(&exact.estimated, rows);
+}
+
+fn push_pls_model_fit_exact_variant_rows(
+    variant: &PlsModelFitExactVariantInference,
+    rows: &mut Vec<ExportRow>,
+) {
+    for criterion in &variant.criteria {
+        let criterion_label = pls_model_fit_exact_criterion(criterion.criterion);
+        for (metric, value) in [
+            (
+                "status",
+                pls_model_fit_exact_status(criterion.status).into(),
+            ),
+            ("original", criterion.original.to_string()),
+            (
+                "requested_replicates",
+                criterion.requested_replicates.to_string(),
+            ),
+            (
+                "minimum_usable_replicates",
+                criterion.minimum_usable_replicates.to_string(),
+            ),
+            ("usable_replicates", criterion.usable_replicates.to_string()),
+            ("failed_replicates", criterion.failed_replicates.to_string()),
+            (
+                "usable_replicate_indices_sha256",
+                criterion.usable_replicate_indices_sha256.clone(),
+            ),
+            (
+                "replicate_min",
+                criterion
+                    .replicate_min
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "replicate_max",
+                criterion
+                    .replicate_max
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "upper_95",
+                criterion
+                    .upper_95
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "upper_99",
+                criterion
+                    .upper_99
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "decision_5_percent",
+                pls_model_fit_exact_decision(criterion.not_rejected_95).into(),
+            ),
+            (
+                "decision_1_percent",
+                pls_model_fit_exact_decision(criterion.not_rejected_99).into(),
+            ),
+            (
+                "exceed_or_equal_count",
+                criterion.exceed_or_equal_count.to_string(),
+            ),
+            (
+                "empirical_upper_tail_probability",
+                criterion
+                    .empirical_upper_tail_probability
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
+            ),
+            (
+                "unavailable_reason_code",
+                criterion
+                    .unavailable_reason_code
+                    .clone()
+                    .unwrap_or_default(),
+            ),
+        ] {
+            rows.push(row(
+                "pls_model_fit_exact",
+                &variant.variant,
+                criterion_label,
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+    }
+
+    for entry in variant
+        .ledger
+        .iter()
+        .filter(|entry| entry.status != PlsModelFitExactReplicateStatus::Success)
+    {
+        let replicate = entry.replicate_index.to_string();
+        for (metric, value) in [
+            (
+                "status",
+                pls_model_fit_exact_replicate_status(entry.status).into(),
+            ),
+            ("sample_indices_sha256", entry.sample_indices_sha256.clone()),
+            (
+                "failure_reason_code",
+                entry.failure_reason_code.clone().unwrap_or_default(),
+            ),
+            (
+                "failure_message",
+                entry.failure_message.clone().unwrap_or_default(),
+            ),
+        ] {
+            rows.push(row(
+                "pls_model_fit_exact_failure",
+                &variant.variant,
+                &replicate,
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+        for failure in &entry.criterion_failures {
+            rows.push(row(
+                "pls_model_fit_exact_failure",
+                &variant.variant,
+                &replicate,
+                pls_model_fit_exact_criterion(failure.criterion),
+                "",
+                "criterion_failure_reason_code",
+                failure.reason_code.clone(),
+            ));
+        }
+    }
+}
+
+fn pls_model_fit_exact_criterion(criterion: PlsModelFitExactCriterion) -> &'static str {
+    match criterion {
+        PlsModelFitExactCriterion::Srmr => "srmr",
+        PlsModelFitExactCriterion::DULS => "d_uls",
+        PlsModelFitExactCriterion::DG => "d_g",
+    }
+}
+
+fn pls_model_fit_exact_status(status: PlsModelFitExactStatus) -> &'static str {
+    match status {
+        PlsModelFitExactStatus::Available => "available",
+        PlsModelFitExactStatus::Partial => "partial",
+        PlsModelFitExactStatus::Unavailable => "unavailable",
+    }
+}
+
+fn pls_model_fit_exact_replicate_status(status: PlsModelFitExactReplicateStatus) -> &'static str {
+    match status {
+        PlsModelFitExactReplicateStatus::Success => "success",
+        PlsModelFitExactReplicateStatus::Partial => "partial",
+        PlsModelFitExactReplicateStatus::Failed => "failed",
+    }
+}
+
+fn pls_model_fit_exact_decision(not_rejected: Option<bool>) -> &'static str {
+    match not_rejected {
+        Some(true) => "not_rejected",
+        Some(false) => "rejected",
+        None => "unavailable",
+    }
+}
+
+fn push_htmt_assessment_and_inference(
+    result: &AnalysisResult,
+    rows: &mut Vec<ExportRow>,
+) -> Result<()> {
+    let (assessment, bootstrap) = match &result.payload {
+        AnalysisPayload::PlsPmV1 { assessment, .. } => (assessment, None),
+        AnalysisPayload::PlsPmV2 {
+            assessment,
+            bootstrap,
+            ..
+        } => (assessment, Some(bootstrap)),
+        AnalysisPayload::PlsPmV3 {
+            assessment,
+            bootstrap,
+            ..
+        } => (assessment, bootstrap.as_ref()),
+        _ => return Ok(()),
+    };
+    let assessment: AssessmentResult = serde_json::from_value(assessment.clone())
+        .context("invalid PLS assessment payload for HTMT export")?;
+    let (Some(plus), Some(original)) = (
+        assessment.htmt_plus.as_ref(),
+        assessment.htmt_original.as_ref(),
+    ) else {
+        if assessment.htmt_plus.is_none()
+            && assessment.htmt_original.is_none()
+            && assessment.htmt_plus_method_version.is_none()
+            && assessment.htmt_original_method_version.is_none()
+        {
+            return Ok(());
+        }
+        bail!("PLS assessment has an incomplete explicit HTMT payload");
+    };
+    if assessment.htmt_plus_method_version.as_deref() != Some(HTMT_PLUS_METHOD_VERSION)
+        || assessment.htmt_original_method_version.as_deref() != Some(HTMT_ORIGINAL_METHOD_VERSION)
+        || !validate_htmt_export_matrix(plus, true)
+        || !validate_htmt_export_matrix(original, false)
+        || plus.constructs != original.constructs
+    {
+        bail!("PLS assessment has an inconsistent HTMT/HTMT+ identity");
+    }
+    push_htmt_point_rows("htmt_plus", HTMT_PLUS_METHOD_VERSION, plus, rows);
+    push_htmt_point_rows(
+        "htmt_original",
+        HTMT_ORIGINAL_METHOD_VERSION,
+        original,
+        rows,
+    );
+
+    let has_inference_version = result
+        .provenance
+        .method_version
+        .split('+')
+        .any(|version| version == HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION);
+    let parsed_bootstrap = bootstrap
+        .map(|value| {
+            serde_json::from_value::<PlsBootstrapResult>(value.clone())
+                .context("invalid PLS bootstrap payload for HTMT export")
+        })
+        .transpose()?;
+    match (
+        parsed_bootstrap
+            .as_ref()
+            .and_then(|bootstrap| bootstrap.htmt_inference.as_ref()),
+        has_inference_version,
+    ) {
+        (Some(bundle), true) => {
+            if !validate_htmt_export_bundle(
+                bundle,
+                plus,
+                original,
+                parsed_bootstrap
+                    .as_ref()
+                    .expect("HTMT bundle came from parsed bootstrap"),
+            ) {
+                bail!("PLS bootstrap has an inconsistent complete HTMT inference payload");
+            }
+            push_htmt_inference_rows("htmt_plus_bootstrap", &bundle.htmt_plus, rows);
+            push_htmt_inference_rows("htmt_original_bootstrap", &bundle.htmt_original, rows);
+        }
+        (None, false) => {}
+        _ => bail!("HTMT bootstrap inference payload and provenance identity disagree"),
+    }
+    Ok(())
+}
+
+fn validate_htmt_export_matrix(artifact: &HtmtAssessment, absolute: bool) -> bool {
+    let dimension = artifact.constructs.len();
+    artifact.correlation_type == "pearson"
+        && artifact.absolute_correlations == absolute
+        && artifact.cells.len() == dimension
+        && artifact.cells.iter().all(|row| row.len() == dimension)
+        && artifact.cells.iter().enumerate().all(|(row, cells)| {
+            cells.iter().enumerate().all(|(column, cell)| {
+                let mirror = &artifact.cells[column][row];
+                cell.status == mirror.status
+                    && cell.reason == mirror.reason
+                    && match (cell.value, mirror.value) {
+                        (Some(left), Some(right)) => {
+                            left.is_finite()
+                                && right.is_finite()
+                                && (!absolute || (left >= 0.0 && right >= 0.0))
+                                && float_matches(left, right)
+                                && (row != column || left == 1.0)
+                        }
+                        (None, None) => cell.status != HtmtStatus::Available,
+                        _ => false,
+                    }
+            })
+        })
+}
+
+fn push_htmt_point_rows(
+    section: &str,
+    method_version: &str,
+    artifact: &HtmtAssessment,
+    rows: &mut Vec<ExportRow>,
+) {
+    rows.push(row(
+        section,
+        "",
+        "",
+        "",
+        "",
+        "method_version",
+        method_version.into(),
+    ));
+    rows.push(row(
+        section,
+        "",
+        "",
+        "",
+        "",
+        "correlation_policy",
+        if artifact.absolute_correlations {
+            "absolute Pearson indicator correlations"
+        } else {
+            "signed Pearson indicator correlations"
+        }
+        .into(),
+    ));
+    for row_index in 1..artifact.constructs.len() {
+        for column_index in 0..row_index {
+            let cell = &artifact.cells[row_index][column_index];
+            let source = &artifact.constructs[column_index];
+            let target = &artifact.constructs[row_index];
+            for (metric, value) in [
+                ("status", htmt_status_label(cell.status).into()),
+                (
+                    "value",
+                    cell.value
+                        .map(|value| value.to_string())
+                        .unwrap_or_default(),
+                ),
+                ("reason", cell.reason.clone().unwrap_or_default()),
+            ] {
+                rows.push(row(section, "", "", source, target, metric, value));
+            }
+        }
+    }
+}
+
+fn validate_htmt_export_bundle(
+    bundle: &HtmtBootstrapInferenceBundle,
+    plus: &HtmtAssessment,
+    original: &HtmtAssessment,
+    bootstrap: &PlsBootstrapResult,
+) -> bool {
+    let globally_failed = bootstrap
+        .failed_replicates
+        .iter()
+        .map(|failure| failure.replicate_index)
+        .collect::<std::collections::HashSet<_>>();
+    globally_failed.len() == bootstrap.failed_replicates.len()
+        && bundle.method_version == HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION
+        && validate_htmt_export_inference(
+            &bundle.htmt_plus,
+            plus,
+            HTMT_PLUS_BOOTSTRAP_METHOD_VERSION,
+            HTMT_PLUS_METHOD_VERSION,
+            true,
+            &globally_failed,
+        )
+        && validate_htmt_export_inference(
+            &bundle.htmt_original,
+            original,
+            HTMT_ORIGINAL_BOOTSTRAP_METHOD_VERSION,
+            HTMT_ORIGINAL_METHOD_VERSION,
+            false,
+            &globally_failed,
+        )
+}
+
+fn validate_htmt_export_inference(
+    inference: &HtmtBootstrapInference,
+    point: &HtmtAssessment,
+    method_version: &str,
+    point_method_version: &str,
+    absolute: bool,
+    globally_failed: &std::collections::HashSet<u32>,
+) -> bool {
+    let dimension = point.constructs.len();
+    inference.method_version == method_version
+        && inference.point_method_version == point_method_version
+        && inference.constructs == point.constructs
+        && inference.correlation_type == "pearson"
+        && inference.absolute_correlations == absolute
+        && inference.interval_method == HTMT_BOOTSTRAP_INTERVAL_METHOD
+        && inference.test_type == HTMT_BOOTSTRAP_TEST_TYPE
+        && inference.significance_level == HTMT_BOOTSTRAP_SIGNIFICANCE_LEVEL
+        && inference.equivalent_two_sided_confidence_level
+            == HTMT_BOOTSTRAP_EQUIVALENT_TWO_SIDED_CONFIDENCE_LEVEL
+        && inference.critical_value == HTMT_BOOTSTRAP_CRITICAL_VALUE
+        && inference.decision_rule == HTMT_BOOTSTRAP_DECISION_RULE
+        && inference.replicate_index_digest_method == HTMT_BOOTSTRAP_REPLICATE_INDEX_DIGEST_METHOD
+        && inference.requested_replicates >= 2
+        && inference.minimum_usable_replicates >= 2
+        && inference.cells.len() == dimension
+        && inference.cells.iter().all(|row| row.len() == dimension)
+        && inference.cells.iter().enumerate().all(|(row, cells)| {
+            cells.iter().enumerate().all(|(column, cell)| {
+                if cell != &inference.cells[column][row]
+                    || cell.usable_replicates + cell.failed_replicates
+                        > inference.requested_replicates
+                {
+                    return false;
+                }
+                let mut pair_unavailable = std::collections::HashSet::new();
+                if cell.pair_unavailable_replicates.iter().any(|entry| {
+                    entry.replicate_index >= inference.requested_replicates
+                        || globally_failed.contains(&entry.replicate_index)
+                        || entry.reason_code.trim().is_empty()
+                        || !pair_unavailable.insert(entry.replicate_index)
+                }) {
+                    return false;
+                }
+                let point_available =
+                    point.cells[row][column].status == HtmtStatus::Available && row != column;
+                if point_available
+                    && (cell.usable_replicates as usize
+                        + globally_failed.len()
+                        + pair_unavailable.len()
+                        != inference.requested_replicates as usize
+                        || !cell
+                            .usable_replicate_indices_sha256
+                            .as_ref()
+                            .is_some_and(|digest| {
+                                digest.len() == 64
+                                    && digest.bytes().all(|byte| byte.is_ascii_hexdigit())
+                            }))
+                {
+                    return false;
+                }
+                match cell.status {
+                    HtmtBootstrapInferenceStatus::Available => {
+                        let values = [
+                            cell.original,
+                            cell.bootstrap_mean,
+                            cell.bias,
+                            cell.standard_error,
+                            cell.bias_correction,
+                            cell.lower,
+                            cell.upper,
+                            cell.replicate_min,
+                            cell.replicate_max,
+                        ];
+                        values.iter().all(|value| value.is_some_and(f64::is_finite))
+                            && cell.reason.is_none()
+                            && cell.usable_replicates >= inference.minimum_usable_replicates
+                            && cell.usable_replicates + cell.failed_replicates
+                                == inference.requested_replicates
+                            && cell.upper_bound_below_critical_value
+                                == cell
+                                    .upper
+                                    .map(|upper| upper < HTMT_BOOTSTRAP_CRITICAL_VALUE)
+                            && float_matches(
+                                cell.bias.unwrap(),
+                                cell.bootstrap_mean.unwrap() - cell.original.unwrap(),
+                            )
+                            && cell.lower.unwrap() <= cell.upper.unwrap()
+                            && (!absolute
+                                || [cell.original, cell.lower, cell.upper]
+                                    .iter()
+                                    .all(|value| value.unwrap() >= 0.0))
+                    }
+                    HtmtBootstrapInferenceStatus::NotApplicable
+                    | HtmtBootstrapInferenceStatus::Unavailable => {
+                        cell.reason
+                            .as_ref()
+                            .is_some_and(|reason| !reason.trim().is_empty())
+                            && cell.bootstrap_mean.is_none()
+                            && cell.bias.is_none()
+                            && cell.standard_error.is_none()
+                            && cell.bias_correction.is_none()
+                            && cell.lower.is_none()
+                            && cell.upper.is_none()
+                            && cell.upper_bound_below_critical_value.is_none()
+                    }
+                }
+            })
+        })
+}
+
+fn push_htmt_inference_rows(
+    section: &str,
+    inference: &HtmtBootstrapInference,
+    rows: &mut Vec<ExportRow>,
+) {
+    for (metric, value) in [
+        ("method_version", inference.method_version.clone()),
+        (
+            "point_method_version",
+            inference.point_method_version.clone(),
+        ),
+        ("interval_method", inference.interval_method.clone()),
+        ("test_type", inference.test_type.clone()),
+        (
+            "significance_level",
+            inference.significance_level.to_string(),
+        ),
+        (
+            "equivalent_two_sided_confidence_level",
+            inference.equivalent_two_sided_confidence_level.to_string(),
+        ),
+        ("critical_value", inference.critical_value.to_string()),
+        ("decision_rule", inference.decision_rule.clone()),
+        (
+            "replicate_index_digest_method",
+            inference.replicate_index_digest_method.clone(),
+        ),
+        (
+            "requested_replicates",
+            inference.requested_replicates.to_string(),
+        ),
+        (
+            "minimum_usable_replicates",
+            inference.minimum_usable_replicates.to_string(),
+        ),
+        ("retry_policy", inference.retry_policy.clone()),
+    ] {
+        rows.push(row(section, "", "", "", "", metric, value));
+    }
+    for row_index in 1..inference.constructs.len() {
+        for column_index in 0..row_index {
+            let cell = &inference.cells[row_index][column_index];
+            let source = &inference.constructs[column_index];
+            let target = &inference.constructs[row_index];
+            let metrics = [
+                ("status", htmt_inference_status_label(cell.status).into()),
+                ("reason", cell.reason.clone().unwrap_or_default()),
+                ("original", optional_f64(cell.original)),
+                ("bootstrap_mean", optional_f64(cell.bootstrap_mean)),
+                ("bias", optional_f64(cell.bias)),
+                ("standard_error", optional_f64(cell.standard_error)),
+                ("bias_correction", optional_f64(cell.bias_correction)),
+                ("bias_corrected_90_lower", optional_f64(cell.lower)),
+                ("bias_corrected_90_upper", optional_f64(cell.upper)),
+                (
+                    "upper_bound_below_critical_value",
+                    cell.upper_bound_below_critical_value
+                        .map(|value| value.to_string())
+                        .unwrap_or_default(),
+                ),
+                ("usable_replicates", cell.usable_replicates.to_string()),
+                ("failed_replicates", cell.failed_replicates.to_string()),
+                (
+                    "usable_replicate_indices_sha256",
+                    cell.usable_replicate_indices_sha256
+                        .clone()
+                        .unwrap_or_default(),
+                ),
+                (
+                    "pair_unavailable_replicates",
+                    cell.pair_unavailable_replicates.len().to_string(),
+                ),
+            ];
+            for (metric, value) in metrics {
+                rows.push(row(section, "", "", source, target, metric, value));
+            }
+            for unavailable in &cell.pair_unavailable_replicates {
+                rows.push(row(
+                    section,
+                    "",
+                    "",
+                    source,
+                    target,
+                    &format!(
+                        "pair_unavailable_replicate_{}_reason",
+                        unavailable.replicate_index
+                    ),
+                    unavailable.reason_code.clone(),
+                ));
+            }
+        }
+    }
+}
+
+fn optional_f64(value: Option<f64>) -> String {
+    value.map(|value| value.to_string()).unwrap_or_default()
+}
+
+fn htmt_status_label(status: HtmtStatus) -> &'static str {
+    match status {
+        HtmtStatus::Available => "available",
+        HtmtStatus::NotApplicable => "not_applicable",
+        HtmtStatus::Unavailable => "unavailable",
+    }
+}
+
+fn htmt_inference_status_label(status: HtmtBootstrapInferenceStatus) -> &'static str {
+    match status {
+        HtmtBootstrapInferenceStatus::Available => "available",
+        HtmtBootstrapInferenceStatus::NotApplicable => "not_applicable",
+        HtmtBootstrapInferenceStatus::Unavailable => "unavailable",
+    }
+}
+
+fn push_cbsem_bootstrap_v2(
+    result: &AnalysisResult,
+    estimation: &serde_json::Value,
+    rows: &mut Vec<ExportRow>,
+) -> Result<()> {
+    let Some(value) = estimation
+        .get("cbsem")
+        .and_then(|value| value.get("bootstrap_v2"))
+        .filter(|value| !value.is_null())
+    else {
+        return Ok(());
+    };
+    let bootstrap: qpls_estimation::CbsemBootstrapAnalysisV2 =
+        serde_json::from_value(value.clone())
+            .context("invalid typed CB-SEM bootstrap_v2 result payload")?;
+    validate_cbsem_bootstrap_v2_for_export(result, &bootstrap)?;
+
+    rows.push(row(
+        "cbsem_bootstrap_v2_setting",
+        "",
+        "",
+        "",
+        "",
+        "standalone_integrity_scope",
+        "Typed shape, frozen identities, accounting, inference status, and complete replicate-index coverage were checked. A standalone result does not contain the scientific recipe or raw data, so recipe, base-result, and sample-index witness hashes are exported as stored provenance rather than recomputed by this command.".into(),
+    ));
+
+    for (metric, value) in [
+        ("method_version", bootstrap.method_version.clone()),
+        ("algorithm", bootstrap.algorithm.clone()),
+        ("interval_method", bootstrap.interval_method.clone()),
+        ("retry_policy", bootstrap.retry_policy.clone()),
+        ("confidence_level", bootstrap.confidence_level.to_string()),
+        (
+            "requested_replicates",
+            bootstrap.requested_replicates.to_string(),
+        ),
+        ("attempted_fits", bootstrap.attempted_fits.to_string()),
+        ("usable_replicates", bootstrap.usable_replicates.to_string()),
+        ("failed_replicates", bootstrap.failed_replicates.to_string()),
+        (
+            "minimum_usable_fraction",
+            bootstrap.minimum_usable_fraction.to_string(),
+        ),
+        (
+            "minimum_usable_replicates",
+            bootstrap.minimum_usable_replicates.to_string(),
+        ),
+        (
+            "max_attempts_per_replicate",
+            bootstrap.max_attempts_per_replicate.to_string(),
+        ),
+        (
+            "complete_case_sample_size",
+            bootstrap.complete_case_sample_size.to_string(),
+        ),
+        ("seed", bootstrap.seed.to_string()),
+        ("stream_token", bootstrap.stream_token.clone()),
+        (
+            "outer_workers",
+            result.provenance.settings.workers.to_string(),
+        ),
+    ] {
+        rows.push(row(
+            "cbsem_bootstrap_v2_setting",
+            "",
+            "",
+            "",
+            "",
+            metric,
+            value,
+        ));
+    }
+    match &bootstrap.inference {
+        qpls_estimation::CbsemBootstrapInferenceV2::Available => rows.push(row(
+            "cbsem_bootstrap_v2_inference",
+            "",
+            "",
+            "",
+            "",
+            "status",
+            "available".into(),
+        )),
+        qpls_estimation::CbsemBootstrapInferenceV2::Unavailable {
+            reason_code,
+            message,
+        } => {
+            rows.push(row(
+                "cbsem_bootstrap_v2_inference",
+                "",
+                "",
+                "",
+                "",
+                "status",
+                "unavailable".into(),
+            ));
+            rows.push(row(
+                "cbsem_bootstrap_v2_inference",
+                "",
+                "",
+                "",
+                "",
+                "reason_code",
+                reason_code.clone(),
+            ));
+            rows.push(row(
+                "cbsem_bootstrap_v2_inference",
+                "",
+                "",
+                "",
+                "",
+                "message",
+                message.clone(),
+            ));
+        }
+    }
+    for interval in &bootstrap.intervals {
+        for (metric, value) in [
+            ("original", interval.original),
+            ("bootstrap_mean", interval.bootstrap_mean),
+            ("bias", interval.bias),
+            ("standard_error", interval.standard_error),
+            ("percentile_lower", interval.percentile_lower),
+            ("percentile_upper", interval.percentile_upper),
+        ] {
+            rows.push(row(
+                "cbsem_bootstrap_v2_interval",
+                &interval.parameter,
+                "",
+                "",
+                "",
+                metric,
+                value.to_string(),
+            ));
+        }
+        rows.push(row(
+            "cbsem_bootstrap_v2_interval",
+            &interval.parameter,
+            "",
+            "",
+            "",
+            "usable_replicates",
+            interval.usable_replicates.to_string(),
+        ));
+    }
+    for failure in &bootstrap.failures {
+        let replicate = failure.replicate_index.to_string();
+        for (metric, value) in [
+            (
+                "sample_indices_sha256",
+                failure.sample_indices_sha256.clone(),
+            ),
+            ("reason_code", failure.reason_code.clone()),
+            ("message", failure.message.clone()),
+        ] {
+            rows.push(row(
+                "cbsem_bootstrap_v2_failure",
+                &replicate,
+                "",
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+    }
+    for (metric, value) in [
+        (
+            "method_version",
+            bootstrap.validation_witness.method_version.clone(),
+        ),
+        (
+            "dataset_fingerprint",
+            bootstrap.validation_witness.dataset_fingerprint.clone(),
+        ),
+        (
+            "recipe_sha256",
+            bootstrap.validation_witness.recipe_sha256.clone(),
+        ),
+        (
+            "base_result_sha256",
+            bootstrap.validation_witness.base_result_sha256.clone(),
+        ),
+        (
+            "parameter_names",
+            serde_json::to_string(&bootstrap.validation_witness.parameter_names)?,
+        ),
+    ] {
+        rows.push(row(
+            "cbsem_bootstrap_v2_validation_witness",
+            "",
+            "",
+            "",
+            "",
+            metric,
+            value,
+        ));
+    }
+    for witness in &bootstrap.validation_witness.successful_replicates {
+        let replicate = witness.replicate_index.to_string();
+        for (metric, value) in [
+            (
+                "sample_indices_sha256",
+                witness.sample_indices_sha256.clone(),
+            ),
+            ("iterations", witness.iterations.to_string()),
+            ("objective", witness.objective.to_string()),
+            (
+                "parameter_estimates",
+                serde_json::to_string(&witness.parameter_estimates)?,
+            ),
+        ] {
+            rows.push(row(
+                "cbsem_bootstrap_v2_success_witness",
+                &replicate,
+                "",
+                "",
+                "",
+                metric,
+                value,
+            ));
+        }
+    }
+    for warning in &bootstrap.warnings {
+        rows.push(row(
+            "cbsem_bootstrap_v2_warning",
+            "",
+            "",
+            "",
+            "",
+            "warning",
+            warning.clone(),
+        ));
+    }
+    Ok(())
+}
+
+fn validate_cbsem_bootstrap_v2_for_export(
+    result: &AnalysisResult,
+    bootstrap: &qpls_estimation::CbsemBootstrapAnalysisV2,
+) -> Result<()> {
+    use qpls_estimation::{
+        CBSEM_BOOTSTRAP_ALGORITHM_V2, CBSEM_BOOTSTRAP_INTERVAL_METHOD_V2,
+        CBSEM_BOOTSTRAP_MAX_ATTEMPTS_PER_REPLICATE_V2, CBSEM_BOOTSTRAP_METHOD_VERSION_V2,
+        CBSEM_BOOTSTRAP_MINIMUM_USABLE_FRACTION_V2, CBSEM_BOOTSTRAP_RETRY_POLICY_V2,
+        CBSEM_BOOTSTRAP_STREAM_TOKEN_V2, CBSEM_BOOTSTRAP_VALIDATION_WITNESS_V2,
+    };
+
+    if result.provenance.method != AnalysisMethod::Cbsem
+        || !result
+            .provenance
+            .method_version
+            .split('+')
+            .any(|version| version == CBSEM_BOOTSTRAP_METHOD_VERSION_V2)
+        || bootstrap.method_version != CBSEM_BOOTSTRAP_METHOD_VERSION_V2
+        || bootstrap.algorithm != CBSEM_BOOTSTRAP_ALGORITHM_V2
+        || bootstrap.interval_method != CBSEM_BOOTSTRAP_INTERVAL_METHOD_V2
+        || bootstrap.retry_policy != CBSEM_BOOTSTRAP_RETRY_POLICY_V2
+        || bootstrap.stream_token != CBSEM_BOOTSTRAP_STREAM_TOKEN_V2
+        || bootstrap.max_attempts_per_replicate != CBSEM_BOOTSTRAP_MAX_ATTEMPTS_PER_REPLICATE_V2
+        || !float_matches(
+            bootstrap.minimum_usable_fraction,
+            CBSEM_BOOTSTRAP_MINIMUM_USABLE_FRACTION_V2,
+        )
+        || bootstrap.validation_witness.method_version != CBSEM_BOOTSTRAP_VALIDATION_WITNESS_V2
+    {
+        bail!("typed CB-SEM bootstrap_v2 payload has an incompatible frozen identity");
+    }
+    let required =
+        qpls_resampling::cbsem_bootstrap_required_usable_replicates(bootstrap.requested_replicates)
+            as u32;
+    if !(1_000..=10_000).contains(&bootstrap.requested_replicates)
+        || bootstrap.attempted_fits != bootstrap.requested_replicates
+        || bootstrap
+            .usable_replicates
+            .checked_add(bootstrap.failed_replicates)
+            != Some(bootstrap.requested_replicates)
+        || bootstrap.minimum_usable_replicates != required
+        || bootstrap.complete_case_sample_size < 2
+        || bootstrap.seed != result.provenance.seed
+        || !bootstrap.confidence_level.is_finite()
+        || bootstrap.confidence_level.to_bits() != 0.95_f64.to_bits()
+        || bootstrap.confidence_level.to_bits()
+            != result.provenance.settings.confidence_level.to_bits()
+        || bootstrap.failures.len() as u32 != bootstrap.failed_replicates
+        || bootstrap.validation_witness.successful_replicates.len() as u32
+            != bootstrap.usable_replicates
+        || bootstrap.validation_witness.dataset_fingerprint != result.provenance.dataset_fingerprint
+        || !is_sha256_hex(&bootstrap.validation_witness.recipe_sha256)
+        || !is_sha256_hex(&bootstrap.validation_witness.base_result_sha256)
+        || bootstrap.validation_witness.parameter_names.is_empty()
+    {
+        bail!("typed CB-SEM bootstrap_v2 settings or accounting are inconsistent");
+    }
+    let parameter_names = bootstrap
+        .validation_witness
+        .parameter_names
+        .iter()
+        .collect::<std::collections::BTreeSet<_>>();
+    if parameter_names.len() != bootstrap.validation_witness.parameter_names.len()
+        || parameter_names.iter().any(|name| name.trim().is_empty())
+    {
+        bail!("typed CB-SEM bootstrap_v2 witness parameter names are invalid");
+    }
+
+    let mut replicate_indices = std::collections::BTreeSet::new();
+    let valid_failure_code = |code: &str| {
+        matches!(
+            code,
+            "insufficient_complete_cases"
+                | "constant_indicator"
+                | "rank_deficient"
+                | "singular_covariance"
+                | "ml_nonconvergence"
+                | "numerical_failure"
+                | "inadmissible_or_unsupported_refit"
+                | "invalid_indicator"
+                | "ml_refit_error"
+                | "missing_cbsem_payload"
+                | "sample_size_mismatch"
+                | "parameter_identity_mismatch"
+                | "nonfinite_ml_fit"
+        )
+    };
+    if bootstrap
+        .failures
+        .windows(2)
+        .any(|pair| pair[0].replicate_index >= pair[1].replicate_index)
+        || bootstrap
+            .validation_witness
+            .successful_replicates
+            .windows(2)
+            .any(|pair| pair[0].replicate_index >= pair[1].replicate_index)
+    {
+        bail!("typed CB-SEM bootstrap_v2 ledgers are not in replicate-index order");
+    }
+    for failure in &bootstrap.failures {
+        if failure.replicate_index >= bootstrap.requested_replicates
+            || !replicate_indices.insert(failure.replicate_index)
+            || !is_sha256_hex(&failure.sample_indices_sha256)
+            || !valid_failure_code(&failure.reason_code)
+            || failure.message.trim().is_empty()
+        {
+            bail!("typed CB-SEM bootstrap_v2 failure ledger is inconsistent");
+        }
+    }
+    for witness in &bootstrap.validation_witness.successful_replicates {
+        if witness.replicate_index >= bootstrap.requested_replicates
+            || !replicate_indices.insert(witness.replicate_index)
+            || !is_sha256_hex(&witness.sample_indices_sha256)
+            || witness.parameter_estimates.len()
+                != bootstrap.validation_witness.parameter_names.len()
+            || witness.iterations == 0
+            || witness.iterations > result.provenance.settings.max_iterations
+            || !witness.objective.is_finite()
+            || witness.objective < 0.0
+            || witness
+                .parameter_estimates
+                .iter()
+                .any(|estimate| !estimate.is_finite())
+        {
+            bail!("typed CB-SEM bootstrap_v2 success witness is inconsistent");
+        }
+    }
+    if replicate_indices.len() != bootstrap.requested_replicates as usize
+        || replicate_indices
+            .iter()
+            .copied()
+            .ne(0..bootstrap.requested_replicates)
+    {
+        bail!("typed CB-SEM bootstrap_v2 ledger does not cover every preplanned replicate");
+    }
+
+    match &bootstrap.inference {
+        qpls_estimation::CbsemBootstrapInferenceV2::Available => {
+            if bootstrap.usable_replicates < required
+                || bootstrap.intervals.len() != bootstrap.validation_witness.parameter_names.len()
+            {
+                bail!("available CB-SEM bootstrap_v2 inference has incomplete intervals");
+            }
+            for (interval, parameter) in bootstrap
+                .intervals
+                .iter()
+                .zip(&bootstrap.validation_witness.parameter_names)
+            {
+                if interval.parameter != *parameter
+                    || interval.usable_replicates != bootstrap.usable_replicates
+                    || [
+                        interval.original,
+                        interval.bootstrap_mean,
+                        interval.bias,
+                        interval.standard_error,
+                        interval.percentile_lower,
+                        interval.percentile_upper,
+                    ]
+                    .iter()
+                    .any(|value| !value.is_finite())
+                    || interval.standard_error < 0.0
+                    || interval.percentile_lower > interval.percentile_upper
+                    || !float_matches(interval.bias, interval.bootstrap_mean - interval.original)
+                {
+                    bail!("typed CB-SEM bootstrap_v2 interval table is inconsistent");
+                }
+            }
+        }
+        qpls_estimation::CbsemBootstrapInferenceV2::Unavailable {
+            reason_code,
+            message,
+        } => {
+            if bootstrap.usable_replicates >= required
+                || !bootstrap.intervals.is_empty()
+                || reason_code != "insufficient_usable_replicates"
+                || message.trim().is_empty()
+            {
+                bail!("unavailable CB-SEM bootstrap_v2 inference status is inconsistent");
+            }
+        }
+    }
+    Ok(())
 }
 
 fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut Vec<ExportRow>) {
@@ -1144,6 +3748,14 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
             "attempted_permutations",
             "failed_permutations",
             "confidence_level",
+            "retry_policy",
+            "step1_status",
+            "step1_computed",
+            "step2_usable_permutations",
+            "step2_failed_permutations",
+            "step3_usable_permutations",
+            "step3_failed_permutations",
+            "permutation_plan_sha256",
         ] {
             if let Some(value) = micom.get(metric) {
                 rows.push(row("micom", "", "", "", "", metric, json_value(value)));
@@ -1192,6 +3804,35 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
                         rows.push(row(
                             "micom_construct",
                             &json_str(construct, "construct"),
+                            "",
+                            "",
+                            "",
+                            metric,
+                            json_value(value),
+                        ));
+                    }
+                }
+            }
+        }
+        if let Some(ledger) = micom
+            .get("permutation_ledger")
+            .and_then(|value| value.as_array())
+        {
+            for entry in ledger {
+                let replicate = entry.get("replicate").map(json_value).unwrap_or_default();
+                for metric in [
+                    "partition_sha256",
+                    "group_a_rows",
+                    "group_b_rows",
+                    "step2_status",
+                    "step2_failure_code",
+                    "step3_status",
+                    "step3_failure_code",
+                ] {
+                    if let Some(value) = entry.get(metric) {
+                        rows.push(row(
+                            "micom_permutation_ledger",
+                            &replicate,
                             "",
                             "",
                             "",
@@ -1721,10 +4362,6 @@ fn push_metadata_rows(result: &AnalysisResult, rows: &mut Vec<ExportRow>) {
         ("seed", result.provenance.seed.to_string()),
         ("started_at", result.provenance.started_at.to_rfc3339()),
         ("completed_at", result.provenance.completed_at.to_rfc3339()),
-        (
-            "export_scope",
-            "v0.3 validated estimator only; assessment and resampling are excluded".into(),
-        ),
     ];
     for (metric, value) in values {
         rows.push(row("metadata", "", "", "", "", metric, value));
@@ -1784,6 +4421,162 @@ fn push_path_coefficients(estimation: &serde_json::Value, rows: &mut Vec<ExportR
             json_value(path.get("coefficient").unwrap_or(&serde_json::Value::Null)),
         ));
     }
+}
+
+fn push_posthoc_minimum_sample_size(
+    result: &AnalysisResult,
+    estimation: &serde_json::Value,
+    rows: &mut Vec<ExportRow>,
+) -> Result<()> {
+    if estimation
+        .get("posthoc_minimum_sample_size")
+        .is_none_or(serde_json::Value::is_null)
+    {
+        return Ok(());
+    }
+    let typed: qpls_estimation::PlsResult = serde_json::from_value(estimation.clone())
+        .context("invalid PLS result containing a post-hoc minimum sample-size result")?;
+    let Some(stored) = typed.posthoc_minimum_sample_size.as_ref() else {
+        bail!("post-hoc minimum sample-size payload is missing after typed conversion");
+    };
+    let expected = match stored.method_version.as_str() {
+        qpls_estimation::PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_METHOD_VERSION_V1 => {
+            qpls_estimation::pls_posthoc_minimum_sample_size(&typed.paths, typed.used_observations)
+        }
+        qpls_estimation::PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_METHOD_VERSION => {
+            let significance = pls_posthoc_bootstrap_significance(result, &typed.paths)?;
+            Some(qpls_estimation::pls_posthoc_minimum_sample_size_v2(
+                &typed.paths,
+                typed.used_observations,
+                significance.as_deref(),
+            ))
+        }
+        other => bail!("unsupported post-hoc minimum sample-size method version {other}"),
+    };
+    if expected.as_ref() != Some(stored) {
+        bail!(
+            "post-hoc minimum sample-size payload does not reproduce from its path coefficients and linked inference"
+        );
+    }
+    let value = serde_json::to_value(stored)?;
+    let mut metrics = vec![
+        "method_version",
+        "alpha",
+        "power",
+        "test",
+        "inverse_square_root_constant",
+        "minimum_absolute_path_coefficient",
+        "technically_required_sample_size",
+        "analytical_sample_size",
+        "meets_technical_requirement",
+        "status",
+        "caution",
+    ];
+    if stored.method_version == qpls_estimation::PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_METHOD_VERSION {
+        metrics.splice(
+            5..5,
+            [
+                "selection_rule",
+                "significance_source",
+                "significance_alpha",
+                "eligible_path_count",
+                "significant_path_count",
+                "driver_p_value_two_sided",
+            ],
+        );
+    }
+    for metric in metrics {
+        if let Some(metric_value) = value.get(metric) {
+            rows.push(row(
+                "posthoc_minimum_sample_size",
+                "",
+                "",
+                stored.driver_source.as_deref().unwrap_or(""),
+                stored.driver_target.as_deref().unwrap_or(""),
+                metric,
+                json_value(metric_value),
+            ));
+        }
+    }
+    if stored.method_version == qpls_estimation::PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_METHOD_VERSION {
+        let registry = CapabilityRegistryV2::embedded().context(
+            "the embedded Capability Registry V2 is invalid; post-hoc availability cannot be exported",
+        )?;
+        let cell = registry
+            .option_cells()
+            .find(|cell| {
+                cell.capability_id == "smartpls.pls_power_analysis"
+                    && cell.cell_id == "qpls3.pls.posthoc_technical_minimum_sample_size"
+                    && cell.capability_version == "pls_posthoc_technical_minimum_sample_size_v2"
+            })
+            .context("the exact post-hoc technical minimum sample-size v2 cell is absent")?;
+        rows.push(row(
+            "posthoc_minimum_sample_size",
+            "",
+            "",
+            stored.driver_source.as_deref().unwrap_or(""),
+            stored.driver_target.as_deref().unwrap_or(""),
+            "availability",
+            customer_availability(cell).to_string(),
+        ));
+    }
+    Ok(())
+}
+
+fn pls_posthoc_bootstrap_significance(
+    result: &AnalysisResult,
+    paths: &[qpls_estimation::PathEstimate],
+) -> Result<Option<Vec<qpls_estimation::PlsPathSignificance>>> {
+    let value = match &result.payload {
+        AnalysisPayload::PlsPmV2 { bootstrap, .. } => Some(bootstrap),
+        AnalysisPayload::PlsPmV3 { bootstrap, .. } => bootstrap.as_ref(),
+        AnalysisPayload::PlsPmV1 { .. } => None,
+        AnalysisPayload::PlsSampleSizePowerV1 { .. }
+        | AnalysisPayload::PlsSampleSizePowerV2 { .. }
+        | AnalysisPayload::Legacy { .. } => None,
+    };
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    let bootstrap: qpls_resampling::PlsBootstrapResult = serde_json::from_value(value.clone())
+        .context("invalid linked PLS bootstrap payload for post-hoc sample-size export")?;
+    let expected_paths = paths
+        .iter()
+        .map(|path| ((path.source.clone(), path.target.clone()), path.coefficient))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    if expected_paths.len() != paths.len() {
+        bail!("duplicate PLS path identities in post-hoc sample-size export source");
+    }
+    let mut seen = std::collections::BTreeSet::new();
+    let mut significance = Vec::with_capacity(paths.len());
+    for parameter in &bootstrap.percentile.parameters {
+        let (kind, parts) = serde_json::from_str::<(String, Vec<String>)>(&parameter.parameter)
+            .context("malformed bootstrap parameter identity in post-hoc sample-size export")?;
+        if kind != "path" {
+            continue;
+        }
+        if parts.len() != 2 {
+            bail!("malformed linked PLS path identity in post-hoc sample-size export");
+        }
+        let identity = (parts[0].clone(), parts[1].clone());
+        let Some(expected_original) = expected_paths.get(&identity) else {
+            bail!("foreign linked PLS path identity in post-hoc sample-size export");
+        };
+        if !seen.insert(identity) || parameter.original.to_bits() != expected_original.to_bits() {
+            bail!(
+                "duplicate or coefficient-mismatched linked PLS path inference in post-hoc sample-size export"
+            );
+        }
+        significance.push(qpls_estimation::PlsPathSignificance {
+            source: parts[0].clone(),
+            target: parts[1].clone(),
+            p_value_two_sided: parameter.p_value_two_sided,
+        });
+    }
+    if seen.len() != expected_paths.len() {
+        bail!("missing linked PLS path inference in post-hoc sample-size export");
+    }
+    Ok(Some(significance))
 }
 
 fn push_effects(estimation: &serde_json::Value, rows: &mut Vec<ExportRow>) {
@@ -1911,6 +4704,22 @@ fn csv_field(value: &str) -> String {
 }
 
 fn render_estimator_html(result: &AnalysisResult, rows: &[ExportRow]) -> String {
+    let (title, notice) = if rows.iter().any(|row| row.section == "pls_power_provenance") {
+        (
+            "QuickPLS PLS sample-size/power export",
+            "Typed prospective sample-size/power tables and the complete ordered replicate ledger are included. Standalone export checks stored accounting but cannot recompute recipe-bound digests without the scientific recipe.",
+        )
+    } else if rows.iter().any(|row| row.section == "scope_warning") {
+        (
+            "QuickPLS supplemental method export",
+            "Supplemental method tables are included with their stored scope warnings, inference status, and provenance.",
+        )
+    } else {
+        (
+            "QuickPLS v0.3 estimator export",
+            "Estimator-only export: validated v0.3 PLS core values are included. Assessment and resampling artifacts are excluded until their publication export gates pass.",
+        )
+    };
     let table_rows = rows
         .iter()
         .map(|row| {
@@ -1927,8 +4736,11 @@ fn render_estimator_html(result: &AnalysisResult, rows: &[ExportRow]) -> String 
         })
         .collect::<String>();
     format!(
-        "<!doctype html><html><head><meta charset=\"utf-8\"><title>QuickPLS v0.3 estimator export</title><style>body{{font-family:Arial,sans-serif;margin:32px;color:#111827}}.notice{{border:1px solid #f59e0b;background:#fffbeb;padding:12px;margin:16px 0}}table{{border-collapse:collapse;width:100%;font-size:13px}}th,td{{border:1px solid #d1d5db;padding:6px;text-align:left}}th{{background:#f3f4f6}}</style></head><body><h1>QuickPLS v0.3 estimator export</h1><p>Result {}</p><div class=\"notice\">Estimator-only export: validated v0.3 PLS core values are included. Assessment and resampling artifacts are excluded until their publication export gates pass.</div><table><thead><tr><th>section</th><th>construct</th><th>indicator</th><th>source</th><th>target</th><th>metric</th><th>value</th></tr></thead><tbody>{}</tbody></table></body></html>",
+        "<!doctype html><html><head><meta charset=\"utf-8\"><title>{}</title><style>body{{font-family:Arial,sans-serif;margin:32px;color:#111827}}.notice{{border:1px solid #f59e0b;background:#fffbeb;padding:12px;margin:16px 0}}table{{border-collapse:collapse;width:100%;font-size:13px}}th,td{{border:1px solid #d1d5db;padding:6px;text-align:left}}th{{background:#f3f4f6}}</style></head><body><h1>{}</h1><p>Result {}</p><div class=\"notice\">{}</div><table><thead><tr><th>section</th><th>construct</th><th>indicator</th><th>source</th><th>target</th><th>metric</th><th>value</th></tr></thead><tbody>{}</tbody></table></body></html>",
+        html_escape(title),
+        html_escape(title),
         html_escape(&result.id.to_string()),
+        html_escape(notice),
         table_rows
     )
 }
@@ -3214,6 +6026,8 @@ fn run_cli_worker_matrix(root: &Path) -> Result<serde_json::Value> {
             Some(&data),
             None,
             &output,
+            true,
+            false,
             true,
             Some(24),
             None,
@@ -4581,11 +7395,12 @@ fn run_demo_recipe(
     Ok(AnalysisResult::completed_pls_inference(
         recipe,
         format!(
-            "{}+{}+{}+{}+{}",
+            "{}+{}+{}+{}+{}+{}",
             qpls_estimation::PLS_METHOD_VERSION,
             qpls_estimation::PLS_MEDIATION_METHOD_VERSION,
             ASSESSMENT_METHOD_VERSION,
             RESAMPLING_METHOD_VERSION,
+            HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION,
             PERMUTATION_METHOD_VERSION
         ),
         started_at,
@@ -4614,6 +7429,7 @@ fn demo_engine_versions() -> serde_json::Value {
         "pls_mediation": qpls_estimation::PLS_MEDIATION_METHOD_VERSION,
         "assessment": ASSESSMENT_METHOD_VERSION,
         "resampling": RESAMPLING_METHOD_VERSION,
+        "htmt_bootstrap_inference": HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION,
         "permutation": PERMUTATION_METHOD_VERSION
     })
 }
@@ -4719,7 +7535,9 @@ fn run_analysis(
     data_path: Option<&Path>,
     recipe_id: Option<&str>,
     output: &Path,
-    _allow_experimental: bool,
+    allow_experimental: bool,
+    allow_internal_qualification: bool,
+    allow_v04_inference_qualification: bool,
     bootstrap_samples: Option<u32>,
     studentized_inner_samples: Option<u32>,
     permutation_samples: Option<u32>,
@@ -4783,7 +7601,22 @@ fn run_analysis(
         && recipe.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION
         && recipe.settings.method == AnalysisMethod::PlsPm
     {
-        recipe.method_config = Some(MethodConfig::default_for_settings(&recipe.settings));
+        if let Some(MethodConfig::PlsPosthocTechnicalMinimumSampleSize(config)) =
+            recipe.method_config.as_mut()
+        {
+            if recipe.settings.bootstrap_samples > 0 {
+                config.base_analysis =
+                    qpls_core::PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsBootstrap;
+                config.inference = qpls_core::PlsPosthocTechnicalMinimumSampleSizeInferenceV2::CaseBootstrapNormalReferenceTwoSided;
+            } else {
+                config.base_analysis =
+                    qpls_core::PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsAlgorithm;
+                config.inference =
+                    qpls_core::PlsPosthocTechnicalMinimumSampleSizeInferenceV2::PointEstimateOnly;
+            }
+        } else {
+            recipe.method_config = Some(MethodConfig::default_for_settings(&recipe.settings));
+        }
     }
     let issues = validate_recipe(&recipe);
     if let Some(issue) = issues
@@ -4795,12 +7628,803 @@ fn run_analysis(
     if recipe.dataset_fingerprint != dataset.fingerprint.0 {
         bail!("recipe dataset fingerprint does not match the imported dataset");
     }
+    if allow_v04_inference_qualification {
+        require_v04_inference_qualification_scope(&recipe)?;
+    } else {
+        require_cli_capability_availability(
+            &recipe,
+            allow_experimental,
+            allow_internal_qualification,
+        )?;
+    }
     let envelope = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {})
         .map_err(anyhow::Error::from)?;
     fs::write(output, serde_json::to_vec_pretty(&envelope)?)
         .with_context(|| format!("cannot write {}", output.display()))?;
     println!("wrote analysis result {}", output.display());
     Ok(())
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct RequiredCliCapabilityCellV2 {
+    capability_id: String,
+    cell_id: String,
+    capability_version: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CliCapabilityMappingFailure {
+    MissingMethodConfig,
+    MethodConfigMismatch,
+    UnmappedMethodConfig,
+    EmptyMapping,
+}
+
+impl std::fmt::Display for CliCapabilityMappingFailure {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(match self {
+            Self::MissingMethodConfig => "method_config is missing",
+            Self::MethodConfigMismatch => "method and method_config are incompatible",
+            Self::UnmappedMethodConfig => "method/config semantics have no exact registry cell",
+            Self::EmptyMapping => "the exact registry mapping is empty",
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct UnmappedCliCapabilityError {
+    method: AnalysisMethod,
+    config_kind: &'static str,
+    failure: CliCapabilityMappingFailure,
+}
+
+impl std::fmt::Display for UnmappedCliCapabilityError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            formatter,
+            "analysis method {} with method_config kind `{}` has no exact Capability Registry V2 execution mapping: {}",
+            self.method, self.config_kind, self.failure,
+        )
+    }
+}
+
+impl std::error::Error for UnmappedCliCapabilityError {}
+
+fn unmapped_cli_capability_error(
+    method: AnalysisMethod,
+    config_kind: &'static str,
+    failure: CliCapabilityMappingFailure,
+) -> anyhow::Error {
+    UnmappedCliCapabilityError {
+        method,
+        config_kind,
+        failure,
+    }
+    .into()
+}
+
+fn push_required_cli_capability_cell(
+    required_cells: &mut Vec<RequiredCliCapabilityCellV2>,
+    capability_id: &str,
+    cell_id: &str,
+    capability_version: &str,
+) {
+    if required_cells.iter().any(|required| {
+        required.capability_id == capability_id
+            && required.cell_id == cell_id
+            && required.capability_version == capability_version
+    }) {
+        return;
+    }
+    required_cells.push(RequiredCliCapabilityCellV2 {
+        capability_id: capability_id.into(),
+        cell_id: cell_id.into(),
+        capability_version: capability_version.into(),
+    });
+}
+
+fn push_pls_recipe_add_on_cells(
+    recipe: &AnalysisRecipe,
+    required_cells: &mut Vec<RequiredCliCapabilityCellV2>,
+) {
+    if recipe
+        .metadata
+        .get(PLS_MODEL_FIT_EXACT_RECIPE_SELECTOR)
+        .is_some_and(|value| value == "true")
+    {
+        push_required_cli_capability_cell(
+            required_cells,
+            "smartpls.model_fit",
+            "qpls3.assessment.model_fit",
+            PLS_MODEL_FIT_METHOD_VERSION,
+        );
+    }
+    if !recipe.model.interactions.is_empty() {
+        push_required_cli_capability_cell(
+            required_cells,
+            "smartpls.moderation",
+            "qpls3.pls.moderation",
+            "pls_two_stage_moderation_v1",
+        );
+    }
+    if !recipe.model.higher_order_constructs.is_empty() {
+        push_required_cli_capability_cell(
+            required_cells,
+            "smartpls.higher_order_models",
+            "qpls3.pls.higher_order_two_stage",
+            "pls_pm_v1",
+        );
+    }
+}
+
+fn push_pls_algorithm_base_cell(required_cells: &mut Vec<RequiredCliCapabilityCellV2>) {
+    push_required_cli_capability_cell(
+        required_cells,
+        "smartpls.pls_algorithm",
+        "qpls3.pls.algorithm",
+        "pls_pm_v1",
+    );
+}
+
+const ESTABLISHED_CLI_REQUIREMENT_ROLE_ORDER_V1: [&str; 2] = ["primary", "base"];
+
+fn push_generated_established_cli_capability_cells(
+    required_cells: &mut Vec<RequiredCliCapabilityCellV2>,
+    method: AnalysisMethod,
+    config_kind: &'static str,
+) -> Result<()> {
+    let contract =
+        qpls_core::generated::established_method_contract_v1(method.as_str(), config_kind)
+            .ok_or_else(|| {
+                unmapped_cli_capability_error(
+                    method,
+                    config_kind,
+                    CliCapabilityMappingFailure::UnmappedMethodConfig,
+                )
+            })?;
+    // Preserve the CLI's established first-failure and output-byte behavior:
+    // method-specific primary cells are checked before their mandatory base.
+    for role in ESTABLISHED_CLI_REQUIREMENT_ROLE_ORDER_V1 {
+        for requirement in contract
+            .capability_requirements
+            .iter()
+            .filter(|requirement| requirement.role == role)
+        {
+            push_required_cli_capability_cell(
+                required_cells,
+                requirement.capability_id,
+                requirement.cell_id,
+                requirement.capability_version,
+            );
+        }
+    }
+    Ok(())
+}
+
+fn required_cli_capability_cells(
+    recipe: &AnalysisRecipe,
+) -> Result<Vec<RequiredCliCapabilityCellV2>> {
+    let method = recipe.settings.method;
+    let Some(config) = recipe.method_config.as_ref() else {
+        return Err(unmapped_cli_capability_error(
+            method,
+            "<missing>",
+            CliCapabilityMappingFailure::MissingMethodConfig,
+        ));
+    };
+    if !config.supports_method(method) {
+        return Err(unmapped_cli_capability_error(
+            method,
+            config.kind(),
+            CliCapabilityMappingFailure::MethodConfigMismatch,
+        ));
+    }
+
+    let mut required_cells = Vec::new();
+    match (method, config) {
+        (AnalysisMethod::PlsPm, MethodConfig::PlsAlgorithm) => {
+            push_pls_recipe_add_on_cells(recipe, &mut required_cells);
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::PlsPm, MethodConfig::PlsBootstrap) => {
+            push_pls_recipe_add_on_cells(recipe, &mut required_cells);
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.pls_bootstrapping",
+                "qpls3.inference.bootstrap",
+                "indexed_resampling_v4",
+            );
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::PlsPm, MethodConfig::PlsPermutation) => {
+            push_pls_recipe_add_on_cells(recipe, &mut required_cells);
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.permutation",
+                "qpls3.inference.structural_path_randomization",
+                "freedman_lane_permutation_v1",
+            );
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::PlsPm, MethodConfig::PlsPosthocTechnicalMinimumSampleSize(posthoc)) => {
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                &posthoc.capability_cell.capability_id,
+                &posthoc.capability_cell.cell_id,
+                &posthoc.capability_cell.capability_version,
+            );
+            push_pls_recipe_add_on_cells(recipe, &mut required_cells);
+            if posthoc.base_analysis
+                == qpls_core::PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsBootstrap
+            {
+                push_required_cli_capability_cell(
+                    &mut required_cells,
+                    "smartpls.pls_bootstrapping",
+                    "qpls3.inference.bootstrap",
+                    "indexed_resampling_v4",
+                );
+            }
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::PlsSampleSizePower, MethodConfig::PlsSampleSizePower(_)) => {
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.pls_power_analysis",
+                "qpls3.pls.sample_size_power",
+                PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2,
+            );
+        }
+        (AnalysisMethod::Plsc, MethodConfig::Plsc | MethodConfig::PlscPermutation { .. }) => {
+            if recipe.settings.bootstrap_samples > 0 {
+                push_required_cli_capability_cell(
+                    &mut required_cells,
+                    "smartpls.consistent_bootstrapping",
+                    "qpls3.inference.consistent_bootstrap",
+                    PLSC_CONSISTENT_BOOTSTRAP_METHOD_VERSION,
+                );
+            }
+            if recipe.settings.permutation_samples > 0
+                || matches!(config, MethodConfig::PlscPermutation { .. })
+            {
+                push_required_cli_capability_cell(
+                    &mut required_cells,
+                    "smartpls.consistent_permutation",
+                    "qpls3.inference.consistent_permutation",
+                    PLSC_CONSISTENT_PERMUTATION_METHOD_VERSION,
+                );
+            }
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.plsc",
+                "qpls3.pls.consistent",
+                "plsc_v2",
+            );
+        }
+        (AnalysisMethod::Wpls, MethodConfig::Wpls) => {
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.wpls",
+                "qpls3.pls.weighted",
+                "wpls_case_weighted_v1",
+            );
+        }
+        (AnalysisMethod::Cca, MethodConfig::Cca) => {
+            push_generated_established_cli_capability_cells(
+                &mut required_cells,
+                method,
+                config.kind(),
+            )?;
+        }
+        (AnalysisMethod::CtaPls, MethodConfig::CtaPls) => {
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.cta_pls",
+                "qpls3.assessment.cta_pls",
+                "cta_pls_tetrad_v1",
+            );
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::Endogeneity, MethodConfig::Endogeneity) => {
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.endogeneity_gaussian_copulas",
+                "qpls3.pls.gaussian_copula_endogeneity",
+                "gaussian_copula_endogeneity_v1",
+            );
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::NonlinearEffects, MethodConfig::NonlinearEffects) => {
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.nonlinear_relationships",
+                "qpls3.pls.nonlinear_quadratic",
+                "pls_quadratic_nonlinear_effects_v1",
+            );
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::ModeratedMediation, MethodConfig::ModeratedMediation) => {
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.moderation",
+                "qpls3.pls.moderation",
+                "pls_two_stage_moderation_v1",
+            );
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.mediation",
+                "qpls3.pls.mediation",
+                "pls_mediation_v1",
+            );
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::Predict, MethodConfig::Predict { pls_pos, fimix }) => {
+            if pls_pos.is_some() {
+                push_required_cli_capability_cell(
+                    &mut required_cells,
+                    "smartpls.pls_pos",
+                    "qpls3.segmentation.pls_pos",
+                    "pls_pos_v1",
+                );
+            }
+            if fimix.is_some() {
+                push_required_cli_capability_cell(
+                    &mut required_cells,
+                    "smartpls.fimix_pls",
+                    "qpls3.segmentation.fimix_pls",
+                    "fimix_pls_v1",
+                );
+            }
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.plspredict",
+                "qpls3.prediction.plspredict_cvpat",
+                "plspredict_indicator_v2",
+            );
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.cvpat",
+                "qpls3.prediction.plspredict_cvpat",
+                "plspredict_indicator_v2",
+            );
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::Mga, MethodConfig::Mga { methods, .. }) => {
+            if methods.is_empty() {
+                return Err(unmapped_cli_capability_error(
+                    method,
+                    config.kind(),
+                    CliCapabilityMappingFailure::UnmappedMethodConfig,
+                ));
+            }
+            for group_method in methods {
+                match group_method {
+                    qpls_core::GroupAnalysisMethod::Micom => {
+                        push_required_cli_capability_cell(
+                            &mut required_cells,
+                            "smartpls.micom",
+                            "qpls3.groups.micom_permutation_mga",
+                            "pls_mga_permutation_v4",
+                        );
+                    }
+                    qpls_core::GroupAnalysisMethod::MgaPermutation => {
+                        push_required_cli_capability_cell(
+                            &mut required_cells,
+                            "smartpls.mga",
+                            "qpls3.groups.micom_permutation_mga",
+                            "pls_mga_permutation_v4",
+                        );
+                    }
+                }
+            }
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::Mga, MethodConfig::Micom { .. }) => {
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.micom",
+                "qpls3.groups.micom_permutation_mga",
+                "pls_mga_permutation_v4",
+            );
+            push_pls_algorithm_base_cell(&mut required_cells);
+        }
+        (AnalysisMethod::Ipma, MethodConfig::Ipma { .. }) => {
+            push_generated_established_cli_capability_cells(
+                &mut required_cells,
+                method,
+                config.kind(),
+            )?;
+        }
+        (
+            AnalysisMethod::Cbsem,
+            MethodConfig::Cbsem {
+                model_type,
+                estimator,
+                input,
+                mean_structure,
+                bootstrap_samples,
+                bootstrap_v2,
+                group_column,
+                invariance_steps,
+            },
+        ) => {
+            if *estimator != qpls_core::CbsemEstimator::Ml
+                || *input != qpls_core::CbsemInput::Raw
+                || *mean_structure
+                || (*bootstrap_samples > 0 && bootstrap_v2.is_none())
+            {
+                return Err(unmapped_cli_capability_error(
+                    method,
+                    config.kind(),
+                    CliCapabilityMappingFailure::UnmappedMethodConfig,
+                ));
+            }
+            if bootstrap_v2.is_some() {
+                push_required_cli_capability_cell(
+                    &mut required_cells,
+                    "smartpls.cbsem_bootstrapping",
+                    "qpls3.cbsem.bootstrap",
+                    "cbsem_bootstrap_v2",
+                );
+            }
+            if !recipe.model.interactions.is_empty() {
+                push_required_cli_capability_cell(
+                    &mut required_cells,
+                    "smartpls.cbsem_moderator",
+                    "qpls3.cbsem.moderator",
+                    "cbsem_moderator_v1",
+                );
+            }
+            if !invariance_steps.is_empty() {
+                push_required_cli_capability_cell(
+                    &mut required_cells,
+                    "smartpls.cbsem_measurement_invariance",
+                    "qpls3.cbsem.measurement_invariance",
+                    "cbsem_invariance_v2",
+                );
+            }
+            if group_column.is_some() {
+                push_required_cli_capability_cell(
+                    &mut required_cells,
+                    "smartpls.cbsem_mga",
+                    "qpls3.cbsem.multigroup",
+                    "cbsem_multigroup_v2",
+                );
+            }
+            let capability_id = match model_type {
+                qpls_core::CbsemModelType::Cfa => "smartpls.cfa",
+                qpls_core::CbsemModelType::Sem => "smartpls.cbsem",
+            };
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                capability_id,
+                "qpls3.cbsem.ml",
+                "cbsem_ml_v1",
+            );
+        }
+        (AnalysisMethod::Pca, MethodConfig::Pca { .. }) => {
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.pca_core",
+                "qpls3.standalone.pca",
+                "pca_v1",
+            );
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                "smartpls.pca_cbsem",
+                "qpls3.standalone.pca",
+                "pca_v1",
+            );
+        }
+        (AnalysisMethod::Gsca, MethodConfig::Gsca) => {
+            push_generated_established_cli_capability_cells(
+                &mut required_cells,
+                method,
+                config.kind(),
+            )?;
+        }
+        (
+            AnalysisMethod::Regression,
+            MethodConfig::Regression {
+                model, bootstrap, ..
+            },
+        ) => {
+            if bootstrap.is_some() {
+                match model {
+                    qpls_core::RegressionModelConfig::Process { .. } => {
+                        push_required_cli_capability_cell(
+                            &mut required_cells,
+                            "smartpls.process_bootstrapping",
+                            "qpls3.standalone.process",
+                            "regression_process_v2",
+                        );
+                    }
+                    qpls_core::RegressionModelConfig::Ols { .. }
+                    | qpls_core::RegressionModelConfig::Logistic => {
+                        push_required_cli_capability_cell(
+                            &mut required_cells,
+                            "smartpls.regression_bootstrapping",
+                            "qpls3.standalone.regression_bootstrap",
+                            "regression_bootstrap_v1",
+                        );
+                    }
+                }
+            }
+            let (capability_id, cell_id, capability_version) = match model {
+                qpls_core::RegressionModelConfig::Ols { .. } => (
+                    "smartpls.regression",
+                    "qpls3.standalone.ols",
+                    "regression_ols_v1",
+                ),
+                qpls_core::RegressionModelConfig::Logistic => (
+                    "smartpls.logistic_regression",
+                    "qpls3.standalone.logistic",
+                    "regression_logistic_v2",
+                ),
+                qpls_core::RegressionModelConfig::Process { .. } => (
+                    "smartpls.process",
+                    "qpls3.standalone.process",
+                    "regression_process_v2",
+                ),
+            };
+            push_required_cli_capability_cell(
+                &mut required_cells,
+                capability_id,
+                cell_id,
+                capability_version,
+            );
+        }
+        (AnalysisMethod::Nca, MethodConfig::Nca { .. }) => {
+            push_generated_established_cli_capability_cells(
+                &mut required_cells,
+                method,
+                config.kind(),
+            )?;
+        }
+        (AnalysisMethod::Legacy, MethodConfig::Legacy) => {
+            return Err(unmapped_cli_capability_error(
+                method,
+                config.kind(),
+                CliCapabilityMappingFailure::UnmappedMethodConfig,
+            ));
+        }
+        _ => {
+            return Err(unmapped_cli_capability_error(
+                method,
+                config.kind(),
+                CliCapabilityMappingFailure::UnmappedMethodConfig,
+            ));
+        }
+    }
+
+    if required_cells.is_empty() {
+        return Err(unmapped_cli_capability_error(
+            method,
+            config.kind(),
+            CliCapabilityMappingFailure::EmptyMapping,
+        ));
+    }
+    Ok(required_cells)
+}
+
+fn require_cli_capability_availability(
+    recipe: &AnalysisRecipe,
+    allow_experimental: bool,
+    allow_internal_qualification: bool,
+) -> Result<()> {
+    require_internal_qualification_build(
+        allow_internal_qualification,
+        cfg!(debug_assertions),
+    )?;
+    require_cli_capability_availability_after_build_guard(
+        recipe,
+        allow_experimental,
+        allow_internal_qualification,
+    )
+}
+
+fn require_internal_qualification_build(
+    allow_internal_qualification: bool,
+    debug_assertions_enabled: bool,
+) -> Result<()> {
+    if allow_internal_qualification && !debug_assertions_enabled {
+        bail!("--allow-internal-qualification is available only in debug validation builds");
+    }
+    Ok(())
+}
+
+fn require_cli_capability_availability_after_build_guard(
+    recipe: &AnalysisRecipe,
+    allow_experimental: bool,
+    allow_internal_qualification: bool,
+) -> Result<()> {
+    if !recipe.model.higher_order_constructs.is_empty()
+        && !pls_higher_order_recipe_is_standard_scope(recipe)
+        && !allow_experimental
+    {
+        bail!(
+            "This higher-order recipe is outside the Standard disjoint two-stage point-estimate scope and requires --allow-experimental; Standard supports exactly one reflective indicator-free HOC, at least two reflective measured measurement-only components, one HOC-to-measured-outcome path, path weighting, standardized listwise data, and no resampling or case weights"
+        );
+    }
+    let required_cells = required_cli_capability_cells(recipe)?;
+    let registry = CapabilityRegistryV2::embedded().context(
+        "the embedded Capability Registry V2 is invalid; analysis availability cannot be checked",
+    )?;
+    for required in required_cells {
+        let cell = registry
+            .option_cells()
+            .find(|cell| {
+                cell.capability_id == required.capability_id
+                    && cell.cell_id == required.cell_id
+                    && cell.capability_version == required.capability_version
+            })
+            .with_context(|| {
+                format!(
+                    "Capability Registry V2 does not contain exact option cell {}::{}@{}",
+                    required.capability_id, required.cell_id, required.capability_version,
+                )
+            })?;
+        if cell.standard_available()
+            || (allow_experimental && cell.labs_available())
+            || (allow_internal_qualification && internal_qualification_allows_cell(recipe, cell))
+        {
+            continue;
+        }
+        if cell.labs_available() {
+            bail!(
+                "{} is Experimental and requires --allow-experimental for CLI calculation",
+                cell.cell_id,
+            );
+        }
+        bail!(
+            "{} is unavailable for CLI calculation (coverage={}, evidence={}, surface={}); the source implementation remains restricted to internal qualification until its exact registry cell becomes executable",
+            cell.cell_id,
+            cell.coverage_state,
+            cell.evidence_state,
+            cell.surface,
+        );
+    }
+    Ok(())
+}
+
+fn pls_higher_order_recipe_is_standard_scope(recipe: &AnalysisRecipe) -> bool {
+    let declarations = &recipe.model.higher_order_constructs;
+    if declarations.len() != 1
+        || recipe.settings.method != AnalysisMethod::PlsPm
+        || !matches!(
+            recipe.method_config.as_ref(),
+            Some(MethodConfig::PlsAlgorithm)
+        )
+        || recipe.settings.weighting_scheme != qpls_core::WeightingScheme::Path
+        || recipe.settings.preprocessing != qpls_core::Preprocessing::Standardized
+        || recipe.settings.missing_data != qpls_core::MissingDataPolicy::ListwiseDeletion
+        || recipe.settings.bootstrap_samples != 0
+        || recipe.settings.studentized_inner_samples != 0
+        || recipe.settings.permutation_samples != 0
+        || recipe.settings.case_weight_column.is_some()
+        || !recipe.model.controls.is_empty()
+        || !recipe.model.interactions.is_empty()
+        || recipe.model.paths.len() != 1
+    {
+        return false;
+    }
+
+    let declaration = &declarations[0];
+    if declaration.method != qpls_core::HigherOrderMethod::TwoStage
+        || declaration.stage_one_recipe.is_some()
+        || declaration.components.len() < 2
+    {
+        return false;
+    }
+    let component_ids = declaration
+        .components
+        .iter()
+        .map(String::as_str)
+        .collect::<std::collections::HashSet<_>>();
+    if component_ids.len() != declaration.components.len() {
+        return false;
+    }
+    let Some(hoc) = recipe
+        .model
+        .constructs
+        .iter()
+        .find(|construct| construct.id == declaration.id.as_str())
+    else {
+        return false;
+    };
+    if hoc.mode != MeasurementMode::Reflective || !hoc.indicators.is_empty() {
+        return false;
+    }
+    if !declaration.components.iter().all(|component_id| {
+        recipe.model.constructs.iter().any(|construct| {
+            construct.id == component_id.as_str()
+                && construct.mode == MeasurementMode::Reflective
+                && !construct.indicators.is_empty()
+        }) && recipe.model.paths.iter().all(|path| {
+            path.source != component_id.as_str() && path.target != component_id.as_str()
+        })
+    }) {
+        return false;
+    }
+    let path = &recipe.model.paths[0];
+    path.source == declaration.id.as_str()
+        && !component_ids.contains(path.target.as_str())
+        && recipe.model.constructs.iter().any(|construct| {
+            construct.id == path.target.as_str()
+                && construct.id != declaration.id.as_str()
+                && !construct.indicators.is_empty()
+        })
+}
+
+fn require_v04_inference_qualification_scope(recipe: &AnalysisRecipe) -> Result<()> {
+    let required = required_cli_capability_cells(recipe)?;
+    let expected = vec![
+        RequiredCliCapabilityCellV2 {
+            capability_id: "smartpls.pls_bootstrapping".into(),
+            cell_id: "qpls3.inference.bootstrap".into(),
+            capability_version: "indexed_resampling_v4".into(),
+        },
+        RequiredCliCapabilityCellV2 {
+            capability_id: "smartpls.pls_algorithm".into(),
+            cell_id: "qpls3.pls.algorithm".into(),
+            capability_version: "pls_pm_v1".into(),
+        },
+    ];
+    if required != expected {
+        bail!(
+            "v0.4 inference qualification requires exactly the bounded PLS bootstrap and PLS algorithm cells"
+        );
+    }
+    Ok(())
+}
+
+fn internal_qualification_allows_cell(
+    recipe: &AnalysisRecipe,
+    cell: &CapabilityOptionCellV2,
+) -> bool {
+    internal_qualification_allows_cell_for_build(recipe, cell, cfg!(debug_assertions))
+}
+
+fn internal_qualification_allows_cell_for_build(
+    recipe: &AnalysisRecipe,
+    cell: &CapabilityOptionCellV2,
+    debug_assertions_enabled: bool,
+) -> bool {
+    if !debug_assertions_enabled
+        || cell.coverage_state != qpls_core::CoverageStateV2::Partial
+        || cell.surface != ProductSurfaceV2::Labs
+    {
+        return false;
+    }
+    let Some(config) = recipe.method_config.as_ref() else {
+        return false;
+    };
+    let explicitly_allowlisted = match (recipe.settings.method, config) {
+        (AnalysisMethod::PlsPm, MethodConfig::PlsAlgorithm) => {
+            cell.capability_id == "smartpls.pls_algorithm"
+                && cell.cell_id == "qpls3.pls.algorithm"
+                && cell.capability_version == "pls_pm_v1"
+        }
+        (AnalysisMethod::Wpls, MethodConfig::Wpls) => {
+            cell.capability_id == "smartpls.wpls"
+                && cell.cell_id == "qpls3.pls.weighted"
+                && cell.capability_version == "wpls_case_weighted_v1"
+        }
+        _ => false,
+    };
+    if explicitly_allowlisted {
+        return true;
+    }
+    let Some(contract) = qpls_core::generated::established_method_contract_v1(
+        recipe.settings.method.as_str(),
+        config.kind(),
+    ) else {
+        return false;
+    };
+    contract.capability_requirements.iter().any(|required| {
+        cell.capability_id == required.capability_id
+            && cell.cell_id == required.cell_id
+            && cell.capability_version == required.capability_version
+    })
 }
 
 fn require_executable_project(project: &Project) -> Result<()> {
@@ -4936,6 +8560,1214 @@ fn migrate_recipe(input: &Path, output: &Path, json_output: bool) -> Result<()> 
 mod tests {
     use super::*;
 
+    fn simple_pls_recipe() -> AnalysisRecipe {
+        let historical: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/fixtures/simple_reflective.recipe.json"
+        ))
+        .unwrap();
+        historical.migrated_v3().unwrap()
+    }
+
+    fn disjoint_two_stage_hoc_recipe() -> AnalysisRecipe {
+        let historical: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/higher_order_two_stage_base.recipe.json"
+        ))
+        .unwrap();
+        historical.migrated_v3().unwrap()
+    }
+
+    fn required_cell(
+        capability_id: &str,
+        cell_id: &str,
+        capability_version: &str,
+    ) -> RequiredCliCapabilityCellV2 {
+        RequiredCliCapabilityCellV2 {
+            capability_id: capability_id.into(),
+            cell_id: cell_id.into(),
+            capability_version: capability_version.into(),
+        }
+    }
+
+    fn write_runner_result(recipe_path: &Path, data_path: &Path, output: &Path) {
+        let recipe: AnalysisRecipe =
+            serde_json::from_slice(&fs::read(recipe_path).unwrap()).unwrap();
+        let dataset =
+            qpls_data::import_path(data_path, &qpls_data::ImportOptions::default()).unwrap();
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        fs::write(output, serde_json::to_vec_pretty(&result).unwrap()).unwrap();
+    }
+
+    fn plsc_consistent_bootstrap_recipe() -> AnalysisRecipe {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let historical: AnalysisRecipe = serde_json::from_slice(
+            &fs::read(root.join("validation/results/plsc_reference.recipe.json")).unwrap(),
+        )
+        .unwrap();
+        let mut recipe = historical.migrated_v3().unwrap();
+        recipe.settings.bootstrap_samples = 1_000;
+        recipe.settings.studentized_inner_samples = 0;
+        recipe.settings.permutation_samples = 0;
+        recipe.method_config = Some(MethodConfig::Plsc);
+        recipe
+    }
+
+    fn plsc_consistent_permutation_fixture() -> (qpls_data::Dataset, AnalysisRecipe) {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let dataset = qpls_data::import_path(
+            &root.join("validation/fixtures/plsc_consistent_permutation_two_group.csv"),
+            &qpls_data::ImportOptions::default(),
+        )
+        .unwrap();
+        let historical: AnalysisRecipe = serde_json::from_slice(
+            &fs::read(root.join("validation/results/micom_v2_reference.recipe.json")).unwrap(),
+        )
+        .unwrap();
+        let mut recipe = historical.migrated_v3().unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.method = AnalysisMethod::Plsc;
+        recipe.settings.bootstrap_samples = 0;
+        recipe.settings.studentized_inner_samples = 0;
+        recipe.settings.permutation_samples = 99;
+        recipe.settings.workers = 2;
+        recipe.settings.confidence_level = 0.95;
+        recipe.settings.case_weight_column = None;
+        recipe.method_config = Some(MethodConfig::PlscPermutation {
+            group_column: "group".into(),
+            group_a: "A".into(),
+            group_b: "B".into(),
+            test_tail: qpls_core::PlscPermutationTestTail::TwoSided,
+        });
+        recipe.metadata.clear();
+        (dataset, recipe)
+    }
+
+    #[test]
+    fn cli_generated_established_method_cells_match_frozen_contracts() {
+        assert_eq!(
+            ESTABLISHED_CLI_REQUIREMENT_ROLE_ORDER_V1,
+            ["primary", "base"]
+        );
+        let cases = [
+            (
+                AnalysisMethod::Cca,
+                MethodConfig::Cca,
+                "cca",
+                vec![
+                    (
+                        "base",
+                        required_cell("smartpls.pls_algorithm", "qpls3.pls.algorithm", "pls_pm_v1"),
+                    ),
+                    (
+                        "primary",
+                        required_cell(
+                            "smartpls.cca",
+                            "qpls3.assessment.cca_residuals",
+                            "cca_composite_residual_v1",
+                        ),
+                    ),
+                ],
+            ),
+            (
+                AnalysisMethod::Gsca,
+                MethodConfig::Gsca,
+                "gsca",
+                vec![(
+                    "primary",
+                    required_cell("smartpls.gsca", "qpls3.gsca.als", "gsca_als_v2"),
+                )],
+            ),
+            (
+                AnalysisMethod::Ipma,
+                MethodConfig::Ipma {
+                    targets: vec!["y".into()],
+                },
+                "ipma",
+                vec![
+                    (
+                        "base",
+                        required_cell("smartpls.pls_algorithm", "qpls3.pls.algorithm", "pls_pm_v1"),
+                    ),
+                    (
+                        "primary",
+                        required_cell("smartpls.ipma", "qpls3.assessment.ipma", "ipma_v1"),
+                    ),
+                ],
+            ),
+            (
+                AnalysisMethod::Nca,
+                MethodConfig::Nca {
+                    condition: "x".into(),
+                    outcome: "y".into(),
+                    ceiling: qpls_core::NcaCeiling::Both,
+                    permutation_samples: 0,
+                },
+                "nca",
+                vec![(
+                    "primary",
+                    required_cell("smartpls.nca", "qpls3.standalone.nca", "nca_v2"),
+                )],
+            ),
+        ];
+
+        for (method, config, config_kind, expected) in cases {
+            assert_eq!(config.kind(), config_kind);
+            let contract =
+                qpls_core::generated::established_method_contract_v1(method.as_str(), config_kind)
+                    .unwrap();
+            let generated = contract
+                .capability_requirements
+                .iter()
+                .map(|requirement| {
+                    (
+                        requirement.role,
+                        required_cell(
+                            requirement.capability_id,
+                            requirement.cell_id,
+                            requirement.capability_version,
+                        ),
+                    )
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(generated, expected, "{method}");
+            let expected_cli = expected
+                .iter()
+                .filter(|(role, _)| *role == "primary")
+                .chain(expected.iter().filter(|(role, _)| *role == "base"))
+                .map(|(_, required)| required.clone())
+                .collect::<Vec<_>>();
+
+            let mut required_cells = Vec::new();
+            push_generated_established_cli_capability_cells(
+                &mut required_cells,
+                method,
+                config_kind,
+            )
+            .unwrap();
+            assert_eq!(required_cells, expected_cli, "{method}");
+
+            let mut recipe = simple_pls_recipe();
+            recipe.settings.method = method;
+            recipe.method_config = Some(config);
+            assert_eq!(
+                required_cli_capability_cells(&recipe).unwrap(),
+                expected_cli,
+                "{method}",
+            );
+        }
+    }
+
+    #[test]
+    fn cli_generated_established_method_lookup_preserves_unknown_and_dynamic_fallbacks() {
+        assert!(qpls_core::generated::established_method_contract_v1("legacy", "legacy").is_none());
+        let mut unknown_cells = Vec::new();
+        let error = push_generated_established_cli_capability_cells(
+            &mut unknown_cells,
+            AnalysisMethod::Legacy,
+            "legacy",
+        )
+        .unwrap_err();
+        let typed = error.downcast_ref::<UnmappedCliCapabilityError>().unwrap();
+        assert_eq!(typed.method, AnalysisMethod::Legacy);
+        assert_eq!(typed.config_kind, "legacy");
+        assert_eq!(
+            typed.failure,
+            CliCapabilityMappingFailure::UnmappedMethodConfig
+        );
+        assert!(unknown_cells.is_empty());
+
+        assert!(
+            qpls_core::generated::established_method_contract_v1("regression", "regression")
+                .is_none()
+        );
+        let mut regression = simple_pls_recipe();
+        regression.settings.method = AnalysisMethod::Regression;
+        regression.method_config = Some(MethodConfig::Regression {
+            outcome: "y".into(),
+            predictors: vec!["x".into()],
+            controls: Vec::new(),
+            model: qpls_core::RegressionModelConfig::Logistic,
+            bootstrap: None,
+        });
+        assert_eq!(
+            required_cli_capability_cells(&regression).unwrap(),
+            vec![required_cell(
+                "smartpls.logistic_regression",
+                "qpls3.standalone.logistic",
+                "regression_logistic_v2",
+            )],
+        );
+    }
+
+    #[test]
+    fn cli_plain_pls_point_plsc_and_consistent_bootstrap_are_standard() {
+        let pls = simple_pls_recipe();
+        assert_eq!(
+            required_cli_capability_cells(&pls).unwrap(),
+            vec![required_cell(
+                "smartpls.pls_algorithm",
+                "qpls3.pls.algorithm",
+                "pls_pm_v1",
+            )],
+        );
+        for allow_experimental in [false, true] {
+            require_cli_capability_availability(&pls, allow_experimental, false).unwrap();
+        }
+
+        let recipe = plsc_consistent_bootstrap_recipe();
+        for allow_experimental in [false, true] {
+            require_cli_capability_availability(&recipe, allow_experimental, false).unwrap();
+        }
+
+        let mut point_estimate = recipe;
+        point_estimate.settings.bootstrap_samples = 0;
+        assert_eq!(
+            required_cli_capability_cells(&point_estimate).unwrap(),
+            vec![required_cell(
+                "smartpls.plsc",
+                "qpls3.pls.consistent",
+                "plsc_v2",
+            )],
+        );
+        for allow_experimental in [false, true] {
+            require_cli_capability_availability(&point_estimate, allow_experimental, false)
+                .unwrap();
+        }
+    }
+
+    #[test]
+    fn cli_cta_pls_uses_the_exact_scoped_standard_cell_and_pls_base() {
+        let mut recipe = simple_pls_recipe();
+        recipe.settings.method = AnalysisMethod::CtaPls;
+        recipe.method_config = Some(MethodConfig::CtaPls);
+
+        assert_eq!(
+            required_cli_capability_cells(&recipe).unwrap(),
+            vec![
+                required_cell(
+                    "smartpls.cta_pls",
+                    "qpls3.assessment.cta_pls",
+                    "cta_pls_tetrad_v1",
+                ),
+                required_cell("smartpls.pls_algorithm", "qpls3.pls.algorithm", "pls_pm_v1"),
+            ],
+        );
+        for allow_experimental in [false, true] {
+            require_cli_capability_availability(&recipe, allow_experimental, false).unwrap();
+        }
+    }
+
+    #[test]
+    fn cli_structural_path_randomization_uses_the_exact_scoped_standard_cell_and_pls_base() {
+        let mut recipe = simple_pls_recipe();
+        recipe.settings.permutation_samples = 999;
+        recipe.method_config = Some(MethodConfig::PlsPermutation);
+
+        assert_eq!(
+            required_cli_capability_cells(&recipe).unwrap(),
+            vec![
+                required_cell(
+                    "smartpls.permutation",
+                    "qpls3.inference.structural_path_randomization",
+                    "freedman_lane_permutation_v1",
+                ),
+                required_cell("smartpls.pls_algorithm", "qpls3.pls.algorithm", "pls_pm_v1"),
+            ],
+        );
+        for allow_experimental in [false, true] {
+            require_cli_capability_availability(&recipe, allow_experimental, false).unwrap();
+        }
+    }
+
+    #[test]
+    fn cli_higher_order_standard_cell_is_exactly_disjoint_two_stage_point_only() {
+        let exact = disjoint_two_stage_hoc_recipe();
+        assert!(pls_higher_order_recipe_is_standard_scope(&exact));
+        assert_eq!(
+            required_cli_capability_cells(&exact).unwrap(),
+            vec![
+                required_cell(
+                    "smartpls.higher_order_models",
+                    "qpls3.pls.higher_order_two_stage",
+                    "pls_pm_v1",
+                ),
+                required_cell("smartpls.pls_algorithm", "qpls3.pls.algorithm", "pls_pm_v1"),
+            ],
+        );
+        require_cli_capability_availability(&exact, false, false).unwrap();
+
+        let mut outside = Vec::new();
+        let mut repeated = exact.clone();
+        repeated.model.higher_order_constructs[0].method =
+            qpls_core::HigherOrderMethod::RepeatedIndicators;
+        outside.push(repeated);
+        let mut hybrid = exact.clone();
+        hybrid.model.higher_order_constructs[0].method = qpls_core::HigherOrderMethod::Hybrid;
+        outside.push(hybrid);
+        let mut extra_path = exact.clone();
+        extra_path.model.paths.push(StructuralPath {
+            source: "x".into(),
+            target: "y".into(),
+        });
+        outside.push(extra_path);
+        let mut resampled = exact.clone();
+        resampled.settings.bootstrap_samples = 999;
+        resampled.method_config = Some(MethodConfig::PlsBootstrap);
+        outside.push(resampled);
+
+        for recipe in outside {
+            assert!(!pls_higher_order_recipe_is_standard_scope(&recipe));
+            let error = require_cli_capability_availability(&recipe, false, false)
+                .unwrap_err()
+                .to_string();
+            assert!(error.contains("outside the Standard disjoint two-stage point-estimate scope"));
+            require_cli_capability_availability(&recipe, true, false).unwrap();
+        }
+    }
+
+    #[test]
+    fn cli_internal_qualification_is_debug_only_and_exactly_scoped() {
+        let mut cca = simple_pls_recipe();
+        cca.settings.method = AnalysisMethod::Cca;
+        cca.method_config = Some(MethodConfig::Cca);
+
+        let ordinary = require_cli_capability_availability(&cca, false, false)
+            .unwrap_err()
+            .to_string();
+        assert!(ordinary.contains("qpls3.assessment.cca_residuals is Experimental"));
+        require_cli_capability_availability(&cca, true, false).unwrap();
+
+        let registry = CapabilityRegistryV2::embedded().unwrap();
+        let mut absent_evidence_cell = registry
+            .option_cells()
+            .find(|cell| cell.cell_id == "qpls3.assessment.cca_residuals")
+            .unwrap()
+            .clone();
+        absent_evidence_cell.evidence_state = qpls_core::EvidenceStateV2::Absent;
+        if cfg!(debug_assertions) {
+            assert!(internal_qualification_allows_cell(
+                &cca,
+                &absent_evidence_cell
+            ));
+            require_cli_capability_availability(&cca, false, true).unwrap();
+        }
+
+        let plain_pls = simple_pls_recipe();
+        let mut pls_cell = registry
+            .option_cells()
+            .find(|cell| cell.cell_id == "qpls3.pls.algorithm")
+            .unwrap()
+            .clone();
+        pls_cell.evidence_state = qpls_core::EvidenceStateV2::Absent;
+        pls_cell.surface = ProductSurfaceV2::Labs;
+        assert!(internal_qualification_allows_cell_for_build(
+            &plain_pls,
+            &pls_cell,
+            true,
+        ));
+        assert!(!internal_qualification_allows_cell_for_build(
+            &plain_pls,
+            &pls_cell,
+            false,
+        ));
+
+        let mut wpls = simple_pls_recipe();
+        wpls.settings.method = AnalysisMethod::Wpls;
+        wpls.method_config = Some(MethodConfig::Wpls);
+        let mut wpls_cell = registry
+            .option_cells()
+            .find(|cell| cell.cell_id == "qpls3.pls.weighted")
+            .unwrap()
+            .clone();
+        wpls_cell.evidence_state = qpls_core::EvidenceStateV2::Absent;
+        wpls_cell.surface = ProductSurfaceV2::Labs;
+        assert!(internal_qualification_allows_cell_for_build(
+            &wpls,
+            &wpls_cell,
+            true,
+        ));
+        assert!(!internal_qualification_allows_cell_for_build(
+            &wpls,
+            &wpls_cell,
+            false,
+        ));
+        if cfg!(debug_assertions) {
+            require_cli_capability_availability(&wpls, false, true).unwrap();
+        }
+
+        let mut wrong_version = pls_cell;
+        wrong_version.capability_version = "pls_pm_v999".into();
+        assert!(!internal_qualification_allows_cell_for_build(
+            &plain_pls,
+            &wrong_version,
+            true,
+        ));
+
+        require_internal_qualification_build(true, true).unwrap();
+        let release_error = require_internal_qualification_build(true, false)
+            .unwrap_err()
+            .to_string();
+        assert!(release_error.contains("only in debug validation builds"));
+    }
+
+    #[test]
+    fn cli_required_cells_keep_derived_dependencies_before_their_base_cells() {
+        let mut bootstrap = simple_pls_recipe();
+        bootstrap.settings.bootstrap_samples = 1_000;
+        bootstrap.method_config = Some(MethodConfig::PlsBootstrap);
+        assert_eq!(
+            required_cli_capability_cells(&bootstrap).unwrap(),
+            vec![
+                required_cell(
+                    "smartpls.pls_bootstrapping",
+                    "qpls3.inference.bootstrap",
+                    "indexed_resampling_v4",
+                ),
+                required_cell("smartpls.pls_algorithm", "qpls3.pls.algorithm", "pls_pm_v1",),
+            ],
+        );
+
+        let mut prospective_power = simple_pls_recipe();
+        prospective_power.settings.method = AnalysisMethod::PlsSampleSizePower;
+        prospective_power.method_config = Some(MethodConfig::PlsSampleSizePower(
+            qpls_core::PlsSampleSizePowerConfig {
+                scenario_identity: "cli-v2-power".into(),
+                predictor_construct: "Capability".into(),
+                outcome_construct: "Retention".into(),
+                predictor_indicator_loadings: vec![0.8, 0.8, 0.8],
+                outcome_indicator_loadings: vec![0.8, 0.8, 0.8],
+                population_path: 0.3,
+                exogenous_distribution: qpls_core::PlsPowerDistribution::StandardNormal,
+                structural_disturbance_distribution:
+                    qpls_core::PlsPowerDistribution::StandardNormal,
+                indicator_error_distribution: qpls_core::PlsPowerDistribution::StandardNormal,
+                missing_data: qpls_core::PlsPowerMissingData::None,
+                inference:
+                    qpls_core::PlsPowerInference::CaseBootstrapNullCenteredTwoSidedPlusOne,
+                sample_size_grid: vec![50, 100],
+                alpha: 0.05,
+                target_power: 0.8,
+                interval_confidence_level: 0.95,
+                monte_carlo_replicates: 100,
+                bootstrap_replicates: 99,
+            },
+        ));
+        assert_eq!(
+            required_cli_capability_cells(&prospective_power).unwrap(),
+            vec![required_cell(
+                "smartpls.pls_power_analysis",
+                "qpls3.pls.sample_size_power",
+                PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2,
+            )],
+        );
+
+        let mut posthoc = simple_pls_recipe();
+        posthoc.settings.bootstrap_samples = 1_000;
+        posthoc.method_config = Some(MethodConfig::PlsPosthocTechnicalMinimumSampleSize(
+            qpls_core::PlsPosthocTechnicalMinimumSampleSizeConfigV2::bootstrap_v2(),
+        ));
+        assert_eq!(
+            required_cli_capability_cells(&posthoc).unwrap(),
+            vec![
+                required_cell(
+                    "smartpls.pls_power_analysis",
+                    "qpls3.pls.posthoc_technical_minimum_sample_size",
+                    "pls_posthoc_technical_minimum_sample_size_v2",
+                ),
+                required_cell(
+                    "smartpls.pls_bootstrapping",
+                    "qpls3.inference.bootstrap",
+                    "indexed_resampling_v4",
+                ),
+                required_cell("smartpls.pls_algorithm", "qpls3.pls.algorithm", "pls_pm_v1",),
+            ],
+        );
+
+        let plsc = plsc_consistent_bootstrap_recipe();
+        assert_eq!(
+            required_cli_capability_cells(&plsc).unwrap(),
+            vec![
+                required_cell(
+                    "smartpls.consistent_bootstrapping",
+                    "qpls3.inference.consistent_bootstrap",
+                    "plsc_bootstrap_v1",
+                ),
+                required_cell("smartpls.plsc", "qpls3.pls.consistent", "plsc_v2",),
+            ],
+        );
+    }
+
+    #[test]
+    fn cli_required_cells_preserve_standalone_cbsem_and_shared_cell_identities() {
+        let mut pca = simple_pls_recipe();
+        pca.settings.method = AnalysisMethod::Pca;
+        pca.method_config = Some(MethodConfig::Pca {
+            variables: vec!["x1".into(), "x2".into()],
+            retention: qpls_core::PcaRetentionConfig::Kaiser,
+        });
+        assert_eq!(
+            required_cli_capability_cells(&pca).unwrap(),
+            vec![
+                required_cell("smartpls.pca_core", "qpls3.standalone.pca", "pca_v1",),
+                required_cell("smartpls.pca_cbsem", "qpls3.standalone.pca", "pca_v1",),
+            ],
+        );
+
+        let mut cbsem = simple_pls_recipe();
+        cbsem.settings.method = AnalysisMethod::Cbsem;
+        cbsem.method_config = Some(MethodConfig::Cbsem {
+            model_type: qpls_core::CbsemModelType::Cfa,
+            estimator: qpls_core::CbsemEstimator::Ml,
+            input: qpls_core::CbsemInput::Raw,
+            mean_structure: false,
+            bootstrap_samples: 0,
+            bootstrap_v2: None,
+            group_column: None,
+            invariance_steps: Vec::new(),
+        });
+        assert_eq!(
+            required_cli_capability_cells(&cbsem).unwrap(),
+            vec![required_cell(
+                "smartpls.cfa",
+                "qpls3.cbsem.ml",
+                "cbsem_ml_v1",
+            )],
+        );
+        require_cli_capability_availability(&cbsem, false, false).unwrap();
+
+        cbsem.method_config = Some(MethodConfig::Cbsem {
+            model_type: qpls_core::CbsemModelType::Sem,
+            estimator: qpls_core::CbsemEstimator::Ml,
+            input: qpls_core::CbsemInput::Raw,
+            mean_structure: false,
+            bootstrap_samples: 0,
+            bootstrap_v2: None,
+            group_column: None,
+            invariance_steps: Vec::new(),
+        });
+        require_cli_capability_availability(&cbsem, false, false).unwrap();
+
+        cbsem.method_config = Some(MethodConfig::Cbsem {
+            model_type: qpls_core::CbsemModelType::Sem,
+            estimator: qpls_core::CbsemEstimator::Ml,
+            input: qpls_core::CbsemInput::Raw,
+            mean_structure: false,
+            bootstrap_samples: 1_000,
+            bootstrap_v2: Some(qpls_core::CbsemBootstrapConfigV2 {
+                algorithm: qpls_core::CbsemBootstrapAlgorithm::CaseResamplingFullMl,
+                interval: qpls_core::CbsemBootstrapInterval::PercentileType7,
+                test_tail: qpls_core::CbsemBootstrapTestTail::TwoSided,
+            }),
+            group_column: None,
+            invariance_steps: Vec::new(),
+        });
+        assert_eq!(
+            required_cli_capability_cells(&cbsem).unwrap(),
+            vec![
+                required_cell(
+                    "smartpls.cbsem_bootstrapping",
+                    "qpls3.cbsem.bootstrap",
+                    "cbsem_bootstrap_v2",
+                ),
+                required_cell("smartpls.cbsem", "qpls3.cbsem.ml", "cbsem_ml_v1",),
+            ],
+        );
+
+        let mut regression = simple_pls_recipe();
+        regression.settings.method = AnalysisMethod::Regression;
+        regression.method_config = Some(MethodConfig::Regression {
+            outcome: "y".into(),
+            predictors: vec!["x".into()],
+            controls: Vec::new(),
+            model: qpls_core::RegressionModelConfig::Logistic,
+            bootstrap: None,
+        });
+        assert_eq!(
+            required_cli_capability_cells(&regression).unwrap(),
+            vec![required_cell(
+                "smartpls.logistic_regression",
+                "qpls3.standalone.logistic",
+                "regression_logistic_v2",
+            )],
+        );
+    }
+
+    #[test]
+    fn cli_required_cells_fail_closed_for_missing_mismatched_legacy_and_unmapped_configs() {
+        let mut missing = simple_pls_recipe();
+        missing.method_config = None;
+        let error = required_cli_capability_cells(&missing).unwrap_err();
+        let typed = error.downcast_ref::<UnmappedCliCapabilityError>().unwrap();
+        assert_eq!(typed.method, AnalysisMethod::PlsPm);
+        assert_eq!(typed.config_kind, "<missing>");
+        assert_eq!(
+            typed.failure,
+            CliCapabilityMappingFailure::MissingMethodConfig
+        );
+
+        let mut mismatched = simple_pls_recipe();
+        mismatched.method_config = Some(MethodConfig::Plsc);
+        let error = required_cli_capability_cells(&mismatched).unwrap_err();
+        let typed = error.downcast_ref::<UnmappedCliCapabilityError>().unwrap();
+        assert_eq!(typed.config_kind, "plsc");
+        assert_eq!(
+            typed.failure,
+            CliCapabilityMappingFailure::MethodConfigMismatch
+        );
+
+        let mut legacy = simple_pls_recipe();
+        legacy.settings.method = AnalysisMethod::Legacy;
+        legacy.method_config = Some(MethodConfig::Legacy);
+        let error = required_cli_capability_cells(&legacy).unwrap_err();
+        let typed = error.downcast_ref::<UnmappedCliCapabilityError>().unwrap();
+        assert_eq!(typed.method, AnalysisMethod::Legacy);
+        assert_eq!(typed.config_kind, "legacy");
+        assert_eq!(
+            typed.failure,
+            CliCapabilityMappingFailure::UnmappedMethodConfig
+        );
+
+        let mut empty_group_options = simple_pls_recipe();
+        empty_group_options.settings.method = AnalysisMethod::Mga;
+        empty_group_options.method_config = Some(MethodConfig::Mga {
+            group_column: "group".into(),
+            group_a: "A".into(),
+            group_b: "B".into(),
+            methods: Vec::new(),
+            permutation_samples: 99,
+            configural_invariance_confirmed: true,
+        });
+        let error = required_cli_capability_cells(&empty_group_options).unwrap_err();
+        let typed = error.downcast_ref::<UnmappedCliCapabilityError>().unwrap();
+        assert_eq!(typed.method, AnalysisMethod::Mga);
+        assert_eq!(typed.config_kind, "mga");
+        assert_eq!(
+            typed.failure,
+            CliCapabilityMappingFailure::UnmappedMethodConfig
+        );
+
+        let mut unmapped_cbsem = simple_pls_recipe();
+        unmapped_cbsem.settings.method = AnalysisMethod::Cbsem;
+        unmapped_cbsem.method_config = Some(MethodConfig::Cbsem {
+            model_type: qpls_core::CbsemModelType::Sem,
+            estimator: qpls_core::CbsemEstimator::RobustMl,
+            input: qpls_core::CbsemInput::Raw,
+            mean_structure: false,
+            bootstrap_samples: 0,
+            bootstrap_v2: None,
+            group_column: None,
+            invariance_steps: Vec::new(),
+        });
+        let error = required_cli_capability_cells(&unmapped_cbsem).unwrap_err();
+        let typed = error.downcast_ref::<UnmappedCliCapabilityError>().unwrap();
+        assert_eq!(typed.method, AnalysisMethod::Cbsem);
+        assert_eq!(typed.config_kind, "cbsem");
+        assert_eq!(
+            typed.failure,
+            CliCapabilityMappingFailure::UnmappedMethodConfig
+        );
+    }
+
+    #[test]
+    fn cli_posthoc_standard_scope_exports_exact_runner_attribution_without_labs_override() {
+        let dataset = qpls_data::import_delimited_bytes(
+            include_bytes!("../../../validation/fixtures/simple_reflective.csv"),
+            "simple_reflective.csv",
+            b',',
+            &qpls_data::ImportOptions::default(),
+        )
+        .unwrap();
+        let historical: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/fixtures/simple_reflective.recipe.json"
+        ))
+        .unwrap();
+        let mut recipe = historical.migrated_v3().unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.bootstrap_samples = 0;
+        recipe.settings.studentized_inner_samples = 0;
+        recipe.settings.permutation_samples = 0;
+        recipe.method_config = Some(MethodConfig::PlsPosthocTechnicalMinimumSampleSize(
+            qpls_core::PlsPosthocTechnicalMinimumSampleSizeConfigV2::point_estimate_v2(),
+        ));
+
+        require_cli_capability_availability(&recipe, false, false).unwrap();
+
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        assert!(result.provenance.method_version.split('+').any(|version| {
+            version == qpls_estimation::PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_METHOD_VERSION
+        }));
+        let rows = experimental_pls_export_rows(&result).unwrap();
+        assert!(rows.iter().any(|row| {
+            row.section == "posthoc_minimum_sample_size"
+                && row.metric == "method_version"
+                && row.value == qpls_estimation::PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_METHOD_VERSION
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "posthoc_minimum_sample_size"
+                && row.metric == "availability"
+                && row.value == "Standard"
+        }));
+    }
+
+    #[test]
+    fn pls_bootstrap_one_sided_export_is_semantic_and_fail_closed() {
+        let dataset = qpls_data::import_delimited_bytes(
+            include_bytes!("../../../validation/fixtures/simple_reflective.csv"),
+            "simple_reflective.csv",
+            b',',
+            &qpls_data::ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = simple_pls_recipe();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.bootstrap_samples = 8;
+        recipe.settings.workers = 1;
+        recipe.settings.bootstrap_test_tail = PlsBootstrapTestTail::OneSidedGreater;
+        recipe.method_config = Some(MethodConfig::PlsBootstrap);
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+
+        let rows = experimental_pls_export_rows(&result).unwrap();
+        assert!(rows.iter().any(|row| {
+            row.section == "pls_bootstrap_test_tail_contract"
+                && row.metric == "method_version"
+                && row.value == PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "pls_bootstrap_test_tail_contract"
+                && row.metric == "selected_test_tail"
+                && row.value == "one_sided_greater"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "pls_bootstrap_test_tail_parameter"
+                && row.metric == "selected_exceedances"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "pls_bootstrap_test_tail_parameter" && row.metric == "selected_p_value"
+        }));
+
+        let mut missing = result.clone();
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut missing.payload {
+            bootstrap
+                .as_object_mut()
+                .unwrap()
+                .remove("test_tail_inference");
+        }
+        assert!(experimental_pls_export_rows(&missing).is_err());
+
+        let mut injected_default = result.clone();
+        injected_default.provenance.settings.bootstrap_test_tail = PlsBootstrapTestTail::TwoSided;
+        injected_default.provenance.method_version = injected_default
+            .provenance
+            .method_version
+            .split('+')
+            .filter(|version| *version != PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION)
+            .collect::<Vec<_>>()
+            .join("+");
+        assert!(experimental_pls_export_rows(&injected_default).is_err());
+
+        let mut wrong = result.clone();
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut wrong.payload {
+            bootstrap["test_tail_inference"]["parameters"][0]["p_value_greater"] =
+                serde_json::json!(0.5);
+        }
+        assert!(experimental_pls_export_rows(&wrong).is_err());
+
+        let mut malformed = result;
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut malformed.payload {
+            bootstrap["test_tail_inference"] = serde_json::json!("not-a-receipt");
+        }
+        assert!(experimental_pls_export_rows(&malformed).is_err());
+    }
+
+    #[test]
+    fn plsc_consistent_bootstrap_export_is_typed_complete_and_fail_closed() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let dataset = qpls_data::import_path(
+            &root.join("validation/results/plsc_reference.csv"),
+            &qpls_data::ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = plsc_consistent_bootstrap_recipe();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.workers = 2;
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        let (successful_replicate_witnesses, successful_jackknife_witnesses) =
+            match &result.payload {
+                AnalysisPayload::PlsPmV2 { bootstrap, .. } => (
+                    bootstrap["successful_replicates"].as_array().unwrap().len(),
+                    bootstrap["successful_jackknife_cases"]
+                        .as_array()
+                        .unwrap()
+                        .len(),
+                ),
+                other => panic!("PLSc consistent bootstrap must use a linked v2 payload: {other:?}"),
+            };
+
+        let rows = experimental_pls_export_rows(&result).unwrap();
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_bootstrap_accounting"
+                && row.metric == "requested_replicates"
+                && row.value == "1000"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_bootstrap_accounting"
+                && row.metric == "attempted_replicates"
+                && row.value == "1000"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_bootstrap_accounting"
+                && row.metric == "successful_replicate_witnesses"
+                && row.value == successful_replicate_witnesses.to_string()
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_bootstrap_accounting"
+                && row.metric == "successful_jackknife_witnesses"
+                && row.value == successful_jackknife_witnesses.to_string()
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_bootstrap_percentile" && row.metric == "standard_error"
+        }));
+        assert!(rows.iter().any(|row| row.section == "plsc_bootstrap_bca"));
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_bootstrap_warning"
+                && row.value.contains("fully re-estimated plsc_v2")
+        }));
+
+        let mut tampered = result;
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut tampered.payload {
+            bootstrap["warnings"] = serde_json::json!([]);
+        } else {
+            panic!("PLSc consistent bootstrap must use a linked v2 payload");
+        }
+        assert!(experimental_pls_export_rows(&tampered).is_err());
+    }
+
+    #[test]
+    fn plsc_consistent_permutation_is_hidden_and_semantic_export_is_fail_closed() {
+        let (dataset, recipe) = plsc_consistent_permutation_fixture();
+        for allow_experimental in [false, true] {
+            let error = require_cli_capability_availability(&recipe, allow_experimental, false)
+                .unwrap_err()
+                .to_string();
+            assert!(error.contains("qpls3.inference.consistent_permutation is unavailable"));
+            assert!(error.contains("coverage=absent"));
+            assert!(error.contains("evidence=absent"));
+            assert!(error.contains("surface=labs"));
+        }
+
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        let rows = experimental_pls_export_rows(&result).unwrap();
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_permutation_accounting"
+                && row.metric == "requested_permutations"
+                && row.value == "99"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_permutation_group"
+                && row.construct == "group_a"
+                && row.metric == "group"
+                && row.value == "A"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_permutation_accounting"
+                && row.metric == "test_method"
+                && row.value == qpls_resampling::PLSC_CONSISTENT_PERMUTATION_TEST
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_permutation_accounting"
+                && row.metric == "directional_test_method"
+                && row.value == qpls_resampling::PLSC_CONSISTENT_PERMUTATION_DIRECTIONAL_TEST
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_permutation_parameter" && row.metric == "p_value_two_sided"
+        }));
+        for metric in [
+            "greater_or_equal",
+            "less_or_equal",
+            "p_value_greater",
+            "p_value_less",
+        ] {
+            assert!(rows.iter().any(|row| {
+                row.section == "plsc_permutation_parameter" && row.metric == metric
+            }));
+        }
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_permutation_ledger" && row.metric == "label_assignment_sha256"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "plsc_permutation_warning"
+                && row.value == qpls_resampling::PLSC_CONSISTENT_PERMUTATION_BOUNDED_SCOPE_WARNING
+        }));
+
+        let mut selected = result.clone();
+        selected.provenance.method_version.push('+');
+        selected
+            .provenance
+            .method_version
+            .push_str(PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION);
+        let selected_permutation = match &mut selected.payload {
+            AnalysisPayload::PlsPmV3 {
+                permutation: Some(value),
+                ..
+            } => value,
+            _ => unreachable!(),
+        };
+        let parameters = selected_permutation["directional_inference"]["parameters"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|parameter| {
+                serde_json::json!({
+                    "parameter": parameter["parameter"],
+                    "selected_exceedances": parameter["greater_or_equal"],
+                    "selected_p_value": parameter["p_value_greater"],
+                    "permutations": parameter["permutations"]
+                })
+            })
+            .collect::<Vec<_>>();
+        selected_permutation["selected_tail_inference"] = serde_json::json!({
+            "method_version": PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION,
+            "orientation": "group_a_minus_group_b",
+            "selected_test_tail": "group_a_greater",
+            "parameters": parameters
+        });
+        let selected_rows = experimental_pls_export_rows(&selected).unwrap();
+        for (metric, value) in [
+            (
+                "method_version",
+                PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION,
+            ),
+            ("orientation", "group_a_minus_group_b"),
+            ("selected_test_tail", "group_a_greater"),
+        ] {
+            assert!(selected_rows.iter().any(|row| {
+                row.section == "plsc_permutation_selected_tail"
+                    && row.metric == metric
+                    && row.value == value
+            }));
+        }
+        assert!(selected_rows.iter().any(|row| {
+            row.section == "plsc_permutation_selected_tail_parameter"
+                && row.metric == "selected_exceedances"
+        }));
+        assert!(selected_rows.iter().any(|row| {
+            row.section == "plsc_permutation_selected_tail_parameter"
+                && row.metric == "selected_p_value"
+        }));
+        let mut missing_marker = selected.clone();
+        missing_marker.provenance.method_version = missing_marker
+            .provenance
+            .method_version
+            .split('+')
+            .filter(|version| *version != PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION)
+            .collect::<Vec<_>>()
+            .join("+");
+        assert!(experimental_pls_export_rows(&missing_marker).is_err());
+        let mut tampered_selected = selected;
+        if let AnalysisPayload::PlsPmV3 {
+            permutation: Some(value),
+            ..
+        } = &mut tampered_selected.payload
+        {
+            value["selected_tail_inference"]["parameters"][0]["selected_p_value"] =
+                serde_json::json!(0.5);
+        }
+        assert!(experimental_pls_export_rows(&tampered_selected).is_err());
+
+        let mut wrong_scheduler = result.clone();
+        let permutation = match &mut wrong_scheduler.payload {
+            AnalysisPayload::PlsPmV3 {
+                permutation: Some(permutation),
+                ..
+            } => permutation,
+            other => panic!("expected PLSc consistent-permutation payload, got {other:?}"),
+        };
+        permutation["scheduler_method_version"] = serde_json::json!("forged_scheduler");
+        assert!(experimental_pls_export_rows(&wrong_scheduler).is_err());
+
+        let mut wrong_ledger = result.clone();
+        let permutation = match &mut wrong_ledger.payload {
+            AnalysisPayload::PlsPmV3 {
+                permutation: Some(permutation),
+                ..
+            } => permutation,
+            other => panic!("expected PLSc consistent-permutation payload, got {other:?}"),
+        };
+        permutation["permutation_ledger"][0]["label_assignment_sha256"] =
+            serde_json::json!("0".repeat(64));
+        assert!(experimental_pls_export_rows(&wrong_ledger).is_err());
+
+        let mut wrong_directional_count = result.clone();
+        let permutation = match &mut wrong_directional_count.payload {
+            AnalysisPayload::PlsPmV3 {
+                permutation: Some(permutation),
+                ..
+            } => permutation,
+            other => panic!("expected PLSc consistent-permutation payload, got {other:?}"),
+        };
+        let count = permutation["directional_inference"]["parameters"][0]["greater_or_equal"]
+            .as_u64()
+            .unwrap();
+        permutation["directional_inference"]["parameters"][0]["greater_or_equal"] =
+            serde_json::json!(if count < 99 { count + 1 } else { count - 1 });
+        assert!(experimental_pls_export_rows(&wrong_directional_count).is_err());
+
+        let mut wrong_probability = result;
+        let permutation = match &mut wrong_probability.payload {
+            AnalysisPayload::PlsPmV3 {
+                permutation: Some(permutation),
+                ..
+            } => permutation,
+            other => panic!("expected PLSc consistent-permutation payload, got {other:?}"),
+        };
+        let probability = permutation["parameters"][0]["p_value_two_sided"]
+            .as_f64()
+            .unwrap();
+        permutation["parameters"][0]["p_value_two_sided"] =
+            serde_json::json!(if probability < 0.5 {
+                probability + 0.25
+            } else {
+                probability - 0.25
+            });
+        assert!(experimental_pls_export_rows(&wrong_probability).is_err());
+    }
+
+    #[test]
+    fn pls_model_fit_export_is_matrix_validated_and_exact_attribution_is_fail_closed() {
+        let dataset = qpls_data::import_delimited_bytes(
+            include_bytes!("../../../validation/fixtures/simple_reflective.csv"),
+            "simple_reflective.csv",
+            b',',
+            &qpls_data::ImportOptions::default(),
+        )
+        .unwrap();
+        let historical: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/fixtures/simple_reflective.recipe.json"
+        ))
+        .unwrap();
+        let mut recipe = historical.migrated_v3().unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.method = AnalysisMethod::PlsPm;
+        recipe.settings.bootstrap_samples = 0;
+        recipe.settings.studentized_inner_samples = 0;
+        recipe.settings.permutation_samples = 0;
+        recipe.method_config = Some(MethodConfig::PlsAlgorithm);
+
+        let mut exact_recipe = recipe.clone();
+        exact_recipe.settings.bootstrap_samples = 999;
+        exact_recipe.method_config = Some(MethodConfig::PlsBootstrap);
+        exact_recipe
+            .metadata
+            .insert(PLS_MODEL_FIT_EXACT_RECIPE_SELECTOR.into(), "true".into());
+        for allow_experimental in [false, true] {
+            let error =
+                require_cli_capability_availability(&exact_recipe, allow_experimental, false)
+                    .unwrap_err()
+                    .to_string();
+            assert!(error.contains("qpls3.assessment.model_fit is unavailable"));
+            assert!(error.contains("coverage=partial"));
+            assert!(error.contains("evidence=absent"));
+            assert!(error.contains("surface=labs"));
+        }
+
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        let rows = experimental_pls_export_rows(&result).unwrap();
+        assert!(rows.iter().any(|row| {
+            row.section == "pls_model_fit_detail"
+                && row.metric == "method_version"
+                && row.value == PLS_MODEL_FIT_METHOD_VERSION
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "pls_model_fit" && row.construct == "saturated" && row.metric == "srmr"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "pls_model_fit" && row.construct == "estimated" && row.metric == "nfi"
+        }));
+        assert!(!rows.iter().any(|row| row.section == "pls_model_fit_exact"));
+
+        let mut tampered = result.clone();
+        let assessment = match &mut tampered.payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. }
+            | AnalysisPayload::PlsPmV2 { assessment, .. }
+            | AnalysisPayload::PlsPmV3 { assessment, .. } => assessment,
+            other => panic!("expected PLS payload, received {other:?}"),
+        };
+        assessment["model_fit"]["estimated"]["srmr"] = serde_json::json!(999.0);
+        assert!(
+            experimental_pls_export_rows(&tampered)
+                .unwrap_err()
+                .to_string()
+                .contains("matrix-backed semantic validation")
+        );
+
+        let mut falsely_attributed = result;
+        falsely_attributed.provenance.method_version.push('+');
+        falsely_attributed
+            .provenance
+            .method_version
+            .push_str(PLS_MODEL_FIT_EXACT_METHOD_VERSION);
+        assert!(
+            experimental_pls_export_rows(&falsely_attributed)
+                .unwrap_err()
+                .to_string()
+                .contains("payload and provenance identity disagree")
+        );
+    }
+
+    #[test]
+    fn methods_command_uses_option_cell_registry_instead_of_legacy_validated_labels() {
+        let registry = CapabilityRegistryV2::embedded().unwrap();
+        let text = capability_registry_cli_text(&registry);
+        assert!(text.contains(
+            "qpls3.pls.algorithm | pls_pm_v1 | coverage=partial evidence=release_qualified surface=standard | Standard"
+        ));
+        assert!(text.contains(
+            "qpls3.pls.sample_size_power | pls_sample_size_power_v2 | coverage=partial evidence=release_qualified surface=standard | Standard"
+        ));
+        assert!(text.contains("Experimental Labs"));
+        assert!(text.contains(
+            "qpls3.gsca.als | gsca_als_v2 | coverage=partial evidence=release_qualified surface=standard | Standard"
+        ));
+        assert!(text.contains(
+            "qpls3.assessment.ipma | ipma_v1 | coverage=partial evidence=release_qualified surface=standard | Standard"
+        ));
+        assert!(text.contains(
+            "qpls3.standalone.nca | nca_v2 | coverage=partial evidence=release_qualified surface=standard | Standard"
+        ));
+        assert!(text.contains(
+            "qpls3.standalone.logistic | regression_logistic_v2 | coverage=partial evidence=release_qualified surface=standard | Standard"
+        ));
+        assert!(text.contains(
+            "qpls3.standalone.ols | regression_ols_v1 | coverage=partial evidence=release_qualified surface=standard | Standard"
+        ));
+        assert!(text.contains(
+            "qpls3.standalone.regression_bootstrap | regression_bootstrap_v1 | coverage=partial evidence=release_qualified surface=standard | Standard"
+        ));
+        assert!(text.contains(
+            "qpls3.cbsem.ml | cbsem_ml_v1 | coverage=partial evidence=release_qualified surface=standard | Standard"
+        ));
+        assert!(!text.contains("Validated"));
+
+        let json = capability_registry_cli_json(&registry);
+        assert_eq!(json["schema_version"], 2);
+        assert_eq!(json["projection"], "cli_option_cell_availability_v2");
+        assert_eq!(json["source_sha256"], registry.source_sha256);
+        assert!(
+            json["capabilities"]
+                .as_array()
+                .is_some_and(|rows| rows.len() == 45)
+        );
+        assert_eq!(
+            json["capabilities"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(|row| row["option_cells"].as_array())
+                .map(Vec::len)
+                .sum::<usize>(),
+            48,
+        );
+    }
+
     fn write_migrated_v3_recipe(source: &Path, destination: &Path) {
         let historical: AnalysisRecipe =
             serde_json::from_slice(&fs::read(source).unwrap()).unwrap();
@@ -4971,51 +9803,36 @@ mod tests {
     }
 
     #[test]
-    fn validated_cli_inference_is_worker_invariant_without_legacy_opt_in() {
+    fn cli_run_executes_release_qualified_scoped_pls_without_opt_in() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let historical_recipe = root.join("validation/fixtures/simple_reflective.recipe.json");
         let data = root.join("validation/fixtures/simple_reflective.csv");
         let directory = tempfile::tempdir().unwrap();
         let recipe = directory.path().join("simple_reflective.v3.recipe.json");
         write_migrated_v3_recipe(&historical_recipe, &recipe);
-        let serial_path = directory.path().join("serial.json");
-        let parallel_path = directory.path().join("parallel.json");
-        run_analysis(
-            &recipe,
-            Some(&data),
-            None,
-            &serial_path,
-            false,
-            Some(24),
-            None,
-            Some(99),
-            Some(1),
-        )
-        .unwrap();
-        run_analysis(
-            &recipe,
-            Some(&data),
-            None,
-            &parallel_path,
-            false,
-            Some(24),
-            None,
-            Some(99),
-            Some(4),
-        )
-        .unwrap();
-        let serial: AnalysisResult =
-            serde_json::from_slice(&fs::read(serial_path).unwrap()).unwrap();
-        let parallel: AnalysisResult =
-            serde_json::from_slice(&fs::read(parallel_path).unwrap()).unwrap();
-        assert_eq!(serial.payload, parallel.payload);
-        assert_eq!(serial.diagnostics, parallel.diagnostics);
-        assert_eq!(
-            serial.provenance.method_version,
-            parallel.provenance.method_version
-        );
-        assert_eq!(serial.provenance.settings.workers, 1);
-        assert_eq!(parallel.provenance.settings.workers, 4);
+        for allow_experimental in [false, true] {
+            let output = directory
+                .path()
+                .join(format!("pls-{allow_experimental}.json"));
+            run_analysis(
+                &recipe,
+                Some(&data),
+                None,
+                &output,
+                allow_experimental,
+                false,
+                false,
+                None,
+                None,
+                None,
+                Some(1),
+            )
+            .unwrap();
+            let result: AnalysisResult =
+                serde_json::from_slice(&fs::read(&output).unwrap()).unwrap();
+            assert_eq!(result.status, RunStatus::Completed);
+            assert!(result.provenance.method_version.contains("pls_pm_v1"));
+        }
     }
 
     #[test]
@@ -5038,6 +9855,8 @@ mod tests {
             Some(&data),
             None,
             &result_path,
+            false,
+            false,
             false,
             None,
             None,
@@ -5293,13 +10112,602 @@ mod tests {
         assert_eq!(report["all_listed_artifacts_present"], true);
         assert_eq!(report["all_listed_artifacts_passed"], true);
         assert!(report["artifact_count"].as_u64().unwrap() >= 20);
+        assert!(report["artifacts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|artifact| artifact["file"] == "validation/results/wpls_reference_report.json"));
+    }
+
+    fn typed_power_export_fixture() -> AnalysisResult {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let historical: AnalysisRecipe = serde_json::from_slice(
+            &fs::read(root.join("validation/fixtures/simple_reflective.recipe.json")).unwrap(),
+        )
+        .unwrap();
+        let mut recipe = historical.migrated_v3().unwrap();
+        recipe.settings.method = AnalysisMethod::PlsSampleSizePower;
+        recipe.settings.seed = 20260814;
+        let analysis = PlsSampleSizePowerResultV1 {
+            schema_version: PLS_SAMPLE_SIZE_POWER_RESULT_SCHEMA_VERSION,
+            capability_id: PLS_SAMPLE_SIZE_POWER_CAPABILITY_ID.into(),
+            method_version: PLS_SAMPLE_SIZE_POWER_METHOD_VERSION.into(),
+            recipe_digest: "a".repeat(64),
+            stream_domain: PLS_SAMPLE_SIZE_POWER_STREAM_DOMAIN.into(),
+            failure_policy: PLS_SAMPLE_SIZE_POWER_FAILURE_POLICY.into(),
+            interval_method: PLS_SAMPLE_SIZE_POWER_INTERVAL_METHOD.into(),
+            inference_method: PLS_SAMPLE_SIZE_POWER_INFERENCE_METHOD.into(),
+            pls_method_version: qpls_estimation::PLS_METHOD_VERSION.into(),
+            resampling_method_version: RESAMPLING_METHOD_VERSION.into(),
+            workload: qpls_resampling::PlsPowerWorkload {
+                grid_points: 1,
+                planned_datasets: 100,
+                estimated_pls_fits: 200,
+                estimated_pls_case_fits: 10_000,
+            },
+            rows: vec![qpls_resampling::PlsPowerRowV1 {
+                sample_size: 50,
+                requested_replicates: 100,
+                attempted_replicates: 100,
+                successful_replicates: 1,
+                failed_replicates: 99,
+                rejections: 1,
+                achieved_power: 0.01,
+                confidence_lower: 0.0005,
+                confidence_upper: 0.055,
+                qualifies: false,
+            }],
+            outcomes: std::iter::once(qpls_resampling::PlsPowerReplicateOutcomeV1 {
+                sample_size: 50,
+                replicate_index: 0,
+                stream_identity: "sample-50-replicate-0".into(),
+                attempted: true,
+                successful: true,
+                converged: true,
+                target_estimate: Some(0.31),
+                p_value_two_sided: Some(0.04),
+                bootstrap_requested_replicates: None,
+                bootstrap_usable_replicates: None,
+                bootstrap_failed_replicates: None,
+                bootstrap_two_sided_exceedances: None,
+                rejected: true,
+                failure_code: None,
+                failure_message: None,
+            })
+            .chain((1..100).map(
+                |replicate_index| qpls_resampling::PlsPowerReplicateOutcomeV1 {
+                    sample_size: 50,
+                    replicate_index,
+                    stream_identity: format!("sample-50-replicate-{replicate_index}"),
+                    attempted: true,
+                    successful: false,
+                    converged: false,
+                    target_estimate: None,
+                    p_value_two_sided: None,
+                    bootstrap_requested_replicates: None,
+                    bootstrap_usable_replicates: None,
+                    bootstrap_failed_replicates: None,
+                    bootstrap_two_sided_exceedances: None,
+                    rejected: false,
+                    failure_code: Some("nonconvergence".into()),
+                    failure_message: Some("PLS fit did not converge".into()),
+                },
+            ))
+            .collect(),
+            outcome_digest: "b".repeat(64),
+            decision: PlsPowerGridDecisionV1::NotReached,
+            monotonicity_violations: 0,
+            warnings: vec!["Power is conditional on the declared design.".into()],
+            exclusions: vec!["Retrospective observed power is excluded.".into()],
+        };
+        AnalysisResult::completed_pls_sample_size_power(
+            &recipe,
+            PLS_SAMPLE_SIZE_POWER_METHOD_VERSION,
+            Utc::now(),
+            serde_json::to_value(analysis).unwrap(),
+            Vec::<String>::new(),
+        )
+    }
+
+    fn typed_power_v2_export_fixture() -> AnalysisResult {
+        let mut result = typed_power_export_fixture();
+        result.provenance.method_version = PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2.into();
+        let AnalysisPayload::PlsSampleSizePowerV1 { mut analysis } = result.payload else {
+            unreachable!()
+        };
+        analysis["schema_version"] =
+            serde_json::json!(PLS_SAMPLE_SIZE_POWER_RESULT_SCHEMA_VERSION_V2);
+        analysis["method_version"] =
+            serde_json::json!(PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2);
+        analysis["stream_domain"] = serde_json::json!(PLS_SAMPLE_SIZE_POWER_STREAM_DOMAIN_V2);
+        analysis["inference_method"] =
+            serde_json::json!(PLS_SAMPLE_SIZE_POWER_INFERENCE_METHOD_V2);
+        analysis["outcomes"][0]["bootstrap_requested_replicates"] = serde_json::json!(99);
+        analysis["outcomes"][0]["bootstrap_usable_replicates"] = serde_json::json!(99);
+        analysis["outcomes"][0]["bootstrap_failed_replicates"] = serde_json::json!(0);
+        analysis["outcomes"][0]["bootstrap_two_sided_exceedances"] = serde_json::json!(3);
+        result.payload = AnalysisPayload::PlsSampleSizePowerV2 { analysis };
+        result
+    }
+
+    fn posthoc_minimum_sample_size_export_fixture() -> AnalysisResult {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let mut result: AnalysisResult = serde_json::from_slice(
+            &fs::read(root.join("validation/results/pls_publication_benchmark_quickpls.json"))
+                .unwrap(),
+        )
+        .unwrap();
+        let estimation = match &mut result.payload {
+            AnalysisPayload::PlsPmV1 { estimation, .. }
+            | AnalysisPayload::PlsPmV2 { estimation, .. }
+            | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
+            other => panic!("expected a PLS estimation payload, received {other:?}"),
+        };
+        let mut typed: qpls_estimation::PlsResult =
+            serde_json::from_value(estimation.clone()).unwrap();
+        typed.posthoc_minimum_sample_size =
+            qpls_estimation::pls_posthoc_minimum_sample_size(&typed.paths, typed.used_observations);
+        *estimation = serde_json::to_value(typed).unwrap();
+        result
+    }
+
+    #[test]
+    fn posthoc_minimum_sample_size_export_is_complete_and_rejects_tampering() {
+        let directory = tempfile::tempdir().unwrap();
+        let result_path = directory.path().join("posthoc.json");
+        let csv_path = directory.path().join("posthoc.csv");
+        let result = posthoc_minimum_sample_size_export_fixture();
+        let rows = v03_estimator_export_rows(&result).unwrap();
+        let technical_rows = rows
+            .iter()
+            .filter(|row| row.section == "posthoc_minimum_sample_size")
+            .collect::<Vec<_>>();
+        assert_eq!(technical_rows.len(), 11);
         assert!(
-            report["artifacts"]
-                .as_array()
-                .unwrap()
+            technical_rows
                 .iter()
-                .any(|artifact| artifact["file"] == "validation/results/wpls_reference_report.json")
+                .all(|row| row.source == "x" && row.target == "y")
         );
+        assert!(
+            technical_rows.iter().any(|row| {
+                row.metric == "technically_required_sample_size" && row.value == "7"
+            })
+        );
+        assert!(
+            technical_rows
+                .iter()
+                .any(|row| { row.metric == "analytical_sample_size" && row.value == "6" })
+        );
+
+        fs::write(&result_path, serde_json::to_vec_pretty(&result).unwrap()).unwrap();
+        export_result(&result_path, ExportFormat::Csv, Some(&csv_path), false).unwrap();
+        let csv = fs::read_to_string(csv_path).unwrap();
+        assert!(
+            csv.contains("posthoc_minimum_sample_size,,,x,y,technically_required_sample_size,7")
+        );
+        assert!(csv.contains(
+            "posthoc_minimum_sample_size,,,x,y,method_version,inverse_square_root_posthoc_v1"
+        ));
+
+        let mut tampered = result;
+        let estimation = match &mut tampered.payload {
+            AnalysisPayload::PlsPmV1 { estimation, .. }
+            | AnalysisPayload::PlsPmV2 { estimation, .. }
+            | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
+            other => panic!("expected a PLS estimation payload, received {other:?}"),
+        };
+        estimation["posthoc_minimum_sample_size"]["technically_required_sample_size"] =
+            serde_json::json!(1);
+        let error = v03_estimator_export_rows(&tampered).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("does not reproduce from its path coefficients and linked inference")
+        );
+    }
+
+    #[test]
+    fn inference_aware_posthoc_export_reproduces_linked_bootstrap_and_rejects_tampering() {
+        use calamine::{Reader, open_workbook_auto};
+
+        let dataset = qpls_data::import_delimited_bytes(
+            include_bytes!("../../../validation/fixtures/simple_reflective.csv"),
+            "simple_reflective.csv",
+            b',',
+            &qpls_data::ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe: qpls_core::AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/fixtures/simple_reflective.recipe.json"
+        ))
+        .unwrap();
+        if recipe.schema_version != qpls_core::ANALYSIS_RECIPE_SCHEMA_VERSION {
+            recipe = recipe.migrated_v3().unwrap();
+        }
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.bootstrap_samples = 99;
+        recipe.settings.workers = 2;
+        recipe.method_config = Some(
+            qpls_core::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(
+                qpls_core::PlsPosthocTechnicalMinimumSampleSizeConfigV2::bootstrap_v2(),
+            ),
+        );
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        let rows = v03_estimator_export_rows(&result).unwrap();
+        let technical_rows = rows
+            .iter()
+            .filter(|row| row.section == "posthoc_minimum_sample_size")
+            .collect::<Vec<_>>();
+        assert_eq!(technical_rows.len(), 18);
+        assert!(technical_rows.iter().any(|row| {
+            row.metric == "selection_rule"
+                && row.value == "smallest_absolute_statistically_significant_structural_path"
+        }));
+        assert!(technical_rows.iter().any(|row| {
+            row.metric == "significance_source"
+                && row.value == "pls_bootstrap_normal_reference_two_sided"
+        }));
+        assert!(
+            technical_rows
+                .iter()
+                .any(|row| { row.metric == "test" && row.value == "directional" })
+        );
+        assert!(
+            technical_rows
+                .iter()
+                .any(|row| { row.metric == "availability" && row.value == "Standard" })
+        );
+
+        let directory = tempfile::tempdir().unwrap();
+        let result_path = directory.path().join("posthoc-v2.json");
+        let csv_path = directory.path().join("posthoc-v2.csv");
+        let html_path = directory.path().join("posthoc-v2.html");
+        let xlsx_path = directory.path().join("posthoc-v2.xlsx");
+        fs::write(&result_path, serde_json::to_vec_pretty(&result).unwrap()).unwrap();
+        export_result(&result_path, ExportFormat::Csv, Some(&csv_path), false).unwrap();
+        export_result(&result_path, ExportFormat::Html, Some(&html_path), false).unwrap();
+        export_result(&result_path, ExportFormat::Xlsx, Some(&xlsx_path), false).unwrap();
+
+        let csv = fs::read_to_string(csv_path).unwrap();
+        for exact_row in [
+            "posthoc_minimum_sample_size,,,x,y,test,directional",
+            "posthoc_minimum_sample_size,,,x,y,significance_source,pls_bootstrap_normal_reference_two_sided",
+            "posthoc_minimum_sample_size,,,x,y,significance_alpha,0.05",
+            "posthoc_minimum_sample_size,,,x,y,availability,Standard",
+        ] {
+            assert!(csv.contains(exact_row), "CSV omitted {exact_row}");
+        }
+        let html = fs::read_to_string(html_path).unwrap();
+        for value in [
+            "posthoc_minimum_sample_size",
+            "directional",
+            "pls_bootstrap_normal_reference_two_sided",
+            "significance_alpha",
+            "Standard",
+        ] {
+            assert!(html.contains(value), "HTML omitted {value}");
+        }
+        let mut workbook = open_workbook_auto(&xlsx_path).unwrap();
+        let range = workbook.worksheet_range("QuickPLS export").unwrap();
+        let workbook_rows = range
+            .rows()
+            .map(|row| row.iter().map(ToString::to_string).collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+        assert!(workbook_rows.iter().any(|row| {
+            row.get(0)
+                .is_some_and(|value| value == "posthoc_minimum_sample_size")
+                && row.get(5).is_some_and(|value| value == "test")
+                && row.get(6).is_some_and(|value| value == "directional")
+        }));
+        assert!(workbook_rows.iter().any(|row| {
+            row.get(0)
+                .is_some_and(|value| value == "posthoc_minimum_sample_size")
+                && row
+                    .get(5)
+                    .is_some_and(|value| value == "significance_source")
+                && row
+                    .get(6)
+                    .is_some_and(|value| value == "pls_bootstrap_normal_reference_two_sided")
+        }));
+        assert!(workbook_rows.iter().any(|row| {
+            row.get(0)
+                .is_some_and(|value| value == "posthoc_minimum_sample_size")
+                && row.get(5).is_some_and(|value| value == "availability")
+                && row.get(6).is_some_and(|value| value == "Standard")
+        }));
+
+        let mut tampered = result.clone();
+        let estimation = match &mut tampered.payload {
+            AnalysisPayload::PlsPmV2 { estimation, .. }
+            | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
+            other => panic!("expected bootstrapped PLS payload, received {other:?}"),
+        };
+        estimation["posthoc_minimum_sample_size"]["significant_path_count"] =
+            serde_json::json!(999);
+        assert!(
+            v03_estimator_export_rows(&tampered)
+                .unwrap_err()
+                .to_string()
+                .contains("linked inference")
+        );
+
+        let mut wrong_formula_test = result.clone();
+        let estimation = match &mut wrong_formula_test.payload {
+            AnalysisPayload::PlsPmV2 { estimation, .. }
+            | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
+            other => panic!("expected bootstrapped PLS payload, received {other:?}"),
+        };
+        estimation["posthoc_minimum_sample_size"]["test"] = serde_json::json!("two_sided");
+        assert!(
+            v03_estimator_export_rows(&wrong_formula_test)
+                .unwrap_err()
+                .to_string()
+                .contains("linked inference")
+        );
+
+        let mut mismatched_bootstrap_original = result.clone();
+        let bootstrap = match &mut mismatched_bootstrap_original.payload {
+            AnalysisPayload::PlsPmV2 { bootstrap, .. } => bootstrap,
+            AnalysisPayload::PlsPmV3 {
+                bootstrap: Some(bootstrap),
+                ..
+            } => bootstrap,
+            other => panic!("expected bootstrapped PLS payload, received {other:?}"),
+        };
+        let path_parameter = bootstrap["percentile"]["parameters"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|parameter| {
+                serde_json::from_str::<(String, Vec<String>)>(
+                    parameter["parameter"].as_str().unwrap_or_default(),
+                )
+                .is_ok_and(|(kind, parts)| kind == "path" && parts.len() == 2)
+            })
+            .unwrap();
+        let original = path_parameter["original"].as_f64().unwrap();
+        let statistic = path_parameter["t_statistic"].as_f64().unwrap();
+        path_parameter["original"] = serde_json::json!(-original);
+        path_parameter["t_statistic"] = serde_json::json!(-statistic);
+        assert!(
+            v03_estimator_export_rows(&mismatched_bootstrap_original)
+                .unwrap_err()
+                .to_string()
+                .contains("coefficient-mismatched linked PLS path inference")
+        );
+
+        let mut wrong_selection_test = result;
+        let estimation = match &mut wrong_selection_test.payload {
+            AnalysisPayload::PlsPmV2 { estimation, .. }
+            | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
+            other => panic!("expected bootstrapped PLS payload, received {other:?}"),
+        };
+        estimation["posthoc_minimum_sample_size"]["significance_source"] =
+            serde_json::json!("pls_bootstrap_normal_reference_one_sided");
+        assert!(
+            v03_estimator_export_rows(&wrong_selection_test)
+                .unwrap_err()
+                .to_string()
+                .contains("linked inference")
+        );
+    }
+
+    #[test]
+    fn typed_power_export_writes_exact_csv_html_xlsx_tables_and_rejects_accounting_tamper() {
+        use calamine::{Reader, open_workbook_auto};
+
+        let directory = tempfile::tempdir().unwrap();
+        let result_path = directory.path().join("power.json");
+        let csv_path = directory.path().join("power.csv");
+        let html_path = directory.path().join("power.html");
+        let xlsx_path = directory.path().join("power.xlsx");
+        let result = typed_power_export_fixture();
+        fs::write(&result_path, serde_json::to_vec_pretty(&result).unwrap()).unwrap();
+
+        export_result(&result_path, ExportFormat::Csv, Some(&csv_path), false).unwrap();
+        export_result(&result_path, ExportFormat::Html, Some(&html_path), false).unwrap();
+        export_result(&result_path, ExportFormat::Xlsx, Some(&xlsx_path), false).unwrap();
+
+        let csv = fs::read_to_string(csv_path).unwrap();
+        assert!(csv.contains("pls_power_by_sample_size,50,,,,achieved_power,0.01"));
+        assert!(csv.contains("pls_power_failure,50,1,,,failure_code,nonconvergence"));
+        assert!(csv.contains("pls_power_replicate_ledger,50,0,,,p_value_two_sided,0.04"));
+        assert!(csv.contains("standalone_integrity_scope"));
+        let html = fs::read_to_string(html_path).unwrap();
+        assert!(html.contains("QuickPLS PLS sample-size/power export"));
+        assert!(html.contains("cannot recompute recipe-bound digests"));
+        let mut workbook = open_workbook_auto(&xlsx_path).unwrap();
+        let range = workbook.worksheet_range("QuickPLS export").unwrap();
+        assert!(range.rows().any(|row| {
+            row.iter()
+                .any(|cell| cell.to_string().contains("pls_power_replicate_ledger"))
+        }));
+
+        let mut tampered = result;
+        let tampered_analysis = {
+            let AnalysisPayload::PlsSampleSizePowerV1 { analysis } = &mut tampered.payload else {
+                panic!("expected typed power payload");
+            };
+            analysis["rows"][0]["successful_replicates"] = serde_json::json!(2);
+            analysis.clone()
+        };
+        let error = pls_sample_size_power_export_rows(&tampered, &tampered_analysis).unwrap_err();
+        assert!(error.to_string().contains("summary for sample size 50"));
+    }
+
+    #[test]
+    fn typed_power_v2_export_exposes_exact_tail_accounting_and_rejects_tampering() {
+        let result = typed_power_v2_export_fixture();
+        let AnalysisPayload::PlsSampleSizePowerV2 { analysis } = &result.payload else {
+            panic!("expected typed power v2 payload")
+        };
+        let rows = pls_sample_size_power_export_rows(&result, analysis).unwrap();
+        for (metric, value) in [
+            ("bootstrap_requested_replicates", "99"),
+            ("bootstrap_usable_replicates", "99"),
+            ("bootstrap_failed_replicates", "0"),
+            ("bootstrap_two_sided_exceedances", "3"),
+        ] {
+            assert!(rows.iter().any(|row| {
+                row.section == "pls_power_replicate_ledger"
+                    && row.construct == "50"
+                    && row.indicator == "0"
+                    && row.metric == metric
+                    && row.value == value
+            }));
+        }
+        assert!(rows.iter().any(|row| {
+            row.section == "pls_power_provenance"
+                && row.metric == "inference_method"
+                && row.value == PLS_SAMPLE_SIZE_POWER_INFERENCE_METHOD_V2
+        }));
+
+        let mut changed_exceedance = result.clone();
+        let AnalysisPayload::PlsSampleSizePowerV2 { analysis } =
+            &mut changed_exceedance.payload
+        else {
+            unreachable!()
+        };
+        analysis["outcomes"][0]["bootstrap_two_sided_exceedances"] = serde_json::json!(4);
+        let changed_analysis = analysis.clone();
+        let error =
+            pls_sample_size_power_export_rows(&changed_exceedance, &changed_analysis).unwrap_err();
+        assert!(error.to_string().contains("tail accounting"));
+
+        let mut relabeled = result;
+        relabeled.provenance.method_version = PLS_SAMPLE_SIZE_POWER_METHOD_VERSION.into();
+        let AnalysisPayload::PlsSampleSizePowerV2 { analysis } = &relabeled.payload else {
+            unreachable!()
+        };
+        assert!(
+            pls_sample_size_power_export_rows(&relabeled, analysis)
+                .unwrap_err()
+                .to_string()
+                .contains("identity")
+        );
+    }
+
+    fn cbsem_bootstrap_v2_export_fixture() -> AnalysisResult {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let mut result: AnalysisResult = serde_json::from_slice(
+            &fs::read(root.join("validation/results/lavaan_one_factor_cfa_quickpls.json")).unwrap(),
+        )
+        .unwrap();
+        result.provenance.method_version.push('+');
+        result
+            .provenance
+            .method_version
+            .push_str(qpls_estimation::CBSEM_BOOTSTRAP_METHOD_VERSION_V2);
+        result.provenance.settings.workers = 4;
+        let successful_replicates = (0..1_000)
+            .map(
+                |replicate_index| qpls_estimation::CbsemBootstrapWitnessReplicateV2 {
+                    replicate_index,
+                    sample_indices_sha256: "c".repeat(64),
+                    iterations: 12,
+                    objective: 0.25,
+                    parameter_estimates: vec![0.72],
+                },
+            )
+            .collect();
+        let bootstrap = qpls_estimation::CbsemBootstrapAnalysisV2 {
+            method_version: qpls_estimation::CBSEM_BOOTSTRAP_METHOD_VERSION_V2.into(),
+            algorithm: qpls_estimation::CBSEM_BOOTSTRAP_ALGORITHM_V2.into(),
+            interval_method: qpls_estimation::CBSEM_BOOTSTRAP_INTERVAL_METHOD_V2.into(),
+            retry_policy: qpls_estimation::CBSEM_BOOTSTRAP_RETRY_POLICY_V2.into(),
+            confidence_level: 0.95,
+            requested_replicates: 1_000,
+            attempted_fits: 1_000,
+            usable_replicates: 1_000,
+            failed_replicates: 0,
+            minimum_usable_fraction: qpls_estimation::CBSEM_BOOTSTRAP_MINIMUM_USABLE_FRACTION_V2,
+            minimum_usable_replicates: 1_000,
+            max_attempts_per_replicate:
+                qpls_estimation::CBSEM_BOOTSTRAP_MAX_ATTEMPTS_PER_REPLICATE_V2,
+            complete_case_sample_size: 120,
+            seed: result.provenance.seed,
+            stream_token: qpls_estimation::CBSEM_BOOTSTRAP_STREAM_TOKEN_V2.into(),
+            inference: qpls_estimation::CbsemBootstrapInferenceV2::Available,
+            intervals: vec![qpls_estimation::CbsemBootstrapParameterIntervalV2 {
+                parameter: "loading:y1".into(),
+                original: 0.70,
+                bootstrap_mean: 0.72,
+                bias: 0.02,
+                standard_error: 0.08,
+                percentile_lower: 0.55,
+                percentile_upper: 0.87,
+                usable_replicates: 1_000,
+            }],
+            failures: Vec::new(),
+            validation_witness: qpls_estimation::CbsemBootstrapValidationWitnessV2 {
+                method_version: qpls_estimation::CBSEM_BOOTSTRAP_VALIDATION_WITNESS_V2.into(),
+                dataset_fingerprint: result.provenance.dataset_fingerprint.clone(),
+                recipe_sha256: "d".repeat(64),
+                base_result_sha256: "e".repeat(64),
+                parameter_names: vec!["loading:y1".into()],
+                successful_replicates,
+            },
+            warnings: vec!["Percentile inference is available.".into()],
+        };
+        let (AnalysisPayload::PlsPmV1 { estimation, .. }
+        | AnalysisPayload::PlsPmV2 { estimation, .. }
+        | AnalysisPayload::PlsPmV3 { estimation, .. }) = &mut result.payload
+        else {
+            panic!("expected PLS-shaped CB-SEM payload");
+        };
+        estimation["cbsem"]["bootstrap"] = serde_json::json!({
+            "method_version": "cbsem_bootstrap_v1",
+            "samples": 999,
+            "usable_samples": 999,
+            "intervals": [],
+            "warnings": ["Historical analytical preview only."]
+        });
+        estimation["cbsem"]["bootstrap_v2"] = serde_json::to_value(bootstrap).unwrap();
+        result
+    }
+
+    #[test]
+    fn cbsem_bootstrap_v2_export_includes_typed_contract_and_preserves_legacy_rows() {
+        let mut result = cbsem_bootstrap_v2_export_fixture();
+        let rows = experimental_pls_export_rows(&result).unwrap();
+        assert!(rows.iter().any(|row| {
+            row.section == "cbsem_bootstrap_v2_setting"
+                && row.metric == "outer_workers"
+                && row.value == "4"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "cbsem_bootstrap_v2_inference"
+                && row.metric == "status"
+                && row.value == "available"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "cbsem_bootstrap_v2_interval"
+                && row.construct == "loading:y1"
+                && row.metric == "percentile_lower"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "cbsem_bootstrap_v2_validation_witness" && row.metric == "recipe_sha256"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "cbsem_bootstrap_v2_success_witness"
+                && row.construct == "999"
+                && row.metric == "parameter_estimates"
+        }));
+        assert!(rows.iter().any(|row| {
+            row.section == "cbsem_bootstrap"
+                && row.metric == "method_version"
+                && row.value == "cbsem_bootstrap_v1"
+        }));
+
+        let (AnalysisPayload::PlsPmV1 { estimation, .. }
+        | AnalysisPayload::PlsPmV2 { estimation, .. }
+        | AnalysisPayload::PlsPmV3 { estimation, .. }) = &mut result.payload
+        else {
+            panic!("expected PLS-shaped CB-SEM payload");
+        };
+        estimation["cbsem"]["bootstrap_v2"]["attempted_fits"] = serde_json::json!(999);
+        let error = experimental_pls_export_rows(&result).unwrap_err();
+        assert!(error.to_string().contains("settings or accounting"));
     }
 
     #[test]
@@ -5316,18 +10724,7 @@ mod tests {
         let csv_path = directory.path().join("estimator.csv");
         let html_path = directory.path().join("estimator.html");
 
-        run_analysis(
-            &recipe,
-            Some(&data),
-            None,
-            &result_path,
-            true,
-            None,
-            None,
-            None,
-            Some(1),
-        )
-        .unwrap();
+        write_runner_result(&recipe, &data, &result_path);
         export_result(&result_path, ExportFormat::Csv, Some(&csv_path), false).unwrap();
         export_result(&result_path, ExportFormat::Html, Some(&html_path), false).unwrap();
 
@@ -5340,7 +10737,20 @@ mod tests {
         assert!(csv.contains("r_squared,y,,,,r_squared,"));
         assert!(csv.contains("metadata,,,,,export_scope,"));
         assert!(!csv.contains("cronbach_alpha"));
-        assert!(!csv.contains("bootstrap"));
+        // Post-hoc provenance legitimately identifies bootstrap as the source of
+        // path significance. The estimator-only boundary is about exported
+        // tables, so bind this assertion to section identities rather than
+        // suppressing scientifically relevant provenance text.
+        let exported_sections = csv
+            .lines()
+            .skip(1)
+            .filter_map(|line| line.split_once(',').map(|(section, _)| section))
+            .collect::<std::collections::BTreeSet<_>>();
+        assert!(
+            exported_sections
+                .iter()
+                .all(|section| !section.contains("bootstrap"))
+        );
 
         let html = fs::read_to_string(html_path).unwrap();
         assert!(html.contains("QuickPLS v0.3 estimator export"));
@@ -5362,18 +10772,7 @@ mod tests {
         let result_path = directory.path().join("result.json");
         let xlsx_path = directory.path().join("estimator.xlsx");
 
-        run_analysis(
-            &recipe,
-            Some(&data),
-            None,
-            &result_path,
-            true,
-            None,
-            None,
-            None,
-            Some(1),
-        )
-        .unwrap();
+        write_runner_result(&recipe, &data, &result_path);
         export_result(&result_path, ExportFormat::Xlsx, Some(&xlsx_path), false).unwrap();
 
         let mut workbook = open_workbook_auto(&xlsx_path).unwrap();
@@ -5398,18 +10797,7 @@ mod tests {
         let result_path = directory.path().join("result.json");
         let legacy_path = directory.path().join("legacy.json");
 
-        run_analysis(
-            &recipe,
-            Some(&data),
-            None,
-            &result_path,
-            true,
-            None,
-            None,
-            None,
-            Some(1),
-        )
-        .unwrap();
+        write_runner_result(&recipe, &data, &result_path);
         let mut result: AnalysisResult =
             serde_json::from_slice(&fs::read(&result_path).unwrap()).unwrap();
         result.payload = AnalysisPayload::Legacy {
@@ -5438,18 +10826,7 @@ mod tests {
         let result_path = directory.path().join("wpls.json");
         let csv_path = directory.path().join("wpls.csv");
 
-        run_analysis(
-            &recipe,
-            Some(&data),
-            None,
-            &result_path,
-            true,
-            None,
-            None,
-            None,
-            Some(1),
-        )
-        .unwrap();
+        write_runner_result(&recipe, &data, &result_path);
         let conservative_error =
             export_result(&result_path, ExportFormat::Csv, None, false).unwrap_err();
         assert!(
@@ -5463,7 +10840,10 @@ mod tests {
 
         let csv = fs::read_to_string(csv_path).unwrap();
         assert!(csv.contains("scope_warning"));
-        assert!(csv.contains("documented QuickPLS v1.0.0 supported scope"));
+        assert!(csv.contains(&format!(
+            "wpls,,,,,method_version,{}",
+            qpls_estimation::WPLS_METHOD_VERSION
+        )));
         assert!(csv.contains("wpls,,,,,case_weight_column,case_wt"));
         assert!(csv.contains("wpls,,,,,effective_sample_size,"));
         assert!(xlsx_path.exists());
@@ -5479,6 +10859,53 @@ mod tests {
         let (saved_project, recovery) = load_project_with_autosave(&project).unwrap();
         assert!(recovery.is_none());
         assert_eq!(saved_project.manifest.name, "Corporate Reputation Sample");
+        let result = &saved_project.results[0];
+        assert!(
+            result
+                .provenance
+                .method_version
+                .split('+')
+                .any(|version| version == HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION)
+        );
+        let AnalysisPayload::PlsPmV3 {
+            bootstrap: Some(bootstrap),
+            ..
+        } = &result.payload
+        else {
+            panic!("demo must retain its typed bootstrap payload");
+        };
+        assert!(bootstrap.get("htmt_inference").is_some());
+
+        let mut missing_htmt_marker = saved_project.clone();
+        missing_htmt_marker.results[0].provenance.method_version = missing_htmt_marker.results[0]
+            .provenance
+            .method_version
+            .split('+')
+            .filter(|version| *version != HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION)
+            .collect::<Vec<_>>()
+            .join("+");
+        let error = save_project(
+            &directory.path().join("demo.missing-htmt-marker.qpls"),
+            &missing_htmt_marker,
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("invalid_htmt_inference"));
+
+        let mut missing_htmt_payload = saved_project.clone();
+        if let AnalysisPayload::PlsPmV3 {
+            bootstrap: Some(bootstrap),
+            ..
+        } = &mut missing_htmt_payload.results[0].payload
+        {
+            bootstrap.as_object_mut().unwrap().remove("htmt_inference");
+        }
+        let error = save_project(
+            &directory.path().join("demo.missing-htmt-payload.qpls"),
+            &missing_htmt_payload,
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("invalid_htmt_inference"));
+
         validate_demo_project(Some(&project), Some(&expected), Some(&validation)).unwrap();
         let report: serde_json::Value =
             serde_json::from_slice(&fs::read(validation).unwrap()).unwrap();

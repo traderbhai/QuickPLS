@@ -1,0 +1,114 @@
+{
+    "schema_version":  1,
+    "passed":  true,
+    "root_pid":  48504,
+    "sample_count":  28,
+    "peak_total_working_set_bytes":  542613504,
+    "peak_total_private_memory_bytes":  326987776,
+    "peak_total_handle_count":  4080,
+    "peak_total_thread_count":  212,
+    "peak_process_count":  7,
+    "peak_working_set_under_2_gib":  true,
+    "zero_other_descendants":  true,
+    "process_command_lines_persisted":  true,
+    "process_identity_stable":  true,
+    "observed_processes":  [
+                               {
+                                   "pid":  50952,
+                                   "parent_pid":  15740,
+                                   "name":  "msedgewebview2.exe",
+                                   "role":  "webview_gpu",
+                                   "creation_date":  "08/14/2026 09:07:34",
+                                   "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                   "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=gpu-process --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --gpu-preferences=WAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAQAAAAAAAAAADAAAAAAAAADgAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAoAAAAAAAAAAgAAAAAAAAAEAAAAAIAAAABAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --startup-read-main-dll --metrics-shmem-handle=1924,i,2299440991558432274,2851363099618723068,262144 --field-trial-handle=2012,i,6676946546132985582,16105332238053514807,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=2024,i,835644334355843694,15373377358470463562,4 --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=2008 /prefetch:2 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21"
+                               },
+                               {
+                                   "pid":  61824,
+                                   "parent_pid":  15740,
+                                   "name":  "msedgewebview2.exe",
+                                   "role":  "webview_utility",
+                                   "creation_date":  "08/14/2026 09:07:34",
+                                   "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                   "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --disable-quic --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2140,i,9504235947977464064,13366512418161861265,524288 --field-trial-handle=2012,i,6676946546132985582,16105332238053514807,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=2024,i,835644334355843694,15373377358470463562,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=4376 /prefetch:11 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21"
+                               },
+                               {
+                                   "pid":  62868,
+                                   "parent_pid":  15740,
+                                   "name":  "msedgewebview2.exe",
+                                   "role":  "webview_renderer",
+                                   "creation_date":  "08/14/2026 09:07:34",
+                                   "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                   "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=renderer --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --remote-debugging-port=9222 --video-capture-use-gpu-memory-buffer --lang=en-US --device-scale-factor=1.25 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --js-flags=\"--expose-gc --ms-user-locale=en_IN\" --time-ticks-at-unix-epoch=-1784358018776134 --launch-time-ticks=2320635659561 --ssd-no-pressure-read-main-dll --metrics-shmem-handle=3816,i,10516890386313661549,3909452419911518229,2097152 --field-trial-handle=2012,i,6676946546132985582,16105332238053514807,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=2024,i,835644334355843694,15373377358470463562,4 --trace-process-track-uuid=3190708990997080739 --mojo-platform-channel-handle=4472 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21 /prefetch:1"
+                               },
+                               {
+                                   "pid":  29816,
+                                   "parent_pid":  15740,
+                                   "name":  "msedgewebview2.exe",
+                                   "role":  "webview_utility",
+                                   "creation_date":  "08/14/2026 09:07:34",
+                                   "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                   "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=service --disable-quic --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2572,i,9401051772502853595,3570998277021378033,524288 --field-trial-handle=2012,i,6676946546132985582,16105332238053514807,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=2024,i,835644334355843694,15373377358470463562,4 --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=4436 /prefetch:13 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21"
+                               },
+                               {
+                                   "pid":  15740,
+                                   "parent_pid":  48504,
+                                   "name":  "msedgewebview2.exe",
+                                   "role":  "webview_browser",
+                                   "creation_date":  "08/14/2026 09:07:32",
+                                   "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                   "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --embedded-browser-webview=1 --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --noerrdialogs --embedded-browser-webview-dpi-awareness=2 --disable-background-networking --disable-component-update --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-quic --disable-sync --metrics-recording-only --proxy-server=http://127.0.0.1:17846 --remote-debugging-port=9222 --lang=en-US --mojo-named-platform-channel-pipe=48504.17560.18214472106648237106 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21"
+                               },
+                               {
+                                   "pid":  48504,
+                                   "parent_pid":  47016,
+                                   "name":  "quickpls-desktop.exe",
+                                   "role":  "desktop_root",
+                                   "creation_date":  "08/14/2026 09:07:31",
+                                   "executable_path":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                                   "command_line":  "\"D:\\QuickPLS\\target\\release\\quickpls-desktop.exe\" "
+                               },
+                               {
+                                   "pid":  52052,
+                                   "parent_pid":  15740,
+                                   "name":  "msedgewebview2.exe",
+                                   "role":  "webview_other",
+                                   "creation_date":  "08/14/2026 09:07:32",
+                                   "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                   "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=crashpad-handler --user-data-dir=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView /prefetch:4 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21 --monitor-self-annotation=ptype=crashpad-handler --database=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\\Crashpad --metrics-dir=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView --annotation=IsOfficialBuild=1 --annotation=channel= --annotation=chromium-version=151.0.7922.109 \"--annotation=exe=C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --annotation=plat=Win64 \"--annotation=prod=Edge WebView2\" --annotation=ver=151.0.4129.78 --initial-client-data=0x1c4,0x1c8,0x1cc,0x1a0,0x1d4,0x7ffa39ab65f0,0x7ffa39ab6600,0x7ffa39ab6610"
+                               }
+                           ],
+    "direct_webview_browser_child_count":  1,
+    "direct_webview_browser_child":  {
+                                         "pid":  15740,
+                                         "parent_pid":  48504,
+                                         "name":  "msedgewebview2.exe",
+                                         "role":  "webview_browser",
+                                         "creation_date":  "08/14/2026 09:07:32",
+                                         "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                         "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --embedded-browser-webview=1 --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --noerrdialogs --embedded-browser-webview-dpi-awareness=2 --disable-background-networking --disable-component-update --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-quic --disable-sync --metrics-recording-only --proxy-server=http://127.0.0.1:17846 --remote-debugging-port=9222 --lang=en-US --mojo-named-platform-channel-pipe=48504.17560.18214472106648237106 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21"
+                                     },
+    "direct_webview_browser_observed_in_every_sample":  true,
+    "frozen_product_browser_switches":  [
+                                            "--disable-background-networking",
+                                            "--disable-component-update",
+                                            "--disable-sync",
+                                            "--metrics-recording-only",
+                                            "--disable-quic",
+                                            "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection",
+                                            "--proxy-server=http://127.0.0.1:17846"
+                                        ],
+    "acceptance_only_browser_switches":  [
+                                             "--remote-debugging-port=9222"
+                                         ],
+    "missing_browser_switches":  [
+
+                                 ],
+    "duplicate_browser_switches":  [
+
+                                   ],
+    "conflicting_browser_switches":  [
+
+                                     ],
+    "browser_switch_contract_passed":  true,
+    "observation":  "sampled exact root process identity, executable path, command line, and descendants with a configured 250 ms inter-sample delay; bounded run, not a sustained no-leak claim"
+}

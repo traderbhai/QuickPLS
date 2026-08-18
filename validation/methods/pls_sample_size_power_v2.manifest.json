@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-17T21:08:08Z",
+    "manifest_path": "validation/methods/pls_sample_size_power_v2.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.sample_size_power",
+    "label": "PLS-SEM Sample Size and Power Analysis",
+    "method_version": "pls_sample_size_power_v2",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
+  "claim": {
+    "supported_scope": "Prospective Monte Carlo power and conservative grid selection for exactly two ordinary reflective constructs joined by one predictor-to-outcome path, with 3-10 declared loadings per block, standard-Gaussian data generation, standardized path-weighted PLS-PM, no missingness, and an indexed null-centered two-sided case-bootstrap plus-one path test.",
+    "estimand": "The probability that the frozen v2 PLS and null-centered case-bootstrap procedure rejects the target-path null under the declared effect, sample size, measurement design, and Gaussian data-generating assumptions.",
+    "assumptions": [
+      "The one-path model, population coefficient, ordered loading vectors, standard-Gaussian distributions, no-missingness policy, alpha, and exact v2 test are declared before execution.",
+      "At least 90 percent of the requested inner case-bootstrap fits must be usable for an outer replicate to contribute an exact p value.",
+      "Power and the conservative decision apply only to the displayed design and evaluated sample-size grid."
+    ],
+    "exclusions": [
+      "Retrospective observed power, heuristic sample-size rules, smoothing, interpolation, and extrapolation are excluded.",
+      "Formative, higher-order, interaction, multigroup, nonlinear, mixture, endogeneity, weighted, clustered, ordinal, matrix-only, multi-path, control-variable, alternate-distribution, and missing-data designs are excluded.",
+      "The result is not a guarantee of convergence, measurement validity, external validity, data quality, or adequacy for an unplanned analysis."
+    ],
+    "warnings": [
+      "Power is conditional on the declared generator, estimator, inferential test, alpha, and target path.",
+      "Failed outer replicates remain in the planned power denominator and failed inner fits remain in typed accounting.",
+      "Archive validation recomputes the stored arithmetic and identities but does not regenerate every dataset or cryptographically authenticate a coordinated archive rewrite.",
+      "Method-level offline qualification requires zero external QuickPLS application/page requests; sampled Microsoft-managed WebView2 background egress is recorded separately and does not satisfy the pending commercial zero-process-egress gate."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "null_centered_plus_one_probability",
+        "expression": "p_r = (1 + sum_b I(abs(beta_star_rb - beta_hat_r) >= abs(beta_hat_r))) / (1 + U_r)",
+        "variables": ["p_r", "beta_star_rb", "beta_hat_r", "U_r"],
+        "source_reference_id": "independent_v2_calibration"
+      },
+      {
+        "id": "monte_carlo_power",
+        "expression": "power_hat(n) = sum_r I(p_r <= alpha) / R",
+        "variables": ["power_hat", "n", "p_r", "alpha", "R"],
+        "source_reference_id": "muthen_muthen_2002"
+      },
+      {
+        "id": "conservative_grid_decision",
+        "expression": "n_min = min{n in N_grid : Wilson_lower(power_hat(n), R) >= target_power}",
+        "variables": ["n_min", "N_grid", "power_hat", "R", "target_power"],
+        "source_reference_id": "muthen_muthen_2002"
+      }
+    ],
+    "references": [
+      {
+        "id": "muthen_muthen_2002",
+        "kind": "primary_paper",
+        "citation": "Muthen and Muthen (2002), How to Use a Monte Carlo Study to Decide on Sample Size and Determine Power",
+        "locator": "https://doi.org/10.1207/S15328007SEM0904_8",
+        "independence_group": "primary_monte_carlo_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_v2_calibration",
+        "kind": "independent_python",
+        "citation": "Independent NumPy bounded generator, Mode-A PLS estimator, indexed case bootstrap, null-centered tail count, plus-one probability, Wilson interval, and frozen calibration profile",
+        "locator": "validation/pls_sample_size_power_v2_reference.py",
+        "independence_group": "python_v2_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "compact_null_calibration",
+        "purpose": "type_i_error",
+        "design": "Frozen independent NumPy null profiles at n=160 and n=320, 300 outer runs per point, 99 indexed case-bootstrap fits per run, reflective loadings 0.80, and population path zero.",
+        "seed_policy": "A frozen validation-only domain separates effect, sample size, outer index, generated data, and bootstrap inference; it consumes no QuickPLS result.",
+        "metrics": ["type_i_error", "wilson_interval", "outer_failure_rate", "inner_fit_failure_rate"],
+        "acceptance_rule": "The pooled 95 percent Wilson interval contains 0.05, pooled rejection is at most 0.065, each point is at most 0.08, every outer run completes, and the inner fit-failure rate is at most 0.001 with failures retained."
+      },
+      {
+        "id": "compact_signal_recovery",
+        "purpose": "power",
+        "design": "Frozen independent NumPy profile with population path 0.45, n=60, 100 outer runs, 99 indexed case-bootstrap fits per run, and reflective loadings 0.80.",
+        "seed_policy": "The same frozen validation-only indexed-domain policy as the null profile.",
+        "metrics": ["rejection_rate", "wilson_interval", "outer_failure_rate", "inner_fit_failure_rate"],
+        "acceptance_rule": "At least 0.60 of successful outer runs reject, every outer run completes, and the retained inner fit-failure rate remains within the same 0.001 bound."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "v1_v2_identity",
+        "category": "unsupported_scope",
+        "case": "A v1 recipe/result is submitted for new execution or relabeled with the v2 method, schema, stream, or inference identity.",
+        "expected_behavior": "Historical v1 remains readable under v1 while execution and append validation reject every mixed or relabeled identity."
+      },
+      {
+        "id": "tail_accounting",
+        "category": "tamper",
+        "case": "Requested, usable, failed, exceedance, p-value, rejection, row, digest, or grid-decision evidence is altered.",
+        "expected_behavior": "Strict validation recomputes the plus-one probability and all deterministic summaries and rejects the payload atomically."
+      },
+      {
+        "id": "seed_worker_invariance",
+        "category": "metamorphic",
+        "case": "The same v2 scientific recipe and seed run under different supported worker counts.",
+        "expected_behavior": "The indexed outcome ledger and analytical payload are exactly equal apart from operational provenance."
+      },
+      {
+        "id": "inner_fit_failure",
+        "category": "data_pathology",
+        "case": "One or more indexed inner case-bootstrap fits fail while at least 90 percent remain usable.",
+        "expected_behavior": "No retry or replacement occurs; exact requested, usable, failed, and exceedance counts determine the plus-one probability."
+      },
+      {
+        "id": "cancel_retry",
+        "category": "determinism",
+        "case": "Execution is cancelled and the same immutable v2 recipe is retried.",
+        "expected_behavior": "Cancellation appends no result and retry reproduces the uninterrupted analytical payload."
+      }
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 2,
+      "payload_kind": "pls_sample_size_power_v2",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a capability, method, inference, stream, or schema identity mismatch."},
+        {"category": "method_version", "expected_behavior": "Reject a result whose immutable design, counts, seed, settings, recipe digest, or v2 method identity differs from its recipe."},
+        {"category": "malformed_payload", "expected_behavior": "Reject changed requested, usable, failed, exceedance, probability, or rejection evidence, plus duplicate keys, unknown fields, non-finite values, partial ledgers, invalid grids, or inconsistent denominators."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a changed project dataset fingerprint even though observed rows are not simulated."},
+        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret the failed-calibration v1 result as v2 evidence."}
+      ],
+      "legacy_policy": "pls_sample_size_power_v1 remains readable under its historical identity and is non-executable; only exact v2 recipes may create new results."
+    },
+    "native": {
+      "setup_controls": [
+        "Predictor and outcome constructs",
+        "Ordered loading vectors and population path",
+        "Sample-size grid, alpha, target power, and Wilson confidence",
+        "Monte Carlo and case-bootstrap replicate counts",
+        "Seed, workers, tolerance, and maximum iterations",
+        "Fixed standard-Gaussian and no-missing design disclosures"
+      ],
+      "applicability_blockers": [
+        "Unsupported model shape or measurement block",
+        "Incomplete or invalid data-generating assumptions",
+        "Invalid grid, probability, inference, replicate count, or workload",
+        "Historical v1 inference selected for new execution"
+      ],
+      "result_surfaces": [
+        "Power and Wilson interval by sample size",
+        "Conservative reached or not-reached decision",
+        "Outer simulation and inner bootstrap tail accounting",
+        "Named failures, assumptions, exclusions, and run provenance"
+      ],
+      "gui_cli_parity_rule": "For the same exact v2 recipe and seed, GUI and CLI ordered analytical payloads are equal apart from operational timestamps.",
+      "accessibility_rules": [
+        "Every curve value has an equivalent accessible table row.",
+        "The decision, accounting, assumptions, exclusions, and failures require neither color nor pointer interaction."
+      ]
+    },
+    "export": {
+      "formats": ["csv", "xlsx"],
+      "tables": ["Power by sample size", "Bootstrap tail accounting", "Simulation failures", "Design assumptions", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/PLS_SAMPLE_SIZE_POWER_V2.md"],
+      "independent_reference": ["validation/pls_sample_size_power_v2_reference.py", "validation/results/pls_sample_size_power_v2_reference_report.json"],
+      "simulation_report": ["validation/pls_sample_size_power_v2_reference.py"],
+      "boundary_report": ["crates/qpls-core/src/contract.rs", "crates/qpls-core/src/validation.rs", "crates/qpls-resampling/src/power.rs", "crates/qpls-resampling/src/lib.rs", "crates/qpls-runner/src/lib.rs", "validation/pls_sample_size_power_v2_factory.py"],
+      "persistence_report": ["crates/qpls-core/src/contract.rs", "crates/qpls-runner/src/lib.rs", "crates/qpls-project/src/lib.rs", "validation/pls_sample_size_power_v2_factory.py"],
+      "frontend_report": ["src/native/nativePlsSampleSizePower.ts", "src/native/nativePlsSampleSizePower.test.ts", "src/native/nativeResults.ts", "src/native/nativeAnalysisRecipe.ts"],
+      "export_report": ["src/native/nativePlsSampleSizePower.ts", "src/native/nativeExportTables.ts", "crates/qpls-cli/src/main.rs"],
+      "method_audit": [
+        "validation/pls_sample_size_power_v2_factory.py",
+        "validation/pls_sample_size_power_v2_factory_audit.py",
+        "validation/pls_sample_size_power_v2_packaged_acceptance.py",
+        "validation/phase2_release_packaged_common.py"
+      ],
+      "packaged_acceptance": [
+        "validation/pls_sample_size_power_v2_packaged_acceptance.py",
+        "validation/run_v247_pls_sample_size_power_native_acceptance.ps1",
+        "validation/v247_tauri_native_acceptance.mjs",
+        "validation/monitor_quickpls_network.ps1",
+        "validation/close_tauri_test_window.mjs",
+        "validation/windows_native_save_export.py",
+        "validation/phase2_release_packaged_common.py",
+        "validation/diagnostic_bundle_source_manifest.py",
+        "validation/test_pls_sample_size_power_v2_packaged_acceptance.py"
+      ]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/pls_sample_size_power_v2/engine_stage.identity.json",
+          "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/pls_sample_size_power_v2/persistence_report.identity.json",
+          "roles": ["persistence_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/pls_sample_size_power_v2/native_stage.identity.json",
+          "roles": ["frontend_report", "export_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/pls_sample_size_power_v2/packaged_acceptance.identity.json",
+          "roles": ["packaged_acceptance"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pls_sample_size_power_v2/method_audit.identity.json",
+          "roles": ["method_audit"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
+  }
+}

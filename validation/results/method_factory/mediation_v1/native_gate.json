@@ -1,0 +1,38 @@
+{
+  "checks": {
+    "all_declared_test_sources_exist": true,
+    "prebuilt_engine_identity": {
+      "path": "target/debug/qpls.exe",
+      "sha256": "f16cc51db4eafb31b8ad6eac37d12c0c163b4169df8abf3ecc703761a7a03fe2",
+      "size": 55822848
+    },
+    "targeted_vitest_passed": true,
+    "test_file_count": 4
+  },
+  "execution": {
+    "command": [
+      "npx.cmd",
+      "vitest",
+      "run",
+      "src/domain/resultInterpretation.test.ts",
+      "src/domain/resultTables.test.ts",
+      "src/native/nativeExportTables.test.ts",
+      "src/native/nativeResults.test.ts"
+    ],
+    "duration_seconds": 11.172,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  4 passed (4)\n      Tests  68 passed (68)\n   Start at  12:17:42\n   Duration  3.53s (transform 2.36s, setup 0ms, import 5.22s, tests 444ms, environment 1ms)\n\n"
+  },
+  "kind": "quickpls_phase3_native_source_gate",
+  "method": "mediation_v1",
+  "packaged_workflow_not_claimed": true,
+  "passed": true,
+  "schema_version": 1,
+  "tests": [
+    "src/domain/resultInterpretation.test.ts",
+    "src/domain/resultTables.test.ts",
+    "src/native/nativeExportTables.test.ts",
+    "src/native/nativeResults.test.ts"
+  ]
+}

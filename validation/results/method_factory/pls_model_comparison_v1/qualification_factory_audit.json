@@ -1,0 +1,636 @@
+{
+  "attached_receipt_count": 0,
+  "candidate_receipt_descriptors": [],
+  "capability_id": "smartpls.pls_model_comparison",
+  "cell_id": "qpls3.comparison.pls_models",
+  "checks": {
+    "all_work_descriptors_are_hash_bound": true,
+    "full_blocker_set_is_preregistered": true,
+    "manifest_remains_absent_with_empty_evidence": true,
+    "no_candidate_or_attached_receipts": true,
+    "oracle_work_is_current_partial_and_nonpromotional": true,
+    "qualification_spec_has_zero_receipts": true,
+    "qualification_spec_is_compatibility_only": true,
+    "qualification_spec_schema_semantics_and_registry_pass": true,
+    "registry_exact_cell_remains_absent_labs": true,
+    "required_roles_are_exact_and_unique": true
+  },
+  "manifest_mutated": false,
+  "method_version": "pls_model_comparison_v1",
+  "note": "Source-bound validation work only. A green factory audit means the missing work is preregistered and the current micro-oracle is unchanged; it is never capability evidence or promotion authority.",
+  "oracle_work_report_descriptor": {
+    "path": "validation/results/method_factory/pls_model_comparison_v1/work/independent_oracle_work.json",
+    "sha256": "a809211f12ccc19f6490156ae770642896077e72b5ee40d0b5e80fcb29549887",
+    "size_bytes": 6499
+  },
+  "passed": true,
+  "promotion_allowed": false,
+  "qualification_id": "qpls3.comparison.pls_models.qualification_v2",
+  "qualification_ready": false,
+  "qualification_spec_receipts_mutated": false,
+  "registry_mutated": false,
+  "remaining_blockers": [
+    "archive.schema6_roundtrip_qualification_receipt_and_historical_future_recovery_campaign_missing",
+    "canonical_result_document_v2.immutable_projection_reopen_qualification_receipt_missing",
+    "cancellation.prediction_aggregation_bic_and_serialization_checkpoint_coverage_unproven",
+    "cli.real_runner_same_run_and_invalid_setup_evidence_missing",
+    "contract.bic_failure_partial_availability_policy_unresolved",
+    "contract.q_squared_and_cvpat_epsilon_thresholds_differ_from_strict_document_wording",
+    "determinism.worker_count_control_and_invariance_missing",
+    "engine.failed_fold_accounting_aborts_and_success_payload_always_reports_zero_failures",
+    "export.csv_xlsx_html_svg_pdf_png_semantic_readback_missing",
+    "frontend.gui_setup_results_comparison_and_run_linkage_missing",
+    "generative.selection_recovery_bias_type_i_power_and_failure_campaign_missing",
+    "limits.extreme_fold_and_repeat_bounds_missing",
+    "metamorphic.graph_id_relabel_scientific_identity_unproven",
+    "metamorphic.physical_row_reorder_fold_assignment_invariance_unproven",
+    "oracle.full_pipeline_product_to_reference_comparison_missing",
+    "oracle.second_independently_maintained_implementation_missing",
+    "packaged_windows.installed_portable_offline_matrix_missing",
+    "performance.applied_maximum_compound_cancellation_leak_and_soak_missing",
+    "preflight.cycle_and_semantic_graph_failures_not_all_rejected_before_estimation",
+    "product.accessibility_keyboard_focus_scaling_and_noncolor_evidence_missing",
+    "result.strict_unknown_fields_capability_identity_settings_digest_and_run_reference_missing",
+    "review.independent_pls_advanced_scientific_review_missing",
+    "runner.recipe_v4_progress_cancellation_atomic_commit_qualification_receipt_missing",
+    "scope.schema_v3_raw_listwise_unweighted_recursive_two_candidate_boundaries_not_full_parity",
+    "simulation.monte_carlo_half_width_and_failed_fit_accounting_missing",
+    "surface.internal_labs_result_label_has_no_qualified_canonical_registry_mapping"
+  ],
+  "report_kind": "pls_model_comparison_v1_qualification_factory_audit",
+  "role_matrix": [
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "method_contract",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "kernel_execution",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "oracle_independence",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "generative_recovery",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "adversarial_boundaries",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "runner_integration",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "archive_persistence",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "canonical_result_projection",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "gui_contract",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "cli_contract",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "cross_format_export",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "packaged_windows_e2e",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "accessibility",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "performance_scale_soak",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "qualification_ready": false,
+      "role": "scientific_review",
+      "status": "blocked"
+    }
+  ],
+  "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+  "schema_version": 1,
+  "scientific_review_satisfied": false,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-estimation/src/lib.rs",
+      "sha256": "a05ece4c1236d8717b8bb12777525d1085f4008fc133dbf7a06958f485a79d6b",
+      "size_bytes": 504
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls_model_comparison.rs",
+      "sha256": "880a9d25c3c19ce175706f8325e42fdc00b0c2b28896ddcd7ff2ca37b4b930f6",
+      "size_bytes": 77127
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "5e4cea07125c9868dd2eb768fb68afacde183bc32f195e511f2263141bf8dc2b",
+      "size_bytes": 82721
+    },
+    {
+      "path": "crates/qpls-runner/src/pls_model_comparison_execution.rs",
+      "sha256": "1be7b61356bb8cb3bee8e1c6434868c06aa91610a4367e82be0182863950594a",
+      "size_bytes": 58981
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "sha256": "aaa3ff9373ace489e4b22b6593340e75f74a71f602204272dd214f0b2118bf5b",
+      "size_bytes": 251413
+    },
+    {
+      "path": "src-tauri/src/pls_model_comparison_jobs.rs",
+      "sha256": "a43c63e92c403ae8243c773e8eae5fb8795ef714cb88844f96e068e89413fc2a",
+      "size_bytes": 32271
+    },
+    {
+      "path": "src-tauri/src/recipe_v4_jobs.rs",
+      "sha256": "08e049873c28f35db18ad7c330f7a3b73ec7db4e384cba11474ab2cb8a5535d4",
+      "size_bytes": 60565
+    },
+    {
+      "path": "crates/qpls-project/tests/pls_model_comparison_schema6.rs",
+      "sha256": "14caffcbed5117324590b841334451aaf0d62b7eb0b0f7fda78b1b47fd046650",
+      "size_bytes": 7654
+    },
+    {
+      "path": "docs/methods/PLS_MODEL_COMPARISON_V1.md",
+      "sha256": "29186003693243b3507fb9199e5a38c891cf6899b3e2225a0d8d09af490c3931",
+      "size_bytes": 10484
+    },
+    {
+      "path": "validation/pls_model_comparison_v1_oracle.py",
+      "sha256": "8488bff8ac85331ec3b4b378f4e31abf8c6083e4ba8eee1a81b231d53ad133ba",
+      "size_bytes": 6507
+    },
+    {
+      "path": "validation/test_pls_model_comparison_v1_oracle.py",
+      "sha256": "0122ddf4c02f79184b63c33fe97bc8cbb9ac6932dfc93a683bb3de1052ecd4c3",
+      "size_bytes": 1307
+    },
+    {
+      "path": "validation/pls_model_comparison_v1_qualification_factory.py",
+      "sha256": "273ce18d0d8a7b46dd13975816e640dc67bddca90530f8a914a4e89405058c03",
+      "size_bytes": 65579
+    },
+    {
+      "path": "validation/pls_model_comparison_v1_qualification_factory.schema.json",
+      "sha256": "ada4515030722f6e2a441bd000081f20a441934ad9a7b475109d21e93cdfc862",
+      "size_bytes": 9163
+    },
+    {
+      "path": "validation/test_pls_model_comparison_v1_qualification_factory.py",
+      "sha256": "a0e2f2ca8ff930224ab92551e9ebe5ff80ced48a614f5232c50b97a4795c329d",
+      "size_bytes": 11126
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/qualification_v2/pls_model_comparison_v1.qualification.json",
+      "sha256": "809066722fcd0cc3082a6758aeb8f8582c93813b3a233c2e72179bffb55d3a51",
+      "size_bytes": 61367
+    },
+    {
+      "path": "validation/methods/pls_model_comparison_v1.manifest.json",
+      "sha256": "dbb994b1a353a12b084e34fedea1fe4161ab41e506fa8ca6639d6eed6830b0f5",
+      "size_bytes": 9850
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.json",
+      "sha256": "d3e480178a619d0bec28e48ddfd9a2fb1848c083b78e1afe1c51f1b12e980fd9",
+      "size_bytes": 303615
+    }
+  ],
+  "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+  "spec_descriptor": {
+    "path": "validation/qualification_v2/pls_model_comparison_v1.qualification.json",
+    "sha256": "809066722fcd0cc3082a6758aeb8f8582c93813b3a233c2e72179bffb55d3a51",
+    "size_bytes": 61367
+  },
+  "spec_frozen_at_utc": "2026-08-15T00:21:46Z",
+  "work_descriptors": [
+    {
+      "blockers": [
+        "No immutable contract qualification receipt is attached."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.method_contract.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "qualification_spec_v2",
+        "official_contract_snapshot"
+      ],
+      "required_check_ids": [
+        "spec.schema",
+        "spec.semantics",
+        "spec.registry_identity",
+        "spec.zero_receipts"
+      ],
+      "role": "method_contract",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "contract",
+      "status": "work_evidence_only"
+    },
+    {
+      "blockers": [
+        "No hash-current immutable product execution envelope or full pipeline oracle comparison exists."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.kernel_execution.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "product_execution_envelope",
+        "cross_language_product_oracle_comparison"
+      ],
+      "required_check_ids": [
+        "kernel.real_two_model_refit",
+        "kernel.typed_failures",
+        "kernel.cancel_progress",
+        "kernel.no_nan_fallback"
+      ],
+      "role": "kernel_execution",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "kernel",
+      "status": "blocked"
+    },
+    {
+      "blockers": [
+        "The micro-oracle is partial; the full independent pipeline, second maintained implementation, and published fixture are missing."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [
+        {
+          "path": "validation/results/method_factory/pls_model_comparison_v1/work/independent_oracle_work.json",
+          "sha256": "a809211f12ccc19f6490156ae770642896077e72b5ee40d0b5e80fcb29549887",
+          "size_bytes": 6499
+        }
+      ],
+      "descriptor_id": "pls_model_comparison_v1.oracle_independence.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "independent_micro_oracle",
+        "second_maintained_implementation",
+        "published_fixture"
+      ],
+      "required_check_ids": [
+        "oracle.micro_formulas",
+        "oracle.fold_digest",
+        "oracle.full_pipeline",
+        "oracle.second_maintained"
+      ],
+      "role": "oracle_independence",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "oracle",
+      "status": "work_evidence_only"
+    },
+    {
+      "blockers": [
+        "No qualification-sized simulation or Monte Carlo precision report exists."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.generative_recovery.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "preregistered_simulation_report"
+      ],
+      "required_check_ids": [
+        "simulation.null_type_i",
+        "simulation.selection_recovery",
+        "simulation.bias_power",
+        "simulation.failures_counted"
+      ],
+      "role": "generative_recovery",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "generative",
+      "status": "blocked"
+    },
+    {
+      "blockers": [
+        "Source micro-boundaries exist, but no full product adversarial, tamper, worker, GUI/CLI, or archive campaign exists."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.adversarial_boundaries.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "source_boundary_tests",
+        "product_adversarial_report"
+      ],
+      "required_check_ids": [
+        "boundary.metamorphic",
+        "boundary.degenerate",
+        "boundary.tamper",
+        "boundary.nonconvergence"
+      ],
+      "role": "adversarial_boundaries",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "adversarial",
+      "status": "work_evidence_only"
+    },
+    {
+      "blockers": [
+        "The Internal/Labs runner, progress, cancellation, and atomic publication source tests exist, but no immutable build-bound qualification receipt is attached."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.runner_integration.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "real_runner_report"
+      ],
+      "required_check_ids": [
+        "runner.recipe_v4",
+        "runner.progress",
+        "runner.cancel",
+        "runner.atomic_commit"
+      ],
+      "role": "runner_integration",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "integration",
+      "status": "work_evidence_only"
+    },
+    {
+      "blockers": [
+        "A focused schema-6 append/reopen source test exists, but no immutable build-bound qualification receipt or historical/future recovery and tamper campaign is attached."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.archive_persistence.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "archive_roundtrip_report"
+      ],
+      "required_check_ids": [
+        "archive.save_reopen",
+        "archive.history",
+        "archive.future_readonly",
+        "archive.tamper_recovery"
+      ],
+      "role": "archive_persistence",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "persistence_export",
+      "status": "work_evidence_only"
+    },
+    {
+      "blockers": [
+        "CanonicalResultDocumentV2 projection and exact schema-6 reopen source tests exist, but no immutable build-bound qualification receipt is attached."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.canonical_result_projection.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "canonical_result_document_v2_report"
+      ],
+      "required_check_ids": [
+        "canonical.typed_projection",
+        "canonical.saved_comparison",
+        "canonical.run_identity"
+      ],
+      "role": "canonical_result_projection",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "persistence_export",
+      "status": "work_evidence_only"
+    },
+    {
+      "blockers": [
+        "No real GUI setup, preflight, result, warning, or run-linkage implementation/evidence exists."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.gui_contract.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "native_gui_interaction_report"
+      ],
+      "required_check_ids": [
+        "gui.setup",
+        "gui.preflight",
+        "gui.results",
+        "gui.run_linkage"
+      ],
+      "role": "gui_contract",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "product_surface",
+      "status": "blocked"
+    },
+    {
+      "blockers": [
+        "No CLI method route or same-result GUI/CLI execution report exists."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.cli_contract.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "cli_execution_report"
+      ],
+      "required_check_ids": [
+        "cli.valid_run",
+        "cli.invalid_setup",
+        "cli.gui_parity",
+        "cli.cancel_retry"
+      ],
+      "role": "cli_contract",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "product_surface",
+      "status": "blocked"
+    },
+    {
+      "blockers": [
+        "No canonical CSV, XLSX, HTML, SVG, PDF, or PNG generation and semantic readback evidence exists."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.cross_format_export.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "cross_format_export_readback_report"
+      ],
+      "required_check_ids": [
+        "export.csv",
+        "export.xlsx",
+        "export.html",
+        "export.svg",
+        "export.pdf",
+        "export.png",
+        "export.semantic_readback"
+      ],
+      "role": "cross_format_export",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "persistence_export",
+      "status": "blocked"
+    },
+    {
+      "blockers": [
+        "No installed/portable offline Windows acceptance matrix exists."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.packaged_windows_e2e.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "packaged_windows_matrix_report"
+      ],
+      "required_check_ids": [
+        "windows.installed",
+        "windows.portable",
+        "windows.offline",
+        "windows.cleanup"
+      ],
+      "role": "packaged_windows_e2e",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "packaged_windows",
+      "status": "blocked"
+    },
+    {
+      "blockers": [
+        "No keyboard, focus, accessible-table, scaling, or noncolor evidence exists."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.accessibility.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "accessibility_matrix_report"
+      ],
+      "required_check_ids": [
+        "a11y.keyboard",
+        "a11y.focus",
+        "a11y.tables",
+        "a11y.scaling",
+        "a11y.noncolor"
+      ],
+      "role": "accessibility",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "packaged_windows",
+      "status": "blocked"
+    },
+    {
+      "blockers": [
+        "No applied/maximum/compound performance, cancellation-latency, leak, or soak evidence exists."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.performance_scale_soak.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "performance_baseline_report",
+        "soak_report"
+      ],
+      "required_check_ids": [
+        "perf.applied",
+        "perf.maximum",
+        "perf.compound",
+        "perf.cancel_latency",
+        "perf.memory_soak"
+      ],
+      "role": "performance_scale_soak",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "scale_reliability",
+      "status": "blocked"
+    },
+    {
+      "blockers": [
+        "No independent PLS advanced/group scientific review is recorded."
+      ],
+      "candidate_receipt_emitted": false,
+      "current_artifacts": [],
+      "descriptor_id": "pls_model_comparison_v1.scientific_review.work_v1",
+      "promotion_allowed": false,
+      "qualification_ready": false,
+      "required_artifact_classes": [
+        "signed_scientific_review_record"
+      ],
+      "required_check_ids": [
+        "review.pls_advanced_independent",
+        "review.discrepancies_resolved"
+      ],
+      "role": "scientific_review",
+      "scenario_set_sha256": "8075e46c90158f772459f89e72350e3221b392a8471b3b53393ea01c9da807db",
+      "source_set_sha256": "cb7529d116abb9e0574bcd9f2bf6e3ab2f45b85d98ae9d68518e5122eb4ae3f3",
+      "stage": "review",
+      "status": "blocked"
+    }
+  ]
+}

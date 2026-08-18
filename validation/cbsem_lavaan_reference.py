@@ -161,7 +161,7 @@ def quickpls_run(model, data_path):
     recipe_path = RESULTS / f"lavaan_{model}.recipe.json"
     output_path = RESULTS / f"lavaan_{model}_quickpls.json"
     recipe_path.write_text(json.dumps(recipe, indent=2), encoding="utf-8")
-    qpls(["run", str(recipe_path.relative_to(ROOT)), "--data", str(data_path.relative_to(ROOT)), "--output", str(output_path.relative_to(ROOT)), "--allow-experimental"], check=True, stdout=subprocess.DEVNULL)
+    qpls(["run", str(recipe_path.relative_to(ROOT)), "--data", str(data_path.relative_to(ROOT)), "--output", str(output_path.relative_to(ROOT))], check=True, stdout=subprocess.DEVNULL)
     return json.loads(output_path.read_text(encoding="utf-8"))["payload"]["estimation"]["cbsem"]
 
 

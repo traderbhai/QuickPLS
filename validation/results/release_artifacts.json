@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "target": "QuickPLS release artifact preservation",
+  "schema_version": 2,
+  "target": "QuickPLS unsigned preview artifact preservation",
   "passed": true,
   "version": "2.46.0",
   "version_contract": {
@@ -32,40 +32,58 @@
       "qpls-runner": "2.46.0",
       "quickpls-desktop": "2.46.0"
     },
-    "tauri": "2.46.0"
+    "tauri": "2.46.0",
+    "release_channels": "2.46.0"
   },
-  "label": "v2_46_0_quickpls_3_wave_1_regression_process",
-  "timestamp_utc": "20260813-070359",
+  "release_channel": "unsigned-preview",
+  "channel_policy": {
+    "audience": "named_technical_preview_testers",
+    "artifact_token": "unsigned-preview",
+    "authenticode_required": false,
+    "distribution": "private_named_testers_only",
+    "commercial_channel": null,
+    "competitor_claims_policy": "prohibited",
+    "artifact_factory": "unsigned_preview"
+  },
+  "trust": {
+    "authenticode_required": false,
+    "authenticode_verification_performed": false,
+    "status": "not_verified",
+    "stable_eligible": false,
+    "competitor_claims_authorized": false
+  },
+  "label": "v2_46_0_quickpls_3_scoped_methods",
+  "timestamp_utc": "20260818-141742",
   "artifact_directory": "target/release/artifacts",
   "artifacts": [
     {
       "role": "portable",
       "source": "target/release/quickpls-desktop.exe",
-      "source_bytes": 28276736,
-      "source_sha256": "988A9006B9E63BD6A91C6D86B84A0449F9BC999E6B394C531320846D68EFCAA1",
-      "path": "target/release/artifacts/QuickPLS_2.46.0_v2_46_0_quickpls_3_wave_1_regression_process_20260813-070359_x64_portable.exe",
-      "bytes": 28276736,
-      "sha256": "988A9006B9E63BD6A91C6D86B84A0449F9BC999E6B394C531320846D68EFCAA1",
+      "source_bytes": 49983488,
+      "source_sha256": "3C7643F8893B4389E5C94168757BBA7614BC216267A819E95588310BD0A03476",
+      "path": "target/release/artifacts/QuickPLS_2.46.0_unsigned-preview_v2_46_0_quickpls_3_scoped_methods_20260818-141742_x64_portable.exe",
+      "bytes": 49983488,
+      "sha256": "3C7643F8893B4389E5C94168757BBA7614BC216267A819E95588310BD0A03476",
       "copy_verified": true
     },
     {
       "role": "cli",
       "source": "target/release/qpls.exe",
-      "source_bytes": 20648448,
-      "source_sha256": "BD4E1780563055398729DC6D2C16CAB655BBDB17AF0B1C2133BD56283413879B",
-      "path": "target/release/artifacts/QuickPLS_2.46.0_v2_46_0_quickpls_3_wave_1_regression_process_20260813-070359_x64_cli.exe",
-      "bytes": 20648448,
-      "sha256": "BD4E1780563055398729DC6D2C16CAB655BBDB17AF0B1C2133BD56283413879B",
+      "source_bytes": 32387072,
+      "source_sha256": "7E1EE9C72D79B6102362F81313A54AEED987CB458F921397CB6FD3A09598D53A",
+      "path": "target/release/artifacts/QuickPLS_2.46.0_unsigned-preview_v2_46_0_quickpls_3_scoped_methods_20260818-141742_x64_cli.exe",
+      "bytes": 32387072,
+      "sha256": "7E1EE9C72D79B6102362F81313A54AEED987CB458F921397CB6FD3A09598D53A",
       "copy_verified": true
     },
     {
       "role": "setup",
       "source": "target/release/bundle/nsis/QuickPLS_2.46.0_x64-setup.exe",
-      "source_bytes": 6072532,
-      "source_sha256": "CF829F0C25FB681C870591B1C35BE9DE1360BEBFFC4C1CD0B7DC76090E244E56",
-      "path": "target/release/artifacts/QuickPLS_2.46.0_v2_46_0_quickpls_3_wave_1_regression_process_20260813-070359_x64_setup.exe",
-      "bytes": 6072532,
-      "sha256": "CF829F0C25FB681C870591B1C35BE9DE1360BEBFFC4C1CD0B7DC76090E244E56",
+      "source_bytes": 226043862,
+      "source_sha256": "49FA5D9A803503C2450C5C67FD4958BC1AF1352C0C10600DB99087F49EB30F12",
+      "path": "target/release/artifacts/QuickPLS_2.46.0_unsigned-preview_v2_46_0_quickpls_3_scoped_methods_20260818-141742_x64_setup.exe",
+      "bytes": 226043862,
+      "sha256": "49FA5D9A803503C2450C5C67FD4958BC1AF1352C0C10600DB99087F49EB30F12",
       "copy_verified": true
     },
     {
@@ -73,11 +91,11 @@
       "source": null,
       "source_bytes": null,
       "source_sha256": null,
-      "path": "target/release/artifacts/QuickPLS_2.46.0_v2_46_0_quickpls_3_wave_1_regression_process_20260813-070359_x64_checksums.txt",
-      "bytes": 472,
-      "sha256": "632B77D0BD4264E118663277EECBC97ED54BD79240A1E0D9A7D8702C5F680A1C",
+      "path": "target/release/artifacts/QuickPLS_2.46.0_unsigned-preview_v2_46_0_quickpls_3_scoped_methods_20260818-141742_x64_checksums.txt",
+      "bytes": 490,
+      "sha256": "F12C998DE82A938D1B12983A79C14D63A2800629C64F80173BC9E161A001ADBB",
       "copy_verified": true
     }
   ],
-  "note": "Files are copied to unique names so repeated desktop builds do not overwrite prior user-testable artifacts; every copied binary is size- and SHA-256-identical to its stable source."
+  "note": "Files are copied to unique names so repeated desktop builds do not overwrite prior test artifacts. Every copied binary is size- and SHA-256-identical to its source, but checksums do not establish publisher authenticity. This unsigned-preview factory never authorizes beta, stable, or competitor-ready distribution."
 }

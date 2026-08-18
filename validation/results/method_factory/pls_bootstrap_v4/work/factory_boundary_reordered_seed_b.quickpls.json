@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "id": "1532a723-e7c6-4a8f-b252-63656eef86e5",
+  "id": "3e90f756-6d0d-4a45-b88b-a3e2dc9c0987",
   "status": "completed",
   "provenance": {
     "recipe_id": "3e1ded56-ff0f-5276-9ee6-0d744c45977d",
     "dataset_fingerprint": "v2:988e9efb2d949ec9a894eeda902e8aba0b75e5105eaee1de1096f15677b1a58d",
     "method": "pls_pm",
-    "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+indexed_resampling_v4",
+    "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v8+indexed_resampling_v4+htmt_bias_corrected_bootstrap_inference_v1",
     "engine_version": "2.46.0",
     "seed": 20260814,
     "settings": {
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-08-13T19:00:39.203425100Z",
-    "completed_at": "2026-08-13T19:00:41.890311Z"
+    "started_at": "2026-08-18T03:54:04.249821900Z",
+    "completed_at": "2026-08-18T03:54:08.692390600Z"
   },
   "diagnostics": [
     {
@@ -37,6 +37,37 @@
   "payload": {
     "kind": "pls_pm_v2",
     "estimation": {
+      "algorithm_convergence_receipt": {
+        "blocks": [
+          {
+            "construct_id": "x",
+            "indicator_order": [
+              "x1",
+              "x2"
+            ],
+            "initialization": "standard_unit_weights",
+            "update_rule": "mode_a_covariance"
+          },
+          {
+            "construct_id": "y",
+            "indicator_order": [
+              "y1",
+              "y2"
+            ],
+            "initialization": "standard_unit_weights",
+            "update_rule": "mode_a_covariance"
+          }
+        ],
+        "comparison": "less_than_or_equal",
+        "contract_version": "pls_algorithm_convergence_receipt_v1",
+        "estimated_block_updates": 8,
+        "final_max_outer_weight_change": 2.234346718754665e-8,
+        "maximum_iterations": 3000,
+        "performed_iterations": 4,
+        "stop_criterion": 1e-7,
+        "termination_reason": "converged_tolerance",
+        "weighting_scheme": "path"
+      },
       "cbsem": null,
       "cca": null,
       "construct_scores": {
@@ -136,6 +167,17 @@
       ],
       "pca": null,
       "plsc": null,
+      "point_estimate_attribution": {
+        "construct_scores": "zero_mean_unit_variance_construct_score",
+        "contract_version": "pls_point_estimate_attribution_v1",
+        "effects": "standardized_structural_path_decomposition",
+        "indicator_centering": "sample_mean",
+        "indicator_scaling": "sample_standard_deviation",
+        "outer_loadings": "indicator_construct_score_correlation",
+        "outer_weights": "preprocessed_indicator_to_unit_variance_construct_score",
+        "preprocessing": "standardized",
+        "structural_paths": "standardized_construct_score_regression"
+      },
       "predict": null,
       "r_squared": {
         "y": 0.967034097927339
@@ -367,16 +409,145 @@
         "correlation_type": "pearson"
       },
       "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
-      "method_version": "pls_assessment_v7",
+      "method_version": "pls_assessment_v8",
       "model_fit": {
+        "analytical_sample_size": 6,
         "estimated": {
+          "chi_square": {
+            "status": "available",
+            "value": 18.119621597351987
+          },
+          "d_g": {
+            "status": "available",
+            "value": 5.576162154773407
+          },
           "d_uls": 0.005302826695427076,
+          "degrees_of_freedom": {
+            "status": "available",
+            "value": 1.0
+          },
+          "nfi": {
+            "status": "available",
+            "value": 0.6959409405630306
+          },
           "srmr": 0.023027867238255208
         },
+        "estimated_implied_correlation": [
+          [
+            1.0,
+            0.9714003097804982,
+            0.9656748619695285,
+            0.9658851309730042
+          ],
+          [
+            0.9714003097804982,
+            1.0,
+            0.9639155997986929,
+            0.9641254857350329
+          ],
+          [
+            0.9656748619695285,
+            0.9639155997986929,
+            1.0,
+            0.9911159470994505
+          ],
+          [
+            0.9658851309730042,
+            0.9641254857350329,
+            0.9911159470994505,
+            1.0
+          ]
+        ],
+        "exact_fit_inference": {
+          "procedure": "adapted_bollen_stine_saturated_and_estimated",
+          "reason_code": "model_fit.adapted_bollen_stine_not_implemented",
+          "status": "unavailable"
+        },
+        "geodesic_logarithm": "natural_logarithm",
+        "indicator_order": [
+          "x1",
+          "x2",
+          "y1",
+          "y2"
+        ],
+        "matrix_convention": "indicator_correlation_lower_triangle_including_diagonal",
+        "method_version": "pls_model_fit_v2",
+        "null_model_chi_square": {
+          "status": "available",
+          "value": 59.59244112280145
+        },
+        "observed_correlation": [
+          [
+            1.0,
+            0.9428571428571428,
+            0.9923149677472929,
+            0.9954180744075037
+          ],
+          [
+            0.9428571428571428,
+            1.0,
+            0.9113096642577179,
+            0.9563820714895624
+          ],
+          [
+            0.9923149677472929,
+            0.9113096642577179,
+            1.0,
+            0.982234538689826
+          ],
+          [
+            0.9954180744075037,
+            0.9563820714895624,
+            0.982234538689826,
+            1.0
+          ]
+        ],
         "saturated": {
+          "chi_square": {
+            "status": "available",
+            "value": 18.119621597352005
+          },
+          "d_g": {
+            "status": "available",
+            "value": 5.576162154773441
+          },
           "d_uls": 0.00530282669542709,
+          "degrees_of_freedom": {
+            "status": "available",
+            "value": 1.0
+          },
+          "nfi": {
+            "status": "available",
+            "value": 0.6959409405630304
+          },
           "srmr": 0.02302786723825524
-        }
+        },
+        "saturated_implied_correlation": [
+          [
+            1.0,
+            0.9714003097804982,
+            0.9656748619695285,
+            0.9658851309730042
+          ],
+          [
+            0.9714003097804982,
+            1.0,
+            0.963915599798693,
+            0.964125485735033
+          ],
+          [
+            0.9656748619695285,
+            0.963915599798693,
+            1.0,
+            0.9911159470994505
+          ],
+          [
+            0.9658851309730042,
+            0.964125485735033,
+            0.9911159470994505,
+            1.0
+          ]
+        ]
       },
       "r_squared": {
         "y": 0.967034097927339
@@ -516,74 +687,307 @@
       "failed_replicates": [
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 406
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 524
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 1869
         },
         {
           "message": "constant indicator: x1",
+          "reason_code": "constant_indicator",
           "replicate_index": 1992
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 2383
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 2448
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 3059
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 3642
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 4415
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 5469
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 5694
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 7024
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 7568
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 8140
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 9062
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 9254
         },
         {
           "message": "numerical failure: outer weights produce a zero-variance score",
+          "reason_code": "numerical_failure",
           "replicate_index": 9576
         }
       ],
+      "htmt_inference": {
+        "htmt_original": {
+          "absolute_correlations": false,
+          "cells": [
+            [
+              {
+                "below_original": 0,
+                "bias": null,
+                "bias_correction": null,
+                "bootstrap_mean": null,
+                "failed_replicates": 0,
+                "lower": null,
+                "original": 1.0,
+                "pair_unavailable_replicates": [],
+                "reason": "htmt.bootstrap.diagonal_not_inferred",
+                "replicate_max": null,
+                "replicate_min": null,
+                "standard_error": null,
+                "status": "not_applicable",
+                "tied_original": 0,
+                "upper": null,
+                "upper_bound_below_critical_value": null,
+                "usable_replicate_indices_sha256": null,
+                "usable_replicates": 0
+              },
+              {
+                "below_original": 4989,
+                "bias": 0.004325926614063613,
+                "bias_correction": 0.017830097915482037,
+                "bootstrap_mean": 1.0058968185184831,
+                "failed_replicates": 17,
+                "lower": 0.9951164205515887,
+                "original": 1.0015708919044195,
+                "pair_unavailable_replicates": [],
+                "reason": null,
+                "replicate_max": 1.358465169569962,
+                "replicate_min": 0.9764915867955758,
+                "standard_error": 0.02982906187431607,
+                "status": "available",
+                "tied_original": 146,
+                "upper": 1.023590744499924,
+                "upper_bound_below_critical_value": false,
+                "usable_replicate_indices_sha256": "746a1ff8cbbd64f387a240ca107bc098e749c97557856c8cbbbaf40fe640e1aa",
+                "usable_replicates": 9982
+              }
+            ],
+            [
+              {
+                "below_original": 4989,
+                "bias": 0.004325926614063613,
+                "bias_correction": 0.017830097915482037,
+                "bootstrap_mean": 1.0058968185184831,
+                "failed_replicates": 17,
+                "lower": 0.9951164205515887,
+                "original": 1.0015708919044195,
+                "pair_unavailable_replicates": [],
+                "reason": null,
+                "replicate_max": 1.358465169569962,
+                "replicate_min": 0.9764915867955758,
+                "standard_error": 0.02982906187431607,
+                "status": "available",
+                "tied_original": 146,
+                "upper": 1.023590744499924,
+                "upper_bound_below_critical_value": false,
+                "usable_replicate_indices_sha256": "746a1ff8cbbd64f387a240ca107bc098e749c97557856c8cbbbaf40fe640e1aa",
+                "usable_replicates": 9982
+              },
+              {
+                "below_original": 0,
+                "bias": null,
+                "bias_correction": null,
+                "bootstrap_mean": null,
+                "failed_replicates": 0,
+                "lower": null,
+                "original": 1.0,
+                "pair_unavailable_replicates": [],
+                "reason": "htmt.bootstrap.diagonal_not_inferred",
+                "replicate_max": null,
+                "replicate_min": null,
+                "standard_error": null,
+                "status": "not_applicable",
+                "tied_original": 0,
+                "upper": null,
+                "upper_bound_below_critical_value": null,
+                "usable_replicate_indices_sha256": null,
+                "usable_replicates": 0
+              }
+            ]
+          ],
+          "constructs": [
+            "x",
+            "y"
+          ],
+          "correlation_type": "pearson",
+          "critical_value": 0.9,
+          "decision_rule": "bias_corrected_upper_bound_strictly_below_critical_value_v1",
+          "equivalent_two_sided_confidence_level": 0.9,
+          "interval_method": "bias_corrected_percentile_type7_v1",
+          "method_version": "henseler_et_al_htmt_bias_corrected_bootstrap_v1",
+          "minimum_usable_replicates": 9000,
+          "point_method_version": "henseler_et_al_htmt_v1",
+          "replicate_index_digest_method": "sha256_u32_le_v1",
+          "requested_replicates": 9999,
+          "retry_policy": "no_retry_fixed_preplanned_primary_draws_v1",
+          "significance_level": 0.05,
+          "test_type": "one_tailed_upper"
+        },
+        "htmt_plus": {
+          "absolute_correlations": true,
+          "cells": [
+            [
+              {
+                "below_original": 0,
+                "bias": null,
+                "bias_correction": null,
+                "bootstrap_mean": null,
+                "failed_replicates": 0,
+                "lower": null,
+                "original": 1.0,
+                "pair_unavailable_replicates": [],
+                "reason": "htmt.bootstrap.diagonal_not_inferred",
+                "replicate_max": null,
+                "replicate_min": null,
+                "standard_error": null,
+                "status": "not_applicable",
+                "tied_original": 0,
+                "upper": null,
+                "upper_bound_below_critical_value": null,
+                "usable_replicate_indices_sha256": null,
+                "usable_replicates": 0
+              },
+              {
+                "below_original": 4989,
+                "bias": 0.004325926614063613,
+                "bias_correction": 0.017830097915482037,
+                "bootstrap_mean": 1.0058968185184831,
+                "failed_replicates": 17,
+                "lower": 0.9951164205515887,
+                "original": 1.0015708919044195,
+                "pair_unavailable_replicates": [],
+                "reason": null,
+                "replicate_max": 1.358465169569962,
+                "replicate_min": 0.9764915867955758,
+                "standard_error": 0.02982906187431607,
+                "status": "available",
+                "tied_original": 146,
+                "upper": 1.023590744499924,
+                "upper_bound_below_critical_value": false,
+                "usable_replicate_indices_sha256": "746a1ff8cbbd64f387a240ca107bc098e749c97557856c8cbbbaf40fe640e1aa",
+                "usable_replicates": 9982
+              }
+            ],
+            [
+              {
+                "below_original": 4989,
+                "bias": 0.004325926614063613,
+                "bias_correction": 0.017830097915482037,
+                "bootstrap_mean": 1.0058968185184831,
+                "failed_replicates": 17,
+                "lower": 0.9951164205515887,
+                "original": 1.0015708919044195,
+                "pair_unavailable_replicates": [],
+                "reason": null,
+                "replicate_max": 1.358465169569962,
+                "replicate_min": 0.9764915867955758,
+                "standard_error": 0.02982906187431607,
+                "status": "available",
+                "tied_original": 146,
+                "upper": 1.023590744499924,
+                "upper_bound_below_critical_value": false,
+                "usable_replicate_indices_sha256": "746a1ff8cbbd64f387a240ca107bc098e749c97557856c8cbbbaf40fe640e1aa",
+                "usable_replicates": 9982
+              },
+              {
+                "below_original": 0,
+                "bias": null,
+                "bias_correction": null,
+                "bootstrap_mean": null,
+                "failed_replicates": 0,
+                "lower": null,
+                "original": 1.0,
+                "pair_unavailable_replicates": [],
+                "reason": "htmt.bootstrap.diagonal_not_inferred",
+                "replicate_max": null,
+                "replicate_min": null,
+                "standard_error": null,
+                "status": "not_applicable",
+                "tied_original": 0,
+                "upper": null,
+                "upper_bound_below_critical_value": null,
+                "usable_replicate_indices_sha256": null,
+                "usable_replicates": 0
+              }
+            ]
+          ],
+          "constructs": [
+            "x",
+            "y"
+          ],
+          "correlation_type": "pearson",
+          "critical_value": 0.9,
+          "decision_rule": "bias_corrected_upper_bound_strictly_below_critical_value_v1",
+          "equivalent_two_sided_confidence_level": 0.9,
+          "interval_method": "bias_corrected_percentile_type7_v1",
+          "method_version": "ringle_et_al_htmt_plus_bias_corrected_bootstrap_v1",
+          "minimum_usable_replicates": 9000,
+          "point_method_version": "ringle_et_al_htmt_plus_v1",
+          "replicate_index_digest_method": "sha256_u32_le_v1",
+          "requested_replicates": 9999,
+          "retry_policy": "no_retry_fixed_preplanned_primary_draws_v1",
+          "significance_level": 0.05,
+          "test_type": "one_tailed_upper"
+        },
+        "method_version": "htmt_bias_corrected_bootstrap_inference_v1"
+      },
       "method_version": "indexed_resampling_v4",
+      "model_fit_exact_inference": null,
       "percentile": {
         "confidence_level": 0.95,
         "parameters": [

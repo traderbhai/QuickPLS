@@ -1,0 +1,41 @@
+{
+  "checks": {
+    "claim_limited_to": "one first- or second-stage bounded conditional indirect-effect diagnostic",
+    "passed": true,
+    "scenarios": [
+      {
+        "invalid_guard": true,
+        "passed": true,
+        "report": "validation/results/method_factory/moderated_mediation_v1/work/scenario_00/reference_report.json",
+        "report_sha256": "84d606f2766f354d259107ddbd95a1b0ecba749a80ee986894aab018014799dd",
+        "sample_size": 128,
+        "scientific_failures": {},
+        "seed": 20260719,
+        "warning_present": false
+      },
+      {
+        "invalid_guard": true,
+        "passed": true,
+        "report": "validation/results/method_factory/moderated_mediation_v1/work/scenario_01/reference_report.json",
+        "report_sha256": "c7f42d3ec78ff02a8cbd8534f9dfcbdee2c497f1d6fc435787252244a13afb96",
+        "sample_size": 192,
+        "scientific_failures": {},
+        "seed": 20260814,
+        "warning_present": false
+      }
+    ],
+    "scope_warning_gap": "the former generic experimental warning is absent from the engine payload"
+  },
+  "completed_at_utc": "2026-08-18T00:10:51.850994Z",
+  "kind": "quickpls_phase3_current_engine_gate",
+  "method": "moderated_mediation_v1",
+  "passed": true,
+  "prebuilt_cli": {
+    "path": "target/debug/qpls.exe",
+    "sha256": "ad982f935cced0de90627d25d941c38d74adf6b19882364b037ca3b9fb01c8b0",
+    "size": 66081792
+  },
+  "recipe_policy": "historical fixtures copied to explicit schema v3; source fixtures preserved",
+  "schema_version": 1,
+  "started_at_utc": "2026-08-18T00:10:49.394212Z"
+}

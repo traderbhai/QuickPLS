@@ -13,6 +13,7 @@ import hashlib
 import json
 import re
 import shutil
+import time
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -58,6 +59,24 @@ GATE_SOURCES = {
     "validation/test_pca_v1_packaged_adapter.py",
     "validation/v247_tauri_native_acceptance.mjs",
 }
+
+
+def copy2_with_retry(source: Path, destination: Path, *, attempts: int = 51, delay_seconds: float = 0.1) -> None:
+    """Snapshot a freshly published Windows artifact after transient mappings close."""
+    last_error: OSError | None = None
+    for attempt in range(attempts):
+        try:
+            shutil.copy2(source, destination)
+            if sha256_file(source) != sha256_file(destination):
+                raise RuntimeError(f"Copied artifact changed during publication: {source}")
+            return
+        except OSError as error:
+            last_error = error
+            if attempt + 1 >= attempts:
+                raise
+            time.sleep(delay_seconds)
+    if last_error is not None:
+        raise last_error
 
 
 def cli_source_paths() -> list[str]:
@@ -523,6 +542,7 @@ def main() -> int:
             "validation/run_v247_pca_native_acceptance.ps1",
             "-ExportPath",
             str(FACTORY_XLSX),
+            "-PreserveMainReport",
         ],
         timeout=1800,
     )
@@ -565,8 +585,8 @@ def main() -> int:
     project_path = Path(raw["checks"]["pcaFixture"]["projectPath"])
     if not project_path.is_file():
         raise FileNotFoundError(project_path)
-    shutil.copy2(project_path, FACTORY_ARCHIVE)
-    shutil.copy2(RAW_REPORT, FACTORY_RAW_REPORT)
+    copy2_with_retry(project_path, FACTORY_ARCHIVE)
+    copy2_with_retry(RAW_REPORT, FACTORY_RAW_REPORT)
 
     project, archive_manifest, _ = read_archive(FACTORY_ARCHIVE)
     tables = read_xlsx_tables(FACTORY_XLSX)

@@ -1,9 +1,24 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { useWorkspace } from "../store";
 import NativeUtilityDialog from "./NativeUtilityDialog";
-import { NATIVE_NCA_SCOPE_NOTE } from "./nativeNca";
+import { completedGscaRun } from "./nativeGsca.testFixture";
 
 describe("NativeUtilityDialog", () => {
+  beforeEach(() => {
+    const state = useWorkspace.getState();
+    useWorkspace.setState({
+      analysisSettings: {
+        ...state.analysisSettings,
+        method: "pls_pm",
+        bootstrapSamples: 0,
+        cbsemBootstrapSamples: 0,
+        cbsemGroupColumn: null,
+      },
+      uiPreferences: { ...state.uiPreferences, experimentalLabsEnabled: false },
+    });
+  });
+
   it("mounts the live preview-first diagnostic workflow in production Preferences", () => {
     vi.stubGlobal("window", { __TAURI_INTERNALS__: {} });
     const html = renderToStaticMarkup(<NativeUtilityDialog kind="settings" close={() => undefined} />);
@@ -21,48 +36,54 @@ describe("NativeUtilityDialog", () => {
     expect(html).not.toContain(">Upload<");
   });
 
-  it("discloses the bounded standalone NCA scope in the on-demand trust surface", () => {
+  it("renders all nine Method Details sections for only the selected exact option cells", () => {
     vi.stubGlobal("window", {});
     const html = renderToStaticMarkup(<NativeUtilityDialog kind="trust" close={() => undefined} />);
     vi.unstubAllGlobals();
 
-    expect(html).toContain("Necessary Condition Analysis");
-    expect(html).toContain(NATIVE_NCA_SCOPE_NOTE);
-    expect(html).toContain("Numeric observed-variable");
-    expect(html).not.toContain("latent-score NCA is supported");
+    expect(html).toContain('data-method-details-v2="true"');
+    expect(html).toContain("PLS-SEM Algorithm");
+    expect(html).toContain("What this method answers");
+    expect(html).toContain("When to use it");
+    expect(html).toContain("Required model and data");
+    expect(html).toContain("Main settings and defaults");
+    expect(html).toContain("Outputs");
+    expect(html).toContain("Assumptions and cautions");
+    expect(html).toContain("Interpretation guidance");
+    expect(html).toContain("Method references");
+    expect(html).toContain("Advanced technical details");
+    expect(html).not.toContain("Necessary Condition Analysis");
   });
 
-  it("describes the current joint MICOM and permutation-MGA v2 scope", () => {
+  it("explains how to enable a Labs method without exposing internal product-governance labels", () => {
+    const state = useWorkspace.getState();
     vi.stubGlobal("window", {});
-    const html = renderToStaticMarkup(<NativeUtilityDialog kind="trust" close={() => undefined} />);
+    const html = renderToStaticMarkup(<NativeUtilityDialog
+      kind="trust"
+      close={() => undefined}
+      methodDetailsSettings={{ ...state.analysisSettings, method: "nonlinear_effects" }}
+      experimentalLabsEnabledOverride={false}
+    />);
     vi.unstubAllGlobals();
 
-    expect(html).toContain("MICOM and Two-Group Permutation MGA");
-    expect(html).toContain("5,000–10,000 usable permutations");
-    expect(html).toContain("MICOM Steps 1–3");
-    expect(html).not.toContain("measurement invariance is not assessed");
+    expect(html).toContain("Nonlinear Relationships");
+    expect(html).toContain("Turn on Experimental Labs in Preferences to use this option.");
+    expect(html).toContain(">Unavailable<");
+    expect(html).not.toMatch(/native-qualified|release-qualified|promotion evidence|packaged evidence|candidate\s*[/,;]\s*unqualified/i);
   });
 
-  it("labels Structural Path Randomization as candidate fixed-score inference, never validated", () => {
+  it("binds Method Details opened from Results to the selected completed run", () => {
     vi.stubGlobal("window", {});
-    const html = renderToStaticMarkup(<NativeUtilityDialog kind="trust" close={() => undefined} />);
+    const run = completedGscaRun();
+    const html = renderToStaticMarkup(<NativeUtilityDialog kind="trust" close={() => undefined} run={run} />);
     vi.unstubAllGlobals();
 
-    expect(html).toContain("Structural Path Randomization");
-    expect(html).toContain("Candidate single-model Freedman-Lane fixed-score inference");
-    expect(html).toContain("exchangeable reduced-model residuals");
-    expect(html).toContain("not a group comparison");
-    expect(html).not.toContain("Structural Path Randomization</dt><dd>Validated");
+    expect(html).toContain('data-method-details-context="completed-run"');
+    expect(html).toContain("Generalized Structured Component Analysis");
+    expect(html).not.toContain("PLS-SEM Algorithm");
+    expect(html).toContain("Selected completed run");
+    expect(html).toContain("GSCA run");
+    expect(html).toContain(run.provenance?.dataset_fingerprint);
   });
 
-  it("describes indicator PLSpredict / CVPAT without a saved-model comparison claim", () => {
-    vi.stubGlobal("window", {});
-    const html = renderToStaticMarkup(<NativeUtilityDialog kind="trust" close={() => undefined} />);
-    vi.unstubAllGlobals();
-
-    expect(html).toContain("PLSpredict / CVPAT");
-    expect(html).toContain("indicator-level scope with seeded 10-fold × 10-repeat cross-validation");
-    expect(html).toContain("one-sided 95% CVPAT benchmark assessment");
-    expect(html).not.toContain("saved-model comparison");
-  });
 });

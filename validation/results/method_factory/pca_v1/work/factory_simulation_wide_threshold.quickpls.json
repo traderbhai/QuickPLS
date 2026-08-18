@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "c581084e-0fb5-41d1-b687-c53d71564680",
+  "id": "baf3b9f1-8831-46a4-ad33-95e764a09c0a",
   "status": "completed",
   "provenance": {
     "recipe_id": "ef1b985a-a255-5b11-9ef4-2b4a1e144378",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-08-13T19:35:36.615577Z",
-    "completed_at": "2026-08-13T19:35:36.621229900Z"
+    "started_at": "2026-08-18T03:07:20.440129300Z",
+    "completed_at": "2026-08-18T03:07:20.446103400Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+      "message": "Standalone PCA v1 supports the model, data, and settings listed in Method Details; incompatible setups remain blocked."
     },
     {
       "code": "estimation.warning",
@@ -2318,7 +2318,7 @@
           "v8"
         ],
         "warnings": [
-          "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+          "Standalone PCA v1 supports the model, data, and settings listed in Method Details; incompatible setups remain blocked."
         ]
       },
       "plsc": null,
@@ -2329,7 +2329,7 @@
       "transforms": [],
       "used_observations": 45,
       "warnings": [
-        "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+        "Standalone PCA v1 supports the model, data, and settings listed in Method Details; incompatible setups remain blocked."
       ],
       "wpls": null
     },

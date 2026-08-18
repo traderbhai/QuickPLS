@@ -45,7 +45,7 @@ def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromName(
         "validation.test_quickpls_3_competitor_program"
     )
-    if suite.countTestCases() != 35:
+    if suite.countTestCases() != 36:
         raise SystemExit(
             "portable competitor-test inventory changed; review the factory fixture"
         )

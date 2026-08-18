@@ -87,10 +87,10 @@ export function canAddNativeModeration(
 export function nativeModerationCreationError(reason: AddTwoStageInteractionBlockReason): string {
   switch (reason) {
     case "constructs_not_distinct": return "Choose three different constructs for predictor, moderator, and outcome.";
-    case "interaction_exists": return "The validated desktop scope supports one two-way moderating effect per model.";
+    case "interaction_exists": return "Create only one two-way moderating effect per model.";
     case "construct_missing": return "One of the selected constructs is no longer available.";
     case "unsupported_construct": return "Predictor, moderator, and outcome must be ordinary measured constructs.";
     case "focal_path_missing": return "The selected predictor-to-outcome relationship no longer exists.";
-    case "control_paths_unsupported": return "Remove or convert control paths before creating a moderating effect in the validated desktop scope.";
+    case "control_paths_unsupported": return "Remove or convert control paths before creating a moderating effect; this workflow does not accept control paths.";
   }
 }

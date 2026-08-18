@@ -1,0 +1,102 @@
+{
+  "critical_value": 0.9,
+  "decision_rule": "bias_corrected_upper_bound_strictly_below_critical_value_v1",
+  "equivalent_two_sided_confidence_level": 0.9,
+  "method": "bias_corrected_percentile_type7_v1",
+  "replicate_index_digest_method": "sha256_u32_le_v1",
+  "scenarios": [
+    {
+      "expected": {
+        "below_original": 4,
+        "bias": 0.02100000000000002,
+        "bias_correction": -0.2533471031357998,
+        "bootstrap_mean": 0.771,
+        "lower": 0.6284869058388926,
+        "lower_probability": 0.015716492294245377,
+        "original": 0.75,
+        "standard_error": 0.09158481193832184,
+        "tied_original": 0,
+        "upper": 0.8740902944425076,
+        "upper_bound_below_critical_value": true,
+        "upper_probability": 0.8724730401180767
+      },
+      "id": "asymmetric_htmt_plus",
+      "original": 0.75,
+      "usable_replicate_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "usable_replicate_indices_sha256": "10b4796eac59c7d81c33711f219ba227247a4e338adad078159ba01e87590841",
+      "values": [0.62, 0.68, 0.7, 0.73, 0.76, 0.78, 0.81, 0.84, 0.88, 0.91]
+    },
+    {
+      "expected": {
+        "below_original": 0,
+        "bias": 0.09999999999999998,
+        "bias_correction": -0.6744897501960817,
+        "bootstrap_mean": 0.6,
+        "lower": 0.5,
+        "lower_probability": 0.0013774828840026343,
+        "original": 0.5,
+        "standard_error": 0.1264911064067352,
+        "tied_original": 3,
+        "upper": 0.6081684472760353,
+        "upper_bound_below_critical_value": true,
+        "upper_probability": 0.6163368945520705
+      },
+      "id": "midrank_ties",
+      "original": 0.5,
+      "usable_replicate_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "usable_replicate_indices_sha256": "cd9a54ed1f18bf97db08914e280ea7349e11ca2c4885a4d8052552ceba84208d",
+      "values": [0.5, 0.5, 0.5, 0.6, 0.7, 0.8]
+    },
+    {
+      "expected": {
+        "below_original": 4,
+        "bias": -0.007499999999999979,
+        "bias_correction": 0.0,
+        "bootstrap_mean": -0.2075,
+        "lower": -0.41500000000000004,
+        "lower_probability": 0.04999999999999999,
+        "original": -0.2,
+        "standard_error": 0.15163395774976376,
+        "tied_original": 0,
+        "upper": -0.015000000000000138,
+        "upper_bound_below_critical_value": true,
+        "upper_probability": 0.9499999999999998
+      },
+      "id": "signed_original_htmt",
+      "original": -0.2,
+      "usable_replicate_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "usable_replicate_indices_sha256": "ff1f6ee5d67458cfac950f62e93042e21fcb867e2234dcc8721801231064ad40",
+      "values": [-0.45, -0.35, -0.28, -0.22, -0.18, -0.12, -0.08, 0.02]
+    }
+  ],
+  "schema_version": 1,
+  "significance_level": 0.05,
+  "test_type": "one_tailed_upper"
+}

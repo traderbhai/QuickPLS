@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.pls_power_analysis",
+  "execution_context": "pls_algorithm_result_with_optional_bootstrap_inference",
+  "feature": {
+    "id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+    "label": "PLS post-hoc technical minimum sample size",
+    "method_version": "pls_posthoc_technical_minimum_sample_size_v2",
+    "analytical_method_version": "inverse_square_root_posthoc_v2",
+    "method_kind": "deterministic_inference_linked"
+  },
+  "coverage_state": "partial",
+  "evidence_state": "release_qualified",
+  "surface": "standard",
+  "availability": "scoped_standard",
+  "distinct_from_cell_id": "qpls3.pls.sample_size_power",
+  "method_contract": "docs/methods/PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_V2.md",
+  "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/",
+  "implemented_contracts": [
+    "significance-aware driver selection from complete linked PLS bootstrap probabilities",
+    "typed point-only, incomplete-inference, no-significant-path, zero, and range states",
+    "native result and canonical table projection",
+    "semantic CSV, HTML, and XLSX export through the shared export rows",
+    "archive append, tamper validation, save, and reopen preservation",
+    "independent transparent Python calculation oracle",
+    "independent base-R oracle with a 24-scenario seeded cross-language matrix",
+    "one-worker/four-worker linked-bootstrap payload invariance"
+  ],
+  "remaining_qualification": [
+    "Refresh source-bound and packaged Windows receipts after the coordinated release build; no unexecuted maximum-axis or soak claim is part of this scoped cell.",
+    "The distinct prospective Monte Carlo v2 cell is independently qualified; this post-hoc manifest neither promotes nor substitutes for it."
+  ]
+}

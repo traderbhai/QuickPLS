@@ -1,0 +1,109 @@
+{
+  "schema_version": 2,
+  "feature_id": "qpls3.standalone.process",
+  "method_version": "regression_process_v2",
+  "phases": {
+    "initial_idle": {
+      "recorded_at_utc": "2026-08-17T01:38:31.100Z",
+      "idle_settle_milliseconds": 5000,
+      "capture_delay_milliseconds": 500,
+      "sample_window_milliseconds": 5000,
+      "logical_state": {
+        "surface": "data",
+        "completed_result_count": 0,
+        "witness_count": 0,
+        "selected_run_id": null,
+        "state_kind": "model_free_fixture"
+      },
+      "effective_archive": {
+        "path": "validation/results/process-v2-resource-snapshot-1786930700762-46756-initial_idle.qpls",
+        "bytes": 12708,
+        "sha256": "88742752bfa2194eca2c235bbeaea9ac4a0eb45a971e1e5cc33125a9d138921e",
+        "source_path": "validation/results/v247-native-process-v2-1786930700762-46756.qpls",
+        "source_before": {
+          "bytes": 12708,
+          "sha256": "88742752bfa2194eca2c235bbeaea9ac4a0eb45a971e1e5cc33125a9d138921e",
+          "mtime_ns": "1786930705164006200"
+        },
+        "source_after": {
+          "bytes": 12708,
+          "sha256": "88742752bfa2194eca2c235bbeaea9ac4a0eb45a971e1e5cc33125a9d138921e",
+          "mtime_ns": "1786930705164006200"
+        },
+        "source_stable_during_copy": true,
+        "exclusive_atomic_copy": true,
+        "application_opened": false,
+        "logical_state": {
+          "manifestValid": true,
+          "completedResultCount": 0,
+          "witnessCount": 0,
+          "completedRunIds": [],
+          "witnessRunIds": [],
+          "recipeIds": [],
+          "recipeCount": 0,
+          "workspaceRunIds": [],
+          "selectedRunId": null
+        }
+      },
+      "primary_archive": {
+        "path": "validation/results/v247-native-process-v2-1786930700762-46756.qpls",
+        "bytes": 12708
+      },
+      "export": {
+        "path": "validation/results/v247-native-process-v2-20260817-070816559.xlsx",
+        "bytes": 0
+      }
+    },
+    "post_cancellation_idle": {
+      "recorded_at_utc": "2026-08-17T01:38:45.822Z",
+      "idle_settle_milliseconds": 5000,
+      "capture_delay_milliseconds": 500,
+      "sample_window_milliseconds": 5000,
+      "logical_state": {
+        "surface": "data",
+        "completed_result_count": 0,
+        "witness_count": 0,
+        "selected_run_id": null,
+        "state_kind": "cancelled_setup_no_result"
+      },
+      "effective_archive": {
+        "path": "validation/results/process-v2-resource-snapshot-1786930700762-46756-post_cancellation_idle.qpls",
+        "bytes": 12708,
+        "sha256": "88742752bfa2194eca2c235bbeaea9ac4a0eb45a971e1e5cc33125a9d138921e",
+        "source_path": "validation/results/v247-native-process-v2-1786930700762-46756.qpls",
+        "source_before": {
+          "bytes": 12708,
+          "sha256": "88742752bfa2194eca2c235bbeaea9ac4a0eb45a971e1e5cc33125a9d138921e",
+          "mtime_ns": "1786930705164006200"
+        },
+        "source_after": {
+          "bytes": 12708,
+          "sha256": "88742752bfa2194eca2c235bbeaea9ac4a0eb45a971e1e5cc33125a9d138921e",
+          "mtime_ns": "1786930705164006200"
+        },
+        "source_stable_during_copy": true,
+        "exclusive_atomic_copy": true,
+        "application_opened": false,
+        "logical_state": {
+          "manifestValid": true,
+          "completedResultCount": 0,
+          "witnessCount": 0,
+          "completedRunIds": [],
+          "witnessRunIds": [],
+          "recipeIds": [],
+          "recipeCount": 0,
+          "workspaceRunIds": [],
+          "selectedRunId": null
+        }
+      },
+      "primary_archive": {
+        "path": "validation/results/v247-native-process-v2-1786930700762-46756.qpls",
+        "bytes": 12708
+      },
+      "export": {
+        "path": "validation/results/v247-native-process-v2-20260817-070816559.xlsx",
+        "bytes": 0
+      }
+    }
+  }
+}

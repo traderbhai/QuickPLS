@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "adapter_version": "compiled_recipe_v4_pls_plan_v2_execution_v3",
+    "compilation_receipt": {
+      "schema_version": 1,
+      "recipe_id": "00000000-0000-0000-0000-000000002002",
+      "recipe_document_sha256": "40d0112ad9a48bb0fbaf46504d80ecdc54956cb33c015ce97e15bf593966db58",
+      "recipe_analytical_sha256": "50b94783c47c23b6d9fc464ce43ae7135766ffe401d134e996071e57aaad7b75",
+      "model_id": "00000000-0000-0000-0000-000000001002",
+      "model_document_sha256": "5e8218723644c6cfab4d9f456a1f80f27548ed255fdb75a296979c72c5f3860a",
+      "model_scientific_sha256": "5e8218723644c6cfab4d9f456a1f80f27548ed255fdb75a296979c72c5f3860a",
+      "dataset_fingerprint": "v2:9b814a8a22eace42776bc479c637de36bc973dfd8a7b3d5b3e60baba98803373",
+      "compiler_target": "pls_plan_v2",
+      "compiler_version": "recipe_v4_to_compiled_pls_plan_v2_v2",
+      "capability_cell": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.pls_algorithm",
+        "cell_id": "qpls3.pls.algorithm",
+        "capability_version": "pls_pm_v1"
+      },
+      "plan_sha256": "a465285bac5a7354f271563236232bc9d24273a41ade6063150f63945e63d3a8",
+      "analytical_identity_sha256": "cf980a4f472fe099e39ea0086e1e77ab4e94e43e4d70fa30d71c85e7cc3d54e0"
+    },
+    "projected_recipe_schema_version": 3,
+    "projected_recipe_sha256": "604a79fdcadac3ce163935e75b790013bf7b3aa7378fecb1041817a81e7bc297",
+    "dataset_id": "208d673d-2abc-44be-b454-1d48c95b4288",
+    "estimator_method_version": "pls_pm_v1"
+  },
+  "estimation": {
+    "method_version": "pls_pm_v1",
+    "converged": true,
+    "iterations": 4,
+    "used_observations": 6,
+    "omitted_observations": 0,
+    "transforms": [
+      {
+        "indicator": "x1",
+        "mean": 3.5,
+        "scale": 1.8708286933869707
+      },
+      {
+        "indicator": "x2",
+        "mean": 4.5,
+        "scale": 1.8708286933869707
+      },
+      {
+        "indicator": "y1",
+        "mean": 5.166666666666667,
+        "scale": 2.6394443859772205
+      },
+      {
+        "indicator": "y2",
+        "mean": 4.5,
+        "scale": 2.7386127875258306
+      }
+    ],
+    "construct_scores": {
+      "construct:x": [
+        -1.3557962024429366,
+        -0.813477721465762,
+        -0.008405600524846808,
+        0.00840560052484688,
+        0.813477721465762,
+        1.3557962024429366
+      ],
+      "construct:y": [
+        -1.2448992992869619,
+        -0.8713119319877388,
+        -0.31210665617024974,
+        0.24945016990993077,
+        0.8086554457274197,
+        1.3702122718076004
+      ]
+    },
+    "outer_estimates": [
+      {
+        "construct": "construct:x",
+        "indicator": "x1",
+        "weight": 0.5230179262300994,
+        "loading": 0.9864954295126468
+      },
+      {
+        "construct": "construct:x",
+        "indicator": "x2",
+        "weight": 0.49156704893603526,
+        "loading": 0.9846982365244146
+      },
+      {
+        "construct": "construct:y",
+        "indicator": "y1",
+        "weight": 0.4961349327145746,
+        "loading": 0.9954396945354063
+      },
+      {
+        "construct": "construct:y",
+        "indicator": "y2",
+        "weight": 0.5083355778619224,
+        "loading": 0.9956564446247306
+      }
+    ],
+    "paths": [
+      {
+        "source": "construct:x",
+        "target": "construct:y",
+        "coefficient": 0.9833789187934318
+      }
+    ],
+    "control_estimates": [],
+    "effects": [
+      {
+        "source": "construct:x",
+        "target": "construct:y",
+        "direct": 0.9833789187934318,
+        "indirect": 0.0,
+        "total": 0.9833789187934318
+      }
+    ],
+    "mediation": {
+      "method_version": "pls_mediation_v1",
+      "tolerance": 1e-12,
+      "estimates": [
+        {
+          "source": "construct:x",
+          "target": "construct:y",
+          "direct": 0.9833789187934318,
+          "indirect": 0.0,
+          "total": 0.9833789187934318,
+          "variance_accounted_for": 0.0,
+          "classification": "direct_only",
+          "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+        }
+      ],
+      "warnings": [
+        "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
+      ]
+    },
+    "plsc": null,
+    "endogeneity": null,
+    "nonlinear_effects": null,
+    "moderated_mediation": null,
+    "cta_pls": null,
+    "wpls": null,
+    "cca": null,
+    "predict": null,
+    "segmentation": null,
+    "mga": null,
+    "micom": null,
+    "mga_permutation": null,
+    "fimix": null,
+    "ipma": null,
+    "cbsem": null,
+    "pca": null,
+    "regression": null,
+    "nca": null,
+    "gsca": null,
+    "r_squared": {
+      "construct:y": 0.967034097927339
+    },
+    "warnings": []
+  }
+}

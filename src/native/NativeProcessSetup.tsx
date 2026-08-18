@@ -411,7 +411,7 @@ export default function NativeProcessSetup({
 
       <ProcessGraphPreview graph={graph} outcome={outcome} />
       <div className="nd-setting-note wide" id="nd-calculation-process-scope">
-        <span>Candidate scope</span>
+        <span>Experimental</span>
         <strong>{NATIVE_PROCESS_SCOPE_NOTE} Continuous simple-slope and plot probes use the original sample raw mean - SD, mean, and mean + SD; binary probes use original raw 0/1. Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid.</strong>
       </div>
       <div className={`nd-process-assessment ${assessment.canRun ? "ready" : "blocked"}`} role="status" aria-live="polite">

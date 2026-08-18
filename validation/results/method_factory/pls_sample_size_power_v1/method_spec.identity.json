@@ -1,0 +1,75 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "bounded_exclusions_explicit": true,
+    "document": "docs/methods/PLS_SAMPLE_SIZE_POWER_V1.md",
+    "frozen_contract_fragments": {
+      "100,000,000 row-fits": true,
+      "250,000 PLS fits": true,
+      "3-10 indicators": true,
+      "Archive validation proves structural, accounting, identity, and deterministic-summary integrity from the stored replicate ledger and rejects isolated mutations.": true,
+      "Failed or inadmissible replicates remain in the denominator": true,
+      "It does not replay generated data, PLS estimates, or bootstrap fits and does not authenticate a coordinated rewrite of target estimates, p values, rejection flags, outcome digest, derived power rows, grid decision, and outer archive checksum.": true,
+      "Retrospective \"observed power\" is excluded": true,
+      "case-bootstrap normal-reference": true,
+      "exactly one bounded design": true,
+      "first evaluated grid value": true,
+      "never an interpolated or extrapolated recommendation": true,
+      "standard-normal exogenous latent": true,
+      "two ordinary reflective constructs": true,
+      "two-sided Wilson binomial interval": true,
+      "worker count as execution-only": true
+    },
+    "passed": true,
+    "status_text_is_not_used_as_qualification_evidence": true
+  },
+  "feature_id": "qpls3.pls.sample_size_power",
+  "generated_at_utc": "2026-08-14T02:08:43.987119Z",
+  "method_version": "pls_sample_size_power_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_SAMPLE_SIZE_POWER_V1.md",
+      "sha256": "f577a9e5b4866efbc3725b0f3b10d9a91c80b4291c5643c2b76fa014ebe7fe71",
+      "size": 8334
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_sample_size_power_v1.manifest.json",
+      "sha256": "59cd37e4523e233deb32521c94ad23ca24cabcffeff183933dfc961ff823a9cd",
+      "size": 18815
+    },
+    {
+      "path": "validation/pls_sample_size_power_method_promotion_audit.py",
+      "sha256": "0a9cbbe5ca0e8949220efb1aacd3e98e7252c93ec3c8dd655748b17fb6e77519",
+      "size": 21527
+    },
+    {
+      "path": "validation/pls_sample_size_power_simulation.py",
+      "sha256": "67c7bd402a730b059682e932f19921048b3f9256af9d1fb8fd22de337904f341",
+      "size": 39018
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "a123eaf4355a92d0c790a61a9e2692ac60e5b308d439b47f8e7e693c917db727",
+      "size": 21242
+    },
+    {
+      "path": "validation/test_pls_sample_size_power_v1.py",
+      "sha256": "b416cd197a0205eda1ee63c47b6e4d92e15464fa85a1ce329d978301d27bf55c",
+      "size": 11741
+    }
+  ]
+}

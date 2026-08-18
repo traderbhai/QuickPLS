@@ -38,13 +38,23 @@
       {
         "id": "dijkstra_henseler_rho_a",
         "expression": "rho_A = (w'w)^2 * [w'(R - diag(R))w] / [w'(ww' - diag(ww'))w]",
-        "variables": ["rho_A", "w", "R", "diag"],
+        "variables": [
+          "rho_A",
+          "w",
+          "R",
+          "diag"
+        ],
         "source_reference_id": "dijkstra_henseler_2015"
       },
       {
         "id": "attenuation_correction",
         "expression": "cor_corrected(j,k) = cor_original(j,k) / sqrt(rho_A_j rho_A_k)",
-        "variables": ["cor_corrected", "cor_original", "rho_A_j", "rho_A_k"],
+        "variables": [
+          "cor_corrected",
+          "cor_original",
+          "rho_A_j",
+          "rho_A_k"
+        ],
         "source_reference_id": "dijkstra_henseler_2015"
       }
     ],
@@ -80,18 +90,49 @@
         "purpose": "recovery",
         "design": "Reflective recursive models spanning reliability, loading strength, structural effects, sample size, two-indicator blocks, and near-inadmissible corrections.",
         "seed_policy": "Frozen scenario-indexed data seeds shared with the independent reference only through source observations.",
-        "metrics": ["rho_a_reference_delta", "corrected_path_reference_delta", "corrected_loading_reference_delta", "latent_path_recovery_error", "inadmissible_rejection_rate"],
+        "metrics": [
+          "rho_a_reference_delta",
+          "corrected_path_reference_delta",
+          "corrected_loading_reference_delta",
+          "latent_path_recovery_error",
+          "inadmissible_rejection_rate"
+        ],
         "acceptance_rule": "Every admissible supported scenario agrees with the independent implementation within 1e-6 and recovers its latent sample path within 0.10; every preregistered inadmissible control is rejected and counted without clamping."
       }
     ],
     "boundaries": [
-      {"id": "inadmissible_reliability_or_correlation", "category": "data_pathology", "case": "Finite-sample rho_A is materially nonpositive or above one, or attenuation correction produces a correlation outside [-1,1].", "expected_behavior": "Calculation fails with a typed inadmissibility diagnostic and no PLSc result is committed."},
-      {"id": "formative_or_generated_construct", "category": "unsupported_scope", "case": "The model contains a formative block, generated interaction, higher-order construct, or PCA weighting.", "expected_behavior": "The typed validator blocks the PLSc recipe before execution."},
-      {"id": "construct_indicator_reorder", "category": "metamorphic", "case": "Reflective constructs and indicators are consistently reordered.", "expected_behavior": "Mapped rho_A, corrected correlations, paths, loadings, and R-squared remain equal within tolerance."},
-      {"id": "repeat_execution", "category": "determinism", "case": "The same recipe and dataset fingerprint are executed repeatedly.", "expected_behavior": "The analytical PLSc payload is bit-identical apart from operational identifiers and timestamps."},
-      {"id": "plsc_version_or_correction_tamper", "category": "tamper", "case": "The saved rho_A, corrected correlation, path, loading, method version, or legacy marker is altered.", "expected_behavior": "Strict project validation rejects the archive rather than displaying the modified PLSc result."}
+      {
+        "id": "inadmissible_reliability_or_correlation",
+        "category": "data_pathology",
+        "case": "Finite-sample rho_A is materially nonpositive or above one, or attenuation correction produces a correlation outside [-1,1].",
+        "expected_behavior": "Calculation fails with a typed inadmissibility diagnostic and no PLSc result is committed."
+      },
+      {
+        "id": "formative_or_generated_construct",
+        "category": "unsupported_scope",
+        "case": "The model contains a formative block, generated interaction, higher-order construct, or PCA weighting.",
+        "expected_behavior": "The typed validator blocks the PLSc recipe before execution."
+      },
+      {
+        "id": "construct_indicator_reorder",
+        "category": "metamorphic",
+        "case": "Reflective constructs and indicators are consistently reordered.",
+        "expected_behavior": "Mapped rho_A, corrected correlations, paths, loadings, and R-squared remain equal within tolerance."
+      },
+      {
+        "id": "repeat_execution",
+        "category": "determinism",
+        "case": "The same recipe and dataset fingerprint are executed repeatedly.",
+        "expected_behavior": "The analytical PLSc payload is bit-identical apart from operational identifiers and timestamps."
+      },
+      {
+        "id": "plsc_version_or_correction_tamper",
+        "category": "tamper",
+        "case": "The saved rho_A, corrected correlation, path, loading, method version, or legacy marker is altered.",
+        "expected_behavior": "Strict project validation rejects the archive rather than displaying the modified PLSc result."
+      }
     ],
-    "numerical_tolerance": 0.000001
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
     "persistence": {
@@ -99,52 +140,160 @@
       "result_schema_version": 1,
       "payload_kind": "pls_pm_v1",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result whose capability identity does not match its PLSc recipe."},
-        {"category": "method_version", "expected_behavior": "Reject plsc_v1, unknown, or relabeled PLSc payloads as current v2 evidence."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a PLSc result whose dataset fingerprint no longer matches."},
-        {"category": "checksum", "expected_behavior": "Reject any changed archive member whose checksum differs."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite corrections, or inconsistent dimensions."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Preserve readable plsc_v1 data under its legacy identity without current reinterpretation."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose capability identity does not match its PLSc recipe."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject plsc_v1, unknown, or relabeled PLSc payloads as current v2 evidence."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a PLSc result whose dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any changed archive member whose checksum differs."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite corrections, or inconsistent dimensions."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Preserve readable plsc_v1 data under its legacy identity without current reinterpretation."
+        }
       ],
       "legacy_policy": "plsc_v1 remains readable only as explicitly unqualified legacy compatibility data; new results must use plsc_v2."
     },
     "native": {
-      "setup_controls": ["Reflective model", "Path or factor weighting", "Preprocessing", "Tolerance", "Maximum iterations"],
-      "applicability_blockers": ["Formative construct", "Fewer than two indicators", "PCA weighting", "Interaction or higher-order construct", "External resampling setting"],
-      "result_surfaces": ["PLSc correction reliability", "PLSc construct correlations", "Corrected paths", "Corrected loadings", "Corrected R-square", "Run provenance"],
+      "setup_controls": [
+        "Reflective model",
+        "Path or factor weighting",
+        "Preprocessing",
+        "Tolerance",
+        "Maximum iterations"
+      ],
+      "applicability_blockers": [
+        "Formative construct",
+        "Fewer than two indicators",
+        "PCA weighting",
+        "Interaction or higher-order construct",
+        "External resampling setting"
+      ],
+      "result_surfaces": [
+        "PLSc correction reliability",
+        "PLSc construct correlations",
+        "Corrected paths",
+        "Corrected loadings",
+        "Corrected R-square",
+        "Run provenance"
+      ],
       "gui_cli_parity_rule": "For the same typed PLSc recipe and dataset fingerprint, GUI and CLI analytical payloads must be exactly equal apart from operational timestamps and run identifiers.",
-      "accessibility_rules": ["Correction tables and inadmissibility warnings are keyboard and screen-reader accessible.", "No corrected value is conveyed by color alone."]
+      "accessibility_rules": [
+        "Correction tables and inadmissibility warnings are keyboard and screen-reader accessible.",
+        "No corrected value is conveyed by color alone."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html", "svg", "png"],
-      "tables": ["PLSc correction reliability", "PLSc construct correlations", "Corrected paths", "Corrected loadings", "Corrected R-square", "Run provenance"],
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "png"
+      ],
+      "tables": [
+        "PLSc correction reliability",
+        "PLSc construct correlations",
+        "Corrected paths",
+        "Corrected loadings",
+        "Corrected R-square",
+        "Run provenance"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": false,
       "process_cleanup_required": true
     },
-    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
   },
   "qualification": {
-    "declared_state": "native_qualified",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/PLSC_V2.md", "docs/methods/PLSC_V1.md", "docs/methods/PLS_RHO_A_V1.md"],
-      "independent_reference": ["validation/plsc_reference.py", "validation/plsc_v2_factory_evidence.py"],
-      "simulation_report": ["validation/plsc_v2_simulation.py"],
-      "boundary_report": ["validation/plsc_v2_boundary_gate.py", "validation/plsc_unsupported_guard.py"],
-      "persistence_report": ["validation/plsc_v2_persistence_gate.py"],
-      "frontend_report": ["src/native/nativePlsReadiness.test.ts", "src/native/nativeResults.test.ts", "src/native/nativeAnalysisRecipe.test.ts", "src/native/NativeCalculationDialog.test.ts"],
-      "export_report": ["src/native/nativeResults.test.ts", "src/native/nativeExportTables.test.ts", "src/native/NativeExportDialog.test.ts"],
-      "method_audit": ["validation/plsc_v2_factory_audit.py"],
+      "method_spec": [
+        "docs/methods/PLSC_V2.md",
+        "docs/methods/PLSC_V1.md",
+        "docs/methods/PLS_RHO_A_V1.md"
+      ],
+      "independent_reference": [
+        "validation/plsc_reference.py",
+        "validation/plsc_v2_factory_evidence.py"
+      ],
+      "simulation_report": [
+        "validation/plsc_v2_simulation.py"
+      ],
+      "boundary_report": [
+        "validation/plsc_v2_boundary_gate.py",
+        "validation/plsc_unsupported_guard.py"
+      ],
+      "persistence_report": [
+        "validation/plsc_v2_persistence_gate.py"
+      ],
+      "frontend_report": [
+        "src/native/nativePlsReadiness.test.ts",
+        "src/native/nativeResults.test.ts",
+        "src/native/nativeAnalysisRecipe.test.ts",
+        "src/native/NativeCalculationDialog.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeResults.test.ts",
+        "src/native/nativeExportTables.test.ts",
+        "src/native/NativeExportDialog.test.ts"
+      ],
+      "method_audit": [
+        "validation/plsc_v2_factory_audit.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json"
+      ],
       "packaged_acceptance": [
         "validation/plsc_v2_packaged_acceptance.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
         "validation/diagnostic_bundle_source_manifest.py",
         "validation/run_v247_cumulative_native_acceptance.ps1",
         "validation/test_extended_pls_cumulative_receipt.py",
@@ -156,40 +305,68 @@
       "engine_only": [
         {
           "path": "validation/results/method_factory/plsc_v2/method_spec.identity.json",
-          "roles": ["method_spec"],
+          "roles": [
+            "method_spec"
+          ],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }
         },
         {
           "path": "validation/results/method_factory/plsc_v2/independent_reference.identity.json",
-          "roles": ["independent_reference"],
+          "roles": [
+            "independent_reference"
+          ],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }
         },
         {
           "path": "validation/results/method_factory/plsc_v2/simulation_report.identity.json",
-          "roles": ["simulation_report"],
+          "roles": [
+            "simulation_report"
+          ],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }
         },
         {
           "path": "validation/results/method_factory/plsc_v2/boundary_report.identity.json",
-          "roles": ["boundary_report"],
+          "roles": [
+            "boundary_report"
+          ],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }
@@ -198,10 +375,17 @@
       "archive_qualified": [
         {
           "path": "validation/results/method_factory/plsc_v2/persistence_report.identity.json",
-          "roles": ["persistence_report"],
+          "roles": [
+            "persistence_report"
+          ],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }
@@ -210,20 +394,34 @@
       "native_qualified": [
         {
           "path": "validation/results/method_factory/plsc_v2/frontend_report.identity.json",
-          "roles": ["frontend_report"],
+          "roles": [
+            "frontend_report"
+          ],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }
         },
         {
           "path": "validation/results/method_factory/plsc_v2/export_report.identity.json",
-          "roles": ["export_report"],
+          "roles": [
+            "export_report"
+          ],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }
@@ -231,21 +429,35 @@
       ],
       "release_qualified": [
         {
-          "path": "validation/results/method_factory/plsc_v2/method_audit.identity.json",
-          "roles": ["method_audit"],
+          "path": "validation/results/method_factory/plsc_v2/packaged_acceptance.identity.json",
+          "roles": [
+            "packaged_acceptance"
+          ],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }
         },
         {
-          "path": "validation/results/method_factory/plsc_v2/packaged_acceptance.identity.json",
-          "roles": ["packaged_acceptance"],
+          "path": "validation/results/method_factory/plsc_v2/method_audit.identity.json",
+          "roles": [
+            "method_audit"
+          ],
           "verification": {
             "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
             "source_artifacts_pointer": "/source_artifacts",
             "generated_at_pointer": "/generated_at_utc"
           }

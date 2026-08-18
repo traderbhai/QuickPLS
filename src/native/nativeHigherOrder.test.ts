@@ -56,17 +56,17 @@ describe("native higher-order construct scope", () => {
     ]));
   });
 
-  it("accepts only the bounded exogenous reflective two-stage PLS shape", () => {
+  it("accepts only the supported exogenous reflective two-stage PLS shape", () => {
     const edges: Edge[] = [{ id: "hoc-y", source: "hoc", target: "y" }];
     expect(nativeHigherOrderScopeProblems([...nodes, hocNode], edges, settings)).toEqual([]);
     expect(nativeHigherOrderScopeProblems([...nodes, hocNode], edges, { ...settings, method: "bootstrap", bootstrapSamples: 100 })).toContain(
-      "Run the bounded higher-order workflow with PLS-SEM Algorithm only; HOC resampling inference is not yet exposed",
+      "Run the higher-order workflow with PLS-SEM Algorithm only; HOC resampling inference is outside this point-estimate workflow",
     );
     expect(nativeHigherOrderScopeProblems([...nodes, hocNode], [...edges, { id: "x-y", source: "x", target: "y" }], settings)).toContain(
-      "Lower-order components must remain measurement-only in the bounded disjoint two-stage model",
+      "Lower-order components must remain measurement-only in the disjoint two-stage model",
     );
     expect(nativeHigherOrderScopeProblems([...nodes, hocNode], [{ id: "y-hoc", source: "y", target: "hoc" }], settings)).toEqual(expect.arrayContaining([
-      "The bounded native slice supports the higher-order construct as an exogenous predictor, not as a structural outcome",
+      "Use the higher-order construct as an exogenous predictor, not as a structural outcome",
       "Connect the higher-order construct to at least one measured outcome before calculation",
     ]));
   });

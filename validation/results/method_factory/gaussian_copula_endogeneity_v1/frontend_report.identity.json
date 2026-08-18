@@ -1,0 +1,105 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "accessible_native_table_exercised": true,
+    "applicability_exercised": true,
+    "method_scoped_files": [
+      "src/native/nativeEndogeneity.test.ts",
+      "src/domain/endogeneityApplicability.test.ts"
+    ],
+    "passed": true,
+    "typed_recipe_and_blockers_exercised": true,
+    "vitest_summary": {
+      "expected_test_files": 2,
+      "minimum_tests": 5,
+      "observed_test_files_passed": 2,
+      "observed_test_files_total": 2,
+      "observed_tests_passed": 5,
+      "observed_tests_total": 5,
+      "passed": true
+    }
+  },
+  "execution": {
+    "command": [
+      "npx.cmd",
+      "vitest",
+      "run",
+      "src/native/nativeEndogeneity.test.ts",
+      "src/domain/endogeneityApplicability.test.ts",
+      "--reporter=verbose"
+    ],
+    "duration_seconds": 7.165,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n \u00e2\u0153\u201c src/domain/endogeneityApplicability.test.ts > Gaussian-copula applicability > exposes the diagnostic-only bounded scope for an ordinary structural path 6ms\n \u00e2\u0153\u201c src/domain/endogeneityApplicability.test.ts > Gaussian-copula applicability > blocks control-only, generated-interaction, and higher-order shapes before execution 2ms\n \u00e2\u0153\u201c src/native/nativeEndogeneity.test.ts > bounded native Gaussian-copula workflow > serializes one typed deterministic recipe and clears unrelated resampling 6ms\n \u00e2\u0153\u201c src/native/nativeEndogeneity.test.ts > bounded native Gaussian-copula workflow > fails closed on PCA weighting, missing paths, controls, interactions, and higher-order constructs 3ms\n \u00e2\u0153\u201c src/native/nativeEndogeneity.test.ts > bounded native Gaussian-copula workflow > uses one completed run for accessible results and CSV/HTML/XLSX input tables 17ms\n\n Test Files  2 passed (2)\n      Tests  5 passed (5)\n   Start at  12:23:00\n   Duration  1.44s (transform 823ms, setup 0ms, import 1.38s, tests 38ms, environment 0ms)\n\n"
+  },
+  "feature_id": "qpls3.pls.gaussian_copula_endogeneity",
+  "generated_at_utc": "2026-08-14T06:53:02.516229Z",
+  "method_version": "gaussian_copula_endogeneity_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "frontend_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/domain/endogeneityApplicability.test.ts",
+      "sha256": "d9718338bab155d6707910ec7e67e782b9af0b5a6921611de31eef2237259463",
+      "size": 3244
+    },
+    {
+      "path": "src/domain/methodApplicability.ts",
+      "sha256": "9b67767b77cf8a954165ec9ac8581646025aaa554dba1afb23f10cebe9fb163e",
+      "size": 39630
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.ts",
+      "sha256": "488b50b9c22a593d8c0e324c517c2250dc2ed0d6fecaff48e25a894b1d0b3a42",
+      "size": 49932
+    },
+    {
+      "path": "src/native/nativeEndogeneity.test.ts",
+      "sha256": "c58c10c0ebdcec2ef9b5f0da81a321346b1d4ba275af2a6f35c03feaf99695af",
+      "size": 8177
+    },
+    {
+      "path": "src/native/nativeResults.ts",
+      "sha256": "08eda3d890140141b69e53faca24704f5da60da2a23079de72ed18e068213c7a",
+      "size": 227209
+    },
+    {
+      "path": "validation/endogeneity_factory_common.py",
+      "sha256": "9ca62fb82ec04b4056d5c138a99e28c1dd5bf00a2c2c12ffa53b49b26bcd85e9",
+      "size": 14111
+    },
+    {
+      "path": "validation/endogeneity_frontend_gate.py",
+      "sha256": "e9cf4a1b148dee8e588249b2a5b8f2223ca87843dcf58b1f688187c5c455806d",
+      "size": 10256
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/gaussian_copula_endogeneity_v1.manifest.json",
+      "sha256": "50e1445c9c8d7131eea334405e5454424982371154ac5d2774e83a5b6fc57320",
+      "size": 14698
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_endogeneity_factory.py",
+      "sha256": "1b2dbb224abd159e0f9179071f67a52dde6b23f227195b75d67cdcd24a203c92",
+      "size": 4689
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    }
+  ]
+}

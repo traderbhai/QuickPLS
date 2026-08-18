@@ -6,26 +6,27 @@
     "current_cli_binding": {
       "current_cli": {
         "path": "target/release/qpls.exe",
-        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-        "size": 20690432
+        "sha256": "f376ef9646a016a2ab5e922b49248d0b0667654159253a8ca0428b6c2dc10e05",
+        "size": 32387072
       },
       "execution_binding": "reference script executed in this evidence run with QUICKPLS_CLI_PATH set to current_cli",
       "explicit_report_binding": true,
       "passed": true,
       "reference_report_cli": {
-        "modified_utc": "2026-08-13T11:30:31.883365+00:00",
+        "modified_utc": "2026-08-18T13:07:54.036633+00:00",
         "path": "target/release/qpls.exe",
-        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-        "size": 20690432
+        "sha256": "f376ef9646a016a2ab5e922b49248d0b0667654159253a8ca0428b6c2dc10e05",
+        "size": 32387072
       }
     },
     "current_reference_execution": {
       "command": [
-        "not_rerun"
+        "python",
+        "validation/structural_path_randomization_reference.py"
       ],
-      "returncode": null,
+      "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": ""
+      "stdout_tail": "{\n  \"report\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\structural_path_randomization_reference_report.json\",\n  \"passed\": true\n}\n"
     },
     "expected_checks": [
       "calibrated_null_boundary",
@@ -49,7 +50,7 @@
         "validation.test_structural_path_randomization_reference"
       ],
       "returncode": 0,
-      "stderr_tail": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.035s\n\nOK\n",
+      "stderr_tail": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.038s\n\nOK\n",
       "stdout_tail": ""
     },
     "observed_passed_checks": [
@@ -70,13 +71,13 @@
     "reference_identity_exact": true,
     "reference_report": {
       "path": "validation/results/structural_path_randomization_reference_report.json",
-      "sha256": "2b999b90aead450236d88c54e6f85d5d00846e459fb5e2975e9656cc7933cf0a",
-      "size": 17703
+      "sha256": "1f59a2cd95ee012d41cdab1354bf52be70e5b45d07d29d858e1bee9c66f44778",
+      "size": 17704
     },
     "required_check_set_exact": true
   },
   "feature_id": "qpls3.inference.structural_path_randomization",
-  "generated_at_utc": "2026-08-13T19:54:09.143734Z",
+  "generated_at_utc": "2026-08-18T13:18:52.193755Z",
   "method_version": "freedman_lane_permutation_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -85,13 +86,13 @@
   "source_artifacts": [
     {
       "path": "docs/methods/PERMUTATION_ENGINE_V1.md",
-      "sha256": "a8628b524857bdb459755b8c026bb9d62e83ac21c08c25d004753129dc69ad98",
-      "size": 3765
+      "sha256": "12e1dbfb2b048bd1aeb37e4565c72e8f85091809d27f1c35749f6d127def7ee0",
+      "size": 3792
     },
     {
       "path": "validation/legacy_release_factory_migration.py",
-      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
-      "size": 23709
+      "sha256": "b9c5207f9d8aff6c2cd8b243acb017634d26b00355a1f537b3cfa4ad69fa92e7",
+      "size": 24794
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -105,8 +106,8 @@
     },
     {
       "path": "validation/methods/structural_path_randomization_v1.manifest.json",
-      "sha256": "c4af70fa296449446e4f987c346b82be6c03c82fdaf73e6e2f66e738d8450b2a",
-      "size": 14560
+      "sha256": "84172080609f9e457387d92a1b9abc617e289d1032928cfde8e70c2fa334eb78",
+      "size": 14735
     },
     {
       "path": "validation/structural_path_randomization_boundary_gate.py",
@@ -120,7 +121,7 @@
     },
     {
       "path": "validation/structural_path_randomization_reference.py",
-      "sha256": "8946d5525cb1c51012e3788dc0f34ace825e96282b33580622cd10d4960eeb7d",
+      "sha256": "372e2aaf9bfddb2f7ef8faf6ffed195ae08ffc227fbb3b67d9a94cd66a475c33",
       "size": 48644
     },
     {
@@ -130,8 +131,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     }
   ]
 }

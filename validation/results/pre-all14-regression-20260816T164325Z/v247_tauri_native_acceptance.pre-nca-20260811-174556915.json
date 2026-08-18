@@ -1,0 +1,3119 @@
+{
+  "passed": true,
+  "generatedAt": "2026-08-11T07:06:16.230Z",
+  "endpoint": "http://127.0.0.1:9222",
+  "runtime": "tauri-webview2-cdp",
+  "checks": {
+    "mgaReferenceFixture": {
+      "path": "D:\\QuickPLS\\validation\\results\\mga_reference.csv",
+      "columns": [
+        "group",
+        "x1",
+        "x2",
+        "z1",
+        "z2",
+        "y1",
+        "y2"
+      ],
+      "rows": 180,
+      "groups": {
+        "A": 90,
+        "B": 90
+      },
+      "deterministic": true
+    },
+    "fixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\wpls_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-methods-1786431976229-35024.qpls",
+      "projectName": "Native Methods Acceptance",
+      "cli": "D:\\QuickPLS\\target\\debug\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-methods-1786431976229-35024.qpls",
+      "stderr": ""
+    },
+    "mediationFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\lavaan_latent_mediation_sem.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-1786431976229-35024.qpls",
+      "projectName": "Native Mediation Acceptance",
+      "cli": "D:\\QuickPLS\\target\\debug\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-mediation-1786431976229-35024.qpls",
+      "stderr": ""
+    },
+    "moderationFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\moderation_reference_base.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-moderation-1786431976229-35024.qpls",
+      "projectName": "Native Moderation Acceptance",
+      "cli": "D:\\QuickPLS\\target\\debug\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-moderation-1786431976229-35024.qpls",
+      "stderr": ""
+    },
+    "mgaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\mga_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-mga-1786431976229-35024.qpls",
+      "projectName": "Native MGA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\debug\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-mga-1786431976229-35024.qpls",
+      "stderr": ""
+    },
+    "ccaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\cca_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-cca-1786431976229-35024.qpls",
+      "projectName": "Native CCA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\debug\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-cca-1786431976229-35024.qpls",
+      "stderr": "",
+      "visibleDataset": {
+        "cases": 132,
+        "columns": [
+          "#",
+          "x1",
+          "x2",
+          "z1",
+          "z2",
+          "y1",
+          "y2"
+        ],
+        "status": "ReadyNative CCA Acceptancecca_reference.csv132 cases0 constructsDataOffline",
+        "deterministicNonSaturatedModel": "X -> Z -> Y"
+      }
+    },
+    "ipmaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\ipma_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-1786431976229-35024.qpls",
+      "projectName": "Native IPMA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\debug\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-ipma-1786431976229-35024.qpls",
+      "stderr": "",
+      "visibleDataset": {
+        "cases": 80,
+        "columns": [
+          "#",
+          "x1",
+          "z1",
+          "m1",
+          "y1",
+          "u1",
+          "v1"
+        ],
+        "status": "ReadyNative IPMA Acceptanceipma_reference.csv80 cases0 constructsDataOffline",
+        "deterministicModel": "X -> M; Z -> M; X -> Y; Z -> Y; M -> Y; disconnected U -> V negative-control branch"
+      }
+    },
+    "runtime": {
+      "title": "QuickPLS",
+      "tauriRuntime": true,
+      "viewport": {
+        "width": 1536,
+        "height": 794,
+        "dpr": 1.25
+      },
+      "surface": "launcher"
+    },
+    "sample": {
+      "project": "Corporate Reputation Sample",
+      "constructs": 4
+    },
+    "recodeDialog": {
+      "source": "COMP1",
+      "browserOnlyNoticeCount": 0,
+      "createEnabled": true
+    },
+    "recodeCompleted": {
+      "versionCountText": "Versions (2)",
+      "derivedVariableVisible": 3
+    },
+    "calculationCommands": {
+      "toolbarGenericCommands": 1,
+      "calculateMenuEntries": [
+        "Calculate…Ctrl+R"
+      ],
+      "methodSpecificMenuEntries": []
+    },
+    "calculationCatalog": {
+      "options": [
+        "PLS-SEM Algorithm",
+        "Consistent PLS",
+        "Weighted PLS",
+        "CCA composite residual diagnostics",
+        "Importance-Performance Map Analysis",
+        "PLS-SEM Bootstrapping",
+        "Structural Path Randomization",
+        "Two-Group Permutation MGA",
+        "Deterministic Construct Prediction"
+      ],
+      "optionCount": 9,
+      "legacyTabCount": 0,
+      "structuralPathRandomization": {
+        "optionCount": 1,
+        "description": "Structural Path RandomizationRun single-model Freedman–Lane randomization inference for structural path coefficients.",
+        "singleModelFreedmanLane": true,
+        "mentionsMgaOrMicom": false
+      }
+    },
+    "predictionDialog": {
+      "selectedMethod": "Deterministic Construct PredictionPredict endogenous construct scores with a fixed complete-case holdout, deterministic repeated folds, and bounded paired-loss diagnostics.",
+      "catalogDescription": "Deterministic Construct PredictionPredict endogenous construct scores with a fixed complete-case holdout, deterministic repeated folds, and bounded paired-loss diagnostics.",
+      "startEnabled": false,
+      "blockers": [
+        "Prediction requires at least 15 observations before complete-case filtering in the native validated scope."
+      ],
+      "plan": "Complete cases; fixed modulo-4 holdout; 5 folds × 3 repeats; bounded paired-loss diagnostic",
+      "truthfulBoundedLabel": true,
+      "expectedSampleScopeBlock": true
+    },
+    "disposableRecentProject": {
+      "visibleRows": 1,
+      "pathVisible": true,
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-methods-1786431976229-35024.qpls"
+    },
+    "nativeMethodDataset": {
+      "cases": 128,
+      "columns": [
+        "#",
+        "x1",
+        "x2",
+        "y1",
+        "y2",
+        "case_wt"
+      ],
+      "status": "ReadyNative Methods Acceptancewpls_reference.csv128 cases0 constructsDataOffline"
+    },
+    "dataGridKeyboard": {
+      "activeCells": 1,
+      "activeRow": "9",
+      "activeColumn": "2",
+      "activeVariable": "y1",
+      "selectedHeader": "y1",
+      "activeCellFocused": true,
+      "activeBoxShadow": "rgb(8, 107, 157) 0px 0px 0px 2px inset, rgb(255, 255, 255) 0px 0px 0px 3px inset",
+      "pagerVisible": true,
+      "viewportOverflowX": "auto",
+      "pageHorizontalOverflow": false,
+      "copyAnnouncement": "Copied row 10, column 3."
+    },
+    "initialEditableModelCreation": {
+      "projectName": "Native Methods Acceptance",
+      "importedEditableModels": 0,
+      "name": "WPLS Structural Model",
+      "constructs": 0,
+      "structuralPaths": 0
+    },
+    "visibleModelBuild": {
+      "constructs": 2,
+      "assignedIndicators": 4,
+      "structuralPaths": 1,
+      "unassignedCaseWeight": true
+    },
+    "projectSaveReopen": {
+      "attempted": true,
+      "reopenedThroughRecentProjectRow": true,
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-methods-1786431976229-35024.qpls",
+      "constructs": 2,
+      "assignedIndicators": 4,
+      "structuralPaths": 1,
+      "cases": 128
+    },
+    "plscDialog": {
+      "selectedMethod": "Consistent PLSApply consistent PLS correction to reflective measurement models.",
+      "startEnabled": true,
+      "blockers": [],
+      "scope": "Reflective constructs with at least two indicators each"
+    },
+    "plscProgress": {
+      "status": "queued",
+      "phase": "Queued",
+      "message": "Native engine accepted the calculation job.",
+      "progressValue": "0",
+      "progressMax": "100",
+      "logEntries": 3
+    },
+    "plscResult": {
+      "runId": "525f81cf-d835-41f2-ba5c-a4a0370058a7",
+      "runLabel": "Consistent PLS run",
+      "selectedItem": "PLSc construct correlations",
+      "reliabilityRows": 2,
+      "correlationRows": 1,
+      "reliabilityText": "Construct 10.9875Construct 20.9747",
+      "correlationText": "Construct 1Construct 20.79080.8061",
+      "recordedSeedLabel": 0
+    },
+    "export": {
+      "formats": 6,
+      "xlsxEnabled": true
+    },
+    "returnToModel": {
+      "constructs": 2,
+      "selectedRunRetained": true
+    },
+    "wplsDialog": {
+      "selectedMethod": "Weighted PLSEstimate a reflective PLS model using positive case weights.",
+      "caseWeightColumn": "case_wt",
+      "numericWeightOptions": [
+        "x1",
+        "x2",
+        "y1",
+        "y2",
+        "case_wt"
+      ],
+      "standardized": "Standardized (fixed)",
+      "startEnabled": true,
+      "blockers": []
+    },
+    "wplsProgress": {
+      "status": "validating",
+      "phase": "Validating",
+      "message": "Checking dataset, model, method scope, and calculation settings.",
+      "progressValue": "20",
+      "progressMax": "100",
+      "logEntries": 2
+    },
+    "wplsResult": {
+      "runId": "e3cf94ba-e9c1-4b2a-9a4d-a2446efd7050",
+      "runLabel": "Weighted PLS run",
+      "pathRows": 1,
+      "pathText": "Construct 1 → Construct 20.7923"
+    },
+    "resultsGridKeyboard": {
+      "activeCells": 1,
+      "activeRow": "0",
+      "activeColumn": "1",
+      "activeCellFocused": true,
+      "activeBoxShadow": "rgb(8, 107, 157) 0px 0px 0px 2px inset, rgb(255, 255, 255) 0px 0px 0px 3px inset",
+      "viewportOverflowX": "auto",
+      "pageHorizontalOverflow": false,
+      "copyAnnouncement": "Copied row 1, column 2."
+    },
+    "wpls_weights": {
+      "tableId": "wpls_weights",
+      "title": "WPLS case-weight diagnostics",
+      "rows": 4,
+      "caseWeightColumnVisible": true
+    },
+    "predictionRunnableDialog": {
+      "selectedMethod": "Deterministic Construct PredictionPredict endogenous construct scores with a fixed complete-case holdout, deterministic repeated folds, and bounded paired-loss diagnostics.",
+      "startEnabled": true,
+      "blockers": [],
+      "plan": "Complete cases; fixed modulo-4 holdout; 5 folds × 3 repeats; bounded paired-loss diagnostic"
+    },
+    "predictionProgress": {
+      "status": "queued",
+      "phase": "Queued",
+      "message": "Native engine accepted the calculation job.",
+      "progressValue": "0",
+      "progressMax": "100",
+      "logEntries": 3
+    },
+    "predictionResult": {
+      "runId": "722283b9-19ce-49ef-b1d3-7c38b1c44580",
+      "runLabel": "Deterministic Construct Prediction run",
+      "holdoutRows": 1,
+      "cvpatRows": 2,
+      "holdoutText": "Construct 210.63940.50691.09010.91330.65590.62740.49410.6687",
+      "cvpatText": "Construct 2pls_vs_training_mean_benchmarksquared_error_difference_pls_minus_comparison-0.81840.0710-11.531<0.0001384plsConstruct 2pls_vs_lm_benchmarksquared_error_difference_pls_minus_comparison0.00300.00580.5140.6075384lm_benchmark"
+    },
+    "predictionAutosave": {
+      "attempted": true,
+      "archiveFailureToasts": []
+    },
+    "completedResultsSaveReopen": {
+      "attempted": true,
+      "reopenedThroughRecentProjectRow": true,
+      "runOptions": [
+        "Consistent PLS run",
+        "Weighted PLS run",
+        "Deterministic Construct Prediction run"
+      ],
+      "hasPlsc": true,
+      "hasWpls": true,
+      "hasPrediction": true
+    },
+    "bootstrapRunning": {
+      "phase": "Studentized inner",
+      "message": "QuickPLS is calculating.",
+      "progressValue": "0",
+      "progressMax": "100"
+    },
+    "bootstrapCancelled": {
+      "status": "cancelled",
+      "partialRunVisible": 0
+    },
+    "finalNativeState": {
+      "runId": "e3cf94ba-e9c1-4b2a-9a4d-a2446efd7050",
+      "title": "WPLS case-weight diagnostics",
+      "rows": 4,
+      "status": "Ready"
+    },
+    "workspaceExplorerContextMenu": {
+      "commands": [
+        "Open Report",
+        "Rename Report…F2",
+        "Remove Report…Delete"
+      ],
+      "openReport": true,
+      "renameReport": true,
+      "removeReport": true,
+      "focusRestored": true
+    },
+    "workspaceExplorerCatalog": {
+      "originalModelName": "WPLS Structural Model",
+      "secondModelName": "Exploratory Model",
+      "reportName": "Weighted Diagnostics Review",
+      "treeItems": 7,
+      "tabStops": 1,
+      "selectedItems": 1,
+      "activeModels": 1,
+      "labels": [
+        "Native Methods Acceptance",
+        "wpls_reference.csv",
+        "Models",
+        "Exploratory Model",
+        "WPLS Structural Model",
+        "Reports",
+        "Weighted Diagnostics Review"
+      ],
+      "levels": [
+        "1",
+        "2",
+        "2",
+        "3",
+        "3",
+        "2",
+        "3"
+      ]
+    },
+    "workspaceExplorerSaveReopen": {
+      "reopenedThroughRecentProjectRow": true,
+      "models": [
+        "WPLS Structural Model",
+        "Exploratory Model"
+      ],
+      "report": "Weighted Diagnostics Review",
+      "originalPresentationBeforeSave": {
+        "tab": "WPLS Structural Model",
+        "constructs": 2,
+        "structuralPaths": 1
+      },
+      "secondPresentationBeforeSave": {
+        "tab": "Exploratory Model",
+        "constructs": 0,
+        "structuralPaths": 0
+      },
+      "originalPresentationAfterReopen": {
+        "tab": "WPLS Structural Model",
+        "constructs": 2,
+        "structuralPaths": 1
+      },
+      "secondPresentationAfterReopen": {
+        "tab": "Exploratory Model",
+        "constructs": 0,
+        "structuralPaths": 0
+      }
+    },
+    "workspaceExplorerHistoricalResult": {
+      "deletedModel": "WPLS Structural Model",
+      "remainingModels": [
+        "Exploratory Model"
+      ],
+      "report": "Weighted Diagnostics Review",
+      "selectedRunId": "e3cf94ba-e9c1-4b2a-9a4d-a2446efd7050",
+      "expectedRunId": "e3cf94ba-e9c1-4b2a-9a4d-a2446efd7050",
+      "rows": 4,
+      "editDeletedModelDisabled": true
+    },
+    "workspaceExplorerReportRemoval": {
+      "aliasesRemaining": 0,
+      "canonicalRunRetained": true,
+      "rows": 4,
+      "saveReportAvailableAgain": true
+    },
+    "mediationRecentProject": {
+      "visibleRows": 1,
+      "pathVisible": true,
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-1786431976229-35024.qpls"
+    },
+    "mediationDataset": {
+      "cases": 240,
+      "columns": [
+        "#",
+        "x1",
+        "x2",
+        "x3",
+        "m1",
+        "m2",
+        "m3",
+        "y1",
+        "y2",
+        "y3"
+      ],
+      "status": "ReadyNative Mediation Acceptancelavaan_latent_mediation_sem.csv240 cases0 constructsDataOffline",
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\lavaan_latent_mediation_sem.csv"
+    },
+    "initialMediationModelCreation": {
+      "projectName": "Native Mediation Acceptance",
+      "importedEditableModels": 0,
+      "name": "Mediation Structural Model",
+      "constructs": 0,
+      "structuralPaths": 0
+    },
+    "visibleMediationModelBuild": {
+      "constructs": 3,
+      "constructLabels": [
+        "Construct 1",
+        "Construct 2",
+        "Construct 3"
+      ],
+      "assignedIndicators": 6,
+      "structuralPaths": 2,
+      "unassignedSpareIndicators": [
+        "x3",
+        "m3",
+        "y3"
+      ]
+    },
+    "mediationPlsDialog": {
+      "selectedMethod": "PLS-SEM AlgorithmEstimate composite scores, paths, loadings, weights, and model quality.",
+      "startEnabled": true,
+      "blockers": []
+    },
+    "mediationPlsResult": {
+      "runId": "9c785479-a717-4f82-a819-1eab6fb702ad",
+      "runLabel": "PLS-SEM Algorithm run",
+      "navigation": {
+        "groupTitle": "Mediation",
+        "requiredTitles": [
+          "Direct effects",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects"
+        ],
+        "treeItems": [
+          "Graphical results",
+          "Model estimates",
+          "Final results",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Mediation",
+          "Direct effects",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Quality criteria",
+          "Construct reliability and validity",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "HTMT+",
+          "Original HTMT",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redundancy"
+        ],
+        "rowCounts": {
+          "Direct effects": 2,
+          "Specific indirect effects": 1,
+          "Total indirect effects": 1,
+          "Total effects": 3
+        },
+        "tableText": {
+          "Direct effects": "Construct 1 → Construct 20.6610Construct 2 → Construct 30.6751",
+          "Specific indirect effects": "Construct 1 → Construct 2 → Construct 30.4462",
+          "Total indirect effects": "Construct 1 → Construct 30.4462",
+          "Total effects": "Construct 1 → Construct 20.6610Construct 1 → Construct 30.4462Construct 2 → Construct 30.6751"
+        },
+        "bootstrapTreeItems": 0,
+        "selectedTable": "Specific indirect effects"
+      }
+    },
+    "mediationBootstrapDialog": {
+      "selectedMethod": "PLS-SEM BootstrappingEstimate confidence intervals and significance with deterministic resampling.",
+      "bootstrapSamples": "100",
+      "studentizedInnerSamples": "0",
+      "startEnabled": true,
+      "blockers": []
+    },
+    "mediationBootstrapResult": {
+      "runId": "106a927a-a826-4786-bccd-0f7155d970f2",
+      "runLabel": "PLS-SEM Bootstrapping run",
+      "navigation": {
+        "groupTitle": "Mediation",
+        "requiredTitles": [
+          "Direct effects",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Aggregate mediation effects bootstrap inference"
+        ],
+        "treeItems": [
+          "Graphical results",
+          "Model estimates",
+          "Final results",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Mediation",
+          "Direct effects",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Aggregate mediation effects bootstrap inference",
+          "Quality criteria",
+          "Construct reliability and validity",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "HTMT+",
+          "Original HTMT",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redundancy",
+          "Inference",
+          "Bootstrapping",
+          "Bias-corrected and accelerated intervals"
+        ],
+        "rowCounts": {
+          "Direct effects": 2,
+          "Specific indirect effects": 1,
+          "Total indirect effects": 1,
+          "Total effects": 3,
+          "Aggregate mediation effects bootstrap inference": 6
+        },
+        "tableText": {
+          "Direct effects": "Construct 1 → Construct 20.6610Construct 2 → Construct 30.6751",
+          "Specific indirect effects": "Construct 1 → Construct 2 → Construct 30.4462",
+          "Total indirect effects": "Construct 1 → Construct 30.4462",
+          "Total effects": "Construct 1 → Construct 20.6610Construct 1 → Construct 30.4462Construct 2 → Construct 30.6751",
+          "Aggregate mediation effects bootstrap inference": "Direct effectConstruct 1 → Construct 20.66100.66660.028723.032<0.00010.61330.7201Direct effectConstruct 2 → Construct 30.67510.67380.035718.920<0.00010.60350.7354Total indirect effect (aggregate)Construct 1 → Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 1 → Construct 20.66100.66660.028723.032<0.00010.61330.7201Total effectConstruct 1 → Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 2 → Construct 30.67510.67380.035718.920<0.00010.60350.7354"
+        },
+        "bootstrapTreeItems": 1,
+        "selectedTable": "Specific indirect effects"
+      }
+    },
+    "mediationExport": {
+      "selectedRunId": "106a927a-a826-4786-bccd-0f7155d970f2",
+      "formats": 6,
+      "xlsxEnabled": true,
+      "selectedResultTable": "Specific indirect effects",
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx",
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 90048222,
+              "pid": 34940,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 90048222,
+              "handle": 21168350,
+              "pid": 34940,
+              "rootOwner": 90048222,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 90048222,
+              "pid": 34940,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx",
+              "requiredSharedStrings": [
+                "Aggregate mediation effects bootstrap inference",
+                "Total indirect effect (aggregate)",
+                "Run provenance"
+              ],
+              "requiredSheet": "Aggregate mediation effects boo",
+              "sha256": "026ecf8ab95be555a9f8751d99e2494c5a02b56bcc36540a2e5813b044164e7b",
+              "sheetNames": [
+                "Direct effects",
+                "Outer loadings",
+                "Outer weights",
+                "R-square",
+                "Specific indirect effects",
+                "Total indirect effects",
+                "Total effects",
+                "Construct reliability and valid",
+                "Cross loadings",
+                "Fornell-Larcker criterion",
+                "HTMT+",
+                "Original HTMT",
+                "Structural model",
+                "Inner VIF values",
+                "f-square effect sizes",
+                "Model fit",
+                "Construct cross-validated redun",
+                "Aggregate mediation effects boo",
+                "Bootstrapping",
+                "Bias-corrected and accelerated ",
+                "Run provenance"
+              ],
+              "size": 22850
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 90048222,
+                    "pid": 34940,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 90048222,
+                    "handle": 21168350,
+                    "pid": 34940,
+                    "rootOwner": 90048222,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 90048222,
+                    "pid": 34940,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx",
+                    "requiredSharedStrings": [
+                      "Aggregate mediation effects bootstrap inference",
+                      "Total indirect effect (aggregate)",
+                      "Run provenance"
+                    ],
+                    "requiredSheet": "Aggregate mediation effects boo",
+                    "sha256": "026ecf8ab95be555a9f8751d99e2494c5a02b56bcc36540a2e5813b044164e7b",
+                    "sheetNames": [
+                      "Direct effects",
+                      "Outer loadings",
+                      "Outer weights",
+                      "R-square",
+                      "Specific indirect effects",
+                      "Total indirect effects",
+                      "Total effects",
+                      "Construct reliability and valid",
+                      "Cross loadings",
+                      "Fornell-Larcker criterion",
+                      "HTMT+",
+                      "Original HTMT",
+                      "Structural model",
+                      "Inner VIF values",
+                      "f-square effect sizes",
+                      "Model fit",
+                      "Construct cross-validated redun",
+                      "Aggregate mediation effects boo",
+                      "Bootstrapping",
+                      "Bias-corrected and accelerated ",
+                      "Run provenance"
+                    ],
+                    "size": 22850
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        },
+        "appFeedback": "Saved v247-native-mediation-20260811-123612252.xlsx.",
+        "file": {
+          "path": "D:\\QuickPLS\\validation\\results\\v247-native-mediation-20260811-123612252.xlsx",
+          "size": 22850,
+          "isFile": true
+        }
+      }
+    },
+    "mediationSaveReopen": {
+      "attempted": true,
+      "reopenedThroughRecentProjectRow": true,
+      "runOptions": [
+        "PLS-SEM Algorithm run",
+        "PLS-SEM Bootstrapping run"
+      ],
+      "hasPlsAlgorithm": true,
+      "hasBootstrap": true,
+      "selectedRunId": "106a927a-a826-4786-bccd-0f7155d970f2",
+      "expectedBootstrapRunId": "106a927a-a826-4786-bccd-0f7155d970f2",
+      "model": {
+        "constructs": 3,
+        "assignedIndicators": 6,
+        "structuralPaths": 2
+      },
+      "navigation": {
+        "groupTitle": "Mediation",
+        "requiredTitles": [
+          "Direct effects",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Aggregate mediation effects bootstrap inference"
+        ],
+        "treeItems": [
+          "Graphical results",
+          "Model estimates",
+          "Final results",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Mediation",
+          "Direct effects",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Aggregate mediation effects bootstrap inference",
+          "Quality criteria",
+          "Construct reliability and validity",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "HTMT+",
+          "Original HTMT",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redundancy",
+          "Inference",
+          "Bootstrapping",
+          "Bias-corrected and accelerated intervals"
+        ],
+        "rowCounts": {
+          "Direct effects": 2,
+          "Specific indirect effects": 1,
+          "Total indirect effects": 1,
+          "Total effects": 3,
+          "Aggregate mediation effects bootstrap inference": 6
+        },
+        "tableText": {
+          "Direct effects": "Construct 1 → Construct 20.6610Construct 2 → Construct 30.6751",
+          "Specific indirect effects": "Construct 1 → Construct 2 → Construct 30.4462",
+          "Total indirect effects": "Construct 1 → Construct 30.4462",
+          "Total effects": "Construct 1 → Construct 20.6610Construct 1 → Construct 30.4462Construct 2 → Construct 30.6751",
+          "Aggregate mediation effects bootstrap inference": "Direct effectConstruct 1 → Construct 20.66100.66660.028723.032<0.00010.61330.7201Direct effectConstruct 2 → Construct 30.67510.67380.035718.920<0.00010.60350.7354Total indirect effect (aggregate)Construct 1 → Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 1 → Construct 20.66100.66660.028723.032<0.00010.61330.7201Total effectConstruct 1 → Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 2 → Construct 30.67510.67380.035718.920<0.00010.60350.7354"
+        },
+        "bootstrapTreeItems": 1,
+        "selectedTable": "Specific indirect effects"
+      },
+      "finalNavigation": {
+        "groupTitle": "Mediation",
+        "requiredTitles": [
+          "Direct effects",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Aggregate mediation effects bootstrap inference"
+        ],
+        "treeItems": [
+          "Graphical results",
+          "Model estimates",
+          "Final results",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Mediation",
+          "Direct effects",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Aggregate mediation effects bootstrap inference",
+          "Quality criteria",
+          "Construct reliability and validity",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "HTMT+",
+          "Original HTMT",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redundancy",
+          "Inference",
+          "Bootstrapping",
+          "Bias-corrected and accelerated intervals"
+        ],
+        "rowCounts": {
+          "Direct effects": 2,
+          "Specific indirect effects": 1,
+          "Total indirect effects": 1,
+          "Total effects": 3,
+          "Aggregate mediation effects bootstrap inference": 6
+        },
+        "tableText": {
+          "Direct effects": "Construct 1 → Construct 20.6610Construct 2 → Construct 30.6751",
+          "Specific indirect effects": "Construct 1 → Construct 2 → Construct 30.4462",
+          "Total indirect effects": "Construct 1 → Construct 30.4462",
+          "Total effects": "Construct 1 → Construct 20.6610Construct 1 → Construct 30.4462Construct 2 → Construct 30.6751",
+          "Aggregate mediation effects bootstrap inference": "Direct effectConstruct 1 → Construct 20.66100.66660.028723.032<0.00010.61330.7201Direct effectConstruct 2 → Construct 30.67510.67380.035718.920<0.00010.60350.7354Total indirect effect (aggregate)Construct 1 → Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 1 → Construct 20.66100.66660.028723.032<0.00010.61330.7201Total effectConstruct 1 → Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 2 → Construct 30.67510.67380.035718.920<0.00010.60350.7354"
+        },
+        "bootstrapTreeItems": 1,
+        "selectedTable": "Specific indirect effects"
+      }
+    },
+    "moderationRecentProject": {
+      "visibleRows": 1,
+      "pathVisible": true,
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-moderation-1786431976229-35024.qpls"
+    },
+    "moderationDataset": {
+      "cases": 120,
+      "columns": [
+        "#",
+        "x",
+        "m",
+        "y"
+      ],
+      "status": "ReadyNative Moderation Acceptancemoderation_reference_base.csv120 cases0 constructsDataOffline",
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\moderation_reference_base.csv"
+    },
+    "initialModerationModelCreation": {
+      "projectName": "Native Moderation Acceptance",
+      "importedEditableModels": 0,
+      "name": "Moderation Structural Model",
+      "constructs": 0,
+      "structuralPaths": 0
+    },
+    "visibleModerationBaseModel": {
+      "constructs": 3,
+      "constructLabels": [
+        "X",
+        "M",
+        "Y"
+      ],
+      "assignedIndicators": 3,
+      "structuralPaths": 1,
+      "basePathId": "path-construct-1786432016820-construct-1786432017487-1786432017936",
+      "nodeIds": {
+        "x": "construct-1786432016820",
+        "moderator": "construct-1786432017137",
+        "outcome": "construct-1786432017487"
+      }
+    },
+    "moderationDialog": {
+      "relationshipId": "path-construct-1786432016820-construct-1786432017487-1786432017936",
+      "relationshipLabel": "X → Y",
+      "moderatorId": "construct-1786432017137",
+      "moderatorLabel": "M",
+      "methodSummary": "PredictorXOutcomeYMethodTwo-stage product score",
+      "automaticMainEffectDisclosure": "QuickPLS creates the interaction term and adds the moderator’s main-effect path to the outcome when it is missing.",
+      "createEnabled": true
+    },
+    "visibleModerationGeneratedModel": {
+      "constructs": 4,
+      "constructLabels": [
+        "X",
+        "M",
+        "Y",
+        "X x M"
+      ],
+      "assignedIndicators": 3,
+      "structuralPaths": 3,
+      "edgeIds": [
+        "path-construct-1786432016820-construct-1786432017487-1786432017936",
+        "path-construct-1786432017137-construct-1786432017487",
+        "path-interaction-construct-1786432016820-construct-1786432017137-construct-1786432017487-construct-1786432017487"
+      ],
+      "interactionId": "interaction-construct-1786432016820-construct-1786432017137-construct-1786432017487",
+      "basePath": {
+        "Source": "X",
+        "Target": "Y"
+      },
+      "moderatorMainEffect": {
+        "Source": "M",
+        "Target": "Y"
+      },
+      "interactionEffect": {
+        "Source": "X x M",
+        "Target": "Y"
+      },
+      "successToast": 1
+    },
+    "moderationPlsDialog": {
+      "selectedMethod": "PLS-SEM AlgorithmEstimate composite scores, paths, loadings, weights, and model quality.",
+      "startEnabled": true,
+      "blockers": []
+    },
+    "moderationPlsResult": {
+      "runId": "1984ea81-aeb6-41a5-b9ee-e81b81779f7a",
+      "runLabel": "PLS-SEM Algorithm run",
+      "navigation": {
+        "groupTitle": "Moderation",
+        "requiredTitles": [
+          "Moderation effects",
+          "Simple slope analysis"
+        ],
+        "treeItems": [
+          "Graphical results",
+          "Model estimates",
+          "Final results",
+          "Path coefficients",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Total effects",
+          "Moderation",
+          "Moderation effects",
+          "Simple slope analysis",
+          "Quality criteria",
+          "Construct reliability and validity",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redundancy"
+        ],
+        "rowCounts": {
+          "Moderation effects": 3,
+          "Simple slope analysis": 3
+        },
+        "tableText": {
+          "Moderation effects": "X → YPredictor main effect0.3455M → YModerator main effect0.2592X × M → YInteraction effect0.8706",
+          "Simple slope analysis": "X → YM-1.0000-0.5251X → YM0.00000.3455X → YM1.00001.2161"
+        },
+        "bootstrapTreeItems": 0,
+        "plot": {
+          "figures": 1,
+          "accessibleSvgs": 1,
+          "lines": 1,
+          "points": 3,
+          "caption": "Conditional effect plotX × M → Y"
+        },
+        "selectedTable": "Simple slope analysis"
+      }
+    },
+    "moderationBootstrapDialog": {
+      "selectedMethod": "PLS-SEM BootstrappingEstimate confidence intervals and significance with deterministic resampling.",
+      "bootstrapSamples": "100",
+      "inputMinimum": "100",
+      "minimumValidBootstrapSamples": 100,
+      "studentizedInnerSamples": "0",
+      "startEnabled": true,
+      "blockers": []
+    },
+    "moderationBootstrapResult": {
+      "runId": "f11e3cd2-5e2d-4c11-886c-4435b66cd2a8",
+      "runLabel": "PLS-SEM Bootstrapping run",
+      "navigation": {
+        "groupTitle": "Moderation",
+        "requiredTitles": [
+          "Moderation effects",
+          "Simple slope analysis",
+          "Interaction effect bootstrap inference"
+        ],
+        "treeItems": [
+          "Graphical results",
+          "Model estimates",
+          "Final results",
+          "Path coefficients",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Total effects",
+          "Moderation",
+          "Moderation effects",
+          "Simple slope analysis",
+          "Interaction effect bootstrap inference",
+          "Interaction effect BCa intervals",
+          "Quality criteria",
+          "Construct reliability and validity",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redundancy",
+          "Inference",
+          "Bootstrapping",
+          "Bias-corrected and accelerated intervals"
+        ],
+        "rowCounts": {
+          "Moderation effects": 3,
+          "Simple slope analysis": 3,
+          "Interaction effect bootstrap inference": 1
+        },
+        "tableText": {
+          "Moderation effects": "X → YPredictor main effect0.3455M → YModerator main effect0.2592X × M → YInteraction effect0.8706",
+          "Simple slope analysis": "X → YM-1.0000-0.5251X → YM0.00000.3455X → YM1.00001.2161",
+          "Interaction effect bootstrap inference": "X × M → Y0.87060.87120.055215.773<0.00010.75660.9740"
+        },
+        "bootstrapTreeItems": 1,
+        "plot": {
+          "figures": 1,
+          "accessibleSvgs": 1,
+          "lines": 1,
+          "points": 3,
+          "caption": "Conditional effect plotX × M → Y"
+        },
+        "selectedTable": "Simple slope analysis"
+      }
+    },
+    "moderationSaveReopen": {
+      "attempted": true,
+      "reopenedThroughRecentProjectRow": true,
+      "runOptions": [
+        "PLS-SEM Algorithm run",
+        "PLS-SEM Bootstrapping run"
+      ],
+      "hasPlsAlgorithm": true,
+      "hasBootstrap": true,
+      "selectedRunId": "f11e3cd2-5e2d-4c11-886c-4435b66cd2a8",
+      "expectedBootstrapRunId": "f11e3cd2-5e2d-4c11-886c-4435b66cd2a8",
+      "model": {
+        "constructs": 4,
+        "assignedIndicators": 3,
+        "structuralPaths": 3,
+        "interactionProperties": {
+          "Predictor": "X",
+          "Moderator": "M",
+          "Outcome": "Y",
+          "Method": "Two-stage product score"
+        }
+      },
+      "navigation": {
+        "groupTitle": "Moderation",
+        "requiredTitles": [
+          "Moderation effects",
+          "Simple slope analysis",
+          "Interaction effect bootstrap inference"
+        ],
+        "treeItems": [
+          "Graphical results",
+          "Model estimates",
+          "Final results",
+          "Path coefficients",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Total effects",
+          "Moderation",
+          "Moderation effects",
+          "Simple slope analysis",
+          "Interaction effect bootstrap inference",
+          "Interaction effect BCa intervals",
+          "Quality criteria",
+          "Construct reliability and validity",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redundancy",
+          "Inference",
+          "Bootstrapping",
+          "Bias-corrected and accelerated intervals"
+        ],
+        "rowCounts": {
+          "Moderation effects": 3,
+          "Simple slope analysis": 3,
+          "Interaction effect bootstrap inference": 1
+        },
+        "tableText": {
+          "Moderation effects": "X → YPredictor main effect0.3455M → YModerator main effect0.2592X × M → YInteraction effect0.8706",
+          "Simple slope analysis": "X → YM-1.0000-0.5251X → YM0.00000.3455X → YM1.00001.2161",
+          "Interaction effect bootstrap inference": "X × M → Y0.87060.87120.055215.773<0.00010.75660.9740"
+        },
+        "bootstrapTreeItems": 1,
+        "plot": {
+          "figures": 1,
+          "accessibleSvgs": 1,
+          "lines": 1,
+          "points": 3,
+          "caption": "Conditional effect plotX × M → Y"
+        },
+        "selectedTable": "Simple slope analysis"
+      },
+      "finalNavigation": {
+        "groupTitle": "Moderation",
+        "requiredTitles": [
+          "Moderation effects",
+          "Simple slope analysis",
+          "Interaction effect bootstrap inference"
+        ],
+        "treeItems": [
+          "Graphical results",
+          "Model estimates",
+          "Final results",
+          "Path coefficients",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Total effects",
+          "Moderation",
+          "Moderation effects",
+          "Simple slope analysis",
+          "Interaction effect bootstrap inference",
+          "Interaction effect BCa intervals",
+          "Quality criteria",
+          "Construct reliability and validity",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redundancy",
+          "Inference",
+          "Bootstrapping",
+          "Bias-corrected and accelerated intervals"
+        ],
+        "rowCounts": {
+          "Moderation effects": 3,
+          "Simple slope analysis": 3,
+          "Interaction effect bootstrap inference": 1
+        },
+        "tableText": {
+          "Moderation effects": "X → YPredictor main effect0.3455M → YModerator main effect0.2592X × M → YInteraction effect0.8706",
+          "Simple slope analysis": "X → YM-1.0000-0.5251X → YM0.00000.3455X → YM1.00001.2161",
+          "Interaction effect bootstrap inference": "X × M → Y0.87060.87120.055215.773<0.00010.75660.9740"
+        },
+        "bootstrapTreeItems": 1,
+        "plot": {
+          "figures": 1,
+          "accessibleSvgs": 1,
+          "lines": 1,
+          "points": 3,
+          "caption": "Conditional effect plotX × M → Y"
+        },
+        "selectedTable": "Simple slope analysis"
+      }
+    },
+    "mgaRecentProject": {
+      "visibleRows": 1,
+      "pathVisible": true,
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-mga-1786431976229-35024.qpls"
+    },
+    "mgaDataset": {
+      "cases": 180,
+      "columns": [
+        "#",
+        "group",
+        "x1",
+        "x2",
+        "z1",
+        "z2",
+        "y1",
+        "y2"
+      ],
+      "previewRows": 100,
+      "status": "ReadyNative MGA Acceptancemga_reference.csv180 cases0 constructsDataOffline",
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\mga_reference.csv"
+    },
+    "initialMgaModelCreation": {
+      "projectName": "Native MGA Acceptance",
+      "importedEditableModels": 0,
+      "name": "Two-Group Structural Model",
+      "constructs": 0,
+      "structuralPaths": 0
+    },
+    "visibleMgaModelBuild": {
+      "constructs": 3,
+      "constructLabels": [
+        "X",
+        "Z",
+        "Y"
+      ],
+      "assignedIndicators": 6,
+      "structuralPaths": 2,
+      "groupVariableVisible": 1,
+      "groupVariableUnassigned": true
+    },
+    "mgaGroupSetup": {
+      "command": "Use as Grouping Variable…",
+      "groupingVariable": "group",
+      "groupA": "A",
+      "groupB": "B",
+      "headers": [
+        "Role",
+        "Value",
+        "Observed",
+        "Complete model cases"
+      ],
+      "rows": [
+        [
+          "A",
+          "A",
+          "90",
+          "90"
+        ],
+        [
+          "B",
+          "B",
+          "90",
+          "90"
+        ]
+      ],
+      "observedCount": 180,
+      "previewRows": 100,
+      "completeDatasetBeyondPreview": true,
+      "scope": "Two-group scope QuickPLS compares Group A − Group B with a two-tailed permutation test. Measurement invariance (MICOM) is not calculated.",
+      "applyEnabled": true
+    },
+    "mgaConfiguredData": {
+      "groupingMarker": 1,
+      "groupingClass": true,
+      "editCommandCount": 1,
+      "editCommandEnabled": true
+    },
+    "mgaCalculationDialog": {
+      "methods": [
+        "PLS-SEM Algorithm",
+        "Consistent PLS",
+        "Weighted PLS",
+        "CCA composite residual diagnostics",
+        "Importance-Performance Map Analysis",
+        "PLS-SEM Bootstrapping",
+        "Structural Path Randomization",
+        "Two-Group Permutation MGA",
+        "Deterministic Construct Prediction"
+      ],
+      "selectedMethod": "Two-Group Permutation MGA",
+      "groupColumn": "group",
+      "groupA": "A",
+      "groupB": "B",
+      "defaultPermutations": "1000",
+      "permutationMinimum": "99",
+      "permutationMaximum": "10000",
+      "twoTailedAMinusB": true,
+      "limitationVisible": true,
+      "selectableMicomControls": 0,
+      "startEnabled": true,
+      "blockers": []
+    },
+    "mgaRunning": {
+      "status": "running",
+      "phase": "Iterating",
+      "message": "QuickPLS is calculating.",
+      "progressValue": "51",
+      "progressMax": "100",
+      "logEntries": 3,
+      "cancelVisible": true,
+      "cancelEnabled": true,
+      "permutationSamples": 1000
+    },
+    "mgaResult": {
+      "runId": "9976007b-f940-44f7-acc4-530d2910b3e8",
+      "runLabel": "Two-Group Permutation MGA run",
+      "autoOpenedSurface": "results",
+      "autoOpenedTable": "Two-tailed permutation path differences",
+      "navigation": {
+        "groupTitle": "Groups",
+        "selectedTable": "Two-tailed permutation path differences",
+        "treeItems": [
+          "Groups",
+          "Two-group sample summary",
+          "Group path coefficients",
+          "Group R-square",
+          "Group A minus Group B path differences",
+          "Two-tailed permutation path differences"
+        ],
+        "tables": {
+          "Two-group sample summary": {
+            "rows": 2,
+            "headers": [
+              "Group column",
+              "Role",
+              "Group value",
+              "Analyzed observations"
+            ],
+            "rowValues": [
+              [
+                "group",
+                "Group A",
+                "A",
+                "90"
+              ],
+              [
+                "group",
+                "Group B",
+                "B",
+                "90"
+              ]
+            ],
+            "text": "groupGroup AA90groupGroup BB90",
+            "viewText": "Two-group sample summary2 rowsMeasurement invariance is not assessed by QuickPLS in this release; interpret group differences only with independent invariance evidence. Two-group permutation inference uses the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation of A-minus-B path differences.Group columnRoleGroup valueAnalyzed observationsgroupGroup AA90groupGroup BB90Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group path coefficients": {
+            "rows": 4,
+            "headers": [
+              "Role",
+              "Group value",
+              "Path",
+              "Coefficient"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "X → Y",
+                "0.9338"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z → Y",
+                "0.2057"
+              ],
+              [
+                "Group B",
+                "B",
+                "X → Y",
+                "0.3126"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z → Y",
+                "0.8690"
+              ]
+            ],
+            "text": "Group AAX → Y0.9338Group AAZ → Y0.2057Group BBX → Y0.3126Group BBZ → Y0.8690",
+            "viewText": "Group path coefficients4 rowsRoleGroup valuePathCoefficientGroup AAX → Y0.9338Group AAZ → Y0.2057Group BBX → Y0.3126Group BBZ → Y0.8690Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group R-square": {
+            "rows": 2,
+            "headers": [
+              "Role",
+              "Group value",
+              "Construct",
+              "R²"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "Y",
+                "0.9376"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "0.9236"
+              ]
+            ],
+            "text": "Group AAY0.9376Group BBY0.9236",
+            "viewText": "Group R-square2 rowsRoleGroup valueConstructR²Group AAY0.9376Group BBY0.9236Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group A minus Group B path differences": {
+            "rows": 2,
+            "headers": [
+              "Path",
+              "Group A",
+              "Coefficient A",
+              "Group B",
+              "Coefficient B",
+              "A − B"
+            ],
+            "rowValues": [
+              [
+                "X → Y",
+                "A",
+                "0.9338",
+                "B",
+                "0.3126",
+                "0.6211"
+              ],
+              [
+                "Z → Y",
+                "A",
+                "0.2057",
+                "B",
+                "0.8690",
+                "-0.6634"
+              ]
+            ],
+            "text": "X → YA0.9338B0.31260.6211Z → YA0.2057B0.8690-0.6634",
+            "viewText": "Group A minus Group B path differences2 rowsPathGroup ACoefficient AGroup BCoefficient BA − BX → YA0.9338B0.31260.6211Z → YA0.2057B0.8690-0.6634Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Two-tailed permutation path differences": {
+            "rows": 2,
+            "headers": [
+              "Path",
+              "A − B",
+              "Two-tailed p",
+              "Percentile rank",
+              "Requested permutations",
+              "Usable permutations"
+            ],
+            "rowValues": [
+              [
+                "X → Y",
+                "0.6211",
+                "0.0010",
+                "1.0000",
+                "1000",
+                "1000"
+              ],
+              [
+                "Z → Y",
+                "-0.6634",
+                "0.0010",
+                "0.0000",
+                "1000",
+                "1000"
+              ]
+            ],
+            "text": "X → Y0.62110.00101.000010001000Z → Y-0.66340.00100.000010001000",
+            "viewText": "Two-tailed permutation path differences2 rowsPathA − BTwo-tailed pPercentile rankRequested permutationsUsable permutationsX → Y0.62110.00101.000010001000Z → Y-0.66340.00100.000010001000Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          }
+        },
+        "noPooledDiagram": true,
+        "noApproximateNormalInference": true,
+        "noMicom": true,
+        "noPlaceholderNa": true
+      }
+    },
+    "mgaExport": {
+      "selectedRunId": "9976007b-f940-44f7-acc4-530d2910b3e8",
+      "formats": 5,
+      "xlsxEnabled": true,
+      "modelDiagramCount": 0,
+      "reviewerPackText": "Reviewer packResults tables and run provenance",
+      "printText": "Print / PDFPrint the selected MGA results table",
+      "selectedTable": "Two-tailed permutation path differences"
+    },
+    "mgaEditModel": {
+      "constructs": 3,
+      "assignedIndicators": 6,
+      "structuralPaths": 2,
+      "groupingVariableCount": 1,
+      "groupingVariableDisabled": true,
+      "selectedResultRetained": true
+    },
+    "mgaSaveReopen": {
+      "attempted": true,
+      "reopenedThroughRecentProjectRow": true,
+      "selectedRunId": "9976007b-f940-44f7-acc4-530d2910b3e8",
+      "expectedRunId": "9976007b-f940-44f7-acc4-530d2910b3e8",
+      "runOptions": [
+        "Two-Group Permutation MGA run"
+      ],
+      "navigation": {
+        "groupTitle": "Groups",
+        "selectedTable": "Two-tailed permutation path differences",
+        "treeItems": [
+          "Groups",
+          "Two-group sample summary",
+          "Group path coefficients",
+          "Group R-square",
+          "Group A minus Group B path differences",
+          "Two-tailed permutation path differences"
+        ],
+        "tables": {
+          "Two-group sample summary": {
+            "rows": 2,
+            "headers": [
+              "Group column",
+              "Role",
+              "Group value",
+              "Analyzed observations"
+            ],
+            "rowValues": [
+              [
+                "group",
+                "Group A",
+                "A",
+                "90"
+              ],
+              [
+                "group",
+                "Group B",
+                "B",
+                "90"
+              ]
+            ],
+            "text": "groupGroup AA90groupGroup BB90",
+            "viewText": "Two-group sample summary2 rowsMeasurement invariance is not assessed by QuickPLS in this release; interpret group differences only with independent invariance evidence. Two-group permutation inference uses the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation of A-minus-B path differences.Group columnRoleGroup valueAnalyzed observationsgroupGroup AA90groupGroup BB90Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group path coefficients": {
+            "rows": 4,
+            "headers": [
+              "Role",
+              "Group value",
+              "Path",
+              "Coefficient"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "X → Y",
+                "0.9338"
+              ],
+              [
+                "Group A",
+                "A",
+                "Z → Y",
+                "0.2057"
+              ],
+              [
+                "Group B",
+                "B",
+                "X → Y",
+                "0.3126"
+              ],
+              [
+                "Group B",
+                "B",
+                "Z → Y",
+                "0.8690"
+              ]
+            ],
+            "text": "Group AAX → Y0.9338Group AAZ → Y0.2057Group BBX → Y0.3126Group BBZ → Y0.8690",
+            "viewText": "Group path coefficients4 rowsRoleGroup valuePathCoefficientGroup AAX → Y0.9338Group AAZ → Y0.2057Group BBX → Y0.3126Group BBZ → Y0.8690Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group R-square": {
+            "rows": 2,
+            "headers": [
+              "Role",
+              "Group value",
+              "Construct",
+              "R²"
+            ],
+            "rowValues": [
+              [
+                "Group A",
+                "A",
+                "Y",
+                "0.9376"
+              ],
+              [
+                "Group B",
+                "B",
+                "Y",
+                "0.9236"
+              ]
+            ],
+            "text": "Group AAY0.9376Group BBY0.9236",
+            "viewText": "Group R-square2 rowsRoleGroup valueConstructR²Group AAY0.9376Group BBY0.9236Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Group A minus Group B path differences": {
+            "rows": 2,
+            "headers": [
+              "Path",
+              "Group A",
+              "Coefficient A",
+              "Group B",
+              "Coefficient B",
+              "A − B"
+            ],
+            "rowValues": [
+              [
+                "X → Y",
+                "A",
+                "0.9338",
+                "B",
+                "0.3126",
+                "0.6211"
+              ],
+              [
+                "Z → Y",
+                "A",
+                "0.2057",
+                "B",
+                "0.8690",
+                "-0.6634"
+              ]
+            ],
+            "text": "X → YA0.9338B0.31260.6211Z → YA0.2057B0.8690-0.6634",
+            "viewText": "Group A minus Group B path differences2 rowsPathGroup ACoefficient AGroup BCoefficient BA − BX → YA0.9338B0.31260.6211Z → YA0.2057B0.8690-0.6634Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          },
+          "Two-tailed permutation path differences": {
+            "rows": 2,
+            "headers": [
+              "Path",
+              "A − B",
+              "Two-tailed p",
+              "Percentile rank",
+              "Requested permutations",
+              "Usable permutations"
+            ],
+            "rowValues": [
+              [
+                "X → Y",
+                "0.6211",
+                "0.0010",
+                "1.0000",
+                "1000",
+                "1000"
+              ],
+              [
+                "Z → Y",
+                "-0.6634",
+                "0.0010",
+                "0.0000",
+                "1000",
+                "1000"
+              ]
+            ],
+            "text": "X → Y0.62110.00101.000010001000Z → Y-0.66340.00100.000010001000",
+            "viewText": "Two-tailed permutation path differences2 rowsPathA − BTwo-tailed pPercentile rankRequested permutationsUsable permutationsX → Y0.62110.00101.000010001000Z → Y-0.66340.00100.000010001000Use the arrow keys to move between cells. Press Control+C to copy the selected cell."
+          }
+        },
+        "noPooledDiagram": true,
+        "noApproximateNormalInference": true,
+        "noMicom": true,
+        "noPlaceholderNa": true
+      }
+    },
+    "visibleCcaModelBuild": {
+      "projectName": "Native CCA Acceptance",
+      "importedEditableModels": 0,
+      "name": "CCA Residual Model",
+      "constructs": 3,
+      "structuralPaths": 2,
+      "assignedIndicators": 6,
+      "paths": [
+        {
+          "Source": "X",
+          "Target": "Z"
+        },
+        {
+          "Source": "Z",
+          "Target": "Y"
+        }
+      ],
+      "nonSaturated": true
+    },
+    "ccaCalculationDialog": {
+      "methods": [
+        "PLS-SEM Algorithm",
+        "Consistent PLS",
+        "Weighted PLS",
+        "CCA composite residual diagnostics",
+        "Importance-Performance Map Analysis",
+        "PLS-SEM Bootstrapping",
+        "Structural Path Randomization",
+        "Two-Group Permutation MGA",
+        "Deterministic Construct Prediction"
+      ],
+      "selectedMethod": "CCA composite residual diagnostics",
+      "category": "Assessment",
+      "resultData": "Standardized (fixed)",
+      "validatedScope": "Reflective composite path model; descriptive residual diagnostics only",
+      "missingData": "Listwise deletion",
+      "weighting": "path",
+      "pcaDisabled": true,
+      "maximumIterations": "3000",
+      "tolerance": "1e-7",
+      "unsupportedControls": 0,
+      "startEnabled": true,
+      "blockers": [],
+      "noInventedDecisionControls": true
+    },
+    "ccaRunning": {
+      "status": "queued",
+      "phase": "Queued",
+      "message": "Native engine accepted the calculation job.",
+      "progressValue": "0",
+      "progressMax": "100",
+      "logEntries": 3,
+      "cancelVisible": true
+    },
+    "ccaResult": {
+      "runId": "60b48bca-8056-4caa-819b-6dbd7ad05b9a",
+      "runLabel": "CCA composite residual diagnostics run",
+      "autoOpenedSurface": "results",
+      "autoOpenedTable": "Residual summary",
+      "methodVersion": "pls_pm_v1+cca_composite_residual_v1+pls_mediation_v1+pls_assessment_v7",
+      "nestedModelVersion": "recursive_standardized_composite_path_model_v1",
+      "nestedModelLabel": "Recursive standardized composite path model",
+      "correlationPairs": 3,
+      "maximumAbsoluteResidual": 0.2763,
+      "navigation": {
+        "groupTitle": "Assessment",
+        "initialSelectedTable": "Residual summary",
+        "summary": {
+          "headers": [
+            "Metric",
+            "Value"
+          ],
+          "rows": [
+            [
+              "Model",
+              "Recursive standardized composite path model"
+            ],
+            [
+              "Correlation pairs",
+              "3"
+            ],
+            [
+              "Maximum absolute residual",
+              "0.2763"
+            ]
+          ],
+          "rowCount": 3
+        },
+        "residuals": {
+          "headers": [
+            "Composite pair",
+            "Observed correlation",
+            "Reproduced correlation",
+            "Residual",
+            "Absolute residual"
+          ],
+          "rows": [
+            [
+              "X ↔ Z",
+              "0.5192",
+              "0.5192",
+              "0.0000",
+              "0.0000"
+            ],
+            [
+              "X ↔ Y",
+              "0.6725",
+              "0.3962",
+              "0.2763",
+              "0.2763"
+            ],
+            [
+              "Z ↔ Y",
+              "0.7632",
+              "0.7632",
+              "0.0000",
+              "0.0000"
+            ]
+          ],
+          "rowCount": 3
+        },
+        "nestedModelLabel": "Recursive standardized composite path model",
+        "correlationPairs": 3,
+        "maximumAbsoluteResidual": 0.2763,
+        "pairLabels": [
+          "X ↔ Y",
+          "X ↔ Z",
+          "Z ↔ Y"
+        ],
+        "finiteAndConsistent": true,
+        "maximumMatchesRows": true,
+        "noInventedInferenceOrClassification": true
+      },
+      "runDetails": {
+        "properties": {
+          "Run": "CCA composite residual diagnostics run",
+          "Method": "CCA composite residual diagnostics",
+          "Created": "11/8/2026, 12:37:18 pm",
+          "Dataset fingerprint": "v2:da6d5f2557259c19c2728f2d115bb50475ec1f6f9345b48a0250dfa7e6e98dec",
+          "Recipe": "4a840278-acb5-48d6-b73a-64f5942f7daa",
+          "Engine": "2.45.0",
+          "Method version": "pls_pm_v1+cca_composite_residual_v1+pls_mediation_v1+pls_assessment_v7",
+          "Weighting": "path",
+          "Preprocessing": "standardized"
+        },
+        "logEntries": 4
+      },
+      "resultProperties": {
+        "Method": "CCA composite residual diagnostics",
+        "Status": "Completed",
+        "Observations": "132",
+        "Iterations": "3",
+        "Completed": "11/8/2026, 12:37:18 pm"
+      },
+      "archiveMaximumMatchesVisible": true
+    },
+    "ccaExport": {
+      "selectedRunId": "60b48bca-8056-4caa-819b-6dbd7ad05b9a",
+      "formats": [
+        "CSV tables",
+        "HTML report",
+        "Reviewer pack",
+        "XLSX workbook",
+        "Model diagram",
+        "Print / PDF"
+      ],
+      "xlsxEnabled": true,
+      "residualTablesIncluded": true,
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx",
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 90048222,
+              "pid": 34940,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 90048222,
+              "handle": 13894946,
+              "pid": 34940,
+              "rootOwner": 90048222,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 90048222,
+              "pid": 34940,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx",
+              "requiredSharedStrings": [
+                "Residual summary",
+                "Composite residuals",
+                "Run provenance"
+              ],
+              "requiredSheets": [
+                "Residual summary",
+                "Composite residuals",
+                "Run provenance"
+              ],
+              "sha256": "5b6ff1f2803a979e1dedf9cce90a3d5bc0b94147e92980ec73f2497dfeda6420",
+              "sheetNames": [
+                "Direct effects",
+                "Outer loadings",
+                "Outer weights",
+                "R-square",
+                "Specific indirect effects",
+                "Total indirect effects",
+                "Total effects",
+                "Residual summary",
+                "Composite residuals",
+                "Construct reliability and valid",
+                "Cross loadings",
+                "Fornell-Larcker criterion",
+                "HTMT+",
+                "Original HTMT",
+                "Structural model",
+                "Inner VIF values",
+                "f-square effect sizes",
+                "Model fit",
+                "Construct cross-validated redun",
+                "Run provenance"
+              ],
+              "size": 19847
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 90048222,
+                    "pid": 34940,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 90048222,
+                    "handle": 13894946,
+                    "pid": 34940,
+                    "rootOwner": 90048222,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 90048222,
+                    "pid": 34940,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-cca-20260811-123612252.xlsx",
+                    "requiredSharedStrings": [
+                      "Residual summary",
+                      "Composite residuals",
+                      "Run provenance"
+                    ],
+                    "requiredSheets": [
+                      "Residual summary",
+                      "Composite residuals",
+                      "Run provenance"
+                    ],
+                    "sha256": "5b6ff1f2803a979e1dedf9cce90a3d5bc0b94147e92980ec73f2497dfeda6420",
+                    "sheetNames": [
+                      "Direct effects",
+                      "Outer loadings",
+                      "Outer weights",
+                      "R-square",
+                      "Specific indirect effects",
+                      "Total indirect effects",
+                      "Total effects",
+                      "Residual summary",
+                      "Composite residuals",
+                      "Construct reliability and valid",
+                      "Cross loadings",
+                      "Fornell-Larcker criterion",
+                      "HTMT+",
+                      "Original HTMT",
+                      "Structural model",
+                      "Inner VIF values",
+                      "f-square effect sizes",
+                      "Model fit",
+                      "Construct cross-validated redun",
+                      "Run provenance"
+                    ],
+                    "size": 19847
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        },
+        "appFeedback": "Saved v247-native-cca-20260811-123612252.xlsx.",
+        "file": {
+          "size": 19847,
+          "isFile": true
+        },
+        "workbookSheets": [
+          "Direct effects",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Residual summary",
+          "Composite residuals",
+          "Construct reliability and valid",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "HTMT+",
+          "Original HTMT",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redun",
+          "Run provenance"
+        ]
+      }
+    },
+    "ccaSaveReopen": {
+      "attempted": true,
+      "reopenedThroughRecentProjectRow": true,
+      "expectedRunId": "60b48bca-8056-4caa-819b-6dbd7ad05b9a",
+      "selectedRunId": "60b48bca-8056-4caa-819b-6dbd7ad05b9a",
+      "sameRunRestored": true,
+      "archive": {
+        "resultId": "60b48bca-8056-4caa-819b-6dbd7ad05b9a",
+        "resultStatus": "completed",
+        "method": "cca",
+        "methodVersion": "pls_pm_v1+cca_composite_residual_v1+pls_mediation_v1+pls_assessment_v7",
+        "nestedModelVersion": "recursive_standardized_composite_path_model_v1",
+        "payloadMethodVersion": "cca_composite_residual_v1",
+        "correlationPairs": 3,
+        "uniqueCorrelationPairs": 3,
+        "finiteRows": true,
+        "residualIdentities": true,
+        "maximumAbsoluteResidual": 0.27627385628730694,
+        "maximumMatchesRows": true,
+        "recipe": {
+          "method": "cca",
+          "weightingScheme": "path",
+          "preprocessing": "standardized",
+          "missingData": "listwise_deletion",
+          "bootstrapSamples": 0,
+          "studentizedInnerSamples": 0,
+          "permutationSamples": 0,
+          "caseWeightColumn": null,
+          "constructs": 3,
+          "paths": 2,
+          "controls": 0,
+          "interactions": 0,
+          "higherOrderConstructs": 0
+        }
+      },
+      "navigation": {
+        "groupTitle": "Assessment",
+        "initialSelectedTable": "Residual summary",
+        "summary": {
+          "headers": [
+            "Metric",
+            "Value"
+          ],
+          "rows": [
+            [
+              "Model",
+              "Recursive standardized composite path model"
+            ],
+            [
+              "Correlation pairs",
+              "3"
+            ],
+            [
+              "Maximum absolute residual",
+              "0.2763"
+            ]
+          ],
+          "rowCount": 3
+        },
+        "residuals": {
+          "headers": [
+            "Composite pair",
+            "Observed correlation",
+            "Reproduced correlation",
+            "Residual",
+            "Absolute residual"
+          ],
+          "rows": [
+            [
+              "X ↔ Z",
+              "0.5192",
+              "0.5192",
+              "0.0000",
+              "0.0000"
+            ],
+            [
+              "X ↔ Y",
+              "0.6725",
+              "0.3962",
+              "0.2763",
+              "0.2763"
+            ],
+            [
+              "Z ↔ Y",
+              "0.7632",
+              "0.7632",
+              "0.0000",
+              "0.0000"
+            ]
+          ],
+          "rowCount": 3
+        },
+        "nestedModelLabel": "Recursive standardized composite path model",
+        "correlationPairs": 3,
+        "maximumAbsoluteResidual": 0.2763,
+        "pairLabels": [
+          "X ↔ Y",
+          "X ↔ Z",
+          "Z ↔ Y"
+        ],
+        "finiteAndConsistent": true,
+        "maximumMatchesRows": true,
+        "noInventedInferenceOrClassification": true
+      }
+    },
+    "visibleIpmaModelBuild": {
+      "projectName": "Native IPMA Acceptance",
+      "importedEditableModels": 0,
+      "name": "Importance-Performance Structural Model",
+      "constructs": 6,
+      "structuralPaths": 6,
+      "constructIds": {
+        "x": "construct-1786432045964",
+        "z": "construct-1786432046295",
+        "m": "construct-1786432046611",
+        "y": "construct-1786432046979",
+        "u": "construct-1786432047312",
+        "v": "construct-1786432047644"
+      },
+      "assignedIndicators": 6,
+      "paths": [
+        {
+          "Source": "X",
+          "Target": "M"
+        },
+        {
+          "Source": "Z",
+          "Target": "M"
+        },
+        {
+          "Source": "X",
+          "Target": "Y"
+        },
+        {
+          "Source": "Z",
+          "Target": "Y"
+        },
+        {
+          "Source": "M",
+          "Target": "Y"
+        },
+        {
+          "Source": "U",
+          "Target": "V"
+        }
+      ],
+      "observedPairs": [
+        "X -> M",
+        "Z -> M",
+        "X -> Y",
+        "Z -> Y",
+        "M -> Y",
+        "U -> V"
+      ]
+    },
+    "ipmaCalculationDialog": {
+      "methods": [
+        "PLS-SEM Algorithm",
+        "Consistent PLS",
+        "Weighted PLS",
+        "CCA composite residual diagnostics",
+        "Importance-Performance Map Analysis",
+        "PLS-SEM Bootstrapping",
+        "Structural Path Randomization",
+        "Two-Group Permutation MGA",
+        "Deterministic Construct Prediction"
+      ],
+      "selectedMethod": "Importance-Performance Map Analysis",
+      "category": "Assessment",
+      "targetPlaceholder": "Select one endogenous construct",
+      "targetOptions": [
+        {
+          "value": "",
+          "label": "Select one endogenous construct"
+        },
+        {
+          "value": "construct-1786432046611",
+          "label": "M [construct-1786432046611]"
+        },
+        {
+          "value": "construct-1786432046979",
+          "label": "Y [construct-1786432046979]"
+        },
+        {
+          "value": "construct-1786432047644",
+          "label": "V [construct-1786432047644]"
+        }
+      ],
+      "selectedTargetId": "construct-1786432046979",
+      "selectedTargetLabel": "Y [construct-1786432046979]",
+      "weighting": "Path weighting (fixed)",
+      "resultData": "Standardized (fixed)",
+      "missingData": "Listwise deletion",
+      "reportedConstructs": "Direct and indirect structural predecessors only; the target and unrelated constructs are omitted",
+      "performanceScope": "0–100 observed-range scaling of standardized composite scores; no theoretical-range correction",
+      "maximumIterations": "3000",
+      "tolerance": "1e-7",
+      "unsupportedControls": 0,
+      "startEnabled": true,
+      "blockers": [],
+      "predecessorOnly": true,
+      "observedRange": true,
+      "noCipmaOrInferenceClaim": true
+    },
+    "ipmaRunning": {
+      "status": "queued",
+      "phase": "Queued",
+      "message": "Native engine accepted the calculation job.",
+      "progressValue": "0",
+      "progressMax": "100",
+      "logEntries": 3,
+      "cancelVisible": true
+    },
+    "ipmaResult": {
+      "runId": "82018389-bbb7-4f85-beb6-5ccbc088c8d5",
+      "runLabel": "Importance-Performance Map Analysis run",
+      "autoOpenedSurface": "results",
+      "autoOpenedTable": "Construct importance and performance",
+      "navigation": {
+        "groupTitle": "Importance-performance map",
+        "initialSelectedTable": "Construct importance and performance",
+        "treeItems": [
+          "Graphical results",
+          "Model estimates",
+          "Importance-performance map",
+          "Construct importance and performance",
+          "Indicator performance",
+          "Calculation scope",
+          "Final results",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Mediation",
+          "Direct effects",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Quality criteria",
+          "Construct reliability and validity",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redundancy"
+        ],
+        "constructs": {
+          "title": "Construct importance and performance",
+          "rowCount": 3,
+          "headers": [
+            "Target",
+            "Predecessor construct",
+            "Total importance",
+            "Performance"
+          ],
+          "rows": [
+            [
+              "Y",
+              "X",
+              "0.9838",
+              "50.0000"
+            ],
+            [
+              "Y",
+              "Z",
+              "0.2200",
+              "50.5804"
+            ],
+            [
+              "Y",
+              "M",
+              "0.5381",
+              "50.2036"
+            ]
+          ]
+        },
+        "indicators": {
+          "title": "Indicator performance",
+          "rowCount": 3,
+          "headers": [
+            "Target",
+            "Construct",
+            "Indicator",
+            "Construct importance",
+            "Loading",
+            "Performance",
+            "Standardized score mean"
+          ],
+          "rows": [
+            [
+              "Y",
+              "X",
+              "x1",
+              "0.9838",
+              "1.0000",
+              "50.0000",
+              "0.0000"
+            ],
+            [
+              "Y",
+              "Z",
+              "z1",
+              "0.2200",
+              "1.0000",
+              "50.5804",
+              "0.0000"
+            ],
+            [
+              "Y",
+              "M",
+              "m1",
+              "0.5381",
+              "1.0000",
+              "50.2036",
+              "0.0000"
+            ]
+          ]
+        },
+        "scope": {
+          "title": "Calculation scope",
+          "rowCount": 5,
+          "headers": [
+            "Field",
+            "Value"
+          ],
+          "rows": [
+            [
+              "Target",
+              "Y"
+            ],
+            [
+              "Method version",
+              "ipma_v1"
+            ],
+            [
+              "Performance",
+              "0–100 observed-range min–max scaling of standardized composite scores"
+            ],
+            [
+              "Missing data",
+              "Listwise deletion"
+            ],
+            [
+              "Theoretical-range correction",
+              "Not applied"
+            ]
+          ]
+        },
+        "scopeValues": {
+          "Target": "Y",
+          "Method version": "ipma_v1",
+          "Performance": "0–100 observed-range min–max scaling of standardized composite scores",
+          "Missing data": "Listwise deletion",
+          "Theoretical-range correction": "Not applied"
+        },
+        "plot": {
+          "figures": 1,
+          "accessibleSvgs": 1,
+          "directTitleCount": 1,
+          "title": "Importance-performance map for Y",
+          "captionTitleCount": 1,
+          "captionTargetCount": 1,
+          "captionTitle": "Importance-performance map",
+          "captionTarget": "Target: Y",
+          "points": 3,
+          "pointLabels": [
+            "M",
+            "X",
+            "Z"
+          ],
+          "scope": "Performance uses 0–100 observed-range min–max scaling of listwise-standardized composite scores. No theoretical-range correction is applied."
+        },
+        "constructLabels": [
+          "M",
+          "X",
+          "Z"
+        ],
+        "indicatorConstructLabels": [
+          "M",
+          "X",
+          "Z"
+        ],
+        "indicatorLabels": [
+          "m1",
+          "x1",
+          "z1"
+        ],
+        "constructValuesFinite": true,
+        "indicatorValuesFinite": true,
+        "predecessorOnly": true,
+        "excludesTargetAndUnrelatedConstructRows": true,
+        "excludesTargetAndUnrelatedIndicatorRows": true,
+        "noPlaceholderOrUnsupportedClaims": true
+      },
+      "runDetails": {
+        "properties": {
+          "Run": "Importance-Performance Map Analysis run",
+          "Method": "Importance-Performance Map Analysis",
+          "Created": "11/8/2026, 12:37:30 pm",
+          "Dataset fingerprint": "v2:d0c59bf8bc184aaa99db8c3e87772e7b93b36400263db8b30193042cc030bb87",
+          "Recipe": "30c9ff6b-656b-4227-af84-d29924a335cd",
+          "Engine": "2.45.0",
+          "Method version": "pls_pm_v1+ipma_v1+pls_mediation_v1+pls_assessment_v7",
+          "Weighting": "path",
+          "Preprocessing": "standardized"
+        },
+        "logEntries": 4
+      },
+      "resultProperties": {
+        "Method": "Importance-Performance Map Analysis",
+        "Status": "Completed",
+        "Observations": "80",
+        "Iterations": "1",
+        "Completed": "11/8/2026, 12:37:30 pm"
+      }
+    },
+    "ipmaExport": {
+      "selectedRunId": "82018389-bbb7-4f85-beb6-5ccbc088c8d5",
+      "formats": [
+        "CSV tables",
+        "HTML report",
+        "Reviewer pack",
+        "XLSX workbook",
+        "Model diagram",
+        "Print / PDF"
+      ],
+      "xlsxEnabled": true,
+      "ipmaTablesIncluded": true,
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx",
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 90048222,
+              "pid": 34940,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 90048222,
+              "handle": 47514966,
+              "pid": 34940,
+              "rootOwner": 90048222,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 90048222,
+              "pid": 34940,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx",
+              "requiredSharedStrings": [
+                "Construct importance and performance",
+                "Indicator performance",
+                "Calculation scope",
+                "Predecessor construct",
+                "Not applied",
+                "Run provenance"
+              ],
+              "requiredSheets": [
+                "Construct importance and perfor",
+                "Indicator performance",
+                "Calculation scope",
+                "Run provenance"
+              ],
+              "sha256": "afccf9317bd9e44ebc59498db7b00d79949f803c95ab1d9d758f605db738b4ac",
+              "sheetNames": [
+                "Direct effects",
+                "Outer loadings",
+                "Outer weights",
+                "R-square",
+                "Specific indirect effects",
+                "Total indirect effects",
+                "Total effects",
+                "Construct importance and perfor",
+                "Indicator performance",
+                "Calculation scope",
+                "Construct reliability and valid",
+                "Cross loadings",
+                "Fornell-Larcker criterion",
+                "Structural model",
+                "Inner VIF values",
+                "f-square effect sizes",
+                "Model fit",
+                "Construct cross-validated redun",
+                "Run provenance"
+              ],
+              "size": 20277
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 90048222,
+                    "pid": 34940,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 90048222,
+                    "handle": 47514966,
+                    "pid": 34940,
+                    "rootOwner": 90048222,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 90048222,
+                    "pid": 34940,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-ipma-20260811-123612252.xlsx",
+                    "requiredSharedStrings": [
+                      "Construct importance and performance",
+                      "Indicator performance",
+                      "Calculation scope",
+                      "Predecessor construct",
+                      "Not applied",
+                      "Run provenance"
+                    ],
+                    "requiredSheets": [
+                      "Construct importance and perfor",
+                      "Indicator performance",
+                      "Calculation scope",
+                      "Run provenance"
+                    ],
+                    "sha256": "afccf9317bd9e44ebc59498db7b00d79949f803c95ab1d9d758f605db738b4ac",
+                    "sheetNames": [
+                      "Direct effects",
+                      "Outer loadings",
+                      "Outer weights",
+                      "R-square",
+                      "Specific indirect effects",
+                      "Total indirect effects",
+                      "Total effects",
+                      "Construct importance and perfor",
+                      "Indicator performance",
+                      "Calculation scope",
+                      "Construct reliability and valid",
+                      "Cross loadings",
+                      "Fornell-Larcker criterion",
+                      "Structural model",
+                      "Inner VIF values",
+                      "f-square effect sizes",
+                      "Model fit",
+                      "Construct cross-validated redun",
+                      "Run provenance"
+                    ],
+                    "size": 20277
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        },
+        "appFeedback": "Saved v247-native-ipma-20260811-123612252.xlsx.",
+        "file": {
+          "size": 20277,
+          "isFile": true
+        },
+        "workbookSheets": [
+          "Direct effects",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Construct importance and perfor",
+          "Indicator performance",
+          "Calculation scope",
+          "Construct reliability and valid",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redun",
+          "Run provenance"
+        ]
+      }
+    },
+    "ipmaSaveReopen": {
+      "attempted": true,
+      "reopenedThroughRecentProjectRow": true,
+      "expectedRunId": "82018389-bbb7-4f85-beb6-5ccbc088c8d5",
+      "selectedRunId": "82018389-bbb7-4f85-beb6-5ccbc088c8d5",
+      "sameRunRestored": true,
+      "archive": {
+        "resultId": "82018389-bbb7-4f85-beb6-5ccbc088c8d5",
+        "resultStatus": "completed",
+        "method": "ipma",
+        "methodVersion": "pls_pm_v1+ipma_v1+pls_mediation_v1+pls_assessment_v7",
+        "payloadMethodVersion": "ipma_v1",
+        "ipmaMethodVersion": "ipma_v1",
+        "performanceScale": "min_max_0_100_from_standardized_scores_v1",
+        "targets": [
+          "construct-1786432046979"
+        ],
+        "constructRows": 3,
+        "indicatorRows": 3,
+        "expectedPredecessors": [
+          "construct-1786432045964",
+          "construct-1786432046295",
+          "construct-1786432046611"
+        ],
+        "actualPredecessors": [
+          "construct-1786432045964",
+          "construct-1786432046295",
+          "construct-1786432046611"
+        ],
+        "actualIndicatorConstructs": [
+          "construct-1786432045964",
+          "construct-1786432046295",
+          "construct-1786432046611"
+        ],
+        "indicators": [
+          "m1",
+          "x1",
+          "z1"
+        ],
+        "finiteConstructRows": true,
+        "finiteIndicatorRows": true,
+        "excludedConstructIds": [
+          "construct-1786432046979",
+          "construct-1786432047312",
+          "construct-1786432047644"
+        ],
+        "excludedIndicators": [
+          "y1",
+          "u1",
+          "v1"
+        ],
+        "excludesTargetAndUnrelatedRows": true,
+        "forbiddenNestedPayloads": [],
+        "recipe": {
+          "method": "ipma",
+          "weightingScheme": "path",
+          "preprocessing": "standardized",
+          "missingData": "listwise_deletion",
+          "bootstrapSamples": 0,
+          "studentizedInnerSamples": 0,
+          "permutationSamples": 0,
+          "caseWeightColumn": null,
+          "ipmaTargets": "construct-1786432046979",
+          "constructs": 6,
+          "paths": 6,
+          "controls": 0,
+          "interactions": 0,
+          "higherOrderConstructs": 0
+        }
+      },
+      "navigation": {
+        "groupTitle": "Importance-performance map",
+        "initialSelectedTable": "Construct importance and performance",
+        "treeItems": [
+          "Graphical results",
+          "Model estimates",
+          "Importance-performance map",
+          "Construct importance and performance",
+          "Indicator performance",
+          "Calculation scope",
+          "Final results",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Mediation",
+          "Direct effects",
+          "Specific indirect effects",
+          "Total indirect effects",
+          "Total effects",
+          "Quality criteria",
+          "Construct reliability and validity",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redundancy"
+        ],
+        "constructs": {
+          "title": "Construct importance and performance",
+          "rowCount": 3,
+          "headers": [
+            "Target",
+            "Predecessor construct",
+            "Total importance",
+            "Performance"
+          ],
+          "rows": [
+            [
+              "Y",
+              "X",
+              "0.9838",
+              "50.0000"
+            ],
+            [
+              "Y",
+              "Z",
+              "0.2200",
+              "50.5804"
+            ],
+            [
+              "Y",
+              "M",
+              "0.5381",
+              "50.2036"
+            ]
+          ]
+        },
+        "indicators": {
+          "title": "Indicator performance",
+          "rowCount": 3,
+          "headers": [
+            "Target",
+            "Construct",
+            "Indicator",
+            "Construct importance",
+            "Loading",
+            "Performance",
+            "Standardized score mean"
+          ],
+          "rows": [
+            [
+              "Y",
+              "X",
+              "x1",
+              "0.9838",
+              "1.0000",
+              "50.0000",
+              "0.0000"
+            ],
+            [
+              "Y",
+              "Z",
+              "z1",
+              "0.2200",
+              "1.0000",
+              "50.5804",
+              "0.0000"
+            ],
+            [
+              "Y",
+              "M",
+              "m1",
+              "0.5381",
+              "1.0000",
+              "50.2036",
+              "0.0000"
+            ]
+          ]
+        },
+        "scope": {
+          "title": "Calculation scope",
+          "rowCount": 5,
+          "headers": [
+            "Field",
+            "Value"
+          ],
+          "rows": [
+            [
+              "Target",
+              "Y"
+            ],
+            [
+              "Method version",
+              "ipma_v1"
+            ],
+            [
+              "Performance",
+              "0–100 observed-range min–max scaling of standardized composite scores"
+            ],
+            [
+              "Missing data",
+              "Listwise deletion"
+            ],
+            [
+              "Theoretical-range correction",
+              "Not applied"
+            ]
+          ]
+        },
+        "scopeValues": {
+          "Target": "Y",
+          "Method version": "ipma_v1",
+          "Performance": "0–100 observed-range min–max scaling of standardized composite scores",
+          "Missing data": "Listwise deletion",
+          "Theoretical-range correction": "Not applied"
+        },
+        "plot": {
+          "figures": 1,
+          "accessibleSvgs": 1,
+          "directTitleCount": 1,
+          "title": "Importance-performance map for Y",
+          "captionTitleCount": 1,
+          "captionTargetCount": 1,
+          "captionTitle": "Importance-performance map",
+          "captionTarget": "Target: Y",
+          "points": 3,
+          "pointLabels": [
+            "M",
+            "X",
+            "Z"
+          ],
+          "scope": "Performance uses 0–100 observed-range min–max scaling of listwise-standardized composite scores. No theoretical-range correction is applied."
+        },
+        "constructLabels": [
+          "M",
+          "X",
+          "Z"
+        ],
+        "indicatorConstructLabels": [
+          "M",
+          "X",
+          "Z"
+        ],
+        "indicatorLabels": [
+          "m1",
+          "x1",
+          "z1"
+        ],
+        "constructValuesFinite": true,
+        "indicatorValuesFinite": true,
+        "predecessorOnly": true,
+        "excludesTargetAndUnrelatedConstructRows": true,
+        "excludesTargetAndUnrelatedIndicatorRows": true,
+        "noPlaceholderOrUnsupportedClaims": true
+      }
+    },
+    "recentProjectsRestored": true
+  },
+  "screenshots": [
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\12-tauri-native-launcher-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\13-tauri-native-model-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\14-tauri-native-data-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\15-tauri-native-recode-dialog-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\16-tauri-native-data-version-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\17-tauri-native-prediction-dialog-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-tauri-native-seeded-recent-project-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-tauri-native-method-fixture-data-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19a-tauri-native-data-grid-active-cell-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-tauri-native-method-fixture-model-built-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\21-tauri-native-method-fixture-model-reopened-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\22-tauri-native-plsc-dialog-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\23-tauri-native-running-plsc-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\24-tauri-native-plsc-results-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\25-tauri-native-export-dialog-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\26-tauri-native-returned-plsc-results-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\27-tauri-native-wpls-dialog-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\28-tauri-native-running-wpls-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\29-tauri-native-wpls-results-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\29a-tauri-native-results-grid-active-cell-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\30-tauri-native-wpls-weights-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\31-tauri-native-prediction-runnable-dialog-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\32-tauri-native-running-prediction-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\33-tauri-native-prediction-results-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\34-tauri-native-prediction-results-reopened-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\35-tauri-native-running-bootstrap-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\36-tauri-native-cancelled-bootstrap-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\37-tauri-native-final-wpls-results-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\37a-tauri-native-workspace-explorer-new-empty-model-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\37b-tauri-native-workspace-explorer-two-models-report-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\37c-tauri-native-workspace-explorer-model-deleted-report-preserved-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\37d-tauri-native-workspace-explorer-historical-report-open-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\37e-tauri-native-workspace-explorer-report-removed-result-retained-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\38-tauri-native-mediation-seeded-recent-project-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\39-tauri-native-mediation-fixture-data-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\40-tauri-native-mediation-model-built-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\41-tauri-native-mediation-pls-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\42-tauri-native-mediation-pls-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\43-tauri-native-mediation-bootstrap-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\44-tauri-native-mediation-bootstrap-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\45-tauri-native-mediation-export-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\46-tauri-native-mediation-results-reopened-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\47-tauri-native-moderation-seeded-recent-project-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\48-tauri-native-moderation-fixture-data-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\49-tauri-native-moderation-base-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\50-tauri-native-moderating-effect-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\51-tauri-native-moderation-generated-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\52-tauri-native-moderation-pls-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\53-tauri-native-moderation-pls-effects-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\54-tauri-native-moderation-pls-conditional-effect-plot-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\55-tauri-native-moderation-bootstrap-dialog-minimum-samples-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\56-tauri-native-moderation-bootstrap-interaction-inference-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\57-tauri-native-moderation-bootstrap-conditional-effect-plot-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\58-tauri-native-moderation-model-reopened-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\59-tauri-native-moderation-results-reopened-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\60-tauri-native-mga-data-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\61-tauri-native-mga-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\62-tauri-native-mga-group-setup-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\63-tauri-native-mga-groups-applied-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\64-tauri-native-mga-dialog-default-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\65-tauri-native-mga-running-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\66-tauri-native-mga-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\67-tauri-native-mga-export-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\68-tauri-native-mga-edit-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\69-tauri-native-mga-reopened-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\70-tauri-native-cca-fixture-data-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\71-tauri-native-cca-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\72-tauri-native-cca-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\73-tauri-native-cca-running-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\74-tauri-native-cca-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\75-tauri-native-cca-export-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\76-tauri-native-cca-reopened-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\77-tauri-native-ipma-fixture-data-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\78-tauri-native-ipma-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\79-tauri-native-ipma-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\80-tauri-native-ipma-running-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\81-tauri-native-ipma-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\82-tauri-native-ipma-export-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\83-tauri-native-ipma-reopened-1536x794.png"
+  ],
+  "consoleErrors": [],
+  "failures": []
+}

@@ -12,6 +12,7 @@ from pls_algorithm_v1_factory_evidence import _compare_values
 from pls_algorithm_v1_factory_common import (
     MANIFEST_PATH,
     ROOT,
+    pls_cli_run_command,
     source_descriptors,
 )
 from pls_algorithm_v1_packaged_acceptance import (
@@ -55,6 +56,35 @@ class PlsAlgorithmV1FactoryEvidenceTests(unittest.TestCase):
                 self.assertEqual(len(paths), len(set(paths)))
                 for relative in paths:
                     self.assertTrue((ROOT / relative).is_file(), relative)
+
+    def test_factory_run_command_uses_only_the_debug_qualification_seam(self):
+        recipe = ROOT / "validation" / "fixtures" / "simple_reflective.recipe.json"
+        data = ROOT / "validation" / "fixtures" / "simple_reflective.csv"
+        output = (
+            ROOT
+            / "validation"
+            / "results"
+            / "method_factory"
+            / "pls_algorithm_v1"
+            / "work"
+            / "qualification-command.json"
+        )
+        command = pls_cli_run_command(recipe, data, output)
+        self.assertEqual(Path(command[0]).name, "qpls.exe")
+        self.assertEqual(Path(command[0]).parent.name, "debug")
+        self.assertEqual(command.count("--allow-internal-qualification"), 1)
+        self.assertEqual(
+            command[1:],
+            [
+                "run",
+                "validation/fixtures/simple_reflective.recipe.json",
+                "--data",
+                "validation/fixtures/simple_reflective.csv",
+                "--output",
+                "validation/results/method_factory/pls_algorithm_v1/work/qualification-command.json",
+                "--allow-internal-qualification",
+            ],
+        )
 
     def test_factory_state_is_derived_and_does_not_borrow_legacy_reports(self):
         evidence = self.document["qualification"]["evidence"]

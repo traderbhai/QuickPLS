@@ -91,7 +91,7 @@ export function dataQualitySummary(dataset: Dataset): DataQualitySummary {
     invalidHeaders,
     missingHeavyColumns,
     sampleReady,
-    sampleWarning: sampleReady ? null : "Small sample: use for demos or checks, not publication-style SEM evidence.",
+    sampleWarning: sampleReady ? null : "Small sample: use for demos or checks, not final SEM reporting.",
   };
 }
 

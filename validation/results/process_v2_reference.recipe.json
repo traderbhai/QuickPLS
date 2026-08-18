@@ -121,7 +121,7 @@
     }
   },
   "metadata": {
-    "status": "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope",
+    "status": "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope",
     "fixture": "process_v2_reference"
   }
 }

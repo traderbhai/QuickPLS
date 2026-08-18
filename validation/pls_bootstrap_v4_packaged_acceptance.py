@@ -18,6 +18,13 @@ from typing import Any
 
 from diagnostic_bundle_source_manifest import SourceManifestFailure, validate_build_receipt
 from method_promotion_manifest import _verify_artifact, validate_manifest
+from packaged_windows_acceptance_v2 import (
+    CONTRACT as PACKAGED_ACCEPTANCE_CONTRACT,
+    CONTRACT_FILE_SHA256,
+    EXPECTED_CHECK_COUNT,
+    receipt_binds_packaged_acceptance_contract,
+    validate_required_report_checks,
+)
 from pls_bootstrap_v4_factory_common import (
     MANIFEST_PATH,
     REPORT_ROOT,
@@ -42,13 +49,16 @@ FACTORY_XLSX = REPORT_ROOT / "pls_bootstrap_v4_packaged.xlsx"
 BUILD_RECEIPT = ROOT / "validation" / "results" / "diagnostic_bundle_build_receipt.json"
 DESKTOP = ROOT / "target" / "release" / "quickpls-desktop.exe"
 RELEASE_CLI = ROOT / "target" / "release" / "qpls.exe"
+EXPECTED_CUMULATIVE_CHECKS = EXPECTED_CHECK_COUNT
 REQUIRED_VIEWPORTS = {"1024x700", "1280x720", "1440x900"}
 GATE_SOURCES = {
     SOURCE,
+    "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
     "validation/diagnostic_bundle_source_manifest.py",
     "validation/method_promotion_manifest.py",
     "validation/methods/method_promotion_manifest.schema.json",
     "validation/methods/pls_bootstrap_v4.manifest.json",
+    "validation/packaged_windows_acceptance_v2.py",
     "validation/pls_bootstrap_v4_factory_audit.py",
     "validation/pls_bootstrap_v4_factory_common.py",
     "validation/run_v247_cumulative_native_acceptance.ps1",
@@ -218,7 +228,7 @@ def verify_reusable_cumulative_receipt(not_before: datetime) -> dict[str, Any]:
             target_path = ROOT / target_path
         target_path = target_path.resolve()
         checks = {
-            "schema_and_kind": receipt.get("schema_version") == 1
+            "schema_and_kind": receipt_binds_packaged_acceptance_contract(receipt)
             and receipt.get("kind")
             == "quickpls_v247_cumulative_native_acceptance_receipt",
             "receipt_passed_cleanly": receipt.get("passed") is True
@@ -233,12 +243,11 @@ def verify_reusable_cumulative_receipt(not_before: datetime) -> dict[str, Any]:
             "exact_report_bytes": receipt.get("report_sha256")
             == report_descriptor["sha256"]
             and receipt.get("report_size") == report_descriptor["size"],
-            "exact_177_checks": receipt.get("checks") == 177
-            and receipt.get("unique_checks") == 177
-            and len(report.get("checks", {})) == 177,
+            "exact_required_checks": receipt_binds_packaged_acceptance_contract(receipt)
+            and validate_required_report_checks(PACKAGED_ACCEPTANCE_CONTRACT, report.get("checks"))["passed"],
             "final_scope_regression_bootstrap": receipt.get("final_scope")
-            == "regression_bootstrap"
-            and report.get("focusedRun", {}).get("scope") == "regression_bootstrap",
+            == PACKAGED_ACCEPTANCE_CONTRACT["final_scope"]
+            and report.get("focusedRun", {}).get("scope") == PACKAGED_ACCEPTANCE_CONTRACT["final_scope"],
             "graceful_cleanup_verified": receipt.get(
                 "graceful_process_cleanup_verified"
             )
@@ -391,6 +400,9 @@ def inspect_bootstrap_archive(path: Path, run_id: str, setup: dict[str, Any]) ->
     recipe = recipes[0]
     bootstrap = result.get("payload", {}).get("bootstrap", {})
     settings = recipe.get("settings", {})
+    provenance_versions = str(
+        result.get("provenance", {}).get("method_version", "")
+    ).split("+")
     identity = {
         "archive_checksums_exact": checksum_exact,
         "run_completed": runs[0].get("status") == "completed",
@@ -398,7 +410,7 @@ def inspect_bootstrap_archive(path: Path, run_id: str, setup: dict[str, Any]) ->
         "recipe_kind": recipe.get("method_config") == {"kind": "pls_bootstrap"},
         "payload_kind": result.get("payload", {}).get("kind") in {"pls_pm_v2", "pls_pm_v3"},
         "method_version": bootstrap.get("method_version") == "indexed_resampling_v4",
-        "provenance_version": result.get("provenance", {}).get("method_version", "").endswith("+indexed_resampling_v4"),
+        "provenance_version": provenance_versions.count("indexed_resampling_v4") == 1,
         "replicates": bootstrap.get("plan", {}).get("replicates") == int(setup["bootstrapSamples"]),
         "master_seed": bootstrap.get("plan", {}).get("master_seed") == int(setup["seed"]),
         "usable_failure_accounting": bootstrap.get("usable_replicates", 0) + len(bootstrap.get("failed_replicates", [])) == int(setup["bootstrapSamples"]),

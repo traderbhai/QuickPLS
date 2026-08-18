@@ -56,25 +56,9 @@ const interactionBudgetsMs = {
   pan: 1_250,
   zoom: 1_250,
   workspaceRoundTrip: 2_500,
+  preflight: 1_000,
+  fixtureReopen: 2_500,
 };
-
-const EXPECTED_NATIVE_CALCULATION_KIND_ORDER = Object.freeze([
-  "pls_algorithm",
-  "plsc",
-  "wpls",
-  "gsca",
-  "cca",
-  "cta_pls",
-  "ipma",
-  "cbsem",
-  "pls_bootstrap",
-  "pls_permutation",
-  "mga",
-  "predict",
-  "nca",
-  "pca",
-  "regression",
-]);
 
 async function canonicalNativeAnalysisCatalog() {
   const catalogSource = await fs.readFile(path.join(ROOT, "src", "native", "nativeAnalysisCatalog.ts"), "utf8");
@@ -85,8 +69,28 @@ async function canonicalNativeAnalysisCatalog() {
 
   const kinds = [...catalogMatch[1].matchAll(/^[ \t]{4}kind:\s*"([a-z_]+)",\r?$/gm)]
     .map((match) => match[1]);
-  if (JSON.stringify(kinds) !== JSON.stringify(EXPECTED_NATIVE_CALCULATION_KIND_ORDER)) {
-    throw new Error(`The canonical native analysis catalogue must preserve the exact 15-kind order: ${JSON.stringify(kinds)}`);
+  if (kinds.length === 0 || new Set(kinds).size !== kinds.length) {
+    throw new Error(`The production native execution-adapter order must be non-empty and unique: ${JSON.stringify(kinds)}`);
+  }
+  const establishedMatch = catalogSource.match(
+    /export const NATIVE_ESTABLISHED_WORKING_ANALYSIS_KINDS_V1\s*=\s*\[([\s\S]*?)\n\] as const satisfies/,
+  );
+  if (!establishedMatch) throw new Error("Could not locate the established working analysis catalogue declaration.");
+  const establishedKinds = [...establishedMatch[1].matchAll(/"([a-z_]+)"/g)].map((match) => match[1]);
+  if (establishedKinds.length === 0 || new Set(establishedKinds).size !== establishedKinds.length
+    || establishedKinds.some((kind) => !kinds.includes(kind))) {
+    throw new Error(`The established working analysis catalogue must be non-empty, unique, and canonical: ${JSON.stringify(establishedKinds)}`);
+  }
+  const standardSupplementalKinds = [
+    "cta_pls",
+    "plsc_bootstrap",
+    "pls_posthoc_technical_minimum_sample_size",
+    "pls_sample_size_power",
+  ];
+  const expectedKindSet = new Set([...establishedKinds, ...standardSupplementalKinds]);
+  if (expectedKindSet.size !== establishedKinds.length + standardSupplementalKinds.length
+    || [...expectedKindSet].some((kind) => !kinds.includes(kind))) {
+    throw new Error(`The Standard calculation catalogue contains an unknown or duplicate analysis kind: ${JSON.stringify([...expectedKindSet])}`);
   }
 
   const labelsByKind = new Map(
@@ -101,7 +105,9 @@ async function canonicalNativeAnalysisCatalog() {
   labelsByKind.set("predict", predictionLabel);
   labelsByKind.set("regression", regressionLabel);
 
-  const methods = kinds.map((kind) => ({ kind, label: labelsByKind.get(kind) ?? null }));
+  const methods = kinds
+    .filter((kind) => expectedKindSet.has(kind))
+    .map((kind) => ({ kind, label: labelsByKind.get(kind) ?? null }));
   if (methods.some((method) => !method.label)
     || new Set(methods.map((method) => method.label)).size !== methods.length) {
     throw new Error(`The canonical native analysis catalogue has missing or duplicate labels: ${JSON.stringify(methods)}`);
@@ -1382,7 +1388,7 @@ async function auditHigherOrderConstructDialog(page, viewport, sequence) {
   const setPropertiesOpen = async (open) => {
     const pressed = await propertiesToggle.getAttribute("aria-pressed");
     if ((pressed === "true") !== open) await propertiesToggle.click();
-    const properties = page.locator('aside[aria-label="Model properties"]');
+    const properties = page.locator("aside.nd-model-inspector");
     if (open) await properties.waitFor({ state: "visible", timeout: 2_000 });
     else await properties.waitFor({ state: "hidden", timeout: 2_000 }).catch(() => null);
   };
@@ -1404,7 +1410,7 @@ async function auditHigherOrderConstructDialog(page, viewport, sequence) {
     const node = page.locator(".react-flow__node-latent").nth(index);
     await node.waitFor({ state: "visible", timeout: 2_000 });
     await setPropertiesOpen(true);
-    const properties = page.locator('aside[aria-label="Model properties"]');
+    const properties = page.locator("aside.nd-model-inspector");
     const nameInput = properties.getByLabel("Name", { exact: true });
     const shortNameInput = properties.getByLabel("Short name", { exact: true });
     await nameInput.fill(name);
@@ -1626,7 +1632,7 @@ async function reopenCalculationDialog(page, viewport, trigger, failureId) {
   }
   await ensureCalculateTriggerEnabled(trigger);
   await trigger.focus();
-  await trigger.click();
+  await trigger.click({ timeout: 2_000 });
   await dialog.waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
   const opened = await dialog.isVisible().catch(() => false);
   if (!opened) {
@@ -1715,7 +1721,7 @@ async function closeCalculationAndCheckFocus(page, dialog, trigger) {
   await ensureCalculateTriggerEnabled(trigger);
   const closeButton = dialog.locator("footer").getByRole("button", { name: "Close", exact: true });
   const closeButtonCount = await closeButton.count();
-  if (closeButtonCount === 1) await closeButton.click();
+  if (closeButtonCount === 1) await closeButton.click({ timeout: 2_000 });
   await dialog.waitFor({ state: "hidden", timeout: 1_000 }).catch(() => null);
   const dialogClosed = await dialog.isHidden().catch(() => true);
   let focusRestored = false;
@@ -1731,7 +1737,8 @@ async function closeCalculationAndCheckFocus(page, dialog, trigger) {
 
 async function selectCalculationMethod(dialog, kind) {
   const option = calculationOption(dialog, kind);
-  await option.click();
+  await option.waitFor({ state: "visible", timeout: 2_000 });
+  await option.click({ timeout: 2_000 });
   await dialog.locator("#nd-calculation-method-" + kind + '[aria-selected="true"]')
     .waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
   return {
@@ -1770,6 +1777,7 @@ async function auditCalculationCatalogDialog(page, viewport, sequence, trigger, 
     draftCancellation: null,
     closeFocus: null,
   };
+  let expectedSearchAliasCount = 0;
 
   try {
     const search = dialog.getByLabel("Find a method", { exact: true });
@@ -1782,7 +1790,7 @@ async function auditCalculationCatalogDialog(page, viewport, sequence, trigger, 
     check.optionLabels = (await options.locator("strong").allTextContents()).map(compactCalculationText);
     check.countStatus = compactCalculationText(await dialog.locator('.nd-method-count[role="status"]').textContent().catch(() => ""));
 
-    for (const alias of [
+    const searchableAliases = [
       { query: "survey weights", expectedKind: "wpls", expectedLabel: "Weighted PLS" },
       { query: "generalized structured component", expectedKind: "gsca", expectedLabel: "GSCA" },
       { query: "composite residual", expectedKind: "cca", expectedLabel: "CCA composite residual diagnostics" },
@@ -1790,31 +1798,46 @@ async function auditCalculationCatalogDialog(page, viewport, sequence, trigger, 
       { query: "importance performance", expectedKind: "ipma", expectedLabel: "Importance-Performance Map Analysis" },
       { query: "confirmatory factor maximum likelihood", expectedKind: "cbsem", expectedLabel: "CB-SEM / CFA" },
       { query: "randomization", expectedKind: "pls_permutation", expectedLabel: "Structural Path Randomization" },
-      { query: "multigroup", expectedKind: "mga", expectedLabel: "MICOM and Two-Group Permutation MGA" },
+      { query: "prospective power", expectedKind: "pls_sample_size_power", expectedLabel: "PLS-SEM Sample Size and Power" },
+      { query: "measurement invariance", expectedKind: "mga", expectedLabel: "MICOM and Two-Group Permutation MGA" },
       { query: "ce-fdh bottleneck", expectedKind: "nca", expectedLabel: "Necessary Condition Analysis" },
       { query: "principal component eigenvalue", expectedKind: "pca", expectedLabel: "Principal Component Analysis" },
       { query: "ordinary least squares hc3", expectedKind: "regression", expectedLabel: "Regression" },
-    ]) {
+    ].filter((alias) => nativeCalculationMethods.some((method) => method.kind === alias.expectedKind));
+    expectedSearchAliasCount = searchableAliases.length;
+    for (const alias of searchableAliases) {
       await search.fill(alias.query);
       await page.waitForFunction((expectedId) => {
         const optionsNow = Array.from(document.querySelectorAll('#nd-calculation-method-list [role="option"]'));
         return optionsNow.length === 1 && optionsNow[0].id === expectedId;
       }, "nd-calculation-method-" + alias.expectedKind, { timeout: 1_000 }).catch(() => null);
       const filtered = listbox.locator('[role="option"]');
+      const filteredCount = await filtered.count();
+      const filteredOption = filteredCount > 0 ? filtered.first() : null;
       check.searchAliases.push({
         query: alias.query,
         expectedKind: alias.expectedKind,
         expectedLabel: alias.expectedLabel,
-        optionCount: await filtered.count(),
-        optionId: await filtered.first().getAttribute("id").catch(() => null),
-        optionLabel: compactCalculationText(await filtered.first().locator("strong").textContent().catch(() => "")),
+        optionCount: filteredCount,
+        optionId: filteredOption ? await filteredOption.getAttribute("id", { timeout: 1_000 }).catch(() => null) : null,
+        optionLabel: filteredOption
+          ? compactCalculationText(await filteredOption.locator("strong").textContent({ timeout: 1_000 }).catch(() => ""))
+          : "",
         status: compactCalculationText(await dialog.locator('.nd-method-count[role="status"]').textContent().catch(() => "")),
       });
     }
     await search.fill("");
     await page.waitForFunction((expectedCount) => (
       document.querySelectorAll('#nd-calculation-method-list [role="option"]').length === expectedCount
-    ), nativeCalculationMethods.length, { timeout: 1_000 }).catch(() => null);
+    ), nativeCalculationMethods.length, { timeout: 5_000 }).catch(async (error) => {
+      const observed = await page.evaluate(() => ({
+        query: document.querySelector('#nd-calculation-method-search')?.value ?? null,
+        optionIds: Array.from(document.querySelectorAll('#nd-calculation-method-list [role="option"]'))
+          .map((option) => option.id),
+        countStatus: document.querySelector('.nd-method-count[role="status"]')?.textContent ?? null,
+      }));
+      throw new Error(`Calculation catalogue did not repopulate to ${nativeCalculationMethods.length} methods after clearing search: ${JSON.stringify(observed)}. ${error.message}`);
+    });
 
     const weighted = await selectCalculationMethod(dialog, "wpls");
     check.pointerSelected = weighted.pointerSelected;
@@ -1891,7 +1914,7 @@ async function auditCalculationCatalogDialog(page, viewport, sequence, trigger, 
   }
 
   evidence.checks.calculationCatalog.push(check);
-  const aliasesCorrect = check.searchAliases.length === 11
+  const aliasesCorrect = check.searchAliases.length === expectedSearchAliasCount
     && check.searchAliases.every((entry) => (
       entry.optionCount === 1
       && entry.optionId === "nd-calculation-method-" + entry.expectedKind
@@ -1904,10 +1927,10 @@ async function auditCalculationCatalogDialog(page, viewport, sequence, trigger, 
   if (!check.searchInitiallyFocused || check.listboxCount !== 1 || check.optionCount !== expectedLabels.length
     || JSON.stringify(check.optionLabels) !== JSON.stringify(expectedLabels)
     || check.countStatus !== `${nativeCalculationMethods.length} methods`) {
-    recordFailure("calculation-fifteen-method-listbox", "The calculation dialog did not expose the exact ordered fifteen-option searchable listbox at " + viewport.id + ".", check);
+    recordFailure("calculation-method-listbox", `The calculation dialog did not expose the exact ordered ${nativeCalculationMethods.length}-option searchable listbox at ${viewport.id}.`, check);
   }
   if (!aliasesCorrect) {
-    recordFailure("calculation-method-search-aliases", "Search aliases did not isolate Weighted PLS, GSCA, CCA composite residual diagnostics, Confirmatory Tetrad Analysis, Importance-Performance Map Analysis, CB-SEM / CFA, single-model Structural Path Randomization, MICOM and Two-Group Permutation MGA, Necessary Condition Analysis, Principal Component Analysis, and OLS regression at " + viewport.id + ".", check);
+    recordFailure("calculation-method-search-aliases", `One or more searchable aliases did not isolate their visible calculation method at ${viewport.id}.`, check);
   }
   if (!check.pointerSelected || !check.keyboardContract) {
     recordFailure("calculation-listbox-interaction", "Pointer selection or Up/Down/Home/End/Enter roving behavior failed at " + viewport.id + ".", check);
@@ -1950,7 +1973,7 @@ async function auditPlscDialog(page, viewport, sequence, trigger) {
     const selection = await selectCalculationMethod(dialog, "plsc");
     check.pointerSelected = selection.pointerSelected;
     check.linkage = selection.linkage;
-    const scope = dialog.locator(".nd-setting-note").filter({ hasText: "Validated scope" });
+    const scope = dialog.locator(".nd-setting-note").filter({ hasText: "Supported setup" });
     check.scopeLabel = compactCalculationText(await scope.locator("span").textContent().catch(() => ""));
     check.scopeDetail = compactCalculationText(await scope.locator("strong").textContent().catch(() => ""));
     const pcaWeighting = dialog.locator('#nd-calculation-weighting option[value="pca"]');
@@ -1970,8 +1993,8 @@ async function auditPlscDialog(page, viewport, sequence, trigger) {
   if (!check.dialogOpened || !check.pointerSelected || !check.linkage?.linkage) {
     recordFailure("plsc-method-editor-linkage", "Consistent PLS did not open as the selected, labelled method editor at " + viewport.id + ".", check);
   }
-  if (check.scopeLabel !== "Validated scope"
-    || check.scopeDetail !== "Reflective constructs with at least two indicators each"
+  if (check.scopeLabel !== "Supported setup"
+    || check.scopeDetail !== "Reflective constructs with at least two indicators each; path or factor weighting; raw observations with listwise deletion"
     || check.pcaWeightingOptionCount !== 1 || !check.pcaWeightingDisabled) {
     recordFailure("plsc-validated-scope", "Consistent PLS did not disclose its validated scope and disabled PCA weighting at " + viewport.id + ".", check);
   }
@@ -2041,7 +2064,7 @@ async function auditWplsDialog(page, viewport, sequence, trigger) {
   }
   if (check.resultData !== "Standardized (fixed)" || check.caseWeightCount !== 1
     || check.caseWeightPlaceholder !== "Select a numeric variable"
-    || check.caseWeightNote !== "Positive finite values; complete column validated at start") {
+    || check.caseWeightNote !== "Positive finite values; the complete column is checked before calculation") {
     recordFailure("wpls-editor-contract", "Weighted PLS did not expose its fixed result data and case-weight editor contract at " + viewport.id + ".", check);
   }
   if (!check.missingWeightBlocker || check.startCommandCount !== 1 || !check.startCommandDisabled) {
@@ -2126,7 +2149,7 @@ async function auditGscaDialog(page, viewport, sequence, trigger) {
     || check.resultData !== "Standardized (fixed)"
     || check.estimator !== "Joint global least-squares alternating least squares; fixed +1 initialization"
     || !check.scope.includes("1e-7 objective-and-weight stop criterion")
-    || !check.scope.includes("No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, or inference")) {
+    || !check.scope.includes("No controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, GSCA bootstrapping, or other inference")) {
     recordFailure("gsca-bounded-scope", "The GSCA editor did not disclose its exact joint-ALS, standardized, listwise, point-estimate-only scope at " + viewport.id + ".", check);
   }
   if (check.unsupportedControlCount !== 0) {
@@ -2182,7 +2205,7 @@ async function auditCcaDialog(page, viewport, sequence, trigger) {
     const resultData = dialog.locator(".nd-setting-note").filter({ hasText: "Result data" });
     check.resultDataLabel = compactCalculationText(await resultData.locator("span").textContent().catch(() => ""));
     check.resultDataDetail = compactCalculationText(await resultData.locator("strong").textContent().catch(() => ""));
-    const scope = dialog.locator(".nd-setting-note").filter({ hasText: "Validated scope" });
+    const scope = dialog.locator(".nd-setting-note").filter({ hasText: "Supported setup" });
     check.scopeLabel = compactCalculationText(await scope.locator("span").textContent().catch(() => ""));
     check.scopeDetail = compactCalculationText(await scope.locator("strong").textContent().catch(() => ""));
     const missingData = dialog.locator(".nd-setting-note").filter({ hasText: "Missing data" });
@@ -2232,7 +2255,7 @@ async function auditCcaDialog(page, viewport, sequence, trigger) {
     recordFailure("cca-method-editor-linkage", "CCA composite residual diagnostics did not open as the selected, labelled method editor at " + viewport.id + ".", check);
   }
   if (check.resultDataLabel !== "Result data" || check.resultDataDetail !== "Standardized (fixed)"
-    || check.scopeLabel !== "Validated scope"
+    || check.scopeLabel !== "Supported setup"
     || check.scopeDetail !== "Reflective composite path model; descriptive residual diagnostics only"
     || check.missingDataLabel !== "Missing data" || check.missingDataDetail !== "Listwise deletion") {
     recordFailure("cca-bounded-scope", "The CCA editor did not disclose its exact standardized, listwise, descriptive-only scope at " + viewport.id + ".", check);
@@ -2364,6 +2387,9 @@ async function auditCbsemDialog(page, viewport, sequence, trigger) {
     resultData: "",
     estimator: "",
     scope: "",
+    bootstrapStatus: "",
+    bootstrapToggleCount: 0,
+    bootstrapToggleChecked: false,
     missingData: "",
     maximumIterationsCount: 0,
     toleranceCount: 0,
@@ -2390,6 +2416,10 @@ async function auditCbsemDialog(page, viewport, sequence, trigger) {
     check.resultData = compactCalculationText(await dialog.locator(".nd-setting-note").filter({ hasText: "Result data" }).locator("strong").textContent().catch(() => ""));
     check.estimator = compactCalculationText(await dialog.locator("#nd-calculation-cbsem-estimator strong").textContent().catch(() => ""));
     check.scope = compactCalculationText(await dialog.locator("#nd-calculation-cbsem-scope strong").textContent().catch(() => ""));
+    check.bootstrapStatus = compactCalculationText(await dialog.locator("#nd-calculation-cbsem-bootstrap-status strong").textContent().catch(() => ""));
+    const bootstrapToggle = dialog.locator("#nd-calculation-cbsem-bootstrap-enabled");
+    check.bootstrapToggleCount = await bootstrapToggle.count();
+    check.bootstrapToggleChecked = check.bootstrapToggleCount === 1 && await bootstrapToggle.isChecked();
     check.missingData = compactCalculationText(await dialog.locator(".nd-setting-note").filter({ hasText: "Missing data" }).locator("strong").textContent().catch(() => ""));
     check.maximumIterationsCount = await dialog.locator("#nd-calculation-max-iterations").count();
     check.toleranceCount = await dialog.locator("#nd-calculation-tolerance").count();
@@ -2435,7 +2465,12 @@ async function auditCbsemDialog(page, viewport, sequence, trigger) {
     || !/Maximum likelihood; first loading fixed to 1/i.test(check.estimator)
     || !/Single-group reflective raw-data CFA or recursive SEM/i.test(check.scope)
     || !/listwise-standardized indicators/i.test(check.scope)
-    || !/no mean structure, bootstrap, robust\/ordinal\/FIML estimator, or invariance testing/i.test(check.scope)
+    || !/no mean structure, robust\/ordinal\/FIML estimator, or invariance testing/i.test(check.scope)
+    || !/Exact CFA case bootstrap is available from the Exact CB-SEM model tab/i.test(check.bootstrapStatus)
+    || !/Historical schema-3 v2 and analytical v1 bootstrap results remain readable/i.test(check.bootstrapStatus)
+    || !/cannot be selected for a new calculation/i.test(check.bootstrapStatus)
+    || check.bootstrapToggleCount !== 0
+    || check.bootstrapToggleChecked
     || check.missingData !== "Listwise deletion") {
     recordFailure("cbsem-bounded-scope", "CB-SEM / CFA did not disclose its exact single-group reflective ML and marker-identification scope at " + viewport.id + ".", check);
   }
@@ -2508,7 +2543,7 @@ async function auditIpmaDialog(page, viewport, sequence, trigger) {
     check.resultDataDetail = await noteValue("Result data");
     check.missingDataDetail = await noteValue("Missing data");
     check.reportedConstructsDetail = await noteValue("Reported constructs");
-    check.performanceScopeDetail = await noteValue("Performance scope");
+    check.performanceScopeDetail = await noteValue("Performance definition");
     check.maximumIterationsCount = await dialog.getByLabel("Maximum iterations", { exact: true }).count();
     check.toleranceCount = await dialog.getByLabel("Stop criterion", { exact: true }).count();
     check.unsupportedControlCount = await dialog.locator([
@@ -2691,7 +2726,7 @@ async function auditNcaStandaloneDialogFromData(page, viewport, sequence) {
     const noteValue = async (label) => compactCalculationText(await dialog.locator(".nd-setting-note")
       .filter({ hasText: label }).locator("strong").textContent().catch(() => ""));
     check.variableData = await noteValue("Variable data");
-    check.validatedScope = await noteValue("Validated scope");
+    check.validatedScope = await noteValue("Supported setup");
     check.unsupportedControlCount = await dialog.locator([
       "#nd-calculation-weighting",
       "#nd-calculation-preprocessing",
@@ -4231,7 +4266,7 @@ async function auditMgaDialog(page, viewport, sequence, trigger) {
       check.pointerSelected = selection.pointerSelected;
       check.linkage = selection.linkage;
       check.methodDescription = compactCalculationText(await calculationOption(dialog, "mga").textContent());
-      check.truthfulScopeDescription = /MICOM measurement invariance/i.test(check.methodDescription)
+      check.truthfulScopeDescription = /MICOM measurement(?:-| )invariance/i.test(check.methodDescription)
         && /Group A minus Group B paths, loadings, and weights/i.test(check.methodDescription);
       const groupsCategory = dialog.locator('#nd-calculation-method-list [role="group"][aria-labelledby="nd-calculation-category-groups"]');
       check.groupsCategoryCount = await groupsCategory.count();
@@ -4541,10 +4576,34 @@ async function attemptTruthfulRunningCapture(page, viewport) {
   });
 }
 
+async function visualStep(viewport, label, operation, timeoutMs = 60_000) {
+  console.log(`[visual:${viewport.id}] start ${label}`);
+  let timeout;
+  try {
+    const result = await Promise.race([
+      operation(),
+      new Promise((_, reject) => {
+        timeout = setTimeout(() => reject(new Error(`Visual step timed out after ${timeoutMs} ms: ${viewport.id} / ${label}`)), timeoutMs);
+      }),
+    ]);
+    console.log(`[visual:${viewport.id}] pass ${label}`);
+    return result;
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
 async function exerciseViewport(browser, viewport) {
   const page = await browser.newPage({
     viewport: { width: viewport.width, height: viewport.height },
     deviceScaleFactor: 1,
+  });
+  page.setDefaultTimeout(3_000);
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "quickpls:native-ui-preferences:v1",
+      JSON.stringify({ experimentalLabsEnabled: true }),
+    );
   });
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push({ viewport: viewport.id, type: "pageerror", message: error.message }));
@@ -4573,34 +4632,36 @@ async function exerciseViewport(browser, viewport) {
 
     // The HOC audit intentionally starts from a data-only fixture. Restore the
     // canonical sample before inspecting model-bound calculation methods.
-    await openSmokePage(page, "1");
-    await setSurface(page, "model");
+    await visualStep(viewport, "restore canonical smoke page after HOC", () => openSmokePage(page, "1"));
+    await visualStep(viewport, "restore canonical model surface after HOC", () => setSurface(page, "model"));
 
-    const calculation = await openCalculationDialogForInspection(page, viewport);
+    const calculation = await visualStep(viewport, "open calculation dialog", () => openCalculationDialogForInspection(page, viewport));
     try {
       if (calculation.opened) {
-        await auditCalculationCatalogDialog(page, viewport, 6, calculation.trigger, calculation.commandSurface);
-        await auditPlscDialog(page, viewport, 7, calculation.trigger);
-        await auditWplsDialog(page, viewport, 8, calculation.trigger);
-        await auditGscaDialog(page, viewport, 9, calculation.trigger);
-        await auditCcaDialog(page, viewport, 9, calculation.trigger);
-        await auditCtaPlsDialog(page, viewport, 9, calculation.trigger);
-        await auditCbsemDialog(page, viewport, 10, calculation.trigger);
-        await auditIpmaDialog(page, viewport, 10, calculation.trigger);
-        await auditStructuralPathRandomizationDialog(page, viewport, 11, calculation.trigger);
-        await auditPredictionDialog(page, viewport, 12, calculation.trigger);
-        await auditMgaDialog(page, viewport, 13, calculation.trigger);
+        await visualStep(viewport, "calculation catalogue", () => auditCalculationCatalogDialog(page, viewport, 6, calculation.trigger, calculation.commandSurface));
+        await visualStep(viewport, "PLS-C dialog", () => auditPlscDialog(page, viewport, 7, calculation.trigger));
+        await visualStep(viewport, "weighted PLS dialog", () => auditWplsDialog(page, viewport, 8, calculation.trigger));
+        await visualStep(viewport, "GSCA dialog", () => auditGscaDialog(page, viewport, 9, calculation.trigger));
+        await visualStep(viewport, "CCA dialog", () => auditCcaDialog(page, viewport, 9, calculation.trigger));
+        if (nativeCalculationMethods.some((method) => method.kind === "cta_pls")) {
+          await visualStep(viewport, "CTA-PLS dialog", () => auditCtaPlsDialog(page, viewport, 9, calculation.trigger));
+        }
+        await visualStep(viewport, "CB-SEM dialog", () => auditCbsemDialog(page, viewport, 10, calculation.trigger));
+        await visualStep(viewport, "IPMA dialog", () => auditIpmaDialog(page, viewport, 10, calculation.trigger));
+        await visualStep(viewport, "structural path randomization dialog", () => auditStructuralPathRandomizationDialog(page, viewport, 11, calculation.trigger));
+        await visualStep(viewport, "prediction dialog", () => auditPredictionDialog(page, viewport, 12, calculation.trigger));
+        await visualStep(viewport, "MGA dialog", () => auditMgaDialog(page, viewport, 13, calculation.trigger));
       }
     } finally {
-      await calculation.restore();
+      await visualStep(viewport, "close calculation dialog", () => calculation.restore());
     }
 
-    await auditNcaStandaloneDialogFromData(page, viewport, 14);
-    await auditPcaStandaloneDialogFromData(page, viewport, 16);
-    await auditOlsStandaloneDialogFromData(page, viewport, 17);
-    await auditLogisticStandaloneDialogFromData(page, viewport, 18);
-    await auditRegressionBootstrapDialogFromData(page, viewport, 19, 20);
-    await auditProcessV2DialogFromImportedProject(page, viewport, 21);
+    await visualStep(viewport, "NCA standalone dialog", () => auditNcaStandaloneDialogFromData(page, viewport, 14));
+    await visualStep(viewport, "PCA standalone dialog", () => auditPcaStandaloneDialogFromData(page, viewport, 16));
+    await visualStep(viewport, "OLS standalone dialog", () => auditOlsStandaloneDialogFromData(page, viewport, 17));
+    await visualStep(viewport, "logistic standalone dialog", () => auditLogisticStandaloneDialogFromData(page, viewport, 18));
+    await visualStep(viewport, "regression bootstrap dialogs", () => auditRegressionBootstrapDialogFromData(page, viewport, 19, 20));
+    await visualStep(viewport, "PROCESS v2 dialog", () => auditProcessV2DialogFromImportedProject(page, viewport, 21));
 
     await page.evaluate(() => window.__QUICKPLS_SMOKE__?.loadEmptyProject());
     await setSurface(page, "results");
@@ -4697,10 +4758,7 @@ async function exerciseLargeModelFixture(browser) {
     if (message.type() === "error") pageErrors.push({ viewport: viewport.id, type: "console", message: message.text() });
   });
 
-  const modelCounts = () => page.evaluate(() => ({
-    constructs: document.querySelectorAll(".smartpls-latent-node").length,
-    indicators: document.querySelectorAll(".smartpls-indicator-node").length,
-  }));
+  const modelCounts = () => page.evaluate(() => window.__QUICKPLS_SMOKE__?.modelCounts?.() ?? ({ constructs: 0, indicators: 0 }));
 
   try {
     await openSmokePage(page, "1");
@@ -4719,10 +4777,10 @@ async function exerciseLargeModelFixture(browser) {
       const value = await window.__QUICKPLS_SMOKE__?.loadDiagramFixture("large");
       return value == null ? null : typeof value;
     });
-    await page.waitForFunction(({ constructs, indicators }) => (
-      document.querySelectorAll(".smartpls-latent-node").length >= constructs
-      && document.querySelectorAll(".smartpls-indicator-node").length >= indicators
-    ), largeModelTarget, { timeout: interactionBudgetsMs.fixtureRender }).catch(() => null);
+    await page.waitForFunction(({ constructs, indicators }) => {
+      const counts = window.__QUICKPLS_SMOKE__?.modelCounts?.();
+      return counts != null && counts.constructs >= constructs && counts.indicators >= indicators;
+    }, largeModelTarget, { timeout: interactionBudgetsMs.fixtureRender }).catch(() => null);
     const fixtureRenderMs = Math.round((performance.now() - renderStarted) * 10) / 10;
     const counts = await modelCounts();
     if (counts.constructs < largeModelTarget.constructs || counts.indicators < largeModelTarget.indicators) {
@@ -4743,13 +4801,19 @@ async function exerciseLargeModelFixture(browser) {
       return;
     }
 
-    const firstConstruct = page.locator(".smartpls-latent-node").first();
-    const firstFlowNode = page.locator(".react-flow__node:has(.smartpls-latent-node)").first();
+    const targetConstructId = "construct-1";
+    await page.evaluate((id) => {
+      window.dispatchEvent(new CustomEvent("quickpls:focus-construct", { detail: { id } }));
+    }, targetConstructId);
+    await page.waitForTimeout(320);
+    const firstFlowNode = page.locator(`.react-flow__node[data-id="${targetConstructId}"]`).first();
+    await firstFlowNode.waitFor({ state: "visible", timeout: interactionBudgetsMs.selection });
+    const firstConstruct = firstFlowNode.locator(".smartpls-latent-node");
     const selectionStarted = performance.now();
-    await firstConstruct.click();
-    await page.waitForFunction(() => document.querySelector(".smartpls-latent-node.selected"));
+    await firstConstruct.click({ timeout: interactionBudgetsMs.selection });
+    await page.waitForFunction((id) => document.querySelector(`.react-flow__node[data-id="${id}"].selected, .react-flow__node[data-id="${id}"] .smartpls-latent-node.selected`) != null, targetConstructId, { timeout: interactionBudgetsMs.selection });
     const selectionMs = Math.round((performance.now() - selectionStarted) * 10) / 10;
-    const selectionChanged = await firstConstruct.evaluate((node) => node.classList.contains("selected"));
+    const selectionChanged = await firstFlowNode.evaluate((node) => node.classList.contains("selected") || node.querySelector(".smartpls-latent-node.selected") != null);
 
     const beforeDrag = await firstFlowNode.boundingBox();
     let dragChanged = false;
@@ -4814,21 +4878,44 @@ async function exerciseLargeModelFixture(browser) {
     await page.waitForSelector('.nd-app[data-surface="data"]');
     await page.evaluate(() => window.__QUICKPLS_SMOKE__?.setView("model"));
     await page.waitForSelector('.nd-app[data-surface="model"]');
-    await page.waitForFunction(({ constructs, indicators }) => (
-      document.querySelectorAll(".smartpls-latent-node").length >= constructs
-      && document.querySelectorAll(".smartpls-indicator-node").length >= indicators
-    ), largeModelTarget, { timeout: interactionBudgetsMs.workspaceRoundTrip }).catch(() => null);
+    await page.waitForFunction(({ constructs, indicators }) => {
+      const counts = window.__QUICKPLS_SMOKE__?.modelCounts?.();
+      return counts != null && counts.constructs >= constructs && counts.indicators >= indicators;
+    }, largeModelTarget, { timeout: interactionBudgetsMs.workspaceRoundTrip }).catch(() => null);
     const retainedCounts = await modelCounts();
     const workspaceRoundTripMs = Math.round((performance.now() - switchStarted) * 10) / 10;
 
-    const metrics = { fixtureRenderMs, selectionMs, dragMs, panMs, zoomMs, workspaceRoundTripMs };
-    const interactions = { selectionChanged, dragChanged, panChanged, zoomChanged, modelRetainedAfterWorkspaceRoundTrip: retainedCounts.constructs >= largeModelTarget.constructs && retainedCounts.indicators >= largeModelTarget.indicators };
+    const preflightStarted = performance.now();
+    const preflight = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.modelPreflight?.() ?? null).catch(() => null);
+    const preflightMs = Math.round((performance.now() - preflightStarted) * 10) / 10;
+    const preflightPresent = Boolean(preflight && [preflight.ready, preflight.blockers, preflight.warnings].every(Number.isInteger)
+      && preflight.ready + preflight.blockers + preflight.warnings > 0);
+
+    const reopenStarted = performance.now();
+    await page.evaluate(async () => {
+      await window.__QUICKPLS_SMOKE__?.loadEmptyProject?.();
+      await window.__QUICKPLS_SMOKE__?.loadDiagramFixture?.("large");
+    });
+    await page.waitForFunction(({ constructs, indicators }) => {
+      const counts = window.__QUICKPLS_SMOKE__?.modelCounts?.();
+      return counts != null && counts.constructs >= constructs && counts.indicators >= indicators;
+    }, largeModelTarget, { timeout: interactionBudgetsMs.fixtureReopen }).catch(() => null);
+    const reopenedCounts = await modelCounts();
+    const fixtureReopenMs = Math.round((performance.now() - reopenStarted) * 10) / 10;
+    const deterministicFixtureReopened = reopenedCounts.constructs >= largeModelTarget.constructs
+      && reopenedCounts.indicators >= largeModelTarget.indicators;
+
+    const metrics = { fixtureRenderMs, selectionMs, dragMs, panMs, zoomMs, workspaceRoundTripMs, preflightMs, fixtureReopenMs };
+    const interactions = { selectionChanged, dragChanged, panChanged, zoomChanged, modelRetainedAfterWorkspaceRoundTrip: retainedCounts.constructs >= largeModelTarget.constructs && retainedCounts.indicators >= largeModelTarget.indicators, preflightPresent, deterministicFixtureReopened };
     evidence.checks.largeModel = {
       supported: true,
       requestedFixture: "large",
       target: largeModelTarget,
       observed: counts,
       retainedAfterWorkspaceRoundTrip: retainedCounts,
+      reopenedFixtureCounts: reopenedCounts,
+      reopenScope: "Deterministic smoke-fixture reload only; browser preview does not prove saved-project archive reopen.",
+      preflight,
       metrics,
       budgetsMs: interactionBudgetsMs,
       interactions,

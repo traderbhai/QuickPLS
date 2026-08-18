@@ -1,0 +1,4 @@
+# Release/security automation tools. Compile with:
+# python -m piptools compile --allow-unsafe --generate-hashes --strip-extras --output-file validation/security-tools-requirements.txt validation/security-tools.in
+detect-secrets==1.5.0
+pip-audit==2.10.1

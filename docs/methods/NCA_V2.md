@@ -1,6 +1,6 @@
 # Necessary Condition Analysis v2
 
-Status: validated for the bounded standalone raw-data scope below, including independent numerical evidence, strict archive persistence, and packaged-native setup/results/XLSX/save/reopen acceptance. This specification does not claim full SmartPLS or NCA-package parity.
+Status: Supported in Standard for the exact standalone raw-data scope below, including independent numerical evidence, strict archive persistence, deterministic cancellation/retry without partial state, setup/results/XLSX/save/reopen acceptance, physical viewport coverage, and cleanup. This specification does not claim full SmartPLS or NCA-package parity.
 
 `nca_v2` performs a two-variable Necessary Condition Analysis for one observed numeric condition X and one observed numeric outcome Y. It provides CE-FDH, CR-FDH, seeded permutation p values, and observed-range bottleneck rows.
 
@@ -25,7 +25,7 @@ The peers therefore have strictly increasing X and Y. They define a nondecreasin
 
 ## CR-FDH
 
-CR-FDH is the ordinary least-squares line `Y = intercept + slope * X` fitted through the CE-FDH peers. Its effect size is the empty area above the line within the observed X/Y scope, clipping the fitted line at the observed Y bounds before integrating.
+CR-FDH is the ordinary least-squares line `Y = intercept + slope * X` fitted through the CE-FDH peers. Its effect size is the empty area above the line within the observed X/Y scope, clipping the fitted line at the observed Y bounds before integrating. CR-FDH requires at least two distinct CE-FDH peers and otherwise fails with a typed error; CE-FDH-only analysis remains available with one peer.
 
 CE-FDH rows report null `slope` and `intercept`. CR-FDH rows report the fitted finite values.
 
@@ -35,7 +35,7 @@ For each requested ceiling, every replicate independently permutes Y while holdi
 
 `(1 + count(permuted effect >= observed effect)) / (B + 1)`.
 
-Accordingly, the p value is finite, lies in `[1/(B+1), 1]`, and lies exactly on the `1/(B+1)` lattice. Repeating the same data, settings, and seed gives the same NCA payload.
+Accordingly, the p value is finite, lies in `[1/(B+1), 1]`, and lies exactly on the `1/(B+1)` lattice. Repeating the same persisted dataset order and fingerprint, settings, and seed gives the same NCA payload. Reordering complete pairs preserves ceiling geometry, effects, and bottlenecks, but can change a finite Monte Carlo p value because permutation indices bind the persisted row order.
 
 ## Bottlenecks
 
@@ -51,7 +51,7 @@ The runner records `provenance.method = "nca"` and exact `provenance.method_vers
 
 - X/Y names, observation counts, selected ceiling, requested/usable permutation counts, and warnings;
 - `scope` with `minimum_x`, `maximum_x`, `minimum_y`, and `maximum_y`;
-- ordered `ce_fdh_peers` points;
+- ordered `ce_fdh_peers` points, projected into the native result and XLSX peer table with stable ordinal peer identities (v2 does not retain original source-row IDs);
 - `ceilings` with ceiling name, effect size, permutation p value, slope, and intercept; and
 - per-ceiling `bottlenecks` with outcome percent, nullable required X percent, and status.
 
@@ -72,10 +72,10 @@ Project append, save, and reopen require the recipe, result, nested method versi
 ## Qualification evidence
 
 - `validation/v08_extended_methods_reference.py --section nca` independently constructs CE peers, fits the CR line with NumPy least squares, integrates both empty-ceiling areas, checks every bottleneck row, verifies the p-value lattice, and repeats the seeded run.
-- `qpls-estimation` hand fixtures verify known peers, effects, CR coefficients, bottlenecks, independent permutation streams, and geometry-tamper rejection.
+- `qpls-estimation` focused matrices verify CE/CR geometry, duplicate-X ties, listwise omissions, constants, insufficient rows, exact seed and worker behavior, an independently reconstructed permutation exceedance, one-peer CR fail-closed behavior, and geometry-tamper rejection.
 - `qpls-core` verifies the no-model recipe and rejects ambiguous variables or incompatible settings.
 - `qpls-project` exercises genuine runner append, save, reopen, strict contract tampering, and explicit `nca_v1` legacy compatibility.
 - the desktop project snapshot test proves that a saved/reopened NCA-only project has no canonical or active phantom model.
-- `validation/results/v247_tauri_native_acceptance.json` proves the genuine model-free native setup, active lifecycle, result tables and accessible ceiling plot, XLSX export, explicit save, and same-run reopen contract.
+- The focused packaged receipt proves the genuine model-free native setup, active lifecycle, result tables including CE-FDH peers, accessible ceiling plot, XLSX export, explicit save, and same-run reopen contract.
 
 Method definitions were checked against the official SmartPLS NCA overview and the CRAN NCA package's CE-FDH, CR-FDH, peer, and bottleneck sources. Those references define the techniques; QuickPLS remains an independent implementation.

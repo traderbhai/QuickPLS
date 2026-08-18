@@ -110,6 +110,12 @@ reason code, and message. The result also records `jackknife_cases` and
 BCa interval used the complete delete-one set. Cancellation aborts the run and
 no partial result is committed.
 
+OLS resamples that exhaust residual degrees of freedom or produce undefined
+HC3 covariance fail closed with the stable reason codes
+`nonpositive_residual_degrees_of_freedom` and `undefined_hc3_covariance`.
+They remain recorded failed replicates and are subject to the same 90-percent
+usable-fit threshold.
+
 The nested `regression_bootstrap_validation_witness_v1` is internal validation
 data and is not rendered or exported. It retains exact term order, every usable
 bootstrap replicate index and coefficient vector, and every successful or
@@ -150,6 +156,7 @@ tests in `crates/qpls-resampling/src/lib.rs`:
 - `regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates`
 - `regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable`
 - `regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca`
+- `regression_bootstrap_failure_boundary_maps_typed_ols_failures`
 
 Strict nested-payload parsing plus append, save, checksum-updated-load, reopen,
 and tamper rejection are bound to

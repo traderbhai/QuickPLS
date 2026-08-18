@@ -1,0 +1,46 @@
+{
+  "checks": {
+    "default_iteration_limit_is_3000": true,
+    "default_stop_criterion_is_1e_7": true,
+    "deterministic_orientation_anchor_positive": true,
+    "different_seed_changes_fixture": true,
+    "hand_single_item_path_equals_correlation": true,
+    "metamorphics_within_tolerance": true,
+    "same_seed_fixture_repeat_exact": true,
+    "typed_boundaries_exact": true
+  },
+  "hand_microcase": {
+    "absolute_difference": 5.551115123125783e-16,
+    "expected_correlation": 0.9828649007908015,
+    "observed_path": 0.982864900790802
+  },
+  "metamorphic_max_abs_differences": {
+    "construct_and_path_declaration_reorder": 8.881784197001252e-16,
+    "irrelevant_variable_addition": 0.0,
+    "positive_affine_rescaling": 1.4432899320127035e-15,
+    "row_reorder": 1.1102230246251565e-15,
+    "same_input_repeat": 0.0,
+    "variable_reorder": 0.0
+  },
+  "metamorphic_tolerance": 2e-10,
+  "oracle_version": "pls_pm_numpy_work_oracle_v1",
+  "passed": true,
+  "promotion_requested": false,
+  "qualification_ready": false,
+  "remaining_blockers": [
+    "No current QuickPLS product build was executed or compared.",
+    "The transparent NumPy implementation is work evidence, not an independently maintained product oracle receipt.",
+    "Qualification-sized simulation, persistence, export, packaged Windows, performance, and scientific-review evidence is absent."
+  ],
+  "report_kind": "pls_algorithm_v1_current_source_oracle_work_v1",
+  "schema_version": 1,
+  "typed_boundaries": {
+    "constant_indicator": true,
+    "cycle": true,
+    "empty_model": true,
+    "insufficient_rows": true,
+    "mode_b_rank": true,
+    "nonconvergence": true
+  },
+  "work_evidence_only": true
+}

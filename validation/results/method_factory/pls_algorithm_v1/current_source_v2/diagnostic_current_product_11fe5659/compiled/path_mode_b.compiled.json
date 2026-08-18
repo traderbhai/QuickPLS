@@ -1,0 +1,72 @@
+{
+  "plan": {
+    "kind": "pls_plan_v2",
+    "plan": {
+      "model_id": "00000000-0000-0000-0000-000000001001",
+      "scientific_hash": "253b68f7d6f1c002763bd4bd8e7b3955e5af6bb6a51f4cd016fd5547dd909cb1",
+      "dataset_id": "af9fc5e4-f28f-4a57-89b1-345d8f3d518a",
+      "blocks": [
+        {
+          "construct_id": "construct:x",
+          "mode": "mode_b",
+          "indicators": [
+            {
+              "variable_id": "observed:x1",
+              "source_column": "x1",
+              "parameter_id": "parameter_78_7831"
+            },
+            {
+              "variable_id": "observed:x2",
+              "source_column": "x2",
+              "parameter_id": "parameter_78_7832"
+            }
+          ]
+        },
+        {
+          "construct_id": "construct:y",
+          "mode": "mode_b",
+          "indicators": [
+            {
+              "variable_id": "observed:y1",
+              "source_column": "y1",
+              "parameter_id": "parameter_79_7931"
+            },
+            {
+              "variable_id": "observed:y2",
+              "source_column": "y2",
+              "parameter_id": "parameter_79_7932"
+            }
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "relation_id": "structural_78_79",
+          "source": "construct:x",
+          "target": "construct:y",
+          "parameter_id": "regression_78_79"
+        }
+      ]
+    }
+  },
+  "receipt": {
+    "schema_version": 1,
+    "recipe_id": "00000000-0000-0000-0000-000000002001",
+    "recipe_document_sha256": "b7c939108868f6090b4b61877d74f151ddc7c89035db0c3f1b97c47bcefeb85e",
+    "recipe_analytical_sha256": "b087ee22f1fb90f8532dce22a47c15a0c784e04f7270845b2300a963986b12af",
+    "model_id": "00000000-0000-0000-0000-000000001001",
+    "model_document_sha256": "253b68f7d6f1c002763bd4bd8e7b3955e5af6bb6a51f4cd016fd5547dd909cb1",
+    "model_scientific_sha256": "253b68f7d6f1c002763bd4bd8e7b3955e5af6bb6a51f4cd016fd5547dd909cb1",
+    "dataset_fingerprint": "v2:9b814a8a22eace42776bc479c637de36bc973dfd8a7b3d5b3e60baba98803373",
+    "compiler_target": "pls_plan_v2",
+    "compiler_version": "recipe_v4_to_compiled_pls_plan_v2_v2",
+    "capability_cell": {
+      "registry_schema_version": 2,
+      "capability_id": "smartpls.pls_algorithm",
+      "cell_id": "qpls3.pls.algorithm",
+      "capability_version": "pls_pm_v1"
+    },
+    "plan_sha256": "cf4aad12ccb8dc17a14a20547b43e219cbb26d550fbb378ac2ff6c07578a921b",
+    "analytical_identity_sha256": "3684820fe93c0776a8424af45865bfeaa1fc7d8ed13e2546ab8c94e36a7588ff"
+  }
+}

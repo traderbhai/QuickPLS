@@ -197,7 +197,7 @@
     },
     "results": {
       "type": "object", "additionalProperties": false,
-      "required": ["passed", "initial_selected_table", "table_ids", "exact_table_ids", "equation_count", "reference_effect_rows", "conditional_indirect_rows", "moderated_mediation_index_rows", "simple_slope_rows", "conditional_plot_point_rows", "johnson_neyman_rows", "johnson_neyman_analysis_count", "johnson_neyman_analysis_keys", "johnson_neyman_curve_point_rows", "bootstrap_estimand_rows", "accessible_non_color_plot_semantics", "reference_effect_columns_exact", "reference_condition_rows_exact", "candidate_promotion_warnings_exact", "curve_warning_disclosure_exact", "failure_disclosure_truthful", "validation_witness_not_rendered", "no_na_fabrication", "generic_regression_shell_not_applicable", "expected_counts_source", "expected_graph_counts", "source_check"],
+      "required": ["passed", "initial_selected_table", "table_ids", "exact_table_ids", "equation_count", "reference_effect_rows", "conditional_indirect_rows", "moderated_mediation_index_rows", "simple_slope_rows", "conditional_plot_point_rows", "johnson_neyman_rows", "johnson_neyman_analysis_count", "johnson_neyman_analysis_keys", "johnson_neyman_curve_point_rows", "bootstrap_estimand_rows", "accessible_non_color_plot_semantics", "reference_effect_columns_exact", "reference_condition_rows_exact", "promotion_pending_warning_absent", "curve_warning_disclosure_exact", "failure_disclosure_truthful", "validation_witness_not_rendered", "no_na_fabrication", "generic_regression_shell_not_applicable", "expected_counts_source", "expected_graph_counts", "source_check"],
       "properties": {
         "passed": { "type": "boolean" }, "initial_selected_table": { "const": "process_model_summary" },
         "table_ids": {
@@ -230,7 +230,7 @@
         "accessible_non_color_plot_semantics": { "type": "boolean" },
         "reference_effect_columns_exact": { "const": true },
         "reference_condition_rows_exact": { "const": true },
-        "candidate_promotion_warnings_exact": { "const": true },
+        "promotion_pending_warning_absent": { "const": true },
         "curve_warning_disclosure_exact": { "const": true },
         "failure_disclosure_truthful": { "type": "boolean" },
         "validation_witness_not_rendered": { "type": "boolean" },
@@ -296,16 +296,16 @@
     },
     "processTableContract": {
       "type": "object", "additionalProperties": false,
-      "required": ["passed", "reference_sheet", "reference_columns", "reference_effect_rows", "reference_condition", "candidate_status", "promotion_pending_warning", "curve_warning_disclosure", "curve_warning_disclosure_exact", "required_shared_strings_verified"],
+      "required": ["passed", "reference_sheet", "reference_columns", "reference_effect_rows", "reference_condition", "result_status", "promotion_pending_warning_absent", "curve_warning_disclosure", "curve_warning_disclosure_exact", "required_shared_strings_verified"],
       "properties": {
         "passed": { "const": true },
         "reference_sheet": { "const": "Reference effects" },
         "reference_columns": { "const": ["Effect ID", "Kind", "Path", "Estimate", "Reference condition"] },
         "reference_effect_rows": { "const": 6 },
         "reference_condition": { "const": "Continuous moderators are evaluated at their original complete-sample raw means (coded 0); binary moderators are evaluated at 0." },
-        "candidate_status": { "const": "experimental" },
-        "promotion_pending_warning": { "const": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass." },
-        "curve_warning_disclosure": { "const": "Exact engine-persisted Johnson-Neyman curve points; bootstrap validation witnesses are never exported." },
+        "result_status": { "const": "validated" },
+        "promotion_pending_warning_absent": { "const": true },
+        "curve_warning_disclosure": { "const": "Exact engine-persisted Johnson-Neyman curve points; internal bootstrap refit diagnostics are not exported." },
         "curve_warning_disclosure_exact": { "const": true },
         "required_shared_strings_verified": { "const": true }
       }
@@ -415,7 +415,7 @@
         "capacity", "graphDefinedWithoutNumberedTemplates"
       ],
       "properties": {
-        "catalogCount": { "const": 15 }, "selectedMethod": { "const": "Regression" },
+        "catalogCount": { "const": 18 }, "selectedMethod": { "const": "Regression" },
         "regressionType": { "const": "process" }, "outcome": { "const": "Y" },
         "focalPredictor": { "const": "X" },
         "paths": { "const": [
@@ -516,10 +516,13 @@
       "required": [
         "passed", "sample_count", "raw_sample_count", "first_sample", "monitor_terminal_reason",
         "peak_working_set_bytes", "peak_private_memory_bytes", "peak_working_set_under_2_gib", "policy",
+        "cancellation_terminal_sample_count", "cancellation_terminal_minimum_samples",
+        "cancellation_terminal_samples_role_stable", "cancellation_terminal_sample_recorded_at_utc",
+        "cancellation_terminal_max_working_set_bytes", "cancellation_terminal_max_private_memory_bytes",
         "cancellation_within_baseline_tolerance", "equal_state_working_set_within_tolerance",
         "equal_state_private_memory_within_tolerance", "equal_state_handle_count_within_tolerance",
         "equal_state_thread_count_within_tolerance", "equal_state_process_roles_exact",
-        "process_roles_bounded_and_terminally_stable",
+        "process_roles_bounded_and_terminally_stable", "full_window_disclosure",
         "retained_history_disclosure", "phase_snapshots_attested", "phase_document_attested",
         "conclusion", "cancellation_cycle_count",
         "completed_cycle_count", "idle_checkpoint_count",
@@ -539,8 +542,18 @@
         "peak_working_set_bytes": { "type": "integer", "minimum": 1 },
         "peak_private_memory_bytes": { "type": "integer", "minimum": 1 },
         "peak_working_set_under_2_gib": { "const": true },
-        "policy": { "const": "bounded_equal_logical_state_window_median_v2" },
+        "policy": { "const": "bounded_equal_logical_state_terminal_stable_v3" },
+        "cancellation_terminal_sample_count": { "const": 6 },
+        "cancellation_terminal_minimum_samples": { "const": 6 },
+        "cancellation_terminal_samples_role_stable": { "const": true },
+        "cancellation_terminal_sample_recorded_at_utc": {
+          "type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true,
+          "items": { "type": "string", "format": "date-time" }
+        },
+        "cancellation_terminal_max_working_set_bytes": { "type": "integer", "minimum": 1 },
+        "cancellation_terminal_max_private_memory_bytes": { "type": "integer", "minimum": 1 },
         "cancellation_within_baseline_tolerance": { "const": true },
+        "full_window_disclosure": { "$ref": "#/$defs/fullWindowDisclosure" },
         "equal_state_working_set_within_tolerance": { "const": true },
         "equal_state_private_memory_within_tolerance": { "const": true },
         "equal_state_handle_count_within_tolerance": { "const": true },
@@ -564,14 +577,14 @@
         },
         "phase_snapshots_attested": { "const": true },
         "phase_document_attested": { "const": true },
-        "conclusion": { "const": "bounded_post_replacement_recovery_v2" },
+        "conclusion": { "const": "bounded_post_replacement_recovery_terminal_stable_v3" },
         "cancellation_cycle_count": { "const": 1 },
         "completed_cycle_count": { "const": 2 },
         "idle_checkpoint_count": { "const": 5 },
         "idle_settle_milliseconds": { "const": 5000 },
         "idle_checkpoints_ordered_and_distinct": { "const": true },
         "capture_delay_milliseconds": { "const": 500 },
-        "sample_window_milliseconds": { "const": 5000 },
+        "sample_window_milliseconds": { "const": 10000 },
         "minimum_samples_per_checkpoint": { "const": 6 },
         "checkpoint_diagnostic_count": { "const": 5 },
         "checkpoint_diagnostics_all_passed": { "const": true },
@@ -583,6 +596,50 @@
         "forced_descendant_pids": { "type": "array", "maxItems": 0 },
         "forced_resource_monitor_termination": { "const": false },
         "source_check": { "const": "processV2Resources" }
+      }
+    },
+    "fullWindowDisclosure": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "qualification_role", "baseline_checkpoint", "cancellation_checkpoint",
+        "baseline_median_working_set_bytes", "cancellation_median_working_set_bytes",
+        "working_set_delta_bytes", "baseline_median_private_memory_bytes",
+        "cancellation_median_private_memory_bytes", "private_memory_delta_bytes", "per_role_deltas"
+      ],
+      "properties": {
+        "qualification_role": { "const": "disclosure_only_not_a_threshold" },
+        "baseline_checkpoint": { "const": "initial_idle" },
+        "cancellation_checkpoint": { "const": "post_cancellation_idle" },
+        "baseline_median_working_set_bytes": { "type": "integer", "minimum": 1 },
+        "cancellation_median_working_set_bytes": { "type": "integer", "minimum": 1 },
+        "working_set_delta_bytes": { "type": "integer" },
+        "baseline_median_private_memory_bytes": { "type": "integer", "minimum": 1 },
+        "cancellation_median_private_memory_bytes": { "type": "integer", "minimum": 1 },
+        "private_memory_delta_bytes": { "type": "integer" },
+        "per_role_deltas": {
+          "type": "array", "minItems": 7, "maxItems": 7,
+          "items": { "$ref": "#/$defs/resourceRoleDelta" }
+        }
+      }
+    },
+    "resourceRoleDelta": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "role", "baseline_median_working_set_bytes", "cancellation_median_working_set_bytes",
+        "working_set_delta_bytes", "baseline_median_private_memory_bytes",
+        "cancellation_median_private_memory_bytes", "private_memory_delta_bytes"
+      ],
+      "properties": {
+        "role": { "enum": [
+          "desktop_root", "webview_browser", "webview_renderer", "webview_gpu",
+          "webview_utility", "webview_other", "other_descendant"
+        ] },
+        "baseline_median_working_set_bytes": { "type": "integer", "minimum": 0 },
+        "cancellation_median_working_set_bytes": { "type": "integer", "minimum": 0 },
+        "working_set_delta_bytes": { "type": "integer" },
+        "baseline_median_private_memory_bytes": { "type": "integer", "minimum": 0 },
+        "cancellation_median_private_memory_bytes": { "type": "integer", "minimum": 0 },
+        "private_memory_delta_bytes": { "type": "integer" }
       }
     },
     "resourceProcess": {
@@ -600,6 +657,9 @@
           "webview_utility", "webview_other", "other_descendant"
         ] },
         "creation_date": { "type": "string", "minLength": 1 },
+        "executable_path": { "type": "string" },
+        "command_line": { "type": "string" },
+        "metrics_available": { "type": "boolean" },
         "working_set_bytes": { "type": "integer", "minimum": 1 },
         "private_memory_bytes": { "type": "integer", "minimum": 1 },
         "handle_count": { "type": "integer", "minimum": 1 },

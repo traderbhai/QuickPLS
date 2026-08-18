@@ -1,1157 +1,1224 @@
 {
-    "schema_version":  "quickpls.packaged_acceptance.v1",
-    "kind":  "quickpls3_scoped_tauri_process_v2_acceptance",
-    "passed":  false,
-    "generated_at_utc":  "2026-08-13T16:09:54.766Z",
-    "completed_at_utc":  "2026-08-13T16:11:53.386Z",
-    "feature_id":  "qpls3.standalone.process",
-    "method_version":  "regression_process_v2",
-    "bootstrap_method_version":  "regression_process_bootstrap_v1",
-    "catalogue_snapshot_date":  "2026-08-12",
-    "target":  "windows_10_11_x64_packaged_tauri",
-    "runtime":  "tauri-webview2-cdp",
-    "endpoint":  "http://127.0.0.1:9222",
-    "generator":  "validation/v247_tauri_native_acceptance.mjs",
-    "tested_product":  {
-                           "qpls_cli_exe":  {
-                                                "path":  "target/release/qpls.exe",
-                                                "size":  20690432,
-                                                "sha256":  "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e"
-                                            },
-                           "quickpls_desktop_exe":  {
-                                                        "path":  "target/release/quickpls-desktop.exe",
-                                                        "size":  30507008,
-                                                        "sha256":  "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277"
-                                                    },
-                           "dist_bundle":  {
-                                               "path":  "dist",
-                                               "size":  1191494,
-                                               "file_count":  19,
-                                               "sha256":  "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
-                                               "manifest":  [
-                                                                {
-                                                                    "path":  "assets/NativeCalculationDialog-CekKsDqn.js",
-                                                                    "size":  51101,
-                                                                    "sha256":  "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/NativeExportDialog-CTZOLsrg.js",
-                                                                    "size":  6432,
-                                                                    "sha256":  "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/NativeGroupSetupDialog-DncLahbL.js",
-                                                                    "size":  6779,
-                                                                    "sha256":  "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
-                                                                    "size":  2948,
-                                                                    "sha256":  "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/NativeModerationDialog-D2IfblSQ.js",
-                                                                    "size":  3081,
-                                                                    "sha256":  "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/NativeResultsSurface-Bv7Fchdi.js",
-                                                                    "size":  31251,
-                                                                    "sha256":  "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/NativeUtilityDialog-B_BR7mw4.js",
-                                                                    "size":  12164,
-                                                                    "sha256":  "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/flow-BN-PNp2v.js",
-                                                                    "size":  83921,
-                                                                    "sha256":  "e96e69cde521273e387064b0ff3ea9f94e29834ea085646f0b8e1fe9e0ea8fde"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/flow-BnuhLJ6X.css",
-                                                                    "size":  15869,
-                                                                    "sha256":  "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/icons-CWW7Ihoi.js",
-                                                                    "size":  20835,
-                                                                    "sha256":  "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/index-DBKNtbUu.js",
-                                                                    "size":  528769,
-                                                                    "sha256":  "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/index-DpTHova4.css",
-                                                                    "size":  74714,
-                                                                    "sha256":  "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/largeModelSmoke-PEBccAlJ.js",
-                                                                    "size":  880,
-                                                                    "sha256":  "a4977bf130c85a688b570fb1f17f8dac958787116a585c9300f3d4c3fbd6b535"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/nativeMga-DgYeq6DN.js",
-                                                                    "size":  3108,
-                                                                    "sha256":  "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/publicationDiagram-BlkNs4Z4.js",
-                                                                    "size":  8648,
-                                                                    "sha256":  "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/smokeRun-CMXwsrTO.js",
-                                                                    "size":  7141,
-                                                                    "sha256":  "33388a0e9df739d8812f2a03c2980f00a3f49046375ae48c9a854d8f94f7f962"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/tauri-CZBL8huA.js",
-                                                                    "size":  15818,
-                                                                    "sha256":  "8fbb85b9879fc37af89bc405134891d8b7dec19829e03c6d7900ba79f71dbe77"
-                                                                },
-                                                                {
-                                                                    "path":  "assets/vendor-3AznE2Td.js",
-                                                                    "size":  317214,
-                                                                    "sha256":  "7dadeaa73f481ffd1ab52c5247997462fd195062a4dbe10353701ffbbc45711f"
-                                                                },
-                                                                {
-                                                                    "path":  "index.html",
-                                                                    "size":  821,
-                                                                    "sha256":  "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50"
-                                                                }
-                                                            ]
-                                           }
-                       },
-    "checks":  {
-                   "runtime_preflight":  {
-                                             "passed":  true,
-                                             "expected_origin":  "http://tauri.localhost",
-                                             "enumerated_pages":  [
-                                                                      {
-                                                                          "index":  0,
-                                                                          "url":  "http://tauri.localhost/",
-                                                                          "origin":  "http://tauri.localhost",
-                                                                          "title":  "QuickPLS",
-                                                                          "shell_visible":  true,
-                                                                          "tauri_runtime":  true
-                                                                      }
-                                                                  ],
-                                             "qualifying_page_count":  1,
-                                             "pre_reload":  {
-                                                                "index":  0,
-                                                                "url":  "http://tauri.localhost/",
-                                                                "origin":  "http://tauri.localhost",
-                                                                "title":  "QuickPLS",
-                                                                "shell_visible":  true,
-                                                                "tauri_runtime":  true
-                                                            },
-                                             "reload_count":  1,
-                                             "post_reload":  {
-                                                                 "index":  0,
-                                                                 "url":  "http://tauri.localhost/",
-                                                                 "origin":  "http://tauri.localhost",
-                                                                 "title":  "QuickPLS",
-                                                                 "shell_visible":  true,
-                                                                 "tauri_runtime":  true
-                                                             },
-                                             "same_origin":  true,
-                                             "source_check":  "runtimePreflight"
-                                         },
-                   "workflow":  {
-                                    "passed":  true,
-                                    "completed":  true,
-                                    "active_lifecycle_captured":  true,
-                                    "model_free":  true,
-                                    "graph_defined_without_numbered_templates":  true,
-                                    "source_check":  "processV2Workflow"
-                                },
-                   "setup":  {
-                                 "passed":  true,
-                                 "outcome":  "Y",
-                                 "focal_predictor":  "X",
-                                 "top_level_predictors":  7,
-                                 "top_level_predictors_maximum":  8,
-                                 "paths":  8,
-                                 "moderators":  2,
-                                 "moderations":  3,
-                                 "controls":  1,
-                                 "controls_maximum":  1,
-                                 "equation_non_intercept_terms_maximum":  50,
-                                 "bootstrap_replicates":  10000,
-                                 "workers":  2,
-                                 "seed":  20260812,
-                                 "source_check":  "processV2Setup"
-                             },
-                   "results":  {
-                                   "passed":  true,
-                                   "initial_selected_table":  "process_model_summary",
-                                   "table_ids":  [
-                                                     "process_model_summary",
-                                                     "process_paths",
-                                                     "process_equation_coefficients",
-                                                     "process_equation_fit",
-                                                     "process_reference_effects",
-                                                     "process_conditional_indirect_effects",
-                                                     "process_moderated_mediation_indices",
-                                                     "process_simple_slopes",
-                                                     "process_conditional_plot_points",
-                                                     "process_johnson_neyman",
-                                                     "process_johnson_neyman_curve_points",
-                                                     "process_bootstrap_summary",
-                                                     "process_bootstrap_failures",
-                                                     "process_bootstrap_inference",
-                                                     "process_bootstrap_bca",
-                                                     "process_scope"
-                                                 ],
-                                   "exact_table_ids":  true,
-                                   "equation_count":  5,
-                                   "reference_effect_rows":  6,
-                                   "conditional_indirect_rows":  5,
-                                   "moderated_mediation_index_rows":  2,
-                                   "simple_slope_rows":  11,
-                                   "conditional_plot_point_rows":  275,
-                                   "johnson_neyman_rows":  7,
-                                   "johnson_neyman_analysis_count":  4,
-                                   "johnson_neyman_analysis_keys":  [
-                                                                        [
-                                                                            "moderation:X-\u003eM3@W",
-                                                                            "W",
-                                                                            ""
-                                                                        ],
-                                                                        [
-                                                                            "moderation:X-\u003eY@W|B",
-                                                                            "W",
-                                                                            "B = 0.0000 (coded 0.0000)"
-                                                                        ],
-                                                                        [
-                                                                            "moderation:X-\u003eY@W|B",
-                                                                            "W",
-                                                                            "B = 1.0000 (coded 1.0000)"
-                                                                        ],
-                                                                        [
-                                                                            "moderation:M4-\u003eY@B",
-                                                                            "B",
-                                                                            ""
-                                                                        ]
-                                                                    ],
-                                   "johnson_neyman_curve_point_rows":  303,
-                                   "bootstrap_estimand_rows":  24,
-                                   "accessible_non_color_plot_semantics":  true,
-                                   "reference_effect_columns_exact":  true,
-                                   "reference_condition_rows_exact":  true,
-                                   "candidate_promotion_warnings_exact":  true,
-                                   "curve_warning_disclosure_exact":  true,
-                                   "failure_disclosure_truthful":  true,
-                                   "validation_witness_not_rendered":  true,
-                                   "no_na_fabrication":  true,
-                                   "generic_regression_shell_not_applicable":  true,
-                                   "expected_counts_source":  "validation/process_v2_reference.py:reference_graph",
-                                   "expected_graph_counts":  {
-                                                                 "completeCases":  175,
-                                                                 "omittedCases":  5,
-                                                                 "equations":  5,
-                                                                 "paths":  8,
-                                                                 "moderations":  3,
-                                                                 "referenceEffects":  6,
-                                                                 "conditionalIndirectEffects":  5,
-                                                                 "moderatedMediationIndices":  2,
-                                                                 "simpleSlopes":  11,
-                                                                 "plots":  3,
-                                                                 "conditionalPlotPoints":  275,
-                                                                 "johnsonNeyman":  4,
-                                                                 "johnsonNeymanRegionRows":  7,
-                                                                 "availableJohnsonNeyman":  3,
-                                                                 "johnsonNeymanCurvePoints":  303,
-                                                                 "estimands":  24
-                                                             },
-                                   "source_check":  "processV2Results"
-                               },
-                   "export":  {
-                                  "passed":  true,
-                                  "workbook_sheets":  [
-                                                          "Model summary",
-                                                          "Directed paths",
-                                                          "Equation coefficients",
-                                                          "Equation fit",
-                                                          "Reference effects",
-                                                          "Conditional indirect effects",
-                                                          "Moderated-mediation indices",
-                                                          "Simple slopes and conditional p",
-                                                          "Conditional outcome plot data",
-                                                          "Johnson-Neyman regions",
-                                                          "Johnson-Neyman curve data",
-                                                          "Bootstrap summary",
-                                                          "Bootstrap failures",
-                                                          "Bootstrap inference",
-                                                          "Bootstrap BCa intervals",
-                                                          "Scope and provenance",
-                                                          "Run provenance"
-                                                      ],
-                                  "validation_witness_excluded":  true,
-                                  "witness_scan":  {
-                                                       "passed":  true,
-                                                       "total_members":  26,
-                                                       "scanned_xml_and_rels_members":  [
-                                                                                            "[Content_Types].xml",
-                                                                                            "_rels/.rels",
-                                                                                            "xl/_rels/workbook.xml.rels",
-                                                                                            "xl/theme/theme1.xml",
-                                                                                            "xl/styles.xml",
-                                                                                            "xl/workbook.xml",
-                                                                                            "xl/worksheets/sheet1.xml",
-                                                                                            "xl/worksheets/sheet2.xml",
-                                                                                            "xl/worksheets/sheet3.xml",
-                                                                                            "xl/worksheets/sheet4.xml",
-                                                                                            "xl/worksheets/sheet5.xml",
-                                                                                            "xl/worksheets/sheet6.xml",
-                                                                                            "xl/worksheets/sheet7.xml",
-                                                                                            "xl/worksheets/sheet8.xml",
-                                                                                            "xl/worksheets/sheet9.xml",
-                                                                                            "xl/worksheets/sheet10.xml",
-                                                                                            "xl/worksheets/sheet11.xml",
-                                                                                            "xl/worksheets/sheet12.xml",
-                                                                                            "xl/worksheets/sheet13.xml",
-                                                                                            "xl/worksheets/sheet14.xml",
-                                                                                            "xl/worksheets/sheet15.xml",
-                                                                                            "xl/worksheets/sheet16.xml",
-                                                                                            "xl/worksheets/sheet17.xml",
-                                                                                            "xl/sharedStrings.xml",
-                                                                                            "docProps/core.xml",
-                                                                                            "docProps/app.xml"
-                                                                                        ],
-                                                       "worksheet_members":  [
-                                                                                 "xl/worksheets/sheet1.xml",
-                                                                                 "xl/worksheets/sheet2.xml",
-                                                                                 "xl/worksheets/sheet3.xml",
-                                                                                 "xl/worksheets/sheet4.xml",
-                                                                                 "xl/worksheets/sheet5.xml",
-                                                                                 "xl/worksheets/sheet6.xml",
-                                                                                 "xl/worksheets/sheet7.xml",
-                                                                                 "xl/worksheets/sheet8.xml",
-                                                                                 "xl/worksheets/sheet9.xml",
-                                                                                 "xl/worksheets/sheet10.xml",
-                                                                                 "xl/worksheets/sheet11.xml",
-                                                                                 "xl/worksheets/sheet12.xml",
-                                                                                 "xl/worksheets/sheet13.xml",
-                                                                                 "xl/worksheets/sheet14.xml",
-                                                                                 "xl/worksheets/sheet15.xml",
-                                                                                 "xl/worksheets/sheet16.xml",
-                                                                                 "xl/worksheets/sheet17.xml"
-                                                                             ],
-                                                       "worksheet_row_counts":  {
-                                                                                    "xl/worksheets/sheet1.xml":  15,
-                                                                                    "xl/worksheets/sheet2.xml":  12,
-                                                                                    "xl/worksheets/sheet3.xml":  31,
-                                                                                    "xl/worksheets/sheet4.xml":  9,
-                                                                                    "xl/worksheets/sheet5.xml":  10,
-                                                                                    "xl/worksheets/sheet6.xml":  9,
-                                                                                    "xl/worksheets/sheet7.xml":  6,
-                                                                                    "xl/worksheets/sheet8.xml":  15,
-                                                                                    "xl/worksheets/sheet9.xml":  279,
-                                                                                    "xl/worksheets/sheet10.xml":  11,
-                                                                                    "xl/worksheets/sheet11.xml":  307,
-                                                                                    "xl/worksheets/sheet12.xml":  17,
-                                                                                    "xl/worksheets/sheet13.xml":  5,
-                                                                                    "xl/worksheets/sheet14.xml":  28,
-                                                                                    "xl/worksheets/sheet15.xml":  28,
-                                                                                    "xl/worksheets/sheet16.xml":  8,
-                                                                                    "xl/worksheets/sheet17.xml":  42
-                                                                                },
-                                                       "forbidden_matches":  [
-
-                                                                             ],
-                                                       "extraction_errors":  [
-
-                                                                             ]
-                                                   },
-                                  "process_table_contract":  {
-                                                                 "passed":  true,
-                                                                 "reference_sheet":  "Reference effects",
-                                                                 "reference_columns":  [
-                                                                                           "Effect ID",
-                                                                                           "Kind",
-                                                                                           "Path",
-                                                                                           "Estimate",
-                                                                                           "Reference condition"
-                                                                                       ],
-                                                                 "reference_effect_rows":  6,
-                                                                 "reference_condition":  "Continuous moderators are evaluated at their original complete-sample raw means (coded 0); binary moderators are evaluated at 0.",
-                                                                 "candidate_status":  "experimental",
-                                                                 "promotion_pending_warning":  "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.",
-                                                                 "curve_warning_disclosure":  "Exact engine-persisted Johnson-Neyman curve points; bootstrap validation witnesses are never exported.",
-                                                                 "curve_warning_disclosure_exact":  true,
-                                                                 "required_shared_strings_verified":  true
-                                                             },
-                                  "artifact_sha256":  "d2c0fac1a74efa13530885b4ae80cf8b3830b560123a5de277820fe718e9185a",
-                                  "source_check":  "processV2Export"
-                              },
-                   "save_reopen":  {
-                                       "passed":  true,
-                                       "same_run_restored":  true,
-                                       "initial_selected_table":  "process_model_summary",
-                                       "project_checksum_matches":  true,
-                                       "archive_witness_validated":  true,
-                                       "archive_sha256":  "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a",
-                                       "cycle_1_settled_autosave":  {
-                                                                        "prefix":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
-                                                                        "coversEverySiblingPrefix":  true,
-                                                                        "present":  [
-                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
-                                                                                    ],
-                                                                        "artifacts":  [
-                                                                                          {
-                                                                                              "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                              "size":  2311374,
-                                                                                              "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
-                                                                                          },
-                                                                                          {
-                                                                                              "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-                                                                                              "size":  108,
-                                                                                              "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
-                                                                                          },
-                                                                                          {
-                                                                                              "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-                                                                                              "size":  12709,
-                                                                                              "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
-                                                                                          },
-                                                                                          {
-                                                                                              "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
-                                                                                              "size":  108,
-                                                                                              "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
-                                                                                          }
-                                                                                      ],
-                                                                        "required":  [
-                                                                                         "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                         "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json"
-                                                                                     ],
-                                                                        "allowed":  [
-                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.bak",
-                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
-                                                                                    ],
-                                                                        "missing":  [
-
-                                                                                    ],
-                                                                        "forbidden":  [
-
-                                                                                      ],
-                                                                        "exactAllowedIdentity":  true,
-                                                                        "autosavePath":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                        "logicalState":  {
-                                                                                             "manifestValid":  true,
-                                                                                             "completedResultCount":  1,
-                                                                                             "witnessCount":  1,
-                                                                                             "completedRunIds":  [
-                                                                                                                     "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
-                                                                                                                 ],
-                                                                                             "witnessRunIds":  [
-                                                                                                                   "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
-                                                                                                               ],
-                                                                                             "recipeIds":  [
-                                                                                                               "e1db2325-9a63-49f3-b580-d9b1b460bd26"
-                                                                                                           ],
-                                                                                             "recipeCount":  1,
-                                                                                             "workspaceRunIds":  [
-                                                                                                                     "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
-                                                                                                                 ],
-                                                                                             "selectedRunId":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
-                                                                                         },
-                                                                        "capturedArtifacts":  [
-                                                                                                  {
-                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                                      "source_size":  2311374,
-                                                                                                      "source_sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
-                                                                                                      "snapshot":  {
-                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-0.bin",
-                                                                                                                       "size":  2311374,
-                                                                                                                       "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
-                                                                                                                   }
-                                                                                                  },
-                                                                                                  {
-                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-                                                                                                      "source_size":  108,
-                                                                                                      "source_sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
-                                                                                                      "snapshot":  {
-                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-1.bin",
-                                                                                                                       "size":  108,
-                                                                                                                       "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
-                                                                                                                   }
-                                                                                                  },
-                                                                                                  {
-                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-                                                                                                      "source_size":  12709,
-                                                                                                      "source_sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
-                                                                                                      "snapshot":  {
-                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-2.bin",
-                                                                                                                       "size":  12709,
-                                                                                                                       "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
-                                                                                                                   }
-                                                                                                  },
-                                                                                                  {
-                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
-                                                                                                      "source_size":  108,
-                                                                                                      "source_sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
-                                                                                                      "snapshot":  {
-                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-3.bin",
-                                                                                                                       "size":  108,
-                                                                                                                       "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
-                                                                                                                   }
-                                                                                                  }
-                                                                                              ]
-                                                                    },
-                                       "cycle_1_autosave_after_checkpoint":  {
-                                                                                 "prefix":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
-                                                                                 "coversEverySiblingPrefix":  true,
-                                                                                 "present":  [
-                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
-                                                                                             ],
-                                                                                 "artifacts":  [
-                                                                                                   {
-                                                                                                       "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                                       "size":  2311374,
-                                                                                                       "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
-                                                                                                   },
-                                                                                                   {
-                                                                                                       "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-                                                                                                       "size":  108,
-                                                                                                       "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
-                                                                                                   },
-                                                                                                   {
-                                                                                                       "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-                                                                                                       "size":  12709,
-                                                                                                       "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
-                                                                                                   },
-                                                                                                   {
-                                                                                                       "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
-                                                                                                       "size":  108,
-                                                                                                       "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
-                                                                                                   }
-                                                                                               ],
-                                                                                 "required":  [
-                                                                                                  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                                  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json"
-                                                                                              ],
-                                                                                 "allowed":  [
-                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.bak",
-                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
-                                                                                             ],
-                                                                                 "missing":  [
-
-                                                                                             ],
-                                                                                 "forbidden":  [
-
-                                                                                               ],
-                                                                                 "exactAllowedIdentity":  true,
-                                                                                 "autosavePath":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                 "logicalState":  {
-                                                                                                      "manifestValid":  true,
-                                                                                                      "completedResultCount":  1,
-                                                                                                      "witnessCount":  1,
-                                                                                                      "completedRunIds":  [
-                                                                                                                              "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
-                                                                                                                          ],
-                                                                                                      "witnessRunIds":  [
-                                                                                                                            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
-                                                                                                                        ],
-                                                                                                      "recipeIds":  [
-                                                                                                                        "e1db2325-9a63-49f3-b580-d9b1b460bd26"
-                                                                                                                    ],
-                                                                                                      "recipeCount":  1,
-                                                                                                      "workspaceRunIds":  [
-                                                                                                                              "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
-                                                                                                                          ],
-                                                                                                      "selectedRunId":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
-                                                                                                  },
-                                                                                 "capturedArtifacts":  [
-                                                                                                           {
-                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
-                                                                                                               "source_size":  2311374,
-                                                                                                               "source_sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
-                                                                                                               "snapshot":  {
-                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-0.bin",
-                                                                                                                                "size":  2311374,
-                                                                                                                                "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
-                                                                                                                            }
-                                                                                                           },
-                                                                                                           {
-                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
-                                                                                                               "source_size":  108,
-                                                                                                               "source_sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
-                                                                                                               "snapshot":  {
-                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-1.bin",
-                                                                                                                                "size":  108,
-                                                                                                                                "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
-                                                                                                                            }
-                                                                                                           },
-                                                                                                           {
-                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
-                                                                                                               "source_size":  12709,
-                                                                                                               "source_sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
-                                                                                                               "snapshot":  {
-                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-2.bin",
-                                                                                                                                "size":  12709,
-                                                                                                                                "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
-                                                                                                                            }
-                                                                                                           },
-                                                                                                           {
-                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
-                                                                                                               "source_size":  108,
-                                                                                                               "source_sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
-                                                                                                               "snapshot":  {
-                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-3.bin",
-                                                                                                                                "size":  108,
-                                                                                                                                "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
-                                                                                                                            }
-                                                                                                           }
-                                                                                                       ]
-                                                                             },
-                                       "source_check":  "processV2SaveReopen"
-                                   },
-                   "cancellation":  {
-                                        "passed":  true,
-                                        "active_lifecycle_captured":  true,
-                                        "no_partial_result":  true,
-                                        "source_check":  "processV2Cancellation"
-                                    },
-                   "cancelled_retry_setup":  {
-                                                 "passed":  true,
-                                                 "read_only":  true,
-                                                 "exact_frozen_setup_match":  true,
-                                                 "snapshot":  {
-                                                                  "catalogCount":  15,
-                                                                  "selectedMethod":  "Regression",
-                                                                  "regressionType":  "process",
-                                                                  "outcome":  "Y",
-                                                                  "focalPredictor":  "X",
-                                                                  "paths":  [
-                                                                                {
-                                                                                    "from":  "X",
-                                                                                    "to":  "Y"
-                                                                                },
-                                                                                {
-                                                                                    "from":  "X",
-                                                                                    "to":  "M1"
-                                                                                },
-                                                                                {
-                                                                                    "from":  "M1",
-                                                                                    "to":  "M2"
-                                                                                },
-                                                                                {
-                                                                                    "from":  "M2",
-                                                                                    "to":  "Y"
-                                                                                },
-                                                                                {
-                                                                                    "from":  "X",
-                                                                                    "to":  "M3"
-                                                                                },
-                                                                                {
-                                                                                    "from":  "M3",
-                                                                                    "to":  "Y"
-                                                                                },
-                                                                                {
-                                                                                    "from":  "X",
-                                                                                    "to":  "M4"
-                                                                                },
-                                                                                {
-                                                                                    "from":  "M4",
-                                                                                    "to":  "Y"
-                                                                                }
-                                                                            ],
-                                                                  "moderators":  [
-                                                                                     {
-                                                                                         "variable":  "W",
-                                                                                         "scale":  "continuous"
-                                                                                     },
-                                                                                     {
-                                                                                         "variable":  "B",
-                                                                                         "scale":  "binary_0_1"
-                                                                                     }
-                                                                                 ],
-                                                                  "moderations":  [
-                                                                                      {
-                                                                                          "edge":  "X -\u003e Y",
-                                                                                          "primary":  "W",
-                                                                                          "conditioning":  "B"
-                                                                                      },
-                                                                                      {
-                                                                                          "edge":  "X -\u003e M3",
-                                                                                          "primary":  "W",
-                                                                                          "conditioning":  ""
-                                                                                      },
-                                                                                      {
-                                                                                          "edge":  "M4 -\u003e Y",
-                                                                                          "primary":  "B",
-                                                                                          "conditioning":  ""
-                                                                                      }
-                                                                                  ],
-                                                                  "selectedControls":  [
-                                                                                           "C"
-                                                                                       ],
-                                                                  "samples":  "10000",
-                                                                  "workers":  "2",
-                                                                  "seed":  "20260812",
-                                                                  "profile":  "Complete-dataset PROCESS profile175 global listwise-complete cases; 5 rows omitted; 5 OLS equations verified",
-                                                                  "profileAriaBusy":  "false",
-                                                                  "scope":  "Graph-defined observed-variable path analysis with raw listwise-complete OLS equations, HC3 covariance, fixed two-sided 95% Student-t inference, parallel and serial mediation, continuous or exact 0/1 moderation, mixed two-moderator interactions, first- or second-stage moderated mediation, simple slopes, and Johnson-Neyman regions where applicable. This release supports up to 8 selected predictors in graph-role order and one control entered in every equation; the 50-term ceiling is an equation-design safety bound. Continuous product participants are centered within each equation sample. Numbered macros, binary outcomes, weights, clusters, custom alpha or tails, studentized intervals, multiple moderated stages on one indirect path, and three-way interactions on mediated paths are excluded. Continuous simple-slope and plot probes use the original sample raw mean - SD, mean, and mean + SD; binary probes use original raw 0/1. Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid.",
-                                                                  "bootstrapScope":  "10,000 complete-case resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa requires every delete-one PROCESS fit; unavailable intervals retain an explicit reason. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Indexed seeded streams are deterministic and worker-invariant.",
-                                                                  "blockers":  [
-
-                                                                               ],
-                                                                  "startEnabled":  true,
-                                                                  "capacity":  {
-                                                                                   "topLevelPredictors":  7,
-                                                                                   "topLevelPredictorsMaximum":  8,
-                                                                                   "controls":  1,
-                                                                                   "controlsMaximum":  1,
-                                                                                   "equationNonInterceptTermsMaximum":  50
-                                                                               },
-                                                                  "graphDefinedWithoutNumberedTemplates":  true
-                                                              },
-                                                 "frozen_setup":  {
-                                                                      "catalogCount":  15,
-                                                                      "selectedMethod":  "Regression",
-                                                                      "regressionType":  "process",
-                                                                      "outcome":  "Y",
-                                                                      "focalPredictor":  "X",
-                                                                      "paths":  [
-                                                                                    {
-                                                                                        "from":  "X",
-                                                                                        "to":  "Y"
-                                                                                    },
-                                                                                    {
-                                                                                        "from":  "X",
-                                                                                        "to":  "M1"
-                                                                                    },
-                                                                                    {
-                                                                                        "from":  "M1",
-                                                                                        "to":  "M2"
-                                                                                    },
-                                                                                    {
-                                                                                        "from":  "M2",
-                                                                                        "to":  "Y"
-                                                                                    },
-                                                                                    {
-                                                                                        "from":  "X",
-                                                                                        "to":  "M3"
-                                                                                    },
-                                                                                    {
-                                                                                        "from":  "M3",
-                                                                                        "to":  "Y"
-                                                                                    },
-                                                                                    {
-                                                                                        "from":  "X",
-                                                                                        "to":  "M4"
-                                                                                    },
-                                                                                    {
-                                                                                        "from":  "M4",
-                                                                                        "to":  "Y"
-                                                                                    }
-                                                                                ],
-                                                                      "moderators":  [
-                                                                                         {
-                                                                                             "variable":  "W",
-                                                                                             "scale":  "continuous"
-                                                                                         },
-                                                                                         {
-                                                                                             "variable":  "B",
-                                                                                             "scale":  "binary_0_1"
-                                                                                         }
-                                                                                     ],
-                                                                      "moderations":  [
-                                                                                          {
-                                                                                              "edge":  "X -\u003e Y",
-                                                                                              "primary":  "W",
-                                                                                              "conditioning":  "B"
-                                                                                          },
-                                                                                          {
-                                                                                              "edge":  "X -\u003e M3",
-                                                                                              "primary":  "W",
-                                                                                              "conditioning":  ""
-                                                                                          },
-                                                                                          {
-                                                                                              "edge":  "M4 -\u003e Y",
-                                                                                              "primary":  "B",
-                                                                                              "conditioning":  ""
-                                                                                          }
-                                                                                      ],
-                                                                      "selectedControls":  [
-                                                                                               "C"
-                                                                                           ],
-                                                                      "samples":  "10000",
-                                                                      "workers":  "2",
-                                                                      "seed":  "20260812",
-                                                                      "profile":  "Complete-dataset PROCESS profile175 global listwise-complete cases; 5 rows omitted; 5 OLS equations verified",
-                                                                      "profileAriaBusy":  "false",
-                                                                      "scope":  "Graph-defined observed-variable path analysis with raw listwise-complete OLS equations, HC3 covariance, fixed two-sided 95% Student-t inference, parallel and serial mediation, continuous or exact 0/1 moderation, mixed two-moderator interactions, first- or second-stage moderated mediation, simple slopes, and Johnson-Neyman regions where applicable. This release supports up to 8 selected predictors in graph-role order and one control entered in every equation; the 50-term ceiling is an equation-design safety bound. Continuous product participants are centered within each equation sample. Numbered macros, binary outcomes, weights, clusters, custom alpha or tails, studentized intervals, multiple moderated stages on one indirect path, and three-way interactions on mediated paths are excluded. Continuous simple-slope and plot probes use the original sample raw mean - SD, mean, and mean + SD; binary probes use original raw 0/1. Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid.",
-                                                                      "bootstrapScope":  "10,000 complete-case resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa requires every delete-one PROCESS fit; unavailable intervals retain an explicit reason. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Indexed seeded streams are deterministic and worker-invariant.",
-                                                                      "blockers":  [
-
-                                                                                   ],
-                                                                      "startEnabled":  true,
-                                                                      "capacity":  {
-                                                                                       "topLevelPredictors":  7,
-                                                                                       "topLevelPredictorsMaximum":  8,
-                                                                                       "controls":  1,
-                                                                                       "controlsMaximum":  1,
-                                                                                       "equationNonInterceptTermsMaximum":  50
-                                                                                   },
-                                                                      "graphDefinedWithoutNumberedTemplates":  true
-                                                                  },
-                                                 "source_check":  "processV2CancelledRetrySetup"
-                                             },
-                   "witness_boundary":  {
-                                            "passed":  true,
-                                            "archive_only":  true,
-                                            "witness_method_version":  "regression_process_bootstrap_validation_witness_v1",
-                                            "estimand_order_exact":  true,
-                                            "bootstrap_index_partition_exact":  true,
-                                            "jackknife_index_partition_exact":  true,
-                                            "excluded_from_results":  true,
-                                            "excluded_from_exports":  true,
-                                            "source_check":  "processV2WitnessBoundary"
-                                        },
-                   "resource_reset":  {
-                                          "passed":  true,
-                                          "original_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
-                                          "reset_path":  "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
-                                          "distinct_path":  true,
-                                          "original_archive":  {
-                                                                   "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
-                                                                   "size":  2317816,
-                                                                   "sha256":  "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a"
-                                                               },
-                                          "reset_archive":  {
-                                                                "path":  "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
-                                                                "size":  2317816,
-                                                                "sha256":  "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a"
-                                                            },
-                                          "result_id":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
-                                          "recipe_id":  "e1db2325-9a63-49f3-b580-d9b1b460bd26",
-                                          "run_id":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
-                                          "completed_result_count":  1,
-                                          "witness_count":  1,
-                                          "no_sidecars_before_copy":  true,
-                                          "no_sidecars_after_copy":  true,
-                                          "no_sidecars_before_open":  true,
-                                          "settled_autosave_sidecars_exact":  true,
-                                          "autosave_sidecars_stable_after_checkpoint":  true,
-                                          "recovery_disclosure_absent":  true,
-                                          "table_ids":  [
-                                                            "process_model_summary",
-                                                            "process_paths",
-                                                            "process_equation_coefficients",
-                                                            "process_equation_fit",
-                                                            "process_reference_effects",
-                                                            "process_conditional_indirect_effects",
-                                                            "process_moderated_mediation_indices",
-                                                            "process_simple_slopes",
-                                                            "process_conditional_plot_points",
-                                                            "process_johnson_neyman",
-                                                            "process_johnson_neyman_curve_points",
-                                                            "process_bootstrap_summary",
-                                                            "process_bootstrap_failures",
-                                                            "process_bootstrap_inference",
-                                                            "process_bootstrap_bca",
-                                                            "process_scope"
-                                                        ],
-                                          "selected_run_id":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
-                                          "selected_table_id":  "process_model_summary",
-                                          "source_check":  "processV2ResourceResetClone"
-                                      },
-                   "resources":  {
-                                     "passed":  false,
-                                     "sample_count":  237,
-                                     "raw_sample_count":  237,
-                                     "first_sample":  {
-                                                          "recorded_at_utc":  "2026-08-13T16:09:53.8355303Z",
-                                                          "root_present":  true,
-                                                          "root_pid":  9284,
-                                                          "total_working_set_bytes":  447164416,
-                                                          "total_private_memory_bytes":  278040576,
-                                                          "total_handle_count":  3377,
-                                                          "total_thread_count":  180,
-                                                          "process_role_counts":  {
-                                                                                      "desktop_root":  1,
-                                                                                      "webview_browser":  1,
-                                                                                      "webview_renderer":  1,
-                                                                                      "webview_gpu":  1,
-                                                                                      "webview_utility":  2,
-                                                                                      "webview_other":  1,
-                                                                                      "other_descendant":  0
-                                                                                  },
-                                                          "processes":  [
-                                                                            {
-                                                                                "pid":  5156,
-                                                                                "parent_pid":  53272,
-                                                                                "name":  "msedgewebview2.exe",
-                                                                                "role":  "webview_gpu",
-                                                                                "creation_date":  "08/13/2026 21:39:52",
-                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
-                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=gpu-process --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --gpu-preferences=WAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAQAAAAAAAAAADAAAAAAAAADgAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAoAAAAAAAAAAgAAAAAAAAAEAAAAAIAAAABAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --startup-read-main-dll --metrics-shmem-handle=1928,i,1305612131185437285,18230944084728707430,262144 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=2044 /prefetch:2 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
-                                                                                "metrics_available":  true,
-                                                                                "working_set_bytes":  134729728,
-                                                                                "private_memory_bytes":  143818752,
-                                                                                "handle_count":  675,
-                                                                                "thread_count":  33
-                                                                            },
-                                                                            {
-                                                                                "pid":  9284,
-                                                                                "parent_pid":  57040,
-                                                                                "name":  "quickpls-desktop.exe",
-                                                                                "role":  "desktop_root",
-                                                                                "creation_date":  "08/13/2026 21:39:52",
-                                                                                "executable_path":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-                                                                                "command_line":  "\"D:\\QuickPLS\\target\\release\\quickpls-desktop.exe\" ",
-                                                                                "metrics_available":  true,
-                                                                                "working_set_bytes":  31580160,
-                                                                                "private_memory_bytes":  8437760,
-                                                                                "handle_count":  374,
-                                                                                "thread_count":  24
-                                                                            },
-                                                                            {
-                                                                                "pid":  17588,
-                                                                                "parent_pid":  53272,
-                                                                                "name":  "msedgewebview2.exe",
-                                                                                "role":  "webview_utility",
-                                                                                "creation_date":  "08/13/2026 21:39:52",
-                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
-                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --disable-quic --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2312,i,167031962881466294,9901966334225416101,524288 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2328 /prefetch:11 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
-                                                                                "metrics_available":  true,
-                                                                                "working_set_bytes":  37015552,
-                                                                                "private_memory_bytes":  18276352,
-                                                                                "handle_count":  348,
-                                                                                "thread_count":  23
-                                                                            },
-                                                                            {
-                                                                                "pid":  53272,
-                                                                                "parent_pid":  9284,
-                                                                                "name":  "msedgewebview2.exe",
-                                                                                "role":  "webview_browser",
-                                                                                "creation_date":  "08/13/2026 21:39:52",
-                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
-                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --embedded-browser-webview=1 --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --noerrdialogs --embedded-browser-webview-dpi-awareness=2 --disable-background-networking --disable-component-update --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-quic --disable-sync --metrics-recording-only --proxy-server=http://127.0.0.1:17846 --remote-debugging-port=9222 --lang=en-US --mojo-named-platform-channel-pipe=9284.39724.2031440401814607262 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
-                                                                                "metrics_available":  true,
-                                                                                "working_set_bytes":  126738432,
-                                                                                "private_memory_bytes":  42106880,
-                                                                                "handle_count":  1286,
-                                                                                "thread_count":  56
-                                                                            },
-                                                                            {
-                                                                                "pid":  60776,
-                                                                                "parent_pid":  53272,
-                                                                                "name":  "msedgewebview2.exe",
-                                                                                "role":  "webview_utility",
-                                                                                "creation_date":  "08/13/2026 21:39:52",
-                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
-                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=service --disable-quic --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2736,i,9173773982284953589,7412069235808815602,524288 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=2752 /prefetch:13 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
-                                                                                "metrics_available":  true,
-                                                                                "working_set_bytes":  23703552,
-                                                                                "private_memory_bytes":  15912960,
-                                                                                "handle_count":  196,
-                                                                                "thread_count":  12
-                                                                            },
-                                                                            {
-                                                                                "pid":  64524,
-                                                                                "parent_pid":  53272,
-                                                                                "name":  "msedgewebview2.exe",
-                                                                                "role":  "webview_renderer",
-                                                                                "creation_date":  "08/13/2026 21:39:52",
-                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
-                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=renderer --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --remote-debugging-port=9222 --video-capture-use-gpu-memory-buffer --lang=en-US --device-scale-factor=1.25 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --js-flags=\"--expose-gc --ms-user-locale=en_IN\" --time-ticks-at-unix-epoch=-1784358019967832 --launch-time-ticks=2279372929512 --ssd-no-pressure-read-main-dll --metrics-shmem-handle=4192,i,16819279150295121104,4213758247913098339,2097152 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708990997080739 --mojo-platform-channel-handle=3108 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21 /prefetch:1",
-                                                                                "metrics_available":  true,
-                                                                                "working_set_bytes":  81453056,
-                                                                                "private_memory_bytes":  44748800,
-                                                                                "handle_count":  328,
-                                                                                "thread_count":  20
-                                                                            },
-                                                                            {
-                                                                                "pid":  66040,
-                                                                                "parent_pid":  53272,
-                                                                                "name":  "msedgewebview2.exe",
-                                                                                "role":  "webview_other",
-                                                                                "creation_date":  "08/13/2026 21:39:52",
-                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
-                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=crashpad-handler --user-data-dir=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView /prefetch:4 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21 --monitor-self-annotation=ptype=crashpad-handler --database=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\\Crashpad --metrics-dir=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView --annotation=IsOfficialBuild=1 --annotation=channel= --annotation=chromium-version=151.0.7922.109 \"--annotation=exe=C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --annotation=plat=Win64 \"--annotation=prod=Edge WebView2\" --annotation=ver=151.0.4129.78 --initial-client-data=0x1cc,0x1d0,0x1d4,0x1a8,0xcc,0x7ffa3a8f65f0,0x7ffa3a8f6600,0x7ffa3a8f6610",
-                                                                                "metrics_available":  true,
-                                                                                "working_set_bytes":  11943936,
-                                                                                "private_memory_bytes":  4739072,
-                                                                                "handle_count":  170,
-                                                                                "thread_count":  12
-                                                                            }
-                                                                        ]
-                                                      },
-                                     "monitor_terminal_reason":  "stop_signal",
-                                     "peak_working_set_bytes":  939085824,
-                                     "peak_private_memory_bytes":  761495552,
-                                     "peak_working_set_under_2_gib":  true,
-                                     "policy":  "bounded_equal_logical_state_window_median_v2",
-                                     "cancellation_within_baseline_tolerance":  true,
-                                     "equal_state_working_set_within_tolerance":  true,
-                                     "equal_state_private_memory_within_tolerance":  true,
-                                     "equal_state_handle_count_within_tolerance":  true,
-                                     "equal_state_thread_count_within_tolerance":  true,
-                                     "equal_state_process_roles_exact":  true,
-                                     "process_roles_bounded_and_terminally_stable":  false,
-                                     "retained_history_disclosure":  {
-                                                                         "checkpoint":  "post_completed_history_2_idle",
-                                                                         "median_working_set_bytes":  764424192,
-                                                                         "median_private_memory_bytes":  550723584,
-                                                                         "completed_result_count":  2,
-                                                                         "witness_count":  2,
-                                                                         "qualification_role":  "disclosure_only_not_a_threshold"
-                                                                     },
-                                     "phase_snapshots_attested":  true,
-                                     "phase_document_attested":  true,
-                                     "conclusion":  "bounded_post_replacement_recovery_v2",
-                                     "cancellation_cycle_count":  1,
-                                     "completed_cycle_count":  2,
-                                     "idle_checkpoint_count":  5,
-                                     "idle_settle_milliseconds":  5000,
-                                     "idle_checkpoints_ordered_and_distinct":  false,
-                                     "capture_delay_milliseconds":  500,
-                                     "sample_window_milliseconds":  5000,
-                                     "minimum_samples_per_checkpoint":  6,
-                                     "checkpoint_diagnostic_count":  5,
-                                     "checkpoint_diagnostics_all_passed":  false,
-                                     "artifact_disk_deltas_recorded":  true,
-                                     "zero_lingering_descendants":  true,
-                                     "graceful_exit_confirmed":  true,
-                                     "parent_absent":  true,
-                                     "forced_parent_termination":  false,
-                                     "forced_descendant_pids":  [
-
-                                                                ],
-                                     "forced_resource_monitor_termination":  false,
-                                     "source_check":  "processV2Resources"
-                                 }
-               },
-    "artifacts":  {
-                      "xlsx":  {
-                                   "path":  "validation/results/v247-native-process-v2-20260813-213951987.xlsx",
-                                   "size":  55317,
-                                   "sha256":  "d2c0fac1a74efa13530885b4ae80cf8b3830b560123a5de277820fe718e9185a"
-                               },
-                      "project_archive":  {
-                                              "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
-                                              "size":  2317816,
-                                              "sha256":  "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a"
-                                          },
-                      "screenshots":  [
-                                          {
-                                              "path":  "validation/results/screens/v247-native-desktop-acceptance/180-tauri-native-process-v2-fixture-data-1536x794.png",
-                                              "size":  288257,
-                                              "sha256":  "564ea7a6df449b3c3069d22012347f270fa9dd957086fa5a86cb2fd7941f42df"
-                                          },
-                                          {
-                                              "path":  "validation/results/screens/v247-native-desktop-acceptance/181-tauri-native-process-v2-cancellation-dialog-1536x794.png",
-                                              "size":  313198,
-                                              "sha256":  "67b6df0d7137eca00185c5002ea44d875eb58c808843fca52b32d47a23c3e848"
-                                          },
-                                          {
-                                              "path":  "validation/results/screens/v247-native-desktop-acceptance/182-tauri-native-process-v2-cancellation-running-1536x794.png",
-                                              "size":  232730,
-                                              "sha256":  "60fcbd7b48aca18cdb519ab678ee0fbae2684b4f395164042ba94bdc44f95b43"
-                                          },
-                                          {
-                                              "path":  "validation/results/screens/v247-native-desktop-acceptance/183-tauri-native-process-v2-cancelled-1536x794.png",
-                                              "size":  288422,
-                                              "sha256":  "3356231e789dea6d8b4d3efa6bba5a2500e1d3dd3389f707582ba22edde0b10d"
-                                          },
-                                          {
-                                              "path":  "validation/results/screens/v247-native-desktop-acceptance/184-tauri-native-process-v2-dialog-1536x794.png",
-                                              "size":  288422,
-                                              "sha256":  "3356231e789dea6d8b4d3efa6bba5a2500e1d3dd3389f707582ba22edde0b10d"
-                                          },
-                                          {
-                                              "path":  "validation/results/screens/v247-native-desktop-acceptance/185-tauri-native-process-v2-running-1536x794.png",
-                                              "size":  232801,
-                                              "sha256":  "963f0d664d539d683265e3d14d2ea3e2144f38c467327fbfee1100448b09e327"
-                                          },
-                                          {
-                                              "path":  "validation/results/screens/v247-native-desktop-acceptance/186-tauri-native-process-v2-results-1536x794.png",
-                                              "size":  209984,
-                                              "sha256":  "f30ab908426eb56343c6efbc8490d662f31128e4fed2cfaca29bfd11543c0fe4"
-                                          },
-                                          {
-                                              "path":  "validation/results/screens/v247-native-desktop-acceptance/187-tauri-native-process-v2-export-1536x794.png",
-                                              "size":  218269,
-                                              "sha256":  "d3d0324e2efe443ce8d0488318d4271172d329b98766d404f241c6ab2e6122c2"
-                                          },
-                                          {
-                                              "path":  "validation/results/screens/v247-native-desktop-acceptance/188-tauri-native-process-v2-reopened-1536x794.png",
-                                              "size":  208687,
-                                              "sha256":  "af91159ca3c12cbe8ffc4475ea99dae68d43899a1475aef92ce1c3f99ea740ff"
-                                          },
-                                          {
-                                              "path":  "validation/results/screens/v247-native-desktop-acceptance/189-tauri-native-process-v2-repeated-running-1536x794.png",
-                                              "size":  232730,
-                                              "sha256":  "60fcbd7b48aca18cdb519ab678ee0fbae2684b4f395164042ba94bdc44f95b43"
-                                          }
-                                      ],
-                      "resource_report":  {
-                                              "path":  "validation/results/process_v2_resource_report.json",
-                                              "size":  126970,
-                                              "sha256":  "b8b2f42f15dcf44e022fd48f1c046e92244d317e5cc76f09b7add76273e6c323"
-                                          },
-                      "resource_samples":  {
-                                               "path":  "validation/results/process_v2_resource_samples.jsonl",
-                                               "size":  2094106,
-                                               "sha256":  "7bf5e71e1bfa2d4b296411f9b8a8d652f9984a2696d4a5e8df27941b6d36be9f"
-                                           },
-                      "resource_phases":  {
-                                              "path":  "validation/results/process_v2_resource_phases.json",
-                                              "size":  10811,
-                                              "sha256":  "097e210f90d5af56be33eb3af32f050dde6f41f45440cd12a6e0c1aeaf3f5868"
-                                          },
-                      "resource_phase_snapshots":  [
-                                                       {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-initial_idle.qpls",
-                                                           "size":  12709,
-                                                           "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
-                                                       },
-                                                       {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_cancellation_idle.qpls",
-                                                           "size":  12709,
-                                                           "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
-                                                       },
-                                                       {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_cycle_1_idle.qpls",
-                                                           "size":  2311374,
-                                                           "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
-                                                       },
-                                                       {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_history_2_idle.qpls",
-                                                           "size":  4613942,
-                                                           "sha256":  "141f11b3169c727d64a1c43a22fde3beabc49033d563651b52aa9b4e6117c1c4"
-                                                       },
-                                                       {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_cycle_2_idle.qpls",
-                                                           "size":  2311374,
-                                                           "sha256":  "aeeebeba631ef4be4bd5bdd7281a0d32b69822c5a3471771ed5fddbf99f1c3e5"
-                                                       }
-                                                   ]
-                  },
-    "console_errors":  [
-
-                       ],
-    "failures":  [
-
-                 ],
-    "source_report":  "validation/results/v247_tauri_native_acceptance_process_v2.json"
+  "schema_version": "quickpls.packaged_acceptance.v1",
+  "kind": "quickpls3_scoped_tauri_process_v2_acceptance",
+  "passed": true,
+  "generated_at_utc": "2026-08-18T14:04:15.023Z",
+  "completed_at_utc": "2026-08-18T14:13:11.257Z",
+  "feature_id": "qpls3.standalone.process",
+  "method_version": "regression_process_v2",
+  "bootstrap_method_version": "regression_process_bootstrap_v1",
+  "catalogue_snapshot_date": "2026-08-12",
+  "target": "windows_10_11_x64_packaged_tauri",
+  "runtime": "tauri-webview2-cdp",
+  "endpoint": "http://127.0.0.1:9222",
+  "generator": "validation/v247_tauri_native_acceptance.mjs",
+  "tested_product": {
+    "qpls_cli_exe": {
+      "path": "target/release/qpls.exe",
+      "size": 32387072,
+      "sha256": "7e1ee9c72d79b6102362f81313a54aeed987cb458f921397cb6fd3a09598d53a"
+    },
+    "quickpls_desktop_exe": {
+      "path": "target/release/quickpls-desktop.exe",
+      "size": 49983488,
+      "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476"
+    },
+    "dist_bundle": {
+      "path": "dist",
+      "size": 2281438,
+      "file_count": 19,
+      "sha256": "0993f32dfcb90fbd8b9643f5d169162457b747ce935e500f52126951b26a3d29",
+      "manifest": [
+        {
+          "path": "assets/NativeCalculationDialog-DUmbxsTj.js",
+          "size": 67846,
+          "sha256": "f372826a4a196668ef0bda364ee447b4a81a6c504d734ea3b36fd422604a1626"
+        },
+        {
+          "path": "assets/NativeExportDialog-CMnug-uT.js",
+          "size": 5329,
+          "sha256": "3e582cdb4f489aa86ddb2fb7f2d694b82da493358c917785b7e977aa2d5aa5dc"
+        },
+        {
+          "path": "assets/NativeGroupSetupDialog-B-zMqU4I.js",
+          "size": 6807,
+          "sha256": "882bfd8cab7eb5c3d8c1d51d75587385106f4a646e8c40ed9e622678eb041a9b"
+        },
+        {
+          "path": "assets/NativeHigherOrderDialog-DXoMqdTP.js",
+          "size": 2921,
+          "sha256": "f77ee4364421f29a7d1fe0c4af2d4948e95bf15383fb74c2cfd21a466a4d10fd"
+        },
+        {
+          "path": "assets/NativeModerationDialog-DAf_lZbj.js",
+          "size": 3070,
+          "sha256": "020ee7e2c4d17b99ea43929d093ba2232819a1e280a894e9ace79764bd6a01b0"
+        },
+        {
+          "path": "assets/NativeResultsSurface-DzKE0-53.js",
+          "size": 32644,
+          "sha256": "9431738fbd3da01babd5a1a1d262e68da515a85a0d77929b03b5597a9b77f3e9"
+        },
+        {
+          "path": "assets/NativeUtilityDialog-DF4n3ckD.js",
+          "size": 24365,
+          "sha256": "f889bbbdbd3951b5157c0db1da89dcc6c5ab70eb39ffd8104114569002f40ee7"
+        },
+        {
+          "path": "assets/flow-BnuhLJ6X.css",
+          "size": 15869,
+          "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
+        },
+        {
+          "path": "assets/flow-DG_yhx79.js",
+          "size": 84113,
+          "sha256": "bc613b2f8b6af00ce0d183175180163e8d5c915dbfbe86518a803d95d7d44ba3"
+        },
+        {
+          "path": "assets/icons-Y9nJPltI.js",
+          "size": 23471,
+          "sha256": "44155ca0d3836bdee82cfa6034cd25738f5ae4688b880e896908a218ada17721"
+        },
+        {
+          "path": "assets/index-BvBkp0W8.js",
+          "size": 1552889,
+          "sha256": "a40515133f3b5658585c7d771f0d8082e718aad930d884880b698bec5c28a5e6"
+        },
+        {
+          "path": "assets/index-ClBrB-uD.css",
+          "size": 107701,
+          "sha256": "38d93b5265523c9836ac53141d9ebeca8e1609f3c42f8e1baade66dcfd9f9074"
+        },
+        {
+          "path": "assets/largeModelSmoke-ChuXLqDH.js",
+          "size": 983,
+          "sha256": "fb24e9dddb7e5a48ae648cf23391b83a80e40d05f57cc3ef1f025cb6fbf1d22d"
+        },
+        {
+          "path": "assets/nativeMga-CQPrK7Ua.js",
+          "size": 3745,
+          "sha256": "e14a6c3728b9d157839875d8de4ae3128abce2f863458d143b8b3860520eb0fd"
+        },
+        {
+          "path": "assets/publicationDiagram-BkF94kBm.js",
+          "size": 8679,
+          "sha256": "d442211ac93704f176b57036ce8eb758e951fd72f6763394ceb282de9e7a0beb"
+        },
+        {
+          "path": "assets/smokeRun-DsBvJjQf.js",
+          "size": 7145,
+          "sha256": "e2b3a0beddc1838c8975b86fe64d9eb33af8f0ad4669b58db797ecef2214c718"
+        },
+        {
+          "path": "assets/tauri-CZBL8huA.js",
+          "size": 15818,
+          "sha256": "8fbb85b9879fc37af89bc405134891d8b7dec19829e03c6d7900ba79f71dbe77"
+        },
+        {
+          "path": "assets/vendor-DAfPu0rL.js",
+          "size": 317222,
+          "sha256": "61f10878d1ededa46b28c7b00d59492a03bbc88f903ea4a7a4fd5b5818d1d1c2"
+        },
+        {
+          "path": "index.html",
+          "size": 821,
+          "sha256": "88071d1a5c606db7a34b5995a808895b5fc3d714597a51f2c674205ede153e0e"
+        }
+      ]
+    }
+  },
+  "checks": {
+    "runtime_preflight": {
+      "passed": true,
+      "expected_origin": "http://tauri.localhost",
+      "enumerated_pages": [
+        {
+          "index": 0,
+          "url": "http://tauri.localhost/",
+          "origin": "http://tauri.localhost",
+          "title": "QuickPLS",
+          "shell_visible": true,
+          "tauri_runtime": true
+        }
+      ],
+      "qualifying_page_count": 1,
+      "pre_reload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shell_visible": true,
+        "tauri_runtime": true
+      },
+      "reload_count": 1,
+      "post_reload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shell_visible": true,
+        "tauri_runtime": true
+      },
+      "same_origin": true,
+      "source_check": "runtimePreflight"
+    },
+    "workflow": {
+      "passed": true,
+      "completed": true,
+      "active_lifecycle_captured": true,
+      "model_free": true,
+      "graph_defined_without_numbered_templates": true,
+      "source_check": "processV2Workflow"
+    },
+    "setup": {
+      "passed": true,
+      "outcome": "Y",
+      "focal_predictor": "X",
+      "top_level_predictors": 7,
+      "top_level_predictors_maximum": 8,
+      "paths": 8,
+      "moderators": 2,
+      "moderations": 3,
+      "controls": 1,
+      "controls_maximum": 1,
+      "equation_non_intercept_terms_maximum": 50,
+      "bootstrap_replicates": 10000,
+      "workers": 2,
+      "seed": 20260812,
+      "source_check": "processV2Setup"
+    },
+    "results": {
+      "passed": true,
+      "initial_selected_table": "process_model_summary",
+      "table_ids": [
+        "process_model_summary",
+        "process_paths",
+        "process_equation_coefficients",
+        "process_equation_fit",
+        "process_reference_effects",
+        "process_conditional_indirect_effects",
+        "process_moderated_mediation_indices",
+        "process_simple_slopes",
+        "process_conditional_plot_points",
+        "process_johnson_neyman",
+        "process_johnson_neyman_curve_points",
+        "process_bootstrap_summary",
+        "process_bootstrap_failures",
+        "process_bootstrap_inference",
+        "process_bootstrap_bca",
+        "process_scope"
+      ],
+      "exact_table_ids": true,
+      "equation_count": 5,
+      "reference_effect_rows": 6,
+      "conditional_indirect_rows": 5,
+      "moderated_mediation_index_rows": 2,
+      "simple_slope_rows": 11,
+      "conditional_plot_point_rows": 275,
+      "johnson_neyman_rows": 7,
+      "johnson_neyman_analysis_count": 4,
+      "johnson_neyman_analysis_keys": [
+        [
+          "moderation:X->M3@W",
+          "W",
+          ""
+        ],
+        [
+          "moderation:X->Y@W|B",
+          "W",
+          "B = 0.0000 (coded 0.0000)"
+        ],
+        [
+          "moderation:X->Y@W|B",
+          "W",
+          "B = 1.0000 (coded 1.0000)"
+        ],
+        [
+          "moderation:M4->Y@B",
+          "B",
+          ""
+        ]
+      ],
+      "johnson_neyman_curve_point_rows": 303,
+      "bootstrap_estimand_rows": 24,
+      "accessible_non_color_plot_semantics": true,
+      "reference_effect_columns_exact": true,
+      "reference_condition_rows_exact": true,
+      "promotion_pending_warning_absent": true,
+      "curve_warning_disclosure_exact": true,
+      "failure_disclosure_truthful": true,
+      "validation_witness_not_rendered": true,
+      "no_na_fabrication": true,
+      "generic_regression_shell_not_applicable": true,
+      "expected_counts_source": "validation/process_v2_reference.py:reference_graph",
+      "expected_graph_counts": {
+        "completeCases": 175,
+        "omittedCases": 5,
+        "equations": 5,
+        "paths": 8,
+        "moderations": 3,
+        "referenceEffects": 6,
+        "conditionalIndirectEffects": 5,
+        "moderatedMediationIndices": 2,
+        "simpleSlopes": 11,
+        "plots": 3,
+        "conditionalPlotPoints": 275,
+        "johnsonNeyman": 4,
+        "johnsonNeymanRegionRows": 7,
+        "availableJohnsonNeyman": 3,
+        "johnsonNeymanCurvePoints": 303,
+        "estimands": 24
+      },
+      "source_check": "processV2Results"
+    },
+    "export": {
+      "passed": true,
+      "workbook_sheets": [
+        "Model summary",
+        "Directed paths",
+        "Equation coefficients",
+        "Equation fit",
+        "Reference effects",
+        "Conditional indirect effects",
+        "Moderated-mediation indices",
+        "Simple slopes and conditional p",
+        "Conditional outcome plot data",
+        "Johnson-Neyman regions",
+        "Johnson-Neyman curve data",
+        "Bootstrap summary",
+        "Bootstrap failures",
+        "Bootstrap inference",
+        "Bootstrap BCa intervals",
+        "Scope and provenance",
+        "Run provenance"
+      ],
+      "validation_witness_excluded": true,
+      "witness_scan": {
+        "passed": true,
+        "total_members": 26,
+        "scanned_xml_and_rels_members": [
+          "[Content_Types].xml",
+          "_rels/.rels",
+          "xl/_rels/workbook.xml.rels",
+          "xl/theme/theme1.xml",
+          "xl/styles.xml",
+          "xl/workbook.xml",
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml",
+          "xl/worksheets/sheet6.xml",
+          "xl/worksheets/sheet7.xml",
+          "xl/worksheets/sheet8.xml",
+          "xl/worksheets/sheet9.xml",
+          "xl/worksheets/sheet10.xml",
+          "xl/worksheets/sheet11.xml",
+          "xl/worksheets/sheet12.xml",
+          "xl/worksheets/sheet13.xml",
+          "xl/worksheets/sheet14.xml",
+          "xl/worksheets/sheet15.xml",
+          "xl/worksheets/sheet16.xml",
+          "xl/worksheets/sheet17.xml",
+          "xl/sharedStrings.xml",
+          "docProps/core.xml",
+          "docProps/app.xml"
+        ],
+        "worksheet_members": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml",
+          "xl/worksheets/sheet6.xml",
+          "xl/worksheets/sheet7.xml",
+          "xl/worksheets/sheet8.xml",
+          "xl/worksheets/sheet9.xml",
+          "xl/worksheets/sheet10.xml",
+          "xl/worksheets/sheet11.xml",
+          "xl/worksheets/sheet12.xml",
+          "xl/worksheets/sheet13.xml",
+          "xl/worksheets/sheet14.xml",
+          "xl/worksheets/sheet15.xml",
+          "xl/worksheets/sheet16.xml",
+          "xl/worksheets/sheet17.xml"
+        ],
+        "worksheet_row_counts": {
+          "xl/worksheets/sheet1.xml": 15,
+          "xl/worksheets/sheet2.xml": 12,
+          "xl/worksheets/sheet3.xml": 31,
+          "xl/worksheets/sheet4.xml": 9,
+          "xl/worksheets/sheet5.xml": 10,
+          "xl/worksheets/sheet6.xml": 9,
+          "xl/worksheets/sheet7.xml": 6,
+          "xl/worksheets/sheet8.xml": 15,
+          "xl/worksheets/sheet9.xml": 279,
+          "xl/worksheets/sheet10.xml": 11,
+          "xl/worksheets/sheet11.xml": 307,
+          "xl/worksheets/sheet12.xml": 17,
+          "xl/worksheets/sheet13.xml": 5,
+          "xl/worksheets/sheet14.xml": 28,
+          "xl/worksheets/sheet15.xml": 28,
+          "xl/worksheets/sheet16.xml": 8,
+          "xl/worksheets/sheet17.xml": 42
+        },
+        "forbidden_matches": [],
+        "extraction_errors": []
+      },
+      "process_table_contract": {
+        "passed": true,
+        "reference_sheet": "Reference effects",
+        "reference_columns": [
+          "Effect ID",
+          "Kind",
+          "Path",
+          "Estimate",
+          "Reference condition"
+        ],
+        "reference_effect_rows": 6,
+        "reference_condition": "Continuous moderators are evaluated at their original complete-sample raw means (coded 0); binary moderators are evaluated at 0.",
+        "result_status": "validated",
+        "promotion_pending_warning_absent": true,
+        "curve_warning_disclosure": "Exact engine-persisted Johnson-Neyman curve points; internal bootstrap refit diagnostics are not exported.",
+        "curve_warning_disclosure_exact": true,
+        "required_shared_strings_verified": true
+      },
+      "artifact_sha256": "0b8b0dd189b22d035d40aed01e43c9766a761c71d390a6513e4475c75c68c38f",
+      "source_check": "processV2Export"
+    },
+    "save_reopen": {
+      "passed": true,
+      "same_run_restored": true,
+      "initial_selected_table": "process_model_summary",
+      "project_checksum_matches": true,
+      "archive_witness_validated": true,
+      "archive_sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e",
+      "cycle_1_settled_autosave": {
+        "prefix": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
+        "coversEverySiblingPrefix": true,
+        "present": [
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json"
+        ],
+        "artifacts": [
+          {
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+            "size": 2317967,
+            "sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb"
+          },
+          {
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+            "size": 108,
+            "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
+          },
+          {
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+            "size": 12707,
+            "sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e"
+          },
+          {
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json",
+            "size": 108,
+            "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
+          }
+        ],
+        "required": [
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json"
+        ],
+        "allowed": [
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json"
+        ],
+        "missing": [],
+        "forbidden": [],
+        "exactAllowedIdentity": true,
+        "autosavePath": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+        "logicalState": {
+          "manifestValid": true,
+          "completedResultCount": 1,
+          "witnessCount": 1,
+          "completedRunIds": [
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
+          ],
+          "witnessRunIds": [
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
+          ],
+          "recipeIds": [
+            "de6d26d3-1767-4eaf-ac45-497a24194d7f"
+          ],
+          "recipeCount": 1,
+          "workspaceRunIds": [
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
+          ],
+          "selectedRunId": "edd1fd08-6b44-4fc1-8299-3a94b086369e"
+        },
+        "capturedArtifacts": [
+          {
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+            "source_size": 2317967,
+            "source_sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb",
+            "snapshot": {
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-0.bin",
+              "size": 2317967,
+              "sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb"
+            }
+          },
+          {
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+            "source_size": 108,
+            "source_sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a",
+            "snapshot": {
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-1.bin",
+              "size": 108,
+              "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
+            }
+          },
+          {
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+            "source_size": 12707,
+            "source_sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e",
+            "snapshot": {
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-2.bin",
+              "size": 12707,
+              "sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e"
+            }
+          },
+          {
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json",
+            "source_size": 108,
+            "source_sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a",
+            "snapshot": {
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-3.bin",
+              "size": 108,
+              "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
+            }
+          }
+        ]
+      },
+      "cycle_1_autosave_after_checkpoint": {
+        "prefix": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
+        "coversEverySiblingPrefix": true,
+        "present": [
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json"
+        ],
+        "artifacts": [
+          {
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+            "size": 2317967,
+            "sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb"
+          },
+          {
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+            "size": 108,
+            "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
+          },
+          {
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+            "size": 12707,
+            "sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e"
+          },
+          {
+            "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json",
+            "size": 108,
+            "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
+          }
+        ],
+        "required": [
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json"
+        ],
+        "allowed": [
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+          "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json"
+        ],
+        "missing": [],
+        "forbidden": [],
+        "exactAllowedIdentity": true,
+        "autosavePath": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+        "logicalState": {
+          "manifestValid": true,
+          "completedResultCount": 1,
+          "witnessCount": 1,
+          "completedRunIds": [
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
+          ],
+          "witnessRunIds": [
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
+          ],
+          "recipeIds": [
+            "de6d26d3-1767-4eaf-ac45-497a24194d7f"
+          ],
+          "recipeCount": 1,
+          "workspaceRunIds": [
+            "edd1fd08-6b44-4fc1-8299-3a94b086369e"
+          ],
+          "selectedRunId": "edd1fd08-6b44-4fc1-8299-3a94b086369e"
+        },
+        "capturedArtifacts": [
+          {
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave",
+            "source_size": 2317967,
+            "source_sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb",
+            "snapshot": {
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-0.bin",
+              "size": 2317967,
+              "sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb"
+            }
+          },
+          {
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.autosave.identity.json",
+            "source_size": 108,
+            "source_sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a",
+            "snapshot": {
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-1.bin",
+              "size": 108,
+              "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
+            }
+          },
+          {
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.bak",
+            "source_size": 12707,
+            "source_sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e",
+            "snapshot": {
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-2.bin",
+              "size": 12707,
+              "sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e"
+            }
+          },
+          {
+            "source_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls.identity.json",
+            "source_size": 108,
+            "source_sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a",
+            "snapshot": {
+              "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-sidecar-cycle1-3.bin",
+              "size": 108,
+              "sha256": "4d47b7b57e749f84e5e83cc719755f418252ecb04f9f290586ce730a4cd6bc5a"
+            }
+          }
+        ]
+      },
+      "source_check": "processV2SaveReopen"
+    },
+    "cancellation": {
+      "passed": true,
+      "active_lifecycle_captured": true,
+      "no_partial_result": true,
+      "source_check": "processV2Cancellation"
+    },
+    "cancelled_retry_setup": {
+      "passed": true,
+      "read_only": true,
+      "exact_frozen_setup_match": true,
+      "snapshot": {
+        "catalogCount": 18,
+        "selectedMethod": "Regression",
+        "regressionType": "process",
+        "outcome": "Y",
+        "focalPredictor": "X",
+        "paths": [
+          {
+            "from": "X",
+            "to": "Y"
+          },
+          {
+            "from": "X",
+            "to": "M1"
+          },
+          {
+            "from": "M1",
+            "to": "M2"
+          },
+          {
+            "from": "M2",
+            "to": "Y"
+          },
+          {
+            "from": "X",
+            "to": "M3"
+          },
+          {
+            "from": "M3",
+            "to": "Y"
+          },
+          {
+            "from": "X",
+            "to": "M4"
+          },
+          {
+            "from": "M4",
+            "to": "Y"
+          }
+        ],
+        "moderators": [
+          {
+            "variable": "W",
+            "scale": "continuous"
+          },
+          {
+            "variable": "B",
+            "scale": "binary_0_1"
+          }
+        ],
+        "moderations": [
+          {
+            "edge": "X -> Y",
+            "primary": "W",
+            "conditioning": "B"
+          },
+          {
+            "edge": "X -> M3",
+            "primary": "W",
+            "conditioning": ""
+          },
+          {
+            "edge": "M4 -> Y",
+            "primary": "B",
+            "conditioning": ""
+          }
+        ],
+        "selectedControls": [
+          "C"
+        ],
+        "samples": "10000",
+        "workers": "2",
+        "seed": "20260812",
+        "profile": "Complete-dataset PROCESS profile175 global listwise-complete cases; 5 rows omitted; 5 OLS equations verified",
+        "profileAriaBusy": "false",
+        "scope": "Graph-defined observed-variable path analysis with raw listwise-complete OLS equations, HC3 covariance, fixed two-sided 95% Student-t inference, parallel and serial mediation, continuous or exact 0/1 moderation, mixed two-moderator interactions, first- or second-stage moderated mediation, simple slopes, and Johnson-Neyman regions where applicable. This release supports up to 8 selected predictors in graph-role order and one control entered in every equation; the 50-term ceiling is an equation-design safety bound. Continuous product participants are centered within each equation sample. Numbered macros, binary outcomes, weights, clusters, custom alpha or tails, studentized intervals, multiple moderated stages on one indirect path, and three-way interactions on mediated paths are excluded. Continuous simple-slope and plot probes use the original sample raw mean - SD, mean, and mean + SD; binary probes use original raw 0/1. Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid.",
+        "bootstrapScope": "10,000 complete-case resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa requires every delete-one PROCESS fit; unavailable intervals retain an explicit reason. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Indexed seeded streams are deterministic and worker-invariant.",
+        "blockers": [],
+        "startEnabled": true,
+        "capacity": {
+          "topLevelPredictors": 7,
+          "topLevelPredictorsMaximum": 8,
+          "controls": 1,
+          "controlsMaximum": 1,
+          "equationNonInterceptTermsMaximum": 50
+        },
+        "graphDefinedWithoutNumberedTemplates": true
+      },
+      "frozen_setup": {
+        "catalogCount": 18,
+        "selectedMethod": "Regression",
+        "regressionType": "process",
+        "outcome": "Y",
+        "focalPredictor": "X",
+        "paths": [
+          {
+            "from": "X",
+            "to": "Y"
+          },
+          {
+            "from": "X",
+            "to": "M1"
+          },
+          {
+            "from": "M1",
+            "to": "M2"
+          },
+          {
+            "from": "M2",
+            "to": "Y"
+          },
+          {
+            "from": "X",
+            "to": "M3"
+          },
+          {
+            "from": "M3",
+            "to": "Y"
+          },
+          {
+            "from": "X",
+            "to": "M4"
+          },
+          {
+            "from": "M4",
+            "to": "Y"
+          }
+        ],
+        "moderators": [
+          {
+            "variable": "W",
+            "scale": "continuous"
+          },
+          {
+            "variable": "B",
+            "scale": "binary_0_1"
+          }
+        ],
+        "moderations": [
+          {
+            "edge": "X -> Y",
+            "primary": "W",
+            "conditioning": "B"
+          },
+          {
+            "edge": "X -> M3",
+            "primary": "W",
+            "conditioning": ""
+          },
+          {
+            "edge": "M4 -> Y",
+            "primary": "B",
+            "conditioning": ""
+          }
+        ],
+        "selectedControls": [
+          "C"
+        ],
+        "samples": "10000",
+        "workers": "2",
+        "seed": "20260812",
+        "profile": "Complete-dataset PROCESS profile175 global listwise-complete cases; 5 rows omitted; 5 OLS equations verified",
+        "profileAriaBusy": "false",
+        "scope": "Graph-defined observed-variable path analysis with raw listwise-complete OLS equations, HC3 covariance, fixed two-sided 95% Student-t inference, parallel and serial mediation, continuous or exact 0/1 moderation, mixed two-moderator interactions, first- or second-stage moderated mediation, simple slopes, and Johnson-Neyman regions where applicable. This release supports up to 8 selected predictors in graph-role order and one control entered in every equation; the 50-term ceiling is an equation-design safety bound. Continuous product participants are centered within each equation sample. Numbered macros, binary outcomes, weights, clusters, custom alpha or tails, studentized intervals, multiple moderated stages on one indirect path, and three-way interactions on mediated paths are excluded. Continuous simple-slope and plot probes use the original sample raw mean - SD, mean, and mean + SD; binary probes use original raw 0/1. Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid.",
+        "bootstrapScope": "10,000 complete-case resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa requires every delete-one PROCESS fit; unavailable intervals retain an explicit reason. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Indexed seeded streams are deterministic and worker-invariant.",
+        "blockers": [],
+        "startEnabled": true,
+        "capacity": {
+          "topLevelPredictors": 7,
+          "topLevelPredictorsMaximum": 8,
+          "controls": 1,
+          "controlsMaximum": 1,
+          "equationNonInterceptTermsMaximum": 50
+        },
+        "graphDefinedWithoutNumberedTemplates": true
+      },
+      "source_check": "processV2CancelledRetrySetup"
+    },
+    "witness_boundary": {
+      "passed": true,
+      "archive_only": true,
+      "witness_method_version": "regression_process_bootstrap_validation_witness_v1",
+      "estimand_order_exact": true,
+      "bootstrap_index_partition_exact": true,
+      "jackknife_index_partition_exact": true,
+      "excluded_from_results": true,
+      "excluded_from_exports": true,
+      "source_check": "processV2WitnessBoundary"
+    },
+    "resource_reset": {
+      "passed": true,
+      "original_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
+      "reset_path": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls",
+      "distinct_path": true,
+      "original_archive": {
+        "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
+        "size": 2317966,
+        "sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e"
+      },
+      "reset_archive": {
+        "path": "validation/results/v247-native-process-v2-reset-1787061855019-24928.qpls",
+        "size": 2317966,
+        "sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e"
+      },
+      "result_id": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
+      "recipe_id": "de6d26d3-1767-4eaf-ac45-497a24194d7f",
+      "run_id": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
+      "completed_result_count": 1,
+      "witness_count": 1,
+      "no_sidecars_before_copy": true,
+      "no_sidecars_after_copy": true,
+      "no_sidecars_before_open": true,
+      "settled_autosave_sidecars_exact": true,
+      "autosave_sidecars_stable_after_checkpoint": true,
+      "recovery_disclosure_absent": true,
+      "table_ids": [
+        "process_model_summary",
+        "process_paths",
+        "process_equation_coefficients",
+        "process_equation_fit",
+        "process_reference_effects",
+        "process_conditional_indirect_effects",
+        "process_moderated_mediation_indices",
+        "process_simple_slopes",
+        "process_conditional_plot_points",
+        "process_johnson_neyman",
+        "process_johnson_neyman_curve_points",
+        "process_bootstrap_summary",
+        "process_bootstrap_failures",
+        "process_bootstrap_inference",
+        "process_bootstrap_bca",
+        "process_scope"
+      ],
+      "selected_run_id": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
+      "selected_table_id": "process_model_summary",
+      "source_check": "processV2ResourceResetClone"
+    },
+    "resources": {
+      "passed": true,
+      "sample_count": 1065,
+      "raw_sample_count": 1065,
+      "first_sample": {
+        "recorded_at_utc": "2026-08-18T14:04:14.0442351Z",
+        "root_present": true,
+        "root_pid": 29224,
+        "total_working_set_bytes": 457900032,
+        "total_private_memory_bytes": 280342528,
+        "total_handle_count": 3374,
+        "total_thread_count": 181,
+        "process_role_counts": {
+          "desktop_root": 1,
+          "webview_browser": 1,
+          "webview_renderer": 1,
+          "webview_gpu": 1,
+          "webview_utility": 2,
+          "webview_other": 1,
+          "other_descendant": 0
+        },
+        "processes": [
+          {
+            "pid": 10792,
+            "parent_pid": 29224,
+            "name": "msedgewebview2.exe",
+            "role": "webview_browser",
+            "creation_date": "08/18/2026 19:34:12",
+            "executable_path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+            "command_line": "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe\" --embedded-browser-webview=1 --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --noerrdialogs --embedded-browser-webview-dpi-awareness=2 --disable-background-networking --disable-component-update --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-quic --disable-sync --metrics-recording-only --proxy-server=http://127.0.0.1:17846 --remote-debugging-port=9222 --lang=en-US --mojo-named-platform-channel-pipe=29224.23324.2645505420981265430 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+            "metrics_available": true,
+            "working_set_bytes": 129892352,
+            "private_memory_bytes": 45776896,
+            "handle_count": 1284,
+            "thread_count": 56
+          },
+          {
+            "pid": 17144,
+            "parent_pid": 10792,
+            "name": "msedgewebview2.exe",
+            "role": "webview_renderer",
+            "creation_date": "08/18/2026 19:34:13",
+            "executable_path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+            "command_line": "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe\" --type=renderer --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --remote-debugging-port=9222 --video-capture-use-gpu-memory-buffer --lang=en-US --device-scale-factor=1.25 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --js-flags=\"--expose-gc --ms-user-locale=en_IN\" --time-ticks-at-unix-epoch=-1784357999479422 --launch-time-ticks=2703853550354 --ssd-no-pressure-read-main-dll --metrics-shmem-handle=4224,i,3571106072925907966,7082986456167501650,2097152 --field-trial-handle=2040,i,13898816959410096266,18174974127850436502,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=2044,i,15690220849988761566,18292901741150916686,4 --trace-process-track-uuid=3190708990997080739 --mojo-platform-channel-handle=4236 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21 /prefetch:1",
+            "metrics_available": true,
+            "working_set_bytes": 94818304,
+            "private_memory_bytes": 57524224,
+            "handle_count": 327,
+            "thread_count": 19
+          },
+          {
+            "pid": 29224,
+            "parent_pid": 34312,
+            "name": "quickpls-desktop.exe",
+            "role": "desktop_root",
+            "creation_date": "08/18/2026 19:34:12",
+            "executable_path": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+            "command_line": "\"D:\\QuickPLS\\target\\release\\quickpls-desktop.exe\" ",
+            "metrics_available": true,
+            "working_set_bytes": 33452032,
+            "private_memory_bytes": 9539584,
+            "handle_count": 376,
+            "thread_count": 24
+          },
+          {
+            "pid": 37124,
+            "parent_pid": 10792,
+            "name": "msedgewebview2.exe",
+            "role": "webview_other",
+            "creation_date": "08/18/2026 19:34:12",
+            "executable_path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+            "command_line": "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe\" --type=crashpad-handler --user-data-dir=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView /prefetch:4 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21 --monitor-self-annotation=ptype=crashpad-handler --database=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\\Crashpad --metrics-dir=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView --annotation=IsOfficialBuild=1 --annotation=channel= --annotation=chromium-version=151.0.7922.138 \"--annotation=exe=C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe\" --annotation=plat=Win64 \"--annotation=prod=Edge WebView2\" --annotation=ver=151.0.4129.86 --initial-client-data=0x1c8,0x1cc,0x1d0,0x54,0x168,0x7ffa5bf365f0,0x7ffa5bf36600,0x7ffa5bf36610",
+            "metrics_available": true,
+            "working_set_bytes": 11890688,
+            "private_memory_bytes": 4718592,
+            "handle_count": 170,
+            "thread_count": 12
+          },
+          {
+            "pid": 44640,
+            "parent_pid": 10792,
+            "name": "msedgewebview2.exe",
+            "role": "webview_gpu",
+            "creation_date": "08/18/2026 19:34:12",
+            "executable_path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+            "command_line": "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe\" --type=gpu-process --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --gpu-preferences=WAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAQAAAAAAAAAADAAAAAAAAADgAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAoAAAAAAAAAAgAAAAAAAAAEAAAAAIAAAABAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --startup-read-main-dll --metrics-shmem-handle=1920,i,2425778254644747551,13518044562450248206,262144 --field-trial-handle=2040,i,13898816959410096266,18174974127850436502,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=2044,i,15690220849988761566,18292901741150916686,4 --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=2036 /prefetch:2 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+            "metrics_available": true,
+            "working_set_bytes": 127148032,
+            "private_memory_bytes": 132517888,
+            "handle_count": 673,
+            "thread_count": 34
+          },
+          {
+            "pid": 58152,
+            "parent_pid": 10792,
+            "name": "msedgewebview2.exe",
+            "role": "webview_utility",
+            "creation_date": "08/18/2026 19:34:12",
+            "executable_path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+            "command_line": "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --disable-quic --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2296,i,17709150956802062084,8790298261510582482,524288 --field-trial-handle=2040,i,13898816959410096266,18174974127850436502,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=2044,i,15690220849988761566,18292901741150916686,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2292 /prefetch:11 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+            "metrics_available": true,
+            "working_set_bytes": 37023744,
+            "private_memory_bytes": 14426112,
+            "handle_count": 348,
+            "thread_count": 24
+          },
+          {
+            "pid": 62216,
+            "parent_pid": 10792,
+            "name": "msedgewebview2.exe",
+            "role": "webview_utility",
+            "creation_date": "08/18/2026 19:34:12",
+            "executable_path": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+            "command_line": "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe\" --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=service --disable-quic --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2608,i,9354214404164086715,2119900894088696060,524288 --field-trial-handle=2040,i,13898816959410096266,18174974127850436502,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=2044,i,15690220849988761566,18292901741150916686,4 --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=2116 /prefetch:13 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+            "metrics_available": true,
+            "working_set_bytes": 23674880,
+            "private_memory_bytes": 15839232,
+            "handle_count": 196,
+            "thread_count": 12
+          }
+        ]
+      },
+      "monitor_terminal_reason": "stop_signal",
+      "peak_working_set_bytes": 893857792,
+      "peak_private_memory_bytes": 713531392,
+      "peak_working_set_under_2_gib": true,
+      "policy": "bounded_equal_logical_state_terminal_stable_v3",
+      "cancellation_terminal_sample_count": 6,
+      "cancellation_terminal_minimum_samples": 6,
+      "cancellation_terminal_samples_role_stable": true,
+      "cancellation_terminal_sample_recorded_at_utc": [
+        "2026-08-18T14:04:52.9848760Z",
+        "2026-08-18T14:04:53.4769333Z",
+        "2026-08-18T14:04:54.0049449Z",
+        "2026-08-18T14:04:54.4190586Z",
+        "2026-08-18T14:04:54.8843728Z",
+        "2026-08-18T14:04:55.3758586Z"
+      ],
+      "cancellation_terminal_max_working_set_bytes": 560197632,
+      "cancellation_terminal_max_private_memory_bytes": 401870848,
+      "cancellation_within_baseline_tolerance": true,
+      "full_window_disclosure": {
+        "qualification_role": "disclosure_only_not_a_threshold",
+        "baseline_checkpoint": "initial_idle",
+        "cancellation_checkpoint": "post_cancellation_idle",
+        "baseline_median_working_set_bytes": 520482816,
+        "cancellation_median_working_set_bytes": 607854592,
+        "working_set_delta_bytes": 87371776,
+        "baseline_median_private_memory_bytes": 330711040,
+        "cancellation_median_private_memory_bytes": 448937984,
+        "private_memory_delta_bytes": 118226944,
+        "per_role_deltas": [
+          {
+            "role": "desktop_root",
+            "baseline_median_working_set_bytes": 34787328,
+            "cancellation_median_working_set_bytes": 38694912,
+            "working_set_delta_bytes": 3907584,
+            "baseline_median_private_memory_bytes": 9170944,
+            "cancellation_median_private_memory_bytes": 10530816,
+            "private_memory_delta_bytes": 1359872
+          },
+          {
+            "role": "webview_browser",
+            "baseline_median_working_set_bytes": 140718080,
+            "cancellation_median_working_set_bytes": 148213760,
+            "working_set_delta_bytes": 7495680,
+            "baseline_median_private_memory_bytes": 49164288,
+            "cancellation_median_private_memory_bytes": 51810304,
+            "private_memory_delta_bytes": 2646016
+          },
+          {
+            "role": "webview_renderer",
+            "baseline_median_working_set_bytes": 140402688,
+            "cancellation_median_working_set_bytes": 207699968,
+            "working_set_delta_bytes": 67297280,
+            "baseline_median_private_memory_bytes": 95465472,
+            "cancellation_median_private_memory_bytes": 153444352,
+            "private_memory_delta_bytes": 57978880
+          },
+          {
+            "role": "webview_gpu",
+            "baseline_median_working_set_bytes": 131584000,
+            "cancellation_median_working_set_bytes": 131178496,
+            "working_set_delta_bytes": -405504,
+            "baseline_median_private_memory_bytes": 142274560,
+            "cancellation_median_private_memory_bytes": 197509120,
+            "private_memory_delta_bytes": 55234560
+          },
+          {
+            "role": "webview_utility",
+            "baseline_median_working_set_bytes": 61063168,
+            "cancellation_median_working_set_bytes": 61022208,
+            "working_set_delta_bytes": -40960,
+            "baseline_median_private_memory_bytes": 29913088,
+            "cancellation_median_private_memory_bytes": 29855744,
+            "private_memory_delta_bytes": -57344
+          },
+          {
+            "role": "webview_other",
+            "baseline_median_working_set_bytes": 11890688,
+            "cancellation_median_working_set_bytes": 21098496,
+            "working_set_delta_bytes": 9207808,
+            "baseline_median_private_memory_bytes": 4718592,
+            "cancellation_median_private_memory_bytes": 5787648,
+            "private_memory_delta_bytes": 1069056
+          },
+          {
+            "role": "other_descendant",
+            "baseline_median_working_set_bytes": 0,
+            "cancellation_median_working_set_bytes": 0,
+            "working_set_delta_bytes": 0,
+            "baseline_median_private_memory_bytes": 0,
+            "cancellation_median_private_memory_bytes": 0,
+            "private_memory_delta_bytes": 0
+          }
+        ]
+      },
+      "equal_state_working_set_within_tolerance": true,
+      "equal_state_private_memory_within_tolerance": true,
+      "equal_state_handle_count_within_tolerance": true,
+      "equal_state_thread_count_within_tolerance": true,
+      "equal_state_process_roles_exact": true,
+      "process_roles_bounded_and_terminally_stable": true,
+      "retained_history_disclosure": {
+        "checkpoint": "post_completed_history_2_idle",
+        "median_working_set_bytes": 758964224,
+        "median_private_memory_bytes": 551530496,
+        "completed_result_count": 2,
+        "witness_count": 2,
+        "qualification_role": "disclosure_only_not_a_threshold"
+      },
+      "phase_snapshots_attested": true,
+      "phase_document_attested": true,
+      "conclusion": "bounded_post_replacement_recovery_terminal_stable_v3",
+      "cancellation_cycle_count": 1,
+      "completed_cycle_count": 2,
+      "idle_checkpoint_count": 5,
+      "idle_settle_milliseconds": 5000,
+      "idle_checkpoints_ordered_and_distinct": true,
+      "capture_delay_milliseconds": 500,
+      "sample_window_milliseconds": 10000,
+      "minimum_samples_per_checkpoint": 6,
+      "checkpoint_diagnostic_count": 5,
+      "checkpoint_diagnostics_all_passed": true,
+      "artifact_disk_deltas_recorded": true,
+      "zero_lingering_descendants": true,
+      "graceful_exit_confirmed": true,
+      "parent_absent": true,
+      "forced_parent_termination": false,
+      "forced_descendant_pids": [],
+      "forced_resource_monitor_termination": false,
+      "source_check": "processV2Resources"
+    }
+  },
+  "artifacts": {
+    "xlsx": {
+      "path": "validation/results/v247-native-process-v2-20260818-193412166.xlsx",
+      "size": 55201,
+      "sha256": "0b8b0dd189b22d035d40aed01e43c9766a761c71d390a6513e4475c75c68c38f"
+    },
+    "project_archive": {
+      "path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
+      "size": 2317966,
+      "sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e"
+    },
+    "screenshots": [
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/180-tauri-native-process-v2-fixture-data-1536x794.png",
+        "size": 289690,
+        "sha256": "f092fcc2602b8c57e19d319e59a6e40c102873fab035e46bea2e907324c0ca2a"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/181-tauri-native-process-v2-cancellation-dialog-1536x794.png",
+        "size": 315109,
+        "sha256": "15f1fab3a8bb35af1cc1b38d666e19bcd2bc40576102f16cb320cb0a01fc9b4d"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/182-tauri-native-process-v2-cancellation-running-1536x794.png",
+        "size": 232672,
+        "sha256": "22a3640bd66499d6a0dd8fabdd64f136ec5a5e78d63720e4d8fc5a1c6a658d47"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/183-tauri-native-process-v2-cancelled-1536x794.png",
+        "size": 289545,
+        "sha256": "a036f47c807ed54fe5ed89d3694f765af6f753091cb621873957b2bab60caa12"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/184-tauri-native-process-v2-dialog-1536x794.png",
+        "size": 289545,
+        "sha256": "a036f47c807ed54fe5ed89d3694f765af6f753091cb621873957b2bab60caa12"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/185-tauri-native-process-v2-running-1536x794.png",
+        "size": 232661,
+        "sha256": "71184753242ade87a02ba62f4d3e8a5e763253110e5422a2245652f6da3ff3d3"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/186-tauri-native-process-v2-results-1536x794.png",
+        "size": 212788,
+        "sha256": "299446a4de83370ea0b26a4e6342b8ca615d6cd9e126202dd060e6b56cde5763"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/187-tauri-native-process-v2-export-1536x794.png",
+        "size": 219631,
+        "sha256": "e564332ea97e4451dbd904293f5dd53d8bd38b13e3c1867cc67a5f12bd1d8d8b"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/188-tauri-native-process-v2-reopened-1536x794.png",
+        "size": 211526,
+        "sha256": "cc92ab7f4f16e262734dbd4c5ae191d6778e77f8670a022d984d90e94bb557e0"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/189-tauri-native-process-v2-repeated-running-1536x794.png",
+        "size": 232672,
+        "sha256": "22a3640bd66499d6a0dd8fabdd64f136ec5a5e78d63720e4d8fc5a1c6a658d47"
+      }
+    ],
+    "resource_report": {
+      "path": "validation/results/process_v2_resource_report.json",
+      "size": 58993,
+      "sha256": "07bc61755a98f6a2cf5875edbf70e7d92df1874302859408c41cc5e40ad554a5"
+    },
+    "resource_samples": {
+      "path": "validation/results/process_v2_resource_samples.jsonl",
+      "size": 9423711,
+      "sha256": "e552981e0c2760bcc1662e645fd2240290e190a92dd699df819d3ae1deebad0a"
+    },
+    "resource_phases": {
+      "path": "validation/results/process_v2_resource_phases.json",
+      "size": 10816,
+      "sha256": "ee766c6d74dca9110b84b35a7aa69ba1c76bd13af8c522336f5cfc27b8cba9ab"
+    },
+    "resource_phase_snapshots": [
+      {
+        "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-initial_idle.qpls",
+        "size": 12707,
+        "sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e"
+      },
+      {
+        "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-post_cancellation_idle.qpls",
+        "size": 12707,
+        "sha256": "6d86534ef0f22cb8d06506953ceba4fd84d5575029b118a0ddaab193d4d0364e"
+      },
+      {
+        "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-post_completed_cycle_1_idle.qpls",
+        "size": 2317967,
+        "sha256": "0a0a2ce00ff32302e817d2d1366e6c4d06fadec7b12070c3cae7b11a12004dbb"
+      },
+      {
+        "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-post_completed_history_2_idle.qpls",
+        "size": 4620595,
+        "sha256": "80711257d54ae5d1ae18a226703f7917178d162c884593fd565b42a56d5e4a11"
+      },
+      {
+        "path": "validation/results/process-v2-resource-snapshot-1787061855019-24928-post_completed_cycle_2_idle.qpls",
+        "size": 2317967,
+        "sha256": "de8c6a7a601d0e142168f181ed220d20f9035d4f337649f84e69a14436ef2354"
+      }
+    ]
+  },
+  "console_errors": [],
+  "failures": [],
+  "source_report": "validation/results/v247_tauri_native_acceptance_process_v2.json"
 }

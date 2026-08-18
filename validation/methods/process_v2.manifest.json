@@ -39,19 +39,33 @@
       {
         "id": "hc3_covariance",
         "expression": "V_HC3 = inverse(X_prime X) X_prime diag((e_i / (1 - h_i))^2) X inverse(X_prime X)",
-        "variables": ["V_HC3", "X", "e_i", "h_i"],
+        "variables": [
+          "V_HC3",
+          "X",
+          "e_i",
+          "h_i"
+        ],
         "source_reference_id": "mackinnon_white_1985"
       },
       {
         "id": "conditional_indirect_effect",
         "expression": "indirect(w) = product_k path_k(w)",
-        "variables": ["indirect", "w", "path_k"],
+        "variables": [
+          "indirect",
+          "w",
+          "path_k"
+        ],
         "source_reference_id": "hayes_2015"
       },
       {
         "id": "simple_slope",
         "expression": "slope(w) = beta_x + beta_xw w",
-        "variables": ["slope", "w", "beta_x", "beta_xw"],
+        "variables": [
+          "slope",
+          "w",
+          "beta_x",
+          "beta_xw"
+        ],
         "source_reference_id": "preacher_curran_bauer_2006"
       }
     ],
@@ -95,7 +109,13 @@
         "purpose": "recovery",
         "design": "Preregistered direct, parallel and serial mediation, one- and two-moderator, and bounded moderated-mediation graphs with known continuous-outcome coefficients.",
         "seed_policy": "Frozen indexed data-generation streams and deterministic point estimation.",
-        "metrics": ["coefficient_bias", "direct_effect_recovery", "indirect_effect_recovery", "conditional_effect_recovery", "coverage"],
+        "metrics": [
+          "coefficient_bias",
+          "direct_effect_recovery",
+          "indirect_effect_recovery",
+          "conditional_effect_recovery",
+          "coverage"
+        ],
         "acceptance_rule": "The dedicated report must satisfy its frozen recovery and coverage boundaries for every advertised graph family."
       },
       {
@@ -103,7 +123,12 @@
         "purpose": "failure_behavior",
         "design": "Rank-deficient equations, near-unit leverage, invalid covariance, degenerate probe grids, unsupported graphs, failed resamples, and incomplete jackknife sets.",
         "seed_policy": "Deterministic named boundary fixtures plus fixed replicate-index-addressed bootstrap streams.",
-        "metrics": ["typed_failure_accuracy", "usable_fraction", "bca_unavailability_accuracy", "partial_result_count"],
+        "metrics": [
+          "typed_failure_accuracy",
+          "usable_fraction",
+          "bca_unavailability_accuracy",
+          "partial_result_count"
+        ],
         "acceptance_rule": "Every invalid case receives the frozen diagnostic, bootstrap failures remain accounted for, and no cancelled or invalid run commits partial analytical output."
       }
     ],
@@ -139,7 +164,7 @@
         "expected_behavior": "Strict archive validation rejects the entire changed result instead of rendering or exporting it."
       }
     ],
-    "numerical_tolerance": 1e-8
+    "numerical_tolerance": 1e-08
   },
   "product_contract": {
     "persistence": {
@@ -147,105 +172,183 @@
       "result_schema_version": 1,
       "payload_kind": "regression_process_v2",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result whose capability identity differs from its recipe."},
-        {"category": "method_version", "expected_behavior": "Reject a result relabeled as another PROCESS method version."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose saved dataset fingerprint no longer matches."},
-        {"category": "checksum", "expected_behavior": "Reject any modified archive entry whose checksum no longer matches."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicated keys, unknown fields, non-finite values, ambiguous effect identities, or inconsistent sufficient statistics."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret regression_process_v1 or unrelated mediation and moderation shells as a current v2 result."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose capability identity differs from its recipe."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a result relabeled as another PROCESS method version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose saved dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any modified archive entry whose checksum no longer matches."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicated keys, unknown fields, non-finite values, ambiguous effect identities, or inconsistent sufficient statistics."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret regression_process_v1 or unrelated mediation and moderation shells as a current v2 result."
+        }
       ],
       "legacy_policy": "Historical regression_process_v1 payloads remain immutable and readable but cannot be executed, appended, or promoted as graph-defined v2 evidence."
     },
     "native": {
-      "setup_controls": ["Focal predictor and terminal outcome", "Directed mediator paths", "Path-scoped moderators", "Control", "Optional bootstrap replicates, seed, and workers"],
-      "applicability_blockers": ["Cycle or reciprocal path", "Unsupported endogenous family", "Graph cap exceeded", "Unsupported moderated path", "Invalid numeric outcome or design"],
-      "result_surfaces": ["Equation coefficients and fit", "Direct and indirect effects", "Conditional effects and simple slopes", "Johnson-Neyman regions", "Bootstrap inference", "Run provenance"],
+      "setup_controls": [
+        "Focal predictor and terminal outcome",
+        "Directed mediator paths",
+        "Path-scoped moderators",
+        "Control",
+        "Optional bootstrap replicates, seed, and workers"
+      ],
+      "applicability_blockers": [
+        "Cycle or reciprocal path",
+        "Unsupported endogenous family",
+        "Graph cap exceeded",
+        "Unsupported moderated path",
+        "Invalid numeric outcome or design"
+      ],
+      "result_surfaces": [
+        "Equation coefficients and fit",
+        "Direct and indirect effects",
+        "Conditional effects and simple slopes",
+        "Johnson-Neyman regions",
+        "Bootstrap inference",
+        "Run provenance"
+      ],
       "gui_cli_parity_rule": "For the same graph, dataset, settings, and seed, GUI and CLI analytical payloads must be exactly equal apart from operational timestamps; bootstrap scientific output must also be worker-invariant.",
-      "accessibility_rules": ["Every graph, interaction plot, and Johnson-Neyman display has an equivalent accessible data table.", "Effect conditions, unavailable results, exclusions, and warnings are available without color or pointer interaction."]
+      "accessibility_rules": [
+        "Every graph, interaction plot, and Johnson-Neyman display has an equivalent accessible data table.",
+        "Effect conditions, unavailable results, exclusions, and warnings are available without color or pointer interaction."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx"],
-      "tables": ["Equation coefficients", "Equation fit", "Direct and indirect effects", "Conditional effects", "Simple slopes", "Johnson-Neyman regions", "Conditional plot points", "Bootstrap inference", "Run provenance"],
+      "formats": [
+        "csv",
+        "xlsx"
+      ],
+      "tables": [
+        "Equation coefficients",
+        "Equation fit",
+        "Direct and indirect effects",
+        "Conditional effects",
+        "Simple slopes",
+        "Johnson-Neyman regions",
+        "Conditional plot points",
+        "Bootstrap inference",
+        "Run provenance"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": true,
       "process_cleanup_required": true
     },
     "audit": {
-      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
       "source_hashes_required": true,
       "freshness_required": true,
       "reports_must_pass": true
     }
   },
   "qualification": {
-    "declared_state": "native_qualified",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/PROCESS_V2.md"],
-      "independent_reference": ["validation/process_v2_reference.py", "validation/process_v2_reference.R"],
-      "simulation_report": ["validation/process_v2_reference.py", "validation/test_process_v2_reference.py"],
-      "boundary_report": ["validation/process_v2_boundary_gate.py", "validation/test_process_v2_reference.py"],
-      "persistence_report": ["validation/test_process_v2_method_promotion_audit.py", "crates/qpls-project/src/lib.rs"],
-      "frontend_report": ["validation/process_v2_frontend_gate.py", "src/native/nativeProcess.test.ts", "src/native/NativeProcessSurface.test.tsx"],
-      "export_report": ["src/native/nativeExportTables.test.ts"],
-      "method_audit": ["validation/process_v2_method_promotion_audit.py", "validation/test_process_v2_method_promotion_audit.py", "validation/process_v2_factory_audit.py", "validation/legacy_release_adapter_common.py", "validation/test_legacy_release_adapters.py"],
-      "packaged_acceptance": ["validation/run_v247_process_v2_native_acceptance.ps1", "validation/v247_tauri_native_acceptance.mjs", "validation/v247_native_desktop_visual_acceptance.mjs", "validation/process_v2_packaged_acceptance.py", "validation/legacy_release_adapter_common.py", "validation/test_legacy_release_adapters.py"]
+      "method_spec": [
+        "docs/methods/PROCESS_V2.md"
+      ],
+      "independent_reference": [
+        "validation/process_v2_reference.py",
+        "validation/process_v2_reference.R"
+      ],
+      "simulation_report": [
+        "validation/process_v2_reference.py",
+        "validation/test_process_v2_reference.py"
+      ],
+      "boundary_report": [
+        "validation/process_v2_boundary_gate.py",
+        "validation/test_process_v2_reference.py"
+      ],
+      "persistence_report": [
+        "validation/test_process_v2_method_promotion_audit.py",
+        "crates/qpls-project/src/lib.rs"
+      ],
+      "frontend_report": [
+        "validation/process_v2_frontend_gate.py",
+        "src/native/nativeProcess.test.ts",
+        "src/native/NativeProcessSurface.test.tsx"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/process_v2_method_promotion_audit.py",
+        "validation/test_process_v2_method_promotion_audit.py",
+        "validation/process_v2_factory_audit.py",
+        "validation/legacy_release_adapter_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/test_legacy_release_adapters.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_v247_process_v2_native_acceptance.ps1",
+        "validation/v247_tauri_native_acceptance.mjs",
+        "validation/v247_native_desktop_visual_acceptance.mjs",
+        "validation/process_v2_packaged_acceptance.py",
+        "validation/legacy_release_adapter_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/test_legacy_release_adapters.py"
+      ]
     },
     "evidence": {
       "engine_only": [
-        {
-          "path": "validation/results/method_factory/process_v2/engine_stage.identity.json",
-          "roles": [
-            "method_spec",
-            "independent_reference",
-            "simulation_report",
-            "boundary_report"
-          ],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {
-              "passed": "/passed",
-              "feature_id": "/feature_id",
-              "method_version": "/method_version",
-              "catalogue_snapshot_date": "/catalogue_snapshot_date"
-            },
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/process_v2/engine_stage.identity.json","roles":["method_spec","independent_reference","simulation_report","boundary_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ],
       "archive_qualified": [
-        {
-          "path": "validation/results/method_factory/process_v2/persistence_report.identity.json",
-          "roles": ["persistence_report"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/process_v2/persistence_report.identity.json","roles":["persistence_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ],
       "native_qualified": [
-        {
-          "path": "validation/results/method_factory/process_v2/native_stage.identity.json",
-          "roles": ["frontend_report", "export_report"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/process_v2/native_stage.identity.json","roles":["frontend_report","export_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ],
-      "release_qualified": []
+      "release_qualified": [
+        {"path":"validation/results/method_factory/process_v2/method_audit.identity.json","roles":["method_audit"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}},
+        {"path":"validation/results/method_factory/process_v2/packaged_acceptance.identity.json","roles":["packaged_acceptance"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
+      ]
     }
   }
 }

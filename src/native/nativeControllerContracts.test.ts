@@ -19,7 +19,18 @@ describe("native controller release contracts", () => {
     expect(controller).toContain('confirmWorkspaceReplacement(path ? "opening another project" : "opening a project")');
     expect(controller).toContain('confirmWorkspaceReplacement("opening the sample project")');
     expect(controller).toContain('buttons: { yes: "Save", no: "Don\'t Save", cancel: "Cancel" }');
+    expect(controller).toContain("authorityOperationPendingRef.current");
+    expect(controller).toContain("Wait for Standard activation or validated save-copy to finish before");
     expect(app).not.toContain('loadProject({ nodes: [], edges: [], dataset: { id: crypto.randomUUID()');
+  });
+
+  it("uses canonical Standard authority anchors for every dirty-work guard", () => {
+    expect(controller).toContain("captureStandardSemModelV4SaveAuthorities(modelIds)");
+    expect(controller).toContain("active: strictAuthorityActive");
+    expect(controller).toContain("dirty: strictAuthorityDirty");
+    expect(controller).toContain("operationPending: authorityOperationPending");
+    expect(controller).toContain("if (!dirtyRef.current && !authorityOperationPendingRef.current) return;");
+    expect(controller).toMatch(/onCloseRequested[\s\S]*authorityOperationPendingRef\.current[\s\S]*event\.preventDefault\(\)/);
   });
 
   it("navigates only after a project or dataset operation succeeds", () => {
@@ -39,6 +50,30 @@ describe("native controller release contracts", () => {
     expect(controller).not.toContain('runs: workspace?.runs');
   });
 
+  it("blocks strict Standard authority before every legacy persistence or calculation boundary", () => {
+    const saveStart = controller.indexOf("const saveProject = async");
+    const saveGate = controller.indexOf('nativeLegacyProjectOperationBlocker(currentState, "schema5_save")', saveStart);
+    const saveNative = controller.indexOf("saveNativeProject(destination", saveStart);
+    const calculationStart = controller.indexOf("const runAnalysis = async");
+    const calculationGate = controller.indexOf('nativeLegacyProjectOperationBlocker(useWorkspace.getState(), "calculation")', calculationStart);
+    const calculationNative = controller.indexOf("startNativePlsJob(recipe)", calculationStart);
+    const autosaveStart = controller.indexOf("const scheduledSignature = projectSignature");
+    const autosaveGate = controller.indexOf('nativeLegacyProjectOperationBlocker(state, "schema5_autosave")', autosaveStart);
+    const autosaveNative = controller.indexOf("autosaveNativeProject(projectPath", autosaveStart);
+    const explorerStart = controller.indexOf("const mutateProjectExplorer = async");
+    const explorerGate = controller.indexOf('standardSemModelV4OperationBlocker("legacy_graph_serialization")', explorerStart);
+    const explorerNative = controller.indexOf("mutateNativeProjectExplorer({", explorerStart);
+
+    expect(saveGate).toBeGreaterThan(saveStart);
+    expect(saveGate).toBeLessThan(saveNative);
+    expect(calculationGate).toBeGreaterThan(calculationStart);
+    expect(calculationGate).toBeLessThan(calculationNative);
+    expect(autosaveGate).toBeGreaterThan(autosaveStart);
+    expect(autosaveGate).toBeLessThan(autosaveNative);
+    expect(explorerGate).toBeGreaterThan(explorerStart);
+    expect(explorerGate).toBeLessThan(explorerNative);
+  });
+
   it("hydrates and mutates the typed project explorer without dropping the outgoing model presentation", () => {
     expect(controller).toContain("projectModels: canonical.projectModels");
     expect(controller).toContain("modelPresentations: canonical.modelPresentations");
@@ -48,7 +83,7 @@ describe("native controller release contracts", () => {
     expect(controller).toContain("currentPresentation: artifacts?.presentation ?? null");
     expect(controller).toContain("path: state.projectPath");
     expect(controller).toContain("establishBaseline: false");
-    expect(controller).toContain("hasUnsavedNativeProjectChanges(true, cleanSignature, nextSignature)");
+    expect(controller).toContain("hasUnsavedNativeProjectChanges(true, cleanSignature, nextSignature, {");
     expect(controller).toContain('"quickpls:mutate-project-explorer"');
     expect(controller).toMatch(/mutateProjectExplorer\(detail\.mutation\)[\s\S]*detail\.resolve\(\)[\s\S]*detail\.reject/);
   });
@@ -87,11 +122,15 @@ describe("native controller release contracts", () => {
   });
 
   it("fails current structural path randomization closed before adding the completed run", () => {
+    const plsCompletionStart = controller.indexOf("const { estimation: result, assessment } = envelope.payload;");
+    const completedRunAppend = controller.indexOf("addRun(completedRun);", plsCompletionStart);
     const completion = controller.slice(
-      controller.indexOf("const envelope = await getNativePlsJobResult(job.id)"),
-      controller.indexOf("transitionRunMonitor({", controller.indexOf("addRun(completedRun);")),
+      plsCompletionStart,
+      controller.indexOf("transitionRunMonitor({", completedRunAppend),
     );
 
+    expect(plsCompletionStart).toBeGreaterThan(-1);
+    expect(completedRunAppend).toBeGreaterThan(plsCompletionStart);
     expect(completion).toContain("const completedRun: AnalysisRun = {");
     expect(completion).toContain("isStructuralPathRandomizationIdentityPresent(recipe, envelope)");
     expect(completion).toContain("nativeStructuralPathRandomizationProjection(completedRun)");
@@ -102,13 +141,24 @@ describe("native controller release contracts", () => {
   });
 
   it("uses the consumed native result id for both the saved run and completion selection", () => {
-    const completion = controller.slice(
-      controller.indexOf("const envelope = await getNativePlsJobResult(job.id);"),
-      controller.indexOf('pushToast({ tone: "success", title: "Calculation completed"'),
-    );
+    const powerCompletionStart = controller.indexOf('envelope.payload.kind === "pls_sample_size_power_v1"');
+    const plsCompletionStart = controller.indexOf("const { estimation: result, assessment } = envelope.payload;", powerCompletionStart);
+    const completionEnd = controller.indexOf("const executeRun = async", plsCompletionStart);
+    const powerCompletion = controller.slice(powerCompletionStart, plsCompletionStart);
+    const plsCompletion = controller.slice(plsCompletionStart, completionEnd);
 
-    expect(completion).toMatch(/const completedRun: AnalysisRun = \{[\s\S]*id: envelope\.id,[\s\S]*modelId:[\s\S]*\};[\s\S]*addRun\(completedRun\);/);
-    expect(completion).toMatch(/transitionRunMonitor\(\{[\s\S]*status: "completed",[\s\S]*lastRunId: envelope\.id,/);
+    expect(powerCompletionStart).toBeGreaterThan(-1);
+    expect(powerCompletion).toContain('envelope.payload.kind === "pls_sample_size_power_v2"');
+    expect(plsCompletionStart).toBeGreaterThan(powerCompletionStart);
+    expect(completionEnd).toBeGreaterThan(plsCompletionStart);
+    expect(powerCompletion).toContain("id: envelope.id,");
+    expect(powerCompletion).toContain("modelId,");
+    expect(powerCompletion).toContain("lastRunId: envelope.id,");
+    expect(powerCompletion.match(/addRun\(completedRun\);/g)).toHaveLength(1);
+    expect(plsCompletion).toContain("id: envelope.id,");
+    expect(plsCompletion).toContain("modelId: standalone ? null : modelId,");
+    expect(plsCompletion).toContain("lastRunId: envelope.id,");
+    expect(plsCompletion.match(/addRun\(completedRun\);/g)).toHaveLength(1);
     expect(app).toContain("resolveSelectedCompletedRun(completedRuns, selectedResultRunId)");
     expect(app).toContain("setSelectedRunId={setSelectedResultRun}");
     expect(app).not.toContain("useState(selectedResultRunId");
@@ -121,22 +171,47 @@ describe("native controller release contracts", () => {
       'if (!envelope || envelope.payload.kind === "legacy") throw new Error("The completed job did not return a compatible result.");',
       resultFetch,
     );
-    const completedRunAppend = controller.indexOf("addRun(completedRun);", compatibilityGate);
-    const runEnd = controller.indexOf("const executeRun = async", completedRunAppend);
+    const powerCompletionStart = controller.indexOf('envelope.payload.kind === "pls_sample_size_power_v1"', compatibilityGate);
+    const plsCompletionStart = controller.indexOf("const { estimation: result, assessment } = envelope.payload;", powerCompletionStart);
+    const runEnd = controller.indexOf("const executeRun = async", plsCompletionStart);
+    const powerCompletion = controller.slice(powerCompletionStart, plsCompletionStart);
+    const plsCompletion = controller.slice(plsCompletionStart, runEnd);
 
     expect(runStart).toBeGreaterThan(-1);
     expect(resultFetch).toBeGreaterThan(runStart);
     expect(compatibilityGate).toBeGreaterThan(resultFetch);
-    expect(completedRunAppend).toBeGreaterThan(compatibilityGate);
+    expect(powerCompletionStart).toBeGreaterThan(compatibilityGate);
+    expect(powerCompletion).toContain('envelope.payload.kind === "pls_sample_size_power_v2"');
+    expect(plsCompletionStart).toBeGreaterThan(powerCompletionStart);
     expect(controller.slice(runStart, resultFetch)).not.toContain("addRun(completedRun);");
-    expect(controller.slice(completedRunAppend, runEnd)).toContain('status: "completed"');
-    expect(controller.slice(completedRunAppend, runEnd).match(/addRun\(completedRun\);/g)).toHaveLength(1);
+    expect(powerCompletion).toContain('status: "completed"');
+    expect(powerCompletion.match(/addRun\(completedRun\);/g)).toHaveLength(1);
+    expect(plsCompletion).toContain('status: "completed"');
+    expect(plsCompletion.match(/addRun\(completedRun\);/g)).toHaveLength(1);
     expect(app).toContain("const completedRuns = useMemo(() => completedResultRuns(runs), [runs]);");
   });
 
   it("stores completed-run logs and exposes them on demand", () => {
     expect(controller).toContain("...useWorkspace.getState().runMonitor.logs");
     expect(app).toContain("Calculation log ({run.logs.length})");
+  });
+
+  it("latches cancellation before the native job id is available and forwards it once accepted", () => {
+    const runStart = controller.indexOf("const runAnalysis = async");
+    const nativeStart = controller.indexOf("let job = await startNativePlsJob(recipe);", runStart);
+    const latchedForward = controller.indexOf("if (calculationCancellationRequestedRef.current)", nativeStart);
+    const nativeCancel = controller.indexOf("job = await cancelNativePlsJob(job.id);", latchedForward);
+    const cancelStart = controller.indexOf("const cancelAnalysis = async");
+    const latch = controller.indexOf("calculationCancellationRequestedRef.current = true;", cancelStart);
+    const storeFallback = controller.indexOf("const jobId = activeJob?.id ?? monitor.activeJobId;", cancelStart);
+    const pendingReturn = controller.indexOf("if (!jobId) return;", storeFallback);
+
+    expect(controller).toContain("const calculationCancellationRequestedRef = useRef(false);");
+    expect(latchedForward).toBeGreaterThan(nativeStart);
+    expect(nativeCancel).toBeGreaterThan(latchedForward);
+    expect(latch).toBeGreaterThan(cancelStart);
+    expect(storeFallback).toBeGreaterThan(latch);
+    expect(pendingReturn).toBeGreaterThan(storeFallback);
   });
 
   it("uses the typed builder as the sole native recipe construction path", () => {
@@ -268,10 +343,8 @@ describe("native controller release contracts", () => {
       controller.indexOf("const recipeId = crypto.randomUUID();"),
       controller.indexOf("let job = await startNativePlsJob(recipe);"),
     );
-    const completion = controller.slice(
-      controller.indexOf("const envelope = await getNativePlsJobResult(job.id);"),
-      controller.indexOf('pushToast({ tone: "success", title: "Calculation completed"'),
-    );
+    const plsCompletionStart = controller.indexOf("const { estimation: result, assessment } = envelope.payload;");
+    const completion = controller.slice(plsCompletionStart, controller.indexOf("const executeRun = async", plsCompletionStart));
 
     expect(controller).toContain("const standalone = isStandaloneNativeAnalysis(request.kind)");
     expect(construction).toContain("const transientModelId = crypto.randomUUID()");
@@ -280,8 +353,9 @@ describe("native controller release contracts", () => {
     expect(construction).toContain("if (!standalone)");
     expect(construction).toContain("nodes: standalone ? [] : nodes");
     expect(construction).toContain("edges: standalone ? [] : edges");
+    expect(plsCompletionStart).toBeGreaterThan(-1);
     expect(completion).toContain("modelId: standalone ? null : modelId");
-    expect(completion).toContain("...(modelSnapshot ? { modelSnapshot } : {})");
+    expect(completion).toContain("...(!standalone && modelSnapshot ? { modelSnapshot } : {})");
   });
 
   it("keeps calculation edits local until Start and lets Close discard the draft", () => {

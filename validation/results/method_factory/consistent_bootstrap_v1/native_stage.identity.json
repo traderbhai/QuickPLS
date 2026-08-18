@@ -1,0 +1,106 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "native_setup_results_and_accessibility": {
+      "passed": true
+    },
+    "same_run_export_contract": {
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "src/native/nativeConsistentBootstrap.test.ts",
+        "src/native/nativeAnalysisRecipe.test.ts",
+        "src/native/NativeCalculationDialog.test.ts"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  3 passed (3)\n      Tests  89 passed (89)\n   Start at  12:39:36\n   Duration  4.91s (transform 4.77s, setup 0ms, import 7.74s, tests 1.49s, environment 1ms)\n\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-cli",
+        "tests::plsc_consistent_bootstrap_export_is_typed_complete_and_fail_closed",
+        "--",
+        "--exact"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.54s\n     Running unittests src\\main.rs (target\\debug\\deps\\qpls-e2390cb85b1f9a14.exe)\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::plsc_consistent_bootstrap_export_is_typed_complete_and_fail_closed ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 4.61s\n\n"
+    }
+  ],
+  "feature_id": "qpls3.inference.consistent_bootstrap",
+  "generated_at_utc": "2026-08-18T07:09:52.047324Z",
+  "method_version": "plsc_bootstrap_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "frontend_report+export_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
+    },
+    {
+      "path": "src/native/nativeConsistentBootstrap.test.ts",
+      "sha256": "ce3e5f94b8e23356238e197636bc8527180ba3ada97db3ab07b3e08b24701401",
+      "size": 10875
+    },
+    {
+      "path": "src/native/nativeConsistentBootstrap.ts",
+      "sha256": "cb804728d1ae353faeb22791c8b7a0ce6d6374141a90db03e48efcca0ef845c8",
+      "size": 13974
+    },
+    {
+      "path": "src/native/nativeExportTables.ts",
+      "sha256": "6ce1244a6be88c0035a6113b070f5c876b46807623f96c949f1d41c985aa6ba7",
+      "size": 42765
+    },
+    {
+      "path": "src/native/nativeResults.ts",
+      "sha256": "86159a6227f9c404ba7056f7002ccc8ccd637c003489e1e4cb1b5328275c4007",
+      "size": 350624
+    },
+    {
+      "path": "validation/established_method_factory_common.py",
+      "sha256": "cbc4eb8e5d7ab329d3a5c1eaae910c43cdac39f6c11fbd26eb774cc65e95c090",
+      "size": 20368
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/consistent_bootstrap_v1.manifest.json",
+      "sha256": "5a7e77d0adfbb942ba0ff051a3975f0e9c64432b1d7950e9eda7334ccd50132a",
+      "size": 16647
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_established_method_factory.py",
+      "sha256": "a16157170cc23ffb0fe8a112a2b28b25b9f6f1518a443c6265c9fe993d70ee52",
+      "size": 2917
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

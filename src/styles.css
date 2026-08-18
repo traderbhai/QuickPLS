@@ -1965,6 +1965,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, .react-flow__no
 .interpretation-workspace .result-table-scroll td:first-child { min-width: 130px; }
 .comparison-selector { padding: 10px; border: 1px solid var(--border); background: #f8fbfb; display: flex; gap: 10px; flex-wrap: wrap; }
 .comparison-selector label { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #d7e1e4; background: white; padding: 6px 8px; font-size: 10px; font-weight: 800; color: #2d444b; }
+.comparison-selector p { flex: 1 0 100%; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.comparison-selector input:disabled { cursor: not-allowed; }
+.comparison-blocked { border: 1px solid #e0b34d; background: #fff9e9; padding: 12px 14px; }
+.comparison-blocked h3 { margin: 0 0 8px; color: #5f470d; font-size: 13px; }
+.comparison-blocked ul { margin: 0; padding-left: 18px; color: #5f470d; }
+.comparison-blocked li + li { margin-top: 7px; }
+.comparison-blocked li strong,
+.comparison-blocked li span { display: block; }
+.comparison-blocked li span { margin-top: 2px; font-size: 10px; line-height: 1.45; }
+.canonical-comparison-results { display: grid; gap: 10px; }
 .method-warnings { margin: -3px 0 0; padding: 7px 9px 7px 24px; border-left: 3px solid #d79a19; background: #fff9e9; color: #6c5722; font-size: 9px; line-height: 1.4; }
 .method-metric { width: fit-content; min-width: 150px; padding: 7px 9px; border: 1px solid var(--border); background: #f8fbfb; }
 .method-metric span { display: block; color: var(--muted); font-size: 9px; }

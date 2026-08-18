@@ -1,0 +1,1780 @@
+{
+  "fragment_schema_version": 1,
+  "fragment_id": "quickpls.wave0.pls_core_resampling_official.v1",
+  "frozen_on": "2026-08-14",
+  "capability_ids": [
+    "smartpls.pls_algorithm",
+    "smartpls.wpls",
+    "smartpls.plsc",
+    "smartpls.pca_core",
+    "smartpls.pls_bootstrapping",
+    "smartpls.consistent_bootstrapping",
+    "smartpls.permutation",
+    "smartpls.consistent_permutation"
+  ],
+  "cell_assessments": [
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.pls_algorithm",
+        "cell_id": "qpls3.pls.algorithm",
+        "capability_version": "pls_pm_v1"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.wpls",
+        "cell_id": "qpls3.pls.weighted",
+        "capability_version": "wpls_case_weighted_v1"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.plsc",
+        "cell_id": "qpls3.pls.consistent",
+        "capability_version": "plsc_v2"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.pca_core",
+        "cell_id": "qpls3.standalone.pca",
+        "capability_version": "pca_v1"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.pls_bootstrapping",
+        "cell_id": "qpls3.inference.bootstrap",
+        "capability_version": "indexed_resampling_v4"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.consistent_bootstrapping",
+        "cell_id": "qpls3.inference.consistent_bootstrap",
+        "capability_version": "plsc_bootstrap_v1"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.permutation",
+        "cell_id": "qpls3.groups.micom_permutation_mga",
+        "capability_version": "pls_mga_permutation_v4"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.permutation",
+        "cell_id": "qpls3.inference.structural_path_randomization",
+        "capability_version": "freedman_lane_permutation_v1"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.consistent_permutation",
+        "cell_id": "qpls3.inference.consistent_permutation",
+        "capability_version": "plsc_permutation_v1"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    }
+  ],
+  "dimension_assessments": [
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_algorithm.settings.documented.options",
+          "description": "Documented fact: SmartPLS offers factor, path, and per-construct PCA weighting; standardized, unstandardized, and mean-centered results; and standard or per-indicator initial outer weights.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "The settings contract exposes exactly factor, path, and PCA weighting and exactly standardized, unstandardized, and mean-centered result types.",
+            "Standard initialization assigns +1 to every indicator; individual initialization persists one explicit starting weight per indicator."
+          ]
+        },
+        {
+          "item_id": "pls_algorithm.settings.open_live_app.sum_scores_reachability",
+          "description": "Open live-app detail: the page says iteration count is fixed in SmartPLS 4 while also noting that zero iterations returns sum scores; the current reachability of that zero-iteration route is not established by the page.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "A dated SmartPLS desktop fixture records whether zero iterations can be selected in the current UI or another supported execution path and records the resulting method label.",
+            "Until that fixture exists, sum-scores reachability remains an explicit open detail and is not inferred from the documentation note."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_algorithm.defaults.documented.fixed_values",
+          "description": "Documented fact: path weighting, standardized results, and +1 initial outer weights are defaults; SmartPLS 4 fixes the maximum at 3,000 iterations and the outer-weight stop criterion at 1e-7.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "A fresh current-version recipe resolves to path weighting, standardized results, standard +1 initialization, 3,000 maximum iterations, and a 1e-7 stop criterion.",
+            "The fixed iteration and stop values are stored in Run Details even when they are not user-editable."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_algorithm.model_shapes.documented.blocks_and_paths",
+          "description": "Documented fact: the algorithm estimates a specified PLS path model with adjacent construct scores and indicator blocks using Mode A single regressions or Mode B multiple regression; path weighting is described as generally applicable to all PLS path-model specifications.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "Microcases with a Mode A block and with a full-rank Mode B block compile to the documented outer-weight regressions and retain the specified structural adjacency.",
+            "Changing one structural path changes the affected inner approximation and downstream estimates without changing unrelated presentation objects."
+          ]
+        },
+        {
+          "item_id": "pls_algorithm.model_shapes.open_live_app.exhaustive_eligibility",
+          "description": "Open live-app detail: the page does not enumerate current eligibility for cycles, single-indicator constructs, controls, interactions, higher-order constructs, or other difficult diagram shapes.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "A dated live-app model-shape matrix records acceptance or rejection and the exact diagnostic for every difficult PLS shape in the finalization corpus.",
+            "No shape is marked supported solely from the page's general-applicability wording."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_algorithm.data_inputs.documented.indicator_cases",
+          "description": "Documented fact: the algorithm operates on observed indicator values indexed by case and estimates construct scores from indicator data and the specified path model.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "The runner binds every scientific indicator to an observed data column and records the case count used to calculate scores.",
+            "An unbound indicator is rejected before iteration begins with an object-specific diagnostic."
+          ]
+        },
+        {
+          "item_id": "pls_algorithm.data_inputs.open_live_app.missing_and_matrix_inputs",
+          "description": "Open live-app detail: this page does not define missing-value policies, categorical-scale eligibility, matrix-input support, or file-import behavior for the PLS algorithm.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "Separate official data-workflow captures record every current input and missing-data choice before those choices are claimed as algorithm parity.",
+            "The PLS core fragment does not infer support for covariance, correlation, ordinal, or silently imputed inputs."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_algorithm.preprocessing.documented.centering_and_normalization",
+          "description": "Documented fact: during stages 1 and 2 manifest and latent scores are treated as deviations from their means, and each updated outside approximation is scaled to unit variance.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "A hand-calculated fixture confirms mean-deviation treatment in stages 1 and 2 and unit-variance construct-score normalization after every outside update.",
+            "Mode A uses indicator-on-inside-approximation regressions and Mode B uses inside-approximation-on-indicators multiple regression."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_algorithm.outputs.documented.core_results",
+          "description": "Documented fact: the three stages yield construct scores and outer weights, path coefficients and loadings, and location parameters; result scaling may be standardized, unstandardized, or mean-centered.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "The canonical result contains stable typed tables for scores, outer weights, loadings, structural paths, and applicable location parameters.",
+            "The selected result type changes the numerical scale and intercept/location output as documented and is preserved in archive and export."
+          ]
+        },
+        {
+          "item_id": "pls_algorithm.outputs.open_live_app.complete_table_inventory",
+          "description": "Open live-app detail: the page does not enumerate every current SmartPLS result table, diagnostic, ordering rule, precision rule, or table identifier.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "A dated complete-results capture enumerates table names, columns, ordering, precision, missing-value display, and result navigation.",
+            "The documented core outputs do not by themselves close full result-surface parity."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_algorithm.charts.open_live_app.inventory",
+          "description": "Open live-app detail: the official algorithm page does not specify a required chart inventory or chart interaction behavior.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "A dated live-app capture records every PLS algorithm chart, its source table, controls, defaults, and export behavior; an empty inventory must be evidenced rather than assumed.",
+            "Every captured chart is tested against its source analytical cells."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_algorithm.failure_conditions.documented.nonconvergence",
+          "description": "Documented fact: iteration ends when the change in outer weights is below 1e-7 or when 3,000 iterations are reached, and reaching the maximum rather than the stop criterion must be detectable when reviewing results.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "A forced nonconvergence fixture records maximum-iteration termination distinctly from convergence and cannot be presented as an ordinary converged result.",
+            "Run Details record iteration count, terminal reason, and final outer-weight change."
+          ]
+        },
+        {
+          "item_id": "pls_algorithm.failure_conditions.open_live_app.invalid_models",
+          "description": "Open live-app detail: the page does not define current diagnostics for singular Mode B blocks, zero-variance indicators, invalid data, or other inadmissible inputs.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "Dated live-app fixtures capture the result or exact diagnostic for every adversarial core-model case in the finalization corpus.",
+            "No undocumented retry, pseudoinverse, zero substitution, or partial-result behavior is inferred."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_algorithm.workflows.documented.three_stage_estimation",
+          "description": "Documented fact: estimation initializes outer weights, iterates inner weights, inside approximation, provisional outer weights and normalized outside approximation, then estimates paths/loadings and location parameters.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "A trace fixture records the documented stage order and proves that Stage 2 and Stage 3 consume the converged Stage 1 scores.",
+            "The saved recipe and result preserve the selected weighting, scaling, and initialization choices."
+          ]
+        },
+        {
+          "item_id": "pls_algorithm.workflows.open_live_app.desktop_sequence",
+          "description": "Open live-app detail: the page does not specify the complete current desktop click path, preflight sequence, progress states, cancellation behavior, or save/export workflow.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_algorithm", "cell_id": "qpls3.pls.algorithm", "capability_version": "pls_pm_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"],
+          "acceptance_criteria": [
+            "A packaged live-app workflow capture records setup, run, progress, cancellation, results, save/reopen, and export actions on the frozen SmartPLS version.",
+            "Product parity remains open until those steps are represented in the broader workflow acceptance pack."
+          ]
+        }
+      ]
+    },
+
+    {
+      "capability_id": "smartpls.wpls",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "wpls.settings.documented.weight_variable",
+          "description": "Documented fact: a weighting tab presents a combo box for choosing the dataset's sampling-weight variable; selecting it automatically applies WPLS.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "The settings contract binds exactly one dataset column as a sampling weight and persists its stable column identity.",
+            "Selecting a weight changes the estimator to WPLS without requiring a separate scientific-model edit."
+          ]
+        },
+        {
+          "item_id": "wpls.settings.open_live_app.weight_constraints",
+          "description": "Open live-app detail: the page does not state accepted numeric type, normalization rule, range, missing marker behavior, or whether a user may explicitly choose no weight after opening the tab.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "A dated live-app fixture records accepted weight values, normalization, missing-value behavior, and the no-weight state.",
+            "Sampling, frequency, and case weights are not treated as interchangeable without official evidence."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.wpls",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "wpls.defaults.open_live_app.selection_state",
+          "description": "Open live-app detail: the official page explains selection but does not identify the current default combo-box value or any default weight normalization.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "A fresh-dialog live-app capture records the default weighting-tab state and the resulting estimator when the user makes no selection.",
+            "No WPLS default is entered into the parity contract until that current-version capture exists."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.wpls",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "wpls.model_shapes.documented.pls_and_plsc",
+          "description": "Documented fact: the weighting option appears for PLS, PLSc, and other algorithms that build on PLS or PLSc; absence of the weighting tab means WPLS is unavailable for that algorithm.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "PLS and PLSc fixtures can bind a sampling weight and compile to their weighted estimator variants.",
+            "A method without documented weighting support cannot accept a weight merely because the dataset contains a candidate column."
+          ]
+        },
+        {
+          "item_id": "wpls.model_shapes.open_live_app.compatibility_matrix",
+          "description": "Open live-app detail: the page does not enumerate every current downstream algorithm and difficult model shape for which the weighting tab appears.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "A dated live-app compatibility matrix records weighting-tab presence for every active PLS/PLSc-derived workflow and representative difficult model shape.",
+            "Uncaptured algorithms remain unsupported rather than being inferred from the phrase 'builds on PLS or PLSc'."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.wpls",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "wpls.data_inputs.documented.sampling_weight_per_case",
+          "description": "Documented fact: the imported dataset must contain a user-created sampling or post-stratification weight for every observation.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "Preflight verifies a one-to-one weight-to-observation binding and records the selected variable with the analytical sample.",
+            "The product never fabricates or estimates sampling weights during WPLS setup."
+          ]
+        },
+        {
+          "item_id": "wpls.data_inputs.open_live_app.invalid_weights",
+          "description": "Open live-app detail: zero, negative, nonfinite, missing, constant, extremely unbalanced, and filtered-out weights are not specified on the page.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "Dated current-version fixtures capture acceptance or the exact diagnostic for every adversarial weight vector in the qualification corpus.",
+            "No invalid-weight repair or normalization behavior is inferred from general sampling-weight guidance."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.wpls",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "wpls.preprocessing.documented.weighted_moments_and_regressions",
+          "description": "Documented fact: WPLS incorporates sampling weights through weighted means or variances, weighted correlations, and weighted regressions on the observed-variable data.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "Hand-calculated weighted-moment and weighted-regression microcases match the estimator's values before iterative PLS estimation.",
+            "Changing only the selected sampling weights changes the weighted correlations/regressions while preserving scientific model identity."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.wpls",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "wpls.outputs.documented.weighted_results",
+          "description": "Documented fact: selecting the weight variable yields weighted PLS results and all subsequent supported PLS computations draw on those sampling weights.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "The canonical result identifies WPLS and the selected weight variable and never labels a weighted estimate as an ordinary unweighted PLS estimate.",
+            "Every supported downstream result links to the same weight binding and analytical sample."
+          ]
+        },
+        {
+          "item_id": "wpls.outputs.open_live_app.table_inventory",
+          "description": "Open live-app detail: the page does not enumerate WPLS-specific tables, weight diagnostics, effective-sample summaries, or provenance fields shown in current results.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "A dated complete-results capture enumerates every WPLS-specific table, label, diagnostic, and export field.",
+            "The generic statement 'weighted PLS results' does not close semantic export parity."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.wpls",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "wpls.charts.open_live_app.inventory",
+          "description": "Open live-app detail: the official WPLS page does not specify charts or weighted chart behavior.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "A dated live-app capture records every WPLS chart and whether its source values use sampling weights; an empty inventory must be evidenced.",
+            "Any chart export reproduces the same weighted analytical values as its source table."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.wpls",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "wpls.failure_conditions.documented.unsupported_algorithm",
+          "description": "Documented fact: when an algorithm has no weighting tab, WPLS is not available for that algorithm.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "An unsupported method/weight combination is blocked before execution with the method and corrective action identified.",
+            "The runner cannot receive a hidden weight parameter for an unsupported algorithm."
+          ]
+        },
+        {
+          "item_id": "wpls.failure_conditions.open_live_app.weight_errors",
+          "description": "Open live-app detail: the page does not define current error messages, cancellation behavior, or numerical failure handling for invalid or extreme weights.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "A live-app adversarial fixture ledger records the exact outcome for missing, nonfinite, nonpositive, and high-leverage weights.",
+            "No silent clipping, absolute-value conversion, or unweighted fallback is accepted."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.wpls",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "wpls.workflows.documented.select_and_propagate",
+          "description": "Documented fact: the researcher creates weights before import, selects the weighting variable while running a supported PLS/PLSc-based algorithm, and SmartPLS applies WPLS to subsequent computations.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "An end-to-end fixture imports a preexisting weight column, selects it, runs WPLS, then runs one supported downstream procedure with the same weight provenance.",
+            "Save/reopen and export preserve the selected weight column and weighted method identity."
+          ]
+        },
+        {
+          "item_id": "wpls.workflows.open_live_app.desktop_details",
+          "description": "Open live-app detail: the page does not document the current complete click path, preflight summary, weight preview, progress, cancellation, or result-navigation sequence.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.wpls", "cell_id": "qpls3.pls.weighted", "capability_version": "wpls_case_weighted_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"],
+          "acceptance_criteria": [
+            "A packaged current-version workflow capture records those desktop states and their accessible labels.",
+            "The documented combo-box instruction alone does not close the product workflow obligation."
+          ]
+        }
+      ]
+    },
+
+    {
+      "capability_id": "smartpls.plsc",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "plsc.settings.documented.initial_calculations",
+          "description": "Documented fact: Initial calculations chooses either the path model as specified or an all-latent-variables-connected score model; the underlying PLS settings still apply and no other correction parameters are required.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "The PLSc settings schema has an explicit two-value initial-calculations enum and embeds the applicable PLS settings contract.",
+            "All-LV initialization changes only the score-generation adjacency used before correction and is recorded in the recipe."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.plsc",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "plsc.defaults.open_live_app.initial_calculations",
+          "description": "Open live-app detail: the page recommends connecting all latent variables for more stable scores but does not state which Initial calculations option is the current SmartPLS default.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "A fresh-dialog live-app capture records the selected Initial calculations value and all inherited PLS defaults.",
+            "The documented recommendation is not encoded as a default without that capture."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.plsc",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "plsc.model_shapes.documented.reflective_constructs",
+          "description": "Documented fact: PLSc corrects correlations among reflectively measured constructs so composite PLS estimates approximate a common-factor model.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "A reflective common-factor fixture receives the correction and returns disattenuated construct relationships.",
+            "The compiler identifies which constructs are eligible for correction rather than applying it blindly to every variable."
+          ]
+        },
+        {
+          "item_id": "plsc.model_shapes.open_live_app.mixed_and_difficult_models",
+          "description": "Open live-app detail: the page does not enumerate support for mixed reflective/formative models, single-indicator constructs, interactions, higher-order constructs, controls, or other difficult shapes.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "A dated current-version model-shape matrix records the outcome and exact diagnostic for each difficult PLSc fixture.",
+            "No mixed-model eligibility is inferred from the general description of reflectively specified constructs."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.plsc",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "plsc.data_inputs.documented.underlying_pls_indicator_data",
+          "description": "Documented fact: PLSc is a correction applied to standard PLS-SEM results and its initial calculation generates latent-variable scores from the PLS model.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "PLSc consumes the same bound indicator observations and analytical sample as its linked initial PLS estimation.",
+            "Changing the data or missing-data recipe invalidates both initial scores and corrected estimates."
+          ]
+        },
+        {
+          "item_id": "plsc.data_inputs.open_live_app.input_policies",
+          "description": "Open live-app detail: this page does not specify matrix inputs, scale types, missing-data options, weights, or minimum sample/indicator requirements.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "Separate dated official captures enumerate current PLSc data and weight policies before those combinations enter the parity gate.",
+            "No input policy is inherited merely because PLSc starts from PLS results."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.plsc",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "plsc.preprocessing.documented.disattenuation",
+          "description": "Documented fact: after the initial PLS calculation, PLSc uses a correction-for-attenuation procedure to adjust correlations among reflectively measured constructs; all-LV connectivity may be used to stabilize initial scores.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "A transparent oracle fixture verifies the documented correction-for-attenuation from the same initial PLS result.",
+            "Specified-path and all-LV initial calculations produce separately identifiable score-generation plans."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.plsc",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "plsc.outputs.documented.factor_consistent_estimates",
+          "description": "Documented fact: PLSc produces corrected, disattenuated construct correlations and parameter estimates intended to be consistent with a common-factor model for reflective constructs.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "The canonical result labels corrected PLSc estimates distinctly from uncorrected PLS estimates and retains their shared run lineage.",
+            "Changing correction eligibility changes only affected corrected parameters and downstream results."
+          ]
+        },
+        {
+          "item_id": "plsc.outputs.open_live_app.table_inventory",
+          "description": "Open live-app detail: the page does not enumerate every PLSc table, quality criterion, ordering rule, precision rule, or comparison with initial PLS values.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "A dated complete-results capture enumerates all PLSc tables, columns, identifiers, warnings, and exports.",
+            "The documented correction purpose alone does not close complete-results parity."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.plsc",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "plsc.charts.open_live_app.inventory",
+          "description": "Open live-app detail: the official PLSc page does not specify charts or chart behavior.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "A dated current-version capture enumerates PLSc charts and their corrected source tables; an empty inventory must be evidenced.",
+            "Chart exports preserve the PLSc method identity and corrected numerical values."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.plsc",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "plsc.failure_conditions.open_live_app.correction_failures",
+          "description": "Open live-app detail: the page does not define diagnostics for ineligible measurement models, invalid reliability corrections, non-positive-definite corrected matrices, initial PLS nonconvergence, or inadmissible estimates.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "A dated adversarial live-app ledger captures the result or exact diagnostic for each PLSc correction failure scenario.",
+            "No clipping, absolute-value conversion, identity fallback, or silent return of uncorrected PLS results is accepted."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.plsc",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "plsc.workflows.documented.initial_then_correct",
+          "description": "Documented fact: the researcher selects the Initial calculations strategy, checks the underlying PLS settings, runs the initial PLS estimation, and applies/evaluates the PLSc correction step by step.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "An end-to-end fixture links the initial PLS result, correction configuration, corrected PLSc result, archive, and export without recomputing hidden inputs.",
+            "Run Details expose both the initial-calculation strategy and the underlying PLS settings."
+          ]
+        },
+        {
+          "item_id": "plsc.workflows.open_live_app.desktop_sequence",
+          "description": "Open live-app detail: the page does not document every current setup screen, warning, progress state, cancellation route, result tab, or export action.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.plsc", "cell_id": "qpls3.pls.consistent", "capability_version": "plsc_v2"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/consistent-pls/"],
+          "acceptance_criteria": [
+            "A packaged current-version live-app capture records the complete PLSc workflow and accessible control names.",
+            "Step-by-step support in the page is not treated as a complete UI specification."
+          ]
+        }
+      ]
+    },
+
+    {
+      "capability_id": "smartpls.pca_core",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pca_core.settings.documented.standardized_only",
+          "description": "Documented fact: PCA has standardized outcomes only, based on the indicator correlation matrix, and uses an eigenvalue threshold of 1 as the component-retention decision criterion.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "The parity settings contract exposes standardized correlation-matrix PCA only and records the eigenvalue-greater-than-or-equal-to-1 retention rule.",
+            "No unstandardized result type is offered as official PCA parity."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pca_core",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pca_core.defaults.documented.only_mode",
+          "description": "Documented fact: standardized correlation-matrix outcomes are both the default and the only PCA result type, with eigenvalue 1 as the retention criterion.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "A new PCA recipe deterministically stores standardized/correlation-matrix mode and the eigenvalue-1 criterion without an alternative hidden default.",
+            "Save/reopen and export reproduce that method configuration exactly."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pca_core",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pca_core.model_shapes.documented.graphical_indicator_models",
+          "description": "Documented fact: SmartPLS supports graphical PCA models as exploratory analysis within both PLS-SEM and CB-SEM projects, transforming observed indicators into uncorrelated components.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "A graphical PCA fixture binds a declared set of observed indicators and remains executable in both PLS-SEM and CB-SEM project contexts.",
+            "PCA relations are not silently reinterpreted as latent-factor loadings or PLS structural paths."
+          ]
+        },
+        {
+          "item_id": "pca_core.model_shapes.open_live_app.graph_constraints",
+          "description": "Open live-app detail: the page does not specify minimum/maximum indicators, overlapping indicator sets, multiple PCA blocks, structural attachments, or other graphical restrictions.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "A dated live-app shape matrix records acceptance or the exact diagnostic for each PCA graph boundary in the qualification corpus.",
+            "No graph constraint is invented from the generic graphical-model statement."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pca_core",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pca_core.data_inputs.documented.observed_indicators",
+          "description": "Documented fact: PCA uses observed indicator variables and their correlation matrix to reduce a dataset into fewer components.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "The analytical input records the exact indicator set, valid-case policy, and correlation matrix used for eigenvalue decomposition.",
+            "Reordering indicators preserves aligned eigenvalues and sign/orientation-adjusted component results."
+          ]
+        },
+        {
+          "item_id": "pca_core.data_inputs.open_live_app.missing_and_matrix_sources",
+          "description": "Open live-app detail: the page does not define raw-versus-matrix input choices, missing-value treatment, categorical scales, weights, or constant-indicator handling.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "Dated current-version fixtures enumerate every accepted input type and missing-data choice and record constant-variable behavior.",
+            "Correlation-matrix computation is not evidence that user-supplied matrix input is supported."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pca_core",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pca_core.preprocessing.documented.correlation_eigendecomposition",
+          "description": "Documented fact: standardized indicator correlations undergo eigenvalue decomposition to produce uncorrelated principal components ordered by captured variance.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "A hand-calculated correlation-matrix fixture reproduces eigenvalues, orthogonal component directions up to sign, and explained-variance ordering.",
+            "Positive affine rescaling of an indicator leaves correlation-based PCA results unchanged after orientation alignment."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pca_core",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pca_core.outputs.documented.components_and_retention",
+          "description": "Documented fact: PCA reports standardized uncorrelated components that retain as much variance as possible, with eigenvalue 1 used to decide how many components to retain.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "The canonical result stores eigenvalues, explained-variance quantities, retained-component decisions, and component coefficients/scores where produced by the qualified contract.",
+            "The retained count changes deterministically when an eigenvalue crosses the threshold of 1."
+          ]
+        },
+        {
+          "item_id": "pca_core.outputs.open_live_app.table_inventory",
+          "description": "Open live-app detail: the page does not enumerate exact table names, loadings/score tables, total/cumulative variance columns, ordering, precision, or export structure.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "A dated complete-results capture records every PCA table, identifier, cell meaning, ordering, and export field.",
+            "Only tables evidenced by that capture enter the full surface-parity assertion."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pca_core",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pca_core.charts.open_live_app.inventory",
+          "description": "Open live-app detail: the official PCA page does not specify scree plots, loading plots, score plots, or any other chart inventory and controls.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "A dated live-app capture enumerates every PCA chart, axis/data mapping, component selector, default, and export behavior; an empty inventory must be evidenced.",
+            "Each captured visualization round-trips its analytical source data."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pca_core",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pca_core.failure_conditions.open_live_app.invalid_matrices",
+          "description": "Open live-app detail: the page does not define behavior for fewer than two usable variables, zero variance, perfect collinearity, non-positive-definite correlations, missingness, or numerical eigenvalue ties.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "A dated adversarial live-app ledger captures a result or exact diagnostic for every listed matrix pathology.",
+            "The qualified implementation returns a deterministic oriented solution or a typed failure, never NaN leakage or an unexplained component drop."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pca_core",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pca_core.workflows.documented.graphical_exploration",
+          "description": "Documented fact: researchers create a graphical PCA model inside a PLS-SEM or CB-SEM project and estimate it by eigenvalue decomposition as exploratory data analysis before or alongside SEM.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "An end-to-end fixture authors the PCA graph, binds indicators, estimates, saves/reopens, and exports the same component solution in both project contexts.",
+            "The PCA run remains a distinct exploratory result and does not silently mutate the SEM model."
+          ]
+        },
+        {
+          "item_id": "pca_core.workflows.open_live_app.desktop_sequence",
+          "description": "Open live-app detail: the page does not specify current authoring controls, calculation menu placement, result navigation, dataset generation, or export actions.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_core", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"],
+          "acceptance_criteria": [
+            "A packaged current-version workflow capture records the complete PCA desktop journey and accessible control names.",
+            "The graphical-model statement alone does not close current workflow parity."
+          ]
+        }
+      ]
+    },
+
+    {
+      "capability_id": "smartpls.pls_bootstrapping",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_bootstrapping.settings.documented.resampling_and_inference",
+          "description": "Documented fact: settings include subsample count, parallel processing, percentile/studentized/BCa confidence intervals, one- or two-sided testing, significance level, and random or fixed RNG seed.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "The recipe stores subsamples, processing mode, interval method, test side, significance level, seed mode, and fixed seed value when applicable.",
+            "Percentile, studentized, and BCa are independent selectable methods and one- versus two-sided tests alter the recorded inference contract."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_bootstrapping",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_bootstrapping.defaults.documented.subsamples_and_interval",
+          "description": "Documented fact: SmartPLS defaults to 10,000 subsamples and percentile confidence intervals; the page does not state current defaults for parallel processing, test type, significance level, or seed mode.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "A fresh recipe resolves to 10,000 subsamples and percentile intervals.",
+            "Every other default remains explicitly unresolved until a current live-app capture supplies it."
+          ]
+        },
+        {
+          "item_id": "pls_bootstrapping.defaults.open_live_app.remaining_defaults",
+          "description": "Open live-app detail: current defaults for parallel processing, one/two-sided testing, significance level, random/fixed seed mode, and fixed-seed value are not specified by the page.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "A fresh-dialog dated capture records every unspecified default and its disabled/enabled conditions.",
+            "SmartPLS 3's random-seed behavior is retained as historical context only and is not assumed to be the SmartPLS 4 default."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_bootstrapping",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_bootstrapping.model_shapes.documented.pls_parameters",
+          "description": "Documented fact: each bootstrap subsample re-estimates a PLS path model and supports inference for parameter/criterion families including paths, outer weights, outer loadings, Cronbach's alpha, HTMT, and R-squared.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "Representative reflective, formative, and structural PLS fixtures re-estimate every selected bootstrap subsample and return inference for each documented eligible family present.",
+            "Parameter identity remains stable across original and resampled estimates."
+          ]
+        },
+        {
+          "item_id": "pls_bootstrapping.model_shapes.open_live_app.difficult_models",
+          "description": "Open live-app detail: the page does not enumerate bootstrap eligibility for interactions, higher-order constructs, nonlinear terms, controls, endogeneity, groups, or other difficult PLS shapes.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "A dated current-version model-shape matrix records accept/reject behavior and result families for every difficult bootstrap fixture.",
+            "No advanced model shape is declared supported from the generic PLS path-model wording."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_bootstrapping",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_bootstrapping.data_inputs.documented.case_resamples",
+          "description": "Documented fact: each subsample randomly draws observations with replacement and has the original analytical sample size, or the reduced size after case-by-case deletion for missing values.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "The resampling ledger stores exactly the analytical-sample-sized index vector for every replicate and permits repeated case indices.",
+            "When case-by-case deletion is selected, every replicate size equals the post-deletion sample count and links to that reduced sample."
+          ]
+        },
+        {
+          "item_id": "pls_bootstrapping.data_inputs.open_live_app.other_missing_and_weighted_inputs",
+          "description": "Open live-app detail: the page does not define resampling behavior for other missing-value treatments, sampling weights, grouped filters, matrix inputs, or categorical indicators.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "Separate official captures record the exact sampling unit and preprocessing order for every such input combination.",
+            "No weighted or pairwise-deletion bootstrap behavior is inferred from the case-resampling description."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_bootstrapping",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_bootstrapping.preprocessing.documented.with_replacement_refits",
+          "description": "Documented fact: the nonparametric procedure draws each case subsample with replacement, re-estimates the PLS model, and aggregates replicate parameter estimates for inference.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "A fixed-seed microcase reproduces every stored index vector and refitted parameter vector across repeated executions.",
+            "Changing worker count changes neither accepted replicate indices nor aligned analytical results."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_bootstrapping",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_bootstrapping.outputs.documented.inference_families",
+          "description": "Documented fact: bootstrap distributions provide standard errors, t-values, confidence intervals, and significance testing for paths, outer weights, outer loadings, Cronbach's alpha, HTMT, R-squared, and other selected PLS results.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "The canonical result stores original estimate, bootstrap mean where produced, standard error, t-value, interval bounds, test side, alpha, and inferential decision for every selected parameter family.",
+            "Interval output identifies percentile, studentized, or BCa and its confidence level."
+          ]
+        },
+        {
+          "item_id": "pls_bootstrapping.outputs.open_live_app.complete_results",
+          "description": "Open live-app detail: the page does not enumerate current important-versus-complete result modes, all quality-criterion families, table identifiers, failure ledgers, ordering, or precision.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "A dated complete-results capture enumerates all result modes, parameter families, tables, warnings, ordering, and export fields.",
+            "The example output families on the public page are not treated as an exhaustive current result inventory."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_bootstrapping",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_bootstrapping.charts.open_live_app.distributions",
+          "description": "Open live-app detail: the official page does not specify bootstrap histograms, distribution plots, confidence-interval graphics, or chart controls.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "A dated live-app capture enumerates every bootstrap chart, source distribution, default parameter, controls, and export behavior; an empty inventory must be evidenced.",
+            "Every captured plot is numerically reconciled with the stored replicate ledger or canonical summary table."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_bootstrapping",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_bootstrapping.failure_conditions.open_live_app.failed_refits",
+          "description": "Open live-app detail: the page does not specify handling of nonconvergent or inadmissible replicates, retries/replacements, too-few subsamples, invalid BCa/studentized prerequisites, interruption, or cancellation.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "A dated adversarial live-app ledger records every requested, attempted, accepted, failed, retried, and replaced replicate for each failure class.",
+            "No retry or replacement semantics are assumed from the public page, and cancelled work cannot commit a partial visible result."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_bootstrapping",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_bootstrapping.workflows.documented.initial_and_final_runs",
+          "description": "Documented fact: researchers may use about 1,000 subsamples for an initial assessment and 10,000 for final results, choose inference settings, and use a fixed seed for repeatable results.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "An end-to-end workflow executes a 1,000-subsample exploratory run and a separate 10,000-subsample final run without overwriting either recipe or result.",
+            "Repeating the final run with the same fixed seed and settings reproduces the same resample indices and analytical output."
+          ]
+        },
+        {
+          "item_id": "pls_bootstrapping.workflows.open_live_app.desktop_sequence",
+          "description": "Open live-app detail: the page does not document the full current setup tabs, result-mode choice, progress/cancellation UI, failure review, save/reopen, or export sequence.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pls_bootstrapping", "cell_id": "qpls3.inference.bootstrap", "capability_version": "indexed_resampling_v4"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"],
+          "acceptance_criteria": [
+            "A packaged current-version live-app capture records the complete bootstrap workflow and accessible control names.",
+            "The public settings table alone does not close the desktop workflow obligation."
+          ]
+        }
+      ]
+    },
+
+    {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_bootstrapping.settings.documented.standard_setting_names",
+          "description": "Documented fact: consistent bootstrapping offers the same significance-testing settings as standard bootstrapping: subsamples, confidence-interval method, test type, significance level, and RNG seed, applied to PLSc estimation.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "The recipe stores each named inference setting and identifies PLSc as the estimator used in every replicate.",
+            "A consistent-bootstrap recipe cannot compile against standard uncorrected PLS estimation."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_bootstrapping.defaults.open_live_app.values",
+          "description": "Open live-app detail: the consistent-bootstrap page names settings but does not repeat their current default values or state whether every standard-bootstrap default is inherited unchanged.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "A fresh-dialog current-version capture records every consistent-bootstrap default and compares it field-by-field with standard bootstrapping.",
+            "No default value is inherited by inference from the phrase 'same settings'."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_bootstrapping.model_shapes.documented.plsc_models",
+          "description": "Documented fact: consistent bootstrapping is available when a model uses the PLSc-SEM algorithm and derives inference from PLSc re-estimation rather than standard PLS.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "A qualifying reflective PLSc model enables consistent bootstrapping and every replicate uses its identical correction plan.",
+            "A standard PLS-only model is rejected with a corrective instruction to select PLSc or ordinary bootstrapping."
+          ]
+        },
+        {
+          "item_id": "consistent_bootstrapping.model_shapes.open_live_app.difficult_plsc",
+          "description": "Open live-app detail: the page does not enumerate eligibility for mixed, interaction, higher-order, nonlinear, weighted, grouped, or other difficult PLSc models.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "A dated model-shape matrix records current live-app accept/reject behavior and result families for every difficult consistent-bootstrap fixture.",
+            "No advanced PLSc shape is accepted from the general availability statement."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_bootstrapping.data_inputs.documented.case_resamples",
+          "description": "Documented fact: subsamples are drawn at random with replacement from the original dataset and each is re-estimated with PLSc.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "The replicate ledger stores with-replacement case-index vectors and links each vector to a PLSc refit on the same bound dataset.",
+            "The original PLSc recipe and analytical sample fingerprint are immutable inputs to the run."
+          ]
+        },
+        {
+          "item_id": "consistent_bootstrapping.data_inputs.open_live_app.sample_and_missing_rules",
+          "description": "Open live-app detail: the page does not specify replicate sample size, missing-data treatment order, weights, groups, or input-scale restrictions.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "Dated current-version captures record each unresolved data rule before it is claimed as consistent-bootstrap parity.",
+            "Standard-bootstrap sample-size details are not silently copied into this row without official traceability."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_bootstrapping.preprocessing.documented.plsc_each_replicate",
+          "description": "Documented fact: every bootstrap subsample is estimated using PLSc so inference reflects disattenuated, factor-consistent parameters.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "A fixed-seed oracle fixture applies the full PLSc correction independently within every replicate rather than correcting only aggregate standard-bootstrap output.",
+            "Replicate parameter alignment remains stable under sign/orientation changes."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_bootstrapping.outputs.documented.plsc_inference",
+          "description": "Documented fact: consistent bootstrapping yields standard errors, t-values, confidence intervals, and significance tests for PLSc results such as paths, Cronbach's alpha, HTMT, and R-squared.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "The canonical result stores PLSc original estimates and matching bootstrap inference for each documented family present in the model.",
+            "Every table identifies consistent bootstrapping rather than standard bootstrapping."
+          ]
+        },
+        {
+          "item_id": "consistent_bootstrapping.outputs.open_live_app.complete_results",
+          "description": "Open live-app detail: the page gives examples rather than an exhaustive parameter-family, table, warning, ordering, precision, or export inventory.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "A dated complete-results capture enumerates every consistent-bootstrap result family, table, warning, and export field.",
+            "No unlisted parameter family is inferred from standard bootstrapping without an exact current capture."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_bootstrapping.charts.open_live_app.inventory",
+          "description": "Open live-app detail: the page does not specify consistent-bootstrap distribution charts or chart controls.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "A dated live-app capture enumerates all charts and their PLSc replicate sources; an empty inventory must be evidenced.",
+            "Captured chart data reconcile with the consistent-bootstrap ledger and canonical tables."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_bootstrapping.failure_conditions.open_live_app.failed_plsc_refits",
+          "description": "Open live-app detail: the page does not define behavior for failed PLSc corrections/refits, retries, replacements, invalid interval prerequisites, interruption, or cancellation.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "A dated adversarial live-app ledger records every requested, attempted, accepted, failed, retried, and replaced replicate and the exact user-visible diagnostic.",
+            "No standard-bootstrap failure policy is assumed and cancellation commits no partial result."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_bootstrapping",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_bootstrapping.workflows.documented.plsc_then_inference",
+          "description": "Documented fact: researchers estimate a model with PLSc and then run consistent bootstrapping to obtain PLSc-based significance tests, standard errors, and confidence intervals.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "An end-to-end fixture links the completed PLSc run, consistent-bootstrap recipe, replicate ledger, inference result, archive, and export.",
+            "Changing the parent PLSc recipe invalidates the saved inference rather than reusing it."
+          ]
+        },
+        {
+          "item_id": "consistent_bootstrapping.workflows.open_live_app.desktop_sequence",
+          "description": "Open live-app detail: the page does not document the complete current setup, result mode, progress/cancellation, failure review, save/reopen, or export sequence.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_bootstrapping", "cell_id": "qpls3.inference.consistent_bootstrap", "capability_version": "plsc_bootstrap_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-bootstrapping/"],
+          "acceptance_criteria": [
+            "A packaged current-version live-app capture records the complete workflow and accessible control names.",
+            "The page's step-by-step support statement does not close the desktop workflow obligation."
+          ]
+        }
+      ]
+    },
+
+    {
+      "capability_id": "smartpls.permutation",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "permutation.settings.documented.groups_and_test",
+          "description": "Documented fact: settings select Group A and Group B, permutation count, one- or two-tailed test, significance level, and parallel processing.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "The recipe stores two distinct declared groups, permutation count, test side, alpha, and processing mode.",
+            "Changing test side changes the p-value computation contract and is preserved in results and exports."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.permutation",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "permutation.defaults.documented.values",
+          "description": "Documented fact: defaults are 1,000 permutations, a two-tailed test, significance level 0.05, and enabled parallel processing.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "A fresh permutation recipe resolves to 1,000 runs, two-tailed, alpha 0.05, and parallel processing enabled.",
+            "Run Details and archive persist those values even when the processing mode does not alter scientific output."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.permutation",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "permutation.model_shapes.documented.two_group_pls_mga_micom",
+          "description": "Documented fact: the routine compares two predefined groups in a PLS-SEM model for group differences and supports MICOM measurement-invariance assessment.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "A two-group PLS fixture runs both permutation MGA and MICOM under one recipe while keeping their result sections distinct.",
+            "Group A and Group B use the same scientific model and parameter identities."
+          ]
+        },
+        {
+          "item_id": "permutation.model_shapes.open_live_app.parameters_and_difficult_models",
+          "description": "Open live-app detail: the page gives example parameter families but does not enumerate all eligible model shapes, parameters, more-than-two-group workflows, interactions, higher-order constructs, or weights.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "A dated live-app model/parameter matrix records current eligibility and exact diagnostics for every difficult fixture and group-count boundary.",
+            "Pairwise or omnibus support beyond the documented Group A versus Group B workflow is not inferred."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.permutation",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "permutation.data_inputs.documented.predefined_groups",
+          "description": "Documented fact: the input consists of the PLS dataset plus two predefined data groups; if group selectors are empty, groups must first be generated from the dataset.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "Preflight resolves stable Group A and Group B definitions, labels, inclusion counts, and non-overlapping member rows before resampling.",
+            "An empty group selection blocks execution and directs the user to create/select dataset groups."
+          ]
+        },
+        {
+          "item_id": "permutation.data_inputs.open_live_app.group_boundaries",
+          "description": "Open live-app detail: the page does not define missing group labels, overlapping filters, empty/tiny groups, extreme imbalance, weights, or missing-data treatment.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "A dated adversarial live-app ledger records the exact outcome for every listed group/data boundary.",
+            "No filtering, overlap resolution, or weight behavior is invented from the group-selection description."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.permutation",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "permutation.preprocessing.documented.fixed_size_reassignment",
+          "description": "Documented fact: every run draws without replacement n observations for Group A, where n is Group A's original size, assigns all remaining observations to Group B, and therefore preserves both group sizes.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "Every permutation ledger entry contains each pooled observation exactly once and preserves the original Group A and Group B counts.",
+            "A fixed-seed reference implementation reproduces aligned null distributions under row and declaration reordering."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.permutation",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "permutation.outputs.documented.mga_and_micom",
+          "description": "Documented fact: one results report includes permutation MGA differences for group-specific estimates such as outer weights, outer loadings, and paths, plus MICOM measurement-invariance outcomes.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "The canonical result has separate stable sections for group-specific estimates, parameter differences/permutation inference, and MICOM outcomes.",
+            "Every value identifies Group A, Group B, test side, alpha, permutation count, and source model/run."
+          ]
+        },
+        {
+          "item_id": "permutation.outputs.open_live_app.complete_results",
+          "description": "Open live-app detail: the page does not enumerate all parameters, MICOM tables/steps, confidence intervals, p-value columns, ordering, precision, warnings, or exports.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "A dated complete-results capture enumerates every permutation and MICOM table, column, decision, warning, ordering, and export field.",
+            "The public examples are not treated as the exhaustive result schema."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.permutation",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "permutation.charts.open_live_app.inventory",
+          "description": "Open live-app detail: the official page does not specify permutation distributions, group-comparison plots, MICOM charts, or controls.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "A dated live-app capture enumerates every chart, null-distribution source, selected parameter/group, defaults, and export behavior; an empty inventory must be evidenced.",
+            "Every captured chart reconciles to the same permutation ledger and canonical table."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.permutation",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "permutation.failure_conditions.documented.missing_groups",
+          "description": "Documented fact: an empty group selector requires the researcher to generate data groups before running the comparison.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "No-group and one-group fixtures fail preflight with an action that opens or identifies group creation/selection.",
+            "No permutation starts until two valid groups are resolved."
+          ]
+        },
+        {
+          "item_id": "permutation.failure_conditions.open_live_app.failed_refits",
+          "description": "Open live-app detail: the page does not define behavior for failed group fits, invariance ineligibility, invalid permutations, retries/replacements, interruption, cancellation, or extreme imbalance.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "A dated adversarial live-app ledger records every requested, attempted, accepted, failed, retried, and replaced permutation and exact diagnostic.",
+            "No retry/replacement behavior is inferred, and cancellation commits no partial result."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.permutation",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "permutation.workflows.documented.select_compare_report",
+          "description": "Documented fact: researchers create/select Group A and Group B, configure the permutation test, compare group-specific PLS estimates, and review both MGA and MICOM in the result report; 500-1,000 runs may be used initially and about 5,000 for final results.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "An end-to-end fixture creates/selects two groups, runs a 1,000-permutation initial analysis and a separate 5,000-permutation final analysis, and opens both MGA and MICOM sections.",
+            "Save/reopen and export preserve group identities, settings, ledger, and source run."
+          ]
+        },
+        {
+          "item_id": "permutation.workflows.open_live_app.desktop_sequence",
+          "description": "Open live-app detail: the page does not document all current group-builder actions, setup tabs, progress/cancellation states, failure review, result navigation, comparison actions, or exports.",
+          "trace_cells": [
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.groups.micom_permutation_mga", "capability_version": "pls_mga_permutation_v4"},
+            {"registry_schema_version": 2, "capability_id": "smartpls.permutation", "cell_id": "qpls3.inference.structural_path_randomization", "capability_version": "freedman_lane_permutation_v1"}
+          ],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/permutation/"],
+          "acceptance_criteria": [
+            "A packaged current-version live-app capture records the complete workflow and accessible control names.",
+            "The public settings and FAQ text do not close the desktop workflow obligation."
+          ]
+        }
+      ]
+    },
+
+    {
+      "capability_id": "smartpls.consistent_permutation",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_permutation.settings.documented.standard_setting_names",
+          "description": "Documented fact: consistent permutation offers the standard permutation settings—group selection, permutation count, test type, significance level, and parallel processing—applied to PLSc estimation.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "The recipe stores the named group and inference settings and identifies PLSc as the estimator for every permutation.",
+            "A consistent-permutation recipe cannot compile against standard uncorrected PLS."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_permutation",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_permutation.defaults.open_live_app.values",
+          "description": "Open live-app detail: the page names the settings but does not repeat current default values or prove that every standard-permutation default is inherited unchanged.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "A fresh-dialog current-version capture records every consistent-permutation default and compares it field-by-field with standard permutation.",
+            "No default is copied solely from the phrase 'same settings'."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_permutation",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_permutation.model_shapes.documented.plsc_groups",
+          "description": "Documented fact: consistent permutation compares predefined groups for PLSc-SEM parameter differences and supports MICOM measurement invariance using PLSc estimates.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "A qualifying grouped PLSc model runs group comparison and MICOM with the identical PLSc correction plan in every permutation.",
+            "A standard PLS-only grouped model is rejected with a corrective instruction."
+          ]
+        },
+        {
+          "item_id": "consistent_permutation.model_shapes.open_live_app.difficult_plsc_groups",
+          "description": "Open live-app detail: the page does not enumerate group-count limits, mixed models, interactions, higher-order constructs, nonlinear terms, weights, or other difficult PLSc shapes.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "A dated current-version shape matrix records accept/reject behavior and exact diagnostics for every difficult consistent-permutation fixture.",
+            "No advanced or more-than-two-group support is inferred from the general group-comparison description."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_permutation",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_permutation.data_inputs.documented.predefined_groups",
+          "description": "Documented fact: observations from predefined groups are the input to random reassignment without replacement for PLSc-based comparison.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "Preflight records stable group definitions, labels, inclusion counts, member rows, PLSc recipe, and dataset fingerprint.",
+            "Every permutation consumes the same pooled eligible observations and model parameter identities."
+          ]
+        },
+        {
+          "item_id": "consistent_permutation.data_inputs.open_live_app.group_and_missing_rules",
+          "description": "Open live-app detail: the page does not define overlapping/empty/tiny groups, imbalance, missing group labels, missing-data treatment, weights, or scale restrictions.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "A dated adversarial live-app ledger captures the exact outcome for every listed group/data boundary.",
+            "No standard-permutation data policy is copied without exact official traceability for the consistent workflow."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_permutation",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_permutation.preprocessing.documented.reassign_and_refit_plsc",
+          "description": "Documented fact: observations are randomly reassigned between groups without replacement and every run re-estimates the model with PLSc to form the null distribution of group differences.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "Every permutation assigns each pooled observation once and executes the complete PLSc correction within both permuted groups.",
+            "A fixed-seed oracle reproduces orientation-aligned null distributions under row and declaration reordering."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_permutation",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_permutation.outputs.documented.mga_and_micom",
+          "description": "Documented fact: results include PLSc-based multigroup comparison and MICOM measurement-invariance outcomes using disattenuated factor-consistent parameter estimates.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "The canonical result has separate stable sections for PLSc group estimates, difference inference, and MICOM and labels all as consistent permutation.",
+            "Every output links to groups, settings, PLSc recipe, permutation ledger, and source dataset."
+          ]
+        },
+        {
+          "item_id": "consistent_permutation.outputs.open_live_app.complete_results",
+          "description": "Open live-app detail: the page does not enumerate parameters, MICOM steps, tables, p-value columns, intervals, warnings, ordering, precision, or exports.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "A dated complete-results capture enumerates every consistent-permutation and MICOM table, column, decision, warning, and export field.",
+            "The public summary does not close the complete result schema."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_permutation",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_permutation.charts.open_live_app.inventory",
+          "description": "Open live-app detail: the page does not specify PLSc permutation distributions, group-comparison plots, MICOM charts, or controls.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "A dated live-app capture enumerates every chart and its PLSc null-distribution source, defaults, controls, and export behavior; an empty inventory must be evidenced.",
+            "Every chart reconciles to the same permutation ledger and canonical table."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_permutation",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_permutation.failure_conditions.open_live_app.failed_plsc_group_refits",
+          "description": "Open live-app detail: the page does not define failed PLSc group refits/corrections, MICOM ineligibility, retries/replacements, invalid groups, interruption, cancellation, or extreme imbalance.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "A dated adversarial live-app ledger records every requested, attempted, accepted, failed, retried, and replaced permutation and exact diagnostic.",
+            "No standard-permutation failure policy is assumed, no uncorrected fallback is allowed, and cancellation commits no partial result."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.consistent_permutation",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "consistent_permutation.workflows.documented.plsc_group_comparison",
+          "description": "Documented fact: researchers run a multigroup comparison on a PLSc model, configure the standard permutation choices, and review both multigroup and MICOM results based on PLSc estimates.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "An end-to-end fixture links the completed PLSc model, two group definitions, consistent-permutation recipe, ledger, MGA/MICOM result, archive, and export.",
+            "Changing the PLSc recipe or either group invalidates the saved comparison rather than reusing it."
+          ]
+        },
+        {
+          "item_id": "consistent_permutation.workflows.open_live_app.desktop_sequence",
+          "description": "Open live-app detail: the page does not document the complete current group setup, calculation tabs, progress/cancellation, failure review, result navigation, save/reopen, or export sequence.",
+          "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.consistent_permutation", "cell_id": "qpls3.inference.consistent_permutation", "capability_version": "plsc_permutation_v1"}],
+          "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"],
+          "acceptance_criteria": [
+            "A packaged current-version live-app capture records the complete workflow and accessible control names.",
+            "The page's step-by-step support statement does not close the desktop workflow obligation."
+          ]
+        }
+      ]
+    }
+  ]
+}

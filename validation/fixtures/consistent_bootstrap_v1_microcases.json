@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "identity": {
+    "capability_id": "smartpls.consistent_bootstrapping",
+    "cell_id": "qpls3.inference.consistent_bootstrap",
+    "method_version": "plsc_bootstrap_v1",
+    "estimator_method_version": "plsc_v2",
+    "resampling_method_version": "indexed_resampling_v4",
+    "operation": "plsc_consistent_bootstrap_v1",
+    "retry_policy": "no_retry_no_replacement_fixed_indexed_draws_v1"
+  },
+  "scope": {
+    "fixture_kind": "contract_microcase_non_product_replicate_count",
+    "product_minimum_replicates": 1000,
+    "product_maximum_replicates": 10000,
+    "qualification_evidence": false,
+    "limitations": [
+      "The fixture checks deterministic ledger, digest, standard-error, Type-7, normal-reference, and BCa arithmetic only.",
+      "The fixture does not execute or independently reproduce the PLSc v2 estimator.",
+      "The ten-row ledger is deliberately below the product minimum and cannot be used as kernel-execution, oracle, simulation, archive, native, export, packaged, or performance evidence."
+    ]
+  },
+  "digest_contract": {
+    "hash_algorithm": "sha256",
+    "sample_domain_utf8_with_terminal_nul": "QuickPLS PLSc consistent bootstrap sample v1\u0000",
+    "sample_encoding": "domain || count_u64_le || each_index_u64_le",
+    "parameter_domain_utf8_with_terminal_nul": "QuickPLS PLSc consistent bootstrap parameters v1\u0000",
+    "parameter_encoding": "domain || count_u64_le || for_each_utf8_key_sorted_ascending(key_length_u64_le || key || value_length_u64_le || rust_scientific_12_digits_after_decimal)",
+    "parameter_value_significant_digits": 13,
+    "ordering_case": {
+      "parameters_in_noncanonical_input_order": [
+        {
+          "key": "[\"plsc_r_squared\",[\"B\"]]",
+          "value": 0.25
+        },
+        {
+          "key": "[\"plsc_path\",[\"A\",\"B\"]]",
+          "value": 5.0
+        }
+      ],
+      "canonical_scientific_values": {
+        "[\"plsc_path\",[\"A\",\"B\"]]": "5.000000000000e0",
+        "[\"plsc_r_squared\",[\"B\"]]": "2.500000000000e-1"
+      },
+      "expected_sha256": "9f79028a935932bb47675f62d776b11b99b64d6a642ff7eb0c28182ea110c86d"
+    }
+  },
+  "microcases": [
+    {
+      "id": "symmetric_one_parameter_with_retained_failure",
+      "confidence_level": 0.95,
+      "original_parameters": {
+        "[\"plsc_path\",[\"A\",\"B\"]]": 5.0
+      },
+      "expected_original_parameter_values_sha256": "3a3de625622521191a456c0e60f770124fece585b1468a333345f959477a016d",
+      "minimum_usable_fraction": 0.9,
+      "requested_replicates": 10,
+      "required_usable_replicates": 9,
+      "ledger": [
+        {
+          "replicate_index": 0,
+          "sample_indices": [0, 1, 2, 3, 4],
+          "expected_sample_indices_sha256": "e3a26ddb9466564d1f33e37a211135d57ddbef1f9f6f11ec5b4d2db674e8cf18",
+          "status": "success",
+          "parameters": {"[\"plsc_path\",[\"A\",\"B\"]]": 1.0},
+          "expected_parameter_values_sha256": "ca8de1c4774b3559ecbc447b08065879ee28b53c63216d7d1cc89096b711e2aa"
+        },
+        {
+          "replicate_index": 1,
+          "sample_indices": [1, 2, 3, 4, 0],
+          "expected_sample_indices_sha256": "63713adab49be709bbd1bfbcf3825c0582a42cf254962076007ee7cdf3288e94",
+          "status": "success",
+          "parameters": {"[\"plsc_path\",[\"A\",\"B\"]]": 2.0},
+          "expected_parameter_values_sha256": "47afbf08329b3d104eb4cab171d524755df29c6cc38ece974c7a6e9fb90f673b"
+        },
+        {
+          "replicate_index": 2,
+          "sample_indices": [2, 3, 4, 0, 1],
+          "expected_sample_indices_sha256": "1207e97d265a8b4173311fed6e09aebcb2b1e60212c78368db11ee660a152053",
+          "status": "success",
+          "parameters": {"[\"plsc_path\",[\"A\",\"B\"]]": 3.0},
+          "expected_parameter_values_sha256": "8358e739e652dfaa2f11f4a1d7e7f1f32a631de082a205eb78553438304a86ce"
+        },
+        {
+          "replicate_index": 3,
+          "sample_indices": [3, 4, 0, 1, 2],
+          "expected_sample_indices_sha256": "4ec8ee575f9fe121725c6a3dcf950e24793c8a9237fb13e7f47b977f8cb7458a",
+          "status": "success",
+          "parameters": {"[\"plsc_path\",[\"A\",\"B\"]]": 4.0},
+          "expected_parameter_values_sha256": "26b00e205b85c82fc7e256faa6feba0a82e7989456e6b56ccf28d8985f8f0a9a"
+        },
+        {
+          "replicate_index": 4,
+          "sample_indices": [4, 0, 1, 2, 3],
+          "expected_sample_indices_sha256": "32ae37315a4a0aefc427eb74c24ddc9bc1c739c182ca19cecea5c857277e6077",
+          "status": "success",
+          "parameters": {"[\"plsc_path\",[\"A\",\"B\"]]": 5.0},
+          "expected_parameter_values_sha256": "3a3de625622521191a456c0e60f770124fece585b1468a333345f959477a016d"
+        },
+        {
+          "replicate_index": 5,
+          "sample_indices": [0, 0, 0, 0, 0],
+          "expected_sample_indices_sha256": "b2587a70f3cb0bfce8ccb3c73488b60dab84ed2b88b00c0b8c3abbf2504c17d6",
+          "status": "success",
+          "parameters": {"[\"plsc_path\",[\"A\",\"B\"]]": 6.0},
+          "expected_parameter_values_sha256": "3f83bf017485c4c9447c4b3eab0b225915ba6c1200e53b0da685f7411d5cf135"
+        },
+        {
+          "replicate_index": 6,
+          "sample_indices": [1, 1, 2, 3, 4],
+          "expected_sample_indices_sha256": "fda9054f5853bc06c7f0ecb6d8282e6152625ce16bca94eb9bb30c3b28c91911",
+          "status": "success",
+          "parameters": {"[\"plsc_path\",[\"A\",\"B\"]]": 7.0},
+          "expected_parameter_values_sha256": "a7cf6a4d55048ba5f5f3769b241b3970eb17c3c0d5607ad1e62326c5cfd1bedc"
+        },
+        {
+          "replicate_index": 7,
+          "sample_indices": [4, 3, 2, 1, 0],
+          "expected_sample_indices_sha256": "32fdfd35a0b9236eae5ec21a91347fb171f093a83db0c178b2e5b906d1c72da1",
+          "status": "success",
+          "parameters": {"[\"plsc_path\",[\"A\",\"B\"]]": 8.0},
+          "expected_parameter_values_sha256": "6f54ddfe9ab7bc9ffd9bf90a099de63ca064d422681117239c63466ca90d788c"
+        },
+        {
+          "replicate_index": 8,
+          "sample_indices": [0, 4, 1, 4, 2],
+          "expected_sample_indices_sha256": "966822bf6b16b08d432711899edb82a9ba20b9cd0a1ad1ebd73bf46ea671ec64",
+          "status": "success",
+          "parameters": {"[\"plsc_path\",[\"A\",\"B\"]]": 9.0},
+          "expected_parameter_values_sha256": "809dcc5ad0b2493e031c8103270b8551831ae2a78efe8a11e933d39c6ec27ea0"
+        },
+        {
+          "replicate_index": 9,
+          "sample_indices": [2, 2, 2, 2, 2],
+          "expected_sample_indices_sha256": "f72a36225638140a2d5d4cfda9195c369958881d0906dc03638ef02181c28922",
+          "status": "failed",
+          "reason_code": "inadmissible_rho_a",
+          "message": "hand fixture: rho_A is outside the admissible correction domain"
+        }
+      ],
+      "jackknife_parameter_values": [4.0, 4.5, 5.0, 5.5, 6.0],
+      "expected": {
+        "usable_replicates": 9,
+        "failed_replicates": 1,
+        "bootstrap_mean": 5.0,
+        "bias": 0.0,
+        "sample_standard_error": 2.7386127875258306,
+        "normal_reference_t_statistic": 1.8257418583505538,
+        "normal_reference_two_sided_p_value": 0.06788915486182903,
+        "percentile_lower": 1.2,
+        "percentile_upper": 8.8,
+        "bca_available": true,
+        "bca_bias_correction": 0.0,
+        "bca_acceleration": 0.0,
+        "bca_lower": 1.2,
+        "bca_upper": 8.8
+      }
+    },
+    {
+      "id": "degenerate_standard_error_and_acceleration",
+      "confidence_level": 0.95,
+      "original": 2.0,
+      "bootstrap_parameter_values": [2.0, 2.0, 2.0, 2.0],
+      "jackknife_parameter_values": [2.0, 2.0, 2.0],
+      "expected": {
+        "bootstrap_mean": 2.0,
+        "bias": 0.0,
+        "sample_standard_error": 0.0,
+        "normal_reference_available": false,
+        "percentile_lower": 2.0,
+        "percentile_upper": 2.0,
+        "bca_available": false,
+        "bca_unavailable_reason": "degenerate_jackknife_acceleration"
+      }
+    }
+  ],
+  "allowed_primary_failure_reason_codes": [
+    "cancelled",
+    "inadmissible_rho_a",
+    "inadmissible_corrected_correlation",
+    "plsc_nonconvergence",
+    "singular_plsc_equation",
+    "nonfinite_plsc_parameter",
+    "parameter_identity_mismatch",
+    "plsc_refit_failed"
+  ],
+  "boundary_cases": [
+    {"id": "replicate_count_999", "stage": "plan_validation", "expected": "typed_rejection_before_execution"},
+    {"id": "replicate_count_10001", "stage": "plan_validation", "expected": "typed_rejection_before_execution"},
+    {"id": "studentized_requested", "stage": "plan_validation", "expected": "typed_rejection_before_execution"},
+    {"id": "permutation_requested", "stage": "plan_validation", "expected": "typed_rejection_before_execution"},
+    {"id": "raw_rows_required", "stage": "preflight", "expected": "typed_not_applicable"},
+    {"id": "ordinary_pls_point_rejected", "stage": "point_validation", "expected": "typed_rejection"},
+    {"id": "formative_construct_rejected", "stage": "preflight", "expected": "typed_not_applicable"},
+    {"id": "single_indicator_construct_rejected", "stage": "preflight", "expected": "typed_not_applicable"},
+    {"id": "generated_interaction_rejected", "stage": "preflight", "expected": "typed_not_applicable"},
+    {"id": "higher_order_construct_rejected", "stage": "preflight", "expected": "typed_not_applicable"},
+    {"id": "group_inference_rejected", "stage": "preflight", "expected": "typed_not_applicable"},
+    {"id": "case_weights_rejected", "stage": "preflight", "expected": "typed_not_applicable"},
+    {"id": "pca_weighting_rejected", "stage": "preflight", "expected": "typed_not_applicable"},
+    {"id": "insufficient_usable_replicates", "stage": "aggregation", "expected": "typed_failure_with_all_attempts_counted"},
+    {"id": "duplicate_ledger_index", "stage": "archive_open", "expected": "reject_semantic_tamper"},
+    {"id": "missing_ledger_index", "stage": "archive_open", "expected": "reject_semantic_tamper"},
+    {"id": "out_of_order_ledger_index", "stage": "archive_open", "expected": "reject_semantic_tamper"},
+    {"id": "sample_digest_tamper", "stage": "archive_open", "expected": "reject_semantic_tamper"},
+    {"id": "parameter_identity_tamper", "stage": "archive_open", "expected": "reject_semantic_tamper"},
+    {"id": "parameter_digest_tamper", "stage": "archive_open", "expected": "reject_semantic_tamper"},
+    {"id": "unknown_failure_reason", "stage": "archive_open", "expected": "reject_semantic_tamper"},
+    {"id": "delete_one_refit_failure", "stage": "jackknife", "expected": "all_bca_unavailable_percentile_retained"},
+    {"id": "nonfinite_parameter", "stage": "primary_resampling", "expected": "retained_failure_without_retry"},
+    {"id": "cancel_before_resampling", "stage": "cancellation", "expected": "cancelled_no_partial_result_archive_unchanged_retryable"},
+    {"id": "cancel_during_resampling", "stage": "cancellation", "expected": "cancelled_no_partial_result_archive_unchanged_retryable"},
+    {"id": "archive_method_version_tamper", "stage": "archive_open", "expected": "reject_semantic_tamper"},
+    {"id": "archive_dataset_fingerprint_tamper", "stage": "archive_open", "expected": "reject_semantic_tamper"},
+    {"id": "archive_member_checksum_tamper", "stage": "archive_open", "expected": "reject_structural_tamper"},
+    {"id": "archive_duplicate_member", "stage": "archive_open", "expected": "reject_structural_tamper"},
+    {"id": "archive_malformed_payload", "stage": "archive_open", "expected": "reject_structural_or_semantic_tamper"},
+    {"id": "archive_legacy_reinterpretation", "stage": "archive_open", "expected": "reject_method_reinterpretation"},
+    {"id": "archive_interrupted_save", "stage": "archive_open", "expected": "recover_previous_atomic_archive"},
+    {"id": "native_projection_wrong_feature", "stage": "native_projection", "expected": "hide_or_reject_payload"},
+    {"id": "native_projection_incomplete_accounting", "stage": "native_projection", "expected": "hide_or_reject_payload"},
+    {"id": "export_wrong_source_run", "stage": "export", "expected": "reject_cross_run_projection"},
+    {"id": "product_hidden_while_evidence_absent", "stage": "preflight", "expected": "not_selectable_in_standard_or_labs_calculate"}
+  ]
+}

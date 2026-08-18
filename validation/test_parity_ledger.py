@@ -35,15 +35,15 @@ class ParityLedgerTests(unittest.TestCase):
         self.assertEqual(report["feature_count"], 17)
         self.assertEqual(
             report["declared_states"],
-            {"native_qualified": 14, "release_qualified": 3},
+            {"absent": 1, "native_qualified": 1, "release_qualified": 15},
         )
         self.assertEqual(
             report["derived_states"],
-            {"native_qualified": 14, "release_qualified": 3},
+            {"absent": 1, "native_qualified": 1, "release_qualified": 15},
         )
         # Keep withheld PROCESS descriptors visible so its release gate stays
         # inspectable and fail-closed while qualification remains native-only.
-        self.assertEqual(len(report["release_evidence_descriptors"]), 8)
+        self.assertEqual(len(report["release_evidence_descriptors"]), 32)
         for descriptor in report["release_evidence_descriptors"]:
             self.assertEqual(set(descriptor), {"path", "size", "sha256"})
             self.assertTrue(descriptor["path"].startswith("validation/results/"))
@@ -52,7 +52,19 @@ class ParityLedgerTests(unittest.TestCase):
         self.assertEqual(
             [feature["id"] for feature in report["features"] if feature["declared_state"] == "release_qualified"],
             [
+                "qpls3.pls.algorithm",
+                "qpls3.pls.consistent",
+                "qpls3.pls.weighted",
+                "qpls3.gsca.als",
+                "qpls3.assessment.cca_residuals",
+                "qpls3.assessment.ipma",
+                "qpls3.cbsem.ml",
+                "qpls3.inference.bootstrap",
                 "qpls3.inference.structural_path_randomization",
+                "qpls3.prediction.plspredict_cvpat",
+                "qpls3.standalone.nca",
+                "qpls3.standalone.pca",
+                "qpls3.standalone.ols",
                 "qpls3.standalone.logistic",
                 "qpls3.standalone.regression_bootstrap",
             ],
@@ -84,7 +96,12 @@ class ParityLedgerTests(unittest.TestCase):
 
     def test_release_claim_without_fresh_reports_is_rejected(self) -> None:
         document = deepcopy(load_json(LEDGER))
-        document["features"][0]["state"] = "release_qualified"
+        gsca = next(
+            feature
+            for feature in document["features"]
+            if feature["id"] == "qpls3.gsca.als"
+        )
+        gsca["release_evidence"] = None
 
         report = validate_ledger_document(document, REPOSITORY_ROOT)
 
@@ -214,6 +231,8 @@ class ParityLedgerTests(unittest.TestCase):
             "catalogue_snapshot_date": "2026-08-12",
             "checks": {"identity": {"passed": True}},
             "errors": [],
+            "failures": 0,
+            "console_errors": 0,
         }
 
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -243,6 +262,18 @@ class ParityLedgerTests(unittest.TestCase):
             self.assertIn(
                 "/errors is not empty",
                 error_report["packaged_acceptance"]["semantic_integrity"]["failures"],
+            )
+
+            nonzero_failure_count = deepcopy(base)
+            nonzero_failure_count["failures"] = 1
+            (results / "package.json").write_text(
+                json.dumps(nonzero_failure_count), encoding="utf-8"
+            )
+            count_report = evaluate_release(feature, root, "2026-08-12")
+            self.assertFalse(count_report["passed"])
+            self.assertIn(
+                "/failures is not empty",
+                count_report["packaged_acceptance"]["semantic_integrity"]["failures"],
             )
 
     def test_release_rejects_failed_freshness_and_inconsistent_reported_descriptor(self) -> None:

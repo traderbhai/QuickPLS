@@ -29,6 +29,6 @@ export function StatusBar() {
         {desktopCommandStatus.label}: {desktopCommandStatus.detail}
       </span>
     ) : null}
-    <span className="status-spacer" /><button className="status-link" onClick={() => setShortcutOverlayOpen(true)}>Shortcuts ?</button><span><WifiOff size={14} />Offline mode</span><span>Validated documented scopes</span>
+    <span className="status-spacer" /><button className="status-link" onClick={() => setShortcutOverlayOpen(true)}>Shortcuts ?</button><span><WifiOff size={14} />Offline mode</span><span>Requirements checked before calculation</span>
   </footer>;
 }

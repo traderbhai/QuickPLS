@@ -1,0 +1,165 @@
+{
+  "admission_policy": "identity_report_requires_separate_manifest_admission_and_review",
+  "blockers": [
+    "current_source_bound_candidate_execution_not_supplied",
+    "full_monte_carlo_recovery_and_coverage_run_not_supplied",
+    "maximum_axis_and_compound_stress_not_executed"
+  ],
+  "capability_id": "smartpls.htmt",
+  "catalogue_snapshot_date": "2026-08-12",
+  "cell_id": "qpls3.assessment.htmt",
+  "checks": {
+    "bootstrap_oracle_agreement": {
+      "decisions_equal": true,
+      "exact_scenario_membership": true,
+      "maximum_absolute_error": 2.220446049250313e-16,
+      "metadata_equal": true,
+      "passed": true,
+      "replicate_index_digests_equal": true,
+      "scenario_ids": [
+        "asymmetric_htmt_plus",
+        "midrank_ties",
+        "signed_original_htmt"
+      ]
+    },
+    "point_oracle_agreement": {
+      "compared_cells": 32,
+      "construct_order_matches": true,
+      "expected_cells": 32,
+      "maximum_absolute_error": 2.220446049250313e-16,
+      "passed": true
+    },
+    "preregistration": {
+      "axes": [
+        "data_distribution",
+        "input_type",
+        "measurement_model",
+        "missingness",
+        "model_topology",
+        "workers",
+        "workload"
+      ],
+      "confidence_level": 0.95,
+      "failed_fits_in_denominator": true,
+      "mandatory_combination_ids": [
+        "applied_pairwise_matrix",
+        "compound_resampling_memory_cancellation",
+        "large_worker_repeatability",
+        "maximum_constructs",
+        "maximum_indicators",
+        "maximum_resamples",
+        "maximum_rows",
+        "micro_exact_thresholds"
+      ],
+      "maximum_half_width": 0.01,
+      "minimum_worst_case_replications": 9604,
+      "passed": true,
+      "profiles": [
+        "applied",
+        "compound_stress",
+        "large",
+        "maximum_axis",
+        "micro_exact"
+      ]
+    }
+  },
+  "declared_manifest_state": "absent",
+  "feature_id": "qpls3.assessment.htmt",
+  "generated_at_utc": "2026-08-14T17:11:46.429740Z",
+  "manifest_sha256": "58b1977b129a7be7b0b55b24e7fbd736850daa6899c820b21e798463dcada6aa",
+  "method_version": "ringle_et_al_htmt_plus_v1",
+  "passed": true,
+  "qualification_evidence": false,
+  "qualification_id": "qpls3.assessment.htmt.qualification_v2",
+  "qualification_ready": false,
+  "qualification_spec_sha256": "42c84a28ec9ab2ea45a273a74f967ed60be98f6131294ba048ead8464f6e6151",
+  "report_kind": "quickpls_htmt_qualification_identity_report",
+  "role": "simulation_report",
+  "scenario_set_sha256": "b99c7bfa0b50e4a6d5d8f6615a734c490494f7eb68592ba61fe0de4e7eb0abdb",
+  "schema_version": 2,
+  "source_artifacts": [
+    {
+      "path": "validation/htmt_bootstrap_inference_reference.py",
+      "sha256": "b8f9108dfc70928b2b9565a1ef6e6819c2019ff8bff8d137b4ea9876a7535219",
+      "size_bytes": 4553
+    },
+    {
+      "path": "validation/htmt_plus_v1_factory_common.py",
+      "sha256": "1c08afa6230f67707d0ed09be93c1cd734f0db7f9f43c222f662a6d86b65c194",
+      "size_bytes": 13629
+    },
+    {
+      "path": "validation/htmt_reference.py",
+      "sha256": "f1219666e4db93fb423584bb964c109c17c22603dc26bed646a5a57a79b686e3",
+      "size_bytes": 7157
+    },
+    {
+      "path": "validation/htmt_release_simulation.py",
+      "sha256": "d72a69f970d593cc1fff214104272cd95d34414abbaa5335f0edb9d7ce5b7375",
+      "size_bytes": 10770
+    },
+    {
+      "path": "validation/htmt_scipy_reference.py",
+      "sha256": "daec4c573deaf44a08027a064090e9c0e5ff63aea3424ca444f5e882aa207001",
+      "size_bytes": 7823
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size_bytes": 34283
+    },
+    {
+      "path": "validation/methods/htmt_plus_v1.manifest.json",
+      "sha256": "58b1977b129a7be7b0b55b24e7fbd736850daa6899c820b21e798463dcada6aa",
+      "size_bytes": 11390
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size_bytes": 15836
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/htmt_plus_v1.qualification.json",
+      "sha256": "42c84a28ec9ab2ea45a273a74f967ed60be98f6131294ba048ead8464f6e6151",
+      "size_bytes": 33223
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/results/htmt_bootstrap_inference_reference.json",
+      "sha256": "70eb6970e277e2ed2bfbe9e6ef842f41da5a9250e85d02b1761e9d0bbccf7a1c",
+      "size_bytes": 2974
+    },
+    {
+      "path": "validation/results/htmt_reference.json",
+      "sha256": "fc74350581dd5dfa2fb798ee4b6c44e1916347f2a6c9a96ab15a4e198b5940c7",
+      "size_bytes": 18248
+    },
+    {
+      "path": "validation/results/htmt_scipy_reference.json",
+      "sha256": "f0b74ac7733b37323d1b4025430f1bae6142441b10f2ab2656bc663897fa397e",
+      "size_bytes": 7325
+    },
+    {
+      "path": "validation/test_htmt_qualification_v2.py",
+      "sha256": "dd9d6e5ff360ff60f16d5e8520c94bf5a03d909173954d5f9720ddfee14452bb",
+      "size_bytes": 7091
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size_bytes": 21334
+    }
+  ],
+  "source_set_sha256": "899668e24620d5632532299237d28d3f5bb9f92e6d1df05c736bceae4703e09e",
+  "spec_frozen_at_utc": "2026-08-14T16:00:00Z",
+  "stage": "generative"
+}

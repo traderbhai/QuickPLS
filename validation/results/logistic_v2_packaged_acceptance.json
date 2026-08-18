@@ -2,8 +2,8 @@
   "schema_version": "quickpls.packaged_acceptance.v1",
   "kind": "quickpls3_scoped_tauri_logistic_v2_acceptance",
   "passed": true,
-  "generated_at_utc": "2026-08-13T19:11:38.144Z",
-  "completed_at_utc": "2026-08-13T19:15:15.159Z",
+  "generated_at_utc": "2026-08-18T13:31:29.880Z",
+  "completed_at_utc": "2026-08-18T13:35:08.471Z",
   "feature_id": "qpls3.standalone.logistic",
   "method_version": "regression_logistic_v2",
   "catalogue_snapshot_date": "2026-08-12",
@@ -39,14 +39,14 @@
         "Run provenance"
       ],
       "in_sample_disclaimer_included": true,
-      "artifact_sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a",
+      "artifact_sha256": "11da29fc67cd6a77e0f6232937053da9fdecad528be5748b4d620431a051f8a1",
       "source_check": "logisticExport"
     },
     "save_reopen": {
       "passed": true,
       "same_run_restored": true,
       "project_checksum_matches": true,
-      "archive_sha256": "57b7497daedce39d64bff0ca7451033c87255e1a303e116137b1709af31ebaa8",
+      "archive_sha256": "11fe9618e2912568e8cc90d305910a965063859852c4e5c57c8b503247bc2bc0",
       "source_check": "logisticSaveReopen"
     },
     "failure_lifecycle": {
@@ -63,45 +63,45 @@
   },
   "artifacts": {
     "xlsx": {
-      "path": "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
-      "size": 16133,
-      "sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a"
+      "path": "validation/results/v247-native-logistic-20260818-185148319-41048-0399187a.xlsx",
+      "size": 16298,
+      "sha256": "11da29fc67cd6a77e0f6232937053da9fdecad528be5748b4d620431a051f8a1"
     },
     "project_archive": {
-      "path": "validation/results/v247-native-logistic-1786648298136-35352.qpls",
-      "size": 20157,
-      "sha256": "57b7497daedce39d64bff0ca7451033c87255e1a303e116137b1709af31ebaa8"
+      "path": "validation/results/v247-native-logistic-1787059889876-52932.qpls",
+      "size": 20270,
+      "sha256": "11fe9618e2912568e8cc90d305910a965063859852c4e5c57c8b503247bc2bc0"
     },
     "screenshots": [
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/150-tauri-native-logistic-fixture-data-1536x794.png",
-        "size": 292324,
-        "sha256": "629a325c18d9fd856e2bd9b8ca68d7eb72d5c909f068ea3e22c2f70200967860"
+        "size": 293651,
+        "sha256": "72b91c856571a523a1b389fd6cb95cf30fa2e060c8298d353739415710eb9875"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/151-tauri-native-logistic-dialog-1536x794.png",
-        "size": 284477,
-        "sha256": "164046f3fff839f75b0cd97a84d09b584892ab855a7e5a22f66050b7dac3b94e"
+        "size": 286477,
+        "sha256": "ce08b506c77798151fa1975137a55413d8d027e47ea07ec29edb7cefac848bc3"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/152-tauri-native-logistic-running-1536x794.png",
-        "size": 230670,
-        "sha256": "412b6a5216d536a10a489d3dc38897b26325a0bdabccdf4898237eb4aa2a9c4a"
+        "size": 230715,
+        "sha256": "50c06a9b70c058760b75ea731d82f3b14bc9afe4b3e29019e161ae63fdc8cef0"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/153-tauri-native-logistic-results-1536x794.png",
-        "size": 90868,
-        "sha256": "669ef9172fa9834f71f2855e2b90db6655e6d6fbf2629a71ce0890ebb391ae8f"
+        "size": 91668,
+        "sha256": "64bd317dc8bb6c77dc6c4f4157a040b4c2c7b3b7be3c1345fdd681ee9b911287"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/154-tauri-native-logistic-export-1536x794.png",
-        "size": 117075,
-        "sha256": "18c18417199acbadf439d13236bad3edc111d519061be44a4a27b9d38bd7b31d"
+        "size": 118152,
+        "sha256": "59dc5892b298258404c8e26639c31972b1c9bcb6d7224da35c9cc1ed790a316c"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/155-tauri-native-logistic-reopened-1536x794.png",
-        "size": 98134,
-        "sha256": "b504fc1c7da2861b4701c156e86d862012c32520c46850faaf3ccf56c10a0d43"
+        "size": 98949,
+        "sha256": "d95fe82ff9a93e85429a21aa13eebcbb323186df19ba096bf7a2a3722f422f2f"
       }
     ]
   },

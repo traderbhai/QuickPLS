@@ -11,14 +11,14 @@
         "validation/results/screens/v247-native-desktop-acceptance/196-tauri-native-structural-path-randomization-results-1536x794.png",
         "validation/results/screens/v247-native-desktop-acceptance/197-tauri-native-structural-path-randomization-export-1536x794.png",
         "validation/results/screens/v247-native-desktop-acceptance/198-tauri-native-structural-path-randomization-reopened-1536x794.png",
-        "validation/results/structural-path-randomization-v1-20260814-005519029.xlsx",
+        "validation/results/structural-path-randomization-v1-20260818-192357944.xlsx",
         "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
         "validation/results/structural_path_randomization_v1_process_cleanup.json",
         "validation/results/structural_path_randomization_v1_process_samples.jsonl",
         "validation/results/structural_path_randomization_v1_resource_report.json",
-        "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-after.qpls",
-        "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-before.qpls",
-        "validation/results/v247-native-structural-path-randomization-1786649121581-11172.qpls",
+        "validation/results/v247-native-structural-path-randomization-1787061240991-64676-cancellation-after.qpls",
+        "validation/results/v247-native-structural-path-randomization-1787061240991-64676-cancellation-before.qpls",
+        "validation/results/v247-native-structural-path-randomization-1787061240991-64676.qpls",
         "validation/results/v247_tauri_native_acceptance_structural_path_randomization.json"
       ],
       "checks": {
@@ -26,197 +26,197 @@
           "artifacts": [
             {
               "actual": {
-                "path": "validation/results/structural-path-randomization-v1-20260814-005519029.xlsx",
-                "sha256": "3401c977c8dad32246d2dbc85db54adc07add53acb8e0f3bf0d36e3f78e93c8e",
-                "size": 18361
+                "path": "validation/results/structural-path-randomization-v1-20260818-192357944.xlsx",
+                "sha256": "ae0de8151cd09f9b31b1e1e678aa846ea2a1b4cbce8a56335134f7823e33901f",
+                "size": 19451
               },
               "passed": true,
               "reported": {
-                "path": "validation/results/structural-path-randomization-v1-20260814-005519029.xlsx",
-                "sha256": "3401c977c8dad32246d2dbc85db54adc07add53acb8e0f3bf0d36e3f78e93c8e",
-                "size": 18361
+                "path": "validation/results/structural-path-randomization-v1-20260818-192357944.xlsx",
+                "sha256": "ae0de8151cd09f9b31b1e1e678aa846ea2a1b4cbce8a56335134f7823e33901f",
+                "size": 19451
               }
             },
             {
               "actual": {
-                "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172.qpls",
-                "sha256": "8b16f213de4c1dc21b44939bc4ce82f076f726377cebc34b70607aa0234ef66c",
-                "size": 22291
+                "path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676.qpls",
+                "sha256": "4792366490fab6b607919af2a75d8d6ffb86f8fb395f21cc5d2aec3f10d23f26",
+                "size": 23710
               },
               "passed": true,
               "reported": {
-                "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172.qpls",
-                "sha256": "8b16f213de4c1dc21b44939bc4ce82f076f726377cebc34b70607aa0234ef66c",
-                "size": 22291
+                "path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676.qpls",
+                "sha256": "4792366490fab6b607919af2a75d8d6ffb86f8fb395f21cc5d2aec3f10d23f26",
+                "size": 23710
               }
             },
             {
               "actual": {
                 "path": "validation/results/structural_path_randomization_v1_process_samples.jsonl",
-                "sha256": "c73dd7515f485f7f2c8e106aeb27487b728659ba369f3a4cdef4d4a79e8a3fef",
-                "size": 742799
+                "sha256": "44a8f3b9de53d8465549220f8e4beef38e85897ec976e84aa4cf9c1a68cc9287",
+                "size": 724020
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/structural_path_randomization_v1_process_samples.jsonl",
-                "sha256": "c73dd7515f485f7f2c8e106aeb27487b728659ba369f3a4cdef4d4a79e8a3fef",
-                "size": 742799
+                "sha256": "44a8f3b9de53d8465549220f8e4beef38e85897ec976e84aa4cf9c1a68cc9287",
+                "size": 724020
               }
             },
             {
               "actual": {
                 "path": "validation/results/structural_path_randomization_v1_resource_report.json",
-                "sha256": "06a7cf79aa2bdaf74e344589ed74d8addcb3b79bbd66160e831cfab6d8fad9b3",
-                "size": 29847
+                "sha256": "2b74447647b947a533262a500078ea4426ed80299f044b753c7296a0af969424",
+                "size": 29821
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/structural_path_randomization_v1_resource_report.json",
-                "sha256": "06a7cf79aa2bdaf74e344589ed74d8addcb3b79bbd66160e831cfab6d8fad9b3",
-                "size": 29847
+                "sha256": "2b74447647b947a533262a500078ea4426ed80299f044b753c7296a0af969424",
+                "size": 29821
               }
             },
             {
               "actual": {
                 "path": "validation/results/structural_path_randomization_v1_process_cleanup.json",
-                "sha256": "949d11c4d3ea84fb676145edb3d822241a53211674be10d6568d17cd802460e0",
-                "size": 3746
+                "sha256": "9327b32dd8df79d2b9eea7354c495b41e27fec19f4618496cc4350681c2fff15",
+                "size": 3742
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/structural_path_randomization_v1_process_cleanup.json",
-                "sha256": "949d11c4d3ea84fb676145edb3d822241a53211674be10d6568d17cd802460e0",
-                "size": 3746
+                "sha256": "9327b32dd8df79d2b9eea7354c495b41e27fec19f4618496cc4350681c2fff15",
+                "size": 3742
               }
             },
             {
               "actual": {
-                "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-before.qpls",
-                "sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
-                "size": 12166
+                "path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676-cancellation-before.qpls",
+                "sha256": "1c3d20e7b8c94c10c002f9a6076e0484db0f320f8cdd002386486f447bca839b",
+                "size": 12295
               },
               "passed": true,
               "reported": {
-                "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-before.qpls",
-                "sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
-                "size": 12166
+                "path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676-cancellation-before.qpls",
+                "sha256": "1c3d20e7b8c94c10c002f9a6076e0484db0f320f8cdd002386486f447bca839b",
+                "size": 12295
               }
             },
             {
               "actual": {
-                "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-after.qpls",
-                "sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
-                "size": 12166
+                "path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676-cancellation-after.qpls",
+                "sha256": "1c3d20e7b8c94c10c002f9a6076e0484db0f320f8cdd002386486f447bca839b",
+                "size": 12295
               },
               "passed": true,
               "reported": {
-                "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-after.qpls",
-                "sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
-                "size": 12166
+                "path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676-cancellation-after.qpls",
+                "sha256": "1c3d20e7b8c94c10c002f9a6076e0484db0f320f8cdd002386486f447bca839b",
+                "size": 12295
               }
             },
             {
               "actual": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/190-tauri-native-structural-path-randomization-fixture-data-1536x794.png",
-                "sha256": "30638d8c419cd1ca77e7199e20a2ad7f0878c09440219f80352f7ffbde3beb9e",
-                "size": 224766
+                "sha256": "8d2c6ba84af3687a1143b9ecfcd48f4002c2c095de629a3f71c6104fb774ecc6",
+                "size": 226202
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/190-tauri-native-structural-path-randomization-fixture-data-1536x794.png",
-                "sha256": "30638d8c419cd1ca77e7199e20a2ad7f0878c09440219f80352f7ffbde3beb9e",
-                "size": 224766
+                "sha256": "8d2c6ba84af3687a1143b9ecfcd48f4002c2c095de629a3f71c6104fb774ecc6",
+                "size": 226202
               }
             },
             {
               "actual": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/191-tauri-native-structural-path-randomization-model-1536x794.png",
-                "sha256": "95ad1315ca1a46798e8c042564f1d9832f38a1e729b80c39b09870fda6e143a6",
-                "size": 133981
+                "sha256": "7aea913c49a445a479744cc9ea8d7f5cd7b8fddf0ba525413a00c98fc55fd681",
+                "size": 153481
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/191-tauri-native-structural-path-randomization-model-1536x794.png",
-                "sha256": "95ad1315ca1a46798e8c042564f1d9832f38a1e729b80c39b09870fda6e143a6",
-                "size": 133981
+                "sha256": "7aea913c49a445a479744cc9ea8d7f5cd7b8fddf0ba525413a00c98fc55fd681",
+                "size": 153481
               }
             },
             {
               "actual": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/192-tauri-native-structural-path-randomization-dialog-1536x794.png",
-                "sha256": "2860a07123583dec7c4b14b1342fcd10f02fd51ffe79b0f9b4877e23d814005c",
-                "size": 200636
+                "sha256": "899136af03af57409bac59d93746252a73f13da6051c5ae993cde9d01eb565b7",
+                "size": 226088
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/192-tauri-native-structural-path-randomization-dialog-1536x794.png",
-                "sha256": "2860a07123583dec7c4b14b1342fcd10f02fd51ffe79b0f9b4877e23d814005c",
-                "size": 200636
+                "sha256": "899136af03af57409bac59d93746252a73f13da6051c5ae993cde9d01eb565b7",
+                "size": 226088
               }
             },
             {
               "actual": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/194-tauri-native-structural-path-randomization-cancelled-1536x794.png",
-                "sha256": "a2da0f281188019ccc4f4ae8c652b1013115d65186fb81e5e279296b3c25be03",
-                "size": 204891
+                "sha256": "b2072603624c8886d31bac1a4a87a31df7cdb90dbeb947dc23a5a0029f3146ab",
+                "size": 230441
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/194-tauri-native-structural-path-randomization-cancelled-1536x794.png",
-                "sha256": "a2da0f281188019ccc4f4ae8c652b1013115d65186fb81e5e279296b3c25be03",
-                "size": 204891
+                "sha256": "b2072603624c8886d31bac1a4a87a31df7cdb90dbeb947dc23a5a0029f3146ab",
+                "size": 230441
               }
             },
             {
               "actual": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/195-tauri-native-structural-path-randomization-running-1536x794.png",
-                "sha256": "53f2efb0b96ee66d8837f9802d8f05c41950ec1ab794f42b7c6281b627f3b03b",
-                "size": 153974
+                "sha256": "737515efbce73a1a2f14e12dfc394d16e572a0c80cdcebcf15a22e3d6cfbe73a",
+                "size": 175368
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/195-tauri-native-structural-path-randomization-running-1536x794.png",
-                "sha256": "53f2efb0b96ee66d8837f9802d8f05c41950ec1ab794f42b7c6281b627f3b03b",
-                "size": 153974
+                "sha256": "737515efbce73a1a2f14e12dfc394d16e572a0c80cdcebcf15a22e3d6cfbe73a",
+                "size": 175368
               }
             },
             {
               "actual": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/196-tauri-native-structural-path-randomization-results-1536x794.png",
-                "sha256": "43621ddddec8307b70db7ca99415ab2adb7e0675f141a91c90b66440c6f4432a",
-                "size": 100150
+                "sha256": "3910a4764dd6f9b15a0758abf16bbe1e2b561f620dfd17bed142bd21952fdef2",
+                "size": 102745
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/196-tauri-native-structural-path-randomization-results-1536x794.png",
-                "sha256": "43621ddddec8307b70db7ca99415ab2adb7e0675f141a91c90b66440c6f4432a",
-                "size": 100150
+                "sha256": "3910a4764dd6f9b15a0758abf16bbe1e2b561f620dfd17bed142bd21952fdef2",
+                "size": 102745
               }
             },
             {
               "actual": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/197-tauri-native-structural-path-randomization-export-1536x794.png",
-                "sha256": "b7fea6b8e3dda1475d7e673a4958ce26b43a5145871ae2d927cf0332a9889623",
-                "size": 126511
+                "sha256": "a3de907030a2911fcf63415703bf2c22cc72683b345e8d59dbad047d17d7065e",
+                "size": 129103
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/197-tauri-native-structural-path-randomization-export-1536x794.png",
-                "sha256": "b7fea6b8e3dda1475d7e673a4958ce26b43a5145871ae2d927cf0332a9889623",
-                "size": 126511
+                "sha256": "a3de907030a2911fcf63415703bf2c22cc72683b345e8d59dbad047d17d7065e",
+                "size": 129103
               }
             },
             {
               "actual": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/198-tauri-native-structural-path-randomization-reopened-1536x794.png",
-                "sha256": "6a69ee4a3f9eb3f90f69c432774ae453e84fa7c8d642071998f8f27b910ea360",
-                "size": 109525
+                "sha256": "32935472a52119912c191976adee0e3b53acfa69b248bdeae0f6f5818d33753c",
+                "size": 112230
               },
               "passed": true,
               "reported": {
                 "path": "validation/results/screens/v247-native-desktop-acceptance/198-tauri-native-structural-path-randomization-reopened-1536x794.png",
-                "sha256": "6a69ee4a3f9eb3f90f69c432774ae453e84fa7c8d642071998f8f27b910ea360",
-                "size": 109525
+                "sha256": "32935472a52119912c191976adee0e3b53acfa69b248bdeae0f6f5818d33753c",
+                "size": 112230
               }
             }
           ],
@@ -280,20 +280,26 @@
           "passed": true,
           "sources": [
             {
-              "mtime_ns": 1786649083288652800,
+              "freshness_cutoff_utc": "2026-08-18T13:54:00.995000Z",
+              "freshness_role": "packaged",
+              "mtime_ns": 1786653643895494700,
               "not_newer_than_report": true,
               "path": "validation/run_v247_structural_path_randomization_native_acceptance.ps1",
-              "sha256": "5f581aa4ba5e507b4517a5de7074c90ab9ad3e6f92913ba2f3227945a02e6361",
-              "size": 24029
+              "sha256": "e841e8597676c9ea4e37f4d63cb6abe9eca3d246e5fbe737ee649817df6361c4",
+              "size": 24063
             },
             {
-              "mtime_ns": 1786638335159990200,
+              "freshness_cutoff_utc": "2026-08-18T13:54:00.995000Z",
+              "freshness_role": "packaged",
+              "mtime_ns": 1787053838961733900,
               "not_newer_than_report": true,
               "path": "validation/v247_tauri_native_acceptance.mjs",
-              "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
-              "size": 809598
+              "sha256": "952061138db0e6e3beb4f858f7e8c359b9763561980920e67a918d729eaf1c34",
+              "size": 981471
             },
             {
+              "freshness_cutoff_utc": "2026-08-18T13:54:00.995000Z",
+              "freshness_role": "packaged",
               "mtime_ns": 1786607997196503400,
               "not_newer_than_report": true,
               "path": "validation/windows_native_save_export.py",
@@ -301,11 +307,13 @@
               "size": 18957
             },
             {
-              "mtime_ns": 1786632159017128800,
+              "freshness_cutoff_utc": "2026-08-18T13:54:00.995000Z",
+              "freshness_role": "packaged",
+              "mtime_ns": 1786653643074604000,
               "not_newer_than_report": true,
               "path": "validation/monitor_quickpls_process_tree.ps1",
-              "sha256": "93c1edb1794cc237923b89f7ffa419c75584325a5e34467608dd45d4dfb786d9",
-              "size": 5982
+              "sha256": "2c7d6427ab111664404ee40205de46395e75fd625722e061e7029f2e0ffd6d0f",
+              "size": 5999
             }
           ]
         },
@@ -333,8 +341,8 @@
             "timestamps_match_exactly": true,
             "timestamps_ordered": true
           },
-          "completed_at_utc": "2026-08-13T19:26:01.118000Z",
-          "generated_at_utc": "2026-08-13T19:25:21.583000Z",
+          "completed_at_utc": "2026-08-18T13:54:41.385000Z",
+          "generated_at_utc": "2026-08-18T13:54:00.995000Z",
           "linked_checks": {
             "cleanup": {
               "package_source_bound": true,
@@ -402,16 +410,16 @@
         "tested_product": {
           "cli_exact_or_not_reported": true,
           "current_cli": {
-            "mtime_ns": 1786620631883365000,
+            "mtime_ns": 1787060951350724000,
             "path": "target/release/qpls.exe",
-            "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-            "size": 20690432
+            "sha256": "7e1ee9c72d79b6102362f81313a54aeed987cb458f921397cb6fd3a09598d53a",
+            "size": 32387072
           },
           "current_desktop": {
-            "mtime_ns": 1786636746102237000,
+            "mtime_ns": 1787057662249356300,
             "path": "target/release/quickpls-desktop.exe",
-            "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
-            "size": 30507008
+            "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476",
+            "size": 49983488
           },
           "desktop_bound_by_current_cumulative_receipt": false,
           "desktop_exact": true,
@@ -422,44 +430,39 @@
               "file_count": 19,
               "manifest": [
                 {
-                  "path": "assets/NativeCalculationDialog-CekKsDqn.js",
-                  "sha256": "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694",
-                  "size": 51101
+                  "path": "assets/NativeCalculationDialog-DUmbxsTj.js",
+                  "sha256": "f372826a4a196668ef0bda364ee447b4a81a6c504d734ea3b36fd422604a1626",
+                  "size": 67846
                 },
                 {
-                  "path": "assets/NativeExportDialog-CTZOLsrg.js",
-                  "sha256": "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2",
-                  "size": 6432
+                  "path": "assets/NativeExportDialog-CMnug-uT.js",
+                  "sha256": "3e582cdb4f489aa86ddb2fb7f2d694b82da493358c917785b7e977aa2d5aa5dc",
+                  "size": 5329
                 },
                 {
-                  "path": "assets/NativeGroupSetupDialog-DncLahbL.js",
-                  "sha256": "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190",
-                  "size": 6779
+                  "path": "assets/NativeGroupSetupDialog-B-zMqU4I.js",
+                  "sha256": "882bfd8cab7eb5c3d8c1d51d75587385106f4a646e8c40ed9e622678eb041a9b",
+                  "size": 6807
                 },
                 {
-                  "path": "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
-                  "sha256": "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609",
-                  "size": 2948
+                  "path": "assets/NativeHigherOrderDialog-DXoMqdTP.js",
+                  "sha256": "f77ee4364421f29a7d1fe0c4af2d4948e95bf15383fb74c2cfd21a466a4d10fd",
+                  "size": 2921
                 },
                 {
-                  "path": "assets/NativeModerationDialog-D2IfblSQ.js",
-                  "sha256": "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840",
-                  "size": 3081
+                  "path": "assets/NativeModerationDialog-DAf_lZbj.js",
+                  "sha256": "020ee7e2c4d17b99ea43929d093ba2232819a1e280a894e9ace79764bd6a01b0",
+                  "size": 3070
                 },
                 {
-                  "path": "assets/NativeResultsSurface-Bv7Fchdi.js",
-                  "sha256": "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f",
-                  "size": 31251
+                  "path": "assets/NativeResultsSurface-DzKE0-53.js",
+                  "sha256": "9431738fbd3da01babd5a1a1d262e68da515a85a0d77929b03b5597a9b77f3e9",
+                  "size": 32644
                 },
                 {
-                  "path": "assets/NativeUtilityDialog-B_BR7mw4.js",
-                  "sha256": "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06",
-                  "size": 12164
-                },
-                {
-                  "path": "assets/flow-BN-PNp2v.js",
-                  "sha256": "e96e69cde521273e387064b0ff3ea9f94e29834ea085646f0b8e1fe9e0ea8fde",
-                  "size": 83921
+                  "path": "assets/NativeUtilityDialog-DF4n3ckD.js",
+                  "sha256": "f889bbbdbd3951b5157c0db1da89dcc6c5ab70eb39ffd8104114569002f40ee7",
+                  "size": 24365
                 },
                 {
                   "path": "assets/flow-BnuhLJ6X.css",
@@ -467,39 +470,44 @@
                   "size": 15869
                 },
                 {
-                  "path": "assets/icons-CWW7Ihoi.js",
-                  "sha256": "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6",
-                  "size": 20835
+                  "path": "assets/flow-DG_yhx79.js",
+                  "sha256": "bc613b2f8b6af00ce0d183175180163e8d5c915dbfbe86518a803d95d7d44ba3",
+                  "size": 84113
                 },
                 {
-                  "path": "assets/index-DBKNtbUu.js",
-                  "sha256": "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7",
-                  "size": 528769
+                  "path": "assets/icons-Y9nJPltI.js",
+                  "sha256": "44155ca0d3836bdee82cfa6034cd25738f5ae4688b880e896908a218ada17721",
+                  "size": 23471
                 },
                 {
-                  "path": "assets/index-DpTHova4.css",
-                  "sha256": "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182",
-                  "size": 74714
+                  "path": "assets/index-BvBkp0W8.js",
+                  "sha256": "a40515133f3b5658585c7d771f0d8082e718aad930d884880b698bec5c28a5e6",
+                  "size": 1552889
                 },
                 {
-                  "path": "assets/largeModelSmoke-PEBccAlJ.js",
-                  "sha256": "a4977bf130c85a688b570fb1f17f8dac958787116a585c9300f3d4c3fbd6b535",
-                  "size": 880
+                  "path": "assets/index-ClBrB-uD.css",
+                  "sha256": "38d93b5265523c9836ac53141d9ebeca8e1609f3c42f8e1baade66dcfd9f9074",
+                  "size": 107701
                 },
                 {
-                  "path": "assets/nativeMga-DgYeq6DN.js",
-                  "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff",
-                  "size": 3108
+                  "path": "assets/largeModelSmoke-ChuXLqDH.js",
+                  "sha256": "fb24e9dddb7e5a48ae648cf23391b83a80e40d05f57cc3ef1f025cb6fbf1d22d",
+                  "size": 983
                 },
                 {
-                  "path": "assets/publicationDiagram-BlkNs4Z4.js",
-                  "sha256": "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df",
-                  "size": 8648
+                  "path": "assets/nativeMga-CQPrK7Ua.js",
+                  "sha256": "e14a6c3728b9d157839875d8de4ae3128abce2f863458d143b8b3860520eb0fd",
+                  "size": 3745
                 },
                 {
-                  "path": "assets/smokeRun-CMXwsrTO.js",
-                  "sha256": "33388a0e9df739d8812f2a03c2980f00a3f49046375ae48c9a854d8f94f7f962",
-                  "size": 7141
+                  "path": "assets/publicationDiagram-BkF94kBm.js",
+                  "sha256": "d442211ac93704f176b57036ce8eb758e951fd72f6763394ceb282de9e7a0beb",
+                  "size": 8679
+                },
+                {
+                  "path": "assets/smokeRun-DsBvJjQf.js",
+                  "sha256": "e2b3a0beddc1838c8975b86fe64d9eb33af8f0ad4669b58db797ecef2214c718",
+                  "size": 7145
                 },
                 {
                   "path": "assets/tauri-CZBL8huA.js",
@@ -507,29 +515,29 @@
                   "size": 15818
                 },
                 {
-                  "path": "assets/vendor-3AznE2Td.js",
-                  "sha256": "7dadeaa73f481ffd1ab52c5247997462fd195062a4dbe10353701ffbbc45711f",
-                  "size": 317214
+                  "path": "assets/vendor-DAfPu0rL.js",
+                  "sha256": "61f10878d1ededa46b28c7b00d59492a03bbc88f903ea4a7a4fd5b5818d1d1c2",
+                  "size": 317222
                 },
                 {
                   "path": "index.html",
-                  "sha256": "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50",
+                  "sha256": "88071d1a5c606db7a34b5995a808895b5fc3d714597a51f2c674205ede153e0e",
                   "size": 821
                 }
               ],
               "path": "dist",
-              "sha256": "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
-              "size": 1191494
+              "sha256": "0993f32dfcb90fbd8b9643f5d169162457b747ce935e500f52126951b26a3d29",
+              "size": 2281438
             },
             "qpls_cli_exe": {
               "path": "target/release/qpls.exe",
-              "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-              "size": 20690432
+              "sha256": "7e1ee9c72d79b6102362f81313a54aeed987cb458f921397cb6fd3a09598d53a",
+              "size": 32387072
             },
             "quickpls_desktop_exe": {
               "path": "target/release/quickpls-desktop.exe",
-              "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
-              "size": 30507008
+              "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476",
+              "size": 49983488
             }
           }
         }
@@ -591,19 +599,19 @@
         "screenshot_integrity_passes": true,
         "visual_harness_not_newer_than_report": true
       },
-      "generated_at_utc": "2026-08-13T19:18:52.475Z",
+      "generated_at_utc": "2026-08-18T13:37:33.655Z",
       "passed": true,
       "report": {
         "path": "validation/results/v247_native_desktop_visual_acceptance.json",
-        "sha256": "3fca6d38de201f6309bfec13d20c5136f82789fb450fe9a4617c710cc33793c1",
-        "size": 464629
+        "sha256": "6ff1b3d9140f4a48f5ccc182889c6d3583daf94e970b827cec7ced97ba40bef1",
+        "size": 468953
       },
       "screenshots": [
         {
           "actual": {
             "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1024x700.png",
-            "sha256": "aa2d55ea1bdc942d43334f5631442c17bccd2a90afdd45fb6a823ebdbdd76cf5",
-            "size": 114551
+            "sha256": "f935f6b72ef08279cc5e7d349f6ead6516b03c440986b07e853e0a0db4cea50c",
+            "size": 120096
           },
           "passed": true,
           "state": "structural-path-randomization-dialog",
@@ -612,8 +620,8 @@
         {
           "actual": {
             "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1280x720.png",
-            "sha256": "5f070b79bf25ce00217c31973d14481fe3900aa1e5d36e88ef6136e8d0155493",
-            "size": 123353
+            "sha256": "58bab12e8f363cc663189abfc87a33590e5fdbc3f3094381d472ae24262489cc",
+            "size": 145850
           },
           "passed": true,
           "state": "structural-path-randomization-dialog",
@@ -622,8 +630,8 @@
         {
           "actual": {
             "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1440x900.png",
-            "sha256": "69a6836b2178f593b0aaef4e527eb5caf0bdc60089af743ce0f2540494a4d5ae",
-            "size": 149906
+            "sha256": "be57fce7592b1aaf38c67a252489047d517afdc9c224fe4ad7b2fe054c5954ea",
+            "size": 173455
           },
           "passed": true,
           "state": "structural-path-randomization-dialog",
@@ -634,91 +642,91 @@
     "runner_cleanup_verified": true,
     "source_freshness": {
       "after": {
-        "build_finished_at_utc": "2026-08-13T15:59:06.155218Z",
+        "build_finished_at_utc": "2026-08-18T12:54:22.306208Z",
         "build_receipt": {
           "path": "validation/results/diagnostic_bundle_build_receipt.json",
-          "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
-          "size": 144210
+          "sha256": "210aa30fd8d7a268b444a0254108e61118584656f6517face86500caeb4b1ea3",
+          "size": 265122
         },
         "desktop": {
-          "mtime_ns": 1786636746102237000,
+          "mtime_ns": 1787057662249356300,
           "path": "target/release/quickpls-desktop.exe",
-          "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
-          "size": 30507008
+          "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476",
+          "size": 49983488
         },
         "desktop_receipt_exact": true,
         "gate_sources_excluded_from_binary_freshness": [
           {
-            "mtime_ns": 1786627059621599000,
+            "mtime_ns": 1786884735966143100,
             "path": "validation/diagnostic_bundle_source_manifest.py",
-            "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
-            "size": 28025
+            "sha256": "abdbccab42e3da4324dc67b40c19f2c6162ae1abcff1663bc43a94af56499e63",
+            "size": 28083
           },
           {
-            "mtime_ns": 1786640237815572600,
+            "mtime_ns": 1787050616242802800,
             "path": "validation/legacy_release_adapter_common.py",
-            "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
-            "size": 51955
+            "sha256": "01f86f08668ad4ff9aad4cccda10298cc6579af4da748cc998d2aabdf0ec8681",
+            "size": 54379
           },
           {
-            "mtime_ns": 1786610514590924400,
+            "mtime_ns": 1786654347549305000,
             "path": "validation/method_promotion_manifest.py",
             "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
             "size": 34283
           },
           {
-            "mtime_ns": 1786610379730126700,
+            "mtime_ns": 1786653643022992500,
             "path": "validation/methods/method_promotion_manifest.schema.json",
             "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
             "size": 15836
           },
           {
-            "mtime_ns": 1786650293209974400,
+            "mtime_ns": 1786994067630545700,
             "path": "validation/methods/structural_path_randomization_v1.manifest.json",
-            "sha256": "c4af70fa296449446e4f987c346b82be6c03c82fdaf73e6e2f66e738d8450b2a",
-            "size": 14560
+            "sha256": "84172080609f9e457387d92a1b9abc617e289d1032928cfde8e70c2fa334eb78",
+            "size": 14735
           },
           {
-            "mtime_ns": 1786632159017128800,
+            "mtime_ns": 1786653643074604000,
             "path": "validation/monitor_quickpls_process_tree.ps1",
-            "sha256": "93c1edb1794cc237923b89f7ffa419c75584325a5e34467608dd45d4dfb786d9",
-            "size": 5982
+            "sha256": "2c7d6427ab111664404ee40205de46395e75fd625722e061e7029f2e0ffd6d0f",
+            "size": 5999
           },
           {
-            "mtime_ns": 1786649083288652800,
+            "mtime_ns": 1786653643895494700,
             "path": "validation/run_v247_structural_path_randomization_native_acceptance.ps1",
-            "sha256": "5f581aa4ba5e507b4517a5de7074c90ab9ad3e6f92913ba2f3227945a02e6361",
-            "size": 24029
+            "sha256": "e841e8597676c9ea4e37f4d63cb6abe9eca3d246e5fbe737ee649817df6361c4",
+            "size": 24063
           },
           {
-            "mtime_ns": 1786638098604415800,
+            "mtime_ns": 1786653643895494700,
             "path": "validation/structural_path_randomization_v1_factory_audit.py",
             "sha256": "39cf74cf64b2516f24e0879293115b9b41f238c4cf22552b2f1f0ada2655176c",
             "size": 229
           },
           {
-            "mtime_ns": 1786638098603386700,
+            "mtime_ns": 1786653643895494700,
             "path": "validation/structural_path_randomization_v1_packaged_acceptance.py",
             "sha256": "6989615c16d5f6c878873e22831a25819630b0b0928b15bd82dfc20a19a1af0b",
             "size": 241
           },
           {
-            "mtime_ns": 1786650833649550100,
+            "mtime_ns": 1787050616790428700,
             "path": "validation/test_legacy_release_adapters.py",
-            "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
-            "size": 13396
+            "sha256": "dbc695bede07f67595a76601614103ac21b9d6fc3512ddd7b26369a3dbc67c51",
+            "size": 15812
           },
           {
-            "mtime_ns": 1786639543726298400,
+            "mtime_ns": 1787029447699504800,
             "path": "validation/v247_native_desktop_visual_acceptance.mjs",
-            "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
-            "size": 280796
+            "sha256": "aea66dcb58de6bb79c36b9d3ad9a3351e1c145053e3c094dfbfec310bd26bc05",
+            "size": 287960
           },
           {
-            "mtime_ns": 1786638335159990200,
+            "mtime_ns": 1787053838961733900,
             "path": "validation/v247_tauri_native_acceptance.mjs",
-            "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
-            "size": 809598
+            "sha256": "952061138db0e6e3beb4f858f7e8c359b9763561980920e67a918d729eaf1c34",
+            "size": 981471
           },
           {
             "mtime_ns": 1786607997196503400,
@@ -729,23 +737,23 @@
         ],
         "passed": true,
         "release_cli": {
-          "mtime_ns": 1786620631883365000,
+          "mtime_ns": 1787060951350724000,
           "path": "target/release/qpls.exe",
-          "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-          "size": 20690432
+          "sha256": "7e1ee9c72d79b6102362f81313a54aeed987cb458f921397cb6fd3a09598d53a",
+          "size": 32387072
         },
         "release_cli_build_sources": [
           {
-            "mtime_ns": 1786618668433447400,
+            "mtime_ns": 1786860463958907500,
             "path": "Cargo.lock",
-            "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
-            "size": 154279
+            "sha256": "2782f92e86ae7420af0c27210b1602ebf6c5fc1c1002c2f4ad1ed56cdc38dcb7",
+            "size": 154646
           },
           {
-            "mtime_ns": 1786607995439584400,
+            "mtime_ns": 1786729071876818500,
             "path": "Cargo.toml",
-            "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
-            "size": 914
+            "sha256": "7b5cc1ab12cb81475cce1227b7ab1381e6278cc22f3b501c3b80858d9b1c749d",
+            "size": 1503
           },
           {
             "mtime_ns": 1784372817481351800,
@@ -754,10 +762,10 @@
             "size": 456
           },
           {
-            "mtime_ns": 1786607995450741900,
+            "mtime_ns": 1787002994858928000,
             "path": "crates/qpls-assessment/src/lib.rs",
-            "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
-            "size": 144364
+            "sha256": "910a3c42edde1db2dcff8b283a9d7acb388b4eb6b30f88c55201624610c2e341",
+            "size": 187841
           },
           {
             "mtime_ns": 1784436493165886700,
@@ -766,34 +774,88 @@
             "size": 678
           },
           {
-            "mtime_ns": 1786607995455877000,
+            "mtime_ns": 1787000828418698500,
             "path": "crates/qpls-cli/src/main.rs",
-            "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
-            "size": 216983
+            "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+            "size": 430654
           },
           {
-            "mtime_ns": 1784352071986106700,
+            "mtime_ns": 1786702377443713300,
             "path": "crates/qpls-core/Cargo.toml",
-            "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
-            "size": 363
+            "sha256": "f3c060597827e18cb29690adab487f96042c0528fc1010f5077f605b2114968e",
+            "size": 453
           },
           {
-            "mtime_ns": 1786607995461617100,
+            "mtime_ns": 1786699776372310400,
+            "path": "crates/qpls-core/src/analysis_recipe_v4.rs",
+            "sha256": "a8d8b808d0bb4c91cf08c1c6762c036c25fb477857710babe88256618f343072",
+            "size": 21328
+          },
+          {
+            "mtime_ns": 1786701952653478700,
+            "path": "crates/qpls-core/src/canonical_result_v2.rs",
+            "sha256": "c34bdbcf39286cd16cddbb633760eee4e00e3a892bdc2feaed262ad58ff49f84",
+            "size": 56826
+          },
+          {
+            "mtime_ns": 1787001641796806900,
+            "path": "crates/qpls-core/src/capability_registry_v2.rs",
+            "sha256": "86ce2f425896a1b3faa19436bcdf5633a99c9bd245ff5cdd87ec426f069ded35",
+            "size": 19248
+          },
+          {
+            "mtime_ns": 1786816780151920600,
+            "path": "crates/qpls-core/src/compiled_cbsem_plan_v2.rs",
+            "sha256": "c4572e4448994ebcb28efb8e4e4ba1a5457aa5cd117a1295cd5e558c216b8731",
+            "size": 85511
+          },
+          {
+            "mtime_ns": 1786816494112683400,
+            "path": "crates/qpls-core/src/compiled_cbsem_product_indicator_v1.rs",
+            "sha256": "34cae04ee493a9198cc8f07d5a5397fe99e9ec2df904bd484a255c21a4a653c5",
+            "size": 57323
+          },
+          {
+            "mtime_ns": 1786816780155299800,
+            "path": "crates/qpls-core/src/compiled_pls_plan_v2.rs",
+            "sha256": "e5f9b1521100f5afafae3b9d728291ce3fe52c945d4ca24404e77845bf92904d",
+            "size": 25316
+          },
+          {
+            "mtime_ns": 1786997348571231100,
             "path": "crates/qpls-core/src/contract.rs",
-            "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
-            "size": 107095
+            "sha256": "51c235a9173d3f9c84e5bfe4c0ce6280268ee26b882e2a41dd01be889a7cdfb5",
+            "size": 144508
           },
           {
-            "mtime_ns": 1784383048514318800,
+            "mtime_ns": 1786807798001317300,
+            "path": "crates/qpls-core/src/dataset_transformation_v2.rs",
+            "sha256": "8a2bfafa9624aae5b6b1a59250cfefd49cb5701e50342a7f3345446934bb85f1",
+            "size": 119293
+          },
+          {
+            "mtime_ns": 1786869790222479600,
+            "path": "crates/qpls-core/src/generated/established_method_contracts_v1.rs",
+            "sha256": "8c072771933a47073cd35a3016c7e14de9016037295efdc1ed95a5af354b043c",
+            "size": 7034
+          },
+          {
+            "mtime_ns": 1786871655298337700,
             "path": "crates/qpls-core/src/lib.rs",
-            "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
-            "size": 180
+            "sha256": "f62d2b1dc99c996bb1cd85e109d08b0dc98c3c847cca7a470366548ff90f13fb",
+            "size": 1108
           },
           {
-            "mtime_ns": 1786607995463756700,
+            "mtime_ns": 1786709293084030600,
             "path": "crates/qpls-core/src/methods.rs",
-            "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
-            "size": 3790
+            "sha256": "474b1f559b920f2a09d90aa45b2e70f5677fac3fb2b2462efcd24b08ea2a56eb",
+            "size": 4404
+          },
+          {
+            "mtime_ns": 1786996627309697100,
+            "path": "crates/qpls-core/src/recipe_v4_compiler.rs",
+            "sha256": "8032ba591af80539a9e00f328c69dd2c385b394af6480a782a67a4fd3d41f6dd",
+            "size": 126441
           },
           {
             "mtime_ns": 1786607995466130100,
@@ -802,16 +864,28 @@
             "size": 12376
           },
           {
+            "mtime_ns": 1786816780158320900,
+            "path": "crates/qpls-core/src/sem_model_v4.rs",
+            "sha256": "b28e0ecdc285f9c256e16739a91aae67f2bfac3faeddf5d1ddf5c935eb34712f",
+            "size": 149643
+          },
+          {
             "mtime_ns": 1786607995469322800,
             "path": "crates/qpls-core/src/statistics.rs",
             "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
             "size": 8527
           },
           {
-            "mtime_ns": 1786620129020320300,
+            "mtime_ns": 1786995968383587500,
             "path": "crates/qpls-core/src/validation.rs",
-            "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
-            "size": 177352
+            "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+            "size": 227427
+          },
+          {
+            "mtime_ns": 1786783615144417500,
+            "path": "crates/qpls-core/src/weight_semantics_v1.rs",
+            "sha256": "f5fcd290ff6498a99a7fdef16de785d0260856997cddfae6a82d9d292db8df7c",
+            "size": 34172
           },
           {
             "mtime_ns": 1784364586747181800,
@@ -826,28 +900,76 @@
             "size": 44865
           },
           {
-            "mtime_ns": 1786607995481159200,
+            "mtime_ns": 1786854028409944000,
             "path": "crates/qpls-estimation/Cargo.toml",
-            "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+            "sha256": "83e71bb5bd14eb64f83f82fe5472f9ab5467d0cb6913fe5e06ee01609393e848",
             "size": 503
           },
           {
-            "mtime_ns": 1784360087780652100,
+            "mtime_ns": 1786873675065897600,
+            "path": "crates/qpls-estimation/src/cbsem_bootstrap_contract.rs",
+            "sha256": "a603bb2fbf2dc6da62fd7d80b10df72fd6f34375b4ad91103a6d847d706c48e9",
+            "size": 39817
+          },
+          {
+            "mtime_ns": 1786873675081550500,
+            "path": "crates/qpls-estimation/src/cbsem_exact_nested_lrt.rs",
+            "sha256": "c7915c1e752a36f8921998f724f3e5326bceff3f26914dd940d6653c3de1b458",
+            "size": 67546
+          },
+          {
+            "mtime_ns": 1786873675066749100,
+            "path": "crates/qpls-estimation/src/cbsem_exact_parameter_table.rs",
+            "sha256": "154ba1fe5c2b6cabfde9f3341dd56938baacd09f1d7a3aee3e02b8ec6dbba35a",
+            "size": 168802
+          },
+          {
+            "mtime_ns": 1786853939426505400,
+            "path": "crates/qpls-estimation/src/cbsem_exact_two_group_invariance.rs",
+            "sha256": "0669b95dc809fca986892ec448389d9b60fb545631c43743b8802ddc237ccb52",
+            "size": 79989
+          },
+          {
+            "mtime_ns": 1786869083458348700,
+            "path": "crates/qpls-estimation/src/cbsem_matrix_input.rs",
+            "sha256": "9639a9fbd2f54adba434859a50b2e9147e148f8e4549993219ad0e9d624048d3",
+            "size": 203709
+          },
+          {
+            "mtime_ns": 1786819654800426000,
+            "path": "crates/qpls-estimation/src/cbsem_product_indicator_moderation.rs",
+            "sha256": "6baa20fa2bd695ea8d13f8ee9bf16829c31686af30c59a7406100202e7cb8ff9",
+            "size": 67567
+          },
+          {
+            "mtime_ns": 1786779255357299200,
+            "path": "crates/qpls-estimation/src/continuous_raw_mean_replacement_v1.rs",
+            "sha256": "f27f000f766c27981cf9005008a875030dc87dd2bf8d98925604a5275a9ce8fd",
+            "size": 55129
+          },
+          {
+            "mtime_ns": 1786852661557123100,
             "path": "crates/qpls-estimation/src/lib.rs",
-            "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
-            "size": 26
+            "sha256": "7dc9eae0e5b5bb436ac52e9d9cf3df24d25ccfa47db23bfd8d7d1d8fafd2bfea",
+            "size": 779
           },
           {
-            "mtime_ns": 1786617342744705100,
+            "mtime_ns": 1786993733812215700,
             "path": "crates/qpls-estimation/src/pls.rs",
-            "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-            "size": 639198
+            "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+            "size": 808499
           },
           {
-            "mtime_ns": 1786607995489944600,
+            "mtime_ns": 1786750927454959800,
+            "path": "crates/qpls-estimation/src/pls_model_comparison.rs",
+            "sha256": "880a9d25c3c19ce175706f8325e42fdc00b0c2b28896ddcd7ff2ca37b4b930f6",
+            "size": 77127
+          },
+          {
+            "mtime_ns": 1786807524127743500,
             "path": "crates/qpls-project/Cargo.toml",
-            "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
-            "size": 628
+            "sha256": "d51f1e2ae30b436bac003892103f05f9cef80ae7956b3a3cbfc3c22e16506fa6",
+            "size": 870
           },
           {
             "mtime_ns": 1786607995492067200,
@@ -856,34 +978,142 @@
             "size": 31085
           },
           {
-            "mtime_ns": 1786620129494578100,
+            "mtime_ns": 1786708225376317800,
+            "path": "crates/qpls-project/src/canonical_result_document_v2.rs",
+            "sha256": "704bf7045e8099f79d47f90a28cc4d36a84651abf031a810dd89af45bd263b58",
+            "size": 30040
+          },
+          {
+            "mtime_ns": 1786807122225577500,
+            "path": "crates/qpls-project/src/data_lineage_v1.rs",
+            "sha256": "db0ed93df87c78483ae5114f0c275ecbcba016ed1cd7d35715efc34708982afa",
+            "size": 41942
+          },
+          {
+            "mtime_ns": 1787021162794577400,
             "path": "crates/qpls-project/src/lib.rs",
-            "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-            "size": 660277
+            "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+            "size": 854728
           },
           {
-            "mtime_ns": 1784375063189640300,
+            "mtime_ns": 1787056097125942800,
+            "path": "crates/qpls-project/src/missing_data_execution_v1.rs",
+            "sha256": "ed0a05fc9115d2bdddb7ff756913c8298ec51e7ab0a5dad3a5f5d402b48a1f55",
+            "size": 53452
+          },
+          {
+            "mtime_ns": 1786825524575836100,
+            "path": "crates/qpls-project/src/pls_score_execution_v2.rs",
+            "sha256": "e1269405136cee66ea948c07b1d11b2f894e7549c4e6010c7605bc4e0ad7d7b8",
+            "size": 40956
+          },
+          {
+            "mtime_ns": 1786818622639890100,
+            "path": "crates/qpls-project/src/project_archive_v6_save_copy.rs",
+            "sha256": "cafcce46dda628197601a1b73ca0f0beff3a7e98aa19040492c2e8cc6e223884",
+            "size": 61426
+          },
+          {
+            "mtime_ns": 1786795933111581000,
+            "path": "crates/qpls-project/src/project_archive_v6_upgrade_zip.rs",
+            "sha256": "5d8fb6eb26fbc69012c01f95aafcee7cc099b0c61f5b1a493bbff4ff0049c7cb",
+            "size": 64961
+          },
+          {
+            "mtime_ns": 1787054742746172200,
+            "path": "crates/qpls-project/src/project_archive_v6_zip.rs",
+            "sha256": "b9384d40081300b97af203e95f0d06b92c08dd1ab01dd408344cf93f4b596619",
+            "size": 32771
+          },
+          {
+            "mtime_ns": 1787054856376136900,
+            "path": "crates/qpls-project/src/project_schema_v6.rs",
+            "sha256": "a936ced328e6e2948b30c948ed88eeb2c10f4e92ca4c313b483bc480fee4a22a",
+            "size": 380560
+          },
+          {
+            "mtime_ns": 1786860463958907500,
             "path": "crates/qpls-resampling/Cargo.toml",
-            "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
-            "size": 589
+            "sha256": "ecc5726052949d6a39868f22bfdca6fccaa435ee2788eccd778182ab8a972b2d",
+            "size": 656
           },
           {
-            "mtime_ns": 1786607995501017700,
+            "mtime_ns": 1786836188583667700,
+            "path": "crates/qpls-resampling/src/cbsem_bootstrap.rs",
+            "sha256": "56bdc1933b608f89ef6157f2cb989ac73a1d1708af26a922a1c01b18a685eb3e",
+            "size": 31308
+          },
+          {
+            "mtime_ns": 1786873922820718800,
+            "path": "crates/qpls-resampling/src/cbsem_exact_bootstrap.rs",
+            "sha256": "fbc89dd825eeb6826f2cd228f100fd2cce53176fde310be91c9b24ce21ac14e3",
+            "size": 158310
+          },
+          {
+            "mtime_ns": 1786994171943469200,
+            "path": "crates/qpls-resampling/src/consistent_bootstrap.rs",
+            "sha256": "fc0091c9078588a1743d37f20381c36200669832b9d40d1c10583a302b74792b",
+            "size": 56561
+          },
+          {
+            "mtime_ns": 1786834615302248200,
+            "path": "crates/qpls-resampling/src/consistent_permutation.rs",
+            "sha256": "d26d80f33604ceb109f903a64e05ab015da2f10f5adf7f1157583ca1c2da8c77",
+            "size": 73167
+          },
+          {
+            "mtime_ns": 1786995196462829700,
             "path": "crates/qpls-resampling/src/lib.rs",
-            "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
-            "size": 170900
+            "sha256": "5aec61b8090183912bce7da7f9855344a882e691aea2336baf8c72c4272cc8ec",
+            "size": 244850
           },
           {
-            "mtime_ns": 1784390064413583300,
+            "mtime_ns": 1786730251870993600,
+            "path": "crates/qpls-resampling/src/pls_model_fit_exact.rs",
+            "sha256": "05a3444522aa7b9c4aa15804c4796f30e611ce71cc9e0f3169bb24e4501ade31",
+            "size": 63796
+          },
+          {
+            "mtime_ns": 1786995575091518300,
+            "path": "crates/qpls-resampling/src/power.rs",
+            "sha256": "100197d9105a82aa28da85b4b34e6c76c9c078eb5189ed8f28a9d8b5adb2e56a",
+            "size": 75512
+          },
+          {
+            "mtime_ns": 1786704824293020900,
             "path": "crates/qpls-runner/Cargo.toml",
-            "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
-            "size": 428
+            "sha256": "07246ac150eb04ae6cb479201c2292caff1d6c66142d9a476237790a9c2e5571",
+            "size": 472
           },
           {
-            "mtime_ns": 1786620129040430400,
+            "mtime_ns": 1786996467995192100,
             "path": "crates/qpls-runner/src/lib.rs",
-            "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
-            "size": 49349
+            "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+            "size": 100140
+          },
+          {
+            "mtime_ns": 1786756525673757500,
+            "path": "crates/qpls-runner/src/pls_model_comparison_execution.rs",
+            "sha256": "1be7b61356bb8cb3bee8e1c6434868c06aa91610a4367e82be0182863950594a",
+            "size": 58981
+          },
+          {
+            "mtime_ns": 1786873888569083800,
+            "path": "crates/qpls-runner/src/recipe_v4_cbsem_execution.rs",
+            "sha256": "aa7d30c1e73c8900a987efd4ff24efe4dc5b3aabb36f560386afacf7958c3dd2",
+            "size": 107058
+          },
+          {
+            "mtime_ns": 1786819586992364400,
+            "path": "crates/qpls-runner/src/recipe_v4_cbsem_product_indicator_execution.rs",
+            "sha256": "fc7a7dae8d050885a7a4f5474f76fd875cd025f035110917b68985cae22ba596",
+            "size": 25359
+          },
+          {
+            "mtime_ns": 1786995436640387400,
+            "path": "crates/qpls-runner/src/recipe_v4_pls_execution.rs",
+            "sha256": "1fb7816b2aea38908e09d48a7827e5728a7b0384c47a5738604d60a96aac4d6a",
+            "size": 62181
           },
           {
             "mtime_ns": 1786607996206752100,
@@ -895,91 +1125,91 @@
         "release_cli_newer_build_sources": []
       },
       "before": {
-        "build_finished_at_utc": "2026-08-13T15:59:06.155218Z",
+        "build_finished_at_utc": "2026-08-18T12:54:22.306208Z",
         "build_receipt": {
           "path": "validation/results/diagnostic_bundle_build_receipt.json",
-          "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
-          "size": 144210
+          "sha256": "210aa30fd8d7a268b444a0254108e61118584656f6517face86500caeb4b1ea3",
+          "size": 265122
         },
         "desktop": {
-          "mtime_ns": 1786636746102237000,
+          "mtime_ns": 1787057662249356300,
           "path": "target/release/quickpls-desktop.exe",
-          "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
-          "size": 30507008
+          "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476",
+          "size": 49983488
         },
         "desktop_receipt_exact": true,
         "gate_sources_excluded_from_binary_freshness": [
           {
-            "mtime_ns": 1786627059621599000,
+            "mtime_ns": 1786884735966143100,
             "path": "validation/diagnostic_bundle_source_manifest.py",
-            "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
-            "size": 28025
+            "sha256": "abdbccab42e3da4324dc67b40c19f2c6162ae1abcff1663bc43a94af56499e63",
+            "size": 28083
           },
           {
-            "mtime_ns": 1786640237815572600,
+            "mtime_ns": 1787050616242802800,
             "path": "validation/legacy_release_adapter_common.py",
-            "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
-            "size": 51955
+            "sha256": "01f86f08668ad4ff9aad4cccda10298cc6579af4da748cc998d2aabdf0ec8681",
+            "size": 54379
           },
           {
-            "mtime_ns": 1786610514590924400,
+            "mtime_ns": 1786654347549305000,
             "path": "validation/method_promotion_manifest.py",
             "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
             "size": 34283
           },
           {
-            "mtime_ns": 1786610379730126700,
+            "mtime_ns": 1786653643022992500,
             "path": "validation/methods/method_promotion_manifest.schema.json",
             "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
             "size": 15836
           },
           {
-            "mtime_ns": 1786650293209974400,
+            "mtime_ns": 1786994067630545700,
             "path": "validation/methods/structural_path_randomization_v1.manifest.json",
-            "sha256": "c4af70fa296449446e4f987c346b82be6c03c82fdaf73e6e2f66e738d8450b2a",
-            "size": 14560
+            "sha256": "84172080609f9e457387d92a1b9abc617e289d1032928cfde8e70c2fa334eb78",
+            "size": 14735
           },
           {
-            "mtime_ns": 1786632159017128800,
+            "mtime_ns": 1786653643074604000,
             "path": "validation/monitor_quickpls_process_tree.ps1",
-            "sha256": "93c1edb1794cc237923b89f7ffa419c75584325a5e34467608dd45d4dfb786d9",
-            "size": 5982
+            "sha256": "2c7d6427ab111664404ee40205de46395e75fd625722e061e7029f2e0ffd6d0f",
+            "size": 5999
           },
           {
-            "mtime_ns": 1786649083288652800,
+            "mtime_ns": 1786653643895494700,
             "path": "validation/run_v247_structural_path_randomization_native_acceptance.ps1",
-            "sha256": "5f581aa4ba5e507b4517a5de7074c90ab9ad3e6f92913ba2f3227945a02e6361",
-            "size": 24029
+            "sha256": "e841e8597676c9ea4e37f4d63cb6abe9eca3d246e5fbe737ee649817df6361c4",
+            "size": 24063
           },
           {
-            "mtime_ns": 1786638098604415800,
+            "mtime_ns": 1786653643895494700,
             "path": "validation/structural_path_randomization_v1_factory_audit.py",
             "sha256": "39cf74cf64b2516f24e0879293115b9b41f238c4cf22552b2f1f0ada2655176c",
             "size": 229
           },
           {
-            "mtime_ns": 1786638098603386700,
+            "mtime_ns": 1786653643895494700,
             "path": "validation/structural_path_randomization_v1_packaged_acceptance.py",
             "sha256": "6989615c16d5f6c878873e22831a25819630b0b0928b15bd82dfc20a19a1af0b",
             "size": 241
           },
           {
-            "mtime_ns": 1786650833649550100,
+            "mtime_ns": 1787050616790428700,
             "path": "validation/test_legacy_release_adapters.py",
-            "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
-            "size": 13396
+            "sha256": "dbc695bede07f67595a76601614103ac21b9d6fc3512ddd7b26369a3dbc67c51",
+            "size": 15812
           },
           {
-            "mtime_ns": 1786639543726298400,
+            "mtime_ns": 1787029447699504800,
             "path": "validation/v247_native_desktop_visual_acceptance.mjs",
-            "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
-            "size": 280796
+            "sha256": "aea66dcb58de6bb79c36b9d3ad9a3351e1c145053e3c094dfbfec310bd26bc05",
+            "size": 287960
           },
           {
-            "mtime_ns": 1786638335159990200,
+            "mtime_ns": 1787053838961733900,
             "path": "validation/v247_tauri_native_acceptance.mjs",
-            "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
-            "size": 809598
+            "sha256": "952061138db0e6e3beb4f858f7e8c359b9763561980920e67a918d729eaf1c34",
+            "size": 981471
           },
           {
             "mtime_ns": 1786607997196503400,
@@ -990,23 +1220,23 @@
         ],
         "passed": true,
         "release_cli": {
-          "mtime_ns": 1786620631883365000,
+          "mtime_ns": 1787060951350724000,
           "path": "target/release/qpls.exe",
-          "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-          "size": 20690432
+          "sha256": "7e1ee9c72d79b6102362f81313a54aeed987cb458f921397cb6fd3a09598d53a",
+          "size": 32387072
         },
         "release_cli_build_sources": [
           {
-            "mtime_ns": 1786618668433447400,
+            "mtime_ns": 1786860463958907500,
             "path": "Cargo.lock",
-            "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
-            "size": 154279
+            "sha256": "2782f92e86ae7420af0c27210b1602ebf6c5fc1c1002c2f4ad1ed56cdc38dcb7",
+            "size": 154646
           },
           {
-            "mtime_ns": 1786607995439584400,
+            "mtime_ns": 1786729071876818500,
             "path": "Cargo.toml",
-            "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
-            "size": 914
+            "sha256": "7b5cc1ab12cb81475cce1227b7ab1381e6278cc22f3b501c3b80858d9b1c749d",
+            "size": 1503
           },
           {
             "mtime_ns": 1784372817481351800,
@@ -1015,10 +1245,10 @@
             "size": 456
           },
           {
-            "mtime_ns": 1786607995450741900,
+            "mtime_ns": 1787002994858928000,
             "path": "crates/qpls-assessment/src/lib.rs",
-            "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
-            "size": 144364
+            "sha256": "910a3c42edde1db2dcff8b283a9d7acb388b4eb6b30f88c55201624610c2e341",
+            "size": 187841
           },
           {
             "mtime_ns": 1784436493165886700,
@@ -1027,34 +1257,88 @@
             "size": 678
           },
           {
-            "mtime_ns": 1786607995455877000,
+            "mtime_ns": 1787000828418698500,
             "path": "crates/qpls-cli/src/main.rs",
-            "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
-            "size": 216983
+            "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+            "size": 430654
           },
           {
-            "mtime_ns": 1784352071986106700,
+            "mtime_ns": 1786702377443713300,
             "path": "crates/qpls-core/Cargo.toml",
-            "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
-            "size": 363
+            "sha256": "f3c060597827e18cb29690adab487f96042c0528fc1010f5077f605b2114968e",
+            "size": 453
           },
           {
-            "mtime_ns": 1786607995461617100,
+            "mtime_ns": 1786699776372310400,
+            "path": "crates/qpls-core/src/analysis_recipe_v4.rs",
+            "sha256": "a8d8b808d0bb4c91cf08c1c6762c036c25fb477857710babe88256618f343072",
+            "size": 21328
+          },
+          {
+            "mtime_ns": 1786701952653478700,
+            "path": "crates/qpls-core/src/canonical_result_v2.rs",
+            "sha256": "c34bdbcf39286cd16cddbb633760eee4e00e3a892bdc2feaed262ad58ff49f84",
+            "size": 56826
+          },
+          {
+            "mtime_ns": 1787001641796806900,
+            "path": "crates/qpls-core/src/capability_registry_v2.rs",
+            "sha256": "86ce2f425896a1b3faa19436bcdf5633a99c9bd245ff5cdd87ec426f069ded35",
+            "size": 19248
+          },
+          {
+            "mtime_ns": 1786816780151920600,
+            "path": "crates/qpls-core/src/compiled_cbsem_plan_v2.rs",
+            "sha256": "c4572e4448994ebcb28efb8e4e4ba1a5457aa5cd117a1295cd5e558c216b8731",
+            "size": 85511
+          },
+          {
+            "mtime_ns": 1786816494112683400,
+            "path": "crates/qpls-core/src/compiled_cbsem_product_indicator_v1.rs",
+            "sha256": "34cae04ee493a9198cc8f07d5a5397fe99e9ec2df904bd484a255c21a4a653c5",
+            "size": 57323
+          },
+          {
+            "mtime_ns": 1786816780155299800,
+            "path": "crates/qpls-core/src/compiled_pls_plan_v2.rs",
+            "sha256": "e5f9b1521100f5afafae3b9d728291ce3fe52c945d4ca24404e77845bf92904d",
+            "size": 25316
+          },
+          {
+            "mtime_ns": 1786997348571231100,
             "path": "crates/qpls-core/src/contract.rs",
-            "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
-            "size": 107095
+            "sha256": "51c235a9173d3f9c84e5bfe4c0ce6280268ee26b882e2a41dd01be889a7cdfb5",
+            "size": 144508
           },
           {
-            "mtime_ns": 1784383048514318800,
+            "mtime_ns": 1786807798001317300,
+            "path": "crates/qpls-core/src/dataset_transformation_v2.rs",
+            "sha256": "8a2bfafa9624aae5b6b1a59250cfefd49cb5701e50342a7f3345446934bb85f1",
+            "size": 119293
+          },
+          {
+            "mtime_ns": 1786869790222479600,
+            "path": "crates/qpls-core/src/generated/established_method_contracts_v1.rs",
+            "sha256": "8c072771933a47073cd35a3016c7e14de9016037295efdc1ed95a5af354b043c",
+            "size": 7034
+          },
+          {
+            "mtime_ns": 1786871655298337700,
             "path": "crates/qpls-core/src/lib.rs",
-            "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
-            "size": 180
+            "sha256": "f62d2b1dc99c996bb1cd85e109d08b0dc98c3c847cca7a470366548ff90f13fb",
+            "size": 1108
           },
           {
-            "mtime_ns": 1786607995463756700,
+            "mtime_ns": 1786709293084030600,
             "path": "crates/qpls-core/src/methods.rs",
-            "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
-            "size": 3790
+            "sha256": "474b1f559b920f2a09d90aa45b2e70f5677fac3fb2b2462efcd24b08ea2a56eb",
+            "size": 4404
+          },
+          {
+            "mtime_ns": 1786996627309697100,
+            "path": "crates/qpls-core/src/recipe_v4_compiler.rs",
+            "sha256": "8032ba591af80539a9e00f328c69dd2c385b394af6480a782a67a4fd3d41f6dd",
+            "size": 126441
           },
           {
             "mtime_ns": 1786607995466130100,
@@ -1063,16 +1347,28 @@
             "size": 12376
           },
           {
+            "mtime_ns": 1786816780158320900,
+            "path": "crates/qpls-core/src/sem_model_v4.rs",
+            "sha256": "b28e0ecdc285f9c256e16739a91aae67f2bfac3faeddf5d1ddf5c935eb34712f",
+            "size": 149643
+          },
+          {
             "mtime_ns": 1786607995469322800,
             "path": "crates/qpls-core/src/statistics.rs",
             "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
             "size": 8527
           },
           {
-            "mtime_ns": 1786620129020320300,
+            "mtime_ns": 1786995968383587500,
             "path": "crates/qpls-core/src/validation.rs",
-            "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
-            "size": 177352
+            "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+            "size": 227427
+          },
+          {
+            "mtime_ns": 1786783615144417500,
+            "path": "crates/qpls-core/src/weight_semantics_v1.rs",
+            "sha256": "f5fcd290ff6498a99a7fdef16de785d0260856997cddfae6a82d9d292db8df7c",
+            "size": 34172
           },
           {
             "mtime_ns": 1784364586747181800,
@@ -1087,28 +1383,76 @@
             "size": 44865
           },
           {
-            "mtime_ns": 1786607995481159200,
+            "mtime_ns": 1786854028409944000,
             "path": "crates/qpls-estimation/Cargo.toml",
-            "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+            "sha256": "83e71bb5bd14eb64f83f82fe5472f9ab5467d0cb6913fe5e06ee01609393e848",
             "size": 503
           },
           {
-            "mtime_ns": 1784360087780652100,
+            "mtime_ns": 1786873675065897600,
+            "path": "crates/qpls-estimation/src/cbsem_bootstrap_contract.rs",
+            "sha256": "a603bb2fbf2dc6da62fd7d80b10df72fd6f34375b4ad91103a6d847d706c48e9",
+            "size": 39817
+          },
+          {
+            "mtime_ns": 1786873675081550500,
+            "path": "crates/qpls-estimation/src/cbsem_exact_nested_lrt.rs",
+            "sha256": "c7915c1e752a36f8921998f724f3e5326bceff3f26914dd940d6653c3de1b458",
+            "size": 67546
+          },
+          {
+            "mtime_ns": 1786873675066749100,
+            "path": "crates/qpls-estimation/src/cbsem_exact_parameter_table.rs",
+            "sha256": "154ba1fe5c2b6cabfde9f3341dd56938baacd09f1d7a3aee3e02b8ec6dbba35a",
+            "size": 168802
+          },
+          {
+            "mtime_ns": 1786853939426505400,
+            "path": "crates/qpls-estimation/src/cbsem_exact_two_group_invariance.rs",
+            "sha256": "0669b95dc809fca986892ec448389d9b60fb545631c43743b8802ddc237ccb52",
+            "size": 79989
+          },
+          {
+            "mtime_ns": 1786869083458348700,
+            "path": "crates/qpls-estimation/src/cbsem_matrix_input.rs",
+            "sha256": "9639a9fbd2f54adba434859a50b2e9147e148f8e4549993219ad0e9d624048d3",
+            "size": 203709
+          },
+          {
+            "mtime_ns": 1786819654800426000,
+            "path": "crates/qpls-estimation/src/cbsem_product_indicator_moderation.rs",
+            "sha256": "6baa20fa2bd695ea8d13f8ee9bf16829c31686af30c59a7406100202e7cb8ff9",
+            "size": 67567
+          },
+          {
+            "mtime_ns": 1786779255357299200,
+            "path": "crates/qpls-estimation/src/continuous_raw_mean_replacement_v1.rs",
+            "sha256": "f27f000f766c27981cf9005008a875030dc87dd2bf8d98925604a5275a9ce8fd",
+            "size": 55129
+          },
+          {
+            "mtime_ns": 1786852661557123100,
             "path": "crates/qpls-estimation/src/lib.rs",
-            "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
-            "size": 26
+            "sha256": "7dc9eae0e5b5bb436ac52e9d9cf3df24d25ccfa47db23bfd8d7d1d8fafd2bfea",
+            "size": 779
           },
           {
-            "mtime_ns": 1786617342744705100,
+            "mtime_ns": 1786993733812215700,
             "path": "crates/qpls-estimation/src/pls.rs",
-            "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-            "size": 639198
+            "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+            "size": 808499
           },
           {
-            "mtime_ns": 1786607995489944600,
+            "mtime_ns": 1786750927454959800,
+            "path": "crates/qpls-estimation/src/pls_model_comparison.rs",
+            "sha256": "880a9d25c3c19ce175706f8325e42fdc00b0c2b28896ddcd7ff2ca37b4b930f6",
+            "size": 77127
+          },
+          {
+            "mtime_ns": 1786807524127743500,
             "path": "crates/qpls-project/Cargo.toml",
-            "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
-            "size": 628
+            "sha256": "d51f1e2ae30b436bac003892103f05f9cef80ae7956b3a3cbfc3c22e16506fa6",
+            "size": 870
           },
           {
             "mtime_ns": 1786607995492067200,
@@ -1117,34 +1461,142 @@
             "size": 31085
           },
           {
-            "mtime_ns": 1786620129494578100,
+            "mtime_ns": 1786708225376317800,
+            "path": "crates/qpls-project/src/canonical_result_document_v2.rs",
+            "sha256": "704bf7045e8099f79d47f90a28cc4d36a84651abf031a810dd89af45bd263b58",
+            "size": 30040
+          },
+          {
+            "mtime_ns": 1786807122225577500,
+            "path": "crates/qpls-project/src/data_lineage_v1.rs",
+            "sha256": "db0ed93df87c78483ae5114f0c275ecbcba016ed1cd7d35715efc34708982afa",
+            "size": 41942
+          },
+          {
+            "mtime_ns": 1787021162794577400,
             "path": "crates/qpls-project/src/lib.rs",
-            "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-            "size": 660277
+            "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+            "size": 854728
           },
           {
-            "mtime_ns": 1784375063189640300,
+            "mtime_ns": 1787056097125942800,
+            "path": "crates/qpls-project/src/missing_data_execution_v1.rs",
+            "sha256": "ed0a05fc9115d2bdddb7ff756913c8298ec51e7ab0a5dad3a5f5d402b48a1f55",
+            "size": 53452
+          },
+          {
+            "mtime_ns": 1786825524575836100,
+            "path": "crates/qpls-project/src/pls_score_execution_v2.rs",
+            "sha256": "e1269405136cee66ea948c07b1d11b2f894e7549c4e6010c7605bc4e0ad7d7b8",
+            "size": 40956
+          },
+          {
+            "mtime_ns": 1786818622639890100,
+            "path": "crates/qpls-project/src/project_archive_v6_save_copy.rs",
+            "sha256": "cafcce46dda628197601a1b73ca0f0beff3a7e98aa19040492c2e8cc6e223884",
+            "size": 61426
+          },
+          {
+            "mtime_ns": 1786795933111581000,
+            "path": "crates/qpls-project/src/project_archive_v6_upgrade_zip.rs",
+            "sha256": "5d8fb6eb26fbc69012c01f95aafcee7cc099b0c61f5b1a493bbff4ff0049c7cb",
+            "size": 64961
+          },
+          {
+            "mtime_ns": 1787054742746172200,
+            "path": "crates/qpls-project/src/project_archive_v6_zip.rs",
+            "sha256": "b9384d40081300b97af203e95f0d06b92c08dd1ab01dd408344cf93f4b596619",
+            "size": 32771
+          },
+          {
+            "mtime_ns": 1787054856376136900,
+            "path": "crates/qpls-project/src/project_schema_v6.rs",
+            "sha256": "a936ced328e6e2948b30c948ed88eeb2c10f4e92ca4c313b483bc480fee4a22a",
+            "size": 380560
+          },
+          {
+            "mtime_ns": 1786860463958907500,
             "path": "crates/qpls-resampling/Cargo.toml",
-            "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
-            "size": 589
+            "sha256": "ecc5726052949d6a39868f22bfdca6fccaa435ee2788eccd778182ab8a972b2d",
+            "size": 656
           },
           {
-            "mtime_ns": 1786607995501017700,
+            "mtime_ns": 1786836188583667700,
+            "path": "crates/qpls-resampling/src/cbsem_bootstrap.rs",
+            "sha256": "56bdc1933b608f89ef6157f2cb989ac73a1d1708af26a922a1c01b18a685eb3e",
+            "size": 31308
+          },
+          {
+            "mtime_ns": 1786873922820718800,
+            "path": "crates/qpls-resampling/src/cbsem_exact_bootstrap.rs",
+            "sha256": "fbc89dd825eeb6826f2cd228f100fd2cce53176fde310be91c9b24ce21ac14e3",
+            "size": 158310
+          },
+          {
+            "mtime_ns": 1786994171943469200,
+            "path": "crates/qpls-resampling/src/consistent_bootstrap.rs",
+            "sha256": "fc0091c9078588a1743d37f20381c36200669832b9d40d1c10583a302b74792b",
+            "size": 56561
+          },
+          {
+            "mtime_ns": 1786834615302248200,
+            "path": "crates/qpls-resampling/src/consistent_permutation.rs",
+            "sha256": "d26d80f33604ceb109f903a64e05ab015da2f10f5adf7f1157583ca1c2da8c77",
+            "size": 73167
+          },
+          {
+            "mtime_ns": 1786995196462829700,
             "path": "crates/qpls-resampling/src/lib.rs",
-            "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
-            "size": 170900
+            "sha256": "5aec61b8090183912bce7da7f9855344a882e691aea2336baf8c72c4272cc8ec",
+            "size": 244850
           },
           {
-            "mtime_ns": 1784390064413583300,
+            "mtime_ns": 1786730251870993600,
+            "path": "crates/qpls-resampling/src/pls_model_fit_exact.rs",
+            "sha256": "05a3444522aa7b9c4aa15804c4796f30e611ce71cc9e0f3169bb24e4501ade31",
+            "size": 63796
+          },
+          {
+            "mtime_ns": 1786995575091518300,
+            "path": "crates/qpls-resampling/src/power.rs",
+            "sha256": "100197d9105a82aa28da85b4b34e6c76c9c078eb5189ed8f28a9d8b5adb2e56a",
+            "size": 75512
+          },
+          {
+            "mtime_ns": 1786704824293020900,
             "path": "crates/qpls-runner/Cargo.toml",
-            "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
-            "size": 428
+            "sha256": "07246ac150eb04ae6cb479201c2292caff1d6c66142d9a476237790a9c2e5571",
+            "size": 472
           },
           {
-            "mtime_ns": 1786620129040430400,
+            "mtime_ns": 1786996467995192100,
             "path": "crates/qpls-runner/src/lib.rs",
-            "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
-            "size": 49349
+            "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+            "size": 100140
+          },
+          {
+            "mtime_ns": 1786756525673757500,
+            "path": "crates/qpls-runner/src/pls_model_comparison_execution.rs",
+            "sha256": "1be7b61356bb8cb3bee8e1c6434868c06aa91610a4367e82be0182863950594a",
+            "size": 58981
+          },
+          {
+            "mtime_ns": 1786873888569083800,
+            "path": "crates/qpls-runner/src/recipe_v4_cbsem_execution.rs",
+            "sha256": "aa7d30c1e73c8900a987efd4ff24efe4dc5b3aabb36f560386afacf7958c3dd2",
+            "size": 107058
+          },
+          {
+            "mtime_ns": 1786819586992364400,
+            "path": "crates/qpls-runner/src/recipe_v4_cbsem_product_indicator_execution.rs",
+            "sha256": "fc7a7dae8d050885a7a4f5474f76fd875cd025f035110917b68985cae22ba596",
+            "size": 25359
+          },
+          {
+            "mtime_ns": 1786995436640387400,
+            "path": "crates/qpls-runner/src/recipe_v4_pls_execution.rs",
+            "sha256": "1fb7816b2aea38908e09d48a7827e5728a7b0384c47a5738604d60a96aac4d6a",
+            "size": 62181
           },
           {
             "mtime_ns": 1786607996206752100,
@@ -1163,7 +1615,7 @@
     "commands": []
   },
   "feature_id": "qpls3.inference.structural_path_randomization",
-  "generated_at_utc": "2026-08-13T19:55:15.741673Z",
+  "generated_at_utc": "2026-08-18T13:55:01.724969Z",
   "method_version": "freedman_lane_permutation_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -1172,18 +1624,23 @@
   "source_artifacts": [
     {
       "path": "target/release/qpls.exe",
-      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-      "size": 20690432
+      "sha256": "7e1ee9c72d79b6102362f81313a54aeed987cb458f921397cb6fd3a09598d53a",
+      "size": 32387072
     },
     {
       "path": "target/release/quickpls-desktop.exe",
-      "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
-      "size": 30507008
+      "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476",
+      "size": 49983488
+    },
+    {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
     },
     {
       "path": "validation/legacy_release_adapter_common.py",
-      "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
-      "size": 51955
+      "sha256": "01f86f08668ad4ff9aad4cccda10298cc6579af4da748cc998d2aabdf0ec8681",
+      "size": 54379
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -1197,128 +1654,133 @@
     },
     {
       "path": "validation/methods/structural_path_randomization_v1.manifest.json",
-      "sha256": "c4af70fa296449446e4f987c346b82be6c03c82fdaf73e6e2f66e738d8450b2a",
-      "size": 14560
+      "sha256": "84172080609f9e457387d92a1b9abc617e289d1032928cfde8e70c2fa334eb78",
+      "size": 14735
     },
     {
       "path": "validation/monitor_quickpls_process_tree.ps1",
-      "sha256": "93c1edb1794cc237923b89f7ffa419c75584325a5e34467608dd45d4dfb786d9",
-      "size": 5982
+      "sha256": "2c7d6427ab111664404ee40205de46395e75fd625722e061e7029f2e0ffd6d0f",
+      "size": 5999
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
     },
     {
       "path": "validation/results/diagnostic_bundle_build_receipt.json",
-      "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
-      "size": 144210
+      "sha256": "210aa30fd8d7a268b444a0254108e61118584656f6517face86500caeb4b1ea3",
+      "size": 265122
     },
     {
       "path": "validation/results/screens/v247-native-desktop-acceptance/190-tauri-native-structural-path-randomization-fixture-data-1536x794.png",
-      "sha256": "30638d8c419cd1ca77e7199e20a2ad7f0878c09440219f80352f7ffbde3beb9e",
-      "size": 224766
+      "sha256": "8d2c6ba84af3687a1143b9ecfcd48f4002c2c095de629a3f71c6104fb774ecc6",
+      "size": 226202
     },
     {
       "path": "validation/results/screens/v247-native-desktop-acceptance/191-tauri-native-structural-path-randomization-model-1536x794.png",
-      "sha256": "95ad1315ca1a46798e8c042564f1d9832f38a1e729b80c39b09870fda6e143a6",
-      "size": 133981
+      "sha256": "7aea913c49a445a479744cc9ea8d7f5cd7b8fddf0ba525413a00c98fc55fd681",
+      "size": 153481
     },
     {
       "path": "validation/results/screens/v247-native-desktop-acceptance/192-tauri-native-structural-path-randomization-dialog-1536x794.png",
-      "sha256": "2860a07123583dec7c4b14b1342fcd10f02fd51ffe79b0f9b4877e23d814005c",
-      "size": 200636
+      "sha256": "899136af03af57409bac59d93746252a73f13da6051c5ae993cde9d01eb565b7",
+      "size": 226088
     },
     {
       "path": "validation/results/screens/v247-native-desktop-acceptance/194-tauri-native-structural-path-randomization-cancelled-1536x794.png",
-      "sha256": "a2da0f281188019ccc4f4ae8c652b1013115d65186fb81e5e279296b3c25be03",
-      "size": 204891
+      "sha256": "b2072603624c8886d31bac1a4a87a31df7cdb90dbeb947dc23a5a0029f3146ab",
+      "size": 230441
     },
     {
       "path": "validation/results/screens/v247-native-desktop-acceptance/195-tauri-native-structural-path-randomization-running-1536x794.png",
-      "sha256": "53f2efb0b96ee66d8837f9802d8f05c41950ec1ab794f42b7c6281b627f3b03b",
-      "size": 153974
+      "sha256": "737515efbce73a1a2f14e12dfc394d16e572a0c80cdcebcf15a22e3d6cfbe73a",
+      "size": 175368
     },
     {
       "path": "validation/results/screens/v247-native-desktop-acceptance/196-tauri-native-structural-path-randomization-results-1536x794.png",
-      "sha256": "43621ddddec8307b70db7ca99415ab2adb7e0675f141a91c90b66440c6f4432a",
-      "size": 100150
+      "sha256": "3910a4764dd6f9b15a0758abf16bbe1e2b561f620dfd17bed142bd21952fdef2",
+      "size": 102745
     },
     {
       "path": "validation/results/screens/v247-native-desktop-acceptance/197-tauri-native-structural-path-randomization-export-1536x794.png",
-      "sha256": "b7fea6b8e3dda1475d7e673a4958ce26b43a5145871ae2d927cf0332a9889623",
-      "size": 126511
+      "sha256": "a3de907030a2911fcf63415703bf2c22cc72683b345e8d59dbad047d17d7065e",
+      "size": 129103
     },
     {
       "path": "validation/results/screens/v247-native-desktop-acceptance/198-tauri-native-structural-path-randomization-reopened-1536x794.png",
-      "sha256": "6a69ee4a3f9eb3f90f69c432774ae453e84fa7c8d642071998f8f27b910ea360",
-      "size": 109525
+      "sha256": "32935472a52119912c191976adee0e3b53acfa69b248bdeae0f6f5818d33753c",
+      "size": 112230
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1024x700.png",
-      "sha256": "aa2d55ea1bdc942d43334f5631442c17bccd2a90afdd45fb6a823ebdbdd76cf5",
-      "size": 114551
+      "sha256": "f935f6b72ef08279cc5e7d349f6ead6516b03c440986b07e853e0a0db4cea50c",
+      "size": 120096
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1280x720.png",
-      "sha256": "5f070b79bf25ce00217c31973d14481fe3900aa1e5d36e88ef6136e8d0155493",
-      "size": 123353
+      "sha256": "58bab12e8f363cc663189abfc87a33590e5fdbc3f3094381d472ae24262489cc",
+      "size": 145850
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1440x900.png",
-      "sha256": "69a6836b2178f593b0aaef4e527eb5caf0bdc60089af743ce0f2540494a4d5ae",
-      "size": 149906
+      "sha256": "be57fce7592b1aaf38c67a252489047d517afdc9c224fe4ad7b2fe054c5954ea",
+      "size": 173455
     },
     {
-      "path": "validation/results/structural-path-randomization-v1-20260814-005519029.xlsx",
-      "sha256": "3401c977c8dad32246d2dbc85db54adc07add53acb8e0f3bf0d36e3f78e93c8e",
-      "size": 18361
+      "path": "validation/results/structural-path-randomization-v1-20260818-192357944.xlsx",
+      "sha256": "ae0de8151cd09f9b31b1e1e678aa846ea2a1b4cbce8a56335134f7823e33901f",
+      "size": 19451
     },
     {
       "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
-      "sha256": "ac3d546a5eba3d07ca489d04d7252ea3036246d1d96cd9089d8fd7a0f9929095",
-      "size": 137009
+      "sha256": "d828b23c9c64ed2d4b3115f86f54e6b130c4bc66374381a8e3b59dfcedf871dd",
+      "size": 137251
     },
     {
       "path": "validation/results/structural_path_randomization_v1_process_cleanup.json",
-      "sha256": "949d11c4d3ea84fb676145edb3d822241a53211674be10d6568d17cd802460e0",
-      "size": 3746
+      "sha256": "9327b32dd8df79d2b9eea7354c495b41e27fec19f4618496cc4350681c2fff15",
+      "size": 3742
     },
     {
       "path": "validation/results/structural_path_randomization_v1_process_samples.jsonl",
-      "sha256": "c73dd7515f485f7f2c8e106aeb27487b728659ba369f3a4cdef4d4a79e8a3fef",
-      "size": 742799
+      "sha256": "44a8f3b9de53d8465549220f8e4beef38e85897ec976e84aa4cf9c1a68cc9287",
+      "size": 724020
     },
     {
       "path": "validation/results/structural_path_randomization_v1_resource_report.json",
-      "sha256": "06a7cf79aa2bdaf74e344589ed74d8addcb3b79bbd66160e831cfab6d8fad9b3",
-      "size": 29847
+      "sha256": "2b74447647b947a533262a500078ea4426ed80299f044b753c7296a0af969424",
+      "size": 29821
     },
     {
-      "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-after.qpls",
-      "sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
-      "size": 12166
+      "path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676-cancellation-after.qpls",
+      "sha256": "1c3d20e7b8c94c10c002f9a6076e0484db0f320f8cdd002386486f447bca839b",
+      "size": 12295
     },
     {
-      "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-before.qpls",
-      "sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
-      "size": 12166
+      "path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676-cancellation-before.qpls",
+      "sha256": "1c3d20e7b8c94c10c002f9a6076e0484db0f320f8cdd002386486f447bca839b",
+      "size": 12295
     },
     {
-      "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172.qpls",
-      "sha256": "8b16f213de4c1dc21b44939bc4ce82f076f726377cebc34b70607aa0234ef66c",
-      "size": 22291
+      "path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676.qpls",
+      "sha256": "4792366490fab6b607919af2a75d8d6ffb86f8fb395f21cc5d2aec3f10d23f26",
+      "size": 23710
     },
     {
       "path": "validation/results/v247_native_desktop_visual_acceptance.json",
-      "sha256": "3fca6d38de201f6309bfec13d20c5136f82789fb450fe9a4617c710cc33793c1",
-      "size": 464629
+      "sha256": "6ff1b3d9140f4a48f5ccc182889c6d3583daf94e970b827cec7ced97ba40bef1",
+      "size": 468953
     },
     {
       "path": "validation/results/v247_tauri_native_acceptance_structural_path_randomization.json",
-      "sha256": "a3515bccf53bf0ec0bf369be245348d2c16f7d528bf6a6c6754f7815e5b09fa1",
-      "size": 121527
+      "sha256": "2039948a610d4f5a0e2b32193397dea621da537bb0b7ca16926fe0fb812c5fe3",
+      "size": 125153
     },
     {
       "path": "validation/run_v247_structural_path_randomization_native_acceptance.ps1",
-      "sha256": "5f581aa4ba5e507b4517a5de7074c90ab9ad3e6f92913ba2f3227945a02e6361",
-      "size": 24029
+      "sha256": "e841e8597676c9ea4e37f4d63cb6abe9eca3d246e5fbe737ee649817df6361c4",
+      "size": 24063
     },
     {
       "path": "validation/structural_path_randomization_v1_factory_audit.py",
@@ -1332,23 +1794,23 @@
     },
     {
       "path": "validation/test_legacy_release_adapters.py",
-      "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
-      "size": 13396
+      "sha256": "dbc695bede07f67595a76601614103ac21b9d6fc3512ddd7b26369a3dbc67c51",
+      "size": 15812
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/v247_native_desktop_visual_acceptance.mjs",
-      "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
-      "size": 280796
+      "sha256": "aea66dcb58de6bb79c36b9d3ad9a3351e1c145053e3c094dfbfec310bd26bc05",
+      "size": 287960
     },
     {
       "path": "validation/v247_tauri_native_acceptance.mjs",
-      "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
-      "size": 809598
+      "sha256": "952061138db0e6e3beb4f858f7e8c359b9763561980920e67a918d729eaf1c34",
+      "size": 981471
     },
     {
       "path": "validation/windows_native_save_export.py",

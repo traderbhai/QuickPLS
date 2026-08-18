@@ -1,0 +1,987 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/capability-registry-v2.schema.json",
+  "title": "QuickPLS Capability Registry V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "registry_schema_version",
+    "registry_id",
+    "registry_version",
+    "frozen_on",
+    "catalogue_snapshot",
+    "comparison_policy",
+    "state_contract",
+    "customer_visibility_policy",
+    "surface_contract",
+    "product_area_contract",
+    "qualification_link_contract",
+    "exclusions",
+    "legacy_catalogue_contract",
+    "capabilities"
+  ],
+  "properties": {
+    "registry_schema_version": {
+      "const": 2
+    },
+    "registry_id": {
+      "const": "quickpls.capability_registry.v2"
+    },
+    "registry_version": {
+      "type": "string",
+      "pattern": "^2\\.[0-9]+\\.[0-9]+$"
+    },
+    "frozen_on": {
+      "type": "string",
+      "format": "date"
+    },
+    "catalogue_snapshot": {
+      "$ref": "#/$defs/catalogueSnapshot"
+    },
+    "comparison_policy": {
+      "type": "object"
+    },
+    "state_contract": {
+      "$ref": "#/$defs/stateContract"
+    },
+    "customer_visibility_policy": {
+      "$ref": "#/$defs/customerVisibilityPolicy"
+    },
+    "surface_contract": {
+      "$ref": "#/$defs/surfaceContract"
+    },
+    "product_area_contract": {
+      "$ref": "#/$defs/productAreaContract"
+    },
+    "qualification_link_contract": {
+      "$ref": "#/$defs/qualificationLinkContract"
+    },
+    "exclusions": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/$defs/exclusion"
+      }
+    },
+    "legacy_catalogue_contract": {
+      "$ref": "#/$defs/legacyCatalogueContract"
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 45,
+      "maxItems": 45,
+      "items": {
+        "$ref": "#/$defs/capability"
+      }
+    }
+  },
+  "$defs": {
+    "nonemptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stringList": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nonemptyString"
+      }
+    },
+    "catalogueSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "product",
+        "official_catalogue_url",
+        "source_snapshot_date",
+        "source_reverified_on",
+        "capability_row_count",
+        "active_row_count",
+        "freeze_rule"
+      ],
+      "properties": {
+        "provider": {
+          "const": "SmartPLS GmbH"
+        },
+        "product": {
+          "const": "SmartPLS 4"
+        },
+        "official_catalogue_url": {
+          "type": "string",
+          "pattern": "^https://smartpls\\.com/"
+        },
+        "source_snapshot_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "source_reverified_on": {
+          "type": "string",
+          "format": "date"
+        },
+        "capability_row_count": {
+          "const": 45
+        },
+        "active_row_count": {
+          "const": 43
+        },
+        "freeze_rule": {
+          "$ref": "#/$defs/nonemptyString"
+        }
+      }
+    },
+    "stateContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coverage_states",
+        "evidence_states",
+        "baseline_counts",
+        "active_row_count",
+        "active_definition",
+        "separation_rule"
+      ],
+      "properties": {
+        "coverage_states": {
+          "const": [
+            "full",
+            "partial",
+            "absent",
+            "intentionally_excluded"
+          ]
+        },
+        "evidence_states": {
+          "const": [
+            "absent",
+            "engine_only",
+            "archive_qualified",
+            "native_qualified",
+            "release_qualified"
+          ]
+        },
+        "baseline_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "full",
+            "partial",
+            "absent",
+            "intentionally_excluded"
+          ],
+          "properties": {
+            "full": {
+              "const": 0
+            },
+            "partial": {
+              "const": 32
+            },
+            "absent": {
+              "const": 11
+            },
+            "intentionally_excluded": {
+              "const": 2
+            }
+          }
+        },
+        "active_row_count": {
+          "const": 43
+        },
+        "active_definition": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "separation_rule": {
+          "$ref": "#/$defs/nonemptyString"
+        }
+      }
+    },
+    "customerVisibilityPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_version",
+        "standard_match",
+        "scoped_standard_match",
+        "otherwise_channel",
+        "labs_requires_opt_in",
+        "evidence_labels",
+        "availability_rule",
+        "non_customer_surfaces"
+      ],
+      "properties": {
+        "policy_version": {
+          "const": 2
+        },
+        "standard_match": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "surface",
+            "coverage_state",
+            "evidence_state"
+          ],
+          "properties": {
+            "surface": {
+              "const": "standard"
+            },
+            "coverage_state": {
+              "const": "full"
+            },
+            "evidence_state": {
+              "const": "release_qualified"
+            }
+          }
+        },
+        "scoped_standard_match": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "surface",
+            "coverage_state",
+            "evidence_state",
+            "scope_statement_required"
+          ],
+          "properties": {
+            "surface": {
+              "const": "standard"
+            },
+            "coverage_state": {
+              "const": "partial"
+            },
+            "evidence_state": {
+              "const": "release_qualified"
+            },
+            "scope_statement_required": {
+              "const": true
+            }
+          }
+        },
+        "otherwise_channel": {
+          "const": "labs"
+        },
+        "labs_requires_opt_in": {
+          "const": true
+        },
+        "evidence_labels": {
+          "const": "internal_only"
+        },
+        "availability_rule": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "non_customer_surfaces": {
+          "const": [
+            "legacy",
+            "internal"
+          ]
+        }
+      }
+    },
+    "surfaceContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed",
+        "baseline_counts",
+        "standard_rule",
+        "fail_closed_rule"
+      ],
+      "properties": {
+        "allowed": {
+          "const": [
+            "standard",
+            "labs",
+            "legacy",
+            "internal"
+          ]
+        },
+        "baseline_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "standard",
+            "labs",
+            "legacy",
+            "internal"
+          ],
+          "properties": {
+            "standard": { "type": "integer", "minimum": 0 },
+            "labs": { "type": "integer", "minimum": 0 },
+            "legacy": { "type": "integer", "minimum": 0 },
+            "internal": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "standard_rule": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "fail_closed_rule": {
+          "$ref": "#/$defs/nonemptyString"
+        }
+      }
+    },
+    "productAreaContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed",
+        "completeness_rule"
+      ],
+      "properties": {
+        "allowed": {
+          "const": [
+            "diagram",
+            "data",
+            "settings",
+            "calculation",
+            "results",
+            "reporting"
+          ]
+        },
+        "completeness_rule": {
+          "$ref": "#/$defs/nonemptyString"
+        }
+      }
+    },
+    "qualificationLinkContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_shape",
+        "registry_schema_version",
+        "identity_rule"
+      ],
+      "properties": {
+        "required_shape": {
+          "const": [
+            "registry_schema_version",
+            "capability_id",
+            "cell_id",
+            "capability_version"
+          ]
+        },
+        "registry_schema_version": {
+          "const": 2
+        },
+        "identity_rule": {
+          "$ref": "#/$defs/nonemptyString"
+        }
+      }
+    },
+    "exclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "decision",
+        "replacement_capability_ids",
+        "official_url"
+      ],
+      "properties": {
+        "capability_id": {
+          "enum": [
+            "smartpls.blindfolding",
+            "smartpls.gof"
+          ]
+        },
+        "decision": {
+          "const": "intentionally_excluded"
+        },
+        "replacement_capability_ids": {
+          "$ref": "#/$defs/stringList"
+        },
+        "official_url": {
+          "type": "string",
+          "pattern": "^https://smartpls\\.com/"
+        }
+      }
+    },
+    "legacyCatalogueContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "projection_rule",
+        "header"
+      ],
+      "properties": {
+        "path": {
+          "const": "validation/quickpls_3_competitor_catalogue.json"
+        },
+        "projection_rule": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "header": {
+          "type": "object",
+          "minProperties": 1
+        }
+      }
+    },
+    "predicates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "official",
+        "quickpls"
+      ],
+      "properties": {
+        "official": {
+          "$ref": "#/$defs/stringList"
+        },
+        "quickpls": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "qualificationLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry_schema_version",
+        "capability_id",
+        "cell_id",
+        "capability_version"
+      ],
+      "properties": {
+        "registry_schema_version": {
+          "const": 2
+        },
+        "capability_id": {
+          "type": "string",
+          "pattern": "^smartpls\\.[a-z0-9_]+$"
+        },
+        "cell_id": {
+          "type": "string",
+          "pattern": "^qpls3\\.[a-z0-9_.]+$"
+        },
+        "capability_version": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_.-]*$"
+        }
+      }
+    },
+    "referenceSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "references"
+      ],
+      "properties": {
+        "references": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "qualificationSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "references",
+        "links"
+      ],
+      "properties": {
+        "references": {
+          "$ref": "#/$defs/stringList"
+        },
+        "links": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/qualificationLink"
+          }
+        }
+      }
+    },
+    "optionCellQualificationSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "references",
+        "links"
+      ],
+      "properties": {
+        "references": {
+          "$ref": "#/$defs/stringList"
+        },
+        "links": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/$defs/qualificationLink"
+          }
+        }
+      }
+    },
+    "optionCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "cell_id",
+        "capability_version",
+        "coverage_state",
+        "evidence_state",
+        "surface",
+        "supported_model_predicate",
+        "supported_data_predicate",
+        "settings_schema",
+        "result_schema",
+        "documentation_reference",
+        "qualification_spec",
+        "known_differences"
+      ],
+      "properties": {
+        "capability_id": {
+          "type": "string",
+          "pattern": "^smartpls\\.[a-z0-9_]+$"
+        },
+        "cell_id": {
+          "type": "string",
+          "pattern": "^qpls3\\.[a-z0-9_.]+$"
+        },
+        "capability_version": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_.-]*$"
+        },
+        "coverage_state": {
+          "enum": [
+            "full",
+            "partial",
+            "absent",
+            "intentionally_excluded"
+          ]
+        },
+        "evidence_state": {
+          "enum": [
+            "absent",
+            "engine_only",
+            "archive_qualified",
+            "native_qualified",
+            "release_qualified"
+          ]
+        },
+        "surface": {
+          "enum": [
+            "standard",
+            "labs",
+            "legacy",
+            "internal"
+          ]
+        },
+        "supported_model_predicate": {
+          "$ref": "#/$defs/predicates"
+        },
+        "supported_data_predicate": {
+          "$ref": "#/$defs/predicates"
+        },
+        "settings_schema": {
+          "$ref": "#/$defs/referenceSchema"
+        },
+        "result_schema": {
+          "$ref": "#/$defs/referenceSchema"
+        },
+        "documentation_reference": {
+          "type": "string",
+          "pattern": "^https://smartpls\\.com/"
+        },
+        "qualification_spec": {
+          "$ref": "#/$defs/optionCellQualificationSpec"
+        },
+        "known_differences": {
+          "$ref": "#/$defs/stringList"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "surface": {
+                "const": "standard"
+              }
+            },
+            "required": [
+              "surface"
+            ]
+          },
+          "then": {
+            "properties": {
+              "coverage_state": {
+                "enum": [
+                  "full",
+                  "partial"
+                ]
+              },
+              "evidence_state": {
+                "const": "release_qualified"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "coverage_state": {
+                "const": "absent"
+              }
+            },
+            "required": [
+              "coverage_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence_state": {
+                "const": "absent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "coverage_state": {
+                "const": "intentionally_excluded"
+              }
+            },
+            "required": [
+              "coverage_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence_state": {
+                "const": "absent"
+              },
+              "surface": {
+                "const": "legacy"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "legacyRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "catalogue_position",
+        "official_family",
+        "official_method",
+        "status",
+        "priority",
+        "target_release",
+        "competitor_scope",
+        "quickpls_scope",
+        "quickpls_capability_ids",
+        "implementation_evidence",
+        "dependencies",
+        "remaining_gap"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^smartpls\\.[a-z0-9_]+$"
+        },
+        "catalogue_position": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 45
+        },
+        "official_family": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "official_method": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "status": {
+          "enum": [
+            "release-qualified",
+            "native-qualified",
+            "engine-preview",
+            "absent",
+            "deferred"
+          ]
+        },
+        "priority": {
+          "enum": [
+            "P0",
+            "P1",
+            "P2",
+            "P3",
+            "deferred"
+          ]
+        },
+        "target_release": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "competitor_scope": {
+          "type": "boolean"
+        },
+        "quickpls_scope": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "quickpls_capability_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^qpls3\\."
+          }
+        },
+        "implementation_evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonemptyString"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nonemptyString"
+          }
+        },
+        "remaining_gap": {
+          "$ref": "#/$defs/nonemptyString"
+        }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "catalogue_position",
+        "official_family",
+        "official_method",
+        "official_lifecycle",
+        "official_url",
+        "coverage_state",
+        "evidence_state",
+        "surface",
+        "product_areas",
+        "model_predicates",
+        "data_predicates",
+        "supported_model_predicate",
+        "supported_data_predicate",
+        "scope_statement",
+        "settings_references",
+        "settings_schema",
+        "result_references",
+        "result_schema",
+        "documentation_reference",
+        "qualification_references",
+        "qualification_links",
+        "qualification_spec",
+        "known_differences",
+        "option_cells",
+        "legacy_row"
+      ],
+      "properties": {
+        "capability_id": {
+          "type": "string",
+          "pattern": "^smartpls\\.[a-z0-9_]+$"
+        },
+        "catalogue_position": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 45
+        },
+        "official_family": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "official_method": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "official_lifecycle": {
+          "enum": [
+            "active",
+            "legacy"
+          ]
+        },
+        "official_url": {
+          "type": "string",
+          "pattern": "^https://smartpls\\.com/"
+        },
+        "coverage_state": {
+          "enum": [
+            "full",
+            "partial",
+            "absent",
+            "intentionally_excluded"
+          ]
+        },
+        "evidence_state": {
+          "enum": [
+            "absent",
+            "engine_only",
+            "archive_qualified",
+            "native_qualified",
+            "release_qualified"
+          ]
+        },
+        "surface": {
+          "enum": [
+            "standard",
+            "labs",
+            "legacy",
+            "internal"
+          ]
+        },
+        "product_areas": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "diagram",
+              "data",
+              "settings",
+              "calculation",
+              "results",
+              "reporting"
+            ]
+          }
+        },
+        "model_predicates": {
+          "$ref": "#/$defs/predicates"
+        },
+        "data_predicates": {
+          "$ref": "#/$defs/predicates"
+        },
+        "supported_model_predicate": {
+          "$ref": "#/$defs/predicates"
+        },
+        "supported_data_predicate": {
+          "$ref": "#/$defs/predicates"
+        },
+        "scope_statement": {
+          "$ref": "#/$defs/nonemptyString"
+        },
+        "settings_references": {
+          "$ref": "#/$defs/stringList"
+        },
+        "settings_schema": {
+          "$ref": "#/$defs/referenceSchema"
+        },
+        "result_references": {
+          "$ref": "#/$defs/stringList"
+        },
+        "result_schema": {
+          "$ref": "#/$defs/referenceSchema"
+        },
+        "documentation_reference": {
+          "type": "string",
+          "pattern": "^https://smartpls\\.com/"
+        },
+        "qualification_references": {
+          "$ref": "#/$defs/stringList"
+        },
+        "qualification_links": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/qualificationLink"
+          }
+        },
+        "qualification_spec": {
+          "$ref": "#/$defs/qualificationSpec"
+        },
+        "known_differences": {
+          "$ref": "#/$defs/stringList"
+        },
+        "option_cells": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/optionCell"
+          }
+        },
+        "legacy_row": {
+          "$ref": "#/$defs/legacyRow"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "coverage_state": {
+                "const": "absent"
+              }
+            },
+            "required": [
+              "coverage_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence_state": {
+                "const": "absent"
+              },
+              "official_lifecycle": {
+                "const": "active"
+              },
+              "surface": {
+                "const": "labs"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "coverage_state": {
+                "const": "intentionally_excluded"
+              }
+            },
+            "required": [
+              "coverage_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence_state": {
+                "const": "absent"
+              },
+              "official_lifecycle": {
+                "const": "legacy"
+              },
+              "surface": {
+                "const": "legacy"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "surface": {
+                "const": "standard"
+              }
+            },
+            "required": [
+              "surface"
+            ]
+          },
+          "then": {
+            "properties": {
+              "coverage_state": {
+                "enum": [
+                  "full",
+                  "partial"
+                ]
+              },
+              "evidence_state": {
+                "const": "release_qualified"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

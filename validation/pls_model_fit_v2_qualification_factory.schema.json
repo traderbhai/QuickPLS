@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.invalid/schemas/pls_model_fit_v2_qualification_factory.schema.json",
+  "title": "QuickPLS PLS model-fit v2 qualification factory artifacts",
+  "oneOf": [
+    { "$ref": "#/$defs/methodContract" },
+    { "$ref": "#/$defs/factoryAudit" }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version"
+      ],
+      "properties": {
+        "qualification_id": {
+          "const": "qpls3.assessment.model_fit.exact.qualification_v2"
+        },
+        "capability_id": { "const": "smartpls.model_fit" },
+        "cell_id": { "const": "qpls3.assessment.model_fit" },
+        "method_version": { "const": "pls_model_fit_v2" }
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "architecture", "cpu", "logical_cores", "memory_gib"],
+      "properties": {
+        "os": { "type": "string", "minLength": 1 },
+        "architecture": { "const": "x86_64" },
+        "cpu": { "type": "string", "minLength": 1 },
+        "logical_cores": { "type": "integer", "minimum": 1 },
+        "memory_gib": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "descriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size_bytes", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "size_bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "receipt": {
+      "allOf": [
+        { "$ref": "#/$defs/identity" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "stage",
+            "evidence_class",
+            "qualification_id",
+            "capability_id",
+            "cell_id",
+            "method_version",
+            "path",
+            "size_bytes",
+            "sha256",
+            "generated_at_utc",
+            "source_set_sha256",
+            "scenario_set_sha256",
+            "build_fingerprint",
+            "hardware_fingerprint"
+          ],
+          "properties": {
+            "role": { "type": "string", "minLength": 1 },
+            "stage": {
+              "enum": [
+                "contract",
+                "kernel",
+                "oracle",
+                "generative",
+                "adversarial",
+                "persistence_export",
+                "packaged_windows",
+                "scale_reliability"
+              ]
+            },
+            "evidence_class": { "const": "qualification" },
+            "qualification_id": {
+              "const": "qpls3.assessment.model_fit.exact.qualification_v2"
+            },
+            "capability_id": { "const": "smartpls.model_fit" },
+            "cell_id": { "const": "qpls3.assessment.model_fit" },
+            "method_version": { "const": "pls_model_fit_v2" },
+            "path": { "type": "string", "minLength": 1 },
+            "size_bytes": { "type": "integer", "minimum": 1 },
+            "sha256": { "$ref": "#/$defs/sha256" },
+            "generated_at_utc": { "type": "string", "format": "date-time" },
+            "source_set_sha256": { "$ref": "#/$defs/sha256" },
+            "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+            "build_fingerprint": { "type": "string", "minLength": 1 },
+            "hardware_fingerprint": { "$ref": "#/$defs/hardware" }
+          }
+        }
+      ]
+    },
+    "methodContract": {
+      "allOf": [
+        { "$ref": "#/$defs/identity" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_version",
+            "report_kind",
+            "role",
+            "stage",
+            "passed",
+            "qualification_evidence",
+            "receipt_eligible",
+            "qualification_ready",
+            "promotion_authority",
+            "qualification_id",
+            "capability_id",
+            "cell_id",
+            "method_version",
+            "generated_at_utc",
+            "spec_frozen_at_utc",
+            "source_set_sha256",
+            "scenario_set_sha256",
+            "build_fingerprint",
+            "hardware_fingerprint",
+            "source_artifacts",
+            "checks",
+            "role_blockers",
+            "admission_policy"
+          ],
+          "properties": {
+            "schema_version": { "const": 1 },
+            "report_kind": {
+              "const": "pls_model_fit_v2_method_contract_qualification_v1"
+            },
+            "role": { "const": "method_contract" },
+            "stage": { "const": "contract" },
+            "passed": { "const": true },
+            "qualification_evidence": { "const": true },
+            "receipt_eligible": { "const": true },
+            "qualification_ready": { "const": false },
+            "promotion_authority": { "const": false },
+            "qualification_id": {
+              "const": "qpls3.assessment.model_fit.exact.qualification_v2"
+            },
+            "capability_id": { "const": "smartpls.model_fit" },
+            "cell_id": { "const": "qpls3.assessment.model_fit" },
+            "method_version": { "const": "pls_model_fit_v2" },
+            "generated_at_utc": { "type": "string", "format": "date-time" },
+            "spec_frozen_at_utc": { "type": "string", "format": "date-time" },
+            "source_set_sha256": { "$ref": "#/$defs/sha256" },
+            "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+            "build_fingerprint": { "type": "string", "minLength": 1 },
+            "hardware_fingerprint": { "$ref": "#/$defs/hardware" },
+            "source_artifacts": {
+              "type": "array",
+              "minItems": 20,
+              "items": { "$ref": "#/$defs/descriptor" }
+            },
+            "checks": {
+              "type": "object",
+              "minProperties": 8,
+              "additionalProperties": { "const": true }
+            },
+            "role_blockers": { "const": [] },
+            "admission_policy": { "type": "string", "minLength": 80 }
+          }
+        }
+      ]
+    },
+    "roleMatrixRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "stage",
+        "status",
+        "candidate_receipt_emitted",
+        "work_evidence",
+        "execution_envelope",
+        "reasons"
+      ],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "stage": { "type": "string", "minLength": 1 },
+        "status": {
+          "enum": ["candidate_receipt_emitted", "work_evidence_only", "blocked"]
+        },
+        "candidate_receipt_emitted": { "type": "boolean" },
+        "work_evidence": {
+          "oneOf": [{ "type": "object" }, { "type": "null" }]
+        },
+        "execution_envelope": {
+          "oneOf": [{ "type": "object" }, { "type": "null" }]
+        },
+        "reasons": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "factoryAudit": {
+      "allOf": [
+        { "$ref": "#/$defs/identity" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_version",
+            "report_kind",
+            "qualification_id",
+            "capability_id",
+            "cell_id",
+            "method_version",
+            "generated_at_utc",
+            "spec_frozen_at_utc",
+            "source_set_sha256",
+            "scenario_set_sha256",
+            "build_fingerprint",
+            "hardware_fingerprint",
+            "source_artifacts",
+            "source_state_before",
+            "state_snapshot",
+            "method_contract_checks",
+            "work_evidence",
+            "role_matrix",
+            "candidate_receipt_descriptors",
+            "attached_receipt_count",
+            "registry_mutated",
+            "manifest_mutated",
+            "qualification_spec_mutated",
+            "scientific_review_satisfied",
+            "qualification_ready",
+            "promotion_allowed",
+            "remaining_blockers",
+            "execution_envelope_contract",
+            "note"
+          ],
+          "properties": {
+            "schema_version": { "const": 1 },
+            "report_kind": {
+              "const": "pls_model_fit_v2_qualification_factory_audit_v1"
+            },
+            "qualification_id": {
+              "const": "qpls3.assessment.model_fit.exact.qualification_v2"
+            },
+            "capability_id": { "const": "smartpls.model_fit" },
+            "cell_id": { "const": "qpls3.assessment.model_fit" },
+            "method_version": { "const": "pls_model_fit_v2" },
+            "generated_at_utc": { "type": "string", "format": "date-time" },
+            "spec_frozen_at_utc": { "type": "string", "format": "date-time" },
+            "source_set_sha256": { "$ref": "#/$defs/sha256" },
+            "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+            "build_fingerprint": { "type": "string", "minLength": 1 },
+            "hardware_fingerprint": { "$ref": "#/$defs/hardware" },
+            "source_artifacts": {
+              "type": "array",
+              "minItems": 20,
+              "items": { "$ref": "#/$defs/descriptor" }
+            },
+            "source_state_before": { "type": "object", "minProperties": 3 },
+            "state_snapshot": { "type": "object", "minProperties": 7 },
+            "method_contract_checks": {
+              "type": "object",
+              "minProperties": 8,
+              "additionalProperties": { "const": true }
+            },
+            "work_evidence": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": { "type": "object" }
+            },
+            "role_matrix": {
+              "type": "array",
+              "minItems": 10,
+              "maxItems": 10,
+              "items": { "$ref": "#/$defs/roleMatrixRow" }
+            },
+            "candidate_receipt_descriptors": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/receipt" }
+            },
+            "attached_receipt_count": { "const": 0 },
+            "registry_mutated": { "const": false },
+            "manifest_mutated": { "const": false },
+            "qualification_spec_mutated": { "const": false },
+            "scientific_review_satisfied": { "const": false },
+            "qualification_ready": { "const": false },
+            "promotion_allowed": { "const": false },
+            "remaining_blockers": {
+              "type": "array",
+              "minItems": 10,
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "execution_envelope_contract": { "type": "object" },
+            "note": { "type": "string", "minLength": 100 }
+          }
+        }
+      ]
+    }
+  }
+}

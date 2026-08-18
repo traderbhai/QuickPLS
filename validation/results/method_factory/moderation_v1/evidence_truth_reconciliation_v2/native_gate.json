@@ -1,0 +1,40 @@
+{
+  "checks": {
+    "all_declared_test_sources_exist": true,
+    "prebuilt_engine_identity": {
+      "path": "target/debug/qpls.exe",
+      "sha256": "ad982f935cced0de90627d25d941c38d74adf6b19882364b037ca3b9fb01c8b0",
+      "size": 66081792
+    },
+    "targeted_vitest_passed": true,
+    "test_file_count": 5
+  },
+  "execution": {
+    "command": [
+      "npx.cmd",
+      "vitest",
+      "run",
+      "src/domain/resultTables.test.ts",
+      "src/native/NativeModerationDialog.test.tsx",
+      "src/native/nativeExportTables.test.ts",
+      "src/native/nativeModeration.test.ts",
+      "src/native/nativeResults.test.ts"
+    ],
+    "duration_seconds": 9.725,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  5 passed (5)\n      Tests  81 passed (81)\n   Start at  06:03:58\n   Duration  4.18s (transform 3.54s, setup 0ms, import 6.61s, tests 737ms, environment 1ms)\n\n"
+  },
+  "kind": "quickpls_phase3_native_source_gate",
+  "method": "moderation_v1",
+  "packaged_workflow_not_claimed": true,
+  "passed": true,
+  "schema_version": 1,
+  "tests": [
+    "src/domain/resultTables.test.ts",
+    "src/native/NativeModerationDialog.test.tsx",
+    "src/native/nativeExportTables.test.ts",
+    "src/native/nativeModeration.test.ts",
+    "src/native/nativeResults.test.ts"
+  ]
+}

@@ -23,7 +23,7 @@
             "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.quickpls.json",
             "--allow-experimental"
           ],
-          "duration_seconds": 1.283,
+          "duration_seconds": 1.876,
           "returncode": 0,
           "stderr_tail": "",
           "stdout_tail": "wrote analysis result validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.quickpls.json\n"
@@ -40,7 +40,7 @@
         "recipe": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.recipe.json",
         "requested_replicates": 399,
         "result": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.quickpls.json",
-        "result_sha256": "aed297f655181a443f9840b892431d332a4cb58dd6eebc597ede1d58c922827b",
+        "result_sha256": "6007792a92f09b0ea278f259f4d402dd9d25207f31a714de41e1d01a6497dbc4",
         "true_path": 0.35,
         "usable_replicates": 399
       },
@@ -64,7 +64,7 @@
             "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.quickpls.json",
             "--allow-experimental"
           ],
-          "duration_seconds": 1.543,
+          "duration_seconds": 2.255,
           "returncode": 0,
           "stderr_tail": "",
           "stdout_tail": "wrote analysis result validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.quickpls.json\n"
@@ -81,7 +81,7 @@
         "recipe": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.recipe.json",
         "requested_replicates": 399,
         "result": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.quickpls.json",
-        "result_sha256": "5ffa1f10a052863caf82d5a7d0e5b5b0b1c671672e6b54850fb56f42512c05bf",
+        "result_sha256": "33768776170e6033e219cd9228b04c8825e87282c93578a56fcd46854443284b",
         "true_path": 0.0,
         "usable_replicates": 399
       }
@@ -98,7 +98,7 @@
           "--output",
           "validation/results/method_factory/pls_bootstrap_v4/work/recomputed_studentized_qualification.json"
         ],
-        "duration_seconds": 0.172,
+        "duration_seconds": 0.299,
         "returncode": 0,
         "stderr_tail": "",
         "stdout_tail": "wrote validation\\results\\method_factory\\pls_bootstrap_v4\\work\\recomputed_studentized_qualification.json | evaluated=True | passed=True\n"
@@ -193,7 +193,7 @@
     "passed": true
   },
   "feature_id": "qpls3.inference.bootstrap",
-  "generated_at_utc": "2026-08-13T19:00:20.336000Z",
+  "generated_at_utc": "2026-08-18T02:24:27.077497Z",
   "method_version": "indexed_resampling_v4",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -217,8 +217,8 @@
     },
     {
       "path": "validation/methods/pls_bootstrap_v4.manifest.json",
-      "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
-      "size": 15803
+      "sha256": "f43015dbd38e34448b9b1cdb5cfc67f1f42fc0e4a606bcd2409679b36a8174ee",
+      "size": 19827
     },
     {
       "path": "validation/pls_bootstrap_v4_factory_common.py",
@@ -232,8 +232,8 @@
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.quickpls.json",
-      "sha256": "aed297f655181a443f9840b892431d332a4cb58dd6eebc597ede1d58c922827b",
-      "size": 36501
+      "sha256": "6007792a92f09b0ea278f259f4d402dd9d25207f31a714de41e1d01a6497dbc4",
+      "size": 52515
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.recipe.json",
@@ -242,8 +242,8 @@
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.quickpls.json",
-      "sha256": "5ffa1f10a052863caf82d5a7d0e5b5b0b1c671672e6b54850fb56f42512c05bf",
-      "size": 36869
+      "sha256": "33768776170e6033e219cd9228b04c8825e87282c93578a56fcd46854443284b",
+      "size": 53028
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.recipe.json",
@@ -472,8 +472,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pls_bootstrap_v4_factory_evidence.py",

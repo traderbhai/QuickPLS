@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "record_type": "quickpls_beta_exit_decision_template",
+  "template_only": true,
+  "checklist": [
+    { "id": "cohort_thresholds", "status": "pending", "evidence_record_id": null },
+    { "id": "six_journey_threshold", "status": "pending", "evidence_record_id": null },
+    { "id": "p0_p1_closed", "status": "pending", "evidence_record_id": null },
+    { "id": "zero_data_loss_or_corruption", "status": "pending", "evidence_record_id": null },
+    { "id": "scientific_discrepancies_disposed", "status": "pending", "evidence_record_id": null },
+    { "id": "independent_reviews_disposed", "status": "pending", "evidence_record_id": null },
+    { "id": "support_routes_exercised", "status": "pending", "evidence_record_id": null },
+    { "id": "exact_signed_candidate_bound", "status": "pending", "evidence_record_id": null },
+    { "id": "post_beta_lifecycle_passed", "status": "pending", "evidence_record_id": null }
+  ],
+  "decision": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null,
+    "record_id": null
+  },
+  "beta_ready": false,
+  "activation_rule": "Approval is valid only after the canonical external-beta validator independently rehashes all referenced evidence"
+}

@@ -1,0 +1,35 @@
+{
+  "checks": {
+    "checks": {
+      "assessment_hoc_present": true,
+      "baseline_hoc_to_y_abs": 0.985289104586091,
+      "component_reorder_max_delta": 0.0,
+      "construct_reorder_max_delta": 0.0,
+      "experimental_warning_present": false,
+      "independent_reference_max_delta": 5.384581669432009e-14,
+      "permuted_component_drop_ratio": 0.6798816591266171,
+      "permuted_component_hoc_to_y_abs": 0.6698799911453706,
+      "positive_affine_max_delta": 3.8191672047105385e-14,
+      "row_reversal_max_delta": 6.661338147750939e-16
+    },
+    "claim_limited_to": "reflective-reflective disjoint two-stage HOC point estimates",
+    "passed": true,
+    "report": "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/work/two_stage_reference_report.json",
+    "report_sha256": "1f0fb91e495de01cc657eb175198016d3a2064a7e2af1e5d0abc662e41445b55",
+    "scenario_count": 6,
+    "scientific_failures": {},
+    "scope_warning_gap": "the former generic experimental warning is absent from the engine payload"
+  },
+  "completed_at_utc": "2026-08-14T23:28:46.820301Z",
+  "kind": "quickpls_phase3_current_engine_gate",
+  "method": "higher_order_v1",
+  "passed": true,
+  "prebuilt_cli": {
+    "path": "target/debug/qpls.exe",
+    "sha256": "35887c8935124619b74255ba93602c20d87300538b60b30840a62aa304fb3f9b",
+    "size": 61828608
+  },
+  "recipe_policy": "historical fixtures copied to explicit schema v3; source fixtures preserved",
+  "schema_version": 1,
+  "started_at_utc": "2026-08-14T23:28:42.890119Z"
+}

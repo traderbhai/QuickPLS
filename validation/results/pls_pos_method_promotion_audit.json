@@ -1,44 +1,228 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "integrity_contract": "explicit_pass_state_and_bound_evidence_v1",
+  "generated_at_utc": "2026-08-13T22:01:29.700908Z",
   "target": "v1_2_2_group_prediction_regression_promotion",
   "method_id": "pls_pos",
   "promoted_scope": "Deterministic PLS-POS with 2-5 segments, deterministic starts, minimum segment-share guard, objective history, memberships, segment paths, and segment R2.",
-  "passed": true,
+  "passed": false,
   "reports": [
     {
       "path": "validation\\results\\segmentation_recovery_simulation_report.json",
       "present": true,
-      "passed": true
+      "bytes": 432602,
+      "sha256": "3d52b061a8b0eac7a2dca4818ce9c44f0754270d7e16c35ee04e27f2796911e5",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [
+        {
+          "path": "kind",
+          "expected": "segmentation_recovery_simulation_v1",
+          "observed": "segmentation_recovery_simulation_v1",
+          "passed": true
+        },
+        {
+          "path": "checks.discovery_payload_version",
+          "expected": true,
+          "observed": true,
+          "passed": true
+        },
+        {
+          "path": "checks.discovery_memberships_complete",
+          "expected": true,
+          "observed": true,
+          "passed": true
+        },
+        {
+          "path": "checks.multi_discovery_memberships_complete",
+          "expected": true,
+          "observed": true,
+          "passed": true
+        },
+        {
+          "path": "checks.bounded_inferential_screen_null_below_signal",
+          "expected": true,
+          "observed": true,
+          "passed": true
+        }
+      ],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": true,
+        "passed": true,
+        "report_modified_at_utc": "2026-08-13T21:06:26.444592Z",
+        "age_days": 0.038232,
+        "max_age_days": null,
+        "sources": [
+          {
+            "path": "validation\\segmentation_recovery_simulation.py",
+            "present": true,
+            "modified_at_utc": "2026-07-19T06:07:33.873644Z"
+          }
+        ]
+      },
+      "generated_at": null
     },
     {
       "path": "validation\\results\\v06_group_methods_reference_report.json",
       "present": true,
-      "passed": true
+      "bytes": 679,
+      "sha256": "017862e182d326427032a39a8d440a8eb7fc1af718ff74c3854dec11d19b40e3",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": false,
+        "states": [
+          {
+            "path": "passed",
+            "present": false,
+            "value": null,
+            "passed": false
+          }
+        ]
+      },
+      "requirement_checks": [
+        {
+          "path": "kind",
+          "expected": "v06_group_methods_reference",
+          "observed": "v06_group_methods_reference",
+          "passed": true
+        },
+        {
+          "path": "sections.pos.method_version",
+          "expected": "pls_pos_v1",
+          "observed": null,
+          "passed": false
+        }
+      ],
+      "companions": [
+        {
+          "path": "validation/results/v06_pos_quickpls.json",
+          "present": true,
+          "bytes": 42857,
+          "sha256": "2ff40236b60dff2a34044e3ed6e34a235eaa3b571f8e97041b5bc00b5b2f6061",
+          "readable": true,
+          "checks": [
+            {
+              "path": "status",
+              "expected": "completed",
+              "observed": "completed",
+              "passed": true
+            },
+            {
+              "path": "provenance.method",
+              "expected": "predict",
+              "observed": "predict",
+              "passed": true
+            },
+            {
+              "path": "payload.estimation.segmentation.method_version",
+              "expected": "pls_pos_v1",
+              "observed": "pls_pos_v1",
+              "passed": true
+            }
+          ],
+          "passed": true
+        }
+      ],
+      "passed": false,
+      "freshness": {
+        "checked": true,
+        "passed": true,
+        "report_modified_at_utc": "2026-08-13T21:06:34.805900Z",
+        "age_days": 0.038135,
+        "max_age_days": null,
+        "sources": [
+          {
+            "path": "validation\\v06_group_methods_reference.py",
+            "present": true,
+            "modified_at_utc": "2026-08-13T07:59:56.857964Z"
+          }
+        ]
+      },
+      "generated_at": null
     },
     {
       "path": "validation\\results\\prediction_heterogeneity_publication_audit.json",
       "present": true,
-      "passed": true
+      "bytes": 7267,
+      "sha256": "ecc71afe10a02625c21201ae8638e0452c316b5f6eebf32cee6bbfc1fbd2b0c5",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [
+        {
+          "path": "coverage.pls_pos",
+          "expected": true,
+          "observed": true,
+          "passed": true
+        }
+      ],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": true,
+        "passed": true,
+        "report_modified_at_utc": "2026-08-13T21:06:02.218283Z",
+        "age_days": 0.038512,
+        "max_age_days": null,
+        "sources": [
+          {
+            "path": "validation\\prediction_heterogeneity_publication_audit.py",
+            "present": true,
+            "modified_at_utc": "2026-08-13T07:59:56.315949Z"
+          }
+        ]
+      },
+      "generated_at": null
     }
   ],
   "docs": [
     {
       "path": "docs\\methods\\PLS_POS_V1.md",
       "present": true,
-      "bytes": 1214
+      "bytes": 4264,
+      "sha256": "d5d0514c73e943f5324509e62a4ab49453d429047c61ec7c0897d6834229c2c7",
+      "required_phrases": [
+        {
+          "phrase": "pls_pos_v1",
+          "present": true
+        },
+        {
+          "phrase": "stable memberships",
+          "present": true
+        },
+        {
+          "phrase": "backward-compatible for older metadata",
+          "present": true
+        }
+      ],
+      "forbidden_phrases": [],
+      "passed": true
     }
   ],
-  "checks": [
-    {
-      "name": "segment_recovery_present",
-      "passed": true,
-      "detail": "Recovery and null-screen evidence is present in segmentation recovery artifacts."
-    },
-    {
-      "name": "legacy_bounded_not_promoted",
-      "passed": true,
-      "detail": "Compatibility keeps pls_pos_bounded_v1 readable but outside the promoted v1.2.2 PLS-POS scope."
-    }
-  ],
-  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+  "checks": [],
+  "note": "Promotion is limited to this documented scope; missing, stale, contradictory, or unbound evidence fails closed."
 }

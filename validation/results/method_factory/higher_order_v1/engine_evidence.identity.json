@@ -1,0 +1,173 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "boundary_gate": {
+      "checks": {
+        "dataset_identity_tamper_rejected": true,
+        "metamorphic_and_determinism_covered_by_engine_gate": true,
+        "no_scope_result_written": true,
+        "no_tampered_result_written": true,
+        "prebuilt_cli_only": true,
+        "unsupported_scope_rejected": true
+      },
+      "executions": [
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "validate",
+            "validation/results/method_factory/higher_order_v1/work/boundary_invalid.recipe.json",
+            "--json"
+          ],
+          "duration_seconds": 0.076,
+          "returncode": 1,
+          "stderr_tail": "Error: recipe validation failed\n",
+          "stdout_tail": "[\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"x\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"z\"\n  },\n  {\n    \"code\": \"higher_order.indicators.generated\",\n    \"severity\": \"warning\",\n    \"message\": \"Higher-order construct indicators are generated from lower-order components for supported HOC methods\",\n    \"subject\": \"hoc\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"y\"\n  },\n  {\n    \"code\": \"higher_order.components\",\n    \"severity\": \"error\",\n    \"message\": \"Higher-order constructs require at least two lower-order components\",\n    \"subject\": \"hoc\"\n  },\n  {\n    \"code\": \"method.higher_order.experimental\",\n    \"severity\": \"warning\",\n    \"message\": \"Higher-order construct semantics are validated only inside the documented QuickPLS v1.0.0 supported scope\",\n    \"subject\": \"hoc\"\n  }\n]\n"
+        },
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/higher_order_v1/work/boundary_invalid.recipe.json",
+            "--data",
+            "validation/results/method_factory/higher_order_v1/work/higher_order_two_stage_base.csv",
+            "--output",
+            "validation/results/method_factory/higher_order_v1/work/boundary_scope_invalid.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.087,
+          "returncode": 1,
+          "stderr_tail": "Error: higher_order.components: Higher-order constructs require at least two lower-order components\n",
+          "stdout_tail": ""
+        },
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/higher_order_v1/work/boundary_identity_tampered.recipe.json",
+            "--data",
+            "validation/results/method_factory/higher_order_v1/work/higher_order_two_stage_base.csv",
+            "--output",
+            "validation/results/method_factory/higher_order_v1/work/boundary_identity_tampered.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.086,
+          "returncode": 1,
+          "stderr_tail": "Error: recipe dataset fingerprint does not match the imported dataset\n",
+          "stdout_tail": ""
+        }
+      ],
+      "kind": "quickpls_phase3_boundary_gate",
+      "method": "higher_order_v1",
+      "passed": true,
+      "path": "validation/results/method_factory/higher_order_v1/boundary_gate.json",
+      "schema_version": 1
+    },
+    "engine_gate": {
+      "checks": {
+        "checks": {
+          "assessment_hoc_present": true,
+          "baseline_hoc_to_y_abs": 0.985289104586091,
+          "component_reorder_max_delta": 0.0,
+          "construct_reorder_max_delta": 0.0,
+          "independent_reference_max_delta": 5.384581669432009e-14,
+          "permuted_component_drop_ratio": 0.6798816591266171,
+          "permuted_component_hoc_to_y_abs": 0.6698799911453706,
+          "point_only_scope_warning_present": true,
+          "positive_affine_max_delta": 3.8191672047105385e-14,
+          "row_reversal_max_delta": 6.661338147750939e-16
+        },
+        "claim_limited_to": "reflective-reflective disjoint two-stage HOC point estimates",
+        "passed": true,
+        "raw_report_passed": true,
+        "report": "validation/results/method_factory/higher_order_v1/work/two_stage_reference_report.json",
+        "report_sha256": "f7312990cdc16a3d5b56865430a5734837646f5c024f0d53b693018022784185",
+        "scenario_count": 6,
+        "scientific_failures": {},
+        "scope_warning_contract": "the point-only/no-HOC-resampling warning is present and the former generic experimental label is absent"
+      },
+      "completed_at_utc": "2026-08-18T00:38:15.831629Z",
+      "kind": "quickpls_phase3_current_engine_gate",
+      "method": "higher_order_v1",
+      "passed": true,
+      "path": "validation/results/method_factory/higher_order_v1/engine_gate.json",
+      "prebuilt_cli": {
+        "path": "target/debug/qpls.exe",
+        "sha256": "ad982f935cced0de90627d25d941c38d74adf6b19882364b037ca3b9fb01c8b0",
+        "size": 66081792
+      },
+      "recipe_policy": "historical fixtures copied to explicit schema v3; source fixtures preserved",
+      "schema_version": 1,
+      "started_at_utc": "2026-08-18T00:38:12.107910Z"
+    },
+    "passed": true
+  },
+  "feature_id": "qpls3.pls.higher_order_two_stage",
+  "generated_at_utc": "2026-08-18T00:38:16.259573Z",
+  "method_version": "pls_pm_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_HIGHER_ORDER_V1.md",
+      "sha256": "2b497dc85b2f2d70b8f857d201de06dad232721faa6bd129bd86201150c2346a",
+      "size": 10953
+    },
+    {
+      "path": "validation/higher_order_two_stage_boundary_gate.py",
+      "sha256": "39ef47e724897dddfb4ac9f6c3ce58858a6d81d0bca767e92697b888ec522ee6",
+      "size": 205
+    },
+    {
+      "path": "validation/higher_order_two_stage_reference.py",
+      "sha256": "67ce784c4445d2a954380d79e78369765268943f7d3b52fdcfc8f03c440b81c2",
+      "size": 11476
+    },
+    {
+      "path": "validation/higher_order_two_stage_simulation.py",
+      "sha256": "cf8e45cd1c9f3a314f201c5f39a2aabbfe9ebc88a1f0148b6f9c94833026c248",
+      "size": 211
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/higher_order_v1.manifest.json",
+      "sha256": "19bd05dfc41e6b36ffd0eb3165dd002594ef46da8493c769b781f3d590835f88",
+      "size": 15861
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "ef5c8d32c4ea502f29666d912ae8103f7eb0e325a838df46dd5647ac07d2c11b",
+      "size": 30813
+    },
+    {
+      "path": "validation/results/method_factory/higher_order_v1/boundary_gate.json",
+      "sha256": "6da324e6c83a968cee473b48e05de38a5eada603b9f96389be2174b0d8e194f1",
+      "size": 3469
+    },
+    {
+      "path": "validation/results/method_factory/higher_order_v1/engine_gate.json",
+      "sha256": "d84a0d78d5719d6534cde7eb9427288ef00211714e7258b93349eff6d78c8ddc",
+      "size": 1610
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "148ba50d641d3ba1b42287e782a00854931f7495c3c938e687f2e72d08546956",
+      "size": 3303
+    }
+  ]
+}

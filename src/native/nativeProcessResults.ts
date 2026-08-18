@@ -13,7 +13,6 @@ import {
   NATIVE_PROCESS_BOOTSTRAP_METHOD_VERSION,
   NATIVE_PROCESS_INFERENCE_WARNING,
   NATIVE_PROCESS_METHOD_VERSION,
-  NATIVE_PROCESS_PROMOTION_PENDING_WARNING,
   NATIVE_PROCESS_RESULT_WARNING,
   NATIVE_PROCESS_SCOPE_NOTE,
 } from "./nativeProcess";
@@ -782,15 +781,13 @@ function table(
   columns: string[],
   rows: string[][],
   warning: string | null = null,
-  status: ResultTable["status"] = "experimental",
+  status: ResultTable["status"] = "validated",
 ): ResultTable {
   return {
     id,
     title,
     status,
-    warning: status === "validated"
-      ? warning
-      : warning ? `${NATIVE_PROCESS_PROMOTION_PENDING_WARNING} ${warning}` : NATIVE_PROCESS_PROMOTION_PENDING_WARNING,
+    warning,
     columns,
     rows,
   };
@@ -924,7 +921,7 @@ export function nativeProcessResultTables(projection: NativeProcessResultProject
       number(point.confidence_interval_lower),
       number(point.confidence_interval_upper),
     ])),
-    "Exact engine-persisted Johnson-Neyman curve points; bootstrap validation witnesses are never exported.",
+    "Exact engine-persisted Johnson-Neyman curve points; internal bootstrap refit diagnostics are not exported.",
   ));
   if (projection.bootstrap) {
     const bootstrap = projection.bootstrap;
@@ -972,7 +969,7 @@ export function nativeProcessResultTables(projection: NativeProcessResultProject
   tables.push(table("process_scope", "Scope and provenance", ["Item", "Disclosure"], [
     ["Implementation", NATIVE_PROCESS_RESULT_WARNING],
     ["Inference", NATIVE_PROCESS_INFERENCE_WARNING],
-    ["Supported scope", NATIVE_PROCESS_SCOPE_NOTE],
+    ["Requirements", NATIVE_PROCESS_SCOPE_NOTE],
     ["Plot provenance", "Conditional and Johnson-Neyman charts use only persisted engine-produced points and intervals; the UI does not recompute scientific values."],
   ]));
   return tables;
@@ -991,7 +988,7 @@ export function nativeLegacyProcessResultTables(projection: NativeLegacyProcessR
     number(row.estimate),
     row.lower_percentile == null ? "" : number(row.lower_percentile),
     row.upper_percentile == null ? "" : number(row.upper_percentile),
-  ]), "Historical read-only regression_process_v1 output; it is displayed under its original method label and is not current PROCESS v2 parity evidence.")];
+  ]), "Historical read-only regression_process_v1 output; it is displayed under its original method label and is not interpreted as graph-defined PROCESS v2.")];
   if (projection.analysis.simple_slopes.length) tables.push(historicalTable(
     "legacy_process_simple_slopes",
     "Historical PROCESS v1 simple slopes",
@@ -999,11 +996,11 @@ export function nativeLegacyProcessResultTables(projection: NativeLegacyProcessR
     projection.analysis.simple_slopes.map((row) => [number(row.moderator_value), number(row.slope)]),
     "Historical read-only regression_process_v1 output; fixed standardized probes from v1 are not reinterpreted as raw PROCESS v2 probes.",
   ));
-  tables.push(historicalTable("legacy_process_scope", "Historical PROCESS v1 scope", ["Item", "Disclosure"], [
+  tables.push(historicalTable("legacy_process_scope", "Historical PROCESS v1 details", ["Item", "Disclosure"], [
     ["Method version", projection.methodVersion],
     ["Model", label(projection.model)],
-    ["Status", "Readable historical output only; create a graph-defined PROCESS v2 recipe for current evidence."],
+    ["Status", "Readable historical output only; create a graph-defined PROCESS v2 analysis for a current interpretation."],
     ...projection.warnings.map((warning) => ["Recorded warning", warning]),
-  ], "Historical read-only archive output; no current execution, parity, or validation claim is made."));
+  ], "Historical read-only archive output; values are displayed under their original version and are not reinterpreted as current output."));
   return tables;
 }

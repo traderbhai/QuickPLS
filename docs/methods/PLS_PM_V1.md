@@ -1,10 +1,12 @@
 # PLS-PM Method Specification v1
 
-Status: validated for the documented v0.3 estimator scope.
+Status: release-qualified bounded scoped Standard. Capability coverage remains partial relative to the full comparator; the exact `pls_pm_v1` scope below has current engine, archive, native, and packaged evidence in Capability Registry V2.
 
 ## Scope
 
 This specification covers recursive PLS path models with numeric raw observations, reflective Mode A blocks, formative Mode B blocks, single-item blocks, path and factor inner weighting, and PCA block weighting. Cyclic models and covariance-only inputs are rejected in v0.3.
+
+The current SmartPLS parity defaults are a maximum of 3,000 iterations and a `1e-7` stop criterion. QuickPLS uses those defaults. Internal Recipe-v4 execution now implements Individual initialization and Unit/Custom fixed scoring under all three typed normalizations: `none`, `sum_to_one`, and `unit_variance`. That implementation does not by itself establish qualification or parity coverage for those options or every result type.
 
 ## Data
 
@@ -34,6 +36,6 @@ All regressions use column-pivoted QR. Numerical rank is read from the absolute 
 - R-squared is `1 - SSE/SST` on the standardized construct score.
 - Direct effects are structural coefficients. Total effects are the finite path expansion `B + B^2 + ... + B^(K-1)` for a recursive `K`-construct model; indirect effects equal total minus direct.
 
-## Determinism and Promotion
+## Determinism and qualification
 
-Construct and indicator order are taken from the versioned model recipe. No random initialization is used. A method remains `unsupported` until hand fixtures, published examples, two independent reference engines, order/scale metamorphic tests, CLI/GUI serialization equality, and the `1e-6` deterministic agreement gate pass.
+Construct and indicator order are taken from the versioned model recipe. No random initialization is used. This specification alone is not qualification evidence; the separate method-promotion identities bind the current hand fixtures, published examples, independent reference engines, deterministic and boundary checks, strict archive lifecycle, selected-run XLSX export, native results, and packaged Windows workflow for this bounded scope. The frozen independent-engine comparison tolerance is `1e-6`; it is a qualification agreement gate, not the estimator stop criterion, whose product default remains `1e-7`. QualificationSpec V2 retains broader options, large-scale matrices, cross-format breadth, and unrestricted parity as a non-blocking future full-parity backlog; scoped Standard does not imply those claims.

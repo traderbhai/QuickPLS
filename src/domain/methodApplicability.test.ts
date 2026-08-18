@@ -50,6 +50,32 @@ const edges: Edge[] = [
   { id: "x-y", source: "x", target: "y" },
 ];
 
+const powerNodes: Array<Node<ConstructData>> = [
+  { id: "x", position: { x: 0, y: 0 }, data: { label: "Predictor", shortName: "X", mode: "reflective", indicators: ["x1", "x2", "m1"] } },
+  { id: "y", position: { x: 500, y: 0 }, data: { label: "Outcome", shortName: "Y", mode: "reflective", indicators: ["y1", "y2", "m2"] } },
+];
+
+const powerEdges: Edge[] = [{ id: "x-y", source: "x", target: "y" }];
+
+const powerSettings: Partial<AnalysisUiSettings> = {
+  method: "pls_sample_size_power",
+  weightingScheme: "path",
+  preprocessing: "standardized",
+  tolerance: 1e-7,
+  maxIterations: 3_000,
+  plsPowerScenarioIdentity: "prospective_two_construct_path",
+  plsPowerPredictorConstruct: "x",
+  plsPowerOutcomeConstruct: "y",
+  plsPowerPredictorLoadings: "0.70,0.75,0.80",
+  plsPowerOutcomeLoadings: "0.72,0.77,0.82",
+  plsPowerPopulationPath: 0.30,
+  plsPowerSampleSizeGrid: "50,100,150",
+  plsPowerAlpha: 0.05,
+  plsPowerTargetPower: 0.80,
+  plsPowerMonteCarloReplicates: 250,
+  plsPowerBootstrapReplicates: 199,
+};
+
 const baseSettings: AnalysisUiSettings = {
   method: "pls_pm",
   bootstrapSamples: 0,
@@ -87,13 +113,19 @@ describe("methodApplicability", () => {
     expect(methodApplicabilityFor("cbsem", input({}, { nodes: formativeNodes })).status).toBe("not_applicable");
   });
 
-  it("requires a two-group column for MICOM/MGA", () => {
+  it("requires a two-group column for standalone MICOM v3.1", () => {
     const missing = methodApplicabilityFor("mga", input());
     expect(missing.status).toBe("needs_setup");
-    expect(missing.checks.find((check) => check.id === "group-column")).toMatchObject({ status: "failed" });
+    expect(missing.checks.find((check) => check.id === "group-column")).toMatchObject({
+      status: "failed",
+      detail: "Select an observed group column for MICOM v3.1.",
+    });
 
     const configured = methodApplicabilityFor("mga", input({ groupColumn: "group" }));
     expect(configured.status).toBe("recommended");
+    expect(configured.reason).toBe("Recommended because a two-group column is selected for MICOM v3.1.");
+    expect(configured.nextActionLabel).toBe("Setup MICOM v3.1");
+    expect(`${configured.reason} ${configured.nextActionLabel}`).not.toContain("MICOM/MGA");
   });
 
   it("checks logistic regression outcome shape", () => {
@@ -153,12 +185,12 @@ describe("methodApplicability", () => {
     expect(topBarMethods(all, "bootstrap").map((item) => item.method.id)).toContain("bootstrap");
   });
 
-  it("exposes Structural Path Randomization as an experimental fixed-score inference add-on", () => {
+  it("exposes Structural Path Randomization as a supported fixed-score inference add-on", () => {
     const result = methodApplicabilityFor("permutation", input({ method: "permutation", permutationSamples: 999 }));
     expect(result).toMatchObject({
       category: "inference_add_on",
-      status: "experimental",
-      scopeStatus: "experimental",
+      status: "available",
+      scopeStatus: "validated",
       nextActionLabel: "Setup path randomization",
     });
     expect(result.reason).toContain("raw and unadjusted for multiplicity");
@@ -167,6 +199,42 @@ describe("methodApplicability", () => {
       "exceedance counts",
       "raw two-sided plus-one p values",
     ]);
+  });
+
+  it("exposes the bounded, calibrated prospective PLS sample-size and power workflow", () => {
+    const result = methodApplicabilityFor("pls_sample_size_power", input(powerSettings, {
+      dataset: { ...dataset, columns: [], rows: [], columnMetadata: [], fingerprint: "project-fingerprint" },
+      nodes: powerNodes,
+      edges: powerEdges,
+    }));
+    expect(result).toMatchObject({
+      category: "workflow_analysis",
+      status: "available",
+      scopeStatus: "validated",
+      nextActionLabel: "Setup prospective power",
+    });
+    expect(result.checks.map((check) => [check.id, check.status])).toEqual([
+      ["runtime", "passed"],
+      ["power-provenance", "passed"],
+      ["power-model", "passed"],
+      ["power-plan", "passed"],
+    ]);
+    expect(result.reason).toContain("Observed values and observed sample size are not used");
+    expect(result.reason).toContain("null-centered two-sided case-bootstrap plus-one inference");
+    expect(result.reason).toContain("not retrospective observed power");
+    expect(result.expectedOutputs).toEqual(["power by sample size", "Wilson confidence intervals", "conservative grid decision", "failure accounting"]);
+  });
+
+  it("fails closed when the power model or explicit grid leaves the bounded scope", () => {
+    const invalidModel = methodApplicabilityFor("pls_sample_size_power", input(powerSettings));
+    expect(invalidModel.status).toBe("needs_setup");
+    expect(invalidModel.checks.find((check) => check.id === "power-model")).toMatchObject({ status: "failed" });
+    expect(invalidModel.reason).toContain("exactly two constructs and one directed path");
+
+    const invalidPlan = methodApplicabilityFor("pls_sample_size_power", input({ ...powerSettings, plsPowerSampleSizeGrid: "50" }, { nodes: powerNodes, edges: powerEdges }));
+    expect(invalidPlan.status).toBe("needs_setup");
+    expect(invalidPlan.checks.find((check) => check.id === "power-plan")).toMatchObject({ status: "failed" });
+    expect(invalidPlan.reason).toContain("between 2 and 16 sample sizes");
   });
 
   it("uses clean R2 text and exposes guidance cards for data and model states", () => {

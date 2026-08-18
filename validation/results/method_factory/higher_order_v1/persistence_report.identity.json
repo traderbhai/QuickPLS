@@ -1,0 +1,88 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "archive": "validation/results/v247-native-hoc-1787023868244-31400.qpls",
+    "archive_sha256": "ea9095b6a47012ac4f778837e9fbd4b98da68efcdbec7fd5a83aee6db53feb7f",
+    "archive_size": 16299,
+    "checks": {
+      "checksums_exact": true,
+      "completed_results": true,
+      "current_cli_accepts_archive": true,
+      "method_payload": true,
+      "passed": true,
+      "unique_safe_members": true
+    },
+    "kind": "quickpls_phase3_persistence_gate",
+    "method": "higher_order_v1",
+    "passed": true,
+    "path": "validation/results/method_factory/higher_order_v1/persistence_gate.json",
+    "rejected_newer_candidates": [],
+    "schema_version": 1,
+    "validation": {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "validate",
+        "validation/results/v247-native-hoc-1787023868244-31400.qpls",
+        "--json"
+      ],
+      "duration_seconds": 0.194,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"issues\": [\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1787023869658\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1787023869944\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1787023870197\"\n    },\n    {\n      \"code\": \"higher_order.indicators.generated\",\n      \"message\": \"Higher-order construct indicators are generated from lower-order components for supported HOC methods\",\n      \"severity\": \"warning\",\n      \"subject\": \"hoc-oc\"\n    },\n    {\n      \"code\": \"method.higher_order.experimental\",\n      \"message\": \"Higher-order construct semantics are validated only inside the documented QuickPLS v1.0.0 supported scope\",\n      \"severity\": \"warning\",\n      \"subject\": \"hoc-oc\"\n    }\n  ],\n  \"recovered\": true,\n  \"valid\": true\n}\n"
+    }
+  },
+  "feature_id": "qpls3.pls.higher_order_two_stage",
+  "generated_at_utc": "2026-08-18T03:46:49.576464Z",
+  "method_version": "pls_pm_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "persistence_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/higher_order_two_stage_persistence_gate.py",
+      "sha256": "59feff110125c5ea6cd155cbc7b2bd223f80f1a8d11c57300b74a4f1fff4b10e",
+      "size": 215
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/higher_order_v1.manifest.json",
+      "sha256": "19bd05dfc41e6b36ffd0eb3165dd002594ef46da8493c769b781f3d590835f88",
+      "size": 15861
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "ef5c8d32c4ea502f29666d912ae8103f7eb0e325a838df46dd5647ac07d2c11b",
+      "size": 30813
+    },
+    {
+      "path": "validation/results/method_factory/higher_order_v1/persistence_gate.json",
+      "sha256": "2aa70b7d6ceb3c46bc90db34f6ca9666b3cc8caee2838bd3e5b63db5ff8a0cc7",
+      "size": 2161
+    },
+    {
+      "path": "validation/results/v247-native-hoc-1787023868244-31400.qpls",
+      "sha256": "ea9095b6a47012ac4f778837e9fbd4b98da68efcdbec7fd5a83aee6db53feb7f",
+      "size": 16299
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "148ba50d641d3ba1b42287e782a00854931f7495c3c938e687f2e72d08546956",
+      "size": 3303
+    }
+  ]
+}

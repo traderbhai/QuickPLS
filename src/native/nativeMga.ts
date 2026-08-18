@@ -75,6 +75,22 @@ export function nativeMgaProfileAssessment(
   profile: DatasetGroupProfile | null,
   settings: Readonly<AnalysisUiSettings>,
 ): NativeMgaProfileAssessment {
+  return assessNativeGroups(profile, settings, true);
+}
+
+/** Validates A/B selection without applying calculation-only MICOM/MGA gates. */
+export function nativeGroupSelectionAssessment(
+  profile: DatasetGroupProfile | null,
+  settings: Readonly<AnalysisUiSettings>,
+): NativeMgaProfileAssessment {
+  return assessNativeGroups(profile, settings, false);
+}
+
+function assessNativeGroups(
+  profile: DatasetGroupProfile | null,
+  settings: Readonly<AnalysisUiSettings>,
+  requireCalculationSetup: boolean,
+): NativeMgaProfileAssessment {
   const blockers: string[] = [];
   const warnings: string[] = [];
   const groupAValue = settings.groupAValue?.trim() ?? "";
@@ -82,7 +98,7 @@ export function nativeMgaProfileAssessment(
   const groupA = profile?.groups.find((group) => group.value === groupAValue) ?? null;
   const groupB = profile?.groups.find((group) => group.value === groupBValue) ?? null;
 
-  if (!profile) blockers.push("Load the complete dataset group profile before starting MGA.");
+  if (!profile) blockers.push("Load the complete dataset group profile before starting MICOM.");
   else {
     if (profile.columnName !== (settings.groupColumn?.trim() ?? "")) {
       blockers.push("The group profile is stale for the selected grouping variable.");
@@ -99,19 +115,40 @@ export function nativeMgaProfileAssessment(
     if (groupB && groupB.completeCases < NATIVE_MGA_MIN_COMPLETE_CASES) {
       blockers.push(`Group B has ${groupB.completeCases} complete model cases; at least ${NATIVE_MGA_MIN_COMPLETE_CASES} are required.`);
     }
+    if (
+      groupA
+      && groupB
+      && Math.max(groupA.completeCases, groupB.completeCases)
+        > Math.min(groupA.completeCases, groupB.completeCases) * 10
+    ) {
+      blockers.push(`micom.extreme_group_imbalance: selected complete-case sizes ${groupA.completeCases} and ${groupB.completeCases} exceed the bounded 10:1 ratio.`);
+    }
     if (profile.missingCount > 0) warnings.push(`${profile.missingCount} row${profile.missingCount === 1 ? " has" : "s have"} a missing group value and will be excluded.`);
     const selectedObservations = (groupA?.observations ?? 0) + (groupB?.observations ?? 0);
     const otherObserved = Math.max(0, profile.rowCount - profile.missingCount - profile.unsupportedCount - selectedObservations);
     if (otherObserved > 0) warnings.push(`${otherObserved} row${otherObserved === 1 ? " belongs" : "s belong"} to unselected group values and will be excluded.`);
   }
 
-  const samples = settings.groupPermutationSamples ?? NATIVE_MGA_MIN_PERMUTATIONS;
-  if (
-    !Number.isInteger(samples)
-    || samples < NATIVE_MGA_MIN_PERMUTATIONS
-    || samples > NATIVE_MGA_MAX_PERMUTATIONS
-  ) {
-    blockers.push(`MICOM and permutation MGA require ${NATIVE_MGA_MIN_PERMUTATIONS.toLocaleString("en-US")} to ${NATIVE_MGA_MAX_PERMUTATIONS.toLocaleString("en-US")} permutations.`);
+  if (requireCalculationSetup) {
+    const methods = (settings.groupMethods ?? "")
+      .split(",")
+      .map((method) => method.trim())
+      .filter(Boolean);
+    if (methods.length !== 2 || methods[0] !== "micom" || methods[1] !== "mga_permutation") {
+      blockers.push("The group workflow requires both MICOM and structural-path permutation MGA.");
+    }
+    if (settings.micomConfiguralConfirmed !== true) {
+      blockers.push("Confirm MICOM Step 1 through explicit researcher review before calculation.");
+    }
+
+    const samples = settings.groupPermutationSamples ?? NATIVE_MGA_MIN_PERMUTATIONS;
+    if (
+      !Number.isInteger(samples)
+      || samples < NATIVE_MGA_MIN_PERMUTATIONS
+      || samples > NATIVE_MGA_MAX_PERMUTATIONS
+    ) {
+      blockers.push(`MICOM requires ${NATIVE_MGA_MIN_PERMUTATIONS.toLocaleString("en-US")} to ${NATIVE_MGA_MAX_PERMUTATIONS.toLocaleString("en-US")} permutations.`);
+    }
   }
 
   return { canRun: blockers.length === 0, blockers, warnings, groupA, groupB };

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "9ef2168f-fbfc-4271-ad47-5968aa569356",
+  "id": "30bc1041-3c96-443c-8a02-213fb8deb439",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000003101",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-08-13T15:31:38.068997700Z",
-    "completed_at": "2026-08-13T15:31:38.179725300Z"
+    "started_at": "2026-08-18T03:56:53.069256600Z",
+    "completed_at": "2026-08-18T03:56:53.128442Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
+      "message": "OLS regression v1 requires numeric complete-case variables and HC3 robust standard errors; incompatible configurations are blocked before calculation."
     },
     {
       "code": "estimation.warning",
@@ -11370,14 +11370,14 @@
         "process": null,
         "regression_type": "ols",
         "warnings": [
-          "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
+          "OLS regression v1 requires numeric complete-case variables and HC3 robust standard errors; incompatible configurations are blocked before calculation."
         ]
       },
       "segmentation": null,
       "transforms": [],
       "used_observations": 140,
       "warnings": [
-        "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
+        "OLS regression v1 requires numeric complete-case variables and HC3 robust standard errors; incompatible configurations are blocked before calculation."
       ],
       "wpls": null
     },

@@ -12,7 +12,7 @@ from validation import package_release_artifacts as release
 
 VERSION = "3.0.0"
 REPOSITORY_RELEASE_VERSION = "2.46.0"
-REPOSITORY_ARTIFACT_LABEL = "v2_46_0_quickpls_3_wave_1_regression_process"
+REPOSITORY_ARTIFACT_LABEL = "v2_46_0_quickpls_3_scoped_methods"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_CARGO_PACKAGES = {
     "qpls-assessment",
@@ -145,7 +145,7 @@ class VersionContractTests(unittest.TestCase):
 
 
 class RepositoryReleaseMetadataTests(unittest.TestCase):
-    def test_wave_1_release_metadata_and_current_facing_copy_are_coordinated(self) -> None:
+    def test_scoped_methods_release_metadata_and_current_facing_copy_are_coordinated(self) -> None:
         version, evidence = release.read_version_contract(REPOSITORY_ROOT)
         package = json.loads((REPOSITORY_ROOT / "package.json").read_text(encoding="utf-8"))
         prototype = (REPOSITORY_ROOT / "src" / "v2" / "NativePrototypeApp.tsx").read_text(encoding="utf-8")
@@ -166,9 +166,14 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertIn("Current development release: `v2.46.0`.", readme)
         self.assertIn("_x64_cli.exe` - command-line executable for batch recipes.", readme)
         self.assertIn(
-            "The capability remains native-qualified rather than release-qualified because the current "
-            "repeated-completion resource report did not prove terminal process-role stability.",
-            readme,
+            "Standard shows only an exact option cell that has passed the full release evidence ladder and "
+            "has either complete coverage or a nonempty, explicitly documented bounded scope.",
+            " ".join(readme.replace("**", "").split()),
+        )
+        self.assertIn(
+            "Twenty-six official rows and 29 exact option-cell registrations are nevertheless available as "
+            "scoped Standard",
+            " ".join(readme.split()),
         )
         self.assertNotIn("The coordinated public 2.46.0 Wave 1 release packages this qualified capability", readme)
         self.assertIn("Previous Milestone Notes v2.45.0", readme)

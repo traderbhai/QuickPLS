@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-14T16:05:18Z",
+    "manifest_path": "validation/methods/pls_model_fit_v2.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.assessment.model_fit",
+    "label": "PLS Model Fit",
+    "method_version": "pls_model_fit_v2",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/model-fit/"
+  },
+  "claim": {
+    "supported_scope": "Deterministic SRMR, d_ULS, d_G, maximum-likelihood-function Chi-square, degrees of freedom, and NFI point estimates for saturated and estimated supported PLS or PLSc indicator-correlation models, plus an explicitly selected bounded adapted Bollen-Stine workflow with separate saturated and estimated null transformations, fixed indexed full-refit ledgers, Type-7 HI95 and HI99 bounds, and decisions for SRMR, d_ULS, and d_G.",
+    "estimand": "Observed-versus-model-implied indicator-correlation discrepancy and approximate fit for saturated and recursive estimated PLS correlation models, together with the empirical exact-fit distribution obtained after transforming the complete indicator sample to each fitted correlation matrix and fully refitting the same estimator on fixed case resamples.",
+    "assumptions": [
+      "All indicators use the same finite complete cases and deterministic recipe order, and the recorded analytical sample size equals the source PLS result.",
+      "Observed and implied matrices are finite, symmetric, dimensionally identical correlation matrices; d_G and maximum-likelihood-function Chi-square additionally require positive definiteness.",
+      "The structural model is recursive and the model-implied matrices follow the stored composite, common-factor, or mixed measurement semantics.",
+      "Exact-fit inference requires raw observations, 999 to 10000 fixed draws, strict positive-definite observed and target correlations, and at least 90 percent usable values independently for each criterion."
+    ],
+    "exclusions": [
+      "The bounded exact-fit v1 lane excludes generated interaction constructs, higher-order indicator expansion, covariance or correlation input, missing-data policies beyond model-wide listwise deletion, and unsupported/nonrecursive PLS structures.",
+      "RMS_theta, automatic universal fit decisions, and CB-SEM fit semantics are excluded.",
+      "This implementation is not full SmartPLS model-fit parity and is not release-qualified without full supported-shape breadth, independent full-refit oracle evidence, simulation calibration, real archive/export readback, packaged Windows qualification, performance evidence, and independent scientific review."
+    ],
+    "warnings": [
+      "SRMR and NFI are approximate fit measures conditional on the specified model, estimator, indicator scaling, and data.",
+      "Raw d_ULS and d_G discrepancies do not establish exact fit without the separately requested adapted Bollen-Stine sampling distribution.",
+      "The present NumPy exact-fit reference validates transformation, ledger-summary, quantile, and decision primitives; it is not an independent PLS/PLSc full-refit pipeline."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "d_uls",
+        "expression": "d_ULS = 1/2 trace((S - Sigma_hat)^2) = sum_i_ge_j (S_ij - Sigma_hat_ij)^2",
+        "variables": ["d_ULS", "S", "Sigma_hat", "S_ij", "Sigma_hat_ij", "i", "j"],
+        "source_reference_id": "dijkstra_henseler_2015"
+      },
+      {
+        "id": "srmr",
+        "expression": "SRMR = sqrt(d_ULS / (p(p+1)/2))",
+        "variables": ["SRMR", "d_ULS", "p"],
+        "source_reference_id": "henseler_2014"
+      },
+      {
+        "id": "d_g",
+        "expression": "d_G = 1/2 sum_k ln(phi_k)^2, where phi_k are eigenvalues of S^-1 Sigma_hat",
+        "variables": ["d_G", "phi_k", "S", "Sigma_hat", "k"],
+        "source_reference_id": "dijkstra_henseler_2015"
+      },
+      {
+        "id": "chi_square",
+        "expression": "Chi_square = (N-1) [trace(Sigma_hat^-1 S) - ln|S| + ln|Sigma_hat| - p]",
+        "variables": ["Chi_square", "N", "S", "Sigma_hat", "p"],
+        "source_reference_id": "lohmoller_1989"
+      },
+      {
+        "id": "nfi",
+        "expression": "NFI = 1 - Chi_square_model / Chi_square_null",
+        "variables": ["NFI", "Chi_square_model", "Chi_square_null"],
+        "source_reference_id": "bentler_bonett_1980"
+      },
+      {
+        "id": "adapted_bollen_stine_transform",
+        "expression": "Z_variant_star = Z S^-1/2 Sigma_variant^1/2, with sample_correlation(Z_variant_star) = Sigma_variant",
+        "variables": ["Z_variant_star", "Z", "S", "Sigma_variant"],
+        "source_reference_id": "dijkstra_henseler_2015"
+      },
+      {
+        "id": "exact_fit_upper_decision",
+        "expression": "HI_q = Type7({d_b: b usable}, q); not_rejected_q = (d_original <= HI_q), for q in {0.95, 0.99}",
+        "variables": ["HI_q", "d_b", "b", "q", "d_original", "not_rejected_q"],
+        "source_reference_id": "dijkstra_henseler_2015"
+      }
+    ],
+    "references": [
+      {
+        "id": "dijkstra_henseler_2015",
+        "kind": "primary_paper",
+        "citation": "Dijkstra and Henseler (2015), Consistent and asymptotically normal PLS estimators for linear structural equations, Computational Statistics and Data Analysis 81, equations 35-36, DOI 10.1016/j.csda.2014.07.008",
+        "locator": "docs/methods/PLS_MODEL_FIT_V2.md",
+        "independence_group": "published_pls_exact_fit",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "henseler_2014",
+        "kind": "primary_paper",
+        "citation": "Henseler et al. (2014), Common Beliefs and Reality About PLS: Comments on Ronkko and Evermann, DOI 10.1177/1094428114526928",
+        "locator": "docs/methods/PLS_MODEL_FIT_V2.md",
+        "independence_group": "published_pls_fit",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "lohmoller_1989",
+        "kind": "primary_paper",
+        "citation": "Lohmoller (1989), Latent Variable Path Modeling with Partial Least Squares, Physica",
+        "locator": "docs/methods/PLS_MODEL_FIT_V2.md",
+        "independence_group": "published_pls_chi_square",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "bentler_bonett_1980",
+        "kind": "primary_paper",
+        "citation": "Bentler and Bonett (1980), Significance Tests and Goodness of Fit in the Analysis of Covariance Structures, Psychological Bulletin 88(3)",
+        "locator": "docs/methods/PLS_MODEL_FIT_V2.md",
+        "independence_group": "published_nfi",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_python_pls_fit_v2",
+        "kind": "independent_python",
+        "citation": "Transparent NumPy reference for the frozen SRMR, d_ULS, d_G, maximum-likelihood-function Chi-square, and NFI equations",
+        "locator": "validation/pls_model_fit_v2_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "id": "independent_python_pls_fit_exact_v1_primitives",
+        "kind": "independent_python",
+        "citation": "Transparent NumPy reference for the symmetric null transformation, fixed-ledger Type-7 bounds, empirical upper tails, and exact-fit decisions; this is explicitly not a full independent PLS refit implementation",
+        "locator": "validation/pls_model_fit_exact_v1_reference.py",
+        "independence_group": "python_exact_fit_primitive_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "pls_fit_point_family_recovery",
+        "purpose": "recovery",
+        "design": "Reflective, formative, and mixed recursive PLS and PLSc models across topology, sample size, loading or weight strength, distribution, misspecification, and positive-definite matrix condition.",
+        "seed_policy": "Frozen indexed data-generation and scenario seeds with deterministic estimator settings.",
+        "metrics": ["srmr_error", "d_uls_error", "d_g_error", "chi_square_error", "nfi_error", "degrees_of_freedom_accuracy"],
+        "acceptance_rule": "Every available criterion must match the preregistered independent reference tolerance and every scientifically undefined criterion must produce its typed unavailable reason."
+      },
+      {
+        "id": "pls_fit_matrix_failure_behavior",
+        "purpose": "failure_behavior",
+        "design": "Singular, near-singular, asymmetric, non-finite, dimension-mismatched, duplicate-indicator, underidentified, and tampered point-fit fixtures.",
+        "seed_policy": "Frozen deterministic adversarial matrices plus indexed near-boundary perturbations.",
+        "metrics": ["typed_failure_accuracy", "placeholder_value_count", "archive_tamper_rejection", "native_fail_closed_accuracy"],
+        "acceptance_rule": "Every invalid or unsupported case must fail or mark only the affected criterion unavailable, with zero fabricated fit values and complete semantic tamper rejection."
+      },
+      {
+        "id": "pls_fit_exact_sampling_calibration",
+        "purpose": "type_i_error",
+        "design": "Pre-registered correctly specified and misspecified reflective, formative, mixed, PLS-PM, and PLSc populations across topology, sample size, distribution, missingness, matrix conditioning, seed, and worker count; saturated and estimated exact-fit runs are assessed separately.",
+        "seed_policy": "Frozen indexed population, dataset, and exact-fit resample streams with failed fits retained in every denominator.",
+        "metrics": ["type_i_error_0_05", "type_i_error_0_01", "misspecification_power", "bound_coverage", "criterion_failure_rate", "run_nonconvergence_rate"],
+        "acceptance_rule": "Monte Carlo proportions meet the frozen QualificationSpec V2 intervals and half-width policy, failed fits are included, and worker-count changes preserve every fixed ledger and decision."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "singular_or_invalid_correlation_matrix",
+        "category": "data_pathology",
+        "case": "An observed or implied matrix is non-finite, asymmetric, dimension-mismatched, not a correlation matrix, singular, or numerically non-positive-definite.",
+        "expected_behavior": "Malformed matrices are rejected; a valid but singular correlation matrix leaves d_G, Chi-square, and dependent NFI unavailable with a typed reason and never a placeholder zero."
+      },
+      {
+        "id": "adapted_bollen_stine_requested",
+        "category": "determinism",
+        "case": "The recipe explicitly requests the bounded adapted Bollen-Stine workflow with a supported raw-data PLS-PM or PLSc model and 999 to 10000 draws.",
+        "expected_behavior": "The engine performs two domain-separated null transformations and full-refit ledgers, emits exact-fit bounds and decisions separately from ordinary parameter bootstrap inference, and attributes pls_model_fit_exact_v1 in provenance."
+      },
+      {
+        "id": "adapted_bollen_stine_unsupported_or_implicit",
+        "category": "unsupported_scope",
+        "case": "Exact-fit inference is not explicitly selected, the selector is malformed, a target matrix is not positive definite, or the recipe uses an unsupported data or model shape.",
+        "expected_behavior": "Ordinary runs do not claim exact-fit inference; malformed or unsupported explicit requests fail preflight or execution with a corrective typed diagnostic and never substitute ordinary bootstrap results."
+      },
+      {
+        "id": "consistent_indicator_permutation",
+        "category": "metamorphic",
+        "case": "Indicators and all observed and implied matrices are permuted consistently.",
+        "expected_behavior": "Every point-fit criterion remains equal within tolerance after identity mapping."
+      },
+      {
+        "id": "repeat_point_fit",
+        "category": "determinism",
+        "case": "The same data, model, estimator output, and indicator order are assessed repeatedly across worker counts.",
+        "expected_behavior": "Matrices, criteria, method identity, and unavailable reasons are exactly equal."
+      },
+      {
+        "id": "model_fit_v2_archive_tamper",
+        "category": "tamper",
+        "case": "A sample size, indicator identity or order, matrix, convention, criterion, exact-fit method identity, operation, transformed-matrix witness, sample digest, ledger status, bound, tail probability, or decision is changed.",
+        "expected_behavior": "Strict project or native validation rejects the payload rather than displaying or exporting it."
+      }
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose PLS model-fit capability identity differs from pls_model_fit_v2."},
+        {"category": "method_version", "expected_behavior": "Reject a fit or exact-fit block with a missing, unknown, legacy, substituted, or unlinked method version or provenance marker."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose recipe, run, or dataset fingerprint no longer identifies the source analytical cases."},
+        {"category": "checksum", "expected_behavior": "Reject an archive whose fit matrices, transformation witnesses, sample or usable-index digests, ledgers, bounds, or decisions no longer match its integrity metadata."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate indicators, malformed matrices, non-finite values, inconsistent formulas, invalid reason codes, unknown fields, incomplete exact-fit ledgers, and recomputed summary or decision mismatches."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Keep pre-v2 SRMR and d_ULS readable as historical output without adding the v2 method identity or advanced criteria."}
+      ],
+      "legacy_policy": "Historical fit blocks remain immutable and readable; only exact pls_model_fit_v2 payloads satisfy this contract."
+    },
+    "native": {
+      "setup_controls": ["Supported PLS-PM or PLSc bootstrap recipe", "Experimental Labs exact-fit selector", "999 to 10000 fixed draws", "Seed", "Workers", "Saturated and estimated point definitions"],
+      "applicability_blockers": ["Invalid fit identity", "Matrix or indicator mismatch", "Non-positive-definite observed or target matrix", "Unsupported input or model shape", "Invalid exact-fit draw count"],
+      "result_surfaces": ["Saturated and estimated SRMR, d_ULS, d_G, Chi-square, df, and NFI", "Separate saturated and estimated HI95 and HI99 exact-fit results", "Criterion-level decisions and usable counts", "Complete partial or failed replicate ledger", "Model-fit details", "Interpretation warning", "Run Details provenance"],
+      "gui_cli_parity_rule": "GUI and CLI must preserve the same v2 identity, exact-fit v1 identity, sample size, indicator order, matrices, variant operations, fixed sample digests, ledgers, point criteria, bounds, decisions, unavailable reasons, seed, and worker-invariant analytical payload for identical inputs.",
+      "accessibility_rules": ["Every point-fit value, exact-fit bound, decision, usable count, and unavailable state appears in an accessible table.", "No fit state, group, significance decision, or warning is communicated by color alone."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html"],
+      "tables": ["PLS model fit", "PLS model fit details", "Exact overall model fit", "Exact-fit replicate ledger exceptions", "Run Details"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/PLS_MODEL_FIT_V2.md", "docs/methods/PLS_MODEL_FIT_EXACT_V1.md"],
+      "independent_reference": ["validation/pls_model_fit_v2_reference.py", "validation/pls_model_fit_exact_v1_reference.py"],
+      "simulation_report": ["validation/pls_model_fit_v2_release_simulation.py"],
+      "boundary_report": ["validation/pls_model_fit_v2_release_boundary_gate.py"],
+      "persistence_report": ["validation/pls_model_fit_v2_release_persistence_gate.py"],
+      "frontend_report": ["src/native/nativePlsModelFit.test.ts"],
+      "export_report": ["src/native/nativeExportTables.test.ts"],
+      "method_audit": ["validation/pls_model_fit_v2_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_pls_model_fit_v2_native_acceptance.ps1"]
+    },
+    "evidence": {
+      "engine_only": [],
+      "archive_qualified": [],
+      "native_qualified": [],
+      "release_qualified": []
+    }
+  }
+}

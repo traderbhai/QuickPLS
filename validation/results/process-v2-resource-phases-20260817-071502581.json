@@ -1,0 +1,290 @@
+{
+  "schema_version": 2,
+  "feature_id": "qpls3.standalone.process",
+  "method_version": "regression_process_v2",
+  "phases": {
+    "initial_idle": {
+      "recorded_at_utc": "2026-08-17T01:45:14.354Z",
+      "idle_settle_milliseconds": 5000,
+      "capture_delay_milliseconds": 500,
+      "sample_window_milliseconds": 5000,
+      "logical_state": {
+        "surface": "data",
+        "completed_result_count": 0,
+        "witness_count": 0,
+        "selected_run_id": null,
+        "state_kind": "model_free_fixture"
+      },
+      "effective_archive": {
+        "path": "validation/results/process-v2-resource-snapshot-1786931105692-28988-initial_idle.qpls",
+        "bytes": 12716,
+        "sha256": "f622acaec03a984b433c2093323ee2fd2fc8725db8785306e62107d00f72cd34",
+        "source_path": "validation/results/v247-native-process-v2-1786931105692-28988.qpls",
+        "source_before": {
+          "bytes": 12716,
+          "sha256": "f622acaec03a984b433c2093323ee2fd2fc8725db8785306e62107d00f72cd34",
+          "mtime_ns": "1786931108385624200"
+        },
+        "source_after": {
+          "bytes": 12716,
+          "sha256": "f622acaec03a984b433c2093323ee2fd2fc8725db8785306e62107d00f72cd34",
+          "mtime_ns": "1786931108385624200"
+        },
+        "source_stable_during_copy": true,
+        "exclusive_atomic_copy": true,
+        "application_opened": false,
+        "logical_state": {
+          "manifestValid": true,
+          "completedResultCount": 0,
+          "witnessCount": 0,
+          "completedRunIds": [],
+          "witnessRunIds": [],
+          "recipeIds": [],
+          "recipeCount": 0,
+          "workspaceRunIds": [],
+          "selectedRunId": null
+        }
+      },
+      "primary_archive": {
+        "path": "validation/results/v247-native-process-v2-1786931105692-28988.qpls",
+        "bytes": 12716
+      },
+      "export": {
+        "path": "validation/results/v247-native-process-v2-20260817-071502581.xlsx",
+        "bytes": 0
+      }
+    },
+    "post_cancellation_idle": {
+      "recorded_at_utc": "2026-08-17T01:45:29.132Z",
+      "idle_settle_milliseconds": 5000,
+      "capture_delay_milliseconds": 500,
+      "sample_window_milliseconds": 5000,
+      "logical_state": {
+        "surface": "data",
+        "completed_result_count": 0,
+        "witness_count": 0,
+        "selected_run_id": null,
+        "state_kind": "cancelled_setup_no_result"
+      },
+      "effective_archive": {
+        "path": "validation/results/process-v2-resource-snapshot-1786931105692-28988-post_cancellation_idle.qpls",
+        "bytes": 12716,
+        "sha256": "f622acaec03a984b433c2093323ee2fd2fc8725db8785306e62107d00f72cd34",
+        "source_path": "validation/results/v247-native-process-v2-1786931105692-28988.qpls",
+        "source_before": {
+          "bytes": 12716,
+          "sha256": "f622acaec03a984b433c2093323ee2fd2fc8725db8785306e62107d00f72cd34",
+          "mtime_ns": "1786931108385624200"
+        },
+        "source_after": {
+          "bytes": 12716,
+          "sha256": "f622acaec03a984b433c2093323ee2fd2fc8725db8785306e62107d00f72cd34",
+          "mtime_ns": "1786931108385624200"
+        },
+        "source_stable_during_copy": true,
+        "exclusive_atomic_copy": true,
+        "application_opened": false,
+        "logical_state": {
+          "manifestValid": true,
+          "completedResultCount": 0,
+          "witnessCount": 0,
+          "completedRunIds": [],
+          "witnessRunIds": [],
+          "recipeIds": [],
+          "recipeCount": 0,
+          "workspaceRunIds": [],
+          "selectedRunId": null
+        }
+      },
+      "primary_archive": {
+        "path": "validation/results/v247-native-process-v2-1786931105692-28988.qpls",
+        "bytes": 12716
+      },
+      "export": {
+        "path": "validation/results/v247-native-process-v2-20260817-071502581.xlsx",
+        "bytes": 0
+      }
+    },
+    "post_completed_cycle_1_idle": {
+      "recorded_at_utc": "2026-08-17T01:46:20.556Z",
+      "idle_settle_milliseconds": 5000,
+      "capture_delay_milliseconds": 500,
+      "sample_window_milliseconds": 5000,
+      "logical_state": {
+        "surface": "results",
+        "completed_result_count": 1,
+        "witness_count": 1,
+        "selected_run_id": "68311635-43bc-49e5-8f17-d7c7966e2795",
+        "state_kind": "one_result_reopened_original"
+      },
+      "effective_archive": {
+        "path": "validation/results/process-v2-resource-snapshot-1786931105692-28988-post_completed_cycle_1_idle.qpls",
+        "bytes": 2317996,
+        "sha256": "1b5a581171b3634871f3bdade4576d69fdba34c8946e098cd2362d0d0b5c5878",
+        "source_path": "validation/results/v247-native-process-v2-1786931105692-28988.qpls.autosave",
+        "source_before": {
+          "bytes": 2317996,
+          "sha256": "1b5a581171b3634871f3bdade4576d69fdba34c8946e098cd2362d0d0b5c5878",
+          "mtime_ns": "1786931175899362900"
+        },
+        "source_after": {
+          "bytes": 2317996,
+          "sha256": "1b5a581171b3634871f3bdade4576d69fdba34c8946e098cd2362d0d0b5c5878",
+          "mtime_ns": "1786931175899362900"
+        },
+        "source_stable_during_copy": true,
+        "exclusive_atomic_copy": true,
+        "application_opened": false,
+        "logical_state": {
+          "manifestValid": true,
+          "completedResultCount": 1,
+          "witnessCount": 1,
+          "completedRunIds": [
+            "68311635-43bc-49e5-8f17-d7c7966e2795"
+          ],
+          "witnessRunIds": [
+            "68311635-43bc-49e5-8f17-d7c7966e2795"
+          ],
+          "recipeIds": [
+            "24000268-404f-4cba-b90d-e77aef185386"
+          ],
+          "recipeCount": 1,
+          "workspaceRunIds": [
+            "68311635-43bc-49e5-8f17-d7c7966e2795"
+          ],
+          "selectedRunId": "68311635-43bc-49e5-8f17-d7c7966e2795"
+        }
+      },
+      "primary_archive": {
+        "path": "validation/results/v247-native-process-v2-1786931105692-28988.qpls",
+        "bytes": 2317996
+      },
+      "export": {
+        "path": "validation/results/v247-native-process-v2-20260817-071502581.xlsx",
+        "bytes": 55286
+      }
+    },
+    "post_completed_history_2_idle": {
+      "recorded_at_utc": "2026-08-17T01:46:47.516Z",
+      "idle_settle_milliseconds": 5000,
+      "capture_delay_milliseconds": 500,
+      "sample_window_milliseconds": 5000,
+      "logical_state": {
+        "surface": "results",
+        "completed_result_count": 2,
+        "witness_count": 2,
+        "selected_run_id": "c99f2dd9-7241-4233-ba2a-80ae4c51c8a3",
+        "state_kind": "two_results_retained_history"
+      },
+      "effective_archive": {
+        "path": "validation/results/process-v2-resource-snapshot-1786931105692-28988-post_completed_history_2_idle.qpls",
+        "bytes": 4620607,
+        "sha256": "924e78dac919bb83b2d9b59d1cd40f1b46e06775fa439634274e76448dee6338",
+        "source_path": "validation/results/v247-native-process-v2-1786931105692-28988.qpls.autosave",
+        "source_before": {
+          "bytes": 4620607,
+          "sha256": "924e78dac919bb83b2d9b59d1cd40f1b46e06775fa439634274e76448dee6338",
+          "mtime_ns": "1786931202969958000"
+        },
+        "source_after": {
+          "bytes": 4620607,
+          "sha256": "924e78dac919bb83b2d9b59d1cd40f1b46e06775fa439634274e76448dee6338",
+          "mtime_ns": "1786931202969958000"
+        },
+        "source_stable_during_copy": true,
+        "exclusive_atomic_copy": true,
+        "application_opened": false,
+        "logical_state": {
+          "manifestValid": true,
+          "completedResultCount": 2,
+          "witnessCount": 2,
+          "completedRunIds": [
+            "68311635-43bc-49e5-8f17-d7c7966e2795",
+            "c99f2dd9-7241-4233-ba2a-80ae4c51c8a3"
+          ],
+          "witnessRunIds": [
+            "68311635-43bc-49e5-8f17-d7c7966e2795",
+            "c99f2dd9-7241-4233-ba2a-80ae4c51c8a3"
+          ],
+          "recipeIds": [
+            "24000268-404f-4cba-b90d-e77aef185386",
+            "59fb26eb-74fd-474a-ab45-212a32dccc4d"
+          ],
+          "recipeCount": 2,
+          "workspaceRunIds": [
+            "c99f2dd9-7241-4233-ba2a-80ae4c51c8a3",
+            "68311635-43bc-49e5-8f17-d7c7966e2795"
+          ],
+          "selectedRunId": "c99f2dd9-7241-4233-ba2a-80ae4c51c8a3"
+        }
+      },
+      "primary_archive": {
+        "path": "validation/results/v247-native-process-v2-1786931105692-28988.qpls",
+        "bytes": 2317996
+      },
+      "export": {
+        "path": "validation/results/v247-native-process-v2-20260817-071502581.xlsx",
+        "bytes": 55286
+      }
+    },
+    "post_completed_cycle_2_idle": {
+      "recorded_at_utc": "2026-08-17T01:47:01.165Z",
+      "idle_settle_milliseconds": 5000,
+      "capture_delay_milliseconds": 500,
+      "sample_window_milliseconds": 5000,
+      "logical_state": {
+        "surface": "results",
+        "completed_result_count": 1,
+        "witness_count": 1,
+        "selected_run_id": "68311635-43bc-49e5-8f17-d7c7966e2795",
+        "state_kind": "one_result_reopened_reset_clone"
+      },
+      "effective_archive": {
+        "path": "validation/results/process-v2-resource-snapshot-1786931105692-28988-post_completed_cycle_2_idle.qpls",
+        "bytes": 2317996,
+        "sha256": "e38bc8ca29d3a39df609a3239ee6747ae0aff89f7f2acd0680cc3e96cfd61e7c",
+        "source_path": "validation/results/v247-native-process-v2-reset-1786931105692-28988.qpls.autosave",
+        "source_before": {
+          "bytes": 2317996,
+          "sha256": "e38bc8ca29d3a39df609a3239ee6747ae0aff89f7f2acd0680cc3e96cfd61e7c",
+          "mtime_ns": "1786931216205406700"
+        },
+        "source_after": {
+          "bytes": 2317996,
+          "sha256": "e38bc8ca29d3a39df609a3239ee6747ae0aff89f7f2acd0680cc3e96cfd61e7c",
+          "mtime_ns": "1786931216205406700"
+        },
+        "source_stable_during_copy": true,
+        "exclusive_atomic_copy": true,
+        "application_opened": false,
+        "logical_state": {
+          "manifestValid": true,
+          "completedResultCount": 1,
+          "witnessCount": 1,
+          "completedRunIds": [
+            "68311635-43bc-49e5-8f17-d7c7966e2795"
+          ],
+          "witnessRunIds": [
+            "68311635-43bc-49e5-8f17-d7c7966e2795"
+          ],
+          "recipeIds": [
+            "24000268-404f-4cba-b90d-e77aef185386"
+          ],
+          "recipeCount": 1,
+          "workspaceRunIds": [
+            "68311635-43bc-49e5-8f17-d7c7966e2795"
+          ],
+          "selectedRunId": "68311635-43bc-49e5-8f17-d7c7966e2795"
+        }
+      },
+      "primary_archive": {
+        "path": "validation/results/v247-native-process-v2-1786931105692-28988.qpls",
+        "bytes": 2317996
+      },
+      "export": {
+        "path": "validation/results/v247-native-process-v2-20260817-071502581.xlsx",
+        "bytes": 55286
+      }
+    }
+  }
+}

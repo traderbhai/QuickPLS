@@ -1,0 +1,234 @@
+{
+  "blockers": [
+    "adversarial.product_engine_exact_fit_boundary_run_not_captured",
+    "adversarial.archive_reopen_tamper_run_not_captured",
+    "adversarial.native_fail_closed_run_not_captured",
+    "adversarial.plsc_formative_mixed_higher_order_and_interaction_matrix_incomplete",
+    "adversarial.worker_count_gui_cli_and_archive_metamorphic_matrix_incomplete"
+  ],
+  "case_count": 14,
+  "cases": [
+    {
+      "actual": "typed_failure",
+      "case_id": "zero_variance_indicator",
+      "code": "model_fit_oracle.constant_indicator",
+      "expected": "typed_failure",
+      "passed": true
+    },
+    {
+      "actual": "typed_failure",
+      "case_id": "duplicated_indicator_singular_observed",
+      "code": "model_fit_oracle.observed_correlation_not_positive_definite",
+      "expected": "typed_failure",
+      "passed": true
+    },
+    {
+      "actual": "typed_failure",
+      "case_id": "non_finite_raw_cell",
+      "code": "model_fit_oracle.non_finite_raw_data",
+      "expected": "typed_failure",
+      "passed": true
+    },
+    {
+      "actual": "typed_failure",
+      "case_id": "n_less_than_p_singular_correlation",
+      "code": "model_fit_oracle.observed_correlation_not_positive_definite",
+      "expected": "typed_failure",
+      "passed": true
+    },
+    {
+      "actual": "typed_failure",
+      "case_id": "non_positive_definite_target",
+      "code": "model_fit_oracle.target_correlation_not_positive_definite",
+      "expected": "typed_failure",
+      "passed": true
+    },
+    {
+      "actual": "typed_failure",
+      "case_id": "nonrecursive_cycle",
+      "code": "model_fit_oracle.nonrecursive_model",
+      "expected": "typed_failure",
+      "passed": true
+    },
+    {
+      "actual": "typed_failure",
+      "case_id": "duplicate_structural_path",
+      "code": "model_fit_oracle.duplicate_path",
+      "expected": "typed_failure",
+      "passed": true
+    },
+    {
+      "actual": "typed_failure",
+      "case_id": "incomplete_explicit_index_plans",
+      "code": "model_fit_oracle.incomplete_index_plans",
+      "expected": "typed_failure",
+      "passed": true
+    },
+    {
+      "actual": "typed_failure",
+      "case_id": "out_of_range_sample_index",
+      "code": "model_fit_oracle.invalid_sample_indices",
+      "expected": "typed_failure",
+      "passed": true
+    },
+    {
+      "actual": 1.8474111129762605e-13,
+      "case_id": "positive_affine_extreme_scale_invariance",
+      "expected": "maximum_scalar_difference_le_1e-7",
+      "passed": true
+    },
+    {
+      "actual": 6.110667527536862e-13,
+      "case_id": "row_permutation_invariance",
+      "expected": "maximum_scalar_difference_le_1e-10",
+      "passed": true
+    },
+    {
+      "actual": "finite_result",
+      "case_id": "near_collinear_finite_or_typed_failure",
+      "expected": "finite_result_or_typed_failure",
+      "passed": true
+    },
+    {
+      "actual": {
+        "estimated": [
+          {
+            "criterion": "srmr",
+            "empirical_upper_tail_probability": null,
+            "exceed_or_equal_count": 0,
+            "failed_replicates": 2,
+            "minimum_usable_replicates": 9,
+            "not_rejected_95": null,
+            "not_rejected_99": null,
+            "original": 0.11892868879625035,
+            "replicate_max": null,
+            "replicate_min": null,
+            "requested_replicates": 10,
+            "status": "unavailable",
+            "unavailable_reason_code": "model_fit_exact.insufficient_usable_replicates",
+            "upper_95": null,
+            "upper_99": null,
+            "usable_index_digest": "63155708d76e842ed1824dcd33e7a71a664089a644f2bba16c9aa45d6070696a",
+            "usable_replicates": 8
+          },
+          {
+            "criterion": "d_uls",
+            "empirical_upper_tail_probability": null,
+            "exceed_or_equal_count": 0,
+            "failed_replicates": 2,
+            "minimum_usable_replicates": 9,
+            "not_rejected_95": null,
+            "not_rejected_99": null,
+            "original": 0.2970246933947026,
+            "replicate_max": null,
+            "replicate_min": null,
+            "requested_replicates": 10,
+            "status": "unavailable",
+            "unavailable_reason_code": "model_fit_exact.insufficient_usable_replicates",
+            "upper_95": null,
+            "upper_99": null,
+            "usable_index_digest": "63155708d76e842ed1824dcd33e7a71a664089a644f2bba16c9aa45d6070696a",
+            "usable_replicates": 8
+          },
+          {
+            "criterion": "d_g",
+            "empirical_upper_tail_probability": null,
+            "exceed_or_equal_count": 0,
+            "failed_replicates": 2,
+            "minimum_usable_replicates": 9,
+            "not_rejected_95": null,
+            "not_rejected_99": null,
+            "original": 0.9978677232420593,
+            "replicate_max": null,
+            "replicate_min": null,
+            "requested_replicates": 10,
+            "status": "unavailable",
+            "unavailable_reason_code": "model_fit_exact.insufficient_usable_replicates",
+            "upper_95": null,
+            "upper_99": null,
+            "usable_index_digest": "63155708d76e842ed1824dcd33e7a71a664089a644f2bba16c9aa45d6070696a",
+            "usable_replicates": 8
+          }
+        ],
+        "saturated": [
+          {
+            "criterion": "srmr",
+            "empirical_upper_tail_probability": null,
+            "exceed_or_equal_count": 0,
+            "failed_replicates": 2,
+            "minimum_usable_replicates": 9,
+            "not_rejected_95": null,
+            "not_rejected_99": null,
+            "original": 0.06900259498757101,
+            "replicate_max": null,
+            "replicate_min": null,
+            "requested_replicates": 10,
+            "status": "unavailable",
+            "unavailable_reason_code": "model_fit_exact.insufficient_usable_replicates",
+            "upper_95": null,
+            "upper_99": null,
+            "usable_index_digest": "63155708d76e842ed1824dcd33e7a71a664089a644f2bba16c9aa45d6070696a",
+            "usable_replicates": 8
+          },
+          {
+            "criterion": "d_uls",
+            "empirical_upper_tail_probability": null,
+            "exceed_or_equal_count": 0,
+            "failed_replicates": 2,
+            "minimum_usable_replicates": 9,
+            "not_rejected_95": null,
+            "not_rejected_99": null,
+            "original": 0.09998852041539397,
+            "replicate_max": null,
+            "replicate_min": null,
+            "requested_replicates": 10,
+            "status": "unavailable",
+            "unavailable_reason_code": "model_fit_exact.insufficient_usable_replicates",
+            "upper_95": null,
+            "upper_99": null,
+            "usable_index_digest": "63155708d76e842ed1824dcd33e7a71a664089a644f2bba16c9aa45d6070696a",
+            "usable_replicates": 8
+          },
+          {
+            "criterion": "d_g",
+            "empirical_upper_tail_probability": null,
+            "exceed_or_equal_count": 1,
+            "failed_replicates": 2,
+            "minimum_usable_replicates": 9,
+            "not_rejected_95": null,
+            "not_rejected_99": null,
+            "original": 0.8331581992048385,
+            "replicate_max": null,
+            "replicate_min": null,
+            "requested_replicates": 10,
+            "status": "unavailable",
+            "unavailable_reason_code": "model_fit_exact.insufficient_usable_replicates",
+            "upper_95": null,
+            "upper_99": null,
+            "usable_index_digest": "63155708d76e842ed1824dcd33e7a71a664089a644f2bba16c9aa45d6070696a",
+            "usable_replicates": 8
+          }
+        ]
+      },
+      "case_id": "fixed_failure_ledger_below_ninety_percent",
+      "expected": "ten_cells_two_failures_no_decision",
+      "passed": true
+    },
+    {
+      "actual": "comparison_failed",
+      "case_id": "frozen_product_scalar_tamper_detected",
+      "expected": "comparison_failed",
+      "passed": true
+    }
+  ],
+  "evidence_version": "pls_model_fit_v2_qualification_work_evidence_v1",
+  "kind": "pls_model_fit_v2_adversarial_work_v1",
+  "note": "All independent-oracle work cases pass, but this report cannot satisfy the adversarial receipt role until matching product, archive, and native executions are captured as immutable source-bound evidence.",
+  "passed_work_checks": true,
+  "qualification_role_satisfied": false,
+  "receipt_eligible": false,
+  "scenario_set_sha256": "6348da07789538581eb597d4d41d941fa71dcbe6a97081326442c68f01f88739",
+  "schema_version": 1,
+  "source": "validation/pls_model_fit_v2_qualification_evidence.py",
+  "source_sha256": "cc79fb2a25ca1d41165f7c79e6984ad26e6c47a020abc20a5e7de0e7521c9fe1"
+}

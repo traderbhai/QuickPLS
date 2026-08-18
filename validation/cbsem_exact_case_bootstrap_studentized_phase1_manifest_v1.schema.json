@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem_exact_case_bootstrap_studentized_phase1_manifest_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "status", "phase0_binding", "source_binding", "dimension_contract", "execution_policy", "acceptance_contract", "cases"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "cbsem_exact_case_bootstrap_studentized_phase1_manifest_v1" },
+    "status": { "const": "predeclared_applied_cap_evidence_product_cap_blocked_on_optimizer_dimension" },
+    "phase0_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["report_path", "report_sha256", "baseline_case_path", "baseline_case_sha256", "baseline_case_id", "baseline_replicates", "baseline_workers", "baseline_p95_elapsed_seconds", "required_status"],
+      "properties": {
+        "report_path": { "type": "string", "minLength": 1 },
+        "report_sha256": { "$ref": "#/$defs/sha256" },
+        "baseline_case_path": { "type": "string", "minLength": 1 },
+        "baseline_case_sha256": { "$ref": "#/$defs/sha256" },
+        "baseline_case_id": { "const": "availability_floor_n180_f3_b1000_w12" },
+        "baseline_replicates": { "const": 1000 },
+        "baseline_workers": { "const": 12 },
+        "baseline_p95_elapsed_seconds": { "type": "number", "exclusiveMinimum": 0 },
+        "required_status": { "const": "survivor_measurement_recorded" }
+      }
+    },
+    "source_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["data_path", "data_sha256", "recipe_path", "recipe_sha256", "rust_example"],
+      "properties": {
+        "data_path": { "type": "string", "minLength": 1 },
+        "data_sha256": { "$ref": "#/$defs/sha256" },
+        "recipe_path": { "type": "string", "minLength": 1 },
+        "recipe_sha256": { "$ref": "#/$defs/sha256" },
+        "rust_example": { "type": "string", "minLength": 1 }
+      }
+    },
+    "dimension_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n_complete_cases", "v_observed_variables", "p_free_parameter_rows", "d_optimizer_dimensions", "d_status", "product_cap_effect"],
+      "properties": {
+        "n_complete_cases": { "const": 180 },
+        "v_observed_variables": { "const": 9 },
+        "p_free_parameter_rows": { "const": 18 },
+        "d_optimizer_dimensions": { "type": "null" },
+        "d_status": { "const": "unavailable_not_exposed_by_public_exact_plan_api" },
+        "product_cap_effect": { "const": "blocked_missing_optimizer_dimension" }
+      }
+    },
+    "execution_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["probe_runs", "survivor_warmup_runs", "survivor_measured_runs", "aggregate_statistics", "append_only_result_paths", "explicit_execute_required", "runtime_thresholds_must_not_change_after_any_phase1_execution"],
+      "properties": {
+        "probe_runs": { "const": 1 },
+        "survivor_warmup_runs": { "const": 1 },
+        "survivor_measured_runs": { "const": 5 },
+        "aggregate_statistics": { "const": ["median", "p95_type7"] },
+        "append_only_result_paths": { "const": true },
+        "explicit_execute_required": { "const": true },
+        "runtime_thresholds_must_not_change_after_any_phase1_execution": { "const": true }
+      }
+    },
+    "acceptance_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime_derivation", "maximum_peak_working_set_fraction_of_physical_ram", "maximum_text_export_proxy_bytes", "maximum_project_document_proxy_bytes", "maximum_cancellation_terminal_latency_seconds", "maximum_orphan_processes", "required_failed_point_refits", "required_analytic_se_unavailable_refits", "exact_digest_across_probe_warmup_and_measured_runs", "size_scope"],
+      "properties": {
+        "runtime_derivation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["formula", "safety_factor", "baseline_p95_elapsed_seconds", "baseline_replicates", "baseline_workers"],
+          "properties": {
+            "formula": { "const": "phase0_same_n_v_p_w_p95_seconds_times_target_b_over_baseline_b_times_safety_factor" },
+            "safety_factor": { "const": 2.0 },
+            "baseline_p95_elapsed_seconds": { "type": "number", "exclusiveMinimum": 0 },
+            "baseline_replicates": { "const": 1000 },
+            "baseline_workers": { "const": 12 }
+          }
+        },
+        "maximum_peak_working_set_fraction_of_physical_ram": { "const": 0.5 },
+        "maximum_text_export_proxy_bytes": { "const": 134217728 },
+        "maximum_project_document_proxy_bytes": { "const": 268435456 },
+        "maximum_cancellation_terminal_latency_seconds": { "const": 1.0 },
+        "maximum_orphan_processes": { "const": 0 },
+        "required_failed_point_refits": { "const": 0 },
+        "required_analytic_se_unavailable_refits": { "const": 0 },
+        "exact_digest_across_probe_warmup_and_measured_runs": { "const": true },
+        "size_scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "order", "mode", "rows", "factors", "replicates", "workers", "cancel_after", "maximum_p95_elapsed_seconds", "depends_on", "survivor_policy"],
+      "properties": {
+        "case_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "order": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "mode": { "enum": ["full", "cancellation"] },
+        "rows": { "const": 180 },
+        "factors": { "const": 3 },
+        "replicates": { "enum": [5000, 10000] },
+        "workers": { "const": 12 },
+        "cancel_after": { "type": ["integer", "null"], "minimum": 1 },
+        "maximum_p95_elapsed_seconds": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "depends_on": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "survivor_policy": { "enum": ["one_probe_then_one_warmup_five_measured_if_probe_survives", "single_typed_cancellation_probe_only"] }
+      }
+    }
+  }
+}

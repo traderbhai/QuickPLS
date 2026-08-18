@@ -1,0 +1,172 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "fresh_boundary_gate": {
+      "passed": true
+    },
+    "fresh_independent_and_simulation_gate": {
+      "passed": true
+    },
+    "method_contract_is_current": {
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "qpls-cli"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.80s\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "--version"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "qpls 2.46.0\n"
+    },
+    {
+      "command": [
+        "C:\\Python313\\python.exe",
+        "validation/cca_release_reference.py"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.91s\n",
+      "stdout_tail": "wrote D:\\QuickPLS\\validation\\results\\method_factory\\cca_residuals_v1\\independent_reference.json | passed=True | max_delta=3.59e-14\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-estimation",
+        "cca_non_saturated_residuals",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.02s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_estimation-964bbb5bd1846697.exe)\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::cca_non_saturated_residuals_are_finite_coherent_and_deterministic ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 162 filtered out; finished in 0.02s\n\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-core",
+        "cca_bounded_scope",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.90s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_core-4c9e2694292d11bc.exe)\n",
+      "stdout_tail": "\nrunning 2 tests\ntest validation::tests::cca_bounded_scope_rejects_unsupported_settings_and_model_shapes ... ok\ntest validation::tests::cca_bounded_scope_accepts_standardized_reflective_path_and_factor_models ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 172 filtered out; finished in 0.00s\n\n"
+    }
+  ],
+  "feature_id": "qpls3.assessment.cca_residuals",
+  "generated_at_utc": "2026-08-17T22:38:21.070996Z",
+  "method_version": "cca_composite_residual_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+      "size": 227427
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+      "size": 100140
+    },
+    {
+      "path": "docs/methods/CCA_V1.md",
+      "sha256": "ce29ae5b8112e167f9b6fd9e3354930cb46558a181ff17d64b47a1f73eff1443",
+      "size": 505
+    },
+    {
+      "path": "docs/methods/PLS_CCA_V1.md",
+      "sha256": "0a74f150077757659f4b171d2519d065bdd517d043b3dff93903cb72b43ac432",
+      "size": 5409
+    },
+    {
+      "path": "validation/cca_reference.py",
+      "sha256": "bba5d7610a72f23e8baecd2680269a5ef395de9f7212707d76c34a75831dd359",
+      "size": 16713
+    },
+    {
+      "path": "validation/cca_release_boundary_gate.py",
+      "sha256": "21af9e0751738b5c19f6dec4ac3b48aff123b6ba001db73c16ee9c4e8f07d33e",
+      "size": 156
+    },
+    {
+      "path": "validation/cca_release_reference.py",
+      "sha256": "c955be056f98b925b18ccb187b1f2bf1acf1190e6e7416935a2961de6a32c292",
+      "size": 1316
+    },
+    {
+      "path": "validation/cca_release_simulation.py",
+      "sha256": "fc921b65b82eed584063a5e0c07208e76fd30d9b87ca978f60eed9d4da8662ca",
+      "size": 158
+    },
+    {
+      "path": "validation/established_method_factory_common.py",
+      "sha256": "cbc4eb8e5d7ab329d3a5c1eaae910c43cdac39f6c11fbd26eb774cc65e95c090",
+      "size": 20368
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cca_residuals_v1.manifest.json",
+      "sha256": "16aeffc4136d16fdb0816f7a45eec9cb7a9349a6021761ea3b638476a8c89ff5",
+      "size": 13621
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/results/method_factory/cca_residuals_v1/independent_reference.json",
+      "sha256": "6c6a71654a6d34ca88414e648fd23b00b1fcc1aba5c109f0868ff6db886f0e5c",
+      "size": 4819
+    },
+    {
+      "path": "validation/test_established_method_factory.py",
+      "sha256": "a16157170cc23ffb0fe8a112a2b28b25b9f6f1518a443c6265c9fe993d70ee52",
+      "size": 2917
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

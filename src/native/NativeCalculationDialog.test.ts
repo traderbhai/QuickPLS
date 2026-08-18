@@ -4,15 +4,28 @@ import { describe, expect, it, vi } from "vitest";
 import type { Edge, Node } from "@xyflow/react";
 import type { AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, RunMonitorState } from "../types";
 import {
+  capabilityAvailabilityV2,
+  EXPERIMENTAL_LABS_WARNING,
+} from "../domain/capabilitySurfaceV2";
+import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
+import type { MethodCapabilityRegistryReaderV2 } from "../domain/methodCapabilityRegistryV2";
+import {
   default as NativeCalculationDialog,
   NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS,
+  nativeCalculationCatalogEntriesV2,
+  nativeExperimentalWarningSessionKeys,
   nativeRegressionTypeSettingsPatch,
   nativeNumericCaseWeightColumns,
+  nativeVisibleCalculationCatalogV2,
   retryNativeProcessProfileState,
   shouldStartNativeProcessProfile,
   scrollNativeMethodOptionIntoView,
 } from "./NativeCalculationDialog";
-import type { NativeWorkbenchAnalysisKind } from "./nativeAnalysisCatalog";
+import {
+  NATIVE_ANALYSIS_CATALOG,
+  NATIVE_ESTABLISHED_WORKING_ANALYSIS_KINDS_V1,
+  type NativeWorkbenchAnalysisKind,
+} from "./nativeAnalysisCatalog";
 
 function satisfiesNumberInputConstraints(
   value: number,
@@ -54,10 +67,39 @@ const nodes: Array<Node<ConstructData>> = [
 ];
 const edges: Edge[] = [{ id: "x-y", source: "x", target: "y" }];
 
+/**
+ * Presentation-only tests exercise settings panels against an explicit Labs
+ * fixture. Product-surface tests also prove that the established implemented
+ * catalogue remains usable in Labs even when Registry qualification is lower.
+ */
+const executableLabsRegistry: MethodCapabilityRegistryReaderV2 = {
+  quickPlsCell(cellId) {
+    return capabilityRegistryV2.quickPlsCell(cellId).map((match) => ({
+      ...match,
+      cell: {
+        ...match.cell,
+        coverage_state: match.cell.coverage_state === "intentionally_excluded" ? "intentionally_excluded" : "partial",
+        evidence_state: match.cell.coverage_state === "intentionally_excluded" ? "absent" : "engine_only",
+        surface: match.cell.coverage_state === "intentionally_excluded" ? "legacy" : "labs",
+      },
+    }));
+  },
+  availability(capabilityId, cellId, experimentalLabsEnabled) {
+    const match = this.quickPlsCell(cellId).find((candidate) => candidate.row.capability_id === capabilityId);
+    if (!match) throw new Error(`Missing test capability cell ${capabilityId}::${cellId}`);
+    return capabilityAvailabilityV2(match.cell, experimentalLabsEnabled);
+  },
+};
+
 function renderReadyDialog(
   kind: NativeWorkbenchAnalysisKind,
   methodSettings: AnalysisUiSettings,
   analysisNodes: Array<Node<ConstructData>> = nodes,
+  experimentalLabsEnabled = true,
+  experimentalWarningShownSessionKeys: ReadonlySet<string> = new Set(),
+  openMethodDetails?: () => void,
+  registryUnavailableReason?: string | null,
+  capabilityRegistry: MethodCapabilityRegistryReaderV2 = executableLabsRegistry,
 ): string {
   return renderToStaticMarkup(createElement(NativeCalculationDialog, {
     kind,
@@ -70,10 +112,32 @@ function renderReadyDialog(
     analysisColumns: [],
     nodes: analysisNodes,
     edges,
+    experimentalLabsEnabled,
+    experimentalWarningShownSessionKeys,
+    openMethodDetails,
+    registryUnavailableReason,
+    capabilityRegistry,
     start: () => undefined,
     cancel: () => undefined,
     close: () => undefined,
   }));
+}
+
+function renderWithLiveRegistry(
+  kind: NativeWorkbenchAnalysisKind,
+  methodSettings: AnalysisUiSettings,
+  analysisNodes: Array<Node<ConstructData>> = nodes,
+): string {
+  return renderReadyDialog(
+    kind,
+    methodSettings,
+    analysisNodes,
+    true,
+    new Set(),
+    undefined,
+    undefined,
+    capabilityRegistryV2,
+  );
 }
 
 const metadata = (name: string, columnType: ColumnMetadata["column_type"]): ColumnMetadata => ({
@@ -88,6 +152,12 @@ const metadata = (name: string, columnType: ColumnMetadata["column_type"]): Colu
 });
 
 describe("NativeCalculationDialog contracts", () => {
+  it("offers Method Details beside the selected setup when the desktop host provides it", () => {
+    const markup = renderReadyDialog("pls_algorithm", settings, nodes, true, new Set(), vi.fn());
+    expect(markup).toContain('class="nd-method-details-link"');
+    expect(markup).toContain(">Method Details</button>");
+  });
+
   it("preserves seeded predictors across fast non-PROCESS type switches and clears them only for PROCESS", () => {
     const autoSeeded = {
       ...settings,
@@ -154,6 +224,244 @@ describe("NativeCalculationDialog contracts", () => {
     });
   });
 
+  it("keeps the established methods plus the executable post-hoc add-on available while exposing bounded methods in Standard", () => {
+    const standardEntries = nativeCalculationCatalogEntriesV2(settings, false);
+    const standardVisible = nativeVisibleCalculationCatalogV2(settings, false);
+    const labsVisible = nativeVisibleCalculationCatalogV2(settings, true);
+    const standardKinds = ["pls_algorithm", "plsc", "wpls", "gsca", "cca", "cta_pls", "ipma", "cbsem", "pls_bootstrap", "plsc_bootstrap", "pls_permutation", "pls_posthoc_technical_minimum_sample_size", "pls_sample_size_power", "mga", "predict", "nca", "pca", "regression"];
+    const expectedLabsKinds = NATIVE_ANALYSIS_CATALOG
+      .map((item) => item.kind)
+      .filter((kind) => standardKinds.includes(kind)
+        || NATIVE_ESTABLISHED_WORKING_ANALYSIS_KINDS_V1.includes(kind as typeof NATIVE_ESTABLISHED_WORKING_ANALYSIS_KINDS_V1[number]));
+
+    expect(standardEntries).toHaveLength(NATIVE_ANALYSIS_CATALOG.length);
+    expect(standardVisible.map((entry) => entry.item.kind)).toEqual(standardKinds);
+    expect(labsVisible.map((entry) => entry.item.kind)).toEqual(expectedLabsKinds);
+    expect(labsVisible).toHaveLength(18);
+    expect(standardEntries.filter((entry) => standardKinds.includes(entry.item.kind))).toHaveLength(standardKinds.length);
+    expect(standardEntries.filter((entry) => !standardKinds.includes(entry.item.kind)).every((entry) => (
+      !entry.availability.selectable && entry.availability.tier === "hidden"
+    ))).toBe(true);
+  });
+
+  it("shows the scoped Standard post-hoc workflow with only its contracted bootstrap plan", () => {
+    const markup = renderWithLiveRegistry("pls_posthoc_technical_minimum_sample_size", settings);
+
+    expect(markup).toContain("Post-hoc Technical Minimum Sample Size");
+    expect(markup).not.toContain('<strong>Post-hoc Technical Minimum Sample Size</strong><span class="nd-form-status nd-inline-warning" data-method-chip="experimental">Experimental</span>');
+    expect(markup).toContain("Inference contract");
+    expect(markup).toContain('id="nd-calculation-bootstrap-samples"');
+    expect(markup).not.toContain('id="nd-calculation-studentized"');
+    expect(markup).toContain("two-sided normal-reference probabilities at alpha 0.05");
+  });
+
+  it("shows point-estimate PLSc as Supported while keeping its inference add-ons separate", () => {
+    const markup = renderWithLiveRegistry("plsc", { ...settings, method: "plsc" });
+    const optionStart = markup.indexOf('id="nd-calculation-method-plsc"');
+    const selectedOption = markup.slice(optionStart, markup.indexOf("</button>", optionStart));
+
+    expect(markup).toMatch(/id="nd-calculation-method-plsc"[^>]*aria-selected="true"/);
+    expect(markup).toContain("Consistent PLS");
+    expect(selectedOption).not.toContain('data-method-chip="experimental"');
+    expect(selectedOption).not.toContain('data-method-chip="limited-scope"');
+    expect(markup).not.toContain('data-experimental-warning');
+    expect(markup).not.toContain('data-limited-scope-warning');
+  });
+
+  it("shows the bounded full-refit PLSc bootstrap workflow as Supported", () => {
+    const markup = renderWithLiveRegistry("plsc_bootstrap", {
+      ...settings,
+      method: "plsc",
+      bootstrapSamples: 1_000,
+      permutationSamples: 0,
+    });
+    const optionStart = markup.indexOf('id="nd-calculation-method-plsc_bootstrap"');
+    const selectedOption = markup.slice(optionStart, markup.indexOf("</button>", optionStart));
+
+    expect(markup).toMatch(/id="nd-calculation-method-plsc_bootstrap"[^>]*aria-selected="true"/);
+    expect(selectedOption).not.toContain('data-method-chip="experimental"');
+    expect(selectedOption).not.toContain('data-method-chip="limited-scope"');
+    expect(markup).toContain("full-PLSc delete-one refit");
+    expect(markup).not.toContain('data-experimental-warning');
+  });
+
+  it("routes an archived schema-3 CB-SEM bootstrap setting to the exact workspace", () => {
+    const markup = renderReadyDialog("cbsem", {
+      ...settings,
+      method: "cbsem",
+      cbsemModelType: "sem",
+      cbsemBootstrapSamples: 500,
+      confidenceLevel: 0.95,
+    });
+
+    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
+    expect(markup).toContain("Run percentile Type-7, analytic studentized Type-7, or BCa Type-7 case bootstrap from the Exact CB-SEM model tab");
+    expect(markup).toContain("historical percentile-only schema-3 recipe");
+    expect(markup).toContain("Clear archived bootstrap setting");
+    expect(markup).not.toContain('id="nd-calculation-cbsem-bootstrap-samples"');
+  });
+
+  it("does not route analytic-studentized CFA through schema-3 Calculate", () => {
+    const markup = renderReadyDialog("cbsem", {
+      ...settings,
+      method: "cbsem",
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 1_000,
+      cbsemBootstrapInterval: "analytic_studentized_type7",
+      cbsemBootstrapTestTail: "two_sided",
+      workers: 12,
+      confidenceLevel: 0.95,
+    });
+
+    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
+    expect(markup).not.toContain('id="nd-calculation-cbsem-bootstrap-interval"');
+    expect(markup).not.toContain("Analytic studentized Type 7 (Labs)");
+    expect(markup).toMatch(/id="nd-calculation-workers"[^>]*max="12"[^>]*value="12"/);
+  });
+
+  it("does not route BCa CFA through schema-3 Calculate", () => {
+    const markup = renderReadyDialog("cbsem", {
+      ...settings,
+      method: "cbsem",
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 1_000,
+      cbsemBootstrapInterval: "bca_type7",
+      cbsemBootstrapTestTail: "two_sided",
+      workers: 12,
+      confidenceLevel: 0.95,
+    });
+
+    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
+    expect(markup).not.toContain('aria-describedby="nd-calculation-cbsem-bootstrap-interval-note"');
+    expect(markup).not.toContain("BCa Type 7 (Labs, complete-only)");
+    expect(markup).toMatch(/id="nd-calculation-workers"[^>]*max="12"[^>]*value="12"/);
+  });
+
+  it("does not expose exact-CFA test tails in schema-3 Calculate", () => {
+    const markup = renderReadyDialog("cbsem", {
+      ...settings,
+      method: "cbsem",
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 1_000,
+      cbsemBootstrapTestTail: "one_sided_greater",
+      confidenceLevel: 0.95,
+    });
+
+    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
+    expect(markup).not.toContain('id="nd-calculation-cbsem-bootstrap-test-tail"');
+    expect(markup).not.toContain("One-sided: parameter is greater than zero");
+  });
+
+  it("keeps point CB-SEM and the exact-CFA bootstrap route Standard without exposing schema-3 controls", () => {
+    const pointEstimator = nativeCalculationCatalogEntriesV2({
+      ...settings,
+      cbsemBootstrapSamples: 0,
+    }, true).find((entry) => entry.item.kind === "cbsem");
+    const combined = nativeCalculationCatalogEntriesV2({
+      ...settings,
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 1_000,
+    }, true).find((entry) => entry.item.kind === "cbsem");
+
+    expect(pointEstimator?.availability).toMatchObject({
+      tier: "standard",
+      selectable: true,
+      blocked_cell_ids: [],
+      internal_reason: "all_required_cells_standard",
+    });
+    expect(combined?.availability).toMatchObject({
+      tier: "standard",
+      selectable: true,
+      blocked_cell_ids: [],
+      internal_reason: "all_required_cells_standard",
+    });
+
+    const markup = renderWithLiveRegistry("cbsem", {
+      ...settings,
+      method: "cbsem",
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 1_000,
+    });
+    expect(markup).toContain('id="nd-calculation-method-cbsem"');
+    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
+    expect(markup).not.toContain('id="nd-calculation-cbsem-bootstrap-samples"');
+    const pointMarkup = renderWithLiveRegistry("cbsem", {
+      ...settings,
+      method: "cbsem",
+      cbsemModelType: "sem",
+      cbsemBootstrapSamples: 0,
+    });
+    const pointOptionStart = pointMarkup.indexOf('id="nd-calculation-method-cbsem"');
+    const pointOption = pointMarkup.slice(pointOptionStart, pointMarkup.indexOf("</button>", pointOptionStart));
+    expect(pointOption).not.toContain('data-method-chip="experimental"');
+    expect(pointOption).not.toContain('data-method-chip="limited-scope"');
+    expect(pointMarkup).not.toContain('data-experimental-warning');
+    expect(pointMarkup).not.toContain('data-limited-scope-warning');
+    expect(markup).not.toContain('data-method-chip="limited-scope"');
+    expect(markup).not.toContain('data-limited-scope-warning="true"');
+    expect(markup).not.toContain("Calculation method unavailable");
+    expect(markup).toMatch(/class="primary" type="submit" disabled=""/);
+    expect(markup).toContain("Clear archived bootstrap setting");
+  });
+
+  it("shows the exact Experimental warning once per capability cell and application session", () => {
+    const entries = nativeCalculationCatalogEntriesV2(settings, true, executableLabsRegistry);
+    const algorithm = entries.find((entry) => entry.item.kind === "pls_algorithm");
+    const bootstrap = entries.find((entry) => entry.item.kind === "pls_bootstrap");
+    const pca = entries.find((entry) => entry.item.kind === "pca");
+    const shown = new Set(nativeExperimentalWarningSessionKeys(algorithm, true, new Set()));
+    const bootstrapPending = nativeExperimentalWarningSessionKeys(bootstrap, true, shown);
+    const pcaPending = nativeExperimentalWarningSessionKeys(pca, true, shown);
+
+    expect([...shown]).toHaveLength(1);
+    expect([...shown][0]).toMatch(/^smartpls\.pls_algorithm::qpls3\.pls\.algorithm::/);
+    expect(nativeExperimentalWarningSessionKeys(algorithm, true, shown)).toEqual([]);
+    expect(bootstrapPending).toHaveLength(1);
+    expect(bootstrapPending[0]).toMatch(/^smartpls\.pls_bootstrapping::qpls3\.inference\.bootstrap::/);
+    expect(pcaPending).toHaveLength(2);
+    expect(new Set(pcaPending).size).toBe(2);
+    expect(pcaPending.every((key) => key.includes("::qpls3.standalone.pca::"))).toBe(true);
+
+    const firstMarkup = renderReadyDialog("pls_algorithm", settings);
+    expect(firstMarkup.split(EXPERIMENTAL_LABS_WARNING)).toHaveLength(2);
+    expect(firstMarkup).toContain('class="nd-form-status nd-inline-warning" data-method-chip="experimental">Experimental</span>');
+
+    const repeatedMarkup = renderReadyDialog("pls_algorithm", settings, nodes, true, shown);
+    expect(repeatedMarkup).not.toContain(EXPERIMENTAL_LABS_WARNING);
+    expect(repeatedMarkup).toContain('class="nd-form-status nd-inline-warning" data-method-chip="experimental">Experimental</span>');
+  });
+
+  it("renders an accessible requirements state and no hidden settings when Standard has no methods", () => {
+    const markup = renderReadyDialog("pls_algorithm", settings, nodes, false);
+
+    expect(markup).toContain("0 methods");
+    expect(markup).toContain("No Standard methods are available yet");
+    expect(markup).toContain('role="status" aria-live="polite"');
+    expect(markup).toContain("Calculation method unavailable");
+    expect(markup).not.toContain('id="nd-calculation-method-pls_algorithm"');
+    expect(markup).not.toContain('id="nd-calculation-weighting"');
+    expect(markup).not.toContain("PLS-SEM Algorithm");
+    expect(markup).toMatch(/class="primary" type="submit" disabled=""/);
+  });
+
+  it("fails closed when the installed registry cannot be verified", () => {
+    const markup = renderReadyDialog(
+      "pls_algorithm",
+      settings,
+      nodes,
+      true,
+      new Set(),
+      undefined,
+      "QuickPLS could not verify the installed calculation catalogue.",
+    );
+
+    expect(markup).toContain("Calculation catalogue unavailable");
+    expect(markup).toContain("QuickPLS could not verify the installed calculation catalogue.");
+    expect(markup).toContain("0 methods");
+    expect(markup).not.toContain('id="nd-calculation-method-pls_algorithm"');
+    expect(markup).toMatch(/class="primary" type="submit" disabled=""/);
+  });
+
   it("admits every backend-valid integer resample count through the HTML number inputs", () => {
     const bootstrap = NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS.bootstrap;
     const permutation = NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS.permutation;
@@ -167,17 +475,74 @@ describe("NativeCalculationDialog contracts", () => {
     expect(satisfiesNumberInputConstraints(10_001, bootstrap)).toBe(false);
   });
 
-  it("renders formerly step-mismatched valid counts with an enabled submit action", () => {
+  it("renders the scoped Standard bootstrap and structural-randomization workflows", () => {
     const bootstrap = renderReadyDialog("pls_bootstrap", { ...settings, bootstrapSamples: 999 });
     expect(bootstrap).toMatch(/id="nd-calculation-bootstrap-samples"[^>]*step="1"[^>]*value="999"/);
     expect(bootstrap).toMatch(/class="primary" type="submit"/);
 
-    const permutation = renderReadyDialog("pls_permutation", { ...settings, permutationSamples: 4_321 });
-    expect(permutation).toMatch(/id="nd-calculation-permutations"[^>]*step="1"[^>]*value="4321"/);
-    expect(permutation).toContain("Candidate scope");
-    expect(permutation).toContain("fixed original PLS construct scores");
-    expect(permutation).toContain("no multiplicity adjustment");
+    const permutation = renderWithLiveRegistry("pls_permutation", { ...settings, permutationSamples: 4_321 });
+    expect(permutation).toContain('id="nd-calculation-method-pls_permutation"');
+    expect(permutation).toMatch(/id="nd-calculation-permutations"[^>]*value="4321"/);
+    const permutationOptionStart = permutation.indexOf('id="nd-calculation-method-pls_permutation"');
+    const permutationOption = permutation.slice(permutationOptionStart, permutation.indexOf("</button>", permutationOptionStart));
+    expect(permutationOption).not.toContain('data-method-chip="experimental"');
+    expect(permutationOption).not.toContain('data-method-chip="limited-scope"');
+    expect(permutation).not.toContain('data-experimental-warning="true"');
+    expect(permutation).not.toContain('data-limited-scope-warning="true"');
+    expect(permutation).not.toContain("Calculation method unavailable");
     expect(permutation).toMatch(/class="primary" type="submit"/);
+    expect(permutation).not.toMatch(/class="primary" type="submit" disabled=""/);
+  });
+
+  it("renders the bounded prospective power v2 workflow as scoped Standard", () => {
+    const powerNodes: Array<Node<ConstructData>> = [
+      { id: "x", position: { x: 0, y: 0 }, data: { label: "Capability", shortName: "CAP", mode: "reflective", indicators: ["x1", "x2", "x3"] } },
+      { id: "y", position: { x: 250, y: 0 }, data: { label: "Retention", shortName: "RET", mode: "reflective", indicators: ["y1", "y2", "y3"] } },
+    ];
+    const markup = renderWithLiveRegistry("pls_sample_size_power", {
+      ...settings,
+      method: "pls_sample_size_power",
+      weightingScheme: "path",
+      preprocessing: "standardized",
+      tolerance: 1e-7,
+      maxIterations: 3_000,
+      workers: 4,
+      plsPowerScenarioIdentity: "prospective_two_construct_path",
+      plsPowerPredictorConstruct: "x",
+      plsPowerOutcomeConstruct: "y",
+      plsPowerPredictorLoadings: "0.8,0.8,0.8",
+      plsPowerOutcomeLoadings: "0.8,0.8,0.8",
+      plsPowerPopulationPath: 0.30,
+      plsPowerSampleSizeGrid: "50,100,150",
+      plsPowerAlpha: 0.05,
+      plsPowerTargetPower: 0.80,
+      plsPowerMonteCarloReplicates: 250,
+      plsPowerBootstrapReplicates: 199,
+    }, powerNodes);
+
+    expect(markup).toContain('id="nd-calculation-method-pls_sample_size_power"');
+    for (const id of [
+      "nd-calculation-pls-power-predictor-loadings",
+      "nd-calculation-pls-power-outcome-loadings",
+      "nd-calculation-pls-power-path",
+      "nd-calculation-pls-power-grid",
+      "nd-calculation-pls-power-alpha",
+      "nd-calculation-pls-power-target",
+      "nd-calculation-pls-power-confidence",
+      "nd-calculation-pls-power-mc",
+      "nd-calculation-pls-power-bootstrap",
+      "nd-calculation-seed",
+      "nd-calculation-pls-power-workers",
+      "nd-calculation-pls-power-workload",
+    ]) expect(markup).toContain(`id="${id}"`);
+    expect(markup).toContain("Prospective Monte Carlo power");
+    expect(markup).not.toContain("Calculation method unavailable");
+    expect(markup).not.toContain('data-method-chip="experimental"');
+    expect(markup).not.toContain('data-method-chip="limited-scope"');
+    expect(markup).not.toContain('data-experimental-warning="true"');
+    expect(markup).not.toContain('data-limited-scope-warning="true"');
+    expect(markup).toMatch(/class="primary" type="submit"/);
+    expect(markup).not.toMatch(/class="primary" type="submit" disabled=""/);
   });
 
   it("offers declared numeric variables and safely inferred resident numeric variables for WPLS", () => {
@@ -200,8 +565,8 @@ describe("NativeCalculationDialog contracts", () => {
     expect(nativeNumericCaseWeightColumns(dataset)).toEqual(["declared", "inferred"]);
   });
 
-  it("renders the bounded joint MICOM and two-group permutation scope", () => {
-    const markup = renderReadyDialog("mga", {
+  it("shows MICOM and permutation MGA as Supported while enforcing the bounded v4 group setup", () => {
+    const markup = renderWithLiveRegistry("mga", {
       ...settings,
       method: "mga",
       groupColumn: "group",
@@ -212,16 +577,18 @@ describe("NativeCalculationDialog contracts", () => {
       micomConfiguralConfirmed: false,
     });
 
-    expect(markup).toContain("MICOM and Two-Group Permutation MGA");
+    expect(markup).toContain('id="nd-calculation-method-mga"');
     expect(markup).toContain('id="nd-calculation-group-column"');
-    expect(markup).toMatch(/id="nd-calculation-group-permutations"[^>]*min="5000"[^>]*max="10000"[^>]*step="1"[^>]*value="5000"/);
-    expect(markup).toContain('id="nd-calculation-micom-confidence"');
+    expect(markup).toContain('id="nd-calculation-group-permutations"');
     expect(markup).toContain('id="nd-calculation-micom-configural"');
-    expect(markup).toContain("Two-tailed; Group A");
-    expect(markup).toContain("Confirm MICOM Step 1");
-    expect(markup).toContain("Step 2 composition and Step 3 pooled-score means and variances");
-    expect(markup).not.toContain("Parallel workers");
-    expect(markup).toContain("configural invariance");
+    // The selected MGA option has no availability chip. Other catalogue
+    // options may independently remain Experimental or Limited scope.
+    expect(markup).toMatch(/id="nd-calculation-method-mga"[\s\S]*?<strong>MICOM and Two-Group Permutation MGA<\/strong><small/);
+    expect(markup).not.toContain('data-limited-scope-warning="true"');
+    expect(markup).not.toContain('data-experimental-warning="true"');
+    expect(markup).not.toContain("Calculation method unavailable");
+    expect(markup).toContain("Choose a grouping variable to load complete-dataset counts.");
+    expect(markup).toMatch(/class="primary" type="submit" disabled=""/);
   });
 
   it("renders an accessible fixed CCA residual-diagnostics setup without ignored inference controls", () => {
@@ -254,12 +621,14 @@ describe("NativeCalculationDialog contracts", () => {
     const ctaNodes = nodes.map((node) => node.id === "x"
       ? { ...node, data: { ...node.data, mode: "formative" as const, indicators: ["x1", "x2", "x3", "x4"] } }
       : node);
-    const markup = renderReadyDialog("cta_pls", {
+    const markup = renderWithLiveRegistry("cta_pls", {
       ...settings,
       method: "cta_pls",
       weightingScheme: "path",
       preprocessing: "standardized",
     }, ctaNodes);
+    const optionStart = markup.indexOf('id="nd-calculation-method-cta_pls"');
+    const selectedOption = markup.slice(optionStart, markup.indexOf("</button>", optionStart));
     expect(markup).toMatch(/id="nd-calculation-method-cta_pls"[^>]*role="option"[^>]*aria-selected="true"/);
     expect(markup).toContain('id="nd-calculation-cta-pls-scope"');
     expect(markup).toContain("Capability: 4 indicators, 3 tetrads");
@@ -267,16 +636,29 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain("Start tetrad diagnostics");
     expect(markup).not.toContain('id="nd-calculation-bootstrap-samples"');
     expect(markup).not.toContain('id="nd-calculation-permutations"');
+    expect(selectedOption).not.toContain('data-method-chip="experimental"');
+    expect(selectedOption).not.toContain('data-method-chip="limited-scope"');
+    expect(markup).not.toContain('data-experimental-warning="true"');
+    expect(markup).not.toContain('data-limited-scope-warning="true"');
   });
 
   it("renders one ID-backed endogenous IPMA target with fixed truthful settings", () => {
-    const markup = renderReadyDialog("ipma", {
-      ...settings,
-      method: "ipma",
-      weightingScheme: "path",
-      preprocessing: "standardized",
-      ipmaTargets: "y",
-    });
+    const markup = renderReadyDialog(
+      "ipma",
+      {
+        ...settings,
+        method: "ipma",
+        weightingScheme: "path",
+        preprocessing: "standardized",
+        ipmaTargets: "y",
+      },
+      nodes,
+      false,
+      new Set(),
+      undefined,
+      undefined,
+      capabilityRegistryV2,
+    );
 
     expect(markup).toMatch(/id="nd-calculation-method-ipma"[^>]*role="option"[^>]*aria-selected="true"/);
     expect(markup).toContain("Importance-Performance Map Analysis");
@@ -295,10 +677,15 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).not.toContain('id="nd-calculation-confidence"');
     expect(markup).not.toContain('id="nd-calculation-workers"');
     expect(markup).not.toContain("Case-weight variable");
+    expect(markup).not.toContain('data-method-chip="limited-scope"');
+    expect(markup).not.toContain('data-limited-scope-warning');
+    expect(markup).not.toContain('data-experimental-warning');
   });
 
   it("renders the fixed indicator-level PLSpredict / CVPAT contract without irrelevant controls", () => {
-    const markup = renderReadyDialog("predict", { ...settings, method: "predict" });
+    const markup = renderWithLiveRegistry("predict", { ...settings, method: "predict" });
+    const predictOptionStart = markup.indexOf('id="nd-calculation-method-predict"');
+    const predictOption = markup.slice(predictOptionStart, markup.indexOf("</button>", predictOptionStart));
 
     expect(markup).toMatch(/id="nd-calculation-method-predict"[^>]*aria-selected="true"/);
     expect(markup).toContain("PLSpredict / CVPAT");
@@ -311,6 +698,10 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain('id="nd-calculation-seed"');
     expect(markup).not.toContain('id="nd-calculation-confidence"');
     expect(markup).not.toContain('id="nd-calculation-workers"');
+    expect(predictOption).not.toContain('data-method-chip="experimental"');
+    expect(predictOption).not.toContain('data-method-chip="limited-scope"');
+    expect(markup).not.toContain('data-experimental-warning');
+    expect(markup).not.toContain('data-limited-scope-warning');
   });
 
   it("renders a bounded observed-variable NCA setup without SEM controls or claims", () => {
@@ -330,6 +721,8 @@ describe("NativeCalculationDialog contracts", () => {
     };
     const markup = renderToStaticMarkup(createElement(NativeCalculationDialog, {
       kind: "nca",
+      experimentalLabsEnabled: true,
+      capabilityRegistry: executableLabsRegistry,
       setKind: () => undefined,
       settings: {
         ...settings,
@@ -367,6 +760,18 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).not.toContain('id="nd-calculation-tolerance"');
     expect(markup).not.toContain('id="nd-calculation-workers"');
     expect(markup).not.toContain("Endogenous target");
+
+    const supportedMarkup = renderWithLiveRegistry("nca", {
+      ...settings,
+      method: "nca",
+      ncaX: "condition",
+      ncaY: "outcome",
+      ncaCeiling: "both",
+      ncaPermutationSamples: 999,
+    });
+    expect(supportedMarkup).toMatch(/id="nd-calculation-method-nca"[\s\S]*?<strong>Necessary Condition Analysis<\/strong><small/);
+    expect(supportedMarkup).not.toContain('data-limited-scope-warning="true"');
+    expect(supportedMarkup).not.toContain('data-experimental-warning="true"');
   });
 
   it("renders the bounded single-group CB-SEM/CFA ML setup without unsupported controls", () => {
@@ -413,12 +818,21 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain('id="nd-calculation-gsca-estimator"');
     expect(markup).toContain('id="nd-calculation-gsca-scope"');
     expect(markup).toContain("Joint global least-squares alternating least squares");
+    expect(markup).toContain("GSCA bootstrapping, or other inference");
     expect(markup).toContain("Start GSCA");
     expect(markup).not.toContain('id="nd-calculation-weighting"');
     expect(markup).not.toContain('id="nd-calculation-preprocessing"');
     expect(markup).not.toContain('id="nd-calculation-max-iterations"');
     expect(markup).not.toContain('id="nd-calculation-tolerance"');
     expect(markup).not.toContain('id="nd-calculation-seed"');
+
+    const supportedMarkup = renderWithLiveRegistry("gsca", {
+      ...settings,
+      method: "gsca",
+    });
+    expect(supportedMarkup).toMatch(/id="nd-calculation-method-gsca"[\s\S]*?<strong>GSCA<\/strong><small/);
+    expect(supportedMarkup).not.toContain('data-limited-scope-warning="true"');
+    expect(supportedMarkup).not.toContain('data-experimental-warning="true"');
   });
 
   it("renders model-free PCA variable and retention controls with fixed scientific scope", () => {
@@ -438,6 +852,8 @@ describe("NativeCalculationDialog contracts", () => {
     };
     const markup = renderToStaticMarkup(createElement(NativeCalculationDialog, {
       kind: "pca",
+      experimentalLabsEnabled: true,
+      capabilityRegistry: executableLabsRegistry,
       setKind: () => undefined,
       settings: {
         ...settings,
@@ -465,6 +881,7 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toMatch(/id="nd-calculation-pca-threshold"[^>]*min="1"[^>]*max="99.9"[^>]*step="0.1"[^>]*value="80"/);
     expect(markup).toContain("Correlation matrix (fixed)");
     expect(markup).toContain("Standardized numeric values (fixed)");
+    expect(markup).toContain("<span>Validated scope</span>");
     expect(markup).toContain("deterministic component orientation");
     expect(markup).toContain("Start principal component analysis");
     expect(markup).not.toContain('id="nd-calculation-seed"');
@@ -489,6 +906,8 @@ describe("NativeCalculationDialog contracts", () => {
     };
     const markup = renderToStaticMarkup(createElement(NativeCalculationDialog, {
       kind: "regression",
+      experimentalLabsEnabled: true,
+      capabilityRegistry: executableLabsRegistry,
       setKind: () => undefined,
       settings: {
         ...settings,
@@ -519,6 +938,7 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain("Predictors (1 selected)");
     expect(markup).toContain("Controls (1 selected, optional)");
     expect(markup).toContain("HC3 robust SE; two-sided 95% CI (fixed)");
+    expect(markup).toContain("<span>Validated scope</span>");
     expect(markup).toContain("Raw numeric ordinary least squares with an intercept");
     expect(markup).toContain("Start OLS regression");
     expect(markup).not.toContain('id="nd-calculation-weighting"');
@@ -527,6 +947,15 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).not.toContain('id="nd-calculation-tolerance"');
     expect(markup).not.toContain('id="nd-calculation-seed"');
     expect(markup).not.toContain('id="nd-calculation-workers"');
+
+    const supportedMarkup = renderWithLiveRegistry("regression", {
+      ...settings,
+      method: "regression",
+      regressionType: "ols",
+    });
+    expect(supportedMarkup).toMatch(/id="nd-calculation-method-regression"[\s\S]*?<strong>Regression<\/strong><small/);
+    expect(supportedMarkup).not.toContain('data-limited-scope-warning="true"');
+    expect(supportedMarkup).not.toContain('data-experimental-warning="true"');
   });
 
   it("renders qualified regression case-resampling controls and disclosures", () => {
@@ -543,6 +972,8 @@ describe("NativeCalculationDialog contracts", () => {
     };
     const markup = renderToStaticMarkup(createElement(NativeCalculationDialog, {
       kind: "regression",
+      experimentalLabsEnabled: true,
+      capabilityRegistry: executableLabsRegistry,
       setKind: () => undefined,
       settings: {
         ...settings,
@@ -579,6 +1010,28 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain("worker-invariant");
     expect(markup).toContain("Start OLS regression with bootstrap");
     expect(markup).toContain('id="nd-calculation-seed"');
+
+    const standardMarkup = renderReadyDialog(
+      "regression",
+      {
+        ...settings,
+        method: "regression",
+        preprocessing: "unstandardized",
+        regressionType: "ols",
+        regressionBootstrap: true,
+        bootstrapSamples: 999,
+      },
+      nodes,
+      false,
+      new Set(),
+      undefined,
+      undefined,
+      capabilityRegistryV2,
+    );
+    expect(standardMarkup).toContain('id="nd-calculation-regression-bootstrap"');
+    expect(standardMarkup).not.toContain('data-method-chip="limited-scope"');
+    expect(standardMarkup).not.toContain('data-limited-scope-warning="true"');
+    expect(standardMarkup).not.toContain('data-experimental-warning="true"');
   });
 
   it("stops regression-bootstrap setup at 50 selected predictors and controls", () => {
@@ -596,6 +1049,8 @@ describe("NativeCalculationDialog contracts", () => {
     };
     const markup = renderToStaticMarkup(createElement(NativeCalculationDialog, {
       kind: "regression",
+      experimentalLabsEnabled: true,
+      capabilityRegistry: executableLabsRegistry,
       setKind: () => undefined,
       settings: {
         ...settings,
@@ -645,6 +1100,8 @@ describe("NativeCalculationDialog contracts", () => {
     };
     const markup = renderToStaticMarkup(createElement(NativeCalculationDialog, {
       kind: "regression",
+      experimentalLabsEnabled: true,
+      capabilityRegistry: executableLabsRegistry,
       setKind: () => undefined,
       settings: {
         ...settings,
@@ -675,9 +1132,19 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain('id="nd-calculation-logistic-profile"');
     expect(markup).toContain("12 complete cases: 8 class 0 and 4 class 1; 0 omitted by listwise deletion");
     expect(markup).toContain("Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)");
+    expect(markup).toContain("<span>Validated scope</span>");
     expect(markup).toContain("The outcome must be coded exactly 0/1");
     expect(markup).toContain("Start binary logistic regression");
     expect(markup).not.toContain('id="nd-calculation-seed"');
     expect(markup).not.toContain('id="nd-calculation-workers"');
+
+    const supportedMarkup = renderWithLiveRegistry("regression", {
+      ...settings,
+      method: "regression",
+      regressionType: "logistic",
+    });
+    expect(supportedMarkup).toMatch(/id="nd-calculation-method-regression"[\s\S]*?<strong>Regression<\/strong><small/);
+    expect(supportedMarkup).not.toContain('data-limited-scope-warning="true"');
+    expect(supportedMarkup).not.toContain('data-experimental-warning="true"');
   });
 });

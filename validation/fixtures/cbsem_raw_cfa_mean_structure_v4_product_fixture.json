@@ -1,0 +1,137 @@
+{
+  "converged": true,
+  "fixture_kind": "quickpls_cbsem_raw_cfa_mean_structure_v4_product_result",
+  "gradient_norm": 9.016504913931653e-8,
+  "identity": {
+    "estimator": "cbsem_ml_exact_parameter_table_v4",
+    "moment_adapter": "cbsem_ml_compiled_moment_input_v4",
+    "moment_result_schema_version": 3,
+    "runner_adapter": "compiled_recipe_v4_cbsem_plan_v2_execution_v6"
+  },
+  "implied_means": [
+    {
+      "value": 3.0149999869100554,
+      "variable": "x1"
+    },
+    {
+      "value": 4.324999991387201,
+      "variable": "x2"
+    },
+    {
+      "value": 0.44999999507652166,
+      "variable": "x3"
+    }
+  ],
+  "input": {
+    "covariance_ml": [
+      [
+        135.47127500000002,
+        107.41712500000001,
+        64.96625000000002
+      ],
+      [
+        107.41712500000001,
+        88.911875,
+        53.663250000000005
+      ],
+      [
+        64.96625000000002,
+        53.663250000000005,
+        34.368
+      ]
+    ],
+    "observed_means": [
+      3.0149999999999997,
+      4.325,
+      0.4500000000000006
+    ],
+    "raw_sha256": "5544141c7bd6bee163d5b3308a3aa75988653070f0cf01b3dc5fce3dceffd227",
+    "sample_size": 40,
+    "variable_order": [
+      "x1",
+      "x2",
+      "x3"
+    ]
+  },
+  "objective": 1.1244360364028384e-12,
+  "parameters": [
+    {
+      "estimate": 3.0149999869100554,
+      "fixed": false,
+      "name": "construct:f~1",
+      "stable_id": "parameter:factor_mean:f",
+      "standard_error": 1.8403211346779509
+    },
+    {
+      "estimate": 0.0,
+      "fixed": true,
+      "name": "x1~1",
+      "stable_id": "parameter:intercept:x1",
+      "standard_error": null
+    },
+    {
+      "estimate": 1.8345578076349156,
+      "fixed": false,
+      "name": "x2~1",
+      "stable_id": "parameter:intercept:x2",
+      "standard_error": 0.3230910427119485
+    },
+    {
+      "estimate": -1.0562281591501659,
+      "fixed": false,
+      "name": "x3~1",
+      "stable_id": "parameter:intercept:x3",
+      "standard_error": 0.29563969738813634
+    },
+    {
+      "estimate": 1.0,
+      "fixed": true,
+      "name": "construct:f=~x1",
+      "stable_id": "parameter_66_7831",
+      "standard_error": null
+    },
+    {
+      "estimate": 0.826017311630118,
+      "fixed": false,
+      "name": "construct:f=~x2",
+      "stable_id": "parameter_66_7832",
+      "standard_error": 0.028132472214430684
+    },
+    {
+      "estimate": 0.49957816277483846,
+      "fixed": false,
+      "name": "construct:f=~x3",
+      "stable_id": "parameter_66_7833",
+      "standard_error": 0.025088098980300295
+    },
+    {
+      "estimate": 5.429055093716567,
+      "fixed": false,
+      "name": "x1~~x1",
+      "stable_id": "residual_variance_7831",
+      "standard_error": 1.6129714020695274
+    },
+    {
+      "estimate": 0.18347036853714557,
+      "fixed": false,
+      "name": "x2~~x2",
+      "stable_id": "residual_variance_7832",
+      "standard_error": 0.7258002504199318
+    },
+    {
+      "estimate": 1.912278540959075,
+      "fixed": false,
+      "name": "x3~~x3",
+      "stable_id": "residual_variance_7833",
+      "standard_error": 0.5030898588303466
+    },
+    {
+      "estimate": 130.04222001581434,
+      "fixed": false,
+      "name": "construct:f~~construct:f",
+      "stable_id": "variance_66",
+      "standard_error": 30.28658996497431
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,980 @@
+{
+  "comparison_contract": {
+    "outputs": [
+      {
+        "output_id": "saturated_point_fit_vector",
+        "rule": "matrix_norm",
+        "absolute_tolerance": 1E-10,
+        "relative_tolerance": 1E-08,
+        "norm": "maximum",
+        "elementwise_tolerance": 1E-10,
+        "rationale": "All available saturated point criteria and typed unavailable states must agree after identical matrix inputs and conventions."
+      },
+      {
+        "output_id": "estimated_point_fit_vector",
+        "rule": "matrix_norm",
+        "absolute_tolerance": 1E-10,
+        "relative_tolerance": 1E-08,
+        "norm": "maximum",
+        "elementwise_tolerance": 1E-10,
+        "rationale": "All available estimated point criteria and typed unavailable states must agree after identical matrix inputs and conventions."
+      },
+      {
+        "output_id": "saturated_exact_bounds",
+        "rule": "matrix_norm",
+        "absolute_tolerance": 1E-10,
+        "relative_tolerance": 1E-08,
+        "norm": "maximum",
+        "elementwise_tolerance": 1E-10,
+        "rationale": "Saturated original discrepancies, usable-ledger extrema, HI95, HI99, and empirical tails must agree for the fixed indexed draws."
+      },
+      {
+        "output_id": "estimated_exact_bounds",
+        "rule": "matrix_norm",
+        "absolute_tolerance": 1E-10,
+        "relative_tolerance": 1E-08,
+        "norm": "maximum",
+        "elementwise_tolerance": 1E-10,
+        "rationale": "Estimated original discrepancies, usable-ledger extrema, HI95, HI99, and empirical tails must agree for the fixed indexed draws."
+      },
+      {
+        "output_id": "saturated_exact_decisions",
+        "rule": "exact",
+        "rationale": "Saturated criterion availability and 5 and 1 percent decisions are exact functions of the frozen bounds."
+      },
+      {
+        "output_id": "estimated_exact_decisions",
+        "rule": "exact",
+        "rationale": "Estimated criterion availability and 5 and 1 percent decisions are exact functions of the frozen bounds."
+      },
+      {
+        "output_id": "fixed_replicate_failure_ledger",
+        "rule": "exact",
+        "rationale": "Variant, replicate index, sample digest, criterion availability, and typed failure identity must be byte-stable after canonical serialization."
+      }
+    ]
+  },
+  "evidence_contract": {
+    "receipt_contract": {
+      "hardware_fingerprint_required": true,
+      "hash_algorithm": "sha256",
+      "identity_fields": [
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "build_fingerprint"
+      ],
+      "scenario_set_hash_required": true,
+      "source_descriptors_required": true
+    },
+    "receipts": [],
+    "required_roles": [
+      "method_contract",
+      "kernel_execution",
+      "oracle_independence",
+      "generative_recovery",
+      "adversarial_boundaries",
+      "archive_persistence",
+      "cross_format_export",
+      "frontend_contract",
+      "packaged_windows_e2e",
+      "performance_scale"
+    ]
+  },
+  "identity": {
+    "capability_cell": {
+      "capability_id": "smartpls.model_fit",
+      "capability_version": "pls_model_fit_v2",
+      "cell_id": "qpls3.assessment.model_fit",
+      "registry_schema_version": 2
+    },
+    "execution_kind": "hybrid",
+    "method_version": "pls_model_fit_v2",
+    "potentially_long_running": true,
+    "qualification_id": "qpls3.assessment.model_fit.exact.qualification_v2",
+    "spec_frozen_at_utc": "2026-08-14T18:30:00Z"
+  },
+  "migration": {
+    "source_kind": "qualification_v1_manifest",
+    "source_manifest_path": "validation/methods/pls_model_fit_v2.manifest.json",
+    "source_schema_version": 1,
+    "status": "compatibility_only",
+    "unresolved_items": [
+      "product.full_supported_pls_and_plsc_model_shape_breadth_not_closed",
+      "model.sem_model_v4_factor_composite_semantics_not_integrated",
+      "data.raw_only_and_listwise_only_bounded_exact_fit_scope",
+      "oracle.full_plsc_and_advanced_model_shape_refit_pipeline_missing",
+      "oracle.small_pls_pm_refit_work_report_is_not_immutable_receipt",
+      "oracle.second_independent_full_pipeline_or_approved_exception_missing",
+      "simulation.type_i_error_power_coverage_and_failure_rate_not_run",
+      "metamorphic.row_variable_worker_archive_gui_cli_matrix_not_complete",
+      "persistence.real_999_draw_archive_reopen_and_all_format_readback_not_recorded",
+      "export.svg_pdf_png_semantic_readback_not_integrated",
+      "performance.maximum_axis_compound_stress_and_soak_not_run",
+      "packaged_windows.accessibility_scaling_cancellation_matrix_not_run",
+      "review.independent_scientific_review_not_recorded",
+      "architecture.project_archive_schema_6_not_integrated_for_model_fit_exact"
+    ]
+  },
+  "operational_contract": {
+    "archive": {
+      "corruption_cases": [
+        "feature_identity",
+        "method_version",
+        "dataset_fingerprint",
+        "checksum",
+        "duplicate_entry",
+        "malformed_payload",
+        "legacy_reinterpretation",
+        "interrupted_save"
+      ],
+      "current_schema_version": 5,
+      "future_schema_policy": "verified_read_only",
+      "readable_schema_versions": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "writable_schema_versions": [
+        5
+      ]
+    },
+    "cancellation": {
+      "archive_unchanged": true,
+      "maximum_latency_seconds": 1.0,
+      "no_partial_committed_result": true,
+      "no_partial_visible_result": true,
+      "phases": [
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "validate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "estimate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "resample"
+        },
+        {
+          "applicability": "not_applicable",
+          "not_applicable_reason": "PLS model-fit exact inference does not execute a competing saved-model comparison phase.",
+          "phase": "compare"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "export"
+        }
+      ],
+      "required_for_potentially_long_operations": true,
+      "same_settings_retry": true
+    },
+    "export": {
+      "canonical_projection_id": "canonical_result_document_v2_pls_model_fit_exact_projection",
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf",
+        "png"
+      ],
+      "provenance_required": true,
+      "same_run_required": true,
+      "semantic_readback_formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf"
+      ],
+      "validation_witness_excluded": true
+    },
+    "performance": {
+      "baseline_policy": {
+        "maximum_memory_regression_percent": 20.0,
+        "maximum_runtime_regression_percent": 20.0,
+        "measured_runs": 5,
+        "statistic": "median",
+        "warmup_runs": 1
+      },
+      "budgets": [
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 120.0,
+          "maximum_peak_working_set_bytes": 536870912,
+          "maximum_result_bytes": 16777216,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 3600.0,
+          "maximum_peak_working_set_bytes": 8589934592,
+          "maximum_result_bytes": 536870912,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 14400.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 28800.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 4294967296,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 28800.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 4294967296,
+          "profile_id": "compound_stress"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 120.0,
+          "maximum_peak_working_set_bytes": 1073741824,
+          "maximum_result_bytes": 16777216,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 3600.0,
+          "maximum_peak_working_set_bytes": 17179869184,
+          "maximum_result_bytes": 536870912,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 14400.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 28800.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 4294967296,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 28800.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 4294967296,
+          "profile_id": "compound_stress"
+        }
+      ],
+      "hardware_classes": [
+        {
+          "architecture": "x86_64",
+          "id": "standard",
+          "minimum_logical_cores": 6,
+          "minimum_memory_gib": 16,
+          "notes": "Product-finalization standard reference class.",
+          "os_family": "windows"
+        },
+        {
+          "architecture": "x86_64",
+          "id": "workstation",
+          "minimum_logical_cores": 12,
+          "minimum_memory_gib": 32,
+          "notes": "Product-finalization workstation reference class.",
+          "os_family": "windows"
+        }
+      ]
+    },
+    "windows": {
+      "accessible_tables_required": true,
+      "display_scale_percent": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "keyboard_only_required": true,
+      "offline_required": true,
+      "package_kinds": [
+        "installed",
+        "portable"
+      ],
+      "real_pointer_required": true,
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ]
+    }
+  },
+  "scenario_contract": {
+    "axes": [
+      {
+        "id": "model_topology",
+        "label": "PLS structural topology",
+        "values": [
+          {
+            "description": "Two-construct recursive model with one directed path and hand-checkable matrices.",
+            "id": "two_construct_pair"
+          },
+          {
+            "description": "Multi-construct branching and mediating recursive model with multiple endogenous variables.",
+            "id": "multi_construct_recursive"
+          }
+        ]
+      },
+      {
+        "id": "measurement_model",
+        "label": "Measurement and estimand configuration",
+        "values": [
+          {
+            "description": "Reflective two-item blocks executable under PLS-PM and PLSc.",
+            "id": "reflective_two_item"
+          },
+          {
+            "description": "Reflective, formative, and mixed Mode A or Mode B blocks where the selected estimator supports them.",
+            "id": "reflective_mixed_block_sizes"
+          }
+        ]
+      },
+      {
+        "id": "data_distribution",
+        "label": "Population distribution",
+        "values": [
+          {
+            "description": "Gaussian positive-definite indicator population with positive loadings.",
+            "id": "gaussian_positive_loadings"
+          },
+          {
+            "description": "Mixed-sign skewed and heavy-tailed finite population with challenging matrix conditioning.",
+            "id": "mixed_sign_skewed_heavy_tail"
+          }
+        ]
+      },
+      {
+        "id": "missingness",
+        "label": "Missing-data condition",
+        "values": [
+          {
+            "description": "No missing observations.",
+            "id": "complete"
+          },
+          {
+            "description": "Five percent MCAR cells evaluated under the exact model-wide listwise complete-case policy.",
+            "id": "listwise_mcar_five_percent"
+          }
+        ]
+      },
+      {
+        "id": "input_type",
+        "label": "Input representation",
+        "values": [
+          {
+            "description": "Supported row-level numeric observations.",
+            "id": "raw_rows"
+          },
+          {
+            "description": "Covariance or correlation input must produce the frozen unsupported-input diagnostic.",
+            "id": "summary_matrix_rejection"
+          }
+        ]
+      },
+      {
+        "id": "workload",
+        "label": "Model-fit calculation workload",
+        "values": [
+          {
+            "description": "Point-fit matrices and saturated or estimated criterion vectors.",
+            "id": "point_assessment"
+          },
+          {
+            "description": "Two separate null transformations and complete PLS or PLSc refits for every fixed indexed draw.",
+            "id": "complete_bootstrap_inference"
+          }
+        ]
+      },
+      {
+        "id": "workers",
+        "label": "Worker scheduling",
+        "values": [
+          {
+            "description": "Serial reference execution.",
+            "id": "one_worker"
+          },
+          {
+            "description": "Parallel execution on the reference hardware class with identical ledgers and analytical payload.",
+            "id": "reference_parallel_workers"
+          }
+        ]
+      }
+    ],
+    "complexity_profiles": [
+      {
+        "applicability": "required",
+        "description": "Hand-checkable two-construct point and exact-fit fixture at the production minimum draw count.",
+        "id": "micro_exact",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 2,
+          "groups": 1,
+          "indicators": 4,
+          "resamples": 999,
+          "rows": 40
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Typical applied recursive PLS model with separate saturated and estimated 5000-draw exact-fit runs.",
+        "id": "applied",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 6,
+          "groups": 1,
+          "indicators": 24,
+          "resamples": 5000,
+          "rows": 500
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Large research model used for repeatability, failure-ledger, archive-size, and cancellation checks.",
+        "id": "large",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 20,
+          "groups": 1,
+          "indicators": 80,
+          "resamples": 5000,
+          "rows": 5000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Separate maximum-row, indicator, construct, and resample axes.",
+        "id": "maximum_axis",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 100,
+          "groups": 1,
+          "indicators": 300,
+          "resamples": 10000,
+          "rows": 100000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Combined high-dimensional PLS exact-fit workload with two full resampling passes.",
+        "id": "compound_stress",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 50,
+          "groups": 1,
+          "indicators": 150,
+          "resamples": 10000,
+          "rows": 50000
+        }
+      }
+    ],
+    "mandatory_combinations": [
+      {
+        "coverage": "pairwise",
+        "id": "applied_pairwise_matrix",
+        "profile_id": "applied",
+        "purpose": "Cover every pair of values across the mandatory exact-fit scenario axes.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings",
+            "mixed_sign_skewed_heavy_tail"
+          ],
+          "input_type": [
+            "raw_rows",
+            "summary_matrix_rejection"
+          ],
+          "measurement_model": [
+            "reflective_two_item",
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete",
+            "listwise_mcar_five_percent"
+          ],
+          "model_topology": [
+            "two_construct_pair",
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "one_worker",
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "point_assessment",
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "micro_exact_thresholds",
+        "profile_id": "micro_exact",
+        "purpose": "Check hand discrepancy values, SPD transformations, Type-7 bounds, equality decisions, and typed applicability.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_two_item"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "two_construct_pair"
+          ],
+          "workers": [
+            "one_worker"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "large_worker_repeatability",
+        "profile_id": "large",
+        "purpose": "Require exact transformed-matrix witnesses, sample digests, replicate ledgers, and summaries under serial and parallel scheduling.",
+        "selections": {
+          "data_distribution": [
+            "mixed_sign_skewed_heavy_tail"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "one_worker",
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_rows",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum rows axis while other dimensions are controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_indicators",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum indicators axis while other dimensions are controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": [
+          "indicators"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_constructs",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum constructs axis while other dimensions are controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": [
+          "constructs"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_resamples",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum resamples axis while other dimensions are controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": [
+          "resamples"
+        ]
+      },
+      {
+        "coverage": "compound",
+        "id": "compound_resampling_memory_cancellation",
+        "profile_id": "compound_stress",
+        "purpose": "Combine high row, indicator, construct, and resample counts with both exact-fit variants, cancellation, archive, and export checks.",
+        "selections": {
+          "data_distribution": [
+            "mixed_sign_skewed_heavy_tail"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "listwise_mcar_five_percent"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows",
+          "indicators",
+          "constructs",
+          "resamples"
+        ]
+      }
+    ],
+    "monte_carlo_policy": {
+      "confidence_level": 0.95,
+      "failed_fits_in_denominator": true,
+      "maximum_half_width": 0.01
+    }
+  },
+  "schema_version": 2,
+  "scientific_contract": {
+    "estimands": [
+      {
+        "id": "point_fit_discrepancy_family",
+        "label": "Saturated and estimated PLS model-fit point criteria",
+        "definition": "SRMR, d_ULS, d_G, maximum-likelihood-function chi-square, degrees of freedom, and NFI computed from the observed and separately implied saturated and estimated indicator-correlation matrices.",
+        "unit": "standardized discrepancy, chi-square scale, degrees of freedom, or relative fit",
+        "output_ids": [
+          "saturated_point_fit_vector",
+          "estimated_point_fit_vector"
+        ]
+      },
+      {
+        "id": "adapted_bollen_stine_exact_fit",
+        "label": "Adapted Bollen-Stine exact-fit inference",
+        "definition": "Separate saturated and estimated null-transformed fixed-index bootstrap distributions, upper 95 and 99 percent Type-7 bounds, empirical upper-tail proportions, decisions, and complete failure ledgers for SRMR, d_ULS, and d_G.",
+        "unit": "discrepancy, probability, Boolean decision, or typed ledger state",
+        "output_ids": [
+          "saturated_exact_bounds",
+          "estimated_exact_bounds",
+          "saturated_exact_decisions",
+          "estimated_exact_decisions",
+          "fixed_replicate_failure_ledger"
+        ]
+      }
+    ],
+    "preprocessing": [
+      {
+        "id": "model_wide_complete_cases",
+        "order": 0,
+        "operation": "Retain the exact model-wide finite complete cases used by the linked PLS or PLSc point estimate.",
+        "parameters": {
+          "policy": "listwise_deletion",
+          "missing_to_zero": false
+        },
+        "applies_to": [
+          "raw_numeric_rows"
+        ]
+      },
+      {
+        "id": "sample_standardization",
+        "order": 1,
+        "operation": "Center and scale every retained indicator by its sample standard deviation using denominator n minus one in deterministic indicator order.",
+        "parameters": {
+          "ddof": 1,
+          "zero_variance": "typed_error",
+          "order": "point_fit_indicator_order"
+        },
+        "applies_to": [
+          "retained_indicator_rows"
+        ]
+      },
+      {
+        "id": "separate_null_transformations",
+        "order": 2,
+        "operation": "For each model variant form Z star equals Z S inverse-half Sigma-variant half using unique symmetric positive-definite matrix powers and verify the target correlation without repair.",
+        "parameters": {
+          "matrix_power": "self_adjoint_spd_eigendecomposition",
+          "maximum_identity_error": 1E-09,
+          "repair": "none"
+        },
+        "applies_to": [
+          "saturated_implied_correlation",
+          "estimated_implied_correlation"
+        ]
+      },
+      {
+        "id": "indexed_case_resampling_and_full_refit",
+        "order": 3,
+        "operation": "Use variant-domain-separated fixed indexed case draws, fully refit PLS or PLSc, and reassess the same model variant; never retry or replace a failed draw.",
+        "parameters": {
+          "draws_minimum": 999,
+          "draws_maximum": 10000,
+          "retry_policy": "no_retry_no_replacement_fixed_indexed_draws_v1",
+          "minimum_usable_fraction": 0.9
+        },
+        "applies_to": [
+          "saturated_null_sample",
+          "estimated_null_sample"
+        ]
+      },
+      {
+        "id": "type7_upper_bounds_and_decisions",
+        "order": 4,
+        "operation": "Summarize criterion-specific usable ledgers with Type-7 upper 95 and 99 percent quantiles and classify original less than or equal to the bound as not rejected.",
+        "parameters": {
+          "quantile": "hyndman_fan_type7_v1",
+          "decision": "original_less_than_or_equal_to_upper_quantile_not_rejected_v1"
+        },
+        "applies_to": [
+          "srmr",
+          "d_uls",
+          "d_g"
+        ]
+      }
+    ],
+    "model_predicates": [
+      {
+        "id": "supported_recursive_pls_graph",
+        "expression": "The model is a currently executable recursive PLS-PM or PLSc graph with no generated interaction or higher-order indicator expansion in the bounded v1 exact-fit lane.",
+        "on_violation": "not_applicable",
+        "diagnostic_code": "model_fit_exact.unsupported_model_shape"
+      },
+      {
+        "id": "linked_point_fit_v2",
+        "expression": "A converged point estimate and exact pls_model_fit_v2 assessment share estimator identity, analytical sample size, indicator identity and order, and observed and implied matrices.",
+        "on_violation": "error",
+        "diagnostic_code": "model_fit_exact.point_fit_link_invalid"
+      }
+    ],
+    "data_predicates": [
+      {
+        "id": "raw_complete_case_observations",
+        "expression": "Input consists of raw numeric rows; covariance and correlation inputs are rejected before execution and at least two complete finite cases remain.",
+        "on_violation": "not_applicable",
+        "diagnostic_code": "model_fit_exact.raw_rows_required"
+      },
+      {
+        "id": "strict_positive_definite_matrices",
+        "expression": "Observed, saturated target, and estimated target correlations are finite, symmetric, unit-diagonal, and numerically positive definite without ridge repair, eigenvalue clamping, or nearest-correlation replacement.",
+        "on_violation": "error",
+        "diagnostic_code": "model_fit_exact.positive_definite_matrix_required"
+      }
+    ],
+    "oracles": [
+      {
+        "id": "dijkstra_henseler_2015",
+        "kind": "primary_literature",
+        "citation": "Dijkstra and Henseler (2015), Consistent and asymptotically normal PLS estimators for linear structural equations, Computational Statistics and Data Analysis 81, equations 35-36 and page 20, DOI 10.1016/j.csda.2014.07.008.",
+        "locator": "docs/methods/PLS_MODEL_FIT_EXACT_V1.md",
+        "independence_group": "primary_dijkstra_henseler_2015",
+        "runtime_policy": "no_runtime_dependency",
+        "implementation": null,
+        "covered_estimand_ids": [
+          "point_fit_discrepancy_family",
+          "adapted_bollen_stine_exact_fit"
+        ]
+      },
+      {
+        "id": "numpy_point_fit_reference",
+        "kind": "independent_implementation",
+        "citation": "Transparent NumPy dense-linear-algebra reference for the frozen SRMR, d_ULS, d_G, chi-square, and NFI equations; validation only.",
+        "locator": "validation/pls_model_fit_v2_reference.py",
+        "independence_group": "numpy_point_fit_reference",
+        "runtime_policy": "development_validation_only",
+        "implementation": {
+          "name": "QuickPLS transparent NumPy PLS fit reference",
+          "version": "2",
+          "maintainer": "QuickPLS validation authors"
+        },
+        "covered_estimand_ids": [
+          "point_fit_discrepancy_family"
+        ]
+      },
+      {
+        "id": "numpy_exact_fit_primitive_reference",
+        "kind": "independent_implementation",
+        "citation": "Transparent NumPy implementation of the symmetric null transformation, Type-7 bounds, fixed-ledger accounting, and exact-fit decisions; it is not a full independent PLS refit pipeline.",
+        "locator": "validation/pls_model_fit_exact_v1_reference.py",
+        "independence_group": "numpy_exact_fit_primitives",
+        "runtime_policy": "development_validation_only",
+        "implementation": {
+          "name": "QuickPLS transparent NumPy exact-fit primitive reference",
+          "version": "1",
+          "maintainer": "QuickPLS validation authors"
+        },
+        "covered_estimand_ids": [
+          "adapted_bollen_stine_exact_fit"
+        ]
+      },
+      {
+        "id": "numpy_scipy_pls_pm_full_refit_oracle",
+        "kind": "independent_implementation",
+        "citation": "Transparent NumPy/SciPy recursive PLS-PM implementation that independently estimates the point model and performs separate saturated and estimated adapted Bollen-Stine full refits for every small fixed indexed validation draw; validation only and not a qualification receipt.",
+        "locator": "validation/pls_model_fit_full_refit_oracle.py",
+        "independence_group": "numpy_scipy_pls_pm_full_refit_oracle",
+        "runtime_policy": "development_validation_only",
+        "implementation": {
+          "name": "QuickPLS transparent NumPy/SciPy PLS-PM full-refit oracle",
+          "version": "1",
+          "maintainer": "QuickPLS validation authors"
+        },
+        "covered_estimand_ids": [
+          "point_fit_discrepancy_family",
+          "adapted_bollen_stine_exact_fit"
+        ]
+      },
+      {
+        "id": "frozen_hand_microcases",
+        "kind": "hand_calculation",
+        "citation": "Frozen analytical two-by-two discrepancy cases plus small sorted-ledger Type-7 and decision cases checked independently of the Rust engine.",
+        "locator": "validation/test_pls_model_fit_v2_reference.py",
+        "independence_group": "frozen_analytical_microcases",
+        "runtime_policy": "development_validation_only",
+        "implementation": null,
+        "covered_estimand_ids": [
+          "point_fit_discrepancy_family",
+          "adapted_bollen_stine_exact_fit"
+        ]
+      }
+    ],
+    "oracle_exception": null
+  }
+}

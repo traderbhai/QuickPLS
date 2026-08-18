@@ -60,6 +60,7 @@ SUITES = {
             {
                 "process_graph_v2_unavailable_inference_uses_process_specific_tokens",
                 "process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional",
+                "process_graph_v2_case_bootstrap_cancellation_returns_no_result",
                 "process_graph_v2_bootstrap_maps_high_leverage_hc3_failure",
                 "process_graph_v2_bootstrap_maps_invalid_hc3_covariance_failure",
                 "process_graph_v2_bootstrap_maps_degenerate_simple_slope_failure",

@@ -1,0 +1,453 @@
+{
+  "archive_smoke": {
+    "atomic_append_and_reopen_verified": true,
+    "passed": true,
+    "real_product_canonical_projection": true,
+    "receipt_eligible": false,
+    "schema_version": 6,
+    "scientific_result_appended_by_real_runner": true
+  },
+  "build_fingerprint": "quickpls-desktop-test-sha256:704fe859ad0ee9e4150b8d24cac985f258435087ad5cc0607c0f2f2e6ed32ce2;source-set-sha256:86f58b63e3ab59c003ef335991dc8a99dc4660150df579ed0b2a3041f4fa66ab",
+  "candidate_receipt_descriptors": [],
+  "capability_id": "smartpls.pls_algorithm",
+  "cell_id": "qpls3.pls.algorithm",
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "quickpls-desktop",
+        "--lib",
+        "--no-run",
+        "--message-format=json"
+      ],
+      "duration_seconds": 117.850554,
+      "finished_at_utc": "2026-08-15T05:04:39.268574Z",
+      "label": "build_internal_desktop_harness",
+      "returncode": 0,
+      "started_at_utc": "2026-08-15T05:02:41.418640Z",
+      "stderr": {
+        "path": "commands/build_internal_desktop_harness.stderr.txt",
+        "sha256": "44b9485de4a428b6c027bd9520ba147a16b5ff8f4eeab1e5714af1355cd35c35",
+        "size_bytes": 136
+      },
+      "stdout": {
+        "path": "commands/build_internal_desktop_harness.stdout.txt",
+        "sha256": "4605e4255c5d095bb0794d455126b8c9d071fb86b7a8a16ccc1f764b58a18dec",
+        "size_bytes": 425001
+      }
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\deps\\quickpls_desktop_lib-57dee36d1d17e086.exe",
+        "--ignored",
+        "--exact",
+        "pls_algorithm_current_product_qualification::current_product_pls_qualification_work_harness",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "duration_seconds": 4.16398,
+      "finished_at_utc": "2026-08-15T05:04:43.580456Z",
+      "label": "run_internal_desktop_harness",
+      "returncode": 0,
+      "started_at_utc": "2026-08-15T05:04:39.416480Z",
+      "stderr": {
+        "path": "commands/run_internal_desktop_harness.stderr.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      "stdout": {
+        "path": "commands/run_internal_desktop_harness.stdout.txt",
+        "sha256": "3e48e61c58ef12f6ea72d5ff5412d58662cd36059172c6ba91430958918c77a5",
+        "size_bytes": 218
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "compared_quantity_count": 9,
+      "construct_identity_map": {
+        "x": "construct:x",
+        "y": "construct:y"
+      },
+      "exact_key_membership": true,
+      "max_abs_difference": 1.1102230246251565e-16,
+      "missing_from_product": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_product": [],
+      "variant": "path_mode_a"
+    },
+    {
+      "compared_quantity_count": 9,
+      "construct_identity_map": {
+        "x": "construct:x",
+        "y": "construct:y"
+      },
+      "exact_key_membership": true,
+      "max_abs_difference": 5.551115123125783e-16,
+      "missing_from_product": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_product": [],
+      "variant": "path_mode_b"
+    },
+    {
+      "compared_quantity_count": 9,
+      "construct_identity_map": {
+        "x": "construct:x",
+        "y": "construct:y"
+      },
+      "exact_key_membership": true,
+      "max_abs_difference": 2.220446049250313e-16,
+      "missing_from_product": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_product": [],
+      "variant": "factor_mode_a"
+    },
+    {
+      "compared_quantity_count": 9,
+      "construct_identity_map": {
+        "x": "construct:x",
+        "y": "construct:y"
+      },
+      "exact_key_membership": true,
+      "max_abs_difference": 1.1102230246251565e-16,
+      "missing_from_product": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_from_product": [],
+      "variant": "pca_mode_a"
+    }
+  ],
+  "customer_cli_invoked": false,
+  "customer_registry_admission_invoked": false,
+  "generated_at_utc": "2026-08-15T05:04:43.687676Z",
+  "harness_binary": {
+    "mtime_ns": 1786770276477340500,
+    "newest_bound_source_mtime_ns": 1786770076936298900,
+    "path": "target/debug/deps/quickpls_desktop_lib-57dee36d1d17e086.exe",
+    "sha256": "704fe859ad0ee9e4150b8d24cac985f258435087ad5cc0607c0f2f2e6ed32ce2",
+    "size_bytes": 89026048
+  },
+  "harness_report": {
+    "path": "harness/harness_report.json",
+    "sha256": "b54b7c736786a3230e35d9457531e5c4033bab425a0be7a4c6d6606e43609346",
+    "size_bytes": 11605
+  },
+  "method_version": "pls_pm_v1",
+  "passed": true,
+  "promotion_authority": false,
+  "qualification_id": "qpls3.pls.algorithm.qualification_v2",
+  "qualification_ready": false,
+  "registry": {
+    "canonical_sha256": "71784d8ab7edaa70b5ea5cc771b2c52f8ee96cc58b7d52534beaac891abd69de",
+    "exact_cell": {
+      "capability_id": "smartpls.pls_algorithm",
+      "capability_version": "pls_pm_v1",
+      "cell_id": "qpls3.pls.algorithm",
+      "coverage_state": "partial",
+      "evidence_state": "absent",
+      "surface": "labs"
+    },
+    "path": "validation/capabilities/capability_registry_v2.json",
+    "raw_sha256": "d3e480178a619d0bec28e48ddfd9a2fb1848c083b78e1afe1c51f1b12e980fd9",
+    "registry_id": "quickpls.capability_registry.v2",
+    "registry_version": "2.1.0"
+  },
+  "remaining_blockers": [
+    "The bounded four-variant current-product matrix is not the complete QualificationSpec scenario contract.",
+    "Qualification-sized generative, adversarial, export, native packaged, performance, soak, and scientific-review roles remain absent.",
+    "This work envelope has no authority to attach candidate receipts or change Registry, manifest, Standard, beta, or release state."
+  ],
+  "report_kind": "pls_algorithm_v1_current_product_work_envelope_v2",
+  "scenario_set_sha256": "594371d9e699ab540ddb561a71d6010207b125c762a732c8a9d1324f7910b4fb",
+  "schema_version": 2,
+  "source_artifacts": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "f53ed52625c3f8fd57765717dc3fcafa0d83e3ebc9508e7c28d0de04591ec7f9",
+      "size_bytes": 154637
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "7b5cc1ab12cb81475cce1227b7ab1381e6278cc22f3b501c3b80858d9b1c749d",
+      "size_bytes": 1503
+    },
+    {
+      "path": "crates/qpls-core/Cargo.toml",
+      "sha256": "f3c060597827e18cb29690adab487f96042c0528fc1010f5077f605b2114968e",
+      "size_bytes": 453
+    },
+    {
+      "path": "crates/qpls-core/src/analysis_recipe_v4.rs",
+      "sha256": "a8d8b808d0bb4c91cf08c1c6762c036c25fb477857710babe88256618f343072",
+      "size_bytes": 21328
+    },
+    {
+      "path": "crates/qpls-core/src/canonical_result_v2.rs",
+      "sha256": "c34bdbcf39286cd16cddbb633760eee4e00e3a892bdc2feaed262ad58ff49f84",
+      "size_bytes": 56826
+    },
+    {
+      "path": "crates/qpls-core/src/capability_registry_v2.rs",
+      "sha256": "d9c6d765983a08717ed538aa44cd530bd199504a0b3099d14ca8e6aba07de79d",
+      "size_bytes": 15132
+    },
+    {
+      "path": "crates/qpls-core/src/compiled_pls_plan_v2.rs",
+      "sha256": "2a9753cf0910cbf2f490b484170569c65b36a66ba38b7ee607260fea4ba7bfed",
+      "size_bytes": 20991
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "5fd06a83325d7f1b4293e4c73b3306ba3cbab179810ec31bc18068c0dbe3361b",
+      "size_bytes": 130686
+    },
+    {
+      "path": "crates/qpls-core/src/lib.rs",
+      "sha256": "915370b5f64273c6b7e4649e4539eb30aca2805ad2197a79b22bb68e173b1145",
+      "size_bytes": 733
+    },
+    {
+      "path": "crates/qpls-core/src/recipe_v4_compiler.rs",
+      "sha256": "ad3f6821b7be0397f67669f715e41f594b593922417c2299ab59b5c02c08de77",
+      "size_bytes": 66342
+    },
+    {
+      "path": "crates/qpls-core/src/sem_model_v4.rs",
+      "sha256": "ec0f2ee926a4aee6811258861eac942cc9902263f4192283c3de52893fb6bb4f",
+      "size_bytes": 138362
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "7111ffd3f5d44cef43ea744b7ca2b24f7d126f9b887c4c208d23ea77494a7cd1",
+      "size_bytes": 223941
+    },
+    {
+      "path": "crates/qpls-data/Cargo.toml",
+      "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+      "size_bytes": 437
+    },
+    {
+      "path": "crates/qpls-data/src/lib.rs",
+      "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+      "size_bytes": 44865
+    },
+    {
+      "path": "crates/qpls-estimation/Cargo.toml",
+      "sha256": "1eec9429398b24f76a8a307c758fc938bca3f9caf26a5db00a22e50eb7807d8b",
+      "size_bytes": 503
+    },
+    {
+      "path": "crates/qpls-estimation/src/lib.rs",
+      "sha256": "a05ece4c1236d8717b8bb12777525d1085f4008fc133dbf7a06958f485a79d6b",
+      "size_bytes": 504
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "3649c14e06ac40dac0e5f049acb09a76b59c1d48ced4c58a0ad81bacb2f9aedd",
+      "size_bytes": 750750
+    },
+    {
+      "path": "crates/qpls-project/Cargo.toml",
+      "sha256": "f0c6a5ac6405c4efc439268f92e0da19c0fb44aaf7392fbb98473bb2da32f453",
+      "size_bytes": 762
+    },
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size_bytes": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/canonical_result_document_v2.rs",
+      "sha256": "704bf7045e8099f79d47f90a28cc4d36a84651abf031a810dd89af45bd263b58",
+      "size_bytes": 30040
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "84d38928bf52b74b05fb494a6f351343e72648f3449cee058e4bc23b0f70158f",
+      "size_bytes": 793454
+    },
+    {
+      "path": "crates/qpls-project/src/pls_score_execution_v2.rs",
+      "sha256": "70a3476814e7f1de82e12c7651df3b70d88b9946a9ee2912b846d67b8b5006a0",
+      "size_bytes": 18511
+    },
+    {
+      "path": "crates/qpls-project/src/project_schema_v6.rs",
+      "sha256": "96304378dbb89ab64b5457208798e21f9448fca6bf7d06e51aecca53d64daa6c",
+      "size_bytes": 102069
+    },
+    {
+      "path": "crates/qpls-runner/Cargo.toml",
+      "sha256": "07246ac150eb04ae6cb479201c2292caff1d6c66142d9a476237790a9c2e5571",
+      "size_bytes": 472
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "3bcbaadd9dce4c070dafb314309d2d8492f693137d5f04f442a4bf3c2247f423",
+      "size_bytes": 83992
+    },
+    {
+      "path": "crates/qpls-runner/src/recipe_v4_pls_execution.rs",
+      "sha256": "5d8b60e625c5b30adb51529c188d7af61d2da936682d26e8b39c395aa065e8db",
+      "size_bytes": 36939
+    },
+    {
+      "path": "docs/methods/PLS_ALGORITHM_V1_QUALIFICATION_STATUS.md",
+      "sha256": "798b7750693fe59753f5cf1489125ef80b133ebeefab864208d305e4d2be56fb",
+      "size_bytes": 4472
+    },
+    {
+      "path": "docs/methods/PLS_PM_V1.md",
+      "sha256": "6382a084afd3f5c8d0e064f7656239b0a8cd5d33b39ee8376acdb8672b48f460",
+      "size_bytes": 4175
+    },
+    {
+      "path": "docs/methods/PLS_SCORE_EXECUTION_V2_VALIDATION_STRATEGY.md",
+      "sha256": "7bab2777d45a0dc67fd2d482b0fa7a22fe5e708deaae386d0115744094e4ca3f",
+      "size_bytes": 7437
+    },
+    {
+      "path": "src-tauri/Cargo.toml",
+      "sha256": "00f0b4f6fed310e716520d22891763f5cce2f358589f62498fecf492d1044181",
+      "size_bytes": 1123
+    },
+    {
+      "path": "src-tauri/build.rs",
+      "sha256": "487059eaf8a947b80f20a9aacac038a5047b2ad69d2401b827376c67d6fe847f",
+      "size_bytes": 39
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "sha256": "31e269f0a58ff760977d0650de0c367b7b592660f381d274fd724ea591db0e08",
+      "size_bytes": 255196
+    },
+    {
+      "path": "src-tauri/src/pls_algorithm_current_product_qualification.rs",
+      "sha256": "f77e796fcf82ef08ef1d6007e6e428039ccbf688f020df594182931b2896940f",
+      "size_bytes": 30009
+    },
+    {
+      "path": "src-tauri/src/project_schema6_result_append.rs",
+      "sha256": "5feb092e65a2fe709ddbe36f432abde5c0a8191bc48fff77db095ac61d74f9f0",
+      "size_bytes": 8717
+    },
+    {
+      "path": "src-tauri/src/project_schema6_result_read.rs",
+      "sha256": "4a99c1f466c9d570c71878105858ec1ec1fae0be5556f4bcd277da1d6ec15b4e",
+      "size_bytes": 28161
+    },
+    {
+      "path": "src-tauri/src/recipe_v4_canonical_result.rs",
+      "sha256": "6a842bce16994b92508a36c7475ea05dccc26870e8925a0c12782bca7ab91716",
+      "size_bytes": 48779
+    },
+    {
+      "path": "validation/Resolve-Rscript.ps1",
+      "sha256": "0248e989b85849f4af535b63878e40dcc559b685926dd71e7b3240c6762f8f5f",
+      "size_bytes": 2288
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.json",
+      "sha256": "d3e480178a619d0bec28e48ddfd9a2fb1848c083b78e1afe1c51f1b12e980fd9",
+      "size_bytes": 303615
+    },
+    {
+      "path": "validation/fixtures/simple_reflective.csv",
+      "sha256": "99f61b1191dab4dfbe3760e9863032cb5a00c9337d7c0497485b840ae21d804e",
+      "size_bytes": 60
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size_bytes": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size_bytes": 15836
+    },
+    {
+      "path": "validation/methods/pls_algorithm_v1.manifest.json",
+      "sha256": "6f9a4e058d35a113ae6220a9544aa2eeee7c55b3196bf451b999c3ce7df9cbc8",
+      "size_bytes": 11868
+    },
+    {
+      "path": "validation/pls_algorithm_v1_current_build_receipts.py",
+      "sha256": "142cde72cb7c5b4a4ca0edc64d8ef04d209dc80d6dace6b9bfa503b3806aca08",
+      "size_bytes": 1273
+    },
+    {
+      "path": "validation/pls_algorithm_v1_current_product_work.py",
+      "sha256": "36bb3d51a51337be89d713d4baea0409353022df043fafee7c288c8b496b9346",
+      "size_bytes": 36701
+    },
+    {
+      "path": "validation/pls_algorithm_v1_current_source_oracle.py",
+      "sha256": "40119011d3b2146b5aa0cf746855f8787fc6c35ed0e5e5ebc6bc52ffc2d401bb",
+      "size_bytes": 26714
+    },
+    {
+      "path": "validation/pls_algorithm_v1_qualification_factory.py",
+      "sha256": "606b0b8ddd564cb4a0ac0d04ec984413459d57b9214988ed47f79ddaba07ba3c",
+      "size_bytes": 123735
+    },
+    {
+      "path": "validation/python_plspm_reference.py",
+      "sha256": "a1881e3cd77a6e49bd15c024acc77fca155d30f3aabec35071b797b1963b703b",
+      "size_bytes": 1966
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/fixtures/pls_algorithm_v1.migrated.json",
+      "sha256": "3184dda504f70089be871d017516da20bbb336e14965057a4162df0579da1c67",
+      "size_bytes": 37881
+    },
+    {
+      "path": "validation/qualification_v2/pls_algorithm_v1.qualification.json",
+      "sha256": "2a2c7ab25074dfc56d1cb3bd78a56e775da3d36553d6d973fcf3dbc6314c0967",
+      "size_bytes": 28397
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/r_csem_reference.R",
+      "sha256": "4c31759068745ab7022450d1806cd31884d543ad548af98d357b4b5c418dbddd",
+      "size_bytes": 3237
+    },
+    {
+      "path": "validation/r_csem_threecommonfactors_reference.R",
+      "sha256": "d89bc14a6e3531c198f58672b3b79c3e61ab4d0e4ea6c8691806af904c2f9582",
+      "size_bytes": 2262
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_current_product_work.py",
+      "sha256": "4e8930fa39fd239cd08b58bf218425edd6b47eadfc6edb130334fc59d8b731c8",
+      "size_bytes": 20250
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_current_source_oracle.py",
+      "sha256": "08af20ef765d0699ac09aebbb3a91a971c2238c66d87e1e879589dda1300d41d",
+      "size_bytes": 3172
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_qualification_factory.py",
+      "sha256": "1feea4e603ded7685909b6e127d1e652632795de6a23c30e3deca446d8e42247",
+      "size_bytes": 62398
+    }
+  ],
+  "source_set_sha256": "86f58b63e3ab59c003ef335991dc8a99dc4660150df579ed0b2a3041f4fa66ab",
+  "spec_sha256": "2a2c7ab25074dfc56d1cb3bd78a56e775da3d36553d6d973fcf3dbc6314c0967",
+  "work_evidence_only": true
+}

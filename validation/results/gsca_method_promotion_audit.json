@@ -1,5 +1,7 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "integrity_contract": "explicit_pass_state_and_bound_evidence_v1",
+  "generated_at_utc": "2026-08-16T14:14:21.507055Z",
   "target": "gsca_als_v2_native_promotion",
   "method_id": "gsca",
   "promoted_scope": "Bounded joint global least-squares GSCA ALS v2 for standardized raw data, disjoint reflective/formative blocks, and recursive single-group paths; point estimates only.",
@@ -8,29 +10,115 @@
     {
       "path": "validation\\results\\gsca_als_v2_reference_report.json",
       "present": true,
-      "passed": true
+      "bytes": 1359,
+      "sha256": "08b2144f2ac2d9f85c06c6c290ff69744c0df5664e59ff07a3c09d2733ff4bfa",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": false,
+        "passed": true,
+        "report_modified_at_utc": "2026-08-13T21:04:43.292044Z",
+        "age_days": 2.715025,
+        "max_age_days": null,
+        "sources": []
+      },
+      "generated_at": null
     },
     {
       "path": "validation\\results\\v247_native_desktop_visual_acceptance.json",
       "present": true,
-      "passed": true
+      "bytes": 466864,
+      "sha256": "357afc910d268ad3a920cc74f41845698577eb719fbdf880508f94c9fbfa49fe",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": false,
+        "passed": true,
+        "report_modified_at_utc": "2026-08-14T05:44:52.392846Z",
+        "age_days": 2.353809,
+        "max_age_days": null,
+        "sources": []
+      },
+      "generated_at": "2026-08-14T05:43:55.188Z"
     },
     {
-      "path": "validation\\results\\v247_tauri_native_acceptance.json",
+      "path": "validation\\results\\v247_tauri_native_acceptance_gsca.json",
       "present": true,
-      "passed": true
+      "bytes": 51648,
+      "sha256": "27c8b3bbbae4fda503ede5f79c716fbd5ff8570380e2650d82a80cbbaff50814",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": false,
+        "passed": true,
+        "report_modified_at_utc": "2026-08-16T13:52:37.161660Z",
+        "age_days": 0.015097,
+        "max_age_days": null,
+        "sources": []
+      },
+      "generated_at": "2026-08-16T13:52:18.825Z"
     }
   ],
   "docs": [
     {
       "path": "docs\\methods\\GSCA_ALS_V2.md",
       "present": true,
-      "bytes": 1988
+      "bytes": 2131,
+      "sha256": "9170e92a8440fe0b896d3bc11cfc706ac36b9b52331a46cead0a0bc6ed40d30e",
+      "required_phrases": [],
+      "forbidden_phrases": [],
+      "passed": true
     },
     {
       "path": "docs\\methods\\GSCA_V1.md",
       "present": true,
-      "bytes": 520
+      "bytes": 520,
+      "sha256": "d23bbe43726ea0dceec9b997752331aec83f27e37c64b2d3d8cbdc7028868f45",
+      "required_phrases": [],
+      "forbidden_phrases": [],
+      "passed": true
     }
   ],
   "checks": [
@@ -60,5 +148,5 @@
       "detail": "Historical gsca_v1 remains a clearly disclosed preview record and is not current scientific evidence."
     }
   ],
-  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+  "note": "Promotion is limited to this documented scope; missing, stale, contradictory, or unbound evidence fails closed."
 }

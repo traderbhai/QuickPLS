@@ -1,0 +1,829 @@
+{
+  "engine_python_parity": {
+    "failures": [],
+    "observed": {
+      "configural_chi_square_absolute_difference": 4.68247662865906e-10,
+      "label_swap_status": "accepted",
+      "lrt_absolute_difference": 4.3510084424269735e-10,
+      "lrt_p_value_absolute_difference": 4.735724616275472e-14,
+      "maximum_group_objective_absolute_difference": 3.450625563061749e-08,
+      "maximum_implied_covariance_absolute_difference": 7.30937723125713e-07,
+      "maximum_label_swap_chi_square_absolute_difference": 5.471179065352771e-13,
+      "maximum_moment_absolute_difference": 0.0,
+      "maximum_parameter_absolute_difference": 2.925400637551756e-06,
+      "metric_chi_square_absolute_difference": 3.3146818623208674e-11
+    },
+    "status": "accepted",
+    "tolerances": {
+      "chi_square_absolute": 1e-06,
+      "implied_covariance_absolute": 0.0001,
+      "label_swap_absolute": 1e-07,
+      "lavaan_chi_square_absolute": 0.001,
+      "moment_absolute": 1e-12,
+      "objective_absolute": 1e-07,
+      "p_value_absolute": 1e-09,
+      "parameter_absolute": 0.0001
+    }
+  },
+  "engine_reference": {
+    "binary_sha256": "ca45e3567b253b04064e6ba2fc778a659abf12007ae8cca1146e77963b188ba2",
+    "configural": {
+      "chi_square": 16.842105249477903,
+      "degrees_of_freedom": 16,
+      "free_dimensions": 26,
+      "gradient_norm": 8.15781677549049e-08,
+      "groups": [
+        {
+          "chi_square": 8.501617508427728,
+          "group": "A",
+          "implied_covariance_sha256": "31d1c829eb45671b95d8dfcdf1a139ffd82764599df221a97af5b727ee1f1cee",
+          "objective": 0.047231208380154044,
+          "parameters": {
+            "factor_covariance_f1_f2": 0.38769627520406014,
+            "factor_variance_f1": 1.1910930235493165,
+            "factor_variance_f2": 0.8617563693798477,
+            "loading_x1": 1.0,
+            "loading_x2": 0.6244435540496779,
+            "loading_x3": 0.5787447316217341,
+            "loading_y1": 1.0,
+            "loading_y2": 0.6834756458870701,
+            "loading_y3": 0.7100192473001135,
+            "residual_variance_x1": 0.17518789719489514,
+            "residual_variance_x2": 0.3742531240190963,
+            "residual_variance_x3": 0.530559939515349,
+            "residual_variance_y1": 0.3128960524790551,
+            "residual_variance_y2": 0.33447577432852915,
+            "residual_variance_y3": 0.3566855916445883
+          },
+          "sample_size": 180
+        },
+        {
+          "chi_square": 8.340487741050175,
+          "group": "B",
+          "implied_covariance_sha256": "cdcedf4554aeb33b47ee170fdcfd06eb373e612058c06ae042be47f5dda13679",
+          "objective": 0.037911307913864434,
+          "parameters": {
+            "factor_covariance_f1_f2": 0.3047700102989061,
+            "factor_variance_f1": 1.008910024836305,
+            "factor_variance_f2": 1.0248848161733206,
+            "loading_x1": 1.0,
+            "loading_x2": 0.658793649104385,
+            "loading_x3": 0.24527049802677095,
+            "loading_y1": 1.0,
+            "loading_y2": 0.7316901918850061,
+            "loading_y3": 0.6468279768796181,
+            "residual_variance_x1": 0.05281282357748404,
+            "residual_variance_x2": 0.5225966806100026,
+            "residual_variance_x3": 0.38168248935911797,
+            "residual_variance_y1": 0.3834695352288537,
+            "residual_variance_y2": 0.4151088798937341,
+            "residual_variance_y3": 0.5016293317522619
+          },
+          "sample_size": 220
+        }
+      ],
+      "objective": 0.04210526312369476,
+      "observed_moments": 42
+    },
+    "data_authority": {
+      "combined_authority_sha256": "34e2b55c9ea3daf314eca18b8df492eebdf39df6046a834ff2e095ac7b704077",
+      "dataset_fingerprint": "v2:c547e992ce2a3c23d470da85b5dbfd254e1728e2bfd8d51254a00d712521d0d5",
+      "dataset_id": "cb5e2a01-0000-0000-0000-000000000001",
+      "group_covariance_sha256": {
+        "A": "a554e1324a917aad52f87bd483f05d89665885c76fc6b6fd7caf1fc1a52de85e",
+        "B": "c1a43b1cf55b84fe7c6a2f74c9fc0ed8119ce0d579568b643305097e3de01b8e"
+      },
+      "group_observed_means_sha256": {
+        "A": "e09cfb5a11f2cb2114b7d6b251f42ecccce9d6a10eb95d25711fc2583aea1335",
+        "B": "f9f6c6010e8bdf17cf8572cf9724f5fe3827791476efb03cc554dfa5541899e7"
+      },
+      "group_sample_sizes": {
+        "A": 180,
+        "B": 220
+      },
+      "shared_complete_case_observations": 400
+    },
+    "dataset_uuids": {
+      "label_swap": "cb5e2a01-0000-0000-0000-000000000002",
+      "primary": "cb5e2a01-0000-0000-0000-000000000001"
+    },
+    "label_swap_check": {
+      "absolute_tolerance": 1e-07,
+      "configural_chi_square_absolute_difference": 0.0,
+      "lrt_absolute_difference": 5.471179065352771e-13,
+      "metric_chi_square_absolute_difference": 5.471179065352771e-13,
+      "status": "accepted"
+    },
+    "likelihood_ratio_test": {
+      "degrees_of_freedom": 4,
+      "statistic": 21.62648233366326,
+      "upper_tail_p_value": 0.00023781437354424367
+    },
+    "method_version": "cbsem_exact_two_group_configural_metric_prerequisite_v1",
+    "metric": {
+      "chi_square": 38.468587583141165,
+      "degrees_of_freedom": 20,
+      "free_dimensions": 22,
+      "gradient_norm": 2.122707606377918e-07,
+      "groups": [
+        {
+          "chi_square": 20.731575356977103,
+          "group": "A",
+          "implied_covariance_sha256": "9dd911beb7582265f4f4e8cfe03f12e67cc22389c7f8670b4f2ea93605babf35",
+          "objective": 0.1151754186498728,
+          "parameters": {
+            "factor_covariance_f1_f2": 0.3981237152389084,
+            "factor_variance_f1": 1.2922298378988222,
+            "factor_variance_f2": 0.8635367427241315,
+            "loading_x1": 1.0,
+            "loading_x2": 0.6253553598685064,
+            "loading_x3": 0.375669672621674,
+            "loading_y1": 1.0,
+            "loading_y2": 0.7083274045244846,
+            "loading_y3": 0.676657211706545,
+            "residual_variance_x1": 0.07924635390964489,
+            "residual_variance_x2": 0.4048621938006217,
+            "residual_variance_x3": 0.6014634173595819,
+            "residual_variance_y1": 0.31334291499431727,
+            "residual_variance_y2": 0.3268828933951894,
+            "residual_variance_y3": 0.3671721542382062
+          },
+          "sample_size": 180
+        },
+        {
+          "chi_square": 17.73701222616406,
+          "group": "B",
+          "implied_covariance_sha256": "1447c262601729a85ce87c99af80753c012217ff0089517faf82ba764ef19010",
+          "objective": 0.08062278284620028,
+          "parameters": {
+            "factor_covariance_f1_f2": 0.3049350533557703,
+            "factor_variance_f1": 0.9487544764561754,
+            "factor_variance_f2": 1.024140548210762,
+            "loading_x1": 1.0,
+            "loading_x2": 0.6253553598685064,
+            "loading_x3": 0.375669672621674,
+            "loading_y1": 1.0,
+            "loading_y2": 0.7083274045244846,
+            "loading_y3": 0.676657211706545,
+            "residual_variance_x1": 0.10721714248322653,
+            "residual_variance_x2": 0.5150097094255004,
+            "residual_variance_x3": 0.3847201563181486,
+            "residual_variance_y1": 0.38199241120220906,
+            "residual_variance_y2": 0.4253605060956911,
+            "residual_variance_y3": 0.49288251721950027
+          },
+          "sample_size": 220
+        }
+      ],
+      "objective": 0.09617146895785292,
+      "observed_moments": 42
+    },
+    "qualification_status": "engine_only_prerequisite_not_product_qualified",
+    "repeat_run_reproducibility": {
+      "canonical_full_engine_json_sha256": [
+        "e7006475dc932fa86a20e5a658fbbe38db3f6b25a48cd2e1f15c3f52f20d9c40",
+        "e7006475dc932fa86a20e5a658fbbe38db3f6b25a48cd2e1f15c3f52f20d9c40"
+      ],
+      "canonical_json_identical": true,
+      "execution_count": 2,
+      "raw_stdout_byte_identical": true,
+      "raw_stdout_sha256": [
+        "c92d1f50c355c6fb3b1544d323db51002a9ce70768ab1c93029662b358681dcf",
+        "c92d1f50c355c6fb3b1544d323db51002a9ce70768ab1c93029662b358681dcf"
+      ],
+      "status": "accepted"
+    },
+    "scientific_result_sha256": "e7006475dc932fa86a20e5a658fbbe38db3f6b25a48cd2e1f15c3f52f20d9c40"
+  },
+  "fixture": {
+    "dgp": {
+      "deliberate_noninvariance": "group_B_x3_loading_0.38_vs_group_A_0.71",
+      "factor_correlation": 0.35,
+      "generation": "frozen_xorshift32_box_muller_raw_rows_v1",
+      "marker_loadings": {
+        "x1": 1,
+        "y1": 1
+      },
+      "nonmarker_loadings": {
+        "A": {
+          "x2": 0.82,
+          "x3": 0.71,
+          "y2": 0.78,
+          "y3": 0.66
+        },
+        "B": {
+          "x2": 0.82,
+          "x3": 0.38,
+          "y2": 0.78,
+          "y3": 0.66
+        }
+      },
+      "residual_standard_deviations": {
+        "x1": 0.55,
+        "x2": 0.6,
+        "x3": 0.65,
+        "y1": 0.58,
+        "y2": 0.62,
+        "y3": 0.68
+      },
+      "seed": 539363350
+    },
+    "group_sample_sizes": {
+      "A": 180,
+      "B": 220
+    },
+    "label_swap_path": "validation/fixtures/cbsem_exact_two_group_configural_metric_v1_label_swap.csv",
+    "label_swap_sha256": "7170f47d6bd8253b61c499b52cc70e3b9e93070ae1e9001b6b5f7ea8722ce926",
+    "label_swap_validation": "exact_numeric_rows_preserved_group_text_values_exchanged",
+    "observed_variable_order": [
+      "x1",
+      "x2",
+      "x3",
+      "y1",
+      "y2",
+      "y3"
+    ],
+    "primary_path": "validation/fixtures/cbsem_exact_two_group_configural_metric_v1.csv",
+    "primary_sha256": "909e80665b244d23c1b6aa329a9e0f86e55b21afb5995928fa4310797e2d6d57"
+  },
+  "kind": "cbsem_exact_two_group_configural_metric_engine_reference_report_v2",
+  "lavaan_reference": {
+    "reason": "Rscript_not_found",
+    "required_contract": {
+      "configural_group_equal": [],
+      "estimator": "ML",
+      "fixed_x": false,
+      "marker_identification": true,
+      "meanstructure": false,
+      "metric_group_equal": [
+        "loadings"
+      ],
+      "missing": "listwise",
+      "std_lv": false
+    },
+    "script_sha256": "968682bdd9e34142fd4c7e876c94e568010beef59638cf675bdfa4f970880c01",
+    "status": "unavailable_current_host"
+  },
+  "manifest_path": "validation/cbsem_exact_two_group_configural_metric_manifest_v2.json",
+  "manifest_sha256": "02b0cd12d277115d16db4a587f4ff79746502f758b0fff1987adfc8ba7e2b1af",
+  "python_reference": {
+    "configural": {
+      "chi_square": 16.84210524994615,
+      "degrees_of_freedom": 16,
+      "free_dimensions": 26,
+      "groups": [
+        {
+          "chi_square": 8.501617508430925,
+          "group": "A",
+          "implied_covariance": [
+            [
+              1.3662810098704121,
+              0.7437704218322153,
+              0.6893388670199092,
+              0.3876963543817123,
+              0.26498099975920414,
+              0.2752718545063818
+            ],
+            [
+              0.7437704218322153,
+              0.8386958024001315,
+              0.4304532446006646,
+              0.24209450772001406,
+              0.16546568975137022,
+              0.17189174814959607
+            ],
+            [
+              0.6893388670199092,
+              0.43045324460066464,
+              0.9295112372118333,
+              0.22437723895009126,
+              0.15335636878769052,
+              0.15931214719136044
+            ],
+            [
+              0.3876963543817123,
+              0.24209450772001406,
+              0.22437723895009126,
+              1.174652460819449,
+              0.5889895489756609,
+              0.6118636641070183
+            ],
+            [
+              0.26498099975920414,
+              0.16546568975137022,
+              0.15335636878769052,
+              0.5889895489756609,
+              0.737035775298019,
+              0.4181938870433066
+            ],
+            [
+              0.2752718545063818,
+              0.17189174814959607,
+              0.15931214719136044,
+              0.6118636641070183,
+              0.4181938870433067,
+              0.7911205653174875
+            ]
+          ],
+          "objective": 0.04723120838017181,
+          "optimizer": {
+            "function_evaluations": 602,
+            "iterations": 34,
+            "maximum_absolute_gradient": 1.776356830474485e-07,
+            "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+            "method": "scipy_optimize_minimize_l_bfgs_b_transformed_open_domains_v1",
+            "status": 0,
+            "success": true
+          },
+          "parameters": {
+            "factor_covariance_f1_f2": 0.3876963543817123,
+            "factor_variance_f1": 1.1910930312173273,
+            "factor_variance_f2": 0.8617565075016704,
+            "loading_x1": 1.0,
+            "loading_x2": 0.6244436012458767,
+            "loading_x3": 0.5787447738783152,
+            "loading_y1": 1.0,
+            "loading_y2": 0.6834756034314243,
+            "loading_y3": 0.7100191977440127,
+            "residual_variance_x1": 0.17518797865308472,
+            "residual_variance_x2": 0.3742531216910581,
+            "residual_variance_x3": 0.5305599704928619,
+            "residual_variance_y1": 0.3128959533177787,
+            "residual_variance_y2": 0.33447578789707677,
+            "residual_variance_y3": 0.35668561739951027
+          },
+          "sample_size": 180
+        },
+        {
+          "chi_square": 8.340487741515226,
+          "group": "B",
+          "implied_covariance": [
+            [
+              1.0617225582689047,
+              0.6646633450664208,
+              0.2474558274225521,
+              0.30476977562275887,
+              0.22299704206605309,
+              0.1971335755111311
+            ],
+            [
+              0.6646633450664208,
+              0.9604725712815296,
+              0.16302185958876253,
+              0.20077981628467423,
+              0.1469086133838543,
+              0.1298699747827296
+            ],
+            [
+              0.2474558274225521,
+              0.16302185958876253,
+              0.4423760730207494,
+              0.07475082827609074,
+              0.05469444456391473,
+              0.04835091675469907
+            ],
+            [
+              0.30476977562275887,
+              0.20077981628467423,
+              0.07475082827609074,
+              1.4083539138815029,
+              0.7498979918158413,
+              0.6629239160557365
+            ],
+            [
+              0.22299704206605309,
+              0.1469086133838543,
+              0.05469444456391473,
+              0.7498979918158413,
+              0.9638019500915695,
+              0.48505489789202844
+            ],
+            [
+              0.1971335755111311,
+              0.1298699747827296,
+              0.04835091675469906,
+              0.6629239160557365,
+              0.48505489789202844,
+              0.9304269589144702
+            ]
+          ],
+          "objective": 0.0379113079159783,
+          "optimizer": {
+            "function_evaluations": 784,
+            "iterations": 39,
+            "maximum_absolute_gradient": 1.7763568501960078e-07,
+            "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+            "method": "scipy_optimize_minimize_l_bfgs_b_transformed_open_domains_v1",
+            "status": 0,
+            "success": true
+          },
+          "parameters": {
+            "factor_covariance_f1_f2": 0.30476977562275887,
+            "factor_variance_f1": 1.0089126600920582,
+            "factor_variance_f2": 1.0248846378777285,
+            "loading_x1": 1.0,
+            "loading_x2": 0.6587917580554233,
+            "loading_x3": 0.2452698208782245,
+            "loading_y1": 1.0,
+            "loading_y2": 0.7316901474576557,
+            "loading_y3": 0.6468278395005322,
+            "residual_variance_x1": 0.05280989817684649,
+            "residual_variance_x2": 0.5225978376702237,
+            "residual_variance_x3": 0.3816826265535472,
+            "residual_variance_y1": 0.3834692760037743,
+            "residual_variance_y2": 0.41510897788163686,
+            "residual_variance_y3": 0.501629314538906
+          },
+          "sample_size": 220
+        }
+      ],
+      "objective": 0.04210526312486538,
+      "observed_moments": 42
+    },
+    "likelihood_ratio_test": {
+      "degrees_of_freedom": 4,
+      "statistic": 21.62648233322816,
+      "upper_tail_p_value": 0.00023781437359160092
+    },
+    "metric": {
+      "chi_square": 38.46858758317431,
+      "degrees_of_freedom": 20,
+      "free_dimensions": 22,
+      "groups": [
+        {
+          "chi_square": 20.73156914585109,
+          "group": "A",
+          "implied_covariance": [
+            [
+              1.3714760776631132,
+              0.8081028653071518,
+              0.485451660876852,
+              0.3981236368899962,
+              0.28200187840655944,
+              0.2693932589843526
+            ],
+            [
+              0.8081028653071518,
+              0.9102136841553492,
+              0.30357969571867366,
+              0.24896866626672595,
+              0.17635132668847753,
+              0.16846646161105203
+            ],
+            [
+              0.485451660876852,
+              0.3035796957186737,
+              0.783832924954597,
+              0.14956295508188583,
+              0.10593953828664894,
+              0.10120286302913552
+            ],
+            [
+              0.3981236368899962,
+              0.24896866626672595,
+              0.14956295508188583,
+              1.1768794262238065,
+              0.6116666571613207,
+              0.584318356728081
+            ],
+            [
+              0.28200187840655944,
+              0.17635132668847756,
+              0.10593953828664895,
+              0.6116666571613207,
+              0.7601431358323709,
+              0.4138886991788489
+            ],
+            [
+              0.2693932589843526,
+              0.16846646161105203,
+              0.1012028630291355,
+              0.584318356728081,
+              0.41388869917884885,
+              0.7625552962321596
+            ]
+          ],
+          "objective": 0.11517538414361717,
+          "parameters": {
+            "factor_covariance_f1_f2": 0.3981236368899962,
+            "factor_variance_f1": 1.2922302896246336,
+            "factor_variance_f2": 0.8635366384415798,
+            "loading_x1": 1.0,
+            "loading_x2": 0.625355148997389,
+            "loading_x3": 0.37566961924245384,
+            "loading_y1": 1.0,
+            "loading_y2": 0.7083273944985038,
+            "loading_y3": 0.6766572843771833,
+            "residual_variance_x1": 0.07924578803847966,
+            "residual_variance_x2": 0.40486239641597827,
+            "residual_variance_x3": 0.6014634843523732,
+            "residual_variance_y1": 0.3133427877822267,
+            "residual_variance_y2": 0.326882886263683,
+            "residual_variance_y3": 0.36717202375679797
+          },
+          "sample_size": 180
+        },
+        {
+          "chi_square": 17.737018437323222,
+          "group": "B",
+          "implied_covariance": [
+            [
+              1.055971913740693,
+              0.5933087365385078,
+              0.35641837683113603,
+              0.30493506050239844,
+              0.2159938568969075,
+              0.206336529950945
+            ],
+            [
+              0.5933087365385078,
+              0.8860384574187772,
+              0.2228880671486426,
+              0.1906927101950052,
+              0.1350728705622863,
+              0.12903361143107744
+            ],
+            [
+              0.35641837683113603,
+              0.2228880671486426,
+              0.5186157555892964,
+              0.11455483807261065,
+              0.0811423299791703,
+              0.07751436564248068
+            ],
+            [
+              0.30493506050239844,
+              0.1906927101950052,
+              0.11455483807261065,
+              1.4061328256317656,
+              0.725426636949715,
+              0.6929920005717128
+            ],
+            [
+              0.2159938568969075,
+              0.1350728705622863,
+              0.0811423299791703,
+              0.725426636949715,
+              0.9391999526865882,
+              0.490865218173267
+            ],
+            [
+              0.206336529950945,
+              0.12903361143107742,
+              0.07751436564248068,
+              0.6929920005717128,
+              0.490865218173267,
+              0.9618005869629114
+            ]
+          ],
+          "objective": 0.08062281107874192,
+          "parameters": {
+            "factor_covariance_f1_f2": 0.30493506050239844,
+            "factor_variance_f1": 0.948754859522209,
+            "factor_variance_f2": 1.0241403093880301,
+            "loading_x1": 1.0,
+            "loading_x2": 0.625355148997389,
+            "loading_x3": 0.37566961924245384,
+            "loading_y1": 1.0,
+            "loading_y2": 0.7083273944985038,
+            "loading_y3": 0.6766572843771833,
+            "residual_variance_x1": 0.10721705421848411,
+            "residual_variance_x2": 0.5150097840792861,
+            "residual_variance_x3": 0.3847201996741301,
+            "residual_variance_y1": 0.3819925162437355,
+            "residual_variance_y2": 0.42536039303618456,
+            "residual_variance_y3": 0.49288250176094467
+          },
+          "sample_size": 220
+        }
+      ],
+      "objective": 0.09617146895793578,
+      "observed_moments": 42,
+      "optimizer": {
+        "function_evaluations": 2553,
+        "iterations": 97,
+        "maximum_absolute_gradient": 3.455569165964659e-07,
+        "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+        "method": "scipy_optimize_minimize_l_bfgs_b_transformed_open_domains_v1",
+        "status": 0,
+        "success": true
+      }
+    },
+    "moments": {
+      "A": {
+        "complete_rows_sha256": "01ef1ee5ee58dedbb029e020cd7f05f00453834ceac983140bd68618d1366738",
+        "covariance_ml": [
+          [
+            1.3662809048217948,
+            0.7450031307919154,
+            0.6843804736807186,
+            0.415367309933177,
+            0.3075290140221236,
+            0.2151942949375751
+          ],
+          [
+            0.7450031307919154,
+            0.8386957315775907,
+            0.4409652278391628,
+            0.2154165649599643,
+            0.11607446101129718,
+            0.11070596110209947
+          ],
+          [
+            0.6843804736807186,
+            0.4409652278391628,
+            0.9295111473316149,
+            0.2525970891395871,
+            0.2210798155926308,
+            0.13448412884797514
+          ],
+          [
+            0.415367309933177,
+            0.2154165649599643,
+            0.2525970891395871,
+            1.1746524306961772,
+            0.5813770283088956,
+            0.6158453701755511
+          ],
+          [
+            0.3075290140221236,
+            0.11607446101129718,
+            0.2210798155926308,
+            0.5813770283088956,
+            0.7370357596337062,
+            0.424188326294424
+          ],
+          [
+            0.2151942949375751,
+            0.11070596110209947,
+            0.13448412884797514,
+            0.6158453701755511,
+            0.424188326294424,
+            0.7911205386460799
+          ]
+        ],
+        "group": "A",
+        "observed_means": [
+          0.1476003330399889,
+          0.13067830382854448,
+          0.12450061499331111,
+          -0.030088598150605526,
+          -0.06734655331042223,
+          0.022815200397344443
+        ],
+        "sample_size": 180
+      },
+      "B": {
+        "complete_rows_sha256": "f621c2b2c40f7050089b4fdbb27b8d56f75292a6c2742f89ee68403716ed5205",
+        "covariance_ml": [
+          [
+            1.0617228255373334,
+            0.6650849276714275,
+            0.2478551391802174,
+            0.3260793169803419,
+            0.24281956387713022,
+            0.11599206355846575
+          ],
+          [
+            0.6650849276714275,
+            0.9604727880597269,
+            0.14460771197479544,
+            0.2133776986224463,
+            0.16760930423259104,
+            0.12966022012320708
+          ],
+          [
+            0.2478551391802174,
+            0.14460771197479544,
+            0.44237612768864065,
+            0.13272728085913346,
+            0.12185843953922401,
+            0.05685119872401589
+          ],
+          [
+            0.3260793169803419,
+            0.2133776986224463,
+            0.13272728085913346,
+            1.4083542730956666,
+            0.7432780973183044,
+            0.6665158607840056
+          ],
+          [
+            0.24281956387713022,
+            0.16760930423259104,
+            0.12185843953922401,
+            0.7432780973183044,
+            0.9638019584200096,
+            0.4931295489472312
+          ],
+          [
+            0.11599206355846575,
+            0.12966022012320708,
+            0.05685119872401589,
+            0.6665158607840056,
+            0.4931295489472312,
+            0.930427268040739
+          ]
+        ],
+        "group": "B",
+        "observed_means": [
+          0.09000577168947274,
+          0.035332798219549995,
+          -0.013985663323959084,
+          0.11065808543908184,
+          0.04379043519502273,
+          0.08015155566751354
+        ],
+        "sample_size": 220
+      }
+    },
+    "runtime": {
+      "numpy_version": "1.26.4",
+      "optimizer_contract": {
+        "configural_maxiter": 5000,
+        "ftol": 1e-15,
+        "gtol": 1e-10,
+        "maxls": 100,
+        "method": "L-BFGS-B",
+        "metric_maxiter": 10000,
+        "parameterization": "marker_loadings_fixed_one_log_variances_tanh_factor_correlation"
+      },
+      "python_version": "3.13.1",
+      "scipy_version": "1.15.2"
+    }
+  },
+  "qualification_boundary": {
+    "evidence_role": "quarantined_engine_reference_only",
+    "forbidden_claims": [
+      "product_support",
+      "runner_support",
+      "project_persistence",
+      "canonical_export_support",
+      "release_qualification"
+    ],
+    "missing_evidence": [
+      "executed_lavaan_reference_on_available_host",
+      "broader_group_and_model_axes",
+      "canonical_and_text_export_contracts",
+      "project_roundtrip",
+      "runner_and_native_integration",
+      "scientific_review"
+    ],
+    "status": "blocked_not_product_qualification"
+  },
+  "schema_version": 2,
+  "source_bindings": [
+    {
+      "path": "validation/fixtures/cbsem_exact_two_group_configural_metric_v1.csv",
+      "role": "primary_raw_fixture",
+      "sha256": "909e80665b244d23c1b6aa329a9e0f86e55b21afb5995928fa4310797e2d6d57"
+    },
+    {
+      "path": "validation/fixtures/cbsem_exact_two_group_configural_metric_v1_label_swap.csv",
+      "role": "label_swap_raw_fixture",
+      "sha256": "7170f47d6bd8253b61c499b52cc70e3b9e93070ae1e9001b6b5f7ea8722ce926"
+    },
+    {
+      "path": "validation/cbsem_exact_two_group_configural_metric_oracle_v1.py",
+      "role": "independent_python_oracle",
+      "sha256": "97edc5bf38ddbae27107ff5d17945f02ce140c260675662cc7afa1e04797c5d0"
+    },
+    {
+      "path": "validation/cbsem_exact_two_group_configural_metric_oracle_v1.R",
+      "role": "independent_lavaan_script",
+      "sha256": "968682bdd9e34142fd4c7e876c94e568010beef59638cf675bdfa4f970880c01"
+    },
+    {
+      "path": "crates/qpls-estimation/examples/cbsem_exact_two_group_configural_metric_validation.rs",
+      "role": "rust_validation_example",
+      "sha256": "04c2562837a3f3e72536bfa271e6c6a764c26472ff30c64f9c9447152d92d210"
+    },
+    {
+      "path": "crates/qpls-estimation/src/cbsem_exact_two_group_invariance.rs",
+      "role": "quarantined_engine_source",
+      "sha256": "0669b95dc809fca986892ec448389d9b60fb545631c43743b8802ddc237ccb52"
+    },
+    {
+      "path": "validation/cbsem_exact_two_group_configural_metric_manifest_v2.schema.json",
+      "role": "manifest_schema",
+      "sha256": "529ccc9e37bd3f790b4848ee649a4d1aacb0b0adf619d1f29322db2e92e3e1db"
+    },
+    {
+      "path": "validation/cbsem_exact_two_group_configural_metric_report_v2.schema.json",
+      "role": "report_schema",
+      "sha256": "fb91b3441dc8ab47fc7ca9b3fd9bc9d30fac6ab5af3530eaa123a1e87deda2ee"
+    },
+    {
+      "path": "target/release/examples/cbsem_exact_two_group_configural_metric_validation.exe",
+      "role": "release_validation_binary",
+      "sha256": "ca45e3567b253b04064e6ba2fc778a659abf12007ae8cca1146e77963b188ba2"
+    }
+  ],
+  "status": "engine_reference_evidence_v2_passed_reproducible_product_qualification_blocked",
+  "supersedes": {
+    "disposition": "rejected_nondeterministic_import_dataset_identity",
+    "path": "validation/results/cbsem_exact_two_group_configural_metric/reference-report-v1.json",
+    "reason": "import_generated_random_dataset_uuids_changed_full_engine_json_between_executions",
+    "sha256": "bc430dbd7907d39ed95f278ce8cfa2e8cf28478f1a3486226bcad2192350b919"
+  }
+}

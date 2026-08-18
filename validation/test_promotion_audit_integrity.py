@@ -510,7 +510,7 @@ class StaticPromotionScriptTests(unittest.TestCase):
             "binary logistic regression",
             "Consistent PLS",
             "Weighted PLS",
-            "PLSpredict / CVPAT",
+            "PLSpredict / CVPAT retry",
         ):
             self.assertIn(
                 f'"{method_label}",\n    {{ allowTerminalTransitionAfterCapture: true }},',
@@ -569,7 +569,7 @@ class StaticPromotionScriptTests(unittest.TestCase):
             source,
         )
         self.assertIn(
-            'predictionCaptureName(93, "running"),\n    "PLSpredict / CVPAT",\n    { allowTerminalTransitionAfterCapture: true },',
+            'predictionCaptureName(93, "running"),\n    "PLSpredict / CVPAT retry",\n    { allowTerminalTransitionAfterCapture: true },',
             source,
         )
 

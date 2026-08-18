@@ -23,7 +23,7 @@ METHOD_VERSION = "freedman_lane_permutation_v1"
 EVIDENCE_KIND = "quickpls3_scoped_tauri_structural_path_randomization_v1_acceptance"
 RAW_REPORT = "validation/results/v247_tauri_native_acceptance_structural_path_randomization.json"
 WARNING = (
-    "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed "
+    "Supported for the documented bounded scope: single-model Freedman-Lane randomization holds the original PLS construct scores fixed "
     "and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate "
     "inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, "
     "no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only."
@@ -31,7 +31,6 @@ WARNING = (
 EXPECTED_SHARED_STRINGS = [
     "Structural path randomization",
     "Run provenance",
-    "experimental",
     WARNING,
     "Randomization method",
     METHOD_VERSION,
@@ -45,8 +44,8 @@ EXPECTED_SHARED_STRINGS = [
     "Structural path coefficients conditional on fixed original PLS construct scores",
     "Pathwise probability",
     "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment",
-    "Qualification status",
-    "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately",
+    "Availability",
+    "Supported within the documented fixed-score scope",
 ]
 CHECK_NAMES = [
     "runtimePreflight",
@@ -98,14 +97,14 @@ def qualified_page() -> dict[str, object]:
 
 def valid_report() -> dict[str, object]:
     setup_contract = {
-        "catalogCount": 15,
+        "catalogCount": 18,
         "selectedMethod": "Structural Path Randomization",
         "permutations": {"count": 1, "type": "number", "minimum": "99", "maximum": "10000", "step": "1", "value": "10000"},
         "workers": {"count": 1, "type": "number", "minimum": "1", "maximum": "64", "value": "4"},
         "seed": {"count": 1, "type": "number", "minimum": "0", "maximum": "4294967295", "value": "20260718"},
         "bootstrapControls": 0,
         "groupControls": 0,
-        "scopeLabel": "Candidate scope",
+        "scopeLabel": "Validated scope",
         "scope": WARNING,
         "blockers": [],
         "startLabel": "Start path randomization",
@@ -253,7 +252,7 @@ def valid_report() -> dict[str, object]:
                         "Dataset fingerprint": "fingerprint-1",
                         "Recipe": "recipe-1",
                         "Engine": "2.45.0",
-                        "Method version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1",
+                        "Method version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v8+freedman_lane_permutation_v1",
                         "Weighting": "path",
                         "Preprocessing": "standardized",
                     },
@@ -406,7 +405,7 @@ class StructuralPathRandomizationPackagedAcceptanceTests(unittest.TestCase):
     def test_harness_uses_an_isolated_scope_and_exact_scientific_contract(self) -> None:
         required = [
             'const structuralPathRandomizationOnly = acceptanceScope === "structural_path_randomization";',
-            "const isolatedFocusedOnly = ctaPlsOnly || processV2Only || structuralPathRandomizationOnly;",
+            "|| processV2Only || structuralPathRandomizationOnly || cbsemOnly || gscaOnly",
             "if (isolatedFocusedOnly && scopedReportPath !== reportPath)",
             "if (structuralPathRandomizationOnly) await writeStructuralPathRandomizationPackagedEvidence();",
             "async function runFocusedStructuralPathRandomizationAcceptance()",

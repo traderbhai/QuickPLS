@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 import type { AnalysisRun, MethodDefinition } from "../types";
-import { methodStatusDescription } from "../domain/methodStatus";
+import { methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
 import { runExportTables } from "../domain/resultTables";
 
 export function WorkspacePage({ children, className = "", ...props }: HTMLAttributes<HTMLElement> & { children: ReactNode }) {
@@ -92,18 +92,19 @@ export function EmptyState({ title, description, actions }: { title: string; des
 
 export function MethodScopeDrawer({ method, open, onToggle }: { method?: MethodDefinition; open: boolean; onToggle: () => void }) {
   const status = method?.status ?? "validated";
-  return <section className="method-scope-drawer" aria-label="Method scope transparency">
-    <button type="button" className="scope-drawer-trigger" onClick={onToggle}>Why trust this result?</button>
+  return <section className="method-scope-drawer" aria-label="Method details">
+    <button type="button" className="scope-drawer-trigger" onClick={onToggle}>Method details</button>
     {open ? <div className="scope-drawer-panel">
-      <div><strong>{method?.name ?? "Selected method"} scope</strong><StatusBadge status={status === "validated" ? "validated" : status === "experimental" ? "experimental" : "unsupported"}>{status === "validated" ? "Validated scope" : status}</StatusBadge></div>
-      <p>{method ? methodStatusDescription(method) : "This result is interpreted only inside the documented QuickPLS supported scope."}</p>
+      <div><strong>{method?.name ?? "Selected method"}</strong><StatusBadge status={status === "validated" ? "validated" : status === "experimental" ? "experimental" : "unsupported"}>{methodStatusLabel(status)}</StatusBadge></div>
+      <p>{method ? methodStatusDescription(method) : "Review the supported model, data, settings, outputs, and assumptions before interpretation."}</p>
       <dl>
-        <div><dt>Validation basis</dt><dd>Published equations, independent references, deterministic fixtures, and QuickPLS audit artifacts.</dd></div>
-        <div><dt>Tolerance policy</dt><dd>Deterministic values require documented agreement or known-difference notes before scoped promotion.</dd></div>
-        <div><dt>Runtime dependency</dt><dd>QuickPLS runs offline. R/Rscript and external engines are validation-only, never runtime requirements.</dd></div>
-        <div><dt>Known limits</dt><dd>Unsupported variants remain blocked or watermarked; QuickPLS does not claim SmartPLS project import or equivalence.</dd></div>
+        <div><dt>What it answers</dt><dd>The analytical question represented by this method and its selected options.</dd></div>
+        <div><dt>Required model and data</dt><dd>Only compatible diagrams, inputs, and settings can be run.</dd></div>
+        <div><dt>Outputs</dt><dd>Result tables and charts remain linked to this exact run.</dd></div>
+        <div><dt>Assumptions and cautions</dt><dd>Review method-specific assumptions and interpretation limits before final reporting.</dd></div>
+        <div><dt>Runtime</dt><dd>QuickPLS runs offline; external reference tools are not runtime requirements.</dd></div>
       </dl>
-      <a href="docs/VALIDATION_ARTIFACT_INDEX_V1_0.md">Open validation artifact index</a>
+      <a href="docs/VALIDATION_ARTIFACT_INDEX_V1_0.md">Open advanced technical details</a>
     </div> : null}
   </section>;
 }
@@ -114,14 +115,14 @@ export function MethodConfidencePanel({ run }: { run: AnalysisRun }) {
     && confidenceTables.every((table) => table.status === "validated")
     ? "validated"
     : "experimental";
-  return <section className="method-confidence-panel" aria-label="Method confidence">
-    <header><strong>Method Confidence</strong><StatusBadge status={scopeStatus}>{scopeStatus === "validated" ? "Validated scope" : "Candidate scope"}</StatusBadge></header>
+  return <section className="method-confidence-panel" aria-label="Run details">
+    <header><strong>Run Details</strong><StatusBadge status={scopeStatus}>{scopeStatus === "validated" ? "Supported result" : "Experimental result"}</StatusBadge></header>
     <dl>
       <div><dt>Method</dt><dd>{run.method}</dd></div>
       <div><dt>Seed</dt><dd>{run.seed}</dd></div>
       <div><dt>Data fingerprint</dt><dd>{run.fingerprint}</dd></div>
       <div><dt>Status</dt><dd>{run.status}</dd></div>
-      <div><dt>Warnings</dt><dd>{run.warnings.filter((warning) => !warning.toLowerCase().includes("validated")).length || "none beyond scope status"}</dd></div>
+      <div><dt>Warnings</dt><dd>{run.warnings.filter((warning) => !warning.toLowerCase().includes("validated")).length || "none"}</dd></div>
     </dl>
   </section>;
 }

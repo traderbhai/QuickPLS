@@ -1,0 +1,8 @@
+   Compiling qpls-core v2.46.0 (D:\QuickPLS\crates\qpls-core)
+   Compiling qpls-estimation v2.46.0 (D:\QuickPLS\crates\qpls-estimation)
+   Compiling qpls-assessment v2.46.0 (D:\QuickPLS\crates\qpls-assessment)
+   Compiling qpls-resampling v2.46.0 (D:\QuickPLS\crates\qpls-resampling)
+   Compiling qpls-project v2.46.0 (D:\QuickPLS\crates\qpls-project)
+   Compiling qpls-runner v2.46.0 (D:\QuickPLS\crates\qpls-runner)
+   Compiling quickpls-desktop v2.46.0 (D:\QuickPLS\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4m 28s

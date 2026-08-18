@@ -1,0 +1,987 @@
+{
+  "comparison_contract": {
+    "outputs": [
+      {
+        "absolute_tolerance": 2e-12,
+        "elementwise_tolerance": 2e-12,
+        "norm": "maximum",
+        "output_id": "canonical_ml_covariance",
+        "rationale": "Equivalent raw, covariance, and explicitly scaled correlation inputs must agree at double-precision moment conversion scale.",
+        "relative_tolerance": 1e-10,
+        "rule": "matrix_norm"
+      },
+      {
+        "absolute_tolerance": 2e-06,
+        "output_id": "unstandardized_parameters",
+        "rationale": "The independent analytic-gradient optimizer and hand solution are compared on each identified parameter without widening for fixture deltas.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "output_id": "stable_parameter_ids",
+        "rationale": "Scientific parameter identities are categorical and must never be fuzzy-matched.",
+        "rule": "exact"
+      },
+      {
+        "absolute_tolerance": 2e-10,
+        "output_id": "objective",
+        "rationale": "The just-identified microcase has an approximately zero ML discrepancy; applied cases retain a relative component.",
+        "relative_tolerance": 1e-08,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 2e-06,
+        "output_id": "gradient_norm",
+        "rationale": "Convergence must be accompanied by an independently evaluated analytic-gradient norm.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "output_id": "convergence_status",
+        "rationale": "Converged, nonconverged, and inadmissible states are typed categorical outcomes.",
+        "rule": "exact"
+      }
+    ]
+  },
+  "evidence_contract": {
+    "receipt_contract": {
+      "hardware_fingerprint_required": true,
+      "hash_algorithm": "sha256",
+      "identity_fields": [
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "build_fingerprint"
+      ],
+      "scenario_set_hash_required": true,
+      "source_descriptors_required": true
+    },
+    "receipts": [],
+    "required_roles": [
+      "method_contract",
+      "kernel_execution",
+      "oracle_independence",
+      "generative_recovery",
+      "adversarial_boundaries",
+      "archive_persistence",
+      "cross_format_export",
+      "frontend_contract",
+      "packaged_windows_e2e",
+      "performance_scale"
+    ]
+  },
+  "identity": {
+    "capability_cell": {
+      "capability_id": "smartpls.cbsem",
+      "capability_version": "cbsem_ml_compiled_moment_input_v2",
+      "cell_id": "qpls3.cbsem.ml.matrix_input",
+      "registry_schema_version": 2
+    },
+    "execution_kind": "iterative",
+    "method_version": "cbsem_ml_compiled_moment_input_v2",
+    "potentially_long_running": true,
+    "qualification_id": "qpls3.cbsem.ml.matrix_input.qualification_v2",
+    "spec_frozen_at_utc": "2026-08-14T18:00:00Z"
+  },
+  "migration": {
+    "source_kind": "qualification_v1_manifest",
+    "source_manifest_path": "validation/methods/cbsem_ml_v1.manifest.json",
+    "source_schema_version": 1,
+    "status": "compatibility_only",
+    "unresolved_items": [
+      "The independent work report has no frozen current-product numerical comparison.",
+      "A second maintained external SEM implementation is unavailable locally and no approved oracle exception exists.",
+      "Qualification-sized generative, product adversarial, archive/export, frontend, packaged Windows, performance, soak, and scientific-review evidence are missing."
+    ]
+  },
+  "operational_contract": {
+    "archive": {
+      "corruption_cases": [
+        "feature_identity",
+        "method_version",
+        "dataset_fingerprint",
+        "checksum",
+        "duplicate_entry",
+        "malformed_payload",
+        "legacy_reinterpretation",
+        "interrupted_save"
+      ],
+      "current_schema_version": 6,
+      "future_schema_policy": "verified_read_only",
+      "readable_schema_versions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "writable_schema_versions": [
+        6
+      ]
+    },
+    "cancellation": {
+      "archive_unchanged": true,
+      "maximum_latency_seconds": 1.0,
+      "no_partial_committed_result": true,
+      "no_partial_visible_result": true,
+      "phases": [
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "validate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "estimate"
+        },
+        {
+          "applicability": "not_applicable",
+          "not_applicable_reason": "This point-estimation cell has no resampling phase.",
+          "phase": "resample"
+        },
+        {
+          "applicability": "not_applicable",
+          "not_applicable_reason": "This cell has no competing-model comparison phase.",
+          "phase": "compare"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "export"
+        }
+      ],
+      "required_for_potentially_long_operations": true,
+      "same_settings_retry": true
+    },
+    "export": {
+      "canonical_projection_id": "canonical_result_document_v2_cbsem_matrix_input_projection",
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf",
+        "png"
+      ],
+      "provenance_required": true,
+      "same_run_required": true,
+      "semantic_readback_formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf"
+      ],
+      "validation_witness_excluded": true
+    },
+    "performance": {
+      "baseline_policy": {
+        "maximum_memory_regression_percent": 20.0,
+        "maximum_runtime_regression_percent": 20.0,
+        "measured_runs": 5,
+        "statistic": "median",
+        "warmup_runs": 1
+      },
+      "budgets": [
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 30.0,
+          "maximum_peak_working_set_bytes": 536870912,
+          "maximum_result_bytes": 16777216,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 600.0,
+          "maximum_peak_working_set_bytes": 4294967296,
+          "maximum_result_bytes": 134217728,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 3600.0,
+          "maximum_peak_working_set_bytes": 8589934592,
+          "maximum_result_bytes": 536870912,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 1073741824,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 1073741824,
+          "profile_id": "compound_stress"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 30.0,
+          "maximum_peak_working_set_bytes": 1073741824,
+          "maximum_result_bytes": 16777216,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 600.0,
+          "maximum_peak_working_set_bytes": 8589934592,
+          "maximum_result_bytes": 134217728,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 3600.0,
+          "maximum_peak_working_set_bytes": 17179869184,
+          "maximum_result_bytes": 536870912,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 1073741824,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 1073741824,
+          "profile_id": "compound_stress"
+        }
+      ],
+      "hardware_classes": [
+        {
+          "architecture": "x86_64",
+          "id": "standard",
+          "minimum_logical_cores": 6,
+          "minimum_memory_gib": 16,
+          "notes": "Product-finalization standard Windows reference class.",
+          "os_family": "windows"
+        },
+        {
+          "architecture": "x86_64",
+          "id": "workstation",
+          "minimum_logical_cores": 12,
+          "minimum_memory_gib": 32,
+          "notes": "Product-finalization workstation Windows reference class.",
+          "os_family": "windows"
+        }
+      ]
+    },
+    "windows": {
+      "accessible_tables_required": true,
+      "display_scale_percent": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "keyboard_only_required": true,
+      "offline_required": true,
+      "package_kinds": [
+        "installed",
+        "portable"
+      ],
+      "real_pointer_required": true,
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ]
+    }
+  },
+  "scenario_contract": {
+    "axes": [
+      {
+        "id": "model_topology",
+        "label": "CB-SEM topology",
+        "values": [
+          {
+            "description": "Marker-identified common-factor CFA.",
+            "id": "single_factor_cfa"
+          },
+          {
+            "description": "Recursive multi-factor latent SEM.",
+            "id": "recursive_latent_sem"
+          }
+        ]
+      },
+      {
+        "id": "measurement_model",
+        "label": "Measurement configuration",
+        "values": [
+          {
+            "description": "Hand-checkable three-indicator marker block.",
+            "id": "three_indicator_marker"
+          },
+          {
+            "description": "Multiple continuous reflective common-factor blocks.",
+            "id": "multiple_reflective_blocks"
+          }
+        ]
+      },
+      {
+        "id": "data_distribution",
+        "label": "Moment conditioning",
+        "values": [
+          {
+            "description": "Gaussian positive-definite moments.",
+            "id": "gaussian_well_conditioned"
+          },
+          {
+            "description": "Mixed scales and difficult positive-definite conditioning.",
+            "id": "mixed_scale_near_singular"
+          }
+        ]
+      },
+      {
+        "id": "missingness",
+        "label": "Missing-data behavior",
+        "values": [
+          {
+            "description": "No missing value reaches the estimator.",
+            "id": "complete"
+          },
+          {
+            "description": "Raw listwise deletion or typed matrix missing-value rejection.",
+            "id": "raw_listwise_or_matrix_rejection"
+          }
+        ]
+      },
+      {
+        "id": "input_type",
+        "label": "Input representation",
+        "values": [
+          {
+            "description": "Raw complete observations converted with denominator n.",
+            "id": "raw_rows"
+          },
+          {
+            "description": "Covariance matrix with explicit sample size and denominator.",
+            "id": "covariance_matrix"
+          },
+          {
+            "description": "Correlation matrix with explicit positive scales.",
+            "id": "scaled_correlation_matrix"
+          }
+        ]
+      },
+      {
+        "id": "workload",
+        "label": "Execution workload",
+        "values": [
+          {
+            "description": "One immutable ML point-estimation run.",
+            "id": "point_estimation"
+          },
+          {
+            "description": "Repeated representation, order, and retry comparisons.",
+            "id": "repeated_equivalence_matrix"
+          }
+        ]
+      },
+      {
+        "id": "workers",
+        "label": "Worker configuration",
+        "values": [
+          {
+            "description": "The bounded deterministic ML execution worker.",
+            "id": "one_worker"
+          },
+          {
+            "description": "An alternate request must preserve results or fail before execution.",
+            "id": "alternate_worker_request"
+          }
+        ]
+      }
+    ],
+    "complexity_profiles": [
+      {
+        "applicability": "required",
+        "description": "Three-indicator one-factor hand case and exhaustive typed boundaries.",
+        "id": "micro_exact",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 1,
+          "groups": 1,
+          "indicators": 3,
+          "resamples": 0,
+          "rows": 10
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Typical research covariance or scaled-correlation recursive SEM.",
+        "id": "applied",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 10,
+          "groups": 1,
+          "indicators": 30,
+          "resamples": 0,
+          "rows": 1000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Large routine matrix-input model for scheduling and result-size checks.",
+        "id": "large",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 20,
+          "groups": 1,
+          "indicators": 80,
+          "resamples": 0,
+          "rows": 10000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Separate maximum sample-size, indicator, and construct axes.",
+        "id": "maximum_axis",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 100,
+          "groups": 1,
+          "indicators": 300,
+          "resamples": 0,
+          "rows": 100000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Combined high sample metadata and dense model/result dimensions.",
+        "id": "compound_stress",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 50,
+          "groups": 1,
+          "indicators": 150,
+          "resamples": 0,
+          "rows": 50000
+        }
+      }
+    ],
+    "mandatory_combinations": [
+      {
+        "coverage": "pairwise",
+        "id": "applied_pairwise_all_values",
+        "profile_id": "applied",
+        "purpose": "One preregistered pairwise matrix covers every value pair across all axes.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned",
+            "mixed_scale_near_singular"
+          ],
+          "input_type": [
+            "raw_rows",
+            "covariance_matrix",
+            "scaled_correlation_matrix"
+          ],
+          "measurement_model": [
+            "three_indicator_marker",
+            "multiple_reflective_blocks"
+          ],
+          "missingness": [
+            "complete",
+            "raw_listwise_or_matrix_rejection"
+          ],
+          "model_topology": [
+            "single_factor_cfa",
+            "recursive_latent_sem"
+          ],
+          "workers": [
+            "one_worker",
+            "alternate_worker_request"
+          ],
+          "workload": [
+            "point_estimation",
+            "repeated_equivalence_matrix"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "micro_hand_and_boundaries",
+        "profile_id": "micro_exact",
+        "purpose": "Exact population, representation, gradient, stable-ID, and typed failure microcases.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "three_indicator_marker"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "single_factor_cfa"
+          ],
+          "workers": [
+            "one_worker"
+          ],
+          "workload": [
+            "point_estimation"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "large_difficult_matrix",
+        "profile_id": "large",
+        "purpose": "Large mixed-scale recursive matrix case with repeated execution.",
+        "selections": {
+          "data_distribution": [
+            "mixed_scale_near_singular"
+          ],
+          "input_type": [
+            "scaled_correlation_matrix"
+          ],
+          "measurement_model": [
+            "multiple_reflective_blocks"
+          ],
+          "missingness": [
+            "raw_listwise_or_matrix_rejection"
+          ],
+          "model_topology": [
+            "recursive_latent_sem"
+          ],
+          "workers": [
+            "alternate_worker_request"
+          ],
+          "workload": [
+            "repeated_equivalence_matrix"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_rows",
+        "profile_id": "maximum_axis",
+        "purpose": "Stress only the declared rows maximum while other dimensions remain applied.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned",
+            "mixed_scale_near_singular"
+          ],
+          "input_type": [
+            "raw_rows",
+            "covariance_matrix",
+            "scaled_correlation_matrix"
+          ],
+          "measurement_model": [
+            "three_indicator_marker",
+            "multiple_reflective_blocks"
+          ],
+          "missingness": [
+            "complete",
+            "raw_listwise_or_matrix_rejection"
+          ],
+          "model_topology": [
+            "single_factor_cfa",
+            "recursive_latent_sem"
+          ],
+          "workers": [
+            "one_worker",
+            "alternate_worker_request"
+          ],
+          "workload": [
+            "point_estimation",
+            "repeated_equivalence_matrix"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_indicators",
+        "profile_id": "maximum_axis",
+        "purpose": "Stress only the declared indicators maximum while other dimensions remain applied.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned",
+            "mixed_scale_near_singular"
+          ],
+          "input_type": [
+            "raw_rows",
+            "covariance_matrix",
+            "scaled_correlation_matrix"
+          ],
+          "measurement_model": [
+            "three_indicator_marker",
+            "multiple_reflective_blocks"
+          ],
+          "missingness": [
+            "complete",
+            "raw_listwise_or_matrix_rejection"
+          ],
+          "model_topology": [
+            "single_factor_cfa",
+            "recursive_latent_sem"
+          ],
+          "workers": [
+            "one_worker",
+            "alternate_worker_request"
+          ],
+          "workload": [
+            "point_estimation",
+            "repeated_equivalence_matrix"
+          ]
+        },
+        "stressed_dimensions": [
+          "indicators"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_constructs",
+        "profile_id": "maximum_axis",
+        "purpose": "Stress only the declared constructs maximum while other dimensions remain applied.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned",
+            "mixed_scale_near_singular"
+          ],
+          "input_type": [
+            "raw_rows",
+            "covariance_matrix",
+            "scaled_correlation_matrix"
+          ],
+          "measurement_model": [
+            "three_indicator_marker",
+            "multiple_reflective_blocks"
+          ],
+          "missingness": [
+            "complete",
+            "raw_listwise_or_matrix_rejection"
+          ],
+          "model_topology": [
+            "single_factor_cfa",
+            "recursive_latent_sem"
+          ],
+          "workers": [
+            "one_worker",
+            "alternate_worker_request"
+          ],
+          "workload": [
+            "point_estimation",
+            "repeated_equivalence_matrix"
+          ]
+        },
+        "stressed_dimensions": [
+          "constructs"
+        ]
+      },
+      {
+        "coverage": "compound",
+        "id": "compound_rows_indicators_constructs",
+        "profile_id": "compound_stress",
+        "purpose": "Stress sample metadata, matrix width, and structural breadth together.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_well_conditioned",
+            "mixed_scale_near_singular"
+          ],
+          "input_type": [
+            "raw_rows",
+            "covariance_matrix",
+            "scaled_correlation_matrix"
+          ],
+          "measurement_model": [
+            "three_indicator_marker",
+            "multiple_reflective_blocks"
+          ],
+          "missingness": [
+            "complete",
+            "raw_listwise_or_matrix_rejection"
+          ],
+          "model_topology": [
+            "single_factor_cfa",
+            "recursive_latent_sem"
+          ],
+          "workers": [
+            "one_worker",
+            "alternate_worker_request"
+          ],
+          "workload": [
+            "point_estimation",
+            "repeated_equivalence_matrix"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows",
+          "indicators",
+          "constructs"
+        ]
+      }
+    ],
+    "monte_carlo_policy": {
+      "confidence_level": 0.95,
+      "failed_fits_in_denominator": true,
+      "maximum_half_width": 0.01
+    }
+  },
+  "schema_version": 2,
+  "scientific_contract": {
+    "data_predicates": [
+      {
+        "diagnostic_code": "cbsem.matrix.data.input_kind_invalid",
+        "expression": "input is raw, covariance, or correlation with exact data binding",
+        "id": "supported_input_kind",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "cbsem.matrix.data.sample_size_mismatch",
+        "expression": "used sample size is an exact integer of at least ten and equals matrix metadata",
+        "id": "exact_sample_size",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "cbsem.matrix.data.shape_invalid",
+        "expression": "matrix is square and exactly matches the bound variable count",
+        "id": "valid_matrix_shape",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "cbsem.matrix.data.non_positive_definite",
+        "expression": "canonical covariance is finite, symmetric, and strictly positive definite",
+        "id": "strict_positive_definiteness",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "cbsem.matrix.data.correlation_scale_required",
+        "expression": "correlation input supplies one finite positive standard deviation per variable",
+        "id": "correlation_scale_complete",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "cbsem.matrix.data.denominator_invalid",
+        "expression": "matrix covariance denominator is sample_n_minus_one or maximum_likelihood_n",
+        "id": "denominator_explicit",
+        "on_violation": "error"
+      }
+    ],
+    "estimands": [
+      {
+        "definition": "The exact denominator-n covariance matrix consumed by ML after raw formation or explicit matrix conversion.",
+        "id": "canonical_moment",
+        "label": "Canonical ML covariance",
+        "output_ids": [
+          "canonical_ml_covariance"
+        ],
+        "unit": "observed-variable covariance units"
+      },
+      {
+        "definition": "Unstandardized loadings, regressions, variances, and covariances bound to stable SemModelV4 parameter identities.",
+        "id": "ml_parameters",
+        "label": "Marker-identified ML parameters",
+        "output_ids": [
+          "unstandardized_parameters",
+          "stable_parameter_ids"
+        ],
+        "unit": "parameter-specific raw scale"
+      },
+      {
+        "definition": "Final discrepancy objective, gradient norm, and typed convergence state for the admissible solution.",
+        "id": "optimizer_solution",
+        "label": "ML objective and convergence solution",
+        "output_ids": [
+          "objective",
+          "gradient_norm",
+          "convergence_status"
+        ],
+        "unit": "objective, gradient norm, and status"
+      }
+    ],
+    "model_predicates": [
+      {
+        "diagnostic_code": "cbsem.matrix.model.common_factor_required",
+        "expression": "all latent measurement estimands are common factors, not composites",
+        "id": "common_factor_only",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "cbsem.matrix.model.marker_identification_required",
+        "expression": "each factor has one marker loading fixed exactly to one and at least two indicators",
+        "id": "marker_identification",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "cbsem.matrix.model.relation_unsupported",
+        "expression": "the structural graph is recursive and every estimated covariance or residual variance is explicit",
+        "id": "recursive_supported_relations",
+        "on_violation": "error"
+      }
+    ],
+    "oracle_exception": null,
+    "oracles": [
+      {
+        "citation": "Bollen, K. A. (1989), Structural Equations with Latent Variables, Wiley, DOI 10.1002/9781118619179.",
+        "covered_estimand_ids": [
+          "canonical_moment",
+          "ml_parameters",
+          "optimizer_solution"
+        ],
+        "id": "bollen_ml_covariance_structure",
+        "implementation": null,
+        "independence_group": "primary_sem_literature",
+        "kind": "primary_literature",
+        "locator": "https://doi.org/10.1002/9781118619179",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Marker-identified three-indicator covariance identities derived directly from Sigma = lambda phi lambda' + theta.",
+        "covered_estimand_ids": [
+          "canonical_moment",
+          "ml_parameters",
+          "optimizer_solution"
+        ],
+        "id": "three_indicator_closed_form_hand_case",
+        "implementation": null,
+        "independence_group": "closed_form_hand_derivation",
+        "kind": "hand_calculation",
+        "locator": "validation/cbsem_matrix_input_v2_oracle.py",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "Transparent validation-only NumPy/SciPy ML covariance-discrepancy implementation with analytic-gradient audit.",
+        "covered_estimand_ids": [
+          "canonical_moment",
+          "ml_parameters",
+          "optimizer_solution"
+        ],
+        "id": "numpy_scipy_transparent_ml",
+        "implementation": {
+          "maintainer": "QuickPLS validation-only independent oracle",
+          "name": "cbsem_matrix_input_numpy_scipy_oracle_v1",
+          "version": "cbsem_matrix_input_numpy_scipy_oracle_v1"
+        },
+        "independence_group": "numpy_scipy_validation_oracle",
+        "kind": "independent_implementation",
+        "locator": "validation/cbsem_matrix_input_v2_oracle.py",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "preprocessing": [
+      {
+        "applies_to": [
+          "raw_rows",
+          "covariance_matrix",
+          "scaled_correlation_matrix"
+        ],
+        "id": "bind_canonical_variable_order",
+        "operation": "Resolve every observed variable to one exact source column and reorder matrices to canonical model order.",
+        "order": 0,
+        "parameters": {
+          "duplicate_sources": "error",
+          "missing_sources": "error"
+        }
+      },
+      {
+        "applies_to": [
+          "raw_rows",
+          "matrix_cells"
+        ],
+        "id": "apply_raw_listwise_policy",
+        "operation": "For raw input only, omit rows with any bound missing cell; matrix cells may not be missing.",
+        "order": 1,
+        "parameters": {
+          "matrix_missing": "error",
+          "raw_policy": "listwise"
+        }
+      },
+      {
+        "applies_to": [
+          "canonical_ml_covariance"
+        ],
+        "id": "form_or_accept_source_moments",
+        "operation": "Form raw covariance with denominator n or accept the declared covariance/correlation matrix.",
+        "order": 2,
+        "parameters": {
+          "raw_denominator": "maximum_likelihood_n"
+        }
+      },
+      {
+        "applies_to": [
+          "scaled_correlation_matrix"
+        ],
+        "id": "apply_correlation_scales",
+        "operation": "Convert correlation to covariance using one explicit finite positive standard deviation per variable.",
+        "order": 3,
+        "parameters": {
+          "implicit_unit_scales": false
+        }
+      },
+      {
+        "applies_to": [
+          "covariance_matrix",
+          "scaled_correlation_matrix"
+        ],
+        "id": "normalize_covariance_denominator",
+        "operation": "Multiply an n-1 covariance by (n-1)/n; leave an n covariance unchanged.",
+        "order": 4,
+        "parameters": {
+          "target_denominator": "maximum_likelihood_n"
+        }
+      },
+      {
+        "applies_to": [
+          "canonical_ml_covariance"
+        ],
+        "id": "validate_moment_matrix",
+        "operation": "Require exact shape, finite symmetry, valid correlation bounds, and strict positive definiteness.",
+        "order": 5,
+        "parameters": {
+          "positive_definite": "strict"
+        }
+      },
+      {
+        "applies_to": [
+          "ml_parameters",
+          "optimizer_solution"
+        ],
+        "id": "estimate_marker_ml_model",
+        "operation": "Minimize log|Sigma| + trace(S Sigma^-1) - log|S| - p and retain objective, gradient, and convergence.",
+        "order": 6,
+        "parameters": {
+          "estimator": "ml",
+          "marker_loading": 1.0
+        }
+      }
+    ]
+  }
+}

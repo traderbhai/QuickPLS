@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "record_type": "quickpls_beta_workflow_observation_template",
+  "template_only": true,
+  "record": {
+    "workflow_id": null,
+    "participant_id": null,
+    "candidate_id": null,
+    "started_at": null,
+    "completed_at": null,
+    "real_workflow": null,
+    "privacy_safe": null,
+    "reproducible_data_loss": null,
+    "archive_corruption": null,
+    "scientific_discrepancy_ids": []
+  },
+  "assistance_scale": [
+    {
+      "value": "none",
+      "developer_assistance": false,
+      "meaning": "Participant completed the journey without prompts or intervention"
+    },
+    {
+      "value": "prompted",
+      "developer_assistance": true,
+      "meaning": "Participant received a general prompt but retained task control"
+    },
+    {
+      "value": "guided",
+      "developer_assistance": true,
+      "meaning": "Observer provided step-specific guidance"
+    },
+    {
+      "value": "developer_intervention",
+      "developer_assistance": true,
+      "meaning": "Developer or facilitator performed or repaired part of the journey"
+    }
+  ],
+  "journeys": [
+    {
+      "journey_id": "import_data",
+      "required": true,
+      "success_criterion": "A privacy-safe dataset is imported and its profile is reviewed",
+      "outcome": null,
+      "assistance_level": null,
+      "elapsed_minutes": null,
+      "privacy_safe_evidence_note": null
+    },
+    {
+      "journey_id": "author_model",
+      "required": true,
+      "success_criterion": "The intended model is authored and validation feedback is resolved or understood",
+      "outcome": null,
+      "assistance_level": null,
+      "elapsed_minutes": null,
+      "privacy_safe_evidence_note": null
+    },
+    {
+      "journey_id": "calculate",
+      "required": true,
+      "success_criterion": "A supported calculation completes with the intended settings and candidate",
+      "outcome": null,
+      "assistance_level": null,
+      "elapsed_minutes": null,
+      "privacy_safe_evidence_note": null
+    },
+    {
+      "journey_id": "interpret",
+      "required": true,
+      "success_criterion": "Results, warnings, scope limitations, and provenance are located and interpreted",
+      "outcome": null,
+      "assistance_level": null,
+      "elapsed_minutes": null,
+      "privacy_safe_evidence_note": null
+    },
+    {
+      "journey_id": "export",
+      "required": true,
+      "success_criterion": "An intended result table or report is exported and opened successfully",
+      "outcome": null,
+      "assistance_level": null,
+      "elapsed_minutes": null,
+      "privacy_safe_evidence_note": null
+    },
+    {
+      "journey_id": "save_reopen",
+      "required": true,
+      "success_criterion": "The project is saved, closed, reopened, and the same completed run is verified",
+      "outcome": null,
+      "assistance_level": null,
+      "elapsed_minutes": null,
+      "privacy_safe_evidence_note": null
+    }
+  ],
+  "allowed_outcomes": [
+    "completed",
+    "incomplete",
+    "blocked",
+    "not_attempted"
+  ],
+  "canonical_mapping": {
+    "completed": "outcome equals completed",
+    "developer_assistance": "assistance_level is not none",
+    "unassisted_success": "outcome equals completed and assistance_level equals none"
+  }
+}

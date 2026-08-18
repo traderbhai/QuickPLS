@@ -597,7 +597,7 @@ class StructuralPathRandomizationPromotionAuditTests(unittest.TestCase):
 
             def setup(workers: int, start_label: str) -> dict[str, object]:
                 return {
-                    "catalogCount": 15,
+                    "catalogCount": audit.canonical_native_catalogue_count(),
                     "selectedMethod": "Structural Path Randomization",
                     "permutations": {
                         "count": 1, "type": "number", "minimum": "99",
@@ -613,7 +613,7 @@ class StructuralPathRandomizationPromotionAuditTests(unittest.TestCase):
                     },
                     "bootstrapControls": 0,
                     "groupControls": 0,
-                    "scopeLabel": "Candidate scope",
+                    "scopeLabel": "Validated scope",
                     "scope": audit.PACKAGED_WARNING,
                     "blockers": [],
                     "startLabel": start_label,
@@ -898,7 +898,7 @@ class StructuralPathRandomizationPromotionAuditTests(unittest.TestCase):
             )
         )
 
-    def test_product_enforcement_rejects_validated_label_and_identity_drift(self) -> None:
+    def test_product_enforcement_rejects_experimental_label_and_identity_drift(self) -> None:
         sources = product_enforcement.load_product_contract_sources(audit.ROOT)
         checks = {
             row["name"]: row
@@ -910,8 +910,8 @@ class StructuralPathRandomizationPromotionAuditTests(unittest.TestCase):
         catalog_mutation["src/data/sample.ts"] = catalog_mutation[
             "src/data/sample.ts"
         ].replace(
-            'name: "Freedman-Lane permutation", status: "experimental"',
             'name: "Freedman-Lane permutation", status: "validated"',
+            'name: "Freedman-Lane permutation", status: "experimental"',
             1,
         )
         mutated_checks = {
@@ -927,8 +927,8 @@ class StructuralPathRandomizationPromotionAuditTests(unittest.TestCase):
         result_status_mutation = dict(sources)
         result_status_mutation["src/domain/resultTables.ts"] = (
             result_status_mutation["src/domain/resultTables.ts"].replace(
-                'const runStatus = structuralPathRandomization ? "experimental" : resultScopeStatus(run.result);',
                 'const runStatus = structuralPathRandomization ? "validated" : resultScopeStatus(run.result);',
+                'const runStatus = structuralPathRandomization ? "experimental" : resultScopeStatus(run.result);',
                 1,
             )
         )
@@ -971,8 +971,8 @@ class StructuralPathRandomizationPromotionAuditTests(unittest.TestCase):
         moderation_source = (audit.ROOT / "validation" / "moderation_method_promotion_audit.py").read_text(encoding="utf-8")
         inference_slice = next(row for row in registry["slices"] if row["id"] == "v0_4_inference_resampling")
 
-        self.assertIn('name: "Freedman-Lane permutation", status: "experimental"', product_enforcement)
-        self.assertNotIn('name: "Freedman-Lane permutation", status: "validated"', product_enforcement)
+        self.assertIn('name: "Freedman-Lane permutation", status: "validated"', product_enforcement)
+        self.assertNotIn('name: "Freedman-Lane permutation", status: "experimental"', product_enforcement)
         self.assertNotIn("permutation", inference_slice["name"].casefold())
         self.assertIn(
             "release-qualified only through validation/results/structural_path_randomization_method_promotion_audit.json",

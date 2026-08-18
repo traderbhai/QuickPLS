@@ -1,0 +1,172 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "boundary_gate": {
+      "checks": {
+        "dataset_identity_tamper_rejected": true,
+        "metamorphic_and_determinism_covered_by_engine_gate": true,
+        "no_scope_result_written": true,
+        "no_tampered_result_written": true,
+        "prebuilt_cli_only": true,
+        "unsupported_scope_rejected": true
+      },
+      "executions": [
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "validate",
+            "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/work/boundary_invalid.recipe.json",
+            "--json"
+          ],
+          "duration_seconds": 0.099,
+          "returncode": 1,
+          "stderr_tail": "Error: recipe validation failed\n",
+          "stdout_tail": "[\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"x\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"z\"\n  },\n  {\n    \"code\": \"higher_order.indicators.generated\",\n    \"severity\": \"warning\",\n    \"message\": \"Higher-order construct indicators are generated from lower-order components for supported HOC methods\",\n    \"subject\": \"hoc\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"y\"\n  },\n  {\n    \"code\": \"higher_order.components\",\n    \"severity\": \"error\",\n    \"message\": \"Higher-order constructs require at least two lower-order components\",\n    \"subject\": \"hoc\"\n  },\n  {\n    \"code\": \"method.higher_order.experimental\",\n    \"severity\": \"warning\",\n    \"message\": \"Higher-order construct semantics are validated only inside the documented QuickPLS v1.0.0 supported scope\",\n    \"subject\": \"hoc\"\n  }\n]\n"
+        },
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/work/boundary_invalid.recipe.json",
+            "--data",
+            "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/work/higher_order_two_stage_base.csv",
+            "--output",
+            "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/work/boundary_scope_invalid.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.117,
+          "returncode": 1,
+          "stderr_tail": "Error: higher_order.components: Higher-order constructs require at least two lower-order components\n",
+          "stdout_tail": ""
+        },
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/work/boundary_identity_tampered.recipe.json",
+            "--data",
+            "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/work/higher_order_two_stage_base.csv",
+            "--output",
+            "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/work/boundary_identity_tampered.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.096,
+          "returncode": 1,
+          "stderr_tail": "Error: recipe dataset fingerprint does not match the imported dataset\n",
+          "stdout_tail": ""
+        }
+      ],
+      "kind": "quickpls_phase3_boundary_gate",
+      "method": "higher_order_v1",
+      "passed": true,
+      "path": "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/boundary_gate.json",
+      "schema_version": 1
+    },
+    "engine_gate": {
+      "checks": {
+        "checks": {
+          "assessment_hoc_present": true,
+          "baseline_hoc_to_y_abs": 0.985289104586091,
+          "component_reorder_max_delta": 0.0,
+          "construct_reorder_max_delta": 0.0,
+          "experimental_warning_present": false,
+          "independent_reference_max_delta": 5.384581669432009e-14,
+          "permuted_component_drop_ratio": 0.6798816591266171,
+          "permuted_component_hoc_to_y_abs": 0.6698799911453706,
+          "positive_affine_max_delta": 3.8191672047105385e-14,
+          "row_reversal_max_delta": 6.661338147750939e-16
+        },
+        "claim_limited_to": "reflective-reflective disjoint two-stage HOC point estimates",
+        "passed": true,
+        "report": "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/work/two_stage_reference_report.json",
+        "report_sha256": "1f0fb91e495de01cc657eb175198016d3a2064a7e2af1e5d0abc662e41445b55",
+        "scenario_count": 6,
+        "scientific_failures": {},
+        "scope_warning_gap": "the former generic experimental warning is absent from the engine payload"
+      },
+      "completed_at_utc": "2026-08-14T23:28:46.820301Z",
+      "kind": "quickpls_phase3_current_engine_gate",
+      "method": "higher_order_v1",
+      "passed": true,
+      "path": "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/engine_gate.json",
+      "prebuilt_cli": {
+        "path": "target/debug/qpls.exe",
+        "sha256": "35887c8935124619b74255ba93602c20d87300538b60b30840a62aa304fb3f9b",
+        "size": 61828608
+      },
+      "recipe_policy": "historical fixtures copied to explicit schema v3; source fixtures preserved",
+      "schema_version": 1,
+      "started_at_utc": "2026-08-14T23:28:42.890119Z"
+    },
+    "passed": true
+  },
+  "feature_id": "qpls3.pls.higher_order_two_stage",
+  "generated_at_utc": "2026-08-14T23:28:47.283064Z",
+  "method_version": "pls_pm_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_HIGHER_ORDER_V1.md",
+      "sha256": "2f57c9c94d6ec4b8b935c9cd681007b036fcdc91bfaf887130e0517d68339322",
+      "size": 10025
+    },
+    {
+      "path": "validation/higher_order_two_stage_boundary_gate.py",
+      "sha256": "39ef47e724897dddfb4ac9f6c3ce58858a6d81d0bca767e92697b888ec522ee6",
+      "size": 205
+    },
+    {
+      "path": "validation/higher_order_two_stage_reference.py",
+      "sha256": "cb11b39ad0ebd70c095e115384eea009f9c569ebba502f79a5a9f4119e8f2387",
+      "size": 11365
+    },
+    {
+      "path": "validation/higher_order_two_stage_simulation.py",
+      "sha256": "cf8e45cd1c9f3a314f201c5f39a2aabbfe9ebc88a1f0148b6f9c94833026c248",
+      "size": 211
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/higher_order_v1.manifest.json",
+      "sha256": "83cecb43ddf6a7c2e507ebfc12b28fcf5f294e6846b0aab02437e4d213fc693c",
+      "size": 13311
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "cf198e70e5cf16d2a0aa39a5d4c1bb4fabc9b59027c7fa59bbd8b634b4870ed2",
+      "size": 30271
+    },
+    {
+      "path": "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/boundary_gate.json",
+      "sha256": "49815a4fcbc6fb03a464da68bbb1a86ba9ac93531cd8e8fd2a083d04311ac349",
+      "size": 3700
+    },
+    {
+      "path": "validation/results/method_factory/higher_order_v1/evidence_truth_reconciliation_v1/engine_gate.json",
+      "sha256": "f3ab8c8d7c3653b2b4295736184d3f12930f96719415f9eb8f4271e75bcbc38d",
+      "size": 1573
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "8ba98f6953e8cacba11b3e927c9c607e48ca5c3a21b9b8d8207e7ac874b5c833",
+      "size": 2402
+    }
+  ]
+}

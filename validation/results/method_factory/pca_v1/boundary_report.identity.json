@@ -3,7 +3,7 @@
   "checks": {
     "baseline_identity": {
       "output": "validation/results/method_factory/pca_v1/work/factory_boundary_baseline.quickpls.json",
-      "output_sha256": "6d7efcc6e1563a2027f7ce0dbd7ca65ff016f7ccffd327ec49f022cb209d0170",
+      "output_sha256": "65b0fcb7a38ae023f68eb4cd7fb3fa63b15d1044d054e217982665dee6aceb57",
       "passed": true
     },
     "categories": {
@@ -20,7 +20,7 @@
             "validation/results/method_factory/pca_v1/work/factory_boundary_constant.quickpls.json",
             "--allow-experimental"
           ],
-          "duration_seconds": 0.046,
+          "duration_seconds": 0.109,
           "returncode": 1,
           "stderr_tail": "Error: PLS estimation failed: constant indicator: d\n",
           "stdout_tail": ""
@@ -29,10 +29,10 @@
         "passed": true
       },
       "determinism": {
-        "first_output_sha256": "6d7efcc6e1563a2027f7ce0dbd7ca65ff016f7ccffd327ec49f022cb209d0170",
+        "first_output_sha256": "65b0fcb7a38ae023f68eb4cd7fb3fa63b15d1044d054e217982665dee6aceb57",
         "passed": true,
         "payloads_exactly_equal": true,
-        "second_output_sha256": "4fa7639b93b8424aaef966b39f80b2cccdb466048c80b0cf81909f8dbbf8b511"
+        "second_output_sha256": "deffc1a93ca8d523ba254fb3234239e9b098586fbf34feebd4ee37daab01703a"
       },
       "metamorphic": {
         "passed": true,
@@ -59,10 +59,10 @@
             "tests::runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering",
             "--"
           ],
-          "duration_seconds": 2.058,
+          "duration_seconds": 3.413,
           "returncode": 0,
-          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.84s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
-          "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.05s\n\n"
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.27s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-1c5316a49d695ac2.exe)\n     Running tests\\pls_model_comparison_schema6.rs (target\\debug\\deps\\pls_model_comparison_schema6-9640385ad6045b51.exe)\n     Running tests\\schema6_sem_model_v4_authoring_shapes.rs (target\\debug\\deps\\schema6_sem_model_v4_authoring_shapes-399eb9324137a89e.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 0.05s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n"
         },
         "fresh_method_scoped_archive_test": true,
         "passed": true
@@ -79,7 +79,7 @@
             "validation/results/method_factory/pca_v1/work/factory_boundary_unsupported_components.quickpls.json",
             "--allow-experimental"
           ],
-          "duration_seconds": 0.031,
+          "duration_seconds": 0.077,
           "returncode": 1,
           "stderr_tail": "Error: pca.components: Fixed PCA retention requires 1 to min(selected variables, 50) components\n",
           "stdout_tail": ""
@@ -93,7 +93,7 @@
     "tolerance": 1e-06
   },
   "feature_id": "qpls3.standalone.pca",
-  "generated_at_utc": "2026-08-13T19:35:40.811284Z",
+  "generated_at_utc": "2026-08-18T03:07:27.326432Z",
   "method_version": "pca_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -102,28 +102,28 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-cli/src/main.rs",
-      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
-      "size": 216983
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
     },
     {
       "path": "crates/qpls-core/src/contract.rs",
-      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
-      "size": 107095
+      "sha256": "51c235a9173d3f9c84e5bfe4c0ce6280268ee26b882e2a41dd01be889a7cdfb5",
+      "size": 144508
     },
     {
       "path": "crates/qpls-estimation/src/pls.rs",
-      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-      "size": 639198
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
     },
     {
       "path": "crates/qpls-project/src/lib.rs",
-      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-      "size": 660277
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
     },
     {
       "path": "crates/qpls-runner/src/lib.rs",
-      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
-      "size": 49349
+      "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+      "size": 100140
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -137,8 +137,8 @@
     },
     {
       "path": "validation/methods/pca_v1.manifest.json",
-      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
-      "size": 14506
+      "sha256": "e89c5a6c5c57853c93b207c2c50451bdfab0a80acb30108ffa19a0cd09d6c8c9",
+      "size": 14560
     },
     {
       "path": "validation/pca_boundary_gate.py",
@@ -147,13 +147,13 @@
     },
     {
       "path": "validation/pca_v1_factory_common.py",
-      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
-      "size": 11599
+      "sha256": "88fceff4dd6fb914e2773f0d4fe537b5df3d01fb70066873808ba3980b2e7a1c",
+      "size": 11651
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pca_v1_factory_evidence.py",

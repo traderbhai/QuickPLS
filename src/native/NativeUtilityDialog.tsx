@@ -1,49 +1,108 @@
 import { useState } from "react";
 import { DiagnosticBundlePanel } from "../components/SettingsWorkspace";
+import {
+  methodDetailsForRequirementsV2,
+  methodDetailsForSettingsV2,
+  type CapabilityMethodDetailsV2,
+} from "../domain/methodDetailsV2";
 import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
-import { NATIVE_PREDICTION_METHOD_LABEL } from "./nativeCalculationMode";
-import { NATIVE_NCA_SCOPE_NOTE } from "./nativeNca";
-import { NATIVE_PCA_SCOPE_NOTE } from "./nativePca";
-import { NATIVE_GSCA_SCOPE_NOTE } from "./nativeGsca";
+import type { AnalysisRun, AnalysisUiSettings } from "../types";
+import { nativeCapabilityRequirementsForRunV2 } from "./nativeCanonicalResultDocumentV2";
 import { completedResultRuns } from "./nativeResults";
 
 export interface NativeUtilityDialogProps {
   kind: "trust" | "settings";
   close: () => void;
+  /** When opened from Results, bind Method Details to this immutable completed run. */
+  run?: AnalysisRun | null;
+  /** Explicit context seam for callers rendering Method Details outside the live workspace. */
+  methodDetailsSettings?: Readonly<AnalysisUiSettings>;
+  experimentalLabsEnabledOverride?: boolean;
 }
 
-export default function NativeUtilityDialog({ kind, close }: NativeUtilityDialogProps) {
-  if (kind === "trust") return <TrustDialog />;
+export default function NativeUtilityDialog({
+  kind,
+  close,
+  run,
+  methodDetailsSettings,
+  experimentalLabsEnabledOverride,
+}: NativeUtilityDialogProps) {
+  if (kind === "trust") return <TrustDialog
+    run={run ?? null}
+    settingsOverride={methodDetailsSettings}
+    experimentalLabsEnabledOverride={experimentalLabsEnabledOverride}
+  />;
   return <PreferencesDialog close={close} />;
 }
 
-function TrustDialog() {
+function TrustDialog({
+  run,
+  settingsOverride,
+  experimentalLabsEnabledOverride,
+}: {
+  run: AnalysisRun | null;
+  settingsOverride?: Readonly<AnalysisUiSettings>;
+  experimentalLabsEnabledOverride?: boolean;
+}) {
   const dataset = useWorkspace((state) => state.dataset);
   const nodes = useWorkspace((state) => state.nodes);
   const runs = useWorkspace((state) => state.runs);
+  const workspaceSettings = useWorkspace((state) => state.analysisSettings);
+  const workspaceExperimentalLabsEnabled = useWorkspace((state) => state.uiPreferences.experimentalLabsEnabled);
+  const settings = settingsOverride ?? workspaceSettings;
+  const experimentalLabsEnabled = experimentalLabsEnabledOverride ?? workspaceExperimentalLabsEnabled;
+  const resolution = run
+    ? methodDetailsForRequirementsV2(
+        run.method,
+        nativeCapabilityRequirementsForRunV2(run),
+        experimentalLabsEnabled,
+      )
+    : methodDetailsForSettingsV2(settings, experimentalLabsEnabled);
+  const datasetFingerprint = run?.provenance?.dataset_fingerprint ?? dataset.fingerprint;
 
-  return <div className="nd-utility-dialog">
-    <p>QuickPLS executes calculations locally and validates supported methods against independent reference fixtures.</p>
-    <dl className="nd-property-list">
-      <div><dt>PLS-SEM Algorithm</dt><dd>Validated core scope</dd></div>
-      <div><dt>Consistent PLS</dt><dd>Validated reflective bounded scope</dd></div>
-      <div><dt>Weighted PLS</dt><dd>Validated positive case-weight bounded scope</dd></div>
-      <div><dt>GSCA</dt><dd>{NATIVE_GSCA_SCOPE_NOTE}</dd></div>
-      <div><dt>CCA composite residual diagnostics</dt><dd>Validated standardized reflective composite path-model scope; descriptive residuals only, without fit thresholds or inference</dd></div>
-      <div><dt>Importance-Performance Map Analysis</dt><dd>Validated single-target predecessor map with 0-100 observed-range performance from listwise-standardized scores; no theoretical-range correction</dd></div>
-      <div><dt>Bootstrapping</dt><dd>Validated inference add-on</dd></div>
-      <div><dt>Structural Path Randomization</dt><dd>Candidate single-model Freedman-Lane fixed-score inference under exchangeable reduced-model residuals, with unadjusted pathwise p values; current calibration covers homoscedastic Gaussian errors only and this is not a group comparison</dd></div>
-      <div><dt>MICOM and Two-Group Permutation MGA</dt><dd>Validated bounded v2 scope with explicit ordered groups, 5,000–10,000 usable permutations, path/loading/weight comparisons, and MICOM Steps 1–3</dd></div>
-      <div><dt>{NATIVE_PREDICTION_METHOD_LABEL}</dt><dd>Validated bounded indicator-level scope with seeded 10-fold × 10-repeat cross-validation, IA/LM benchmarks, and one-sided 95% CVPAT benchmark assessment; construct scores and the deterministic holdout are supplementary</dd></div>
-      <div><dt>Necessary Condition Analysis</dt><dd>{NATIVE_NCA_SCOPE_NOTE}</dd></div>
-      <div><dt>Principal Component Analysis</dt><dd>{NATIVE_PCA_SCOPE_NOTE}</dd></div>
-      <div><dt>Dataset fingerprint</dt><dd>{dataset.fingerprint || "Not available"}</dd></div>
-      <div><dt>Model</dt><dd>{nodes.length} constructs</dd></div>
-      <div><dt>Completed runs</dt><dd>{completedResultRuns(runs).length}</dd></div>
-      <div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Offline desktop" : "Web preview"}</dd></div>
-    </dl>
+  return <div className="nd-utility-dialog" data-method-details-context={run ? "completed-run" : "workspace-settings"}>
+    <p>Review what the selected method answers, its requirements, settings, outputs, assumptions, interpretation, and references.</p>
+    {resolution.issues.length > 0 ? <div className="nd-inline-error" role="alert">
+      <strong>Method information is unavailable.</strong>
+      <ul>{resolution.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul>
+    </div> : null}
+    <div className="nd-method-details-list">
+      {resolution.items.map((item) => <MethodDetailsCard key={`${item.capability_cell.capability_id}::${item.capability_cell.cell_id}`} item={item} />)}
+    </div>
+    <section className="nd-method-run-context" aria-labelledby="nd-method-run-context-title">
+      <h3 id="nd-method-run-context-title">{run ? "Selected completed run" : "Current workspace"}</h3>
+      <dl className="nd-property-list">
+        <div><dt>Dataset fingerprint</dt><dd>{datasetFingerprint || "Not available"}</dd></div>
+        {run ? <div><dt>Run</dt><dd>{run.name}</dd></div> : <div><dt>Model</dt><dd>{nodes.length} constructs</dd></div>}
+        {run ? <div><dt>Completed</dt><dd>{run.createdAt}</dd></div> : <div><dt>Completed runs</dt><dd>{completedResultRuns(runs).length}</dd></div>}
+        <div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Offline desktop" : "Web preview"}</dd></div>
+      </dl>
+    </section>
   </div>;
+}
+
+function MethodDetailsCard({ item }: { item: CapabilityMethodDetailsV2 }) {
+  const status = item.availability.customer_label ?? "Unavailable";
+  const details = item.details;
+  return <article className="nd-method-details-card" data-method-details-v2="true">
+    <header>
+      <div><span>{item.family}</span><h3>{item.option_name}</h3></div>
+      <span className={`nd-method-availability is-${item.availability.visibility}`}>{status}</span>
+    </header>
+    <p className="nd-method-availability-message">{item.availability_message}</p>
+    <div className="nd-method-details-grid">
+      <section><h4>What this method answers</h4><p>{details.what_it_answers}</p></section>
+      <section><h4>When to use it</h4><p>{details.when_to_use}</p></section>
+      <section><h4>Required model and data</h4><p>{details.required_model_and_data}</p></section>
+      <section><h4>Main settings and defaults</h4><p>{details.settings_and_defaults}</p></section>
+      <section><h4>Outputs</h4><p>{details.outputs}</p></section>
+      <section><h4>Assumptions and cautions</h4><p>{details.assumptions_and_cautions}</p></section>
+      <section><h4>Interpretation guidance</h4><p>{details.interpretation_guidance}</p></section>
+      <section><h4>Advanced technical details</h4><p>{details.advanced_technical_details}</p></section>
+      <section className="nd-method-references"><h4>Method references</h4><ol>{details.method_references.map((reference) => <li key={reference}><a href={reference} target="_blank" rel="noreferrer">{reference}</a></li>)}</ol></section>
+    </div>
+  </article>;
 }
 
 function PreferencesDialog({ close }: { close: () => void }) {

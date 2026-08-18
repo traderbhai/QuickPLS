@@ -1,0 +1,74 @@
+{
+  "created_at": "2026-07-19T00:00:00Z",
+  "dataset_fingerprint": "v2:9e9586f315755dfebfabc9dd9d75a7d74b6d9a2192c61abd60c60e294d05b971",
+  "id": "00000000-0000-0000-0000-000000000057",
+  "metadata": {
+    "fixture": "mediation_metamorphic",
+    "validation_recipe_migration": "schema_v2_fixture_to_explicit_schema_v3_copy"
+  },
+  "method_config": {
+    "kind": "pls_algorithm"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x"
+        ],
+        "mode": "reflective",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "m",
+        "indicators": [
+          "m"
+        ],
+        "mode": "reflective",
+        "name": "M",
+        "short_name": "M"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "00000000-0000-0000-0000-000000000058",
+    "interactions": [],
+    "name": "mediation_metamorphic_reversed",
+    "paths": [
+      {
+        "source": "x",
+        "target": "m"
+      },
+      {
+        "source": "m",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 3000,
+    "method": "pls_pm",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260719,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-07,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

@@ -30,6 +30,7 @@ EXPECTED_TESTS = frozenset(
         "regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates",
         "regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable",
         "regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca",
+        "regression_bootstrap_failure_boundary_maps_typed_ols_failures",
     }
 )
 EXPECTED_ARCHIVE_TESTS = frozenset(

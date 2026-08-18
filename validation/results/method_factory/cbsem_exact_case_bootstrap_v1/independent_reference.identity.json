@@ -1,0 +1,74 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "fixture": "compact deterministic Type-7, studentized, and BCa oracle",
+    "gates": {
+      "python_contract": {
+        "command": [
+          "C:\\Python313\\python.exe",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "validation/test_cbsem_exact_case_bootstrap_v1_source_closure.py"
+        ],
+        "duration_seconds": 5.859,
+        "passed": true,
+        "returncode": 0,
+        "stderr_tail": "C:\\Users\\mohd.naved\\AppData\\Roaming\\Python\\Python313\\site-packages\\pytest_asyncio\\plugin.py:208: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
+        "stdout_tail": "...                                                                      [100%]\n3 passed in 0.36s\n"
+      }
+    },
+    "passed": true
+  },
+  "feature_id": "qpls3.cbsem.bootstrap",
+  "generated_at_utc": "2026-08-18T12:59:35.731303Z",
+  "method_version": "cbsem_exact_case_bootstrap_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "independent_reference",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/cbsem_exact_case_bootstrap_v1_contract_matrix.py",
+      "sha256": "44d1be53cd851a3632b08a3dc0bc3cb49556392bb56e201cf3d2a9227ee4a067",
+      "size": 9011
+    },
+    {
+      "path": "validation/cbsem_exact_case_bootstrap_v1_factory.py",
+      "sha256": "eb26ee192b9b7f3b207da9eae1f9982765b337fc5ba4dbc3a576fa785d99744f",
+      "size": 22804
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cbsem_exact_case_bootstrap_v1.manifest.json",
+      "sha256": "a42ef87fb7857a33df1ea575f8d6ca242d0da7a1a0c278e6523ead59c12af37f",
+      "size": 17699
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_cbsem_exact_case_bootstrap_v1_factory.py",
+      "sha256": "3eb5e05f5eede2ab6fb1fca5d1f49e51c678a645037b87a80a590f0e73370658",
+      "size": 6733
+    },
+    {
+      "path": "validation/test_cbsem_exact_case_bootstrap_v1_source_closure.py",
+      "sha256": "a5ca20f122387eb35f373f572bdd5fca7c392a495b9357d1f7dcecbcd7e73b47",
+      "size": 1429
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

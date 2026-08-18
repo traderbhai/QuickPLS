@@ -244,7 +244,11 @@ def discover_product_source(root: Path = ROOT) -> dict[str, Any]:
     package_scripts = package.get("scripts", {})
     package_build_script = package_scripts.get("build")
     package_tauri_script = package_scripts.get("tauri")
-    require(package_build_script == "tsc -b && vite build", "Unsupported package build script")
+    require(
+        package_build_script
+        == "npm run typecheck:build && npm run build:bundle",
+        "Unsupported package build script",
+    )
     require(package_tauri_script == "tauri", "Unsupported package Tauri script")
 
     present_vite = tuple(name for name in VITE_CONFIG_PRECEDENCE if (root / name).is_file())

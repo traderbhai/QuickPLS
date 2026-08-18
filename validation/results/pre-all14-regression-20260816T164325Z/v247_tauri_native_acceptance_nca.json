@@ -1,0 +1,1723 @@
+{
+  "passed": true,
+  "generatedAt": "2026-08-16T14:59:45.310Z",
+  "endpoint": "http://127.0.0.1:9222",
+  "runtime": "tauri-webview2-cdp",
+  "focusedRun": {
+    "scope": "nca",
+    "priorGeneratedAt": null,
+    "completedAt": "2026-08-16T15:00:33.240Z"
+  },
+  "checks": {
+    "ncaReferenceFixture": {
+      "path": "D:\\QuickPLS\\validation\\results\\nca_native_reference.csv",
+      "columns": [
+        "x",
+        "y"
+      ],
+      "rows": 1024,
+      "completeCases": 1024,
+      "deterministic": true,
+      "repeatedReferencePattern": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          4
+        ]
+      ],
+      "expected": {
+        "scope": {
+          "minimum_x": 0,
+          "maximum_x": 3,
+          "minimum_y": 1,
+          "maximum_y": 4
+        },
+        "ceFdhPeers": [
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 1,
+            "y": 3
+          },
+          {
+            "x": 3,
+            "y": 4
+          }
+        ],
+        "ceFdhEffectSize": 0.5555555555555556,
+        "crFdh": {
+          "slope": 0.9285714285714286,
+          "intercept": 1.4285714285714286,
+          "effectSize": 0.3956043956043956
+        },
+        "ceiling": "both",
+        "permutationSamples": 9999,
+        "seed": 20260811
+      }
+    },
+    "ncaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\nca_native_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-nca-1786892385306-63392.qpls",
+      "projectName": "Native NCA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-nca-1786892385306-63392.qpls",
+      "stderr": "",
+      "initialArchive": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "models": 0,
+        "recipes": 0,
+        "results": 0,
+        "activeModelId": null,
+        "nodes": 0,
+        "edges": 0
+      },
+      "visibleDataset": {
+        "cases": 1024,
+        "columns": [
+          "#",
+          "x",
+          "y"
+        ],
+        "status": "ReadyNative NCA Acceptancenca_native_reference.csv1024 cases0 constructsDataOffline",
+        "surface": "data",
+        "projectProperties": {
+          "Project": "Native NCA Acceptance",
+          "Location": "D:\\QuickPLS\\validation\\results\\v247-native-nca-1786892385306-63392.qpls",
+          "Data": "nca_native_reference.csv",
+          "Models": "0",
+          "Reports": "0"
+        },
+        "modelProperties": {
+          "Models": "0",
+          "Active model": "None"
+        },
+        "editableModelTreeItems": 0,
+        "toolbar": [
+          "Import Data…",
+          "Recode Variable…",
+          "Use as Grouping Variable…",
+          "Save",
+          "New Model…",
+          "Analyze…",
+          "Properties"
+        ]
+      }
+    },
+    "runtimePreflight": {
+      "passed": true,
+      "expectedOrigin": "http://tauri.localhost",
+      "enumeratedPages": [
+        {
+          "index": 0,
+          "url": "http://tauri.localhost/",
+          "origin": "http://tauri.localhost",
+          "title": "QuickPLS",
+          "shellVisible": true,
+          "tauriRuntime": true
+        }
+      ],
+      "qualifyingPageCount": 1,
+      "preReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "reloadCount": 1,
+      "postReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "sameOrigin": true,
+      "experimentalLabsPreferenceRestored": true
+    },
+    "runtime": {
+      "title": "QuickPLS",
+      "tauriRuntime": true,
+      "viewport": {
+        "width": 1536,
+        "height": 794,
+        "dpr": 1.25
+      },
+      "surface": "launcher"
+    },
+    "ncaInvalidSetup": {
+      "attempted": true,
+      "selectedMethod": "Necessary Condition Analysis",
+      "selectedX": "",
+      "selectedY": "",
+      "startEnabled": false,
+      "blockers": [
+        "Choose a numeric condition variable (X); Choose a numeric outcome variable (Y)."
+      ],
+      "missingRolesBlocked": true,
+      "archiveBefore": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveAfter": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveStateUnchanged": true,
+      "resultCreated": false
+    },
+    "ncaCalculationDialog": {
+      "methods": [
+        "PLS-SEM Algorithm",
+        "Consistent PLS",
+        "Weighted PLS",
+        "GSCA",
+        "CCA composite residual diagnostics",
+        "Importance-Performance Map Analysis",
+        "CB-SEM / CFA",
+        "PLS-SEM Bootstrapping",
+        "Structural Path Randomization",
+        "MICOM v3.1",
+        "PLSpredict / CVPAT",
+        "Necessary Condition Analysis",
+        "Principal Component Analysis",
+        "Regression"
+      ],
+      "initiallySelectedMethod": "Necessary Condition Analysis",
+      "selectedMethod": "Necessary Condition Analysis",
+      "category": "Standalone analysis",
+      "xOptions": [
+        {
+          "value": "",
+          "label": "Select a numeric variable",
+          "disabled": false
+        },
+        {
+          "value": "x",
+          "label": "x",
+          "disabled": false
+        },
+        {
+          "value": "y",
+          "label": "y",
+          "disabled": false
+        }
+      ],
+      "yOptionsAfterX": [
+        {
+          "value": "",
+          "label": "Select a different numeric variable",
+          "disabled": false
+        },
+        {
+          "value": "x",
+          "label": "x",
+          "disabled": true
+        },
+        {
+          "value": "y",
+          "label": "y",
+          "disabled": false
+        }
+      ],
+      "selectedX": "x",
+      "selectedY": "y",
+      "ceilingModes": [
+        {
+          "value": "both",
+          "label": "CE-FDH and CR-FDH"
+        },
+        {
+          "value": "ce_fdh",
+          "label": "CE-FDH"
+        },
+        {
+          "value": "cr_fdh",
+          "label": "CR-FDH"
+        }
+      ],
+      "selectedCeiling": "both",
+      "permutations": {
+        "value": "9999",
+        "min": "1",
+        "max": "10000",
+        "step": "1"
+      },
+      "seed": {
+        "value": "20260811",
+        "min": "0",
+        "max": "4294967295"
+      },
+      "variableData": "Observed numeric values (fixed)",
+      "validatedScope": "Numeric observed-variable CE-FDH and CR-FDH analysis with observed-range bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and broader ceiling variants are not included.",
+      "unsupportedControls": 0,
+      "startEnabled": true,
+      "blockers": [],
+      "noModelBlocker": true,
+      "noBroaderProductClaim": true,
+      "noIdleRunState": true
+    },
+    "ncaRunning": {
+      "status": "queued",
+      "phase": "Queued",
+      "message": "Native engine accepted the calculation job.",
+      "progressValue": "0",
+      "progressMax": "100",
+      "logEntries": 8,
+      "cancelVisible": true
+    },
+    "ncaCancellationRetry": {
+      "passed": true,
+      "cancelledMethod": "Necessary Condition Analysis",
+      "cancelledSettings": {
+        "x": "x",
+        "y": "y",
+        "ceiling": "both",
+        "permutations": "9999",
+        "seed": "20260811"
+      },
+      "activeLifecycle": {
+        "status": "queued",
+        "phase": "Queued",
+        "message": "Native engine accepted the calculation job.",
+        "progressValue": "0",
+        "progressMax": "100",
+        "logEntries": 3,
+        "cancelVisible": true
+      },
+      "terminalMessage": "Cancelled0%0%Calculation cancelled.Calculation log (5)8:30:18 pmCalculation cancelled.8:30:18 pmCancellation requested.8:30:18 pmNative calculation job started.8:30:18 pmFrontend readiness checks passed.8:30:18 pmNecessary Condition Analysis requested.",
+      "noPartialVisibleResult": true,
+      "noPartialCommittedResult": true,
+      "archiveStateUnchanged": true,
+      "archiveBefore": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveAfter": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "retrySettings": {
+        "selectedMethod": "Necessary Condition Analysis",
+        "x": "x",
+        "y": "y",
+        "ceiling": "both",
+        "permutations": "9999",
+        "seed": "20260811"
+      },
+      "retryEnabled": true,
+      "completedRetryRunId": "3e0c1187-2be4-4aa9-b657-3664fdc73640"
+    },
+    "ncaResult": {
+      "runId": "3e0c1187-2be4-4aa9-b657-3664fdc73640",
+      "runLabel": "Necessary Condition Analysis run",
+      "autoOpenedSurface": "results",
+      "autoOpenedTable": "Ceiling effect sizes and permutation inference",
+      "navigation": {
+        "groupTitle": "Necessary conditions",
+        "initialSelectedTable": "Ceiling effect sizes and permutation inference",
+        "treeItems": [
+          "Necessary conditions",
+          "Ceiling effect sizes and permutation inference",
+          "CR-FDH ceiling coefficients",
+          "Observed-range bottlenecks",
+          "Analysis details"
+        ],
+        "effects": {
+          "title": "Ceiling effect sizes and permutation inference",
+          "rowCount": 2,
+          "headers": [
+            "Ceiling line",
+            "Effect size",
+            "Permutation p"
+          ],
+          "rows": [
+            [
+              "CE-FDH",
+              "0.5556",
+              "0.0001"
+            ],
+            [
+              "CR-FDH",
+              "0.3956",
+              "0.0001"
+            ]
+          ]
+        },
+        "crLine": {
+          "title": "CR-FDH ceiling coefficients",
+          "rowCount": 1,
+          "headers": [
+            "Ceiling line",
+            "Slope",
+            "Intercept"
+          ],
+          "rows": [
+            [
+              "CR-FDH",
+              "0.9286",
+              "1.4286"
+            ]
+          ]
+        },
+        "bottlenecks": {
+          "title": "Observed-range bottlenecks",
+          "rowCount": 18,
+          "headers": [
+            "Ceiling line",
+            "Outcome (% observed range)",
+            "Condition requirement"
+          ],
+          "rows": [
+            [
+              "CE-FDH",
+              "10%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "20%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "30%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "40%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "50%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "60%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "70%",
+              "100.0000% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "80%",
+              "100.0000% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "90%",
+              "100.0000% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "10%",
+              "Not necessary"
+            ],
+            [
+              "CR-FDH",
+              "20%",
+              "6.1538% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "30%",
+              "16.9231% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "40%",
+              "27.6923% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "50%",
+              "38.4615% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "60%",
+              "49.2308% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "70%",
+              "60.0000% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "80%",
+              "70.7692% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "90%",
+              "81.5385% of observed X range"
+            ]
+          ]
+        },
+        "scope": {
+          "title": "Analysis details",
+          "rowCount": 10,
+          "headers": [
+            "Field",
+            "Value"
+          ],
+          "rows": [
+            [
+              "Condition variable (X)",
+              "x"
+            ],
+            [
+              "Outcome variable (Y)",
+              "y"
+            ],
+            [
+              "Analyzed observations",
+              "1024"
+            ],
+            [
+              "X observed range",
+              "0.000000 to 3.000000"
+            ],
+            [
+              "Y observed range",
+              "1.000000 to 4.000000"
+            ],
+            [
+              "Ceiling lines",
+              "CE-FDH and CR-FDH"
+            ],
+            [
+              "Requested permutations",
+              "9999"
+            ],
+            [
+              "Usable permutations",
+              "9999"
+            ],
+            [
+              "Missing data",
+              "Listwise deletion"
+            ],
+            [
+              "Method version",
+              "nca_v2"
+            ]
+          ]
+        },
+        "scopeValues": {
+          "Condition variable (X)": "x",
+          "Outcome variable (Y)": "y",
+          "Analyzed observations": "1024",
+          "X observed range": "0.000000 to 3.000000",
+          "Y observed range": "1.000000 to 4.000000",
+          "Ceiling lines": "CE-FDH and CR-FDH",
+          "Requested permutations": "9999",
+          "Usable permutations": "9999",
+          "Missing data": "Listwise deletion",
+          "Method version": "nca_v2"
+        },
+        "plot": {
+          "figures": 1,
+          "accessibleSvgs": 1,
+          "namedImages": 1,
+          "labelledBy": "nd-nca-plot-title nd-nca-plot-description",
+          "directTitleCount": 1,
+          "title": "Necessary condition ceiling plot for x and y",
+          "descriptionCount": 1,
+          "description": "Observed-range necessary condition ceiling plot for x as X and y as Y. CE-FDH peer 0, 1. CE-FDH peer 1, 3. CE-FDH peer 3, 4. CR-FDH slope 0.9286 and intercept 1.4286. Exact effect sizes and permutation p-values are listed in the table.",
+          "captionTitle": "Necessary condition ceiling plot",
+          "captionPair": "x -> y",
+          "ceFdhPaths": 2,
+          "crFdhLines": 2,
+          "ceFdhPeers": 3
+        },
+        "effectValues": {
+          "CE-FDH": {
+            "effectSize": 0.5556,
+            "permutationP": 0.0001
+          },
+          "CR-FDH": {
+            "effectSize": 0.3956,
+            "permutationP": 0.0001
+          }
+        },
+        "pValueLattice": true,
+        "bottlenecksMatch": true,
+        "noModelOrQualityTree": true,
+        "noPlaceholder": true,
+        "noBroaderNcaClaim": true
+      },
+      "runDetails": {
+        "properties": {
+          "Run": "Necessary Condition Analysis run",
+          "Method": "Necessary Condition Analysis",
+          "Created": "16/8/2026, 8:30:19 pm",
+          "Recorded seed": "20260811",
+          "Dataset fingerprint": "v2:526fafc7b8d57fdf8d2aa389b7cff6a3a8b7f21ad5f5485b0a2e13c6e768fb94",
+          "Recipe": "a7f1ccb7-f773-4a88-9f6c-245201ae459a",
+          "Engine": "2.46.0",
+          "Method version": "nca_v2",
+          "Condition (X)": "x",
+          "Outcome (Y)": "y",
+          "Observations": "1024",
+          "Ceiling lines": "CE-FDH and CR-FDH",
+          "Requested permutations": "9999",
+          "Usable permutations": "9999",
+          "Missing data": "Listwise deletion"
+        },
+        "logEntries": 9
+      },
+      "resultProperties": {
+        "Method": "Necessary Condition Analysis",
+        "Status": "Completed",
+        "Condition (X)": "x",
+        "Outcome (Y)": "y",
+        "Observations": "1024",
+        "Ceiling lines": "CE-FDH and CR-FDH",
+        "Requested permutations": "9999",
+        "Usable permutations": "9999",
+        "Recorded seed": "20260811",
+        "Completed": "16/8/2026, 8:30:19 pm"
+      },
+      "editModelCommand": {
+        "count": 0,
+        "enabled": false
+      },
+      "editDataCommand": {
+        "count": 1,
+        "enabled": true
+      }
+    },
+    "ncaExport": {
+      "selectedRunId": "3e0c1187-2be4-4aa9-b657-3664fdc73640",
+      "formats": [
+        "CSV tables",
+        "HTML report",
+        "Reviewer pack",
+        "XLSX workbook",
+        "Print / PDF"
+      ],
+      "xlsxEnabled": true,
+      "modelDiagramCount": 0,
+      "ncaTablesIncluded": true,
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx",
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 788258,
+              "pid": 53388,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 788258,
+              "handle": 1050176,
+              "pid": 53388,
+              "rootOwner": 788258,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 788258,
+              "pid": 53388,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx",
+              "requiredSharedStrings": [
+                "Ceiling effect sizes and permutation inference",
+                "CR-FDH ceiling coefficients",
+                "Observed-range bottlenecks",
+                "Analysis details",
+                "Run provenance",
+                "CE-FDH",
+                "CR-FDH",
+                "Condition variable (X)",
+                "Necessary Condition Analysis",
+                "nca_v2",
+                "20260811"
+              ],
+              "requiredSheets": [
+                "Ceiling effect sizes and permut",
+                "CR-FDH ceiling coefficients",
+                "Observed-range bottlenecks",
+                "Analysis details",
+                "Run provenance"
+              ],
+              "sha256": "82364f3acdc44dfc80febe94b165f889293bf10ab404fd424a7d38fac0ed58d8",
+              "sheetNames": [
+                "Ceiling effect sizes and permut",
+                "CR-FDH ceiling coefficients",
+                "Observed-range bottlenecks",
+                "Analysis details",
+                "Run provenance"
+              ],
+              "size": 9598
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 788258,
+                    "pid": 53388,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 788258,
+                    "handle": 1050176,
+                    "pid": 53388,
+                    "rootOwner": 788258,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 788258,
+                    "pid": 53388,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-nca-20260816-202941743.xlsx",
+                    "requiredSharedStrings": [
+                      "Ceiling effect sizes and permutation inference",
+                      "CR-FDH ceiling coefficients",
+                      "Observed-range bottlenecks",
+                      "Analysis details",
+                      "Run provenance",
+                      "CE-FDH",
+                      "CR-FDH",
+                      "Condition variable (X)",
+                      "Necessary Condition Analysis",
+                      "nca_v2",
+                      "20260811"
+                    ],
+                    "requiredSheets": [
+                      "Ceiling effect sizes and permut",
+                      "CR-FDH ceiling coefficients",
+                      "Observed-range bottlenecks",
+                      "Analysis details",
+                      "Run provenance"
+                    ],
+                    "sha256": "82364f3acdc44dfc80febe94b165f889293bf10ab404fd424a7d38fac0ed58d8",
+                    "sheetNames": [
+                      "Ceiling effect sizes and permut",
+                      "CR-FDH ceiling coefficients",
+                      "Observed-range bottlenecks",
+                      "Analysis details",
+                      "Run provenance"
+                    ],
+                    "size": 9598
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        },
+        "appFeedback": "Saved v247-native-nca-20260816-202941743.xlsx.",
+        "file": {
+          "size": 9598,
+          "isFile": true
+        },
+        "workbookSheets": [
+          "Ceiling effect sizes and permut",
+          "CR-FDH ceiling coefficients",
+          "Observed-range bottlenecks",
+          "Analysis details",
+          "Run provenance"
+        ]
+      }
+    },
+    "ncaSaveReopen": {
+      "attempted": true,
+      "reopenedThroughRecentProjectRow": true,
+      "expectedRunId": "3e0c1187-2be4-4aa9-b657-3664fdc73640",
+      "selectedRunId": "3e0c1187-2be4-4aa9-b657-3664fdc73640",
+      "sameRunRestored": true,
+      "sameVisibleEffectsRestored": true,
+      "archive": {
+        "resultId": "3e0c1187-2be4-4aa9-b657-3664fdc73640",
+        "resultStatus": "completed",
+        "provenanceMethod": "nca",
+        "provenanceMethodVersion": "nca_v2",
+        "provenanceEngineVersion": "2.46.0",
+        "provenanceSeed": 20260811,
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "payloadKind": "pls_pm_v1",
+        "estimationMethodVersion": "nca_v2",
+        "usedObservations": 1024,
+        "omittedObservations": 0,
+        "assessment": {
+          "methodVersion": "assessment_not_applicable_v1",
+          "warnings": [
+            "PLS assessment is not applicable to standalone raw-data analyses."
+          ]
+        },
+        "ncaKeys": [
+          "bottlenecks",
+          "ce_fdh_peers",
+          "ceiling",
+          "ceilings",
+          "method_version",
+          "observations",
+          "permutation_samples",
+          "scope",
+          "usable_permutations",
+          "warnings",
+          "x",
+          "y"
+        ],
+        "exactCeilingRows": true,
+        "exactBottleneckRows": true,
+        "exactPeerRows": true,
+        "ncaMethodVersion": "nca_v2",
+        "ceiling": "both",
+        "permutationSamples": 9999,
+        "usablePermutations": 9999,
+        "x": "x",
+        "y": "y",
+        "observations": 1024,
+        "scope": {
+          "maximum_x": 3,
+          "maximum_y": 4,
+          "minimum_x": 0,
+          "minimum_y": 1
+        },
+        "peers": [
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 1,
+            "y": 3
+          },
+          {
+            "x": 3,
+            "y": 4
+          }
+        ],
+        "ceilings": [
+          {
+            "ceiling": "ce_fdh",
+            "effect_size": 0.5555555555555556,
+            "intercept": null,
+            "permutation_p_value": 0.0001,
+            "slope": null
+          },
+          {
+            "ceiling": "cr_fdh",
+            "effect_size": 0.39560439560439564,
+            "intercept": 1.4285714285714284,
+            "permutation_p_value": 0.0001,
+            "slope": 0.9285714285714286
+          }
+        ],
+        "bottlenecks": [
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 10,
+            "required_x_percent": 33.333333333333336,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 20,
+            "required_x_percent": 33.333333333333336,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 30,
+            "required_x_percent": 33.333333333333336,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 40,
+            "required_x_percent": 33.333333333333336,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 50,
+            "required_x_percent": 33.333333333333336,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 60,
+            "required_x_percent": 33.333333333333336,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 70,
+            "required_x_percent": 100,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 80,
+            "required_x_percent": 100,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 90,
+            "required_x_percent": 100,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 10,
+            "required_x_percent": null,
+            "status": "not_necessary"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 20,
+            "required_x_percent": 6.153846153846164,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 30,
+            "required_x_percent": 16.923076923076927,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 40,
+            "required_x_percent": 27.692307692307704,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 50,
+            "required_x_percent": 38.46153846153847,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 60,
+            "required_x_percent": 49.230769230769226,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 70,
+            "required_x_percent": 60.00000000000001,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 80,
+            "required_x_percent": 70.76923076923077,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 90,
+            "required_x_percent": 81.53846153846155,
+            "status": "required"
+          }
+        ],
+        "scopeMatches": true,
+        "peersMatch": true,
+        "ceilingGeometryMatches": true,
+        "bottlenecksMatch": true,
+        "pValueLattice": true,
+        "warnings": [
+          "NCA v2 is limited to the documented numeric X/Y CE-FDH and CR-FDH scope with observed-range bottlenecks; multiple conditions, latent-score NCA, cIPMA, and broader ceiling variants remain unsupported."
+        ],
+        "forbiddenNestedPayloads": [],
+        "recipe": {
+          "schemaVersion": 3,
+          "exactMethodConfigKeys": true,
+          "methodConfigKind": "nca",
+          "method": "nca",
+          "weightingScheme": "path",
+          "preprocessing": "unstandardized",
+          "missingData": "listwise_deletion",
+          "seed": 20260811,
+          "bootstrapSamples": 0,
+          "studentizedInnerSamples": 0,
+          "permutationSamples": 0,
+          "caseWeightColumn": null,
+          "ncaX": "x",
+          "ncaY": "y",
+          "ncaCeiling": "both",
+          "ncaPermutationSamples": 9999,
+          "constructs": 0,
+          "paths": 0,
+          "controls": 0,
+          "interactions": 0,
+          "higherOrderConstructs": 0
+        },
+        "models": 0,
+        "activeModelId": null,
+        "nodes": 0,
+        "edges": 0,
+        "runModelId": null,
+        "runModelSnapshot": null,
+        "runSeed": 20260811
+      },
+      "navigation": {
+        "groupTitle": "Necessary conditions",
+        "initialSelectedTable": "Ceiling effect sizes and permutation inference",
+        "treeItems": [
+          "Necessary conditions",
+          "Ceiling effect sizes and permutation inference",
+          "CR-FDH ceiling coefficients",
+          "Observed-range bottlenecks",
+          "Analysis details"
+        ],
+        "effects": {
+          "title": "Ceiling effect sizes and permutation inference",
+          "rowCount": 2,
+          "headers": [
+            "Ceiling line",
+            "Effect size",
+            "Permutation p"
+          ],
+          "rows": [
+            [
+              "CE-FDH",
+              "0.5556",
+              "0.0001"
+            ],
+            [
+              "CR-FDH",
+              "0.3956",
+              "0.0001"
+            ]
+          ]
+        },
+        "crLine": {
+          "title": "CR-FDH ceiling coefficients",
+          "rowCount": 1,
+          "headers": [
+            "Ceiling line",
+            "Slope",
+            "Intercept"
+          ],
+          "rows": [
+            [
+              "CR-FDH",
+              "0.9286",
+              "1.4286"
+            ]
+          ]
+        },
+        "bottlenecks": {
+          "title": "Observed-range bottlenecks",
+          "rowCount": 18,
+          "headers": [
+            "Ceiling line",
+            "Outcome (% observed range)",
+            "Condition requirement"
+          ],
+          "rows": [
+            [
+              "CE-FDH",
+              "10%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "20%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "30%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "40%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "50%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "60%",
+              "33.3333% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "70%",
+              "100.0000% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "80%",
+              "100.0000% of observed X range"
+            ],
+            [
+              "CE-FDH",
+              "90%",
+              "100.0000% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "10%",
+              "Not necessary"
+            ],
+            [
+              "CR-FDH",
+              "20%",
+              "6.1538% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "30%",
+              "16.9231% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "40%",
+              "27.6923% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "50%",
+              "38.4615% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "60%",
+              "49.2308% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "70%",
+              "60.0000% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "80%",
+              "70.7692% of observed X range"
+            ],
+            [
+              "CR-FDH",
+              "90%",
+              "81.5385% of observed X range"
+            ]
+          ]
+        },
+        "scope": {
+          "title": "Analysis details",
+          "rowCount": 10,
+          "headers": [
+            "Field",
+            "Value"
+          ],
+          "rows": [
+            [
+              "Condition variable (X)",
+              "x"
+            ],
+            [
+              "Outcome variable (Y)",
+              "y"
+            ],
+            [
+              "Analyzed observations",
+              "1024"
+            ],
+            [
+              "X observed range",
+              "0.000000 to 3.000000"
+            ],
+            [
+              "Y observed range",
+              "1.000000 to 4.000000"
+            ],
+            [
+              "Ceiling lines",
+              "CE-FDH and CR-FDH"
+            ],
+            [
+              "Requested permutations",
+              "9999"
+            ],
+            [
+              "Usable permutations",
+              "9999"
+            ],
+            [
+              "Missing data",
+              "Listwise deletion"
+            ],
+            [
+              "Method version",
+              "nca_v2"
+            ]
+          ]
+        },
+        "scopeValues": {
+          "Condition variable (X)": "x",
+          "Outcome variable (Y)": "y",
+          "Analyzed observations": "1024",
+          "X observed range": "0.000000 to 3.000000",
+          "Y observed range": "1.000000 to 4.000000",
+          "Ceiling lines": "CE-FDH and CR-FDH",
+          "Requested permutations": "9999",
+          "Usable permutations": "9999",
+          "Missing data": "Listwise deletion",
+          "Method version": "nca_v2"
+        },
+        "plot": {
+          "figures": 1,
+          "accessibleSvgs": 1,
+          "namedImages": 1,
+          "labelledBy": "nd-nca-plot-title nd-nca-plot-description",
+          "directTitleCount": 1,
+          "title": "Necessary condition ceiling plot for x and y",
+          "descriptionCount": 1,
+          "description": "Observed-range necessary condition ceiling plot for x as X and y as Y. CE-FDH peer 0, 1. CE-FDH peer 1, 3. CE-FDH peer 3, 4. CR-FDH slope 0.9286 and intercept 1.4286. Exact effect sizes and permutation p-values are listed in the table.",
+          "captionTitle": "Necessary condition ceiling plot",
+          "captionPair": "x -> y",
+          "ceFdhPaths": 2,
+          "crFdhLines": 2,
+          "ceFdhPeers": 3
+        },
+        "effectValues": {
+          "CE-FDH": {
+            "effectSize": 0.5556,
+            "permutationP": 0.0001
+          },
+          "CR-FDH": {
+            "effectSize": 0.3956,
+            "permutationP": 0.0001
+          }
+        },
+        "pValueLattice": true,
+        "bottlenecksMatch": true,
+        "noModelOrQualityTree": true,
+        "noPlaceholder": true,
+        "noBroaderNcaClaim": true
+      }
+    },
+    "ncaPackagedViewports": {
+      "passed": true,
+      "actualTauriWindow": true,
+      "resizeMechanism": "Browser.setWindowBounds",
+      "targetIdentity": {
+        "targetId": "CF74F53C237C83CCB209E2955916DFFE",
+        "windowId": 1408387183,
+        "type": "page",
+        "title": "QuickPLS - Native NCA Acceptance *",
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "lookupCommand": "Browser.getWindowForTarget"
+      },
+      "deviceMetricsOverride": {
+        "clearCommand": "Emulation.clearDeviceMetricsOverride",
+        "cleared": true,
+        "pageSetViewportSizeUsed": false,
+        "emulationOnly": false,
+        "playwrightViewportBefore": null
+      },
+      "method": {
+        "slug": "nca_v2",
+        "version": "nca_v2",
+        "evidenceCheck": "ncaResult",
+        "expectedRunId": "3e0c1187-2be4-4aa9-b657-3664fdc73640",
+        "expectedRunLabel": "Necessary Condition Analysis",
+        "expectedTableId": "nca_ceiling_effects"
+      },
+      "outerBoundsBefore": {
+        "left": 0,
+        "top": 23,
+        "width": 1536,
+        "height": 793,
+        "windowState": "normal"
+      },
+      "exactViewports": [
+        {
+          "id": "1024x700",
+          "requestedClientViewport": {
+            "width": 1024,
+            "height": 700
+          },
+          "domInnerDimensions": {
+            "width": 1024,
+            "height": 700
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1536,
+            "height": 793,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1024,
+            "height": 701,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 699,
+                "left": 0,
+                "top": 23
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 46,
+                "width": 1024,
+                "height": 700,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 699
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 701,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1024,
+                "height": 702,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 702
+              }
+            },
+            {
+              "attempt": 3,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 700,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1024,
+                "height": 701,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 700
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "3e0c1187-2be4-4aa9-b657-3664fdc73640",
+          "selectedRunLabel": "Necessary Condition Analysis run",
+          "selectedTableId": "nca_ceiling_effects",
+          "resultRows": 2,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\89v-tauri-native-nca-packaged-viewport-1024x700.png",
+          "passed": true
+        },
+        {
+          "id": "1280x720",
+          "requestedClientViewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "domInnerDimensions": {
+            "width": 1280,
+            "height": 720
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1024,
+            "height": 701,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1280,
+            "height": 721,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1280,
+                "height": 721,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1280,
+                "height": 722,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1280,
+                "innerHeight": 722
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1280,
+                "height": 720,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1280,
+                "height": 721,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1280,
+                "innerHeight": 720
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "3e0c1187-2be4-4aa9-b657-3664fdc73640",
+          "selectedRunLabel": "Necessary Condition Analysis run",
+          "selectedTableId": "nca_ceiling_effects",
+          "resultRows": 2,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\89v-tauri-native-nca-packaged-viewport-1280x720.png",
+          "passed": true
+        },
+        {
+          "id": "1440x900",
+          "requestedClientViewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "domInnerDimensions": {
+            "width": 1440,
+            "height": 900
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1280,
+            "height": 721,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1440,
+            "height": 901,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1440,
+                "height": 901,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1440,
+                "height": 902,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1440,
+                "innerHeight": 902
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1440,
+                "height": 900,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1440,
+                "height": 901,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1440,
+                "innerHeight": 900
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "3e0c1187-2be4-4aa9-b657-3664fdc73640",
+          "selectedRunLabel": "Necessary Condition Analysis run",
+          "selectedTableId": "nca_ceiling_effects",
+          "resultRows": 2,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\89v-tauri-native-nca-packaged-viewport-1440x900.png",
+          "passed": true
+        }
+      ],
+      "restoredFinalWindowState": {
+        "requested": {
+          "left": 0,
+          "top": 23,
+          "width": 1536,
+          "height": 793,
+          "windowState": "normal"
+        },
+        "actual": {
+          "left": 0,
+          "top": 23,
+          "width": 1536,
+          "height": 793,
+          "windowState": "normal"
+        },
+        "passed": true
+      }
+    },
+    "ncaFunctionalOffline": {
+      "passed": true,
+      "analyticalWorkflowRequiresInternet": false,
+      "strictZeroProcessEgressClaimed": false,
+      "platformBackgroundEgressOutsidePageRequestScope": true,
+      "observedRequestCount": 68,
+      "externalRequestCount": 0,
+      "origins": [
+        "http://ipc.localhost",
+        "http://tauri.localhost"
+      ],
+      "externalRequests": []
+    },
+    "recentProjectsRestored": true
+  },
+  "screenshots": [
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\84-tauri-native-nca-fixture-data-no-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\84a-tauri-native-nca-invalid-setup-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\85-tauri-native-nca-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\85a-tauri-native-nca-cancelled-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\86-tauri-native-nca-running-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\87-tauri-native-nca-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\88-tauri-native-nca-export-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\89-tauri-native-nca-reopened-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\89v-tauri-native-nca-packaged-viewport-1024x700.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\89v-tauri-native-nca-packaged-viewport-1280x720.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\89v-tauri-native-nca-packaged-viewport-1440x900.png"
+  ],
+  "screenshotArtifacts": [
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/84-tauri-native-nca-fixture-data-no-model-1536x794.png",
+      "size": 102021,
+      "sha256": "f3e3fc0a18416c09a00013ad54d89f592091634a9ab872b927e2d903a77d8c61"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/84a-tauri-native-nca-invalid-setup-1536x794.png",
+      "size": 192119,
+      "sha256": "0b62e032124dcc6def05851116adc2fbad6e9e38ebe9d76fe684cfc47220bc4e"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/85-tauri-native-nca-dialog-1536x794.png",
+      "size": 177102,
+      "sha256": "cc0509be7929f35bd593c6b83bf494fb02c141f2515ab17794408de4d0789bcd"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/85a-tauri-native-nca-cancelled-1536x794.png",
+      "size": 181301,
+      "sha256": "f84d9a65f31ae323446afb592413610450404eec1b96c73fa8e7413cfbd9a697"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/86-tauri-native-nca-running-1536x794.png",
+      "size": 139646,
+      "sha256": "116544cdcdd7052e8dace94c37e61d56e7ec9bd407fd33189f60ffeaaa952970"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/87-tauri-native-nca-results-1536x794.png",
+      "size": 106530,
+      "sha256": "a7631f771c367f2f868f80e416217097e95a0bf38cbffb3858ab65d8bcb8bf17"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/88-tauri-native-nca-export-1536x794.png",
+      "size": 114357,
+      "sha256": "7335aeeccb6bdeb21e8f376697e840abc37ac4d992e0392e1a14153b354952b8"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/89-tauri-native-nca-reopened-1536x794.png",
+      "size": 104753,
+      "sha256": "6cabfad2bd79ae3376cd609b3d362856b532b0304a2448d17c277ebac9d68c5f"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/89v-tauri-native-nca-packaged-viewport-1024x700.png",
+      "size": 78238,
+      "sha256": "06cbe33dbb17f29b859cde5751aed8c7b25e18398c0a01b51a01f636882bdf0d"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/89v-tauri-native-nca-packaged-viewport-1280x720.png",
+      "size": 74526,
+      "sha256": "94bb313e512e4a25f70ffd9cbac1b3f8c14e44fffe5da828c858a1d65a5eb298"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/89v-tauri-native-nca-packaged-viewport-1440x900.png",
+      "size": 77197,
+      "sha256": "687eb8b5ed189291c6333cf149593d6a12fde331dd4f52835d799cc4ac427cbb"
+    }
+  ],
+  "consoleErrors": [],
+  "failures": []
+}

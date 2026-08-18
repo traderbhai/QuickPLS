@@ -1,0 +1,117 @@
+name: QuickPLS security and supply-chain scans
+
+on:
+  pull_request:
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/**/Cargo.toml"
+      - "src-tauri/Cargo.toml"
+      - "validation/requirements.txt"
+      - "validation/security-tools.in"
+      - "validation/security-tools-requirements.txt"
+      - "validation/quickpls_security_scans.py"
+      - "validation/security_scan_dispositions.json"
+      - "validation/test_release_workflow_contract.py"
+      - ".github/workflows/security.yml"
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/**/Cargo.toml"
+      - "src-tauri/Cargo.toml"
+      - "validation/requirements.txt"
+      - "validation/security-tools.in"
+      - "validation/security-tools-requirements.txt"
+      - "validation/quickpls_security_scans.py"
+      - "validation/security_scan_dispositions.json"
+      - "validation/test_release_workflow_contract.py"
+      - ".github/workflows/security.yml"
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_AUDIT_VERSION: "0.22.2"
+  CARGO_AUDIT_CRATE_SHA256: "700c2b240f7fd330c24b675fe429f73a5b676531fcc6300400b2b67f155ba12a"
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scans:
+    name: Dependency, secret, and license gates
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c
+
+      - name: Install locked project dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --require-hashes -r validation/requirements.txt
+          npm ci --ignore-scripts
+
+      - name: Install pinned scan tools
+        shell: pwsh
+        run: |
+          python -m pip install --require-hashes -r validation/security-tools-requirements.txt
+          cargo install cargo-audit --locked --version $env:CARGO_AUDIT_VERSION
+          $toolVersion = (cargo-audit --version).Trim()
+          if ($toolVersion -ne "cargo-audit $env:CARGO_AUDIT_VERSION") {
+            throw "Unexpected cargo-audit executable version: $toolVersion"
+          }
+          $archives = @(Get-ChildItem -LiteralPath "$env:USERPROFILE/.cargo/registry/cache" -Recurse -File -Filter "cargo-audit-$env:CARGO_AUDIT_VERSION.crate")
+          if ($archives.Count -eq 0) {
+            throw 'Cargo did not retain the cargo-audit source archive for checksum verification.'
+          }
+          foreach ($archive in $archives) {
+            $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive.FullName).Hash.ToLowerInvariant()
+            if ($actual -ne $env:CARGO_AUDIT_CRATE_SHA256) {
+              throw "cargo-audit source archive checksum differs: $actual"
+            }
+          }
+
+      - name: Run fail-closed security scans
+        id: scan
+        shell: pwsh
+        run: >-
+          python validation/quickpls_security_scans.py
+          --report validation/results/quickpls_security_scan_report.json
+
+      - name: Upload scan evidence
+        if: always() && hashFiles('validation/results/quickpls_security_scan_report.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: quickpls-security-scan-${{ github.sha }}
+          path: validation/results/quickpls_security_scan_report.json
+          if-no-files-found: error
+          retention-days: 90

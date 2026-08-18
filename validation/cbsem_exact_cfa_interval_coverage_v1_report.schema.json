@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem_exact_cfa_interval_coverage_v1_report.schema.json",
+  "title": "QuickPLS exact-CFA interval coverage aggregate report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "stage", "status", "qualification_status", "manifest_sha256", "binary_sha256", "shard_count", "dataset_count", "all_predeclared_evidence_accepted", "coverage_decision", "primary_cells", "availability_cells", "failure_summary", "rejection_diagnostics", "qualification_boundary"],
+  "allOf": [
+    {
+      "if": {"properties": {"stage": {"const": "conformance"}}},
+      "then": {"properties": {"shard_count": {"const": 2}, "dataset_count": {"const": 2}}}
+    },
+    {
+      "if": {"properties": {"stage": {"const": "pilot"}}},
+      "then": {"properties": {"shard_count": {"const": 8}, "dataset_count": {"const": 40}}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "conformance_evidence_passed_coverage_not_evaluated_product_qualification_blocked"}}},
+      "then": {"properties": {"stage": {"const": "conformance"}, "all_predeclared_evidence_accepted": {"const": true}, "coverage_decision": {"const": "not_evaluated_conformance"}, "primary_cells": {"maxItems": 0}, "availability_cells": {"maxItems": 0}, "failure_summary": {"maxItems": 0}, "rejection_diagnostics": {"maxItems": 0}}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "pilot_evidence_assembled_no_qualification_decision_product_qualification_blocked"}}},
+      "then": {"properties": {"stage": {"const": "pilot"}, "all_predeclared_evidence_accepted": {"const": true}, "coverage_decision": {"const": "descriptive_pilot_only_no_qualification_decision"}, "primary_cells": {"minItems": 57, "maxItems": 57}, "availability_cells": {"minItems": 6, "maxItems": 6}, "failure_summary": {"minItems": 2, "maxItems": 2}, "rejection_diagnostics": {"maxItems": 0}}}
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["conformance_evidence_rejected_product_qualification_blocked", "pilot_evidence_rejected_product_qualification_blocked"]}}},
+      "then": {"properties": {"all_predeclared_evidence_accepted": {"const": false}, "coverage_decision": {"const": "not_evaluated_rejected_integrity_evidence"}, "primary_cells": {"maxItems": 0}, "availability_cells": {"maxItems": 0}, "failure_summary": {"maxItems": 0}, "rejection_diagnostics": {"minItems": 1}}}
+    }
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "cbsem_exact_cfa_interval_coverage_report_v1"},
+    "stage": {"enum": ["conformance", "pilot"]},
+    "status": {
+      "enum": [
+        "conformance_evidence_passed_coverage_not_evaluated_product_qualification_blocked",
+        "pilot_evidence_assembled_no_qualification_decision_product_qualification_blocked",
+        "conformance_evidence_rejected_product_qualification_blocked",
+        "pilot_evidence_rejected_product_qualification_blocked"
+      ]
+    },
+    "qualification_status": {"const": "blocked_not_product_qualification"},
+    "manifest_sha256": {"$ref": "#/$defs/sha"},
+    "binary_sha256": {"$ref": "#/$defs/sha"},
+    "shard_count": {"type": "integer", "minimum": 2, "maximum": 8},
+    "dataset_count": {"type": "integer", "minimum": 2, "maximum": 40},
+    "all_predeclared_evidence_accepted": {"type": "boolean"},
+    "coverage_decision": {"enum": ["not_evaluated_conformance", "descriptive_pilot_only_no_qualification_decision", "not_evaluated_rejected_integrity_evidence"]},
+    "primary_cells": {"type": "array", "items": {"$ref": "#/$defs/primaryCell"}, "maxItems": 57},
+    "availability_cells": {"type": "array", "items": {"$ref": "#/$defs/availabilityCell"}, "maxItems": 6},
+    "failure_summary": {"type": "array", "items": {"$ref": "#/$defs/failureSummary"}, "maxItems": 2},
+    "rejection_diagnostics": {"type": "array", "items": {"$ref": "#/$defs/rejectionDiagnostic"}, "maxItems": 8},
+    "qualification_boundary": {"$ref": "#/$defs/qualificationBoundary"}
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "nullableBoolean": {"oneOf": [{"type": "boolean"}, {"type": "null"}]},
+    "nullableNumber": {"oneOf": [{"type": "number"}, {"type": "null"}]},
+    "primaryCell": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dgp_id", "parameter_id", "method", "requested_datasets", "available_datasets", "covered_unconditional", "covered_conditional", "unconditional_rate", "conditional_rate", "ordinary_cp95_lower", "ordinary_cp95_upper", "ordinary_cp95_half_width", "simultaneous_bonferroni_cp_lower", "simultaneous_bonferroni_cp_upper", "conditional_cp95_lower", "conditional_cp95_upper", "final_acceptance"],
+      "properties": {
+        "dgp_id": {"enum": ["dgp_a_one_factor_n150", "dgp_b_two_factor_n300"]}, "parameter_id": {"type": "string", "minLength": 1}, "method": {"enum": ["percentile", "studentized", "bca"]},
+        "requested_datasets": {"type": "integer", "minimum": 1}, "available_datasets": {"type": "integer", "minimum": 0}, "covered_unconditional": {"type": "integer", "minimum": 0}, "covered_conditional": {"type": "integer", "minimum": 0},
+        "unconditional_rate": {"type": "number", "minimum": 0.0, "maximum": 1.0}, "conditional_rate": {"$ref": "#/$defs/nullableNumber"},
+        "ordinary_cp95_lower": {"type": "number", "minimum": 0.0, "maximum": 1.0}, "ordinary_cp95_upper": {"type": "number", "minimum": 0.0, "maximum": 1.0}, "ordinary_cp95_half_width": {"type": "number", "minimum": 0.0, "maximum": 0.5},
+        "simultaneous_bonferroni_cp_lower": {"type": "number", "minimum": 0.0, "maximum": 1.0}, "simultaneous_bonferroni_cp_upper": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "conditional_cp95_lower": {"$ref": "#/$defs/nullableNumber"}, "conditional_cp95_upper": {"$ref": "#/$defs/nullableNumber"}, "final_acceptance": {"$ref": "#/$defs/nullableBoolean"}
+      }
+    },
+    "availabilityCell": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dgp_id", "method", "requested_datasets", "available_datasets", "bonferroni_one_sided_lower", "final_acceptance"],
+      "properties": {
+        "dgp_id": {"enum": ["dgp_a_one_factor_n150", "dgp_b_two_factor_n300"]}, "method": {"enum": ["percentile", "studentized", "bca"]},
+        "requested_datasets": {"type": "integer", "minimum": 1}, "available_datasets": {"type": "integer", "minimum": 0},
+        "bonferroni_one_sided_lower": {"type": "number", "minimum": 0.0, "maximum": 1.0}, "final_acceptance": {"$ref": "#/$defs/nullableBoolean"}
+      }
+    },
+    "failureSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dgp_id", "independent_cluster_unit", "dataset_count", "bootstrap_replicates_are_not_binomial_trials", "descriptive_quantile_method", "cluster_bootstrap_method", "point", "standard_error", "delete_one"],
+      "properties": {
+        "dgp_id": {"enum": ["dgp_a_one_factor_n150", "dgp_b_two_factor_n300"]}, "independent_cluster_unit": {"const": "generated_dataset"}, "dataset_count": {"type": "integer", "minimum": 1}, "bootstrap_replicates_are_not_binomial_trials": {"const": true},
+        "descriptive_quantile_method": {"const": "type7_over_dataset_level_failure_fractions_v1"},
+        "cluster_bootstrap_method": {"const": "fixed_seed_dataset_resample_percentile_mean_v1"},
+        "point": {"$ref": "#/$defs/clusterSummary"},
+        "standard_error": {"$ref": "#/$defs/clusterSummary"},
+        "delete_one": {"$ref": "#/$defs/clusterSummary"}
+      }
+    },
+    "clusterSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["metric", "dataset_count", "seed", "resamples", "confidence_level", "mean", "p05", "p50", "p95", "cluster_bootstrap_mean_ci_lower", "cluster_bootstrap_mean_ci_upper"],
+      "properties": {
+        "metric": {"enum": ["point", "standard_error", "delete_one"]},
+        "dataset_count": {"type": "integer", "minimum": 2},
+        "seed": {"type": "integer", "minimum": 0},
+        "resamples": {"const": 10000},
+        "confidence_level": {"const": 0.95},
+        "mean": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "p05": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "p50": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "p95": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "cluster_bootstrap_mean_ci_lower": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "cluster_bootstrap_mean_ci_upper": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+      }
+    },
+    "retained": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_kind", "dataset_index", "path", "sha256"],
+      "properties": {
+        "artifact_kind": {"enum": ["dataset", "worker_replay", "cancellation_bootstrap", "cancellation_jackknife"]},
+        "dataset_index": {"type": "integer", "minimum": 0},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "rejectionDiagnostic": {
+      "type": "object", "additionalProperties": false,
+      "required": ["shard_id", "shard_status", "rejected_datasets", "worker_replay_reasons", "cancellation_reasons", "retained_full_audit_results"],
+      "properties": {
+        "shard_id": {"type": "string", "minLength": 1},
+        "shard_status": {"const": "rejected_validation_shard"},
+        "rejected_datasets": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["dataset_index", "integrity_reasons"],
+            "properties": {"dataset_index": {"type": "integer", "minimum": 0}, "integrity_reasons": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true}}
+          }
+        },
+        "worker_replay_reasons": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "cancellation_reasons": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "retained_full_audit_results": {"type": "array", "items": {"$ref": "#/$defs/retained"}, "minItems": 1}
+      }
+    },
+    "qualificationBoundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "missing_evidence"],
+      "properties": {"status": {"const": "blocked_not_product_qualification"}, "missing_evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true}}
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "record_type": "quickpls_beta_defect_register_template",
+  "template_only": true,
+  "records": [],
+  "record_template": {
+    "defect_id": null,
+    "workflow_id": null,
+    "candidate_id": null,
+    "severity": null,
+    "status": null,
+    "data_loss": null,
+    "archive_corruption": null,
+    "privacy_safe_summary": null,
+    "synthetic_reproduction_id": null,
+    "opened_at": null,
+    "closed_at": null,
+    "closure_evidence_record_id": null
+  },
+  "allowed_severities": [
+    "P0",
+    "P1",
+    "P2",
+    "P3"
+  ],
+  "allowed_status_values": [
+    "open",
+    "closed",
+    "duplicate",
+    "not_reproducible"
+  ],
+  "exit_rules": {
+    "maximum_unresolved_p0": 0,
+    "maximum_unresolved_p1": 0,
+    "maximum_reproducible_data_loss": 0,
+    "maximum_archive_corruption": 0,
+    "closed_items_require_closure_evidence": true
+  }
+}

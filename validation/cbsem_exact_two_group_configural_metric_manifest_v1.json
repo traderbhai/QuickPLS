@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "kind": "cbsem_exact_two_group_configural_metric_engine_reference_manifest_v1",
+  "status": "predeclared_engine_reference_program_product_qualification_blocked",
+  "source_bindings": [
+    {
+      "role": "primary_raw_fixture",
+      "path": "validation/fixtures/cbsem_exact_two_group_configural_metric_v1.csv",
+      "sha256": "909e80665b244d23c1b6aa329a9e0f86e55b21afb5995928fa4310797e2d6d57"
+    },
+    {
+      "role": "label_swap_raw_fixture",
+      "path": "validation/fixtures/cbsem_exact_two_group_configural_metric_v1_label_swap.csv",
+      "sha256": "7170f47d6bd8253b61c499b52cc70e3b9e93070ae1e9001b6b5f7ea8722ce926"
+    },
+    {
+      "role": "independent_python_oracle",
+      "path": "validation/cbsem_exact_two_group_configural_metric_oracle_v1.py",
+      "sha256": "21b7a9c0427febafdf0ca0e751f710918edc6a19bf5024f08187dee48de666a2"
+    },
+    {
+      "role": "independent_lavaan_script",
+      "path": "validation/cbsem_exact_two_group_configural_metric_oracle_v1.R",
+      "sha256": "968682bdd9e34142fd4c7e876c94e568010beef59638cf675bdfa4f970880c01"
+    },
+    {
+      "role": "rust_validation_example",
+      "path": "crates/qpls-estimation/examples/cbsem_exact_two_group_configural_metric_validation.rs",
+      "sha256": "5202038f90708a80391c483af0b58de8e54baed3cd2eea91c2c7838a9873d353"
+    },
+    {
+      "role": "quarantined_engine_source",
+      "path": "crates/qpls-estimation/src/cbsem_exact_two_group_invariance.rs",
+      "sha256": "0669b95dc809fca986892ec448389d9b60fb545631c43743b8802ddc237ccb52"
+    },
+    {
+      "role": "manifest_schema",
+      "path": "validation/cbsem_exact_two_group_configural_metric_manifest_v1.schema.json",
+      "sha256": "48702b005dc17345cc39fac028e9fdcc8ed397e1a4371f7dfbb9fef8be0f8d51"
+    },
+    {
+      "role": "report_schema",
+      "path": "validation/cbsem_exact_two_group_configural_metric_report_v1.schema.json",
+      "sha256": "f59e5c16c40a81c9f35aec6313e6784e7d5f9304d851c525b05a55febeb4a3ce"
+    }
+  ],
+  "fixture_contract": {
+    "primary_path": "validation/fixtures/cbsem_exact_two_group_configural_metric_v1.csv",
+    "primary_sha256": "909e80665b244d23c1b6aa329a9e0f86e55b21afb5995928fa4310797e2d6d57",
+    "label_swap_path": "validation/fixtures/cbsem_exact_two_group_configural_metric_v1_label_swap.csv",
+    "label_swap_sha256": "7170f47d6bd8253b61c499b52cc70e3b9e93070ae1e9001b6b5f7ea8722ce926",
+    "group_sample_sizes": {
+      "A": 180,
+      "B": 220
+    },
+    "observed_variable_order": ["x1", "x2", "x3", "y1", "y2", "y3"],
+    "dgp": {
+      "generation": "frozen_xorshift32_box_muller_raw_rows_v1",
+      "seed": 539363350,
+      "factor_correlation": 0.35,
+      "marker_loadings": {
+        "x1": 1.0,
+        "y1": 1.0
+      },
+      "nonmarker_loadings": {
+        "A": {
+          "x2": 0.82,
+          "x3": 0.71,
+          "y2": 0.78,
+          "y3": 0.66
+        },
+        "B": {
+          "x2": 0.82,
+          "x3": 0.38,
+          "y2": 0.78,
+          "y3": 0.66
+        }
+      },
+      "residual_standard_deviations": {
+        "x1": 0.55,
+        "x2": 0.6,
+        "x3": 0.65,
+        "y1": 0.58,
+        "y2": 0.62,
+        "y3": 0.68
+      },
+      "deliberate_noninvariance": "group_B_x3_loading_0.38_vs_group_A_0.71"
+    }
+  },
+  "scientific_contract": {
+    "model": "two_correlated_factors_three_reflective_indicators_each",
+    "estimator": "ordinary_maximum_likelihood",
+    "objective": "sum_over_groups_Ng_times_Fml_group_with_total_objective_divided_by_total_N",
+    "covariance_denominator": "maximum_likelihood_n",
+    "missing_data": "listwise_deletion",
+    "mean_structure": false,
+    "fixed_x": false,
+    "identification": "first_loading_per_factor_fixed_to_one_in_each_group",
+    "metric_constraint": "four_corresponding_nonmarker_loadings_equal_across_groups",
+    "expected_dimensions": {
+      "configural_free_dimensions": 26,
+      "configural_degrees_of_freedom": 16,
+      "metric_free_dimensions": 22,
+      "metric_degrees_of_freedom": 20,
+      "delta_degrees_of_freedom": 4
+    },
+    "lavaan_contract": {
+      "estimator": "ML",
+      "missing": "listwise",
+      "meanstructure": false,
+      "fixed_x": false,
+      "std_lv": false,
+      "marker_identification": true,
+      "configural_group_equal": [],
+      "metric_group_equal": ["loadings"]
+    }
+  },
+  "acceptance_tolerances": {
+    "moment_absolute": 1e-12,
+    "parameter_absolute": 0.0001,
+    "implied_covariance_absolute": 0.0001,
+    "objective_absolute": 1e-7,
+    "chi_square_absolute": 0.000001,
+    "p_value_absolute": 1e-9,
+    "label_swap_absolute": 1e-7,
+    "lavaan_chi_square_absolute": 0.001
+  },
+  "execution_contract": {
+    "append_only_report": true,
+    "explicit_execute_required": true,
+    "engine_timeout_seconds": 120,
+    "lavaan_unavailable_policy": "allowed_for_engine_reference_only_and_blocks_external_cross_implementation_claim"
+  },
+  "qualification_boundary": {
+    "status": "blocked_not_product_qualification",
+    "evidence_role": "quarantined_engine_reference_only",
+    "forbidden_claims": [
+      "product_support",
+      "runner_support",
+      "project_persistence",
+      "canonical_export_support",
+      "release_qualification"
+    ],
+    "missing_evidence": [
+      "executed_lavaan_reference_on_available_host",
+      "broader_group_and_model_axes",
+      "canonical_and_text_export_contracts",
+      "project_roundtrip",
+      "runner_and_native_integration",
+      "scientific_review"
+    ]
+  }
+}

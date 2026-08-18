@@ -60,7 +60,7 @@ export interface RunMonitorState {
   logs: RunMonitorLogEntry[];
 }
 
-export type AnalysisMethodId = "pls_pm" | "bootstrap" | "permutation" | "plsc" | "wpls" | "cca" | "cta_pls" | "endogeneity" | "nonlinear_effects" | "moderated_mediation" | "predict" | "mga" | "ipma" | "cbsem" | "pca" | "gsca" | "regression" | "nca";
+export type AnalysisMethodId = "pls_pm" | "bootstrap" | "permutation" | "pls_sample_size_power" | "plsc" | "wpls" | "cca" | "cta_pls" | "endogeneity" | "nonlinear_effects" | "moderated_mediation" | "predict" | "mga" | "ipma" | "cbsem" | "pca" | "gsca" | "regression" | "nca";
 export type DiagramMode = "compact" | "sem" | "publication" | "smartpls_result";
 export type DiagramOverlayMode = "model" | "loadings" | "paths_r2" | "significance" | "quality" | "cbsem_standardized" | "cbsem_residuals" | "modification_indices";
 export type DiagramToolMode = "select" | "pan" | "construct" | "indicator" | "path" | "covariance" | "residual" | "caption" | "measurement" | "interaction" | "higher_order";
@@ -101,6 +101,18 @@ export interface DiagramViewport {
   zoom: number;
 }
 
+export type StandardSemPresentationLayoutObject =
+  | { kind: "caption"; id: string; text: string; x: number; y: number }
+  | { kind: "note"; id: string; subject: string; text: string; x: number; y: number }
+  | { kind: "shape"; id: string; shape: "rectangle" | "rounded_rectangle" | "ellipse" | "diamond"; x: number; y: number; width: number; height: number; label: string | null; style: Record<string, string> }
+  | { kind: "image"; id: string; assetRef: string; altText: string; x: number; y: number; width: number; height: number; style: Record<string, string> }
+  | { kind: "line"; id: string; x1: number; y1: number; x2: number; y2: number; label: string | null; startMarker: string | null; endMarker: string | null; style: Record<string, string> };
+
+export interface StandardSemPresentationLayoutV1 {
+  schemaVersion: 1;
+  objects: StandardSemPresentationLayoutObject[];
+}
+
 export interface DiagramLayoutState {
   diagramVersion: "sem_designer_v1";
   constructLayouts: Record<string, ConstructLayout>;
@@ -110,6 +122,8 @@ export interface DiagramLayoutState {
   diagramTheme: "academic_grayscale" | "smartpls_like" | "quickpls_color" | "journal_mono" | "high_contrast";
   showGrid: boolean;
   layoutLocked: boolean;
+  /** Presentation-only SemModelV4 decorations; never scientific authority. */
+  standardSemPresentation?: StandardSemPresentationLayoutV1;
 }
 
 export interface UiPreferences {
@@ -117,6 +131,7 @@ export interface UiPreferences {
   tableDensity: UiDensity;
   defaultPrecision: number;
   showAdvancedHelp: boolean;
+  experimentalLabsEnabled: boolean;
   recentPanels: WorkspaceView[];
   methodScopeDrawerOpen: boolean;
   showThresholdColors: boolean;
@@ -172,6 +187,8 @@ export interface AnalysisUiSettings {
   maxIterations?: number;
   preprocessing?: "standardized" | "mean_centered" | "unstandardized";
   bootstrapSamples: number;
+  /** Omitted for the historical/default two-sided PLS bootstrap contract. */
+  bootstrapTestTail?: PlsBootstrapTestTail;
   studentizedInnerSamples: number;
   permutationSamples: number;
   seed: number;
@@ -194,6 +211,10 @@ export interface AnalysisUiSettings {
   cbsemGroupColumn?: string | null;
   cbsemInvarianceSteps?: string | null;
   cbsemBootstrapSamples?: number;
+  /** Exact CB-SEM bootstrap interval; omitted preserves the historical percentile wire. */
+  cbsemBootstrapInterval?: "percentile_type7" | "analytic_studentized_type7" | "bca_type7";
+  /** Omitted for the historical/default two-sided exact CB-SEM bootstrap test. */
+  cbsemBootstrapTestTail?: CbsemBootstrapTestTail;
   pcaVariables?: string | null;
   pcaComponentRule?: "kaiser" | "fixed" | "variance_threshold";
   pcaComponents?: number;
@@ -213,6 +234,19 @@ export interface AnalysisUiSettings {
   ncaY?: string | null;
   ncaCeiling?: "ce_fdh" | "cr_fdh" | "both";
   ncaPermutationSamples?: number;
+  plsPowerScenarioIdentity?: string | null;
+  plsPowerPredictorConstruct?: string | null;
+  plsPowerOutcomeConstruct?: string | null;
+  plsPowerPredictorLoadings?: string | null;
+  plsPowerOutcomeLoadings?: string | null;
+  plsPowerPopulationPath?: number;
+  plsPowerSampleSizeGrid?: string | null;
+  plsPowerAlpha?: number;
+  plsPowerTargetPower?: number;
+  plsPowerMonteCarloReplicates?: number;
+  plsPowerBootstrapReplicates?: number;
+  /** Product-only selector for the versioned scoped Standard post-hoc add-on. */
+  posthocTechnicalMinimumSampleSize?: boolean;
 }
 
 export interface ConstructData {
@@ -221,9 +255,14 @@ export interface ConstructData {
   shortName: string;
   mode: MeasurementMode;
   indicators: string[];
-  semantic?: "interaction" | "higher_order";
+  semantic?: "interaction" | "higher_order" | "polynomial" | "observed";
   interaction?: InteractionData;
   higherOrder?: HigherOrderConstructData;
+  polynomial?: PolynomialConstructData;
+  /** Read-only projection metadata from the sole canonical Standard SemModelV4 authority. */
+  standardSemV4Authority?: StandardSemV4NodeAuthorityData;
+  /** Persisted factor-versus-composite authoring intent; absent means legacy unspecified. */
+  semModelV4?: SemModelV4ConstructAuthoringState;
   score?: number;
   resultLoadings?: Record<string, number>;
   resultR2?: number;
@@ -258,17 +297,50 @@ export interface PublicationDiagramSettings {
 }
 
 export interface InteractionData {
+  termId?: string;
   predictor: string;
   moderator: string;
   outcome: string;
+  focalRelationId?: string;
+  /** Legacy canvas compatibility token; canonicalMethod is authoritative for Standard projections. */
   method: "two_stage_product_score";
+  canonicalMethod?: "two_stage" | "product_indicator" | "orthogonalizing";
+  productIndicator?: {
+    centering: "none" | "mean_center" | "double_mean_center";
+    standardization: "none" | "sample_standard_deviation";
+    pairing: "all_pairs";
+  } | null;
 }
 
 export interface HigherOrderConstructData {
   id: string;
   components: string[];
   method: "repeated_indicators" | "two_stage" | "hybrid";
+  canonicalApproach?: "repeated_indicators" | "extended_repeated_indicators" | "embedded_two_stage" | "disjoint_two_stage" | "hybrid";
+  measurementType?: "reflective_reflective" | "reflective_formative" | "formative_reflective" | "formative_formative";
   stage_one_recipe?: string | null;
+}
+
+export interface PolynomialConstructData {
+  termId: string;
+  source: string;
+  degree: number;
+}
+
+export interface StandardSemV4MeasurementBindingData {
+  relationId: string;
+  parameterId: string;
+  observedId: string;
+  sourceColumn: string;
+  relationKind: "measurement_effect" | "measurement_causal";
+}
+
+export interface StandardSemV4NodeAuthorityData {
+  variableId: string;
+  variableKind: "observed" | "common_factor" | "composite" | "derived";
+  readOnly: true;
+  observedRole?: "indicator" | "structural" | "both" | "control";
+  measurementBindings: StandardSemV4MeasurementBindingData[];
 }
 
 export interface ControlData {
@@ -277,9 +349,100 @@ export interface ControlData {
   label?: string | null;
 }
 
+export type SemModelV4AuthoringEndpoint =
+  | { kind: "variable"; id: string }
+  | { kind: "residual_of"; id: string }
+  | { kind: "disturbance_of"; id: string };
+
+export type SemModelV4ConstructAuthoring =
+  | { kind: "composite" }
+  | { kind: "common_factor"; marker_indicator: string | null }
+  | { kind: "legacy_estimand_unspecified" };
+
+export type SemModelV4FactorIdentificationAuthoring =
+  | { kind: "marker_loading"; indicator: string }
+  | { kind: "fixed_variance" }
+  | { kind: "effects_coding" };
+
+export type SemModelV4ParameterAuthoringTarget =
+  | { kind: "loading"; construct: string; indicator: string }
+  | { kind: "weight"; indicator: string; composite: string }
+  | { kind: "regression"; source: string; target: string }
+  | { kind: "variance"; endpoint: SemModelV4AuthoringEndpoint }
+  | { kind: "covariance"; left: SemModelV4AuthoringEndpoint; right: SemModelV4AuthoringEndpoint }
+  | { kind: "intercept"; variable: string }
+  | { kind: "mean"; variable: string }
+  | { kind: "threshold"; variable: string; index: number };
+
+export type SemModelV4ParameterAuthoringSpecification =
+  | {
+    kind: "free";
+    start: number | null;
+    lower: number | null;
+    upper: number | null;
+    equality_label: string | null;
+  }
+  | { kind: "fixed"; value: number };
+
+export interface SemModelV4ParameterAuthoringEntry {
+  parameter_id: string;
+  target: SemModelV4ParameterAuthoringTarget;
+  specification: SemModelV4ParameterAuthoringSpecification;
+}
+
+export interface SemModelV4ConstructAuthoringState {
+  version: 1;
+  construct: SemModelV4ConstructAuthoring;
+  identification?: SemModelV4FactorIdentificationAuthoring;
+  parameters?: SemModelV4ParameterAuthoringEntry[];
+}
+
+export interface SemModelV4CovarianceAuthoringState {
+  version: 1;
+  covariance: SemModelV4CovarianceAuthoring;
+  parameters?: SemModelV4ParameterAuthoringEntry[];
+}
+
+export interface SemModelV4RelationshipParameterAuthoringState {
+  version: 1;
+  parameters: SemModelV4ParameterAuthoringEntry[];
+}
+
+export type SemModelV4CovarianceAuthoring =
+  | {
+    kind: "scientific";
+    origin: "new_authoring" | "explicit_conversion";
+    left: SemModelV4AuthoringEndpoint | null;
+    right: SemModelV4AuthoringEndpoint | null;
+  }
+  | {
+    kind: "presentation_only";
+    origin: "explicit_conversion" | "legacy_migration";
+  }
+  | {
+    kind: "legacy_unspecified";
+    origin: "legacy_archive" | "role_conversion";
+  };
+
 export interface PathEdgeData {
   role?: "control" | "covariance";
   controlLabel?: string | null;
+  /** Persisted editor intent for the dormant SemModelV4 execution path. */
+  semModelV4?: SemModelV4CovarianceAuthoringState;
+  /** Persisted parameter edits for non-covariance scientific relationships. */
+  semModelV4ParameterAuthoring?: SemModelV4RelationshipParameterAuthoringState;
+  /** Read-only source identity retained by the Standard SemModelV4 projection. */
+  standardSemV4Authority?: StandardSemV4EdgeAuthorityData;
+}
+
+export interface StandardSemV4EdgeAuthorityData {
+  authorityObjectId: string;
+  relationKind: "structural" | "covariance" | "display_only_covariance";
+  parameterId: string | null;
+  leftEndpoint?: SemModelV4AuthoringEndpoint;
+  rightEndpoint?: SemModelV4AuthoringEndpoint;
+  presentationOnly: boolean;
+  readOnly: true;
 }
 
 export interface Dataset {
@@ -321,7 +484,24 @@ export interface DatasetGroupProfile {
   groups: DatasetGroupProfileValue[];
 }
 
-export type DatasetVersionOperation = "import" | "metadata" | "recode";
+export type DatasetVersionOperation = "import" | "metadata" | "recode" | "transform";
+
+export interface DatasetTransformationLineageRecordV2 {
+  schema_version: 2;
+  engine: "qpls.dataset_transform.v2";
+  operation_id: string;
+  source_dataset_id: string;
+  source_dataset_fingerprint: string;
+  output_dataset_id: string;
+  output_dataset_fingerprint: string;
+  created_at: string;
+  spec_sha256: string;
+  spec: import("./domain/datasetTransformationsV2").DatasetTransformationSpecV2;
+  input_columns: string[];
+  output_columns: string[];
+  source_row_count: number;
+  output_missing_count: number;
+}
 
 export interface DatasetVersionRecord {
   datasetId: string;
@@ -331,6 +511,12 @@ export interface DatasetVersionRecord {
   summary: string;
   sourceColumn: string | null;
   targetColumn: string | null;
+  transformation?: DatasetTransformationLineageRecordV2;
+}
+
+export interface ProjectDataLineageV1 {
+  schemaVersion: 1;
+  records: DatasetVersionRecord[];
 }
 
 export interface DatasetVersionMutation {
@@ -411,7 +597,7 @@ export interface NativeProjectSnapshot {
   } | null;
 }
 
-/** Presentation-only state for one canonical editable model. */
+/** Presentation plus dormant, versioned SemModelV4 authoring intent for one editable model. */
 export interface NativeModelPresentation {
   nodes?: Array<Node<ConstructData>>;
   edges?: Edge[];
@@ -510,11 +696,66 @@ export interface NativeCanonicalAnalysisRecipe {
   metadata: Record<string, string>;
 }
 
+export type PlscPermutationTestTail = "two_sided" | "group_a_greater" | "group_a_less";
+
 export type NativeAnalysisMethodConfig =
   | { kind: "pls_algorithm" }
+  | {
+      kind: "pls_algorithm_configured_v2";
+      initialization_contract_version: "pls_initial_outer_weights_v2";
+      initial_outer_weights:
+        | { kind: "standard" }
+        | {
+            kind: "individual";
+            weights: Array<{ construct_id: string; indicator_id: string; value: number }>;
+          };
+    }
   | { kind: "pls_bootstrap" }
   | { kind: "pls_permutation" }
+  | ({
+      kind: "pls_posthoc_technical_minimum_sample_size";
+      capability_cell: {
+        registry_schema_version: 2;
+        capability_id: "smartpls.pls_power_analysis";
+        cell_id: "qpls3.pls.posthoc_technical_minimum_sample_size";
+        capability_version: "pls_posthoc_technical_minimum_sample_size_v2";
+      };
+      method_version: "inverse_square_root_posthoc_v2";
+    } & (
+      | { base_analysis: "pls_algorithm"; inference: "point_estimate_only" }
+      | { base_analysis: "pls_bootstrap"; inference: "case_bootstrap_normal_reference_two_sided" }
+    ))
+  | {
+      kind: "pls_sample_size_power";
+      scenario_identity: string;
+      predictor_construct: string;
+      outcome_construct: string;
+      predictor_indicator_loadings: number[];
+      outcome_indicator_loadings: number[];
+      population_path: number;
+      exogenous_distribution: "standard_normal";
+      structural_disturbance_distribution: "standard_normal";
+      indicator_error_distribution: "standard_normal";
+      missing_data: "none";
+      inference:
+        | "case_bootstrap_normal_reference_two_sided"
+        | "case_bootstrap_null_centered_two_sided_plus_one";
+      sample_size_grid: number[];
+      alpha: number;
+      target_power: number;
+      interval_confidence_level: number;
+      monte_carlo_replicates: number;
+      bootstrap_replicates: number;
+    }
   | { kind: "plsc" }
+  | {
+      kind: "plsc_permutation";
+      group_column: string;
+      group_a: string;
+      group_b: string;
+      /** Omitted for the historical/default two-sided selection. */
+      test_tail?: PlscPermutationTestTail;
+    }
   | { kind: "wpls" }
   | { kind: "cca" }
   | { kind: "cta_pls" }
@@ -535,6 +776,14 @@ export type NativeAnalysisMethodConfig =
       permutation_samples: number;
       configural_invariance_confirmed: boolean;
     }
+  | {
+      kind: "micom";
+      group_column: string;
+      group_a: string;
+      group_b: string;
+      permutation_samples: number;
+      configural_invariance_confirmed: boolean;
+    }
   | { kind: "ipma"; targets: string[] }
   | {
       kind: "cbsem";
@@ -543,6 +792,7 @@ export type NativeAnalysisMethodConfig =
       input: "raw" | "covariance" | "correlation";
       mean_structure: boolean;
       bootstrap_samples: number;
+      bootstrap_v2?: NativeCbsemBootstrapConfigV2;
       group_column?: string;
       invariance_steps?: Array<"configural" | "metric" | "scalar">;
     }
@@ -575,6 +825,15 @@ export type NativePcaRetentionConfig =
   | { rule: "kaiser" }
   | { rule: "fixed"; components: number }
   | { rule: "variance_threshold"; threshold: number };
+
+export interface NativeCbsemBootstrapConfigV2 {
+  algorithm: "case_resampling_full_ml";
+  interval: "percentile_type7" | "analytic_studentized_type7" | "bca_type7";
+  /** Omitted for the historical/default two-sided exact CB-SEM bootstrap test. */
+  test_tail?: Exclude<CbsemBootstrapTestTail, "two_sided">;
+}
+
+export type CbsemBootstrapTestTail = "two_sided" | "one_sided_greater" | "one_sided_less";
 
 export type NativeRegressionModelConfig =
   | { type: "ols"; robust_se: "hc3" }
@@ -635,6 +894,8 @@ export interface AnalysisRun {
   bootstrap?: PlsBootstrapRun;
   permutation?: PlsPermutationRun;
   provenance?: AnalysisResultProvenance;
+  plsSampleSizePower?: PlsSampleSizePowerResultV1 | PlsSampleSizePowerResultV2;
+  plsSampleSizePowerRecipe?: PlsSampleSizePowerRecipeV1 | PlsSampleSizePowerRecipeV2;
 }
 
 export type NativeWorkspaceRunPresentation = Omit<
@@ -652,6 +913,10 @@ export interface PlsResult {
   method_version: string;
   converged: boolean;
   iterations: number;
+  score_execution?: PlsResolvedScoreExecutionV2;
+  fixed_score_scale_receipt?: PlsFixedScoreScaleReceiptV1;
+  point_estimate_attribution?: PlsPointEstimateAttributionV1;
+  algorithm_convergence_receipt?: PlsAlgorithmConvergenceReceiptV1;
   used_observations: number;
   omitted_observations: number;
   outer_estimates: Array<{ construct: string; indicator: string; weight: number; loading: number }>;
@@ -679,8 +944,144 @@ export interface PlsResult {
   regression?: RegressionAnalysis | null;
   nca?: NcaAnalysis | null;
   gsca?: GscaAnalysis | null;
+  posthoc_minimum_sample_size?: PlsPosthocMinimumSampleSize | null;
   r_squared: Record<string, number>;
   warnings: string[];
+}
+
+export type PlsPointEstimateScaleV1 =
+  | "sample_mean"
+  | "no_centering"
+  | "sample_standard_deviation"
+  | "unit_scale"
+  | "preprocessed_indicator_to_unit_variance_construct_score"
+  | "indicator_construct_score_correlation"
+  | "zero_mean_unit_variance_construct_score"
+  | "standardized_construct_score_regression"
+  | "standardized_structural_path_decomposition";
+
+export interface PlsPointEstimateAttributionV1 {
+  contract_version: "pls_point_estimate_attribution_v1";
+  preprocessing: "standardized" | "mean_centered" | "unstandardized";
+  indicator_centering: "sample_mean" | "no_centering";
+  indicator_scaling: "sample_standard_deviation" | "unit_scale";
+  outer_weights: "preprocessed_indicator_to_unit_variance_construct_score";
+  outer_loadings: "indicator_construct_score_correlation";
+  construct_scores: "zero_mean_unit_variance_construct_score";
+  structural_paths: "standardized_construct_score_regression";
+  effects: "standardized_structural_path_decomposition";
+}
+
+export interface PlsFixedScoreBlockScaleReceiptV1 {
+  construct_id: string;
+  indicator_ids: string[];
+  pre_standardization_center: number;
+  pre_standardization_scale: number;
+  effective_unit_score_weights: PlsResolvedScoreWeightV2[];
+}
+
+export interface PlsFixedScoreScaleReceiptV1 {
+  contract_version: "pls_fixed_score_scale_receipt_v1";
+  blocks: PlsFixedScoreBlockScaleReceiptV1[];
+}
+
+export interface PlsAlgorithmBlockReceiptV1 {
+  construct_id: string;
+  indicator_order: string[];
+  update_rule: "mode_a_covariance" | "mode_b_ols" | "fixed_no_update";
+  initialization:
+    | "standard_unit_weights"
+    | "individual_requested_weights"
+    | "fixed_unit_weights"
+    | "fixed_custom_weights";
+}
+
+export interface PlsAlgorithmConvergenceReceiptV1 {
+  contract_version: "pls_algorithm_convergence_receipt_v1";
+  weighting_scheme: "path" | "factor";
+  maximum_iterations: number;
+  stop_criterion: number;
+  comparison: "less_than_or_equal";
+  performed_iterations: number;
+  estimated_block_updates: number;
+  termination_reason: "converged_tolerance" | "all_blocks_fixed";
+  final_max_outer_weight_change?: number | null;
+  blocks: PlsAlgorithmBlockReceiptV1[];
+}
+
+export interface PlsResolvedScoreWeightV2 {
+  indicator_id: string;
+  value: number;
+}
+
+export type PlsResolvedInitialOuterWeightsV2 =
+  | { kind: "standard"; weights: PlsResolvedScoreWeightV2[] }
+  | { kind: "individual"; weights: PlsResolvedScoreWeightV2[] };
+
+export type PlsResolvedScoreBlockKindV2 =
+  | {
+      kind: "estimated";
+      mode: "mode_a" | "mode_b";
+      requested_initialization: PlsResolvedInitialOuterWeightsV2;
+      resolved_initial_weights: PlsResolvedScoreWeightV2[];
+    }
+  | {
+      kind: "fixed_unit";
+      normalization: "none" | "sum_to_one" | "unit_variance";
+      requested_weights: PlsResolvedScoreWeightV2[];
+      resolved_effective_weights: PlsResolvedScoreWeightV2[];
+    }
+  | {
+      kind: "fixed_custom";
+      normalization: "none" | "sum_to_one" | "unit_variance";
+      requested_weights: PlsResolvedScoreWeightV2[];
+      resolved_effective_weights: PlsResolvedScoreWeightV2[];
+    };
+
+export interface PlsResolvedScoreExecutionV2 {
+  contract_version: "pls_score_execution_v2";
+  blocks: Array<{
+    construct_id: string;
+    indicator_ids: string[];
+    scoring: PlsResolvedScoreBlockKindV2;
+  }>;
+  iteration_accounting: {
+    maximum_iterations: number;
+    stop_criterion: number;
+    estimated_block_count: number;
+    fixed_block_count: number;
+    performed_iterations: number;
+    estimated_block_updates: number;
+  };
+}
+
+export interface PlsPosthocMinimumSampleSize {
+  method_version: "inverse_square_root_posthoc_v1" | "inverse_square_root_posthoc_v2";
+  alpha: number;
+  power: number;
+  test: "directional";
+  inverse_square_root_constant: number;
+  selection_rule?: "smallest_absolute_statistically_significant_structural_path" | "";
+  significance_source?: "pls_bootstrap_normal_reference_two_sided" | null;
+  significance_alpha?: number | null;
+  eligible_path_count?: number;
+  significant_path_count?: number | null;
+  driver_source: string | null;
+  driver_target: string | null;
+  driver_p_value_two_sided?: number | null;
+  minimum_absolute_path_coefficient: number | null;
+  technically_required_sample_size: number | null;
+  analytical_sample_size: number;
+  meets_technical_requirement: boolean | null;
+  status:
+    | "available"
+    | "not_applicable_no_structural_path"
+    | "inference_unavailable"
+    | "inference_incomplete"
+    | "no_statistically_significant_path"
+    | "undefined_zero_path"
+    | "exceeds_supported_integer_range";
+  caution: string;
 }
 
 export interface PcaAnalysis {
@@ -1129,7 +1530,12 @@ export interface CbsemAnalysis {
   residual_correlation: CbsemMatrixCell[];
   fit: CbsemFitIndices;
   modification_indices: CbsemModificationIndex[];
+  score_lm?: CbsemCfaScoreLmBundleV1 | null;
   bootstrap?: CbsemBootstrapAnalysis | null;
+  bootstrap_v2?: CbsemBootstrapAnalysisV2 | null;
+  exact_case_bootstrap?: CbsemExactCaseBootstrapResultV1 | null;
+  exact_case_bootstrap_studentized?: CbsemExactCaseBootstrapWithStudentizedResultV1 | null;
+  exact_case_bootstrap_bca?: CbsemExactCaseBootstrapWithBcaResultV1 | null;
   multigroup?: CbsemMultigroupAnalysis | null;
   diagnostics: string[];
   warnings: string[];
@@ -1163,6 +1569,11 @@ export interface CbsemMatrixCell {
   value: number;
 }
 
+export interface CbsemRmseaIntervalAttributionV1 {
+  method_version: "rmsea_noncentral_chi_square_inversion_90_n_minus_one_v1";
+  confidence_level: 0.9;
+}
+
 export interface CbsemFitIndices {
   method_version: string;
   chi_square: number;
@@ -1171,6 +1582,7 @@ export interface CbsemFitIndices {
   cfi?: number | null;
   tli?: number | null;
   rmsea?: number | null;
+  rmsea_interval_attribution?: CbsemRmseaIntervalAttributionV1 | null;
   rmsea_ci_lower?: number | null;
   rmsea_ci_upper?: number | null;
   srmr: number;
@@ -1189,12 +1601,409 @@ export interface CbsemModificationIndex {
   expected_parameter_change?: number | null;
 }
 
+export type CbsemCfaScoreLmUnavailableReasonV1 =
+  | "nuisance_information_unavailable"
+  | "efficient_information_non_positive"
+  | "non_finite_computation";
+
+export type CbsemCfaScoreLmOutcomeV1 =
+  | {
+      status: "available";
+      score: number;
+      efficient_score: number;
+      candidate_information: number;
+      efficient_information: number;
+      modification_index: number;
+      expected_parameter_change: number;
+      p_value: number;
+    }
+  | {
+      status: "unavailable";
+      reason: CbsemCfaScoreLmUnavailableReasonV1;
+    };
+
+export interface CbsemCfaScoreLmRowV1 {
+  parameter_id: string;
+  kind: "residual_covariance";
+  lhs: string;
+  rhs: string;
+  outcome: CbsemCfaScoreLmOutcomeV1;
+}
+
+export interface CbsemCfaScoreLmBundleV1 {
+  method_version: "cbsem_cfa_score_lm_v1";
+  scope: "covariance_only_declared_zero_residual_covariances";
+  rows: CbsemCfaScoreLmRowV1[];
+}
+
 export interface CbsemBootstrapAnalysis {
   method_version: string;
   samples: number;
   usable_samples: number;
   intervals: Array<{ parameter: string; original: number; lower_percentile: number; upper_percentile: number }>;
   warnings: string[];
+}
+
+export interface CbsemBootstrapAnalysisV2 {
+  method_version: "cbsem_bootstrap_v2";
+  algorithm: "indexed_raw_case_refit_ml_v2";
+  interval_method: "percentile_type7_v1";
+  retry_policy: "no_retry_fixed_preplanned_primary_draws_v1";
+  confidence_level: number;
+  requested_replicates: number;
+  attempted_fits: number;
+  usable_replicates: number;
+  failed_replicates: number;
+  minimum_usable_fraction: number;
+  minimum_usable_replicates: number;
+  max_attempts_per_replicate: number;
+  complete_case_sample_size: number;
+  seed: number;
+  stream_token: "quickpls_cbsem_ml_case_bootstrap_v2";
+  inference:
+    | { status: "available" }
+    | { status: "unavailable"; reason_code: "insufficient_usable_replicates"; message: string };
+  intervals: CbsemBootstrapParameterIntervalV2[];
+  failures: CbsemBootstrapFailedReplicateV2[];
+  validation_witness: CbsemBootstrapValidationWitnessV2;
+  warnings: string[];
+}
+
+export interface CbsemBootstrapParameterIntervalV2 {
+  parameter: string;
+  original: number;
+  bootstrap_mean: number;
+  bias: number;
+  standard_error: number;
+  percentile_lower: number;
+  percentile_upper: number;
+  usable_replicates: number;
+}
+
+export interface CbsemBootstrapFailedReplicateV2 {
+  replicate_index: number;
+  sample_indices_sha256: string;
+  reason_code: string;
+  message: string;
+}
+
+export interface CbsemBootstrapValidationWitnessV2 {
+  method_version: "cbsem_bootstrap_validation_witness_v2";
+  dataset_fingerprint: string;
+  recipe_sha256: string;
+  base_result_sha256: string;
+  parameter_names: string[];
+  successful_replicates: Array<{
+    replicate_index: number;
+    sample_indices_sha256: string;
+    iterations: number;
+    objective: number;
+    parameter_estimates: number[];
+  }>;
+}
+
+export type CbsemExactCaseBootstrapFailureKindV1 =
+  | "moment_matrix_not_positive_definite"
+  | "non_convergence"
+  | "inadmissible_solution"
+  | "numerical_failure";
+
+export interface CbsemExactCaseBootstrapParameterIntervalV1 {
+  parameter_id: string;
+  original: number;
+  bootstrap_mean: number;
+  bias: number;
+  standard_error: number;
+  percentile_lower: number;
+  percentile_upper: number;
+  usable_replicates: number;
+}
+
+export interface CbsemExactCaseBootstrapWitnessV1 {
+  replicate_index: number;
+  sampling_positions_sha256: string;
+  sample_indices_sha256: string;
+  parameter_estimates: number[];
+  iterations: number;
+  objective: number;
+  gradient_norm: number;
+}
+
+export interface CbsemExactCaseBootstrapFailureV1 {
+  replicate_index: number;
+  sampling_positions_sha256: string;
+  sample_indices_sha256: string;
+  kind: CbsemExactCaseBootstrapFailureKindV1;
+  message: string;
+}
+
+export type CbsemExactCaseBootstrapHypothesisTestUnavailableReasonV1 =
+  | "insufficient_usable_replicates"
+  | "nonregular_variance_boundary"
+  | "zero_null_outside_open_domain"
+  | "unsupported_parameter_family";
+
+export type CbsemExactCaseBootstrapHypothesisTestOutcomeV1 =
+  | {
+      status: "available";
+      point_estimate: number;
+      two_sided_exceedances: number;
+      greater_or_equal_exceedances: number;
+      less_or_equal_exceedances: number;
+      p_value_two_sided: number;
+      p_value_greater: number;
+      p_value_less: number;
+      selected_exceedances: number;
+      selected_p_value: number;
+      reject_null: boolean;
+    }
+  | {
+      status: "unavailable";
+      reason: CbsemExactCaseBootstrapHypothesisTestUnavailableReasonV1;
+    };
+
+export interface CbsemExactCaseBootstrapHypothesisTestParameterV1 {
+  parameter_id: string;
+  outcome: CbsemExactCaseBootstrapHypothesisTestOutcomeV1;
+}
+
+export interface CbsemExactCaseBootstrapHypothesisTestsV1 {
+  method_version: "cbsem_exact_case_bootstrap_null_centered_test_tail_v1";
+  null_hypothesis: "compiled_free_parameter_equals_zero_v1";
+  statistic: "unstudentized_null_centered_parameter_estimate_v1";
+  tie_policy: "inclusive_ieee_comparison_v1";
+  probability_method: "plus_one_over_usable_plus_one_v1";
+  decision_rule: "selected_p_value_less_than_or_equal_alpha_v1";
+  selected_test_tail: CbsemBootstrapTestTail;
+  null_value: 0;
+  significance_level: 0.05;
+  usable_replicates: number;
+  inference:
+    | { status: "available" }
+    | { status: "unavailable"; reason_code: "insufficient_usable_refits"; message: string };
+  parameters: CbsemExactCaseBootstrapHypothesisTestParameterV1[];
+}
+
+export interface CbsemExactCaseBootstrapResultV1 {
+  method_version: "cbsem_exact_case_bootstrap_v1";
+  estimator_method_version: "cbsem_ml_exact_parameter_table_v3";
+  source_dataset_id: string;
+  source_dataset_fingerprint: string;
+  outer_recipe_analytical_identity_sha256: string;
+  base_point_result_sha256: string;
+  compiler_analytical_identity_sha256: string;
+  plan_sha256: string;
+  model_scientific_sha256: string;
+  complete_case_sample_size: number;
+  complete_case_universe_digest_method: "sha256_source_fingerprint_and_ordered_complete_case_u64_indices_v1";
+  complete_case_universe_sha256: string;
+  covariance_denominator: "maximum_likelihood_n";
+  sample_indices_digest_method: "sha256_source_fingerprint_and_ordered_u64_indices_v1";
+  sampling_positions_digest_method: "sha256_stream_seed_replicate_complete_case_n_and_ordered_sampling_positions_v1";
+  interval_method: "percentile_type7_v1";
+  confidence_level: 0.95;
+  requested_replicates: number;
+  attempted_refits: number;
+  usable_replicates: number;
+  failed_replicates: number;
+  minimum_usable_fraction: 0.9;
+  minimum_usable_replicates: number;
+  seed: number;
+  stream_token: "quickpls_cbsem_exact_cfa_ml_case_bootstrap_v1";
+  retry_policy: "no_retry_fixed_preplanned_primary_draws_v1";
+  max_attempts_per_replicate: 1;
+  parameter_ids: string[];
+  inference:
+    | { status: "available" }
+    | { status: "unavailable"; reason_code: string; message: string };
+  intervals: CbsemExactCaseBootstrapParameterIntervalV1[];
+  successful_refits: CbsemExactCaseBootstrapWitnessV1[];
+  failed_refits: CbsemExactCaseBootstrapFailureV1[];
+  hypothesis_tests?: CbsemExactCaseBootstrapHypothesisTestsV1 | null;
+}
+
+export type CbsemExactCaseBootstrapRefitStandardErrorUnavailableReasonV1 =
+  | "singular_information"
+  | "information_not_positive_definite"
+  | "invalid_information_variance_or_standard_error"
+  | "derivative_unavailable"
+  | "numerical_information_failure";
+
+export interface CbsemExactCaseBootstrapParameterStandardErrorV1 {
+  parameter_id: string;
+  standard_error: number;
+}
+
+export interface CbsemExactCaseBootstrapRefitStandardErrorsV1 {
+  method_version: "cbsem_exact_case_bootstrap_refit_standard_errors_v1";
+  outcome:
+    | {
+        status: "available";
+        information_method: "cbsem_ml_expected_information_delta_method_v1";
+        parameters: CbsemExactCaseBootstrapParameterStandardErrorV1[];
+      }
+    | {
+        status: "unavailable";
+        reason: CbsemExactCaseBootstrapRefitStandardErrorUnavailableReasonV1;
+      };
+}
+
+export type CbsemExactCaseBootstrapStudentizedUnavailableReasonV1 =
+  | "point_standard_errors_unavailable"
+  | "insufficient_studentized_usable_replicates";
+
+export type CbsemExactCaseBootstrapStudentizedInferenceV1 =
+  | { status: "available" }
+  | {
+      status: "unavailable";
+      reason: CbsemExactCaseBootstrapStudentizedUnavailableReasonV1;
+      message: string;
+    };
+
+export interface CbsemExactCaseBootstrapStudentizedParameterIntervalV1 {
+  parameter_id: string;
+  outcome:
+    | {
+        status: "available";
+        point_estimate: number;
+        point_standard_error: number;
+        lower_pivot_quantile: number;
+        upper_pivot_quantile: number;
+        interval_lower: number;
+        interval_upper: number;
+        usable_replicates: number;
+      }
+    | {
+        status: "unavailable";
+        reason: CbsemExactCaseBootstrapStudentizedUnavailableReasonV1;
+      };
+}
+
+export interface CbsemExactCaseBootstrapStudentizedRefitStandardErrorsV1 {
+  replicate_index: number;
+  outcome:
+    | {
+        status: "available";
+        information_method: "cbsem_ml_expected_information_delta_method_v1";
+        standard_errors: number[];
+      }
+    | {
+        status: "unavailable";
+        reason: CbsemExactCaseBootstrapRefitStandardErrorUnavailableReasonV1;
+      };
+}
+
+export interface CbsemExactCaseBootstrapStudentizedSidecarV1 {
+  method_version: "cbsem_exact_case_bootstrap_analytic_studentized_interval_v1";
+  standard_error_method_version: "cbsem_exact_case_bootstrap_refit_standard_errors_v1";
+  expected_information_method: "cbsem_ml_expected_information_delta_method_v1";
+  pivot_method: "outer_estimate_minus_point_estimate_over_outer_analytic_standard_error_v1";
+  quantile_method: "percentile_type7_v1";
+  interval_method: "reversed_type7_studentized_pivot_v1";
+  archive_validation_scope: "ledger_and_arithmetic_only_no_raw_refit_or_expected_information_replay_v1";
+  confidence_level: 0.95;
+  minimum_usable_fraction: 0.9;
+  minimum_usable_replicates: number;
+  studentized_usable_replicates: number;
+  parameter_ids: string[];
+  point_standard_errors: CbsemExactCaseBootstrapRefitStandardErrorsV1;
+  inference: CbsemExactCaseBootstrapStudentizedInferenceV1;
+  intervals: CbsemExactCaseBootstrapStudentizedParameterIntervalV1[];
+  refit_standard_errors: CbsemExactCaseBootstrapStudentizedRefitStandardErrorsV1[];
+}
+
+export interface CbsemExactCaseBootstrapWithStudentizedResultV1 {
+  base: CbsemExactCaseBootstrapResultV1;
+  studentized: CbsemExactCaseBootstrapStudentizedSidecarV1;
+}
+
+export type CbsemExactCaseBootstrapBcaUnavailableReasonV1 =
+  | "base_inference_unavailable"
+  | "incomplete_delete_one_ledger"
+  | "bias_correction_probability_at_boundary"
+  | "degenerate_jackknife_acceleration"
+  | "nonfinite_jackknife_arithmetic"
+  | "singular_acceleration_adjustment"
+  | "invalid_adjusted_probability"
+  | "adjusted_probability_order_invalid"
+  | "nonfinite_or_reversed_interval";
+
+export type CbsemExactCaseBootstrapBcaInferenceV1 =
+  | { status: "available" }
+  | {
+      status: "unavailable";
+      reason: CbsemExactCaseBootstrapBcaUnavailableReasonV1;
+      message: string;
+    };
+
+export interface CbsemExactCaseBootstrapBcaParameterIntervalV1 {
+  parameter_id: string;
+  outcome:
+    | {
+        status: "available";
+        point_estimate: number;
+        bias_correction: number;
+        acceleration: number;
+        adjusted_lower_probability: number;
+        adjusted_upper_probability: number;
+        interval_lower: number;
+        interval_upper: number;
+        usable_replicates: number;
+      }
+    | {
+        status: "unavailable";
+        reason: CbsemExactCaseBootstrapBcaUnavailableReasonV1;
+      };
+}
+
+export interface CbsemExactCaseBootstrapDeleteOneWitnessV1 {
+  omitted_complete_case_position: number;
+  omitted_source_row_index: number;
+  retained_sampling_positions_sha256: string;
+  retained_sample_indices_sha256: string;
+  parameter_estimates: number[];
+  iterations: number;
+  objective: number;
+  gradient_norm: number;
+}
+
+export interface CbsemExactCaseBootstrapDeleteOneFailureV1 {
+  omitted_complete_case_position: number;
+  omitted_source_row_index: number;
+  retained_sampling_positions_sha256: string;
+  retained_sample_indices_sha256: string;
+  kind: CbsemExactCaseBootstrapFailureKindV1;
+  message: string;
+}
+
+export interface CbsemExactCaseBootstrapBcaSidecarV1 {
+  method_version: "cbsem_exact_case_bootstrap_bca_interval_v1";
+  base_bootstrap_method_version: "cbsem_exact_case_bootstrap_v1";
+  outer_recipe_analytical_identity_sha256: string;
+  base_point_result_sha256: string;
+  compiler_analytical_identity_sha256: string;
+  plan_sha256: string;
+  model_scientific_sha256: string;
+  delete_one_refit_method_version: "cbsem_exact_case_bootstrap_delete_one_refit_v1";
+  bias_correction_method: "midrank_less_plus_half_ties_no_clamp_v1";
+  acceleration_method: "complete_delete_one_jackknife_neumaier_mean_squares_cubes_acceleration_v2";
+  adjusted_probability_method: "efron_bca_statrs_inverse_normal_libm_erfc_cdf_adjustment_v2";
+  quantile_method: "percentile_type7_v1";
+  retry_policy: "no_retry_exactly_one_fit_per_omitted_case_v1";
+  confidence_level: 0.95;
+  bootstrap_usable_replicates: number;
+  minimum_bootstrap_usable_replicates: number;
+  delete_one_case_count: number;
+  parameter_ids: string[];
+  inference: CbsemExactCaseBootstrapBcaInferenceV1;
+  intervals: CbsemExactCaseBootstrapBcaParameterIntervalV1[];
+  successful_delete_one_refits: CbsemExactCaseBootstrapDeleteOneWitnessV1[];
+  failed_delete_one_refits: CbsemExactCaseBootstrapDeleteOneFailureV1[];
+}
+
+export interface CbsemExactCaseBootstrapWithBcaResultV1 {
+  base: CbsemExactCaseBootstrapResultV1;
+  bca: CbsemExactCaseBootstrapBcaSidecarV1;
 }
 
 export interface CbsemMultigroupAnalysis {
@@ -1483,6 +2292,17 @@ export interface PlsMgaAnalysis {
   warnings: string[];
 }
 
+export interface MicomPermutationLedgerEntry {
+  replicate: number;
+  partition_sha256: string;
+  group_a_rows: number;
+  group_b_rows: number;
+  step2_status: "usable" | "failed";
+  step2_failure_code?: string | null;
+  step3_status: "usable" | "failed";
+  step3_failure_code?: string | null;
+}
+
 export interface MicomAnalysis {
   method_version: string;
   group_column: string;
@@ -1491,6 +2311,15 @@ export interface MicomAnalysis {
   attempted_permutations?: number | null;
   failed_permutations?: number | null;
   confidence_level?: number | null;
+  retry_policy?: string | null;
+  step1_status?: string | null;
+  step1_computed?: boolean | null;
+  step2_usable_permutations?: number | null;
+  step2_failed_permutations?: number | null;
+  step3_usable_permutations?: number | null;
+  step3_failed_permutations?: number | null;
+  permutation_plan_sha256?: string | null;
+  permutation_ledger?: MicomPermutationLedgerEntry[];
   groups: Array<{ group: string; observations: number }>;
   constructs: Array<{
     construct: string;
@@ -1525,6 +2354,9 @@ export interface PlsMgaPermutationAnalysis {
   usable_permutations: number;
   attempted_permutations?: number | null;
   failed_permutations?: number | null;
+  retry_policy?: string | null;
+  permutation_plan_sha256?: string | null;
+  permutation_ledger?: MicomPermutationLedgerEntry[];
   comparisons: Array<{
     source: string;
     target: string;
@@ -1621,6 +2453,38 @@ export interface ModerationAnalysis {
   warnings: string[];
 }
 
+export type PlsFitCriterionValue =
+  | { status: "available"; value: number }
+  | { status: "unavailable"; reason_code: string };
+
+export interface PlsFitMeasures {
+  srmr: number;
+  d_uls: number;
+  d_g?: PlsFitCriterionValue;
+  chi_square?: PlsFitCriterionValue;
+  degrees_of_freedom?: PlsFitCriterionValue;
+  nfi?: PlsFitCriterionValue;
+}
+
+export interface PlsModelFit {
+  method_version?: string;
+  analytical_sample_size?: number;
+  indicator_order?: string[];
+  matrix_convention?: string;
+  geodesic_logarithm?: string;
+  observed_correlation?: number[][];
+  saturated_implied_correlation?: number[][];
+  estimated_implied_correlation?: number[][];
+  null_model_chi_square?: PlsFitCriterionValue;
+  saturated: PlsFitMeasures;
+  estimated: PlsFitMeasures;
+  exact_fit_inference?: {
+    procedure: string;
+    status: "unavailable";
+    reason_code: string;
+  };
+}
+
 export interface AssessmentResult {
   method_version: string;
   rho_a_method_version?: string | null;
@@ -1656,7 +2520,7 @@ export interface AssessmentResult {
   structural_vif: Array<{ target_construct: string; predictor_construct: string; vif: number | null }>;
   formative_indicator_vif: Array<{ construct: string; indicator: string; vif: number | null }>;
   f_squared: Array<{ source_construct: string; target_construct: string; included_r_squared: number; excluded_r_squared: number | null; f_squared: number | null }>;
-  model_fit?: { saturated: { srmr: number; d_uls: number }; estimated: { srmr: number; d_uls: number } };
+  model_fit?: PlsModelFit;
   blindfolding?: {
     settings: { omission_distance: number; selection: string; missing_value_treatment: string };
     constructs: Array<{ construct: string; q_squared: number | null; prediction_error_sum_squares: number | null; observation_sum_squares: number | null }>;
@@ -1675,11 +2539,161 @@ export interface HtmtAssessment {
   }>>;
 }
 
+export type HtmtBootstrapInferenceStatus = "available" | "not_applicable" | "unavailable";
+
+export interface HtmtBootstrapInferenceCell {
+  status: HtmtBootstrapInferenceStatus;
+  reason: string | null;
+  original: number | null;
+  bootstrap_mean: number | null;
+  bias: number | null;
+  standard_error: number | null;
+  bias_correction: number | null;
+  lower: number | null;
+  upper: number | null;
+  usable_replicates: number;
+  failed_replicates: number;
+  below_original: number;
+  tied_original: number;
+  replicate_min: number | null;
+  replicate_max: number | null;
+  upper_bound_below_critical_value: boolean | null;
+  usable_replicate_indices_sha256: string | null;
+  pair_unavailable_replicates: Array<{
+    replicate_index: number;
+    reason_code: string;
+  }>;
+}
+
+export interface HtmtBootstrapInference {
+  method_version: string;
+  point_method_version: string;
+  constructs: string[];
+  correlation_type: "pearson";
+  absolute_correlations: boolean;
+  interval_method: "bias_corrected_percentile_type7_v1";
+  test_type: "one_tailed_upper";
+  significance_level: 0.05;
+  equivalent_two_sided_confidence_level: 0.90;
+  critical_value: 0.90;
+  decision_rule: "bias_corrected_upper_bound_strictly_below_critical_value_v1";
+  replicate_index_digest_method: "sha256_u32_le_v1";
+  requested_replicates: number;
+  minimum_usable_replicates: number;
+  retry_policy: "no_retry_fixed_preplanned_primary_draws_v1";
+  cells: HtmtBootstrapInferenceCell[][];
+}
+
+export interface HtmtBootstrapInferenceBundle {
+  method_version: "htmt_bias_corrected_bootstrap_inference_v1";
+  htmt_plus: HtmtBootstrapInference;
+  htmt_original: HtmtBootstrapInference;
+}
+
+export type PlsModelFitExactStatus = "available" | "partial" | "unavailable";
+export type PlsModelFitExactCriterion = "srmr" | "d_uls" | "d_g";
+
+export interface PlsModelFitExactCriterionInference {
+  criterion: PlsModelFitExactCriterion;
+  status: PlsModelFitExactStatus;
+  original: number;
+  requested_replicates: number;
+  minimum_usable_replicates: number;
+  usable_replicates: number;
+  failed_replicates: number;
+  usable_replicate_indices_sha256: string;
+  replicate_min: number | null;
+  replicate_max: number | null;
+  upper_95: number | null;
+  upper_99: number | null;
+  not_rejected_95: boolean | null;
+  not_rejected_99: boolean | null;
+  exceed_or_equal_count: number;
+  empirical_upper_tail_probability: number | null;
+  unavailable_reason_code: string | null;
+}
+
+export interface PlsModelFitExactReplicateLedgerEntry {
+  replicate_index: number;
+  sample_indices_sha256: string;
+  status: "success" | "partial" | "failed";
+  srmr: number | null;
+  d_uls: number | null;
+  d_g: number | null;
+  criterion_failures: Array<{
+    criterion: PlsModelFitExactCriterion;
+    reason_code: string;
+  }>;
+  failure_reason_code: string | null;
+  failure_message: string | null;
+}
+
+export interface PlsModelFitExactVariantInference {
+  variant: "saturated" | "estimated";
+  status: PlsModelFitExactStatus;
+  operation: string;
+  target_correlation_sha256: string;
+  transformed_correlation: number[][];
+  transformed_correlation_sha256: string;
+  transformation_max_abs_error: number;
+  requested_replicates: number;
+  ledger: PlsModelFitExactReplicateLedgerEntry[];
+  criteria: PlsModelFitExactCriterionInference[];
+}
+
+export interface PlsModelFitExactInference {
+  method_version: "pls_model_fit_exact_v1";
+  point_fit_method_version: "pls_model_fit_v2";
+  estimator_method_version: string;
+  resampling_method_version: string;
+  procedure: "adapted_bollen_stine_saturated_and_estimated_v1";
+  transformation: string;
+  matrix_power: string;
+  quantile_method: "hyndman_fan_type7_v1";
+  decision_rule: string;
+  retry_policy: "no_retry_no_replacement_fixed_indexed_draws_v1";
+  sample_digest_method: "sha256_u64_le_v1";
+  usable_index_digest_method: "sha256_u32_le_v1";
+  matrix_digest_method: "sha256_f64_bits_row_major_v1";
+  status: PlsModelFitExactStatus;
+  analytical_sample_size: number;
+  indicator_order: string[];
+  master_seed: number;
+  requested_replicates: number;
+  minimum_usable_fraction: 0.90;
+  observed_correlation_sha256: string;
+  saturated: PlsModelFitExactVariantInference;
+  estimated: PlsModelFitExactVariantInference;
+}
+
 export interface PlsBootstrapRun {
   method_version: string;
+  /** Present only for the separately attributed full-reestimation PLSc workflow. */
+  estimator_method_version?: string;
+  /** Indexed-resampling kernel version used underneath the PLSc workflow. */
+  resampling_method_version?: string;
   plan: { replicates: number; master_seed: number; operation: string };
+  minimum_usable_fraction?: number;
+  retry_policy?: string;
+  original_parameter_values_sha256?: string;
   usable_replicates: number;
-  failed_replicates: Array<{ replicate_index: number; message: string }>;
+  failed_replicates: Array<{ replicate_index: number; message: string; reason_code?: string; sample_indices_sha256?: string }>;
+  replicate_ledger?: Array<{
+    replicate_index: number;
+    sample_indices_sha256: string;
+    status: "success" | "failed";
+    parameter_values_sha256: string | null;
+    reason_code: string | null;
+    message: string | null;
+  }>;
+  /** Replayable full-PLSc primary refits; required by current plsc_bootstrap_v1 output. */
+  successful_replicates?: Array<{
+    replicate_index: number;
+    iterations: number;
+    used_observations: number;
+    omitted_observations: number;
+    parameters: Record<string, number>;
+  }>;
   percentile: {
     confidence_level: number;
     parameters: Array<{ parameter: string; original: number; bootstrap_mean: number; bias: number; standard_error: number; lower: number; upper: number; usable_replicates: number; t_statistic?: number | null; p_value_two_sided?: number | null }>;
@@ -1689,6 +2703,14 @@ export interface PlsBootstrapRun {
     jackknife_case_count: number;
     parameters: Array<{ parameter: string; bias_correction: number | null; acceleration: number | null; lower: number | null; upper: number | null; unavailable_reason: string | null }>;
   } | null;
+  /** Replayable full-PLSc delete-one refits; required by current plsc_bootstrap_v1 output. */
+  successful_jackknife_cases?: Array<{
+    omitted_case: number;
+    iterations: number;
+    used_observations: number;
+    omitted_observations: number;
+    parameters: Record<string, number>;
+  }>;
   studentized?: {
     method_version: string;
     confidence_level: number;
@@ -1698,12 +2720,100 @@ export interface PlsBootstrapRun {
     failure?: { reason_code: string; first_primary_replicate: number; failed_primary_replicates: number; message: string } | null;
     parameters: Array<{ parameter: string; original: number; outer_standard_error: number; outer_scale: number; usable_primary_replicates: number; lower_pivot: number | null; upper_pivot: number | null; lower: number | null; upper: number | null; unavailable_reason: string | null }>;
   } | null;
+  failed_jackknife_cases?: Array<{ omitted_case: number; reason_code: string; message: string }>;
+  warnings?: string[];
+  htmt_inference?: HtmtBootstrapInferenceBundle | null;
+  model_fit_exact_inference?: PlsModelFitExactInference | null;
+  /** Present only when the user explicitly selects a one-sided PLS bootstrap test. */
+  test_tail_inference?: PlsBootstrapTestTailInference;
+}
+
+export type PlsBootstrapTestTail = "two_sided" | "one_sided_greater" | "one_sided_less";
+
+export interface PlsBootstrapTestTailInference {
+  method_version: "pls_bootstrap_null_centered_test_tail_v1";
+  selected_test_tail: Exclude<PlsBootstrapTestTail, "two_sided">;
+  parameters: PlsBootstrapTestTailParameterInference[];
+}
+
+export interface PlsBootstrapTestTailParameterInference {
+  parameter: string;
+  usable_replicates: number;
+  two_sided_exceedances: number;
+  greater_or_equal_exceedances: number;
+  less_or_equal_exceedances: number;
+  p_value_two_sided: number;
+  p_value_greater: number;
+  p_value_less: number;
 }
 
 export interface PlsPermutationRun {
   method_version: string;
+  estimator_method_version?: string;
+  scheduler_method_version?: string;
   plan: { permutations: number; master_seed: number; operation: string };
-  parameters: Array<{ parameter: string; original: number; exceedances: number; p_value_two_sided: number; permutations: number }>;
+  test_method?: string;
+  significance_level?: number;
+  minimum_usable_fraction?: number;
+  retry_policy?: string;
+  group_column?: string;
+  group_a?: { group: string; observations: number; parameter_values_sha256: string };
+  group_b?: { group: string; observations: number; parameter_values_sha256: string };
+  pooled_parameter_values_sha256?: string;
+  usable_permutations?: number;
+  failed_permutations?: Array<{
+    permutation_index: number;
+    label_assignment_sha256: string;
+    reason_code: string;
+    message: string;
+  }>;
+  permutation_ledger?: Array<{
+    permutation_index: number;
+    label_assignment_sha256: string;
+    status: "success" | "failed";
+    parameter_values_sha256: string | null;
+    reason_code: string | null;
+    message: string | null;
+  }>;
+  parameters: Array<{
+    parameter: string;
+    family?: "path" | "outer_loading" | "rho_a" | "construct_correlation" | "r_squared";
+    estimate_a?: number;
+    estimate_b?: number;
+    original: number;
+    exceedances: number;
+    p_value_two_sided: number;
+    permutations: number;
+  }>;
+  directional_inference?: {
+    method_version: string;
+    test_method: string;
+    parameters: Array<{
+      parameter: string;
+      greater_or_equal: number;
+      less_or_equal: number;
+      p_value_greater: number;
+      p_value_less: number;
+      permutations: number;
+    }>;
+  } | null;
+  /** Present only for an explicitly selected one-sided PLSc permutation tail. */
+  selected_tail_inference?: PlscPermutationSelectedTailInference | null;
+  warnings?: string[];
+}
+
+export interface PlscPermutationSelectedTailInference {
+  method_version: "plsc_permutation_selected_tail_v1";
+  orientation: "group_a_minus_group_b";
+  selected_test_tail: Exclude<PlscPermutationTestTail, "two_sided">;
+  parameters: PlscPermutationSelectedTailParameterInference[];
+}
+
+export interface PlscPermutationSelectedTailParameterInference {
+  parameter: string;
+  selected_exceedances: number;
+  selected_p_value: number;
+  permutations: number;
 }
 
 export interface AnalysisEngineSettingsSnapshot {
@@ -1712,6 +2822,8 @@ export interface AnalysisEngineSettingsSnapshot {
   tolerance: number;
   max_iterations: number;
   bootstrap_samples: number;
+  /** Rust omits the default two-sided value to preserve historical bytes. */
+  bootstrap_test_tail?: PlsBootstrapTestTail;
   studentized_inner_samples: number;
   permutation_samples: number;
   seed: number;
@@ -1744,7 +2856,116 @@ export interface AnalysisResultEnvelope {
     | { kind: "pls_pm_v1"; estimation: PlsResult; assessment: AssessmentResult }
     | { kind: "pls_pm_v2"; estimation: PlsResult; assessment: AssessmentResult; bootstrap: PlsBootstrapRun }
     | { kind: "pls_pm_v3"; estimation: PlsResult; assessment: AssessmentResult; bootstrap?: PlsBootstrapRun | null; permutation?: PlsPermutationRun | null }
+    | { kind: "pls_sample_size_power_v1"; analysis: PlsSampleSizePowerResultV1 }
+    | { kind: "pls_sample_size_power_v2"; analysis: PlsSampleSizePowerResultV2 }
     | { kind: "legacy"; value: unknown };
+}
+
+export interface PlsSampleSizePowerOutcomeV1 {
+  sample_size: number;
+  replicate_index: number;
+  stream_identity: string;
+  attempted: boolean;
+  successful: boolean;
+  converged: boolean;
+  target_estimate: number | null;
+  p_value_two_sided: number | null;
+  bootstrap_requested_replicates?: number | null;
+  bootstrap_usable_replicates?: number | null;
+  bootstrap_failed_replicates?: number | null;
+  bootstrap_two_sided_exceedances?: number | null;
+  rejected: boolean;
+  failure_code: string | null;
+  failure_message: string | null;
+}
+
+export interface PlsSampleSizePowerRecipeV1 {
+  schema_version: 1;
+  capability_id: "qpls3.pls.sample_size_power";
+  method_version: "pls_sample_size_power_v1";
+  scenario_identity: string;
+  design: {
+    predictor_construct: string;
+    outcome_construct: string;
+    predictor_indicator_loadings: number[];
+    outcome_indicator_loadings: number[];
+    population_path: number;
+    exogenous_distribution: "standard_normal";
+    structural_disturbance_distribution: "standard_normal";
+    indicator_error_distribution: "standard_normal";
+    missing_data: "none";
+  };
+  estimator: {
+    weighting_scheme: "path";
+    preprocessing: "standardized";
+    tolerance: number;
+    max_iterations: number;
+  };
+  inference: "case_bootstrap_normal_reference_two_sided";
+  sample_size_grid: number[];
+  alpha: number;
+  target_power: number;
+  confidence_level: number;
+  monte_carlo_replicates: number;
+  bootstrap_replicates: number;
+  master_seed: number;
+  workers: number;
+}
+
+export interface PlsSampleSizePowerRowV1 {
+  sample_size: number;
+  requested_replicates: number;
+  attempted_replicates: number;
+  successful_replicates: number;
+  failed_replicates: number;
+  rejections: number;
+  achieved_power: number;
+  confidence_lower: number;
+  confidence_upper: number;
+  qualifies: boolean;
+}
+
+export interface PlsSampleSizePowerResultV1 {
+  schema_version: 1;
+  capability_id: "qpls3.pls.sample_size_power";
+  method_version: "pls_sample_size_power_v1";
+  recipe_digest: string;
+  stream_domain: string;
+  failure_policy: "failed_replicates_count_as_non_rejections_v1";
+  interval_method: "wilson_score_two_sided_v1";
+  inference_method: "pls_pm_case_bootstrap_normal_reference_two_sided_v1";
+  pls_method_version: string;
+  resampling_method_version: string;
+  workload: {
+    grid_points: number;
+    planned_datasets: number;
+    estimated_pls_fits: number;
+    estimated_pls_case_fits: number;
+  };
+  rows: PlsSampleSizePowerRowV1[];
+  outcomes: PlsSampleSizePowerOutcomeV1[];
+  outcome_digest: string;
+  decision: { status: "reached"; sample_size: number } | { status: "not_reached" };
+  monotonicity_violations: number;
+  warnings: string[];
+  exclusions: string[];
+}
+
+export interface PlsSampleSizePowerRecipeV2
+  extends Omit<PlsSampleSizePowerRecipeV1, "schema_version" | "method_version" | "inference"> {
+  schema_version: 2;
+  method_version: "pls_sample_size_power_v2";
+  inference: "case_bootstrap_null_centered_two_sided_plus_one";
+}
+
+export interface PlsSampleSizePowerResultV2
+  extends Omit<
+    PlsSampleSizePowerResultV1,
+    "schema_version" | "method_version" | "inference_method"
+  > {
+  schema_version: 2;
+  method_version: "pls_sample_size_power_v2";
+  inference_method: "pls_pm_case_bootstrap_null_centered_two_sided_plus_one_v2";
 }
 
 export interface JobSnapshot {

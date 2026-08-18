@@ -13,10 +13,10 @@
             "--",
             "--exact"
           ],
-          "duration_seconds": 1.814,
+          "duration_seconds": 2.259,
           "returncode": 0,
-          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.64s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-d402665705c44efe.exe)\n",
-          "stdout_tail": "\nrunning 1 test\ntest tests::bca_matches_hand_calculated_midrank_fixture ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n"
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.01s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-b2b9382888ef1d5a.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::bca_matches_hand_calculated_midrank_fixture ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 105 filtered out; finished in 0.00s\n\n"
         },
         "passed": true,
         "test": "tests::bca_matches_hand_calculated_midrank_fixture"
@@ -32,10 +32,10 @@
             "--",
             "--exact"
           ],
-          "duration_seconds": 1.431,
+          "duration_seconds": 2.71,
           "returncode": 0,
-          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.28s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-d402665705c44efe.exe)\n",
-          "stdout_tail": "\nrunning 1 test\ntest tests::studentized_interval_matches_reversed_pivot_quantiles ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n"
+          "stderr_tail": "    Blocking waiting for file lock on package cache\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.40s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-b2b9382888ef1d5a.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::studentized_interval_matches_reversed_pivot_quantiles ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 105 filtered out; finished in 0.00s\n\n"
         },
         "passed": true,
         "test": "tests::studentized_interval_matches_reversed_pivot_quantiles"
@@ -51,10 +51,10 @@
             "--",
             "--exact"
           ],
-          "duration_seconds": 12.628,
+          "duration_seconds": 2.729,
           "returncode": 0,
-          "stderr_tail": "   Compiling qpls-resampling v2.46.0 (D:\\QuickPLS\\crates\\qpls-resampling)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 12.09s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-d402665705c44efe.exe)\n",
-          "stdout_tail": "\nrunning 1 test\ntest tests::type7_percentile_interpolates_at_requested_probability ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n"
+          "stderr_tail": "    Blocking waiting for file lock on package cache\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.25s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-b2b9382888ef1d5a.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::type7_percentile_interpolates_at_requested_probability ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 105 filtered out; finished in 0.00s\n\n"
         },
         "passed": true,
         "test": "tests::type7_percentile_interpolates_at_requested_probability"
@@ -111,7 +111,7 @@
     }
   },
   "feature_id": "qpls3.inference.bootstrap",
-  "generated_at_utc": "2026-08-13T19:00:16.744117Z",
+  "generated_at_utc": "2026-08-18T02:24:21.753932Z",
   "method_version": "indexed_resampling_v4",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -120,8 +120,8 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-resampling/src/lib.rs",
-      "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
-      "size": 170900
+      "sha256": "5aec61b8090183912bce7da7f9855344a882e691aea2336baf8c72c4272cc8ec",
+      "size": 244850
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -135,8 +135,8 @@
     },
     {
       "path": "validation/methods/pls_bootstrap_v4.manifest.json",
-      "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
-      "size": 15803
+      "sha256": "f43015dbd38e34448b9b1cdb5cfc67f1f42fc0e4a606bcd2409679b36a8174ee",
+      "size": 19827
     },
     {
       "path": "validation/pls_bootstrap_corporate_csem_reference.py",
@@ -195,8 +195,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pls_bootstrap_v4_factory_evidence.py",

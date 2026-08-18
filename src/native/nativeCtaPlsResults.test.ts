@@ -30,6 +30,7 @@ describe("native CTA-PLS result contract", () => {
       ["Method version", "cta_pls_tetrad_v1"],
       ["Excluded inference", "Bootstrap, permutation, asymptotic, and vanishing-tetrad decisions"],
     ]));
+    expect(JSON.stringify(tables)).not.toMatch(/experimental|limited scope/i);
 
     const navigation = buildNativeResultNavigation(run);
     expect(navigation.defaultItemId).toBe("cta_pls_summary");

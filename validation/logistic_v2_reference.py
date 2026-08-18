@@ -210,6 +210,7 @@ def run_recipe(
             str(data_path),
             "--output",
             str(output_path),
+            "--allow-experimental",
         ]
     )
     result = json.loads(output_path.read_text(encoding="utf-8")) if output_path.is_file() else None
@@ -489,6 +490,19 @@ def negative_guards(temporary: Path) -> dict[str, Any]:
     single = [dict(row, outcome="0") for row in base]
     collinear = [dict(row, z=row["x"]) for row in base]
     separated = [dict(row, outcome="1" if float(row["x"]) > 2.0 else "0") for row in base]
+    quasi_separated = [
+        {
+            "outcome": str(outcome),
+            "x": str(x),
+            "z": "0",
+            "control": "0",
+        }
+        for outcome, x in zip(
+            [0, 0, 0, 0, 1, 1, 1, 1],
+            [-3, -2, -1, 0, 0, 1, 2, 3],
+            strict=True,
+        )
+    ]
     workers_path = temporary / "logistic_workers_two.csv"
     write_rows(workers_path, base)
     workers_completed, workers_result, _ = run_recipe(
@@ -522,6 +536,13 @@ def negative_guards(temporary: Path) -> dict[str, Any]:
             "logistic_separation",
             separated,
             "separation",
+        ),
+        "quasi_separation": failure_case(
+            temporary,
+            "logistic_quasi_separation",
+            quasi_separated,
+            "separation",
+            predictors=["x"],
         ),
         "workers_fixed": {
             "passed": (
@@ -616,6 +637,7 @@ def main() -> int:
         "single_class_outcome_rejected": guards["single_class"]["passed"],
         "rank_deficiency_rejected": guards["rank_deficient"]["passed"],
         "complete_separation_rejected": guards["separation"]["passed"],
+        "quasi_separation_rejected": guards["quasi_separation"]["passed"],
         "nondefault_worker_count_rejected": guards["workers_fixed"]["passed"],
     }
     report = {

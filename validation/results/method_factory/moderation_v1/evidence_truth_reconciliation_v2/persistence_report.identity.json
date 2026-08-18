@@ -1,0 +1,88 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "archive": "validation/results/v247-native-moderation-1786955655448-29040.qpls",
+    "archive_sha256": "3efa368bb187d79642828df98d80e5550b4cf2e2e27a45a17ffe0d5e134dce53",
+    "archive_size": 28525,
+    "checks": {
+      "checksums_exact": true,
+      "completed_results": true,
+      "current_cli_accepts_archive": true,
+      "method_payload": true,
+      "passed": true,
+      "unique_safe_members": true
+    },
+    "kind": "quickpls_phase3_persistence_gate",
+    "method": "moderation_v1",
+    "passed": true,
+    "path": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/persistence_gate.json",
+    "rejected_newer_candidates": [],
+    "schema_version": 1,
+    "validation": {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "validate",
+        "validation/results/v247-native-moderation-1786955655448-29040.qpls",
+        "--json"
+      ],
+      "duration_seconds": 0.102,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"issues\": [\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786955807135\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786955807366\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786955807601\"\n    },\n    {\n      \"code\": \"interaction.product_indicator.generated\",\n      \"message\": \"Two-stage interaction product indicators are generated from stage-1 construct scores\",\n      \"severity\": \"warning\",\n      \"subject\": \"interaction-construct-1786955807135-construct-1786955807366-construct-1786955807601\"\n    },\n    {\n      \"code\": \"method.moderation.experimental\",\n      \"message\": \"Two-stage moderation is validated only inside the documented QuickPLS v1.0.0 supported scope\",\n      \"severity\": \"warning\",\n      \"subject\": \"interaction-construct-1786955807135-construct-1786955807366-construct-1786955807601\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786955807135\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786955807366\"\n    },\n    {\n      \"code\": \"construct.single_item\",\n      \"message\": \"Single-item reflective construct requires explicit justification\",\n      \"severity\": \"warning\",\n      \"subject\": \"construct-1786955807601\"\n    },\n    {\n      \"code\": \"interaction.product_indicator.generated\",\n      \"message\": \"Two-stage interaction product indicators are generated from stage-1 construct scores\",\n      \"severity\": \"warning\",\n      \"subject\": \"interaction-construct-1786955807135-construct-1786955807366-construct-1786955807601\"\n    },\n    {\n      \"code\": \"method.moderation.experimental\",\n      \"message\": \"Two-stage moderation is validated only inside the documented QuickPLS v1.0.0 supported scope\",\n      \"severity\": \"warning\",\n      \"subject\": \"interaction-construct-1786955807135-construct-1786955807366-construct-1786955807601\"\n    }\n  ],\n  \"recovered\": false,\n  \"valid\": true\n}\n"
+    }
+  },
+  "feature_id": "qpls3.pls.moderation",
+  "generated_at_utc": "2026-08-18T00:33:52.612296Z",
+  "method_version": "pls_two_stage_moderation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "persistence_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/moderation_v1.manifest.json",
+      "sha256": "130474213ff5e5d481b8fd26db9038852c8e221e6d85c5444c942d373688b88a",
+      "size": 14197
+    },
+    {
+      "path": "validation/moderation_persistence_gate.py",
+      "sha256": "8bf37984081c539422ad0070154561cdca442d7b0770cf7802255ae1c79200e4",
+      "size": 210
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "ef5c8d32c4ea502f29666d912ae8103f7eb0e325a838df46dd5647ac07d2c11b",
+      "size": 30813
+    },
+    {
+      "path": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/persistence_gate.json",
+      "sha256": "3c229bb96c12181c2170d08a7f301b7765e4a9c61e0b01d6fd85811748c73e98",
+      "size": 3652
+    },
+    {
+      "path": "validation/results/v247-native-moderation-1786955655448-29040.qpls",
+      "sha256": "3efa368bb187d79642828df98d80e5550b4cf2e2e27a45a17ffe0d5e134dce53",
+      "size": 28525
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "148ba50d641d3ba1b42287e782a00854931f7495c3c938e687f2e72d08546956",
+      "size": 3303
+    }
+  ]
+}

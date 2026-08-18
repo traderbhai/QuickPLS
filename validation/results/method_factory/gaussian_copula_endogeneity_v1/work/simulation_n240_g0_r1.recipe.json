@@ -1,0 +1,76 @@
+{
+  "created_at": "2026-08-14T00:00:00Z",
+  "dataset_fingerprint": "v2:ad136b2d2c0230175b721c51170054ffd0017f5d91d0bad6a4b89db5483f9e8b",
+  "id": "da409bf6-e968-58d2-a9f8-29721265172f",
+  "metadata": {
+    "status": "validated_endogeneity_bounded_scope"
+  },
+  "method_config": {
+    "kind": "endogeneity"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x1",
+          "x2"
+        ],
+        "mode": "reflective",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "z",
+        "indicators": [
+          "z1",
+          "z2"
+        ],
+        "mode": "reflective",
+        "name": "Z",
+        "short_name": "Z"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y1",
+          "y2"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "6b4ab3f5-8b50-5c33-a0b1-7bf677fceed6",
+    "interactions": [],
+    "name": "Gaussian-copula endogeneity factory fixture",
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "z",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 3000,
+    "method": "endogeneity",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260814,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-07,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

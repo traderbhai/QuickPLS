@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "checks": {
+      "baseline_indirect_abs": 0.5866198661181502,
+      "construct_reorder_max_delta": 0.0,
+      "independent_reference_max_delta": 6.94999613415348e-14,
+      "permuted_mediator_drop_ratio": 0.0697466198393737,
+      "permuted_mediator_indirect_abs": 0.04091475279236692,
+      "positive_affine_max_delta": 6.317169010117141e-14,
+      "row_reversal_max_delta": 2.220446049250313e-16
+    },
+    "claim_limited_to": "single-mediator direct, indirect, total, VAF, and descriptive classification",
+    "passed": true,
+    "report": "validation/results/method_factory/mediation_v1/evidence_truth_reconciliation_v1/work/mediation_coverage_report.json",
+    "report_sha256": "41dc8d0848ef6f2832a02691d9abfe5584fd14262faef56ca8b93c1b87757c67",
+    "scenario_count": 5
+  },
+  "completed_at_utc": "2026-08-14T23:28:49.615218Z",
+  "kind": "quickpls_phase3_current_engine_gate",
+  "method": "mediation_v1",
+  "passed": true,
+  "prebuilt_cli": {
+    "path": "target/debug/qpls.exe",
+    "sha256": "35887c8935124619b74255ba93602c20d87300538b60b30840a62aa304fb3f9b",
+    "size": 61828608
+  },
+  "recipe_policy": "historical fixtures copied to explicit schema v3; source fixtures preserved",
+  "schema_version": 1,
+  "started_at_utc": "2026-08-14T23:28:47.453600Z"
+}

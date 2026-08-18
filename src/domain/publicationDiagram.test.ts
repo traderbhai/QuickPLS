@@ -53,7 +53,7 @@ describe("publication diagram SVG", () => {
     expect(svg).toContain("0.457");
     expect(svg).toContain("R&#178; 0.208");
     expect(svg).toContain("0.910");
-    expect(svg).toContain("Validated for documented QuickPLS supported scope");
+    expect(svg).toContain("Supported for the model, data, and settings recorded in Run Details");
     expect(svg).not.toContain("Mode A");
     expect(svg).not.toContain("Trash");
   });
@@ -65,16 +65,16 @@ describe("publication diagram SVG", () => {
     expect(svg).toContain("R&#178; 0.208");
   });
 
-  it("uses the candidate warning rather than a validated watermark for Structural Path Randomization", () => {
+  it("uses the bounded-scope warning rather than a generic watermark for Structural Path Randomization", () => {
     const svg = publicationDiagramSvg(nodes, edges, completedStructuralPathRandomizationRun());
     expect(svg).toContain(NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING);
-    expect(svg).not.toContain("Validated for documented QuickPLS supported scope");
+    expect(svg).not.toContain("Supported for the model, data, and settings recorded in Run Details");
   });
 
   it("escapes labels in model-only diagrams", () => {
     const svg = publicationDiagramSvg([{ ...nodes[0], data: { ...nodes[0].data, label: "A&B <test>" } }], [], undefined);
     expect(svg).toContain("A&amp;B &lt;test&gt;");
-    expect(svg).not.toContain("Validated for documented QuickPLS supported scope");
+    expect(svg).not.toContain("Supported for the model, data, and settings recorded in Run Details");
   });
 
   it("exports the current canvas indicator layout when requested", () => {

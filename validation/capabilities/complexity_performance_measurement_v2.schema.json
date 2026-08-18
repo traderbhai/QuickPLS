@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/complexity-performance-measurement-v2.schema.json",
+  "title": "QuickPLS complexity and performance measurement receipt V2",
+  "oneOf": [
+    { "$ref": "#/$defs/capabilityMeasurement" },
+    { "$ref": "#/$defs/uiMeasurement" }
+  ],
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "capabilityReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry_schema_version", "capability_id", "cell_id", "capability_version"],
+      "properties": {
+        "registry_schema_version": { "const": 2 },
+        "capability_id": { "type": "string", "pattern": "^smartpls\\.[a-z0-9_]+$" },
+        "cell_id": { "type": "string", "pattern": "^qpls3\\.[a-z0-9_.]+$" },
+        "capability_version": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "hardwareFingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "architecture", "cpu", "physical_cores", "logical_cores", "memory_bytes"],
+      "properties": {
+        "os": { "const": "windows_11" },
+        "architecture": { "const": "x86_64" },
+        "cpu": { "$ref": "#/$defs/nonEmptyString" },
+        "physical_cores": { "type": "integer", "minimum": 1 },
+        "logical_cores": { "type": "integer", "minimum": 1 },
+        "memory_bytes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "baselineReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measurement_id", "receipt_sha256"],
+      "properties": {
+        "measurement_id": { "$ref": "#/$defs/id" },
+        "receipt_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "commandIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv", "working_directory", "build_fingerprint", "workload_fingerprint", "process_tree_measured"],
+      "properties": {
+        "argv": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmptyString" } },
+        "working_directory": { "$ref": "#/$defs/nonEmptyString" },
+        "build_fingerprint": { "$ref": "#/$defs/sha256" },
+        "workload_fingerprint": { "$ref": "#/$defs/sha256" },
+        "process_tree_measured": { "const": true }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "index", "exit_code", "elapsed_seconds", "peak_working_set_bytes", "result_bytes", "progress_values", "orphan_processes"],
+      "properties": {
+        "phase": { "enum": ["warmup", "measured"] },
+        "index": { "type": "integer", "minimum": 0 },
+        "exit_code": { "const": 0 },
+        "elapsed_seconds": { "type": "number", "minimum": 0 },
+        "peak_working_set_bytes": { "type": "integer", "minimum": 0 },
+        "result_bytes": { "type": "integer", "minimum": 0 },
+        "progress_values": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1 } },
+        "orphan_processes": { "const": 0 }
+      }
+    },
+    "aggregates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["median_elapsed_seconds", "p95_elapsed_seconds", "median_working_set_bytes", "p95_working_set_bytes", "p95_result_bytes"],
+      "properties": {
+        "median_elapsed_seconds": { "type": "number", "minimum": 0 },
+        "p95_elapsed_seconds": { "type": "number", "minimum": 0 },
+        "median_working_set_bytes": { "type": "number", "minimum": 0 },
+        "p95_working_set_bytes": { "type": "number", "minimum": 0 },
+        "p95_result_bytes": { "type": "number", "minimum": 0 }
+      }
+    },
+    "progressObservation": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["operation_exceeded_threshold", "real_progress_shown", "distinct_progress_values", "monotonic"],
+      "properties": {
+        "operation_exceeded_threshold": { "type": "boolean" },
+        "real_progress_shown": { "type": "boolean" },
+        "distinct_progress_values": { "type": "integer", "minimum": 0 },
+        "monotonic": { "type": "boolean" }
+      }
+    },
+    "cancellationObservation": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["terminal_latency_seconds", "terminal_state", "no_partial_visible_result", "no_partial_committed_result", "archive_unchanged"],
+      "properties": {
+        "terminal_latency_seconds": { "type": "number", "minimum": 0 },
+        "terminal_state": { "type": "string" },
+        "no_partial_visible_result": { "type": "boolean" },
+        "no_partial_committed_result": { "type": "boolean" },
+        "archive_unchanged": { "type": "boolean" }
+      }
+    },
+    "memoryGrowthObservation": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["accepted_runs", "first_settled_working_set_bytes", "last_settled_working_set_bytes", "growth_percent", "orphan_processes"],
+      "properties": {
+        "accepted_runs": { "type": "integer", "minimum": 0 },
+        "first_settled_working_set_bytes": { "type": "integer", "minimum": 0 },
+        "last_settled_working_set_bytes": { "type": "integer", "minimum": 0 },
+        "growth_percent": { "type": "number" },
+        "orphan_processes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "common": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "const": 2 },
+        "measurement_id": { "$ref": "#/$defs/id" },
+        "measurement_role": { "enum": ["accepted_baseline", "current"] },
+        "captured_at_utc": { "type": "string", "format": "date-time" },
+        "contract_id": { "const": "quickpls.product_finalization.complexity_performance.v2" },
+        "contract_sha256": { "$ref": "#/$defs/sha256" },
+        "hardware_profile_id": { "$ref": "#/$defs/id" },
+        "hardware_fingerprint": { "$ref": "#/$defs/hardwareFingerprint" },
+        "baseline_reference": { "oneOf": [{ "$ref": "#/$defs/baselineReference" }, { "type": "null" }] },
+        "receipt_complete": { "type": "boolean" }
+      }
+    },
+    "capabilityMeasurement": {
+      "allOf": [
+        { "$ref": "#/$defs/common" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema_version", "document_kind", "measurement_id", "measurement_role", "captured_at_utc", "contract_id", "contract_sha256", "capability_reference", "hardware_profile_id", "hardware_fingerprint", "budget_class_id", "profile_id", "case_id", "applicability", "not_applicable_reason", "predicate_references", "command", "warmup_runs", "measured_runs", "aggregates", "progress_observation", "cancellation_observation", "memory_growth_observation", "baseline_reference", "receipt_complete"],
+          "properties": {
+            "schema_version": { "const": 2 },
+            "document_kind": { "const": "capability_performance_measurement" },
+            "measurement_id": { "$ref": "#/$defs/id" },
+            "measurement_role": { "enum": ["accepted_baseline", "current"] },
+            "captured_at_utc": { "type": "string", "format": "date-time" },
+            "contract_id": { "const": "quickpls.product_finalization.complexity_performance.v2" },
+            "contract_sha256": { "$ref": "#/$defs/sha256" },
+            "capability_reference": { "$ref": "#/$defs/capabilityReference" },
+            "hardware_profile_id": { "$ref": "#/$defs/id" },
+            "hardware_fingerprint": { "$ref": "#/$defs/hardwareFingerprint" },
+            "budget_class_id": { "$ref": "#/$defs/id" },
+            "profile_id": { "enum": ["micro_exact", "applied", "large", "maximum_axis", "compound_stress"] },
+            "case_id": { "$ref": "#/$defs/id" },
+            "applicability": { "enum": ["measured", "not_applicable"] },
+            "not_applicable_reason": { "type": ["string", "null"] },
+            "predicate_references": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" } },
+            "command": { "oneOf": [{ "$ref": "#/$defs/commandIdentity" }, { "type": "null" }] },
+            "warmup_runs": { "type": "array", "items": { "$ref": "#/$defs/run" } },
+            "measured_runs": { "type": "array", "items": { "$ref": "#/$defs/run" } },
+            "aggregates": { "oneOf": [{ "$ref": "#/$defs/aggregates" }, { "type": "null" }] },
+            "progress_observation": { "$ref": "#/$defs/progressObservation" },
+            "cancellation_observation": { "$ref": "#/$defs/cancellationObservation" },
+            "memory_growth_observation": { "$ref": "#/$defs/memoryGrowthObservation" },
+            "baseline_reference": { "oneOf": [{ "$ref": "#/$defs/baselineReference" }, { "type": "null" }] },
+            "receipt_complete": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "uiMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["open_seconds", "edit_response_ms", "pan_zoom_fps", "preflight_seconds"],
+      "properties": {
+        "open_seconds": { "type": ["number", "null"], "minimum": 0 },
+        "edit_response_ms": { "type": ["number", "null"], "minimum": 0 },
+        "pan_zoom_fps": { "type": ["number", "null"], "minimum": 0 },
+        "preflight_seconds": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "uiAggregates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["median_open", "p95_open", "median_edit_response", "p95_edit_response", "median_pan_zoom_fps", "p05_pan_zoom_fps", "median_preflight", "p95_preflight"],
+      "properties": {
+        "median_open": { "type": ["number", "null"], "minimum": 0 },
+        "p95_open": { "type": ["number", "null"], "minimum": 0 },
+        "median_edit_response": { "type": ["number", "null"], "minimum": 0 },
+        "p95_edit_response": { "type": ["number", "null"], "minimum": 0 },
+        "median_pan_zoom_fps": { "type": ["number", "null"], "minimum": 0 },
+        "p05_pan_zoom_fps": { "type": ["number", "null"], "minimum": 0 },
+        "median_preflight": { "type": ["number", "null"], "minimum": 0 },
+        "p95_preflight": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "uiMeasurement": {
+      "allOf": [
+        { "$ref": "#/$defs/common" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema_version", "document_kind", "measurement_id", "measurement_role", "captured_at_utc", "contract_id", "contract_sha256", "hardware_profile_id", "hardware_fingerprint", "scenario_id", "warmup_runs", "measured_runs", "aggregates", "baseline_reference", "receipt_complete"],
+          "properties": {
+            "schema_version": { "const": 2 },
+            "document_kind": { "const": "ui_performance_measurement" },
+            "measurement_id": { "$ref": "#/$defs/id" },
+            "measurement_role": { "enum": ["accepted_baseline", "current"] },
+            "captured_at_utc": { "type": "string", "format": "date-time" },
+            "contract_id": { "const": "quickpls.product_finalization.complexity_performance.v2" },
+            "contract_sha256": { "$ref": "#/$defs/sha256" },
+            "hardware_profile_id": { "$ref": "#/$defs/id" },
+            "hardware_fingerprint": { "$ref": "#/$defs/hardwareFingerprint" },
+            "scenario_id": { "enum": ["applied_diagram", "stress_diagram", "typical_preflight", "stress_preflight"] },
+            "warmup_runs": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/$defs/uiMetrics" } },
+            "measured_runs": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/$defs/uiMetrics" } },
+            "aggregates": { "$ref": "#/$defs/uiAggregates" },
+            "baseline_reference": { "oneOf": [{ "$ref": "#/$defs/baselineReference" }, { "type": "null" }] },
+            "receipt_complete": { "type": "boolean" }
+          }
+        }
+      ]
+    }
+  }
+}

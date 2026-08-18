@@ -1,0 +1,274 @@
+{
+  "fragment_schema_version": 1,
+  "fragment_id": "quickpls.wave0.pls_power_posthoc.v1",
+  "frozen_on": "2026-08-14",
+  "capability_ids": [
+    "smartpls.pls_power_analysis"
+  ],
+  "cell_assessments": [
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.pls_power_analysis",
+        "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+        "capability_version": "pls_posthoc_technical_minimum_sample_size_v2"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.pls_power_analysis",
+        "cell_id": "qpls3.pls.sample_size_power",
+        "capability_version": "pls_sample_size_power_v1"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "beyond_parity"
+      }
+    }
+  ],
+  "dimension_assessments": [
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_power_posthoc.settings.fixed_assumptions",
+          "description": "The documented retrospective technical sample-size calculation uses the inverse-square-root method under a 5% significance level, 80% power, and a directional test.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.pls_power_analysis",
+              "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+              "capability_version": "pls_posthoc_technical_minimum_sample_size_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/"
+          ],
+          "acceptance_criteria": [
+            "The parity result fixes alpha to 0.05, statistical power to 0.80, the test direction to directional, and the inverse-square-root constant to 2.486.",
+            "A settings surface cannot relabel another alpha, power, or test direction as this documented SmartPLS result."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_power_posthoc.defaults.no_silent_override",
+          "description": "The documented result has one fixed assumption set rather than an inferred default that may silently change.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.pls_power_analysis",
+              "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+              "capability_version": "pls_posthoc_technical_minimum_sample_size_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/"
+          ],
+          "acceptance_criteria": [
+            "A new result records 0.05, 0.80, directional, and 2.486 explicitly in its analytical payload.",
+            "Save/reopen and every export reproduce those assumptions exactly."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_power_posthoc.model_shapes.pls_structural_paths",
+          "description": "The result belongs to a completed PLS-SEM algorithm model and is driven by an eligible structural path coefficient; it is not a generic output of every algorithm.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.pls_power_analysis",
+              "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+              "capability_version": "pls_posthoc_technical_minimum_sample_size_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/"
+          ],
+          "acceptance_criteria": [
+            "The table is created only for a completed PLS-SEM algorithm result containing at least one eligible structural path.",
+            "PCA, CB-SEM, regression, and other algorithm families cannot emit this parity table merely because they contain coefficients."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_power_posthoc.data_inputs.same_analytical_sample",
+          "description": "The diagnostic uses the structural estimates and valid analytical observation count from the same completed PLS run.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.pls_power_analysis",
+              "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+              "capability_version": "pls_posthoc_technical_minimum_sample_size_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/"
+          ],
+          "acceptance_criteria": [
+            "The stored analytical sample size equals the valid observation count used for the linked PLS estimation.",
+            "Changing the dataset, missing-data treatment, or path estimates invalidates the stored diagnostic instead of reusing it."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_power_posthoc.preprocessing.documented_driver",
+          "description": "The original inverse-square-root rule uses the statistically significant structural path with the smallest absolute magnitude; focal relevance remains an interpretation caution rather than an undocumented numerical rewrite.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.pls_power_analysis",
+              "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+              "capability_version": "pls_posthoc_technical_minimum_sample_size_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/"
+          ],
+          "acceptance_criteria": [
+            "An inference-aware parity implementation selects the statistically significant eligible path having the smallest absolute coefficient, with a documented deterministic tie rule.",
+            "A point-estimate-only smallest-path fallback is identified as a QuickPLS difference and cannot satisfy full parity coverage.",
+            "Control, exploratory, or substantively irrelevant paths are never silently removed from the numerical rule; any focal-path selection must be explicit and separately identified."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_power_posthoc.outputs.technical_required_n",
+          "description": "The result is labeled Technically required sample size and reports the ceiling of the inverse-square-root calculation for the driver coefficient.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.pls_power_analysis",
+              "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+              "capability_version": "pls_posthoc_technical_minimum_sample_size_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/"
+          ],
+          "acceptance_criteria": [
+            "For absolute coefficients 0.10, 0.15, 0.20, 0.25, 0.30, and 0.40 the required sample sizes are respectively 619, 275, 155, 99, 69, and 39.",
+            "The result links the required count, analytical count, driver path, fixed assumptions, and adequacy comparison to the same run.",
+            "The result states that technical adequacy does not establish population representativeness, causal validity, or general study quality."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_power_posthoc.charts.none_documented",
+          "description": "The official workflow documents a result value and interpretation table, not a required analytical chart.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.pls_power_analysis",
+              "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+              "capability_version": "pls_posthoc_technical_minimum_sample_size_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/"
+          ],
+          "acceptance_criteria": [
+            "Parity does not require a chart for this result.",
+            "Any optional QuickPLS visualization is clearly additional and reproduces the same stored coefficient-to-sample-size calculation."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_power_posthoc.failures.no_driver_and_extreme_values",
+          "description": "The result must distinguish inapplicability from mathematically large requirements and must not turn representativeness or substantive relevance into unsupported claims.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.pls_power_analysis",
+              "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+              "capability_version": "pls_posthoc_technical_minimum_sample_size_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/"
+          ],
+          "acceptance_criteria": [
+            "A model without an eligible structural path returns a typed not-applicable result.",
+            "Zero and near-zero driver coefficients never overflow, clamp, or produce NaN; an unrepresentable requirement returns a typed unavailable state.",
+            "A very large finite requirement remains visible with the documented near-zero-effect explanation rather than being classified as a calculation error."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.pls_power_analysis",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "pls_power_posthoc.workflows.completed_pls_result",
+          "description": "The documented workflow opens the result after PLS-SEM estimation under Algorithm -> Posthoc minimum sample size, compares it with the valid analytical sample, and keeps bootstrap inference and prospective planning separate.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.pls_power_analysis",
+              "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size",
+              "capability_version": "pls_posthoc_technical_minimum_sample_size_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/"
+          ],
+          "acceptance_criteria": [
+            "A user can open the linked table from a completed PLS run, compare required and analytical sample sizes, and export the same values.",
+            "The workflow explains that post-hoc diagnosis does not replace a priori planning or bootstrap inference.",
+            "Subgroup, multigroup, missing-data, and complex-sampling cautions remain visible where relevant."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -17,13 +17,13 @@
       "src/native/NativeExportDialog.test.ts",
       "--reporter=verbose"
     ],
-    "duration_seconds": 4.824,
+    "duration_seconds": 9.776,
     "returncode": 0,
     "stderr_tail": "",
-    "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n \u00e2\u0153\u201c src/native/plsAlgorithmFactory.test.ts > PLS Algorithm v1 factory-native contract > serializes the exact deterministic PLS algorithm recipe without inference state 5ms\n \u00e2\u0153\u201c src/native/plsAlgorithmFactory.test.ts > PLS Algorithm v1 factory-native contract > projects accessible point-estimate tables and same-run provenance without inference claims 9ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact GSCA ALS v2 provenance without PLS or inference settings 8ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports bounded CB-SEM/CFA optimizer, identification, and method-version provenance without resampling fields 2ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports model-free PCA scores and PCA-specific provenance without SEM weighting claims 2ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > builds one truthful provenance table without legacy N/A placeholders 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > omits unavailable optional fields instead of manufacturing a value 0ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports immutable engine settings when native provenance is available 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > omits unused inference settings from descriptive CCA exports 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports the genuine MICOM permutation plan without claiming parallel workers 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact standalone NCA provenance without irrelevant SEM iteration settings 2ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact PLSpredict / CVPAT v2 provenance and the assignment digest 2ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps ordinary completed-run diagram exports and reviewer diagrams 3ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps a standardized model diagram in CB-SEM/CFA reviewer and SVG exports 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps the immutable GSCA model diagram alongside its dedicated result tables 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps candidate Structural Path Randomization model exports visibly scoped 20ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > makes completed MGA exports table-only and never injects a pooled model diagram 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > omits the SVG action from the completed MGA export dialog 2ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > exports standalone NCA as five table-backed formats without a fabricated model diagram 2ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps standalone PCA and binary logistic exports table-only 2ms\n\n Test Files  3 passed (3)\n      Tests  20 passed (20)\n   Start at  00:48:40\n   Duration  1.34s (transform 813ms, setup 0ms, import 1.97s, tests 71ms, environment 0ms)\n\n"
+    "stdout_tail": "ive contract > serializes the exact deterministic PLS algorithm recipe without inference state 13ms\n \u00e2\u0153\u201c src/native/plsAlgorithmFactory.test.ts > PLS Algorithm v1 factory-native contract > projects accessible point-estimate tables and same-run provenance without inference claims 28ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact GSCA ALS v2 provenance without PLS or inference settings 20ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact standalone logistic provenance without SEM-only settings 12ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports bounded CB-SEM/CFA optimizer, identification, and method-version provenance without resampling fields 4ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports the attributed 90% RMSEA interval method and both bounds 2ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports genuine CFA score/LM provenance without relabeling heuristic diagnostics 4ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports truthful exact-CFA bootstrap provenance and labels a 500-draw pilot unavailable 51ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports model-free PCA scores and PCA-specific provenance without SEM weighting claims 4ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > builds one truthful provenance table without legacy N/A placeholders 2ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports complete ordinary PLS bootstrap fit accounting and no-retry provenance 3ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > omits unavailable optional fields instead of manufacturing a value 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports immutable engine settings when native provenance is available 2ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > omits unused inference settings from descriptive CCA exports 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports the genuine MICOM permutation plan without claiming parallel workers 15ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact standalone NCA provenance without irrelevant SEM iteration settings 5ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact PLSpredict / CVPAT v2 provenance and the assignment digest 3ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps ordinary completed-run diagram exports and reviewer diagrams 5ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps a standardized model diagram in CB-SEM/CFA reviewer and SVG exports 2ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps the immutable GSCA model diagram alongside its dedicated result tables 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps scoped Standard Structural Path Randomization model exports visibly bounded 63ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > makes completed MGA exports table-only and never injects a pooled model diagram 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > omits the SVG action from the completed MGA export dialog 6ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > exports standalone NCA as five table-backed formats without a fabricated model diagram 6ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps standalone PCA and binary logistic exports table-only 5ms\n\n Test Files  3 passed (3)\n      Tests  25 passed (25)\n   Start at  03:45:30\n   Duration  3.22s (transform 3.04s, setup 0ms, import 6.22s, tests 271ms, environment 1ms)\n\n"
   },
   "feature_id": "qpls3.pls.algorithm",
-  "generated_at_utc": "2026-08-13T19:18:41.623294Z",
+  "generated_at_utc": "2026-08-17T22:15:34.170372Z",
   "method_version": "pls_pm_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -32,23 +32,23 @@
   "source_artifacts": [
     {
       "path": "src/native/NativeExportDialog.test.ts",
-      "sha256": "7fe0ac9ca5fef80b51e7897ffd6d5c25241e7cff7763faebc944ac035ccad380",
-      "size": 8119
+      "sha256": "2af68e6cf72b2ae6bc3c5d655ca72daa2753ce2eeec0a2141e6f24442b8b6cb3",
+      "size": 8186
     },
     {
       "path": "src/native/NativeExportDialog.tsx",
-      "sha256": "51944e6ef72be0cafb2db9ab6b7be77e9aa648d8dc4f45f344acb63d9d14ff0c",
-      "size": 9603
+      "sha256": "514d8866d3570111958a9d15f7462fa2e99266bcc2e913f1c12a9eb1bb618b9a",
+      "size": 10113
     },
     {
       "path": "src/native/nativeExportTables.test.ts",
-      "sha256": "ab22330e2e6ed7752f748034adaa2c8e653bb4a149a0e91bef21943e2c6964fd",
-      "size": 19426
+      "sha256": "0c09a9a8279bc13b8492b281e5473eb226525da683143904dfc0a68df3f1336a",
+      "size": 44064
     },
     {
       "path": "src/native/nativeExportTables.ts",
-      "sha256": "ca8ebea6a2607152bd539a56ca73a7178f2e4270b7b3284ff62bd88c20562c88",
-      "size": 20407
+      "sha256": "6ce1244a6be88c0035a6113b070f5c876b46807623f96c949f1d41c985aa6ba7",
+      "size": 42765
     },
     {
       "path": "src/native/plsAlgorithmFactory.test.ts",
@@ -67,13 +67,13 @@
     },
     {
       "path": "validation/methods/pls_algorithm_v1.manifest.json",
-      "sha256": "ec18270309bd1dce2b5064e2f727893d03a44eaa04376efcd99a6dee57dc1ead",
-      "size": 15592
+      "sha256": "983eac3d5605fe49a414fe203f719d02618a610ecdb07a74cc380cd9193fa04c",
+      "size": 15718
     },
     {
       "path": "validation/pls_algorithm_v1_factory_common.py",
-      "sha256": "2047408b08f5a7d0f0955ffc5902d063820551d0a37c6c3e595c9441591df3d7",
-      "size": 12465
+      "sha256": "cc3030d40c551240ddc535a4715fe78183738ec068b8146a70ed08decc5576c2",
+      "size": 12700
     },
     {
       "path": "validation/pls_algorithm_v1_factory_evidence.py",
@@ -82,13 +82,13 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pls_algorithm_v1_factory_evidence.py",
-      "sha256": "3296d72e15da0d8bf6c7c87d7e1a74c7db3cdb40d49d807374953cdf1c98499f",
-      "size": 12583
+      "sha256": "648186a17c4c7e153e8b35f0b198b852c7b4a4b171f145a15b3646b699e31c13",
+      "size": 13781
     }
   ]
 }

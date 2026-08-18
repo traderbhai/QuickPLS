@@ -10,6 +10,7 @@ import {
 } from "../services/projectService";
 import { useWorkspace } from "../store";
 import type { UiPreferences, WorkspaceView } from "../types";
+import { InternalProjectArchiveV6SessionPanel } from "./InternalProjectArchiveV6SessionPanel";
 import { Card, CommandGroup, InlineNotice, MetricCard, PageHeader, Panel, StatusBadge, ToolbarButton, WorkspacePage } from "./Ui";
 
 const resetUiPreferences: UiPreferences = {
@@ -17,6 +18,7 @@ const resetUiPreferences: UiPreferences = {
   tableDensity: "compact" as const,
   defaultPrecision: 4,
   showAdvancedHelp: true,
+  experimentalLabsEnabled: false,
   recentPanels: ["models", "runs", "reports"],
   methodScopeDrawerOpen: false,
   showThresholdColors: true,
@@ -37,6 +39,7 @@ function parseImportedPreferences(value: unknown): Partial<UiPreferences> {
     next.defaultPrecision = Math.min(6, Math.max(2, Math.round(record.defaultPrecision)));
   }
   if (typeof record.showAdvancedHelp === "boolean") next.showAdvancedHelp = record.showAdvancedHelp;
+  if (typeof record.experimentalLabsEnabled === "boolean") next.experimentalLabsEnabled = record.experimentalLabsEnabled;
   if (Array.isArray(record.recentPanels)) {
     const panels = record.recentPanels.filter((panel): panel is WorkspaceView => typeof panel === "string" && workspaceViews.has(panel as WorkspaceView));
     if (panels.length > 0) next.recentPanels = panels;
@@ -194,7 +197,7 @@ export function DiagnosticBundlePanel() {
           <MetricCard
             label="Estimated size"
             value={`${Math.max(1, Math.ceil(diagnosticPreview.estimatedUncompressedBytes / 1024))} KiB`}
-            detail="Bounded uncompressed staging size."
+            detail="Maximum uncompressed staging size."
             tone="info"
           />
         </div>
@@ -248,6 +251,10 @@ export function DiagnosticBundlePanel() {
       </div>
     </Panel>
   </div>;
+}
+
+export function SettingsSchema6LabsSurface({ enabled }: { enabled: boolean }) {
+  return <InternalProjectArchiveV6SessionPanel experimentalLabsEnabled={enabled} />;
 }
 
 export function SettingsWorkspace() {
@@ -340,8 +347,21 @@ export function SettingsWorkspace() {
           <input type="checkbox" checked={uiPreferences.showThresholdColors} onChange={(event) => setUiPreferences({ showThresholdColors: event.target.checked })} />
           Show threshold guidance colors
         </label>
+        <label className="checkbox-row" aria-describedby="experimental-labs-description">
+          <input
+            type="checkbox"
+            checked={uiPreferences.experimentalLabsEnabled}
+            onChange={(event) => setUiPreferences({ experimentalLabsEnabled: event.target.checked })}
+          />
+          Enable Experimental Labs
+        </label>
+        <p id="experimental-labs-description" className="settings-field-description">
+          Disabled by default. Labs methods remain separate from Standard analyses and product-parity claims.
+        </p>
       </div>
     </Panel>
+
+    <SettingsSchema6LabsSurface enabled={uiPreferences.experimentalLabsEnabled} />
 
     <Panel
       title="Design system foundation"
@@ -353,16 +373,16 @@ export function SettingsWorkspace() {
         <MetricCard label="Control height" value="34 px" detail="Consistent button, select, and input sizing." tone="info" />
         <MetricCard label="Panel radius" value="4 px" detail="Low-radius desktop surfaces." tone="success" />
         <MetricCard label="Page gutter" value="28 px" detail="Shared workspace alignment." tone="info" />
-        <MetricCard label="Status language" value="Scoped" detail="Validated, Experimental, Unsupported, Needs setup." tone="success" />
+        <MetricCard label="Availability language" value="Plain" detail="Supported, Experimental, Needs setup, Not available." tone="success" />
       </div>
 
       <div className="qpls2-design-samples">
         <InlineNotice
           tone="success"
-          title="Validated scope wording"
-          action={<StatusBadge status="validated">Validated scope</StatusBadge>}
+          title="Supported setup wording"
+          action={<StatusBadge status="validated">Supported setup</StatusBadge>}
         >
-          Method status copy stays bounded to documented QuickPLS scope.
+          Method copy states the concrete model and data requirements.
         </InlineNotice>
         <InlineNotice
           tone="warning"
@@ -379,7 +399,7 @@ export function SettingsWorkspace() {
           <ToolbarButton><SlidersHorizontal size={15} /> Arrange</ToolbarButton>
         </CommandGroup>
         <CommandGroup label="Status">
-          <ToolbarButton><CheckCircle2 size={15} /> Validated scope</ToolbarButton>
+          <ToolbarButton><CheckCircle2 size={15} /> Supported setup</ToolbarButton>
           <ToolbarButton><CircleAlert size={15} /> Needs setup</ToolbarButton>
         </CommandGroup>
       </div>
@@ -405,7 +425,7 @@ export function SettingsWorkspace() {
     <div className="qpls2-hero-grid">
       <Card title="Offline first" description="QuickPLS does not require account login, activation, telemetry, cloud sync, or remote computation." tone="validated" />
       <Card title="Versioned artifacts" description="Each desktop build creates a fresh installer, portable executable, and checksum file." />
-      <Card title="Numerical boundary" description="Settings here do not change formulas, estimators, validation tolerances, or serialized result values." />
+      <Card title="Numerical boundary" description="Settings here do not change formulas, estimators, numerical tolerances, or serialized result values." />
     </div>
   </WorkspacePage>;
 }

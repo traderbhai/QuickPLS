@@ -106,7 +106,7 @@ def source_artifacts() -> dict:
             "crates/qpls-runner/Cargo.toml", "src-tauri/Cargo.toml",
         ],
         "tauri_configs": ["src-tauri/tauri.conf.json"],
-        "package_build_script": "tsc -b && vite build",
+        "package_build_script": "npm run typecheck:build && npm run build:bundle",
         "package_tauri_script": "tauri",
         "tauri_before_build_command": "npm run build",
         "tauri_frontend_dist": "../dist",
@@ -681,7 +681,17 @@ class DiagnosticBundlePackagedAcceptanceTests(unittest.TestCase):
             path.write_text(f"fixture-{index}-{relative}\n", encoding="utf-8")
 
         (root / "Cargo.toml").write_text("[workspace]\nmembers = [\"crates/demo\", \"src-tauri\"]\n", encoding="utf-8")
-        (root / "package.json").write_text(json.dumps({"scripts": {"build": "tsc -b && vite build", "tauri": "tauri"}}), encoding="utf-8")
+        (root / "package.json").write_text(
+            json.dumps(
+                {
+                    "scripts": {
+                        "build": "npm run typecheck:build && npm run build:bundle",
+                        "tauri": "tauri",
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
         (root / "crates/demo/Cargo.toml").write_text("[package]\nname='demo'\nversion='1.0.0'\n", encoding="utf-8")
         (root / "src-tauri/Cargo.toml").write_text(
             "[package]\nname='quickpls-desktop'\nversion='1.0.0'\n[dependencies]\ndemo={path='../crates/demo'}\n",

@@ -7,25 +7,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATION = ROOT / "validation"
-EXPECTED_KIND_ORDER = [
-    "pls_algorithm",
-    "plsc",
-    "wpls",
-    "gsca",
-    "cca",
-    "cta_pls",
-    "ipma",
-    "cbsem",
-    "pls_bootstrap",
-    "pls_permutation",
-    "mga",
-    "predict",
-    "nca",
-    "pca",
-    "regression",
-]
-
-
 def derive_catalogue(
     catalog_source: str,
     recipe_source: str,
@@ -42,8 +23,8 @@ def derive_catalogue(
         catalog_match.group(1),
         re.MULTILINE,
     )
-    if kinds != EXPECTED_KIND_ORDER:
-        raise ValueError(f"catalog kind order differs: {kinds!r}")
+    if not kinds or len(kinds) != len(set(kinds)):
+        raise ValueError(f"catalog kind order is empty or duplicated: {kinds!r}")
 
     labels_by_kind = dict(
         re.findall(
@@ -84,15 +65,20 @@ class NativeCatalogueContractTests(unittest.TestCase):
             ROOT / "src/native/nativeCalculationMode.ts"
         ).read_text(encoding="utf-8")
 
-    def test_canonical_catalogue_is_exactly_fifteen_methods_with_cta(self) -> None:
+    def test_execution_adapter_order_is_derived_and_includes_cta_and_power(self) -> None:
         methods = derive_catalogue(
             self.catalog_source,
             self.recipe_source,
             self.calculation_mode_source,
         )
-        self.assertEqual([kind for kind, _ in methods], EXPECTED_KIND_ORDER)
+        self.assertEqual(
+            [kind for kind, _ in methods],
+            list(dict.fromkeys(kind for kind, _ in methods)),
+        )
         self.assertEqual(dict(methods)["cta_pls"], "Confirmatory Tetrad Analysis")
-        self.assertEqual(len(methods), 15)
+        self.assertEqual(
+            dict(methods)["pls_sample_size_power"], "PLS-SEM Sample Size and Power"
+        )
 
     def test_catalogue_identity_mutations_fail_closed(self) -> None:
         mutations = {
@@ -103,10 +89,10 @@ class NativeCatalogueContractTests(unittest.TestCase):
                 self.recipe_source,
                 self.calculation_mode_source,
             ),
-            "cta_reordered": (
-                self.catalog_source.replace('    kind: "cca",', '    kind: "swap",', 1)
-                .replace('    kind: "cta_pls",', '    kind: "cca",', 1)
-                .replace('    kind: "swap",', '    kind: "cta_pls",', 1),
+            "cta_duplicated": (
+                self.catalog_source.replace(
+                    '    kind: "cta_pls",', '    kind: "cca",', 1
+                ),
                 self.recipe_source,
                 self.calculation_mode_source,
             ),
@@ -143,10 +129,14 @@ class NativeCatalogueContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         for source in (packaged, visual):
-            self.assertIn("EXPECTED_NATIVE_CALCULATION_KIND_ORDER", source)
             self.assertIn("async function canonicalNativeAnalysisCatalog()", source)
-            self.assertIn("exact 15-kind order", source)
+            self.assertIn("execution-adapter order must be non-empty and unique", source)
+            self.assertIn("standardSupplementalKinds", source)
+            self.assertNotIn("EXPECTED_NATIVE_CALCULATION_KIND_ORDER", source)
             self.assertIn('"cta_pls"', source)
+            self.assertIn('"plsc_bootstrap"', source)
+            self.assertIn('"pls_posthoc_technical_minimum_sample_size"', source)
+            self.assertIn('"pls_sample_size_power"', source)
         self.assertNotIn("const expectedOptionLabels = [", packaged)
         self.assertNotIn("const nativeCalculationMethods = [", visual)
         self.assertNotIn('check.countStatus !== "14 methods"', visual)
@@ -163,10 +153,10 @@ class NativeCatalogueContractTests(unittest.TestCase):
         ):
             self.assertIn(token, visual)
         for token in (
-            "const ctaPlsOption",
-            "descriptiveTetradScope",
-            "four-or-more-indicator PLS blocks",
-            "without inferential classification",
+            "const scopeText",
+            "scopeText !== ctaPlsScopeNote",
+            'eligibleBlockText !== "Predictor: 4 indicators, 3 tetrads"',
+            "does not classify blocks or calculate bootstrap, permutation, asymptotic, or vanishing-tetrad decisions",
         ):
             self.assertIn(token, packaged)
 

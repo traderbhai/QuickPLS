@@ -109,7 +109,7 @@ def run_recipe(name, data_path, model_type, metadata):
     output = WORKDIR / f"{name}_quickpls.json"
     suffix = sum(ord(ch) for ch in name) % 1000
     recipe.write_text(json.dumps(recipe_payload(fingerprint, suffix, model_type, metadata), indent=2), encoding="utf-8")
-    qpls(["run", str(recipe.relative_to(ROOT)), "--data", str(data_path.relative_to(ROOT)), "--output", str(output.relative_to(ROOT)), "--allow-experimental"], check=True, stdout=subprocess.DEVNULL)
+    qpls(["run", str(recipe.relative_to(ROOT)), "--data", str(data_path.relative_to(ROOT)), "--output", str(output.relative_to(ROOT))], check=True, stdout=subprocess.DEVNULL)
     RUN_OUTPUTS[name] = output
     return json.loads(output.read_text(encoding="utf-8"))
 

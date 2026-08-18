@@ -1,0 +1,126 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "final_release_audit": {
+      "actual_packaged_viewport_matrix": true,
+      "bounded_claim": "Indicator-level seeded repeated 10-fold out-of-sample prediction for supported reflective PLS targets with indicator-average and linear-model benchmarks plus bounded single-model CVPAT loss comparison.",
+      "bounded_packaged_workflow": true,
+      "exact_required_check_receipt": true,
+      "excluded_scope": [
+        "Saved competing-model comparison, formative targets, time-series validation, grouped leakage controls, and broader model shapes are excluded.",
+        "The fold assignment is independently specified and is not claimed to reproduce another product's random folds.",
+        "Predictive performance does not establish causal correctness, construct validity, or external validity beyond the sampled design."
+      ],
+      "invalid_setup_no_state_mutation": true,
+      "packaged_artifact": {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/plspredict_cvpat_v2/packaged_acceptance.identity.json"
+      },
+      "packaged_identity_passes": true,
+      "passed": true,
+      "prior_factory_native": true,
+      "release_evidence_contract_passes": true,
+      "required_cancellation_retry": true,
+      "same_run_archive": true,
+      "source_receipt_and_cli_current": true,
+      "verified_prior_artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/plspredict_cvpat_v2/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/plspredict_cvpat_v2/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/plspredict_cvpat_v2/native_stage.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ]
+    }
+  },
+  "feature_id": "qpls3.prediction.plspredict_cvpat",
+  "generated_at_utc": "2026-08-18T14:16:06.377676Z",
+  "method_version": "plspredict_indicator_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/plspredict_cvpat_v2.manifest.json",
+      "sha256": "05966449a2a01b650e1c3cb15d3abbff266a2dee94b8fc4d7d70dc5aa981db6c",
+      "size": 16826
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
+    },
+    {
+      "path": "validation/phase2_release_packaged_common.py",
+      "sha256": "ac2e758e49d380ce66d8b5987b0d76e1752fb4bf6ad5e6e65f16b1e4e5b15775",
+      "size": 70975
+    },
+    {
+      "path": "validation/plspredict_cvpat_v2_packaged_acceptance.py",
+      "sha256": "f483cfbd9b4f7486199ee941f9cf16c26447505517250799ad48518d23263625",
+      "size": 262
+    },
+    {
+      "path": "validation/plspredict_cvpat_v2_release_audit.py",
+      "sha256": "25defe40e76258304b786b9025011773e59cea856c165901e490f6d11d17665b",
+      "size": 280
+    },
+    {
+      "path": "validation/results/method_factory/plspredict_cvpat_v2/packaged_acceptance.identity.json",
+      "sha256": "8d26e3fc0638a2cfc2f3a23b20b17b83e551cc713c08974cb5e5792a237d6f66",
+      "size": 37342
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase2_release_packaged_common.py",
+      "sha256": "e50a98a98d0f3e5f29373801eaa5ec0b0352d8cdeb7d8cc6c71a5b67b87af92d",
+      "size": 38027
+    }
+  ]
+}

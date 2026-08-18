@@ -305,7 +305,7 @@ def main():
         and native_result.get("initialSelectedTable") == "ols_coefficients"
         and native_result.get("coefficients", {}).get("rows") == 4
         and native_result.get("fit", {}).get("rows") == 1
-        and native_result.get("scope", {}).get("rows") == 11
+        and native_result.get("scope", {}).get("rows") == 12
         and native_result.get("noPlaceholder") is True
         and native_result.get("noSemResultGroups") is True
         and native_export.get("attempted") is True

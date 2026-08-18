@@ -1,0 +1,56 @@
+{
+  "expected": "Signed A-minus-B differences reverse, two-tailed permutation p values remain equal, and MICOM decisions remain mapped when Group A and Group B are exchanged.",
+  "failed_boundary": "swap_group_labels",
+  "feature_id": "qpls3.groups.micom_permutation_mga",
+  "generated_at_utc": "2026-08-13T22:42:23.043580Z",
+  "method_version": "pls_mga_permutation_v2",
+  "observed": {
+    "base_attempted_permutations": 5013,
+    "base_failed_permutations": 13,
+    "max_measurement_two_tailed_p_delta": 0.044591081783643294,
+    "max_micom_two_tailed_p_delta": 0.306738652269546,
+    "max_path_two_tailed_p_delta": 0.002399520095980767,
+    "max_signed_difference_residual": 0.0,
+    "micom_decisions_mapped": true,
+    "swapped_attempted_permutations": 5017,
+    "swapped_failed_permutations": 17
+  },
+  "passed": false,
+  "promotion_ready": false,
+  "qualification_state": "absent",
+  "release_claim_authorized": false,
+  "required_fix": "Make the deterministic permutation plan and failed-fit accounting invariant to the selected A/B ordering, then rerun the independent 5,000-permutation gate.",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/methods/micom_permutation_mga_v2.manifest.json",
+      "sha256": "459ab74e3c5e200f11739373b7f6b9e9271012e31d4b3d4a0d44177cba75f2b0",
+      "size": 10823
+    },
+    {
+      "path": "validation/phase4_high_value_factory.py",
+      "sha256": "3338f8c2bbe067118eaab883b8f7d520b236e65058c6a48f2475ed0fa46b2dae",
+      "size": 40550
+    },
+    {
+      "path": "validation/results/method_factory/micom_permutation_mga_v2/work/reference.quickpls.json",
+      "sha256": "f2f2348a0b66aef8e4bcfafdf8ec1f9d6200fbac6a369b93df40aa434af20bc7",
+      "size": 81017
+    },
+    {
+      "path": "validation/results/method_factory/micom_permutation_mga_v2/work/swapped.quickpls.json",
+      "sha256": "d1de381f2ba3fd826db683c46e257c06ebf77a7fda991e8ed54d725ce8090900",
+      "size": 81009
+    },
+    {
+      "path": "validation/results/method_factory/micom_permutation_mga_v2/work/reference.recipe.json",
+      "sha256": "e15d4f4bbe7698f810a663e74c0292237880e550070a9804af09e7fe71292498",
+      "size": 2324
+    },
+    {
+      "path": "validation/results/method_factory/micom_permutation_mga_v2/work/swapped.quickpls.recipe.json",
+      "sha256": "afed5778ddfaa97d17b7c0b5c57ab8674a92875aa8d42d2661d893542d72d086",
+      "size": 2324
+    }
+  ]
+}

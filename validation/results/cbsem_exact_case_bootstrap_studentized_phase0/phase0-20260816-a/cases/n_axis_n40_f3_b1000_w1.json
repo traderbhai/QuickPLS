@@ -1,0 +1,137 @@
+{
+  "aggregates": {
+    "median_elapsed_seconds": 18.257164599839598,
+    "median_working_set_bytes": 13500416,
+    "p95_elapsed_seconds": 18.663226640131324,
+    "p95_result_bytes": 1851196.0,
+    "p95_working_set_bytes": 16397107.2
+  },
+  "cap_decision": "not_permitted_from_phase0",
+  "case": {
+    "cancel_after": null,
+    "case_id": "n_axis_n40_f3_b1000_w1",
+    "depends_on": [
+      "compact_b500_w1"
+    ],
+    "factors": 3,
+    "mode": "full",
+    "order": 2,
+    "replicates": 1000,
+    "roles": [
+      "N_axis_low",
+      "V_P_axis_high_at_low_N"
+    ],
+    "rows": 40,
+    "survivor_policy": "probe_then_one_warmup_five_measured_if_no_stop",
+    "workers": 1
+  },
+  "dimensions": {
+    "d_note": "Equality-constrained free parameter rows may differ from optimizer dimensions, so D is not inferred from P.",
+    "d_optimizer_dimensions": null,
+    "d_status": "unavailable_not_exposed_by_public_s1_s2_api",
+    "n_complete_cases": 40,
+    "p_free_parameter_rows": 18,
+    "v_observed_variables": 9
+  },
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase0_case_v1",
+  "manifest_sha256": "f64e0afe552a907430cbd32e7d4b1586bae8a9316e1586ed005adc536d70e49e",
+  "measured_runs": [
+    {
+      "elapsed_seconds": 18.205997200217098,
+      "exit_code": 0,
+      "index": 0,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 13500416,
+      "phase": "measured",
+      "progress_values": [],
+      "result_bytes": 1851196,
+      "scientific_result_sha256": "a9f136612e61a2bcb22020acf505f5fcacc1641069d8dfcb3018adc997f2d83a"
+    },
+    {
+      "elapsed_seconds": 18.665144400205463,
+      "exit_code": 0,
+      "index": 1,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 15368192,
+      "phase": "measured",
+      "progress_values": [],
+      "result_bytes": 1851196,
+      "scientific_result_sha256": "a9f136612e61a2bcb22020acf505f5fcacc1641069d8dfcb3018adc997f2d83a"
+    },
+    {
+      "elapsed_seconds": 18.257164599839598,
+      "exit_code": 0,
+      "index": 2,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 12918784,
+      "phase": "measured",
+      "progress_values": [],
+      "result_bytes": 1851196,
+      "scientific_result_sha256": "a9f136612e61a2bcb22020acf505f5fcacc1641069d8dfcb3018adc997f2d83a"
+    },
+    {
+      "elapsed_seconds": 18.16453729989007,
+      "exit_code": 0,
+      "index": 3,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 12918784,
+      "phase": "measured",
+      "progress_values": [],
+      "result_bytes": 1851196,
+      "scientific_result_sha256": "a9f136612e61a2bcb22020acf505f5fcacc1641069d8dfcb3018adc997f2d83a"
+    },
+    {
+      "elapsed_seconds": 18.65555559983477,
+      "exit_code": 0,
+      "index": 4,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 16654336,
+      "phase": "measured",
+      "progress_values": [],
+      "result_bytes": 1851196,
+      "scientific_result_sha256": "a9f136612e61a2bcb22020acf505f5fcacc1641069d8dfcb3018adc997f2d83a"
+    }
+  ],
+  "probe": {
+    "elapsed_seconds": 19.12660050019622,
+    "exit_code": 0,
+    "index": 0,
+    "orphan_processes": 0,
+    "peak_working_set_bytes": 12853248,
+    "phase": "measured",
+    "progress_values": [],
+    "result_bytes": 1851196,
+    "scientific_result_sha256": "a9f136612e61a2bcb22020acf505f5fcacc1641069d8dfcb3018adc997f2d83a"
+  },
+  "representative_metrics": {
+    "analytic_se_unavailable_rate_among_point_successes": 0.018789144050104383,
+    "analytic_se_unavailable_refits": 18,
+    "base_json_bytes": 664090,
+    "canonical_v11_json_bytes": null,
+    "combined_s2_json_bytes": 1153381,
+    "failed_point_refits": 42,
+    "studentized_sidecar_json_bytes": 489267,
+    "studentized_usable_rate_among_point_successes": 0.9812108559498957,
+    "studentized_usable_refits": 940,
+    "successful_point_refits": 958,
+    "text_export_v11_bytes": null,
+    "unavailable_size_reason": "v11 canonical and export builders are not yet an execution authority; this run does not project guessed bytes"
+  },
+  "schema_version": 1,
+  "scientific_result_sha256": "a9f136612e61a2bcb22020acf505f5fcacc1641069d8dfcb3018adc997f2d83a",
+  "status": "survivor_measurement_recorded",
+  "stop_reasons": [],
+  "warmup_runs": [
+    {
+      "elapsed_seconds": 18.47431269986555,
+      "exit_code": 0,
+      "index": 0,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 15986688,
+      "phase": "warmup",
+      "progress_values": [],
+      "result_bytes": 1851196,
+      "scientific_result_sha256": "a9f136612e61a2bcb22020acf505f5fcacc1641069d8dfcb3018adc997f2d83a"
+    }
+  ]
+}

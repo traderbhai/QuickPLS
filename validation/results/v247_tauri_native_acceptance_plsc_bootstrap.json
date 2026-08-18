@@ -1,0 +1,977 @@
+{
+  "schema_version": "quickpls.packaged_acceptance.v1",
+  "feature_id": "qpls3.inference.consistent_bootstrap",
+  "method_version": "plsc_bootstrap_v1",
+  "catalogue_snapshot_date": "2026-08-12",
+  "acceptance_scope": "plsc_bootstrap",
+  "passed": true,
+  "generatedAt": "2026-08-18T14:00:32.535Z",
+  "endpoint": "http://127.0.0.1:9222",
+  "runtime": "tauri-webview2-cdp",
+  "focusedRun": {
+    "scope": "plsc_bootstrap",
+    "priorGeneratedAt": null,
+    "completedAt": "2026-08-18T14:00:58.726Z"
+  },
+  "checks": {
+    "plscBootstrapFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\wpls_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-1787061632530-46508.qpls",
+      "projectName": "Native PLSc Bootstrap Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-1787061632530-46508.qpls",
+      "stderr": "",
+      "importAttempts": 1
+    },
+    "runtimePreflight": {
+      "passed": true,
+      "expectedOrigin": "http://tauri.localhost",
+      "enumeratedPages": [
+        {
+          "index": 0,
+          "url": "http://tauri.localhost/",
+          "origin": "http://tauri.localhost",
+          "title": "QuickPLS",
+          "shellVisible": true,
+          "tauriRuntime": true
+        }
+      ],
+      "qualifyingPageCount": 1,
+      "preReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "reloadCount": 1,
+      "postReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "sameOrigin": true,
+      "experimentalLabsPreferenceRestored": true
+    },
+    "runtime": {
+      "title": "QuickPLS",
+      "tauriRuntime": true,
+      "viewport": {
+        "width": 1536,
+        "height": 794,
+        "dpr": 1.25
+      },
+      "surface": "launcher"
+    },
+    "plscBootstrapFixture": {
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-1787061632530-46508.qpls",
+      "status": "ReadyNative PLSc Bootstrap Acceptancewpls_reference.csv128 cases0 constructsDataOffline",
+      "columns": [
+        "#",
+        "x1",
+        "x2",
+        "y1",
+        "y2",
+        "case_wt"
+      ]
+    },
+    "plscBootstrapInitialModel": {
+      "projectName": "Native PLSc Bootstrap Acceptance",
+      "importedEditableModels": 0,
+      "name": "PLSc Bootstrap Structural Model",
+      "constructs": 0,
+      "structuralPaths": 0
+    },
+    "plscBootstrapInvalidSetup": {
+      "attempted": true,
+      "selectedMethod": "PLSc Consistent Bootstrapping",
+      "startEnabled": false,
+      "blockers": [
+        "The model does not contain any constructs.",
+        "The model does not contain any assigned indicators.",
+        "Structural validity cannot be checked without constructs."
+      ],
+      "emptyModelBlocker": true,
+      "archiveBefore": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveAfter": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveStateUnchanged": true,
+      "resultCreated": false
+    },
+    "plscBootstrapCancellation": {
+      "passed": true,
+      "activeState": {
+        "captured": true,
+        "outcome": "cancel_requested",
+        "ariaBusy": "true",
+        "status": "validating",
+        "phase": "Checking",
+        "message": "Checking the dataset, model, method requirements, and calculation settings.",
+        "progressValue": "20",
+        "progressMax": "100",
+        "logEntries": 2,
+        "cancelButtonCount": 1,
+        "screenshot": {
+          "captured": true,
+          "detail": null
+        }
+      },
+      "cancelledMessage": "Cancelled0%0%Calculation cancelled.Calculation log (5)7:30:36 pmCalculation cancelled.7:30:36 pmNative calculation job started.7:30:36 pmCancellation requested.7:30:36 pmFrontend readiness checks passed.7:30:36 pmPLSc Consistent Bootstrapping requested.",
+      "terminalMessage": "Cancelled0%0%Calculation cancelled.Calculation log (5)7:30:36 pmCalculation cancelled.7:30:36 pmNative calculation job started.7:30:36 pmCancellation requested.7:30:36 pmFrontend readiness checks passed.7:30:36 pmPLSc Consistent Bootstrapping requested.",
+      "cancelledMethod": "PLSc Consistent Bootstrapping",
+      "cancelledSettings": {
+        "samples": "10000",
+        "seed": "20260818",
+        "workers": "1"
+      },
+      "noPartialResult": true,
+      "noPartialVisibleResult": true,
+      "noPartialCommittedResult": true,
+      "archiveStateUnchanged": true,
+      "archiveBefore": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveAfter": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "retryEnabled": true,
+      "retrySettings": {
+        "selectedMethod": "PLSc Consistent Bootstrapping",
+        "samples": "10000",
+        "seed": "20260818",
+        "workers": "2"
+      },
+      "completedRetryRunId": "3803e75d-0a4c-4630-af62-1d97d114ac0c"
+    },
+    "plscBootstrapDialog": {
+      "selectedMethod": "PLSc Consistent Bootstrapping",
+      "selectedText": "PLSc Consistent BootstrappingFully re-estimate consistent PLS for each indexed case resample and report percentile plus conditional BCa inference.",
+      "samples": "10000",
+      "seed": "20260818",
+      "workers": "2",
+      "inference": "InferenceTwo-sided normal-reference diagnostics, percentile intervals, and BCa when every required full-PLSc delete-one refit is usable",
+      "blockers": [],
+      "startEnabled": true,
+      "standardSurface": true
+    },
+    "plscBootstrapProgress": {
+      "captured": true,
+      "ariaBusy": "true",
+      "status": "queued",
+      "phase": "Queued",
+      "message": "Native engine accepted the calculation job.",
+      "progressValue": "0",
+      "progressMax": "100",
+      "logEntries": 3,
+      "postCapture": {
+        "ariaBusy": "true",
+        "status": "running",
+        "active": true,
+        "terminalTransitionObserved": false,
+        "terminalTransitionAllowed": true
+      },
+      "completedRunProof": {
+        "matched": true,
+        "runId": "3803e75d-0a4c-4630-af62-1d97d114ac0c"
+      }
+    },
+    "plscBootstrapResult": {
+      "runId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+      "runLabel": "PLSc Consistent Bootstrapping run",
+      "methodVersion": "plsc_bootstrap_v1",
+      "initialSelectedTable": "model_estimates",
+      "treeItems": [
+        "Graphical results",
+        "Model estimates",
+        "Final results",
+        "Path coefficients",
+        "Outer loadings",
+        "Outer weights",
+        "R-square",
+        "Total effects",
+        "Quality criteria",
+        "PLSc correction reliability",
+        "PLSc construct correlations",
+        "Construct reliability and validity",
+        "Cross loadings",
+        "Fornell-Larcker criterion",
+        "HTMT+",
+        "Original HTMT",
+        "Structural model",
+        "Inner VIF values",
+        "f-square effect sizes",
+        "Model fit",
+        "Model fit details",
+        "Construct cross-validated redundancy",
+        "Inference",
+        "PLSc bootstrap replicate accounting",
+        "PLSc consistent bootstrapping",
+        "Bias-corrected and accelerated intervals",
+        "Unavailable PLSc BCa intervals"
+      ],
+      "accountingRows": 12,
+      "accountingValues": {
+        "Requested case resamples": "10000",
+        "Attempted preplanned full-PLSc refits": "10000",
+        "Usable full-PLSc refits": "10000",
+        "Failed full-PLSc refits": "0",
+        "Minimum usable refits": "9000",
+        "Replayable successful-refit witnesses": "10000",
+        "Delete-one PLSc fits": "128",
+        "Replayable successful delete-one witnesses": "128",
+        "Failed delete-one fits": "0",
+        "BCa parameters available": "14",
+        "BCa parameters unavailable": "2",
+        "Retry policy": "No retry or replacement draw"
+      },
+      "requested": 10000,
+      "attempted": 10000,
+      "usable": 10000,
+      "failed": 0,
+      "successfulWitnesses": 10000,
+      "jackknife": 128,
+      "successfulJackknife": 128,
+      "failedJackknife": 0,
+      "percentileRows": 16,
+      "bcaRows": 14,
+      "failureDisclosure": {
+        "rows": 0,
+        "typed": true
+      },
+      "jackknifeFailureDisclosure": {
+        "rows": 0,
+        "typed": true
+      }
+    },
+    "plscBootstrapExport": {
+      "selectedRunId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+      "expectedRunId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx",
+        "file": {
+          "size": 24277,
+          "isFile": true
+        },
+        "workbookSheets": [
+          "Path coefficients",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Total effects",
+          "PLSc correction reliability",
+          "PLSc construct correlations",
+          "Construct reliability and valid",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "HTMT+",
+          "Original HTMT",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Model fit details",
+          "Construct cross-validated redun",
+          "PLSc bootstrap replicate accoun",
+          "PLSc consistent bootstrapping",
+          "Bias-corrected and accelerated",
+          "Unavailable PLSc BCa intervals",
+          "Run provenance"
+        ],
+        "expectedSheets": [
+          "PLSc bootstrap replicate accoun",
+          "PLSc consistent bootstrapping",
+          "Bias-corrected and accelerated",
+          "Run provenance"
+        ],
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 1377510,
+              "pid": 15120,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 1377510,
+              "handle": 2622524,
+              "pid": 15120,
+              "rootOwner": 1377510,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 1377510,
+              "pid": 15120,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx",
+              "requiredSharedStrings": [
+                "plsc_bootstrap_v1",
+                "Replayable successful-refit witnesses",
+                "Replayable successful delete-one witnesses",
+                "Run provenance"
+              ],
+              "requiredSheets": [
+                "PLSc bootstrap replicate accoun",
+                "PLSc consistent bootstrapping",
+                "Bias-corrected and accelerated",
+                "Run provenance"
+              ],
+              "sha256": "ab5816704daa7908833822073bebdf40850b9ff60383c7a88f197d35c59e389d",
+              "sheetNames": [
+                "Path coefficients",
+                "Outer loadings",
+                "Outer weights",
+                "R-square",
+                "Total effects",
+                "PLSc correction reliability",
+                "PLSc construct correlations",
+                "Construct reliability and valid",
+                "Cross loadings",
+                "Fornell-Larcker criterion",
+                "HTMT+",
+                "Original HTMT",
+                "Structural model",
+                "Inner VIF values",
+                "f-square effect sizes",
+                "Model fit",
+                "Model fit details",
+                "Construct cross-validated redun",
+                "PLSc bootstrap replicate accoun",
+                "PLSc consistent bootstrapping",
+                "Bias-corrected and accelerated",
+                "Unavailable PLSc BCa intervals",
+                "Run provenance"
+              ],
+              "size": 24277
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 1377510,
+                    "pid": 15120,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 1377510,
+                    "handle": 2622524,
+                    "pid": 15120,
+                    "rootOwner": 1377510,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 1377510,
+                    "pid": 15120,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-plsc-bootstrap-20260818-193027926.xlsx",
+                    "requiredSharedStrings": [
+                      "plsc_bootstrap_v1",
+                      "Replayable successful-refit witnesses",
+                      "Replayable successful delete-one witnesses",
+                      "Run provenance"
+                    ],
+                    "requiredSheets": [
+                      "PLSc bootstrap replicate accoun",
+                      "PLSc consistent bootstrapping",
+                      "Bias-corrected and accelerated",
+                      "Run provenance"
+                    ],
+                    "sha256": "ab5816704daa7908833822073bebdf40850b9ff60383c7a88f197d35c59e389d",
+                    "sheetNames": [
+                      "Path coefficients",
+                      "Outer loadings",
+                      "Outer weights",
+                      "R-square",
+                      "Total effects",
+                      "PLSc correction reliability",
+                      "PLSc construct correlations",
+                      "Construct reliability and valid",
+                      "Cross loadings",
+                      "Fornell-Larcker criterion",
+                      "HTMT+",
+                      "Original HTMT",
+                      "Structural model",
+                      "Inner VIF values",
+                      "f-square effect sizes",
+                      "Model fit",
+                      "Model fit details",
+                      "Construct cross-validated redun",
+                      "PLSc bootstrap replicate accoun",
+                      "PLSc consistent bootstrapping",
+                      "Bias-corrected and accelerated",
+                      "Unavailable PLSc BCa intervals",
+                      "Run provenance"
+                    ],
+                    "size": 24277
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        }
+      }
+    },
+    "plscBootstrapSaveReopen": {
+      "expectedRunId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+      "selectedRunId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+      "sameRunRestored": true,
+      "reopenedAccountingRows": 12,
+      "witnessRowsRestored": true,
+      "archiveBeforeReopen": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "runId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+        "resultStatus": "completed",
+        "runStatus": "completed",
+        "payloadKind": "pls_pm_v2",
+        "provenanceMethodVersion": "pls_pm_v1+plsc_v2+pls_mediation_v1+pls_assessment_v8+plsc_bootstrap_v1+indexed_resampling_v4",
+        "recipeMethod": "plsc",
+        "recipeMethodConfig": {
+          "kind": "plsc"
+        },
+        "requested": 10000,
+        "usable": 10000,
+        "failed": 0,
+        "ledgerRows": 10000,
+        "successfulWitnesses": 10000,
+        "successfulJackknifeWitnesses": 128,
+        "failedJackknife": 0,
+        "ledgerPartitionExact": true,
+        "primaryWitnessesValid": true,
+        "jackknifeWitnessesValid": true,
+        "failureReasonsValid": true,
+        "checksum": "d2abd6ee2abd6d4a228a3e115a9b7f7224d6d2ef79100d823b41994ed4e8975b",
+        "immutableRunChecksum": "1bf9566f9b153fc4699a66b175afebcb69e715fb2d4fb25f807fc8d36fdd8941"
+      },
+      "archiveAfterReopen": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "runId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+        "resultStatus": "completed",
+        "runStatus": "completed",
+        "payloadKind": "pls_pm_v2",
+        "provenanceMethodVersion": "pls_pm_v1+plsc_v2+pls_mediation_v1+pls_assessment_v8+plsc_bootstrap_v1+indexed_resampling_v4",
+        "recipeMethod": "plsc",
+        "recipeMethodConfig": {
+          "kind": "plsc"
+        },
+        "requested": 10000,
+        "usable": 10000,
+        "failed": 0,
+        "ledgerRows": 10000,
+        "successfulWitnesses": 10000,
+        "successfulJackknifeWitnesses": 128,
+        "failedJackknife": 0,
+        "ledgerPartitionExact": true,
+        "primaryWitnessesValid": true,
+        "jackknifeWitnessesValid": true,
+        "failureReasonsValid": true,
+        "checksum": "d2abd6ee2abd6d4a228a3e115a9b7f7224d6d2ef79100d823b41994ed4e8975b",
+        "immutableRunChecksum": "1bf9566f9b153fc4699a66b175afebcb69e715fb2d4fb25f807fc8d36fdd8941"
+      },
+      "archive": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "runId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+        "resultStatus": "completed",
+        "runStatus": "completed",
+        "payloadKind": "pls_pm_v2",
+        "provenanceMethodVersion": "pls_pm_v1+plsc_v2+pls_mediation_v1+pls_assessment_v8+plsc_bootstrap_v1+indexed_resampling_v4",
+        "recipeMethod": "plsc",
+        "recipeMethodConfig": {
+          "kind": "plsc"
+        },
+        "requested": 10000,
+        "usable": 10000,
+        "failed": 0,
+        "ledgerRows": 10000,
+        "successfulWitnesses": 10000,
+        "successfulJackknifeWitnesses": 128,
+        "failedJackknife": 0,
+        "ledgerPartitionExact": true,
+        "primaryWitnessesValid": true,
+        "jackknifeWitnessesValid": true,
+        "failureReasonsValid": true,
+        "checksum": "d2abd6ee2abd6d4a228a3e115a9b7f7224d6d2ef79100d823b41994ed4e8975b",
+        "immutableRunChecksum": "1bf9566f9b153fc4699a66b175afebcb69e715fb2d4fb25f807fc8d36fdd8941"
+      }
+    },
+    "plscBootstrapPackagedViewports": {
+      "passed": true,
+      "actualTauriWindow": true,
+      "resizeMechanism": "Browser.setWindowBounds",
+      "targetIdentity": {
+        "targetId": "8C23689C54A00C0E89FF3EBFC5C58842",
+        "windowId": 1408401705,
+        "type": "page",
+        "title": "QuickPLS - Native PLSc Bootstrap Acceptance *",
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "lookupCommand": "Browser.getWindowForTarget"
+      },
+      "deviceMetricsOverride": {
+        "clearCommand": "Emulation.clearDeviceMetricsOverride",
+        "cleared": true,
+        "pageSetViewportSizeUsed": false,
+        "emulationOnly": false,
+        "playwrightViewportBefore": null
+      },
+      "method": {
+        "slug": "plsc_bootstrap_v1",
+        "version": "plsc_bootstrap_v1",
+        "evidenceCheck": "plscBootstrapResult",
+        "expectedRunId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+        "expectedRunLabel": "PLSc Consistent Bootstrapping",
+        "expectedTableId": "plsc_bootstrap_accounting"
+      },
+      "outerBoundsBefore": {
+        "left": 0,
+        "top": 23,
+        "width": 1536,
+        "height": 793,
+        "windowState": "normal"
+      },
+      "exactViewports": [
+        {
+          "id": "1024x700",
+          "requestedClientViewport": {
+            "width": 1024,
+            "height": 700
+          },
+          "domInnerDimensions": {
+            "width": 1024,
+            "height": 700
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1536,
+            "height": 793,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1024,
+            "height": 701,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 699,
+                "left": 0,
+                "top": 23
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 46,
+                "width": 1024,
+                "height": 700,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 699
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 701,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1024,
+                "height": 702,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 702
+              }
+            },
+            {
+              "attempt": 3,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 700,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1024,
+                "height": 701,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 700
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+          "selectedRunLabel": "PLSc Consistent Bootstrapping run",
+          "selectedTableId": "plsc_bootstrap_accounting",
+          "resultRows": 12,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\179v-tauri-native-plsc-bootstrap-packaged-viewport-1024x700.png",
+          "passed": true
+        },
+        {
+          "id": "1280x720",
+          "requestedClientViewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "domInnerDimensions": {
+            "width": 1280,
+            "height": 720
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1024,
+            "height": 701,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1280,
+            "height": 721,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1280,
+                "height": 721,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1280,
+                "height": 722,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1280,
+                "innerHeight": 722
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1280,
+                "height": 720,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1280,
+                "height": 721,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1280,
+                "innerHeight": 720
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+          "selectedRunLabel": "PLSc Consistent Bootstrapping run",
+          "selectedTableId": "plsc_bootstrap_accounting",
+          "resultRows": 12,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\179v-tauri-native-plsc-bootstrap-packaged-viewport-1280x720.png",
+          "passed": true
+        },
+        {
+          "id": "1440x900",
+          "requestedClientViewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "domInnerDimensions": {
+            "width": 1440,
+            "height": 900
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1280,
+            "height": 721,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1440,
+            "height": 901,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1440,
+                "height": 901,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1440,
+                "height": 902,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1440,
+                "innerHeight": 902
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1440,
+                "height": 900,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1440,
+                "height": 901,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1440,
+                "innerHeight": 900
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "3803e75d-0a4c-4630-af62-1d97d114ac0c",
+          "selectedRunLabel": "PLSc Consistent Bootstrapping run",
+          "selectedTableId": "plsc_bootstrap_accounting",
+          "resultRows": 12,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\179v-tauri-native-plsc-bootstrap-packaged-viewport-1440x900.png",
+          "passed": true
+        }
+      ],
+      "restoredFinalWindowState": {
+        "requested": {
+          "left": 0,
+          "top": 23,
+          "width": 1536,
+          "height": 793,
+          "windowState": "normal"
+        },
+        "actual": {
+          "left": 0,
+          "top": 23,
+          "width": 1536,
+          "height": 793,
+          "windowState": "normal"
+        },
+        "tolerancePixels": 1,
+        "passed": true
+      }
+    },
+    "plscBootstrapFunctionalOffline": {
+      "passed": true,
+      "analyticalWorkflowRequiresInternet": false,
+      "strictZeroProcessEgressClaimed": false,
+      "observedRequestCount": 64,
+      "externalRequestCount": 0,
+      "origins": [
+        "http://ipc.localhost",
+        "http://tauri.localhost"
+      ],
+      "externalRequests": []
+    },
+    "recentProjectsRestored": true
+  },
+  "screenshots": [
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\172-tauri-native-plsc-bootstrap-invalid-setup-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\173-tauri-native-plsc-bootstrap-cancellation-running-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\174-tauri-native-plsc-bootstrap-running-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\179v-tauri-native-plsc-bootstrap-packaged-viewport-1024x700.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\179v-tauri-native-plsc-bootstrap-packaged-viewport-1280x720.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\179v-tauri-native-plsc-bootstrap-packaged-viewport-1440x900.png"
+  ],
+  "screenshotArtifacts": [
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/172-tauri-native-plsc-bootstrap-invalid-setup-1440x900.png",
+      "size": 219611,
+      "sha256": "bcd4d593d0a3fcc2571f81ed0f49134ded3089225644cf6b280f10158d03e857"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/173-tauri-native-plsc-bootstrap-cancellation-running-1440x900.png",
+      "size": 177304,
+      "sha256": "f1432cf1c1c9f7f348f963ed370ef9c7fafcfee63fc83dbeea6b0a32003e9a09"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/174-tauri-native-plsc-bootstrap-running-1440x900.png",
+      "size": 173538,
+      "sha256": "216c11ba4f1f819791c0ae76cceb4ccb6329e50201a5dd97ed70384942d8e1c8"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/179v-tauri-native-plsc-bootstrap-packaged-viewport-1024x700.png",
+      "size": 92280,
+      "sha256": "1fdb083722c49361b8c16cdadd0e291734e257a5e9a2672c3f30a900f47a3a09"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/179v-tauri-native-plsc-bootstrap-packaged-viewport-1280x720.png",
+      "size": 90001,
+      "sha256": "adf3ba15c2404a5f19d2d9c60c0880a532f59eb6cb61964825f14448ead2b92f"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/179v-tauri-native-plsc-bootstrap-packaged-viewport-1440x900.png",
+      "size": 102925,
+      "sha256": "e885e82cdd34e0ed0b20d16372b943d9e0f565f29a5246a16c41202230b89f76"
+    }
+  ],
+  "consoleErrors": [],
+  "failures": []
+}

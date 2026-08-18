@@ -1,0 +1,218 @@
+{
+  "admitted_evidence_counts": {
+    "archive_qualified": 0,
+    "engine_only": 0,
+    "native_qualified": 0,
+    "release_qualified": 0
+  },
+  "capability_id": "smartpls.htmt",
+  "cell_id": "qpls3.assessment.htmt",
+  "decision": "remain_absent_labs_unpromoted",
+  "execution_and_evidence_blockers": [
+    "archive_and_gui_cli_metamorphic_cases_not_executed_in_this_source_audit",
+    "csv_xlsx_html_semantic_readback_not_executed_by_this_source_audit",
+    "current_candidate_adversarial_execution_not_supplied",
+    "current_source_bound_candidate_execution_not_supplied",
+    "data.missing_value_policies_beyond_listwise_not_integrated",
+    "evidence.current_source_bound_candidate_build_missing",
+    "evidence.full_monte_carlo_qualification_not_run",
+    "evidence.independent_scientific_review_not_recorded",
+    "evidence.maximum_axis_compound_stress_and_soak_not_run",
+    "evidence.packaged_windows_accessibility_matrix_not_run",
+    "export.svg_pdf_png_semantic_readback_not_integrated",
+    "fresh_archive_save_close_reopen_execution_not_supplied",
+    "fresh_current_build_against_both_external_oracles_not_executed",
+    "full_monte_carlo_recovery_and_coverage_run_not_supplied",
+    "historical_and_future_archive_corpus_not_executed",
+    "independent_oracle_bootstrap_coverage_beyond_microcases_not_executed",
+    "installed_and_portable_offline_runs_not_executed",
+    "installed_package_matrix_not_executed",
+    "interrupted_save_and_cancellation_archive_checks_not_executed",
+    "keyboard_pointer_accessibility_and_scaling_matrix_not_executed",
+    "maximum_axis_and_compound_stress_not_executed",
+    "model.sem_model_v4_factor_composite_semantics_not_integrated",
+    "offline_cancellation_cleanup_and_reopen_runs_not_executed",
+    "portable_package_matrix_not_executed",
+    "product.configurable_one_and_two_sided_htmt_inference_missing",
+    "product.percentile_studentized_and_true_bca_htmt_inference_missing",
+    "product.plsc_consistent_bootstrap_htmt_inference_missing",
+    "real_packaged_windows_gui_execution_not_supplied",
+    "real_windows_accessibility_and_pointer_runs_not_executed",
+    "same_run_gui_cli_export_readback_not_executed",
+    "svg_pdf_png_export_and_semantic_readback_not_implemented"
+  ],
+  "feature_id": "qpls3.assessment.htmt",
+  "generated_at_utc": "2026-08-14T17:17:48.839202Z",
+  "invalid_source_audits": [],
+  "kind": "quickpls_htmt_qualification_gap_report",
+  "manifest_sha256": "58b1977b129a7be7b0b55b24e7fbd736850daa6899c820b21e798463dcada6aa",
+  "method_version": "ringle_et_al_htmt_plus_v1",
+  "missing_source_audits": [],
+  "missing_sources": [],
+  "passed": true,
+  "product_breadth_blockers": [
+    "product.configurable_one_and_two_sided_htmt_inference_missing",
+    "product.percentile_studentized_and_true_bca_htmt_inference_missing",
+    "product.plsc_consistent_bootstrap_htmt_inference_missing",
+    "model.sem_model_v4_factor_composite_semantics_not_integrated",
+    "data.missing_value_policies_beyond_listwise_not_integrated",
+    "export.svg_pdf_png_semantic_readback_not_integrated",
+    "evidence.current_source_bound_candidate_build_missing",
+    "evidence.full_monte_carlo_qualification_not_run",
+    "evidence.maximum_axis_compound_stress_and_soak_not_run",
+    "evidence.packaged_windows_accessibility_matrix_not_run",
+    "evidence.independent_scientific_review_not_recorded"
+  ],
+  "promotion_authority": false,
+  "qualification_id": "qpls3.assessment.htmt.qualification_v2",
+  "qualification_ready": false,
+  "qualification_spec_sha256": "42c84a28ec9ab2ea45a273a74f967ed60be98f6131294ba048ead8464f6e6151",
+  "registry_sha256": "432d889c686ace4c4db964074be3075a1a651bcbaf0e75e1e6ab3c3014c60e3d",
+  "required_v1_roles": [
+    "boundary_report",
+    "export_report",
+    "frontend_report",
+    "independent_reference",
+    "method_audit",
+    "method_spec",
+    "packaged_acceptance",
+    "persistence_report",
+    "simulation_report"
+  ],
+  "required_v2_receipt_roles": [
+    "adversarial_boundaries",
+    "archive_persistence",
+    "cross_format_export",
+    "frontend_contract",
+    "generative_recovery",
+    "kernel_execution",
+    "method_contract",
+    "oracle_independence",
+    "packaged_windows_e2e",
+    "performance_scale"
+  ],
+  "schema_version": 1,
+  "source_audits": {
+    "boundary_report": {
+      "blockers": [
+        "archive_and_gui_cli_metamorphic_cases_not_executed_in_this_source_audit",
+        "current_candidate_adversarial_execution_not_supplied"
+      ],
+      "identity_current": true,
+      "passed": true,
+      "path": "validation/results/method_factory/htmt_plus_v1/boundary_report.source_audit.json",
+      "qualification_evidence": false,
+      "sha256": "48c89c51bb5e5e23acdf5f75066336f9f1cdeb26ed8c8e9fdffca7e4b1239447",
+      "source_bytes_current": true
+    },
+    "export_report": {
+      "blockers": [
+        "csv_xlsx_html_semantic_readback_not_executed_by_this_source_audit",
+        "same_run_gui_cli_export_readback_not_executed",
+        "svg_pdf_png_export_and_semantic_readback_not_implemented"
+      ],
+      "identity_current": true,
+      "passed": true,
+      "path": "validation/results/method_factory/htmt_plus_v1/export_report.source_audit.json",
+      "qualification_evidence": false,
+      "sha256": "fb6db0b03afedd45c10cbc0b8b8b1e713e95be12f79837d1d4683c4a240f6ad5",
+      "source_bytes_current": true
+    },
+    "frontend_report": {
+      "blockers": [
+        "installed_and_portable_offline_runs_not_executed",
+        "keyboard_pointer_accessibility_and_scaling_matrix_not_executed",
+        "real_packaged_windows_gui_execution_not_supplied"
+      ],
+      "identity_current": true,
+      "passed": true,
+      "path": "validation/results/method_factory/htmt_plus_v1/frontend_report.source_audit.json",
+      "qualification_evidence": false,
+      "sha256": "6d547c915fac649832ef24d37f743928e3c21e1e21cd14bdd1ac3bef790d4c87",
+      "source_bytes_current": true
+    },
+    "independent_reference": {
+      "blockers": [
+        "fresh_current_build_against_both_external_oracles_not_executed",
+        "independent_oracle_bootstrap_coverage_beyond_microcases_not_executed"
+      ],
+      "identity_current": true,
+      "passed": true,
+      "path": "validation/results/method_factory/htmt_plus_v1/independent_reference.source_audit.json",
+      "qualification_evidence": false,
+      "sha256": "e9d763d056da3a67239dc7e8b1e2ce43d9dfccc84898911c8105cb66f1c0d950",
+      "source_bytes_current": true
+    },
+    "method_spec": {
+      "blockers": [
+        "data.missing_value_policies_beyond_listwise_not_integrated",
+        "evidence.current_source_bound_candidate_build_missing",
+        "evidence.full_monte_carlo_qualification_not_run",
+        "evidence.independent_scientific_review_not_recorded",
+        "evidence.maximum_axis_compound_stress_and_soak_not_run",
+        "evidence.packaged_windows_accessibility_matrix_not_run",
+        "export.svg_pdf_png_semantic_readback_not_integrated",
+        "model.sem_model_v4_factor_composite_semantics_not_integrated",
+        "product.configurable_one_and_two_sided_htmt_inference_missing",
+        "product.percentile_studentized_and_true_bca_htmt_inference_missing",
+        "product.plsc_consistent_bootstrap_htmt_inference_missing"
+      ],
+      "identity_current": true,
+      "passed": true,
+      "path": "validation/results/method_factory/htmt_plus_v1/method_spec.source_audit.json",
+      "qualification_evidence": false,
+      "sha256": "a143fcbf7919f9e1139b320d9c97298777336ce2653af8626f9892b8efd00762",
+      "source_bytes_current": true
+    },
+    "packaged_acceptance": {
+      "blockers": [
+        "installed_package_matrix_not_executed",
+        "offline_cancellation_cleanup_and_reopen_runs_not_executed",
+        "portable_package_matrix_not_executed",
+        "real_windows_accessibility_and_pointer_runs_not_executed"
+      ],
+      "identity_current": true,
+      "passed": true,
+      "path": "validation/results/method_factory/htmt_plus_v1/packaged_acceptance.source_audit.json",
+      "qualification_evidence": false,
+      "sha256": "24e3031ff46ee951df75065926a30f1e657668f000b52c9120b59ce716c448d1",
+      "source_bytes_current": true
+    },
+    "persistence_report": {
+      "blockers": [
+        "fresh_archive_save_close_reopen_execution_not_supplied",
+        "historical_and_future_archive_corpus_not_executed",
+        "interrupted_save_and_cancellation_archive_checks_not_executed"
+      ],
+      "identity_current": true,
+      "passed": true,
+      "path": "validation/results/method_factory/htmt_plus_v1/persistence_report.source_audit.json",
+      "qualification_evidence": false,
+      "sha256": "766fff7cd602a66a77d1dd568c6523b54fb0168e631bc5c266cde22c1edc1b6e",
+      "source_bytes_current": true
+    },
+    "simulation_report": {
+      "blockers": [
+        "current_source_bound_candidate_execution_not_supplied",
+        "full_monte_carlo_recovery_and_coverage_run_not_supplied",
+        "maximum_axis_and_compound_stress_not_executed"
+      ],
+      "identity_current": true,
+      "passed": true,
+      "path": "validation/results/method_factory/htmt_plus_v1/simulation_report.source_audit.json",
+      "qualification_evidence": false,
+      "sha256": "c7dda52aea9979678c8935b3c03a71f9d848c8fa68b5b267d46531d11c89384e",
+      "source_bytes_current": true
+    }
+  },
+  "source_complete": true,
+  "state": {
+    "coverage_state": "absent",
+    "evidence_state": "absent",
+    "surface": "labs",
+    "v1_declared_state": "absent",
+    "v1_derived_state": "absent",
+    "v2_migration_status": "compatibility_only",
+    "v2_receipt_count": 0
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem_exact_case_bootstrap_studentized_phase1b_manifest_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "status", "source_binding", "validation_binding", "phase0_runtime_binding", "dimension_contract", "execution_policy", "acceptance_contract", "qualification_boundary", "cases"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "cbsem_exact_case_bootstrap_studentized_phase1b_manifest_v1" },
+    "status": { "const": "predeclared_applied_resource_candidate_evidence_product_qualification_blocked" },
+    "source_binding": { "$ref": "#/$defs/source_binding" },
+    "validation_binding": { "$ref": "#/$defs/validation_binding" },
+    "phase0_runtime_binding": { "$ref": "#/$defs/phase0_binding" },
+    "dimension_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n_complete_cases", "v_observed_variables", "p_free_parameter_rows", "d_optimizer_dimensions"],
+      "properties": {
+        "n_complete_cases": { "const": 180 },
+        "v_observed_variables": { "const": 9 },
+        "p_free_parameter_rows": { "const": 18 },
+        "d_optimizer_dimensions": { "const": 18 }
+      }
+    },
+    "execution_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resource_probe_runs", "resource_warmup_runs", "resource_measured_runs", "stability_runs", "cancellation_runs", "append_only_result_paths", "explicit_execute_required", "no_cross_case_dependency_stops", "resource_survivor_policy"],
+      "properties": {
+        "resource_probe_runs": { "const": 1 },
+        "resource_warmup_runs": { "const": 1 },
+        "resource_measured_runs": { "const": 5 },
+        "stability_runs": { "const": 1 },
+        "cancellation_runs": { "const": 1 },
+        "append_only_result_paths": { "const": true },
+        "explicit_execute_required": { "const": true },
+        "no_cross_case_dependency_stops": { "const": true },
+        "resource_survivor_policy": { "const": "stop_same_seed_repeats_after_first_irreversible_rejection_continue_all_independent_cases" }
+      }
+    },
+    "acceptance_contract": { "$ref": "#/$defs/acceptance" },
+    "qualification_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "missing_evidence"],
+      "properties": {
+        "status": { "const": "blocked_not_product_qualification" },
+        "missing_evidence": {
+          "const": ["authoritative_canonical_v11_bytes", "authoritative_text_export_v11_bytes", "coverage_and_failure_rate_simulation", "broader_dimension_and_model_axes", "package_and_integration_gates"]
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "prefixItems": [
+        { "$ref": "#/$defs/resource5000" },
+        { "$ref": "#/$defs/stability5000" },
+        { "$ref": "#/$defs/resource10000" },
+        { "$ref": "#/$defs/stability10000" },
+        { "$ref": "#/$defs/cancellation10000" }
+      ],
+      "items": false,
+      "minItems": 5,
+      "maxItems": 5
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["data_path", "data_sha256", "recipe_path", "recipe_sha256", "rust_example_path", "rust_example_sha256", "binary_path", "binary_sha256"],
+      "properties": {
+        "data_path": { "const": "validation/results/v07_cbsem.csv" },
+        "data_sha256": { "$ref": "#/$defs/sha256" },
+        "recipe_path": { "const": "validation/results/v07_cfa.recipe.json" },
+        "recipe_sha256": { "$ref": "#/$defs/sha256" },
+        "rust_example_path": { "const": "crates/qpls-resampling/examples/cbsem_exact_case_bootstrap_studentized_benchmark.rs" },
+        "rust_example_sha256": { "$ref": "#/$defs/sha256" },
+        "binary_path": { "const": "target/release/examples/cbsem_exact_case_bootstrap_studentized_benchmark.exe" },
+        "binary_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "phase0_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["report_path", "report_sha256", "baseline_case_path", "baseline_case_sha256", "baseline_replicates", "baseline_workers", "baseline_p95_elapsed_seconds", "safety_factor"],
+      "properties": {
+        "report_path": { "type": "string", "minLength": 1 },
+        "report_sha256": { "$ref": "#/$defs/sha256" },
+        "baseline_case_path": { "type": "string", "minLength": 1 },
+        "baseline_case_sha256": { "$ref": "#/$defs/sha256" },
+        "baseline_replicates": { "const": 1000 },
+        "baseline_workers": { "const": 12 },
+        "baseline_p95_elapsed_seconds": { "type": "number", "exclusiveMinimum": 0 },
+        "safety_factor": { "const": 2.0 }
+      }
+    },
+    "validation_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runner_path", "runner_sha256", "manifest_schema_path", "manifest_schema_sha256", "case_schema_path", "case_schema_sha256", "report_schema_path", "report_schema_sha256"],
+      "properties": {
+        "runner_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase1b.py" },
+        "runner_sha256": { "$ref": "#/$defs/sha256" },
+        "manifest_schema_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_manifest_v1.schema.json" },
+        "manifest_schema_sha256": { "$ref": "#/$defs/sha256" },
+        "case_schema_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_case_v1.schema.json" },
+        "case_schema_sha256": { "$ref": "#/$defs/sha256" },
+        "report_schema_path": { "const": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_report_v1.schema.json" },
+        "report_schema_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime_formula", "minimum_usable_fraction", "minimum_usable_floor", "one_sided_failure_bound_method", "one_sided_confidence_level", "maximum_total_unusable_fraction_upper_bound", "retry_policy", "max_attempts_per_replicate", "known_point_failure_kinds", "known_standard_error_unavailable_reasons", "maximum_peak_working_set_fraction_of_physical_ram", "maximum_text_export_proxy_bytes", "maximum_project_document_proxy_bytes", "maximum_cancellation_terminal_latency_seconds", "maximum_orphan_processes", "exact_same_seed_digest_across_resource_runs"],
+      "properties": {
+        "runtime_formula": { "const": "phase0_same_n_v_p_w_p95_seconds_times_target_b_over_baseline_b_times_safety_factor" },
+        "minimum_usable_fraction": { "const": 0.9 },
+        "minimum_usable_floor": { "const": 1000 },
+        "one_sided_failure_bound_method": { "const": "clopper_pearson_beta_quantile_one_sided_v1" },
+        "one_sided_confidence_level": { "const": 0.95 },
+        "maximum_total_unusable_fraction_upper_bound": { "const": 0.1 },
+        "retry_policy": { "const": "no_retry_fixed_preplanned_primary_draws_v1" },
+        "max_attempts_per_replicate": { "const": 1 },
+        "known_point_failure_kinds": { "const": ["moment_matrix_not_positive_definite", "non_convergence", "inadmissible_solution", "numerical_failure"] },
+        "known_standard_error_unavailable_reasons": { "const": ["singular_information", "information_not_positive_definite", "invalid_information_variance_or_standard_error", "derivative_unavailable", "numerical_information_failure"] },
+        "maximum_peak_working_set_fraction_of_physical_ram": { "const": 0.5 },
+        "maximum_text_export_proxy_bytes": { "const": 134217728 },
+        "maximum_project_document_proxy_bytes": { "const": 268435456 },
+        "maximum_cancellation_terminal_latency_seconds": { "const": 1.0 },
+        "maximum_orphan_processes": { "const": 0 },
+        "exact_same_seed_digest_across_resource_runs": { "const": true }
+      }
+    },
+    "case_base": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "order", "mode", "replicates", "workers", "seed", "cancel_after", "maximum_single_run_elapsed_seconds", "maximum_p95_elapsed_seconds"],
+      "properties": {
+        "case_id": { "type": "string" },
+        "order": { "type": "integer" },
+        "mode": { "enum": ["resource", "stability", "cancellation"] },
+        "replicates": { "enum": [5000, 10000] },
+        "workers": { "const": 12 },
+        "seed": { "type": "integer", "minimum": 0 },
+        "cancel_after": { "type": ["integer", "null"] },
+        "maximum_single_run_elapsed_seconds": { "type": ["number", "null"] },
+        "maximum_p95_elapsed_seconds": { "type": ["number", "null"] }
+      }
+    },
+    "resource5000": {
+      "allOf": [
+        { "$ref": "#/$defs/case_base" },
+        { "properties": { "case_id": { "const": "resource_n180_v9_p18_d18_b5000_w12_seed19001" }, "order": { "const": 1 }, "mode": { "const": "resource" }, "replicates": { "const": 5000 }, "seed": { "const": 19001 }, "cancel_after": { "type": "null" }, "maximum_single_run_elapsed_seconds": { "const": 38.149020597338676 }, "maximum_p95_elapsed_seconds": { "const": 38.149020597338676 } } }
+      ]
+    },
+    "stability5000": {
+      "allOf": [
+        { "$ref": "#/$defs/case_base" },
+        { "properties": { "case_id": { "const": "stability_n180_v9_p18_d18_b5000_w12_seed19002" }, "order": { "const": 2 }, "mode": { "const": "stability" }, "replicates": { "const": 5000 }, "seed": { "const": 19002 }, "cancel_after": { "type": "null" }, "maximum_single_run_elapsed_seconds": { "const": 38.149020597338676 }, "maximum_p95_elapsed_seconds": { "type": "null" } } }
+      ]
+    },
+    "resource10000": {
+      "allOf": [
+        { "$ref": "#/$defs/case_base" },
+        { "properties": { "case_id": { "const": "resource_n180_v9_p18_d18_b10000_w12_seed29001" }, "order": { "const": 3 }, "mode": { "const": "resource" }, "replicates": { "const": 10000 }, "seed": { "const": 29001 }, "cancel_after": { "type": "null" }, "maximum_single_run_elapsed_seconds": { "const": 76.29804119467735 }, "maximum_p95_elapsed_seconds": { "const": 76.29804119467735 } } }
+      ]
+    },
+    "stability10000": {
+      "allOf": [
+        { "$ref": "#/$defs/case_base" },
+        { "properties": { "case_id": { "const": "stability_n180_v9_p18_d18_b10000_w12_seed29002" }, "order": { "const": 4 }, "mode": { "const": "stability" }, "replicates": { "const": 10000 }, "seed": { "const": 29002 }, "cancel_after": { "type": "null" }, "maximum_single_run_elapsed_seconds": { "const": 76.29804119467735 }, "maximum_p95_elapsed_seconds": { "type": "null" } } }
+      ]
+    },
+    "cancellation10000": {
+      "allOf": [
+        { "$ref": "#/$defs/case_base" },
+        { "properties": { "case_id": { "const": "cancellation_n180_v9_p18_d18_b10000_w12_seed39001" }, "order": { "const": 5 }, "mode": { "const": "cancellation" }, "replicates": { "const": 10000 }, "seed": { "const": 39001 }, "cancel_after": { "const": 10 }, "maximum_single_run_elapsed_seconds": { "type": "null" }, "maximum_p95_elapsed_seconds": { "type": "null" } } }
+      ]
+    }
+  }
+}

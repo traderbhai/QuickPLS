@@ -1,0 +1,797 @@
+{
+  "passed": true,
+  "generatedAt": "2026-08-14T07:06:57.496Z",
+  "endpoint": "http://127.0.0.1:9222",
+  "runtime": "tauri-webview2-cdp",
+  "focusedRun": {
+    "scope": "pca",
+    "priorGeneratedAt": null,
+    "completedAt": "2026-08-14T07:08:05.996Z"
+  },
+  "checks": {
+    "pcaFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\v08_extended_methods_fixture.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-pca-1786691217494-14368.qpls",
+      "projectName": "Native PCA Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-pca-1786691217494-14368.qpls",
+      "stderr": ""
+    },
+    "runtimePreflight": {
+      "passed": true,
+      "expectedOrigin": "http://tauri.localhost",
+      "enumeratedPages": [
+        {
+          "index": 0,
+          "url": "http://tauri.localhost/",
+          "origin": "http://tauri.localhost",
+          "title": "QuickPLS",
+          "shellVisible": true,
+          "tauriRuntime": true
+        }
+      ],
+      "qualifyingPageCount": 1,
+      "preReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "reloadCount": 1,
+      "postReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "sameOrigin": true
+    },
+    "runtime": {
+      "title": "QuickPLS",
+      "tauriRuntime": true,
+      "viewport": {
+        "width": 1536,
+        "height": 794,
+        "dpr": 1.25
+      },
+      "surface": "launcher"
+    },
+    "pcaFixture": {
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-pca-1786691217494-14368.qpls",
+      "status": "ReadyNative PCA Acceptancev08_extended_methods_fixture.csv140 cases0 constructsDataOffline",
+      "cases": 140,
+      "columns": [
+        "#",
+        "x",
+        "m",
+        "w",
+        "y",
+        "z",
+        "bin_y",
+        "g1",
+        "g2",
+        "g3",
+        "h1",
+        "h2"
+      ],
+      "initialArchive": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "models": 0,
+        "recipes": 0,
+        "results": 0,
+        "activeModelId": null,
+        "nodes": 0,
+        "edges": 0
+      }
+    },
+    "pcaDialog": {
+      "catalogCount": 16,
+      "canonicalCatalogKinds": [
+        "pls_algorithm",
+        "plsc",
+        "wpls",
+        "gsca",
+        "cca",
+        "cta_pls",
+        "ipma",
+        "cbsem",
+        "pls_bootstrap",
+        "pls_permutation",
+        "pls_sample_size_power",
+        "mga",
+        "predict",
+        "nca",
+        "pca",
+        "regression"
+      ],
+      "catalogKinds": [
+        "pls_algorithm",
+        "plsc",
+        "wpls",
+        "gsca",
+        "cca",
+        "cta_pls",
+        "ipma",
+        "cbsem",
+        "pls_bootstrap",
+        "pls_permutation",
+        "pls_sample_size_power",
+        "mga",
+        "predict",
+        "nca",
+        "pca",
+        "regression"
+      ],
+      "selectedMethod": "Principal Component Analysis",
+      "category": "Standalone analysis",
+      "availableVariables": [
+        "x",
+        "m",
+        "w",
+        "y",
+        "z",
+        "bin_y",
+        "g1",
+        "g2",
+        "g3",
+        "h1",
+        "h2"
+      ],
+      "selectedVariables": [
+        "x",
+        "m",
+        "w",
+        "y",
+        "z"
+      ],
+      "componentRule": "variance_threshold",
+      "varianceThresholdPercent": "95",
+      "calculationBasis": "Correlation matrix (fixed)",
+      "variableData": "Standardized numeric values (fixed)",
+      "validatedScope": "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling.",
+      "maxIterationsCount": 0,
+      "toleranceCount": 0,
+      "unsupportedControls": 0,
+      "blockers": [],
+      "blockerText": "",
+      "noModelBlocker": true,
+      "startEnabled": true
+    },
+    "pcaProgress": {
+      "captured": false,
+      "completedBeforeCapture": true,
+      "detail": "standalone PCA left its active lifecycle before the evidence snapshot completed."
+    },
+    "pcaResult": {
+      "runId": "09dd8d0f-6ad4-474e-8acb-7e246970b64d",
+      "runLabel": "Principal Component Analysis run",
+      "initialSelectedTable": "pca_component_summary",
+      "treeItems": [
+        "Principal components",
+        "Component summary",
+        "Component loadings and weights",
+        "Calculation scope"
+      ],
+      "summary": {
+        "rows": 4,
+        "headers": [
+          "Component",
+          "Eigenvalue",
+          "Explained variance",
+          "Cumulative variance"
+        ],
+        "values": [
+          [
+            "PC1",
+            "2.7290",
+            "54.58%",
+            "54.58%"
+          ],
+          [
+            "PC2",
+            "1.0015",
+            "20.03%",
+            "74.61%"
+          ],
+          [
+            "PC3",
+            "0.9932",
+            "19.86%",
+            "94.47%"
+          ],
+          [
+            "PC4",
+            "0.1781",
+            "3.56%",
+            "98.04%"
+          ]
+        ]
+      },
+      "loadings": {
+        "rows": 20,
+        "headers": [
+          "Variable",
+          "Component",
+          "Loading",
+          "Weight"
+        ],
+        "values": [
+          [
+            "x",
+            "PC1",
+            "0.8651",
+            "0.5237"
+          ],
+          [
+            "m",
+            "PC1",
+            "0.9436",
+            "0.5712"
+          ],
+          [
+            "w",
+            "PC1",
+            "0.2762",
+            "0.1672"
+          ],
+          [
+            "y",
+            "PC1",
+            "0.9452",
+            "0.5722"
+          ],
+          [
+            "z",
+            "PC1",
+            "0.3472",
+            "0.2102"
+          ],
+          [
+            "x",
+            "PC2",
+            "-0.3195",
+            "-0.3192"
+          ],
+          [
+            "m",
+            "PC2",
+            "-0.1368",
+            "-0.1367"
+          ],
+          [
+            "w",
+            "PC2",
+            "0.8632",
+            "0.8625"
+          ],
+          [
+            "y",
+            "PC2",
+            "0.0423",
+            "0.0423"
+          ],
+          [
+            "z",
+            "PC2",
+            "0.3658",
+            "0.3656"
+          ],
+          [
+            "x",
+            "PC3",
+            "-0.2191",
+            "-0.2198"
+          ],
+          [
+            "m",
+            "PC3",
+            "0.1467",
+            "0.1472"
+          ],
+          [
+            "w",
+            "PC3",
+            "-0.4138",
+            "-0.4153"
+          ],
+          [
+            "y",
+            "PC3",
+            "-0.1396",
+            "-0.1401"
+          ],
+          [
+            "z",
+            "PC3",
+            "0.8561",
+            "0.8590"
+          ],
+          [
+            "x",
+            "PC4",
+            "0.3165",
+            "0.7499"
+          ],
+          [
+            "m",
+            "PC4",
+            "-0.1272",
+            "-0.3014"
+          ],
+          [
+            "w",
+            "PC4",
+            "0.0657",
+            "0.1558"
+          ],
+          [
+            "y",
+            "PC4",
+            "-0.2183",
+            "-0.5172"
+          ],
+          [
+            "z",
+            "PC4",
+            "0.0990",
+            "0.2345"
+          ]
+        ]
+      },
+      "scope": {
+        "rows": 10,
+        "headers": [
+          "Field",
+          "Value"
+        ],
+        "values": [
+          [
+            "Variables",
+            "5"
+          ],
+          [
+            "Selected variables",
+            "x, m, w, y, z"
+          ],
+          [
+            "Analyzed observations",
+            "140"
+          ],
+          [
+            "Retention rule",
+            "Cumulative variance threshold"
+          ],
+          [
+            "Retained components",
+            "4"
+          ],
+          [
+            "Stored component scores",
+            "560"
+          ],
+          [
+            "Input matrix",
+            "Correlation matrix of standardized variables"
+          ],
+          [
+            "Missing data",
+            "Listwise deletion"
+          ],
+          [
+            "Rotation",
+            "None"
+          ],
+          [
+            "Method version",
+            "pca_v1"
+          ]
+        ]
+      },
+      "scopeValues": {
+        "Variables": "5",
+        "Selected variables": "x, m, w, y, z",
+        "Analyzed observations": "140",
+        "Retention rule": "Cumulative variance threshold",
+        "Retained components": "4",
+        "Stored component scores": "560",
+        "Input matrix": "Correlation matrix of standardized variables",
+        "Missing data": "Listwise deletion",
+        "Rotation": "None",
+        "Method version": "pca_v1"
+      },
+      "runDetails": {
+        "properties": {
+          "Run": "Principal Component Analysis run",
+          "Method": "Principal Component Analysis",
+          "Created": "14/8/2026, 12:37:30 pm",
+          "Dataset fingerprint": "v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb",
+          "Recipe": "6343aec1-1c9a-4842-a888-9c5e7959f4a6",
+          "Engine": "2.46.0",
+          "Method version": "pca_v1",
+          "Variables": "5",
+          "Retention rule": "Cumulative variance threshold",
+          "Retained components": "4",
+          "Observations": "140",
+          "Input matrix": "Correlation matrix of standardized variables",
+          "Missing data": "Listwise deletion"
+        },
+        "logEntries": 4
+      },
+      "editDataCommand": {
+        "count": 1,
+        "enabled": true
+      },
+      "editModelCommand": {
+        "count": 0
+      },
+      "noPlaceholder": true,
+      "noSemResultGroups": true
+    },
+    "pcaExport": {
+      "xlsxEnabled": true,
+      "formats": [
+        "CSV tables",
+        "HTML report",
+        "Reviewer pack",
+        "XLSX workbook",
+        "Print / PDF"
+      ],
+      "buttonTexts": [],
+      "everyFormatPresentOnceWhenReadable": null,
+      "buttonCount": 5,
+      "modelDiagramFormats": 0,
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 25560838,
+              "pid": 43856,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 25560838,
+              "handle": 16058388,
+              "pid": 43856,
+              "rootOwner": 25560838,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 25560838,
+              "pid": 43856,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+              "requiredSharedStrings": [
+                "Component summary",
+                "Component loadings and weights",
+                "Calculation scope",
+                "Component scores",
+                "Run provenance",
+                "Cumulative variance threshold",
+                "pca_v1"
+              ],
+              "requiredSheets": [
+                "Component summary",
+                "Component loadings and weights",
+                "Calculation scope",
+                "Component scores",
+                "Run provenance"
+              ],
+              "sha256": "a40cc858a770fd4513ffae357ddee46cc12de0959d02a246b62ce5f68b1ecf3b",
+              "sheetNames": [
+                "Component summary",
+                "Component loadings and weights",
+                "Calculation scope",
+                "Component scores",
+                "Run provenance"
+              ],
+              "size": 15752
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 25560838,
+                    "pid": 43856,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 25560838,
+                    "handle": 16058388,
+                    "pid": 43856,
+                    "rootOwner": 25560838,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 25560838,
+                    "pid": 43856,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+                    "requiredSharedStrings": [
+                      "Component summary",
+                      "Component loadings and weights",
+                      "Calculation scope",
+                      "Component scores",
+                      "Run provenance",
+                      "Cumulative variance threshold",
+                      "pca_v1"
+                    ],
+                    "requiredSheets": [
+                      "Component summary",
+                      "Component loadings and weights",
+                      "Calculation scope",
+                      "Component scores",
+                      "Run provenance"
+                    ],
+                    "sha256": "a40cc858a770fd4513ffae357ddee46cc12de0959d02a246b62ce5f68b1ecf3b",
+                    "sheetNames": [
+                      "Component summary",
+                      "Component loadings and weights",
+                      "Calculation scope",
+                      "Component scores",
+                      "Run provenance"
+                    ],
+                    "size": 15752
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        },
+        "appFeedback": "Saved pca_v1_packaged.xlsx.",
+        "file": {
+          "size": 15752,
+          "isFile": true
+        },
+        "workbookSheets": [
+          "Component summary",
+          "Component loadings and weights",
+          "Calculation scope",
+          "Component scores",
+          "Run provenance"
+        ]
+      }
+    },
+    "pcaSaveReopen": {
+      "expectedRunId": "09dd8d0f-6ad4-474e-8acb-7e246970b64d",
+      "selectedRunId": "09dd8d0f-6ad4-474e-8acb-7e246970b64d",
+      "sameRunRestored": true,
+      "summaryRows": 4,
+      "loadingRows": 20,
+      "scopeRows": 10,
+      "archive": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "resultId": "09dd8d0f-6ad4-474e-8acb-7e246970b64d",
+        "resultStatus": "completed",
+        "provenanceMethod": "pca",
+        "provenanceMethodVersion": "pca_v1",
+        "provenanceEngineVersion": "2.46.0",
+        "payloadKind": "pls_pm_v1",
+        "estimationMethodVersion": "pca_v1",
+        "usedObservations": 140,
+        "omittedObservations": 0,
+        "assessment": {
+          "methodVersion": "assessment_not_applicable_v1",
+          "warnings": [
+            "PLS assessment is not applicable to standalone raw-data analyses."
+          ]
+        },
+        "pcaMethodVersion": "pca_v1",
+        "componentRule": "variance_threshold",
+        "retainedComponents": 4,
+        "observations": 140,
+        "variables": [
+          "x",
+          "m",
+          "w",
+          "y",
+          "z"
+        ],
+        "componentIds": [
+          "PC1",
+          "PC2",
+          "PC3",
+          "PC4"
+        ],
+        "components": [
+          {
+            "component": "PC1",
+            "cumulative_variance": 0.5458091423531943,
+            "eigenvalue": 2.7290457117659725,
+            "explained_variance": 0.5458091423531943
+          },
+          {
+            "component": "PC2",
+            "cumulative_variance": 0.7461062236884051,
+            "eigenvalue": 1.001485406676054,
+            "explained_variance": 0.2002970813352107
+          },
+          {
+            "component": "PC3",
+            "cumulative_variance": 0.9447387151990516,
+            "eigenvalue": 0.9931624575532332,
+            "explained_variance": 0.19863249151064657
+          },
+          {
+            "component": "PC4",
+            "cumulative_variance": 0.9803664776181275,
+            "eigenvalue": 0.17813881209537924,
+            "explained_variance": 0.03562776241907584
+          }
+        ],
+        "loadings": 20,
+        "scores": 560,
+        "uniqueLoadingIdentities": 20,
+        "uniqueScoreIdentities": 560,
+        "finiteComponents": true,
+        "finiteLoadings": true,
+        "finiteScores": true,
+        "thresholdCrossing": true,
+        "warnings": [
+          "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+        ],
+        "unrelatedPayloads": [],
+        "recipe": {
+          "schemaVersion": 3,
+          "exactMethodConfigKeys": true,
+          "exactRetentionKeys": true,
+          "methodConfigKind": "pca",
+          "method": "pca",
+          "weightingScheme": "path",
+          "preprocessing": "standardized",
+          "missingData": "listwise_deletion",
+          "bootstrapSamples": 0,
+          "permutationSamples": 0,
+          "caseWeightColumn": null,
+          "variables": [
+            "x",
+            "m",
+            "w",
+            "y",
+            "z"
+          ],
+          "componentRule": "variance_threshold",
+          "varianceThreshold": 0.95,
+          "constructs": 0,
+          "paths": 0
+        },
+        "models": 0,
+        "activeModelId": null,
+        "nodes": 0,
+        "edges": 0,
+        "runModelId": null,
+        "runModelSnapshot": null
+      }
+    },
+    "recentProjectsRestored": true
+  },
+  "screenshots": [
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\110-tauri-native-pca-fixture-data-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\111-tauri-native-pca-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\112-tauri-native-pca-running-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\113-tauri-native-pca-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\114-tauri-native-pca-export-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\115-tauri-native-pca-reopened-1536x794.png"
+  ],
+  "screenshotArtifacts": [
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/110-tauri-native-pca-fixture-data-1536x794.png",
+      "size": 292201,
+      "sha256": "849fdd3401c38d0eea5d0e35055263fea64986c48c0c64dccc96430be4ee2dac"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/111-tauri-native-pca-dialog-1536x794.png",
+      "size": 271380,
+      "sha256": "bf6ab73eafa1cbdb7789d1c71b517cdf8f3e18ac3647130c0fc34c0ad5601b4d"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/112-tauri-native-pca-running-1536x794.png",
+      "size": 230503,
+      "sha256": "a802999970ae59870752e5728595c41abf796a38211de3354001966a9e892c4c"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/113-tauri-native-pca-results-1536x794.png",
+      "size": 69402,
+      "sha256": "b98c251cddeabc6cd92bea559eaa1ab16bd0e30cd1cad0897762456e57997ce3"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/114-tauri-native-pca-export-1536x794.png",
+      "size": 94471,
+      "sha256": "7e9989f2247f316f4533738a7b44799992f79eacd052c0532c401661cd989070"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/115-tauri-native-pca-reopened-1536x794.png",
+      "size": 76564,
+      "sha256": "cf9931d485734860bf7de9a308a8ea9e9c34bfb2df36000bed71a14b6f222c92"
+    }
+  ],
+  "consoleErrors": [],
+  "failures": []
+}

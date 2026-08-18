@@ -1,0 +1,72 @@
+{
+    "passed":  true,
+    "launched_pid":  48504,
+    "descendants_at_shutdown":  [
+                                    {
+                                        "ProcessId":  15740,
+                                        "ParentProcessId":  48504,
+                                        "CreationDate":  "\/Date(1786678652324)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  29816,
+                                        "ParentProcessId":  15740,
+                                        "CreationDate":  "\/Date(1786678654438)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  50952,
+                                        "ParentProcessId":  15740,
+                                        "CreationDate":  "\/Date(1786678654398)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  52052,
+                                        "ParentProcessId":  15740,
+                                        "CreationDate":  "\/Date(1786678652696)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  61824,
+                                        "ParentProcessId":  15740,
+                                        "CreationDate":  "\/Date(1786678654405)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  62868,
+                                        "ParentProcessId":  15740,
+                                        "CreationDate":  "\/Date(1786678654473)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    }
+                                ],
+    "graceful_close_exit_code":  0,
+    "graceful_exit_confirmed":  true,
+    "forced_parent_termination":  false,
+    "forced_descendant_pids":  [
+
+                               ],
+    "parent_exit_confirmed":  true,
+    "lingering_descendant_pids":  [
+
+                                  ],
+    "process_monitor":  {
+                            "label":  "process_tree",
+                            "exit_confirmed":  true,
+                            "exit_code":  0,
+                            "forced_termination":  false,
+                            "stderr":  ""
+                        },
+    "network_monitor":  {
+                            "label":  "network_tcp",
+                            "exit_confirmed":  true,
+                            "exit_code":  0,
+                            "forced_termination":  false,
+                            "stderr":  ""
+                        }
+}

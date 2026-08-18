@@ -38,19 +38,31 @@
       {
         "id": "bootstrap_standard_error",
         "expression": "se_boot = sqrt(sum_r((beta_r - mean_beta)^2) / (B - 1))",
-        "variables": ["se_boot", "beta_r", "mean_beta", "B"],
+        "variables": [
+          "se_boot",
+          "beta_r",
+          "mean_beta",
+          "B"
+        ],
         "source_reference_id": "efron_1979"
       },
       {
         "id": "bootstrap_ratio",
         "expression": "z_boot = beta_original / se_boot",
-        "variables": ["z_boot", "beta_original", "se_boot"],
+        "variables": [
+          "z_boot",
+          "beta_original",
+          "se_boot"
+        ],
         "source_reference_id": "efron_1979"
       },
       {
         "id": "percentile_interval",
         "expression": "ci_percentile = [type7_quantile(beta_star, 0.025), type7_quantile(beta_star, 0.975)]",
-        "variables": ["ci_percentile", "beta_star"],
+        "variables": [
+          "ci_percentile",
+          "beta_star"
+        ],
         "source_reference_id": "hyndman_fan_1996"
       }
     ],
@@ -82,19 +94,31 @@
     ],
     "simulations": [
       {
-        "id": "ols_and_logistic_coverage",
-        "purpose": "coverage",
-        "design": "Preregistered supported OLS and binary-logistic designs spanning bounded sample size, effect, prevalence, and conditioning grids.",
-        "seed_policy": "Fixed master seeds with operation- and replicate-index-addressed streams, reduced in replicate order.",
-        "metrics": ["percentile_coverage", "bca_coverage", "usable_fraction", "worker_invariance"],
-        "acceptance_rule": "The simulation report must meet its frozen coverage and usable-fit intervals and show exact scientific-payload equality across supported worker counts."
+        "id": "ols_and_logistic_distribution_parity",
+        "purpose": "recovery",
+        "design": "Frozen 140-row listwise OLS and binary-logistic fixture with exact QuickPLS witness reconstruction plus independently seeded Python and R case-resampling reconstructions.",
+        "seed_policy": "Fixed QuickPLS witness seed and separately fixed independent Python and R seeds; indexed QuickPLS replicates are reduced in replicate order.",
+        "metrics": [
+          "exact_witness_arithmetic",
+          "mean_pooled_se_units",
+          "standard_error_relative",
+          "percentile_endpoint_pooled_se_units",
+          "bca_endpoint_pooled_se_units",
+          "odds_ratio_log_endpoint_pooled_se_units",
+          "worker_invariance"
+        ],
+        "acceptance_rule": "Exact witness arithmetic differs by at most 5e-11, every frozen Python/R distribution-parity threshold passes, and worker-count scientific payloads are exactly equal."
       },
       {
         "id": "failure_envelope",
         "purpose": "failure_behavior",
-        "design": "Single-class resamples, rank-deficient resamples, incomplete jackknife sets, degenerate standard errors, and below-90-percent usable cases.",
+        "design": "Single-class resamples, rank-deficient resamples, OLS residual-degree-of-freedom and HC3 failures, incomplete jackknife sets, degenerate standard errors, and below-90-percent usable cases.",
         "seed_policy": "Deterministic named fixtures plus frozen indexed resampling streams.",
-        "metrics": ["failure_accounting", "bca_unavailability_accuracy", "partial_result_count"],
+        "metrics": [
+          "failure_accounting",
+          "bca_unavailability_accuracy",
+          "partial_result_count"
+        ],
         "acceptance_rule": "Every failed fit is accounted for, BCa unavailability is tagged exactly, and a below-threshold or cancelled run commits no partial result."
       }
     ],
@@ -102,8 +126,8 @@
       {
         "id": "insufficient_usable_resamples",
         "category": "data_pathology",
-        "case": "Fewer than 90 percent of requested bootstrap fits are usable or the bootstrap standard error is degenerate.",
-        "expected_behavior": "The run fails or the affected inference row is tagged unavailable according to the frozen policy; no NaN or fabricated statistic is emitted."
+        "case": "Fewer than 90 percent of requested bootstrap fits are usable, an OLS resample has nonpositive residual degrees of freedom or undefined HC3 covariance, or the bootstrap standard error is degenerate.",
+        "expected_behavior": "OLS fit failures retain a typed reason and count against the usable-fit threshold; the run fails or the affected inference row is tagged unavailable according to the frozen policy, with no NaN or fabricated statistic emitted."
       },
       {
         "id": "unsupported_regression_family",
@@ -130,7 +154,7 @@
         "expected_behavior": "Strict archive validation rejects the complete changed result."
       }
     ],
-    "numerical_tolerance": 1e-6
+    "numerical_tolerance": 1e-06
   },
   "product_contract": {
     "persistence": {
@@ -138,38 +162,106 @@
       "result_schema_version": 1,
       "payload_kind": "regression_bootstrap_v1",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result whose capability identity differs from its recipe."},
-        {"category": "method_version", "expected_behavior": "Reject a result relabeled as another regression-bootstrap method version."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose saved dataset fingerprint no longer matches."},
-        {"category": "checksum", "expected_behavior": "Reject any modified archive entry whose checksum no longer matches."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicated keys, unknown fields, non-finite values, invalid indices, incomplete partitions, or inconsistent summaries."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret point-only, PLS-bootstrap, PROCESS-bootstrap, or legacy regression output as regression_bootstrap_v1."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose capability identity differs from its recipe."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a result relabeled as another regression-bootstrap method version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose saved dataset fingerprint no longer matches."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any modified archive entry whose checksum no longer matches."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicated keys, unknown fields, non-finite values, invalid indices, incomplete partitions, or inconsistent summaries."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret point-only, PLS-bootstrap, PROCESS-bootstrap, or legacy regression output as regression_bootstrap_v1."
+        }
       ],
       "legacy_policy": "Point-only and unrelated resampling payloads remain readable under their original identities and cannot be promoted as regression-bootstrap evidence."
     },
     "native": {
-      "setup_controls": ["Supported regression model", "Replicates", "Seed", "Workers", "Percentile and conditional BCa intervals"],
-      "applicability_blockers": ["Unsupported regression family", "Invalid replicate count", "Unsupported confidence level or tail", "Insufficient complete cases"],
-      "result_surfaces": ["Bootstrap coefficient summaries", "Percentile and conditional BCa intervals", "Failed-fit accounting", "Run provenance"],
+      "setup_controls": [
+        "Supported regression model",
+        "Replicates",
+        "Seed",
+        "Workers",
+        "Percentile and conditional BCa intervals"
+      ],
+      "applicability_blockers": [
+        "Unsupported regression family",
+        "Invalid replicate count",
+        "Unsupported confidence level or tail",
+        "Insufficient complete cases"
+      ],
+      "result_surfaces": [
+        "Bootstrap coefficient summaries",
+        "Percentile and conditional BCa intervals",
+        "Failed-fit accounting",
+        "Run provenance"
+      ],
       "gui_cli_parity_rule": "For the same dataset, recipe, seed, and worker count, GUI and CLI analytical payloads must be exactly equal apart from operational timestamps; scientific output must also be worker-invariant.",
-      "accessibility_rules": ["Bootstrap distributions have equivalent accessible summary tables.", "Failure counts, unavailable intervals, warnings, and provenance are available without color or pointer interaction."]
+      "accessibility_rules": [
+        "Bootstrap distributions have equivalent accessible summary tables.",
+        "Failure counts, unavailable intervals, warnings, and provenance are available without color or pointer interaction."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx"],
-      "tables": ["Bootstrap coefficients", "Percentile intervals", "Conditional BCa intervals", "Failed resamples", "Run provenance"],
+      "formats": [
+        "csv",
+        "xlsx"
+      ],
+      "tables": [
+        "Bootstrap coefficients",
+        "Percentile intervals",
+        "Conditional BCa intervals",
+        "Failed resamples",
+        "Run provenance"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": true,
       "process_cleanup_required": true
     },
     "audit": {
-      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
       "source_hashes_required": true,
       "freshness_required": true,
       "reports_must_pass": true
@@ -179,84 +271,65 @@
     "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/REGRESSION_BOOTSTRAP_V1.md"],
-      "independent_reference": ["validation/regression_bootstrap_v1_reference.py", "validation/regression_bootstrap_v1_reference.R"],
-      "simulation_report": ["validation/regression_bootstrap_v1_reference.py", "validation/test_regression_bootstrap_v1_reference.py"],
-      "boundary_report": ["validation/regression_bootstrap_failure_boundary_gate.py"],
-      "persistence_report": ["validation/test_regression_bootstrap_method_promotion_audit.py", "crates/qpls-project/src/lib.rs"],
-      "frontend_report": ["src/native/nativeRegressionBootstrapWitness.test.ts", "src/native/nativeResults.test.ts"],
-      "export_report": ["src/native/nativeExportTables.test.ts"],
-      "method_audit": ["validation/regression_bootstrap_method_promotion_audit.py", "validation/test_regression_bootstrap_method_promotion_audit.py", "validation/regression_bootstrap_v1_factory_audit.py", "validation/legacy_release_adapter_common.py", "validation/test_legacy_release_adapters.py"],
-      "packaged_acceptance": ["validation/run_v247_regression_bootstrap_native_acceptance.ps1", "validation/run_v247_cumulative_native_acceptance.ps1", "validation/v247_tauri_native_acceptance.mjs", "validation/v247_native_desktop_visual_acceptance.mjs", "validation/regression_bootstrap_v1_packaged_acceptance.py", "validation/legacy_release_adapter_common.py", "validation/test_legacy_release_adapters.py"]
+      "method_spec": [
+        "docs/methods/REGRESSION_BOOTSTRAP_V1.md"
+      ],
+      "independent_reference": [
+        "validation/regression_bootstrap_v1_reference.py",
+        "validation/regression_bootstrap_v1_reference.R"
+      ],
+      "simulation_report": [
+        "validation/regression_bootstrap_v1_reference.py",
+        "validation/test_regression_bootstrap_v1_reference.py"
+      ],
+      "boundary_report": [
+        "validation/regression_bootstrap_failure_boundary_gate.py"
+      ],
+      "persistence_report": [
+        "validation/test_regression_bootstrap_method_promotion_audit.py",
+        "crates/qpls-project/src/lib.rs"
+      ],
+      "frontend_report": [
+        "src/native/nativeRegressionBootstrapWitness.test.ts",
+        "src/native/nativeResults.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/regression_bootstrap_method_promotion_audit.py",
+        "validation/test_regression_bootstrap_method_promotion_audit.py",
+        "validation/regression_bootstrap_v1_factory_audit.py",
+        "validation/legacy_release_adapter_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/test_legacy_release_adapters.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_v247_regression_bootstrap_native_acceptance.ps1",
+        "validation/run_v247_cumulative_native_acceptance.ps1",
+        "validation/v247_tauri_native_acceptance.mjs",
+        "validation/v247_native_desktop_visual_acceptance.mjs",
+        "validation/regression_bootstrap_v1_packaged_acceptance.py",
+        "validation/legacy_release_adapter_common.py",
+        "validation/packaged_windows_acceptance_v2.py",
+        "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+        "validation/test_legacy_release_adapters.py"
+      ]
     },
     "evidence": {
       "engine_only": [
-        {
-          "path": "validation/results/method_factory/regression_bootstrap_v1/engine_stage.identity.json",
-          "roles": [
-            "method_spec",
-            "independent_reference",
-            "simulation_report",
-            "boundary_report"
-          ],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {
-              "passed": "/passed",
-              "feature_id": "/feature_id",
-              "method_version": "/method_version",
-              "catalogue_snapshot_date": "/catalogue_snapshot_date"
-            },
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/regression_bootstrap_v1/engine_stage.identity.json","roles":["method_spec","independent_reference","simulation_report","boundary_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ],
       "archive_qualified": [
-        {
-          "path": "validation/results/method_factory/regression_bootstrap_v1/persistence_report.identity.json",
-          "roles": ["persistence_report"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/regression_bootstrap_v1/persistence_report.identity.json","roles":["persistence_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ],
       "native_qualified": [
-        {
-          "path": "validation/results/method_factory/regression_bootstrap_v1/native_stage.identity.json",
-          "roles": ["frontend_report", "export_report"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/regression_bootstrap_v1/native_stage.identity.json","roles":["frontend_report","export_report"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ],
       "release_qualified": [
-        {
-          "path": "validation/results/method_factory/regression_bootstrap_v1/method_audit.identity.json",
-          "roles": ["method_audit"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        },
-        {
-          "path": "validation/results/method_factory/regression_bootstrap_v1/packaged_acceptance.identity.json",
-          "roles": ["packaged_acceptance"],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        }
+        {"path":"validation/results/method_factory/regression_bootstrap_v1/method_audit.identity.json","roles":["method_audit"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}},
+        {"path":"validation/results/method_factory/regression_bootstrap_v1/packaged_acceptance.identity.json","roles":["packaged_acceptance"],"verification":{"kind":"identity_report","identity_pointers":{"passed":"/passed","feature_id":"/feature_id","method_version":"/method_version","catalogue_snapshot_date":"/catalogue_snapshot_date"},"source_artifacts_pointer":"/source_artifacts","generated_at_pointer":"/generated_at_utc"}}
       ]
     }
   }

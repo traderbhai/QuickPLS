@@ -48,6 +48,11 @@ import {
 } from "./nativePrototypeData";
 import { useNativePrototypeAdapter } from "./nativePrototypeAdapters";
 import { AnalysisCatalog } from "../components/AnalysisCatalog";
+import { methods } from "../data/sample";
+import {
+  analysisCatalogCapabilityCountsV2,
+  analysisCatalogCapabilityEntriesV2,
+} from "../domain/analysisCatalogCapabilityV2";
 import { DataWorkspace } from "../components/DataWorkspace";
 import { Explorer } from "../components/Explorer";
 import { Inspector } from "../components/Inspector";
@@ -376,7 +381,7 @@ function DesktopMenu({
     ],
     Tools: [
       { label: "Trust Center", action: () => setView("trust") },
-      { label: "Method Scope", action: () => openDialog("method_scope") },
+      { label: "Method Details", action: () => openDialog("method_scope") },
       { label: "Preferences", action: () => setView("settings") },
     ],
     Window: [
@@ -433,7 +438,7 @@ function CommandBar({ data, openDialog }: { data: NativePrototypeData; openDialo
     <div className="np-command-spacer" />
     <div className="np-ribbon-group calculate">
       <select aria-label="Selected method" value={data.selectedMethodLabel} onChange={() => undefined}><option>{data.selectedMethodLabel}</option><option>More methods in Setup...</option></select>
-      <Chip tone="good">Validated scope</Chip>
+      <Chip tone="good">Supported setup</Chip>
       <button className="primary" onClick={() => openDialog("calculation_setup")}><Play size={18} /> <span>Run</span></button>
     </div>
   </div>;
@@ -508,7 +513,7 @@ function SetupCommandBar({ openDialog, setView }: { openDialog: (dialog: NativeP
       { label: "Export Tables", icon: Table2, action: () => setView("report") },
       { label: "Export Figures", icon: FileDown, action: () => setView("report") },
     ] },
-    { title: "Evidence", items: [
+    { title: "Diagnostics", items: [
       { label: "PLSpredict", icon: BarChart3, action: () => setView("setup") },
       { label: "MICOM", icon: Move, action: () => setView("setup") },
       { label: "Bootstrap", icon: Sigma, dialog: "calculation_setup" },
@@ -569,7 +574,7 @@ function RunCommandBar({ openDialog, setView }: { openDialog: (dialog: NativePro
 function ResultsCommandBar({ openDialog, setView }: { openDialog: (dialog: NativePrototypeDialog) => void; setView: (view: NativePrototypeView) => void }) {
   const buttons: NativeCommandItem[] = [
     { label: "Select Run", icon: Play, menu: true, action: () => dispatchNativeResultsCommand("select-run") },
-    { label: "Method Confidence", icon: BarChart3, menu: true, action: () => dispatchNativeResultsCommand("method-confidence") },
+    { label: "Method Details", icon: BarChart3, menu: true, action: () => dispatchNativeResultsCommand("method-confidence") },
     { label: "Copy Table", icon: FileText, action: () => dispatchNativeResultsCommand("copy-current-table") },
     { label: "Export Table", icon: FileDown, menu: true, action: () => dispatchNativeResultsCommand("export-current-table") },
     { label: "Export Workbook", icon: Table2, menu: true, action: () => setView("report") },
@@ -632,9 +637,9 @@ function TrustCommandBar({
   setReleaseIntegrity: (result: ChecksumVerification | null) => void;
 }) {
   const buttons: Array<NativeCommandItem & { separator?: boolean }> = [
-    { label: "Refresh Evidence", icon: Undo2, action: () => dispatchNativeTrustCommand("refresh-evidence") },
+    { label: "Refresh References", icon: Undo2, action: () => dispatchNativeTrustCommand("refresh-evidence") },
     { label: "Open Method Doc", icon: BookOpen, separator: true, action: () => dispatchNativeTrustCommand("open-method-doc") },
-    { label: "Export Evidence Index", icon: Table2, action: () => dispatchNativeTrustCommand("export-evidence-index") },
+    { label: "Export Reference Index", icon: Table2, action: () => dispatchNativeTrustCommand("export-evidence-index") },
     {
       label: "Verify Checksums",
       icon: ShieldCheck,
@@ -649,8 +654,8 @@ function TrustCommandBar({
           .catch((error) => dispatchNativeStatus(String(error), "error"));
       },
     },
-    { label: "Known Differences", icon: AlertTriangle, separator: true, dialog: "method_scope" },
-    { label: "About Validation", icon: HelpCircle, dialog: "method_scope" },
+    { label: "Known Limitations", icon: AlertTriangle, separator: true, dialog: "method_scope" },
+    { label: "About Method Support", icon: HelpCircle, dialog: "method_scope" },
   ];
   return <div className="np-commandbar np-trust-commandbar np-ribbon" data-v241-trust-ribbon="true">
     {buttons.map((button) => {
@@ -822,7 +827,7 @@ function CompactCommandBar({
     ],
     trust: [
       { label: "Documentation", icon: BookOpen, dialog: "documentation" },
-      { label: "Method scope", icon: ShieldCheck, dialog: "method_scope" },
+      { label: "Method details", icon: ShieldCheck, dialog: "method_scope" },
     ],
     settings: [
       { label: "Save", icon: Save, action: () => dispatchNativeSettingsCommand("save") },
@@ -867,6 +872,11 @@ function CompactCommandBar({
 type NativeStatusMessage = { message: string; tone?: "success" | "info" | "warning" | "error" } | null;
 
 function StatusBar({ data, view, message }: { data: NativePrototypeData; view: NativePrototypeView; message: NativeStatusMessage }) {
+  const settings = useWorkspace((state) => state.analysisSettings);
+  const experimentalLabsEnabled = useWorkspace((state) => state.uiPreferences.experimentalLabsEnabled);
+  const methodCounts = useMemo(() => analysisCatalogCapabilityCountsV2(
+    analysisCatalogCapabilityEntriesV2(methods, settings, { experimentalLabsEnabled }),
+  ), [experimentalLabsEnabled, settings]);
   const statusOverride = message
     ? <span className={`status-cell command-feedback ${message.tone ?? "info"}`}>{message.message}</span>
     : null;
@@ -875,7 +885,7 @@ function StatusBar({ data, view, message }: { data: NativePrototypeData; view: N
       {statusOverride ?? <span className="status-cell ready">Ready</span>}
       <span className="status-cell"><MonitorCog size={15} /> Offline</span>
       <span className="status-cell">{data.projectSummary.name}</span>
-      <span className="status-cell"><CheckCircle2 size={15} /> Engine: Validated (PLS-SEM)</span>
+      <span className="status-cell"><CheckCircle2 size={15} /> Engine: Ready (PLS-SEM)</span>
       <span className="status-cell">{data.recentProjects.length} recent project(s)</span>
     </footer>;
   }
@@ -906,7 +916,7 @@ function StatusBar({ data, view, message }: { data: NativePrototypeData; view: N
       <span>{data.resultSummary.hasRun ? "Results loaded" : "No completed run"}</span>
       <span>{data.selectedRunLabel}</span>
       <span>{data.projectSummary.paths} path(s)</span>
-      <span className="right"><CheckCircle2 size={13} /> Scope: {data.projectSummary.status}</span>
+      <span className="right"><CheckCircle2 size={13} /> Setup: {data.projectSummary.status}</span>
     </footer>;
   }
   if (view === "report") {
@@ -922,9 +932,9 @@ function StatusBar({ data, view, message }: { data: NativePrototypeData; view: N
     return <footer className="np-statusbar np-trust-statusbar">
       {statusOverride ?? <span><span className="ready-dot" /> Ready</span>}
       <span><MonitorCog size={15} /> Offline</span>
-      <span>Evidence loaded: 2025-05-12 10:22:14</span>
-      <span>Validated methods: 6</span>
-      <span>Experimental methods: 7</span>
+      <span>References updated: 2025-05-12 10:22:14</span>
+      <span>Supported methods: {methodCounts.standard}</span>
+      <span>Experimental methods: {methodCounts.experimental}</span>
       <span className="right"><CheckCircle2 size={13} /> Release checksums available</span>
     </footer>;
   }
@@ -942,7 +952,7 @@ function StatusBar({ data, view, message }: { data: NativePrototypeData; view: N
       <span><MonitorCog size={15} /> Offline</span>
       <span>Workers: {data.runSummary.settings.find(([label]) => label === "Workers")?.[1] ?? "1"}</span>
       <span>Elapsed Time: {data.runSummary.elapsed}</span>
-      <span className="right">Scope: Data &amp; Model</span>
+      <span className="right">Checks: Data &amp; Model</span>
     </footer>;
   }
   return <footer className="np-statusbar">
@@ -976,7 +986,7 @@ function HomeScreen({ data, setView, openDialog }: { data: NativePrototypeData; 
     project.status,
   ]);
   const messageRows = data.messages;
-  const statusTone = (status: string) => status === "Validated" ? "good" : status === "Error" ? "bad" : status === "Not Run" ? "neutral" : "warn";
+  const statusTone = (status: string) => status === "Ready" || status === "Supported setup" ? "good" : status === "Error" ? "bad" : status === "Not Run" ? "neutral" : "warn";
   return <main className="np-home-manager" data-v237-screen="home" data-v241-home-exact="true">
     <span className="np-parity-required-text">Welcome to QuickPLS 2.0 Project Summary Quick Links Open Project</span>
     <section className="np-home-top">
@@ -1033,7 +1043,7 @@ function HomeScreen({ data, setView, openDialog }: { data: NativePrototypeData; 
             <dt>Description:</dt><dd>{data.projectSummary.constructs} constructs, {data.projectSummary.indicators} indicators, {data.projectSummary.paths} paths.</dd>
           </dl>
           <div className="np-detail-divider" />
-          <div className="np-validation-status"><strong>Validation Status</strong><Chip tone={data.projectSummary.status === "Ready" ? "good" : "warn"}>{data.projectSummary.status}</Chip></div>
+          <div className="np-validation-status"><strong>Project Checks</strong><Chip tone={data.projectSummary.status === "Ready" ? "good" : "warn"}>{data.projectSummary.status}</Chip></div>
           <dl>
             <dt>Checked:</dt><dd>{new Date().toLocaleString()}</dd>
             <dt>Issues:</dt><dd>{data.projectSummary.status === "Ready" ? "0" : "Review setup"}</dd>
@@ -1049,7 +1059,7 @@ function HomeScreen({ data, setView, openDialog }: { data: NativePrototypeData; 
     </section>
     <section className="np-desktop-pane np-message-pane">
       <div className="np-message-tabs">
-        {["Messages", "Recovery (1)", "Validation Evidence", "Recent Activity"].map((tab, index) => <button key={tab} className={index === 0 ? "active" : ""}>{tab}</button>)}
+        {["Messages", "Recovery (1)", "Run Details", "Recent Activity"].map((tab, index) => <button key={tab} className={index === 0 ? "active" : ""}>{tab}</button>)}
         <span className="np-message-tools"><Search size={14} /><X size={14} /><ListChecks size={15} /></span>
       </div>
       <table className="np-message-table">
@@ -1343,8 +1353,8 @@ function SetupScreen({ data, openDialog }: { data: NativePrototypeData; openDial
         <PropertyRow label="Algorithm" value={data.selectedMethodLabel} />
         <PropertyRow label="Estimator" value="PLS Algorithm (Path weighting)" />
         <PropertyRow label="Output" value="Paths, loadings, R², reliability" />
-        <PropertyRow label="Scope" value="Validated documented scope" />
-        <button className="full" onClick={() => openDialog("method_scope")}>Method Scope...</button>
+        <PropertyRow label="Requirements" value="Supported setup" />
+        <button className="full" onClick={() => openDialog("method_scope")}>Method Details...</button>
       </aside>
     </div>
   </main>;
@@ -1396,9 +1406,9 @@ function SetupWorkbenchScreen({ data, openDialog }: { data: NativePrototypeData;
       </div>
     </section>
     <aside className="np-method-evidence-drawer" data-v245-setup-drawer="true">
-      <header><h2>Why this method?</h2><span className="np-compat-text">Method Scope</span><button aria-label="Close method evidence"><X size={15} /></button></header>
-      <h3>Validated scope</h3>
-      <p><CheckCircle2 size={14} />{activeMethod?.reason ?? "Current project is evaluated against documented QuickPLS scope."}</p>
+      <header><h2>Why this method?</h2><span className="np-compat-text">Method Details</span><button aria-label="Close method details"><X size={15} /></button></header>
+      <h3>Supported setup</h3>
+      <p><CheckCircle2 size={14} />{activeMethod?.reason ?? "The current project meets the listed model and data requirements."}</p>
       <p className="np-compat-text">{data.projectSummary.constructs} constructs, {data.projectSummary.indicators} indicators, {data.projectSummary.paths} paths, {data.projectSummary.cases} cases.</p>
       <button className="link">Learn more</button>
       <h3>Requirements</h3>
@@ -1416,14 +1426,14 @@ function SetupWorkbenchScreen({ data, openDialog }: { data: NativePrototypeData;
       <h3>Limitations</h3>
       <ul className="warn">
         {unavailable.slice(0, 2).map((card) => <li key={card.name}><AlertTriangle size={14} />{card.name}: {card.reason}</li>)}
-        {!unavailable.length ? <li><AlertTriangle size={14} />Review method documentation before extending beyond validated scope.</li> : null}
+        {!unavailable.length ? <li><AlertTriangle size={14} />Review Method Details before changing the supported setup.</li> : null}
       </ul>
       <button className="link">See details</button>
-      <h3>Evidence & References</h3>
+      <h3>References &amp; Known Limitations</h3>
       <ul className="links">
         <li><FileText size={14} />Method documentation</li>
         <li><FileText size={14} />Recent simulations summary (2023)</li>
-        <li><FileText size={14} />Comparative evidence (PLS-SEM vs CB-SEM)</li>
+        <li><FileText size={14} />Method comparison reference (PLS-SEM vs CB-SEM)</li>
       </ul>
     </aside>
     <section className="np-setup-bottom">
@@ -1550,7 +1560,7 @@ function ResultsScreen({ data }: { data: NativePrototypeData }) {
   const fRows = pathRows.map((row) => [row[0], "N/A", "N/A", "N/A"]).slice(0, 6);
   const provenanceRows = [
     [data.resultSummary.createdAt || new Date().toISOString(), "Analyst", data.resultSummary.hasRun ? "Run loaded" : "No completed run", `${data.resultSummary.method}; seed ${data.resultSummary.seed}; fingerprint ${data.resultSummary.fingerprint}`],
-    [new Date().toISOString(), "QuickPLS", "Validation", `Scope status: ${data.projectSummary.status}`],
+    [new Date().toISOString(), "QuickPLS", "Requirements", `Setup status: ${data.projectSummary.status}`],
     [new Date().toISOString(), "QuickPLS", "Project", `${data.projectSummary.cases} cases, ${data.projectSummary.constructs} constructs, ${data.projectSummary.paths} paths`],
   ];
   const selectedPathLabel = pathRows[0]?.[0] ?? "No path selected";
@@ -1572,7 +1582,7 @@ function ResultsScreen({ data }: { data: NativePrototypeData }) {
       <div><span>Sample Size</span><strong>{data.projectSummary.cases}</strong></div>
       <div><span>Bootstrap Samples</span><strong>{bootstrapSamples}</strong></div>
       <div><span>Warnings</span><strong className={warningCount > 0 ? "warn" : "good"}>{warningCount > 0 ? <AlertTriangle size={15} /> : <CheckCircle2 size={15} />}{data.resultSummary.warnings}</strong></div>
-      <div><span>Validated Scope</span><Chip tone={data.projectSummary.status.toLowerCase().includes("valid") ? "good" : "warn"}>{data.projectSummary.status}</Chip></div>
+      <div><span>Supported Setup</span><Chip tone={data.projectSummary.status.toLowerCase().includes("ready") || data.projectSummary.status.toLowerCase().includes("supported") ? "good" : "warn"}>{data.projectSummary.status}</Chip></div>
       <button>Expert Results</button>
     </section>
     <section className="np-results-main">
@@ -1605,7 +1615,7 @@ function ResultsScreen({ data }: { data: NativePrototypeData }) {
       <header><h2>Interpretation / Row Details</h2><span><Pin size={13} /><X size={13} /></span></header>
       <section><h3>Selected Path</h3><strong>{selectedPathLabel}</strong><dl><dt>Original sample (O)</dt><dd>{selectedPathCoefficient}</dd><dt>95% Confidence Interval</dt><dd>{pathRows[0]?.[5] && pathRows[0]?.[6] ? `[${pathRows[0][5]}, ${pathRows[0][6]}]` : "Not available"}</dd><dt>p value</dt><dd className="good">{pathRows[0]?.[4] ?? "N/A"}</dd></dl></section>
       <section><h3>Interpretation</h3><p className="good-line"><CheckCircle2 size={18} />{data.resultSummary.interpretationTitle}: {data.resultSummary.interpretationBody}</p></section>
-      <section><h3>What to Inspect Next</h3><ul><li>Check measurement quality for constructs connected to {selectedPathLabel}.</li><li>Review inference availability before reporting p values or confidence intervals.</li><li>Inspect warnings and scope details in the Method Confidence drawer.</li></ul></section>
+      <section><h3>What to Inspect Next</h3><ul><li>Check measurement quality for constructs connected to {selectedPathLabel}.</li><li>Review inference availability before reporting p values or confidence intervals.</li><li>Inspect warnings, requirements, and cautions in Method Details.</li></ul></section>
       <section><h3>Suggested Report Wording</h3><p className="report-wording">{data.resultSummary.reportWording}</p></section>
       <section><h3>Linked Diagram Object</h3><p>Path: <a>{selectedPathLabel}</a></p><p>Model Diagram: <a>{data.projectSummary.name}</a></p></section>
     </aside>
@@ -1694,7 +1704,7 @@ function ReportScreen({ data, openDialog }: { data: NativePrototypeData; openDia
           <h2>NOTES AND INTERPRETATION</h2>
           <label><span>Include interpretation notes:</span><input type="checkbox" checked readOnly /><button>Edit Notes...</button></label>
           <h2>PROVENANCE</h2>
-          <label><span>Include validation footer:</span><input type="checkbox" checked readOnly /><button>View Details...</button></label>
+          <label><span>Include run details footer:</span><input type="checkbox" checked readOnly /><button>View Details...</button></label>
         </div>
       </aside>
     </section>
@@ -1720,7 +1730,7 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
     ["PLS-SEM", ["PLS-SEM Algorithm", "PLS-SEM Bootstrapping", "PLS-SEM Blindfolding", "PLS-SEM Consistency PLSc", "PLS-SEM IPMA", "PLS-SEM MICOM"]],
     ["Assessment", ["Measurement Model Assessment", "Structural Model Assessment"]],
     ["Inference", ["Bootstrapping", "Structural Path Randomization", "Confidence Intervals", "HTMT Inference"]],
-    ["Prediction", ["PLS-Predict", "Holdout Validation"]],
+    ["Prediction", ["PLS-Predict", "Holdout Prediction"]],
     ["Groups", ["Multi-Group Analysis (MGA)", "MICOM (Measurement Invariance)"]],
     ["Regression", ["Linear Regression", "Robust Regression"]],
     ["CB-SEM", []],
@@ -1750,16 +1760,16 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
     reason,
     "documented",
     new Date().toISOString().slice(0, 10),
-    `${method.toLowerCase().replace(/[^a-z0-9]+/g, "_")}_scope.md`,
+    `${method.toLowerCase().replace(/[^a-z0-9]+/g, "_")}_method_details.md`,
     status,
   ]);
   const statusIcon = (state: string) => state === "ok" ? <CheckCircle2 size={13} /> : state === "warn" ? <AlertTriangle size={13} /> : <X size={13} />;
-  const statusTone = (status: string) => status.toLowerCase().includes("valid") || status.toLowerCase().includes("recommended") ? "good" : status.toLowerCase().includes("experimental") || status.toLowerCase().includes("setup") || status.toLowerCase().includes("available") ? "warn" : "bad";
-  const selectedEvidence = evidenceRows[0] ?? ["No method", "No scope", "No evidence loaded", "N/A", "N/A", "N/A", "Unsupported"];
+  const statusTone = (status: string) => status.toLowerCase().includes("supported") || status.toLowerCase().includes("recommended") ? "good" : status.toLowerCase().includes("experimental") || status.toLowerCase().includes("setup") || status.toLowerCase().includes("available") ? "warn" : "bad";
+  const selectedEvidence = evidenceRows[0] ?? ["No method", "No requirements", "No references loaded", "N/A", "N/A", "N/A", "Unsupported"];
   const releaseVersion = "2.46.0";
   const checksumPrompt = "Use Verify Checksums Now to inspect current release artifacts";
   return <main className="np-trust-center-exact" data-v237-screen="trust" data-v241-trust-exact="true">
-    <span className="np-parity-required-text">Method Compatibility Matrix Validation Evidence Evidence Detail Release Integrity Overall Assessment Scope checked</span>
+    <span className="np-parity-required-text">Method Compatibility Matrix Method References Known Limitations Run Details Overall Assessment Requirements checked</span>
     <aside className="np-trust-family-pane np-desktop-pane">
       <div className="np-pane-title"><strong>Method Families</strong><ChevronDown size={13} /></div>
       <div className="np-trust-tree">
@@ -1774,7 +1784,7 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
       </div>
       <div className="np-trust-filters">
         <h3>Filters</h3>
-        <label><input type="checkbox" checked readOnly /><CheckCircle2 size={13} />Validated</label>
+        <label><input type="checkbox" checked readOnly /><CheckCircle2 size={13} />Supported</label>
         <label><input type="checkbox" checked readOnly /><AlertTriangle size={13} />Experimental</label>
         <label><input type="checkbox" checked readOnly /><X size={13} />Unsupported</label>
       </div>
@@ -1792,9 +1802,9 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
         </table>
       </section>
       <section className="np-trust-panel evidence">
-        <h2>Validation Evidence</h2>
+        <h2>Method References &amp; Limitations</h2>
         <table className="np-trust-evidence-table">
-          <thead><tr>{["Method", "Scope", "Reference Source", "Tolerance", "Last Audit", "Artifact", "Status"].map((header) => <th key={header}>{header}</th>)}</tr></thead>
+          <thead><tr>{["Method", "Requirements", "Reference", "Comparison Tolerance", "Last Reviewed", "Method Note", "Availability"].map((header) => <th key={header}>{header}</th>)}</tr></thead>
           <tbody>{evidenceRows.map((row) => <tr key={row[0]}>
             {row.slice(0, 5).map((cell, index) => <td key={`${row[0]}-${index}`}>{cell}</td>)}
             <td><a>{row[5]}</a></td>
@@ -1804,17 +1814,17 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
       </section>
     </section>
     <aside className="np-trust-detail-pane np-desktop-pane">
-      <div className="np-pane-title"><strong>Evidence Detail</strong><ChevronDown size={13} /></div>
+      <div className="np-pane-title"><strong>Method Details</strong><ChevronDown size={13} /></div>
       <section className="np-trust-detail-section">
         <h2>Method: <a>{selectedEvidence[0]}</a></h2>
       </section>
       <section className="np-trust-detail-section">
-        <h3><CheckCircle2 size={15} />Validated Scope</h3>
+        <h3><CheckCircle2 size={15} />Supported Setup</h3>
         <p>{selectedEvidence[2]}</p>
-        <p><strong>Includes:</strong> current documented QuickPLS scope for {selectedEvidence[1]}.</p>
+        <p><strong>Requirements:</strong> the listed model and data setup for {selectedEvidence[1]}.</p>
       </section>
       <section className="np-trust-detail-section">
-        <h3><X size={15} />Unsupported Variants</h3>
+        <h3><X size={15} />Unsupported Setups</h3>
         <ul>
           <li>Two-stage approach</li>
           <li>Higher-order constructs (component-based)</li>
@@ -1823,7 +1833,7 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
         </ul>
       </section>
       <section className="np-trust-detail-section">
-        <h3><AlertTriangle size={15} />Known Differences</h3>
+        <h3><AlertTriangle size={15} />Known Limitations</h3>
         <p>Numerical differences may occur vs. other software due to:</p>
         <ul>
           <li>Scaling (standardization vs. original metric)</li>
@@ -1838,7 +1848,7 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
         <p>CPU Features: SSE2 or higher</p>
       </section>
       <section className="np-trust-detail-section">
-        <h3><FileText size={15} />Validation Artifacts</h3>
+        <h3><FileText size={15} />Technical References</h3>
         {["alg_plssem_v2.0.pdf", "alg_plssem_tests_v2.0.zip", "alg_plssem_replication.xlsx"].map((artifact, index) => <p key={artifact}><a>{artifact}</a><span>(SHA-256)</span><code>{["3F2A...9C71", "C6D1...7B2E", "7A91...1E8F"][index]}</code><CheckCircle2 size={13} /></p>)}
       </section>
       <section className="np-trust-detail-section references">
@@ -1852,9 +1862,9 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
       <div className="np-tabs"><button className="active">Release Integrity</button><button>Audit Log</button><button>Dependencies</button><button>Method Notes</button></div>
       <div className="np-release-grid">
         <label>Installer Checksum (SHA-256):<input value={checksumPrompt} readOnly /></label>
-        <label>Evidence Index Checksum (SHA-256):<input value="Loaded from bundled validation evidence index" readOnly /></label>
+        <label>Reference Index Checksum (SHA-256):<input value="Loaded from bundled technical reference index" readOnly /></label>
         <label>Portable Package Checksum (SHA-256):<input value={checksumPrompt} readOnly /></label>
-        <label>Validation Bundle Checksum (SHA-256):<input value="See validation artifact index for current bundle status" readOnly /></label>
+        <label>Technical Reference Bundle Checksum (SHA-256):<input value="See the technical reference index for current bundle status" readOnly /></label>
         <label>Current Version:<input value={releaseVersion} readOnly /></label>
         <p><strong>Signature Status:</strong> See current release notes and checksum verification result.</p>
         <label>Offline Runtime Included:<input value="Offline desktop runtime; no internet dependency for calculation" readOnly /></label>
@@ -2036,8 +2046,8 @@ function ImportDataWizard({ data }: { data: NativePrototypeData }) {
         </section>
       </aside>
       <div className="np-import-validation-summary">
-        <strong>Validation summary</strong>
-        <span className="good"><CheckCircle2 size={17} /> Headers valid<br /><small>{data.projectSummary.variables} variable names</small></span>
+        <strong>Import checks</strong>
+        <span className="good"><CheckCircle2 size={17} /> Headers ready<br /><small>{data.projectSummary.variables} variable names</small></span>
         <span className={data.projectSummary.cases ? "good" : "warn"}>{data.projectSummary.cases ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />} Cases<br /><small>{data.projectSummary.cases}</small></span>
         <span className={data.projectSummary.variables ? "good" : "warn"}>{data.projectSummary.variables ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />} Variables<br /><small>{data.projectSummary.variables}</small></span>
         <span className={missingText.startsWith("0 ") ? "good" : "warn"}>{missingText.startsWith("0 ") ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />} Missing values<br /><small>{missingText}</small></span>
@@ -2295,7 +2305,7 @@ function Dialog({
     sample_gallery: "Sample Project Gallery",
     import_data: "Import Data",
     calculation_setup: "Calculation Setup",
-    method_scope: "Method Scope and Evidence",
+    method_scope: "Method Details",
     export_options: "Export Options",
     help_shortcuts: "Help and Shortcuts",
     settings: "Preferences",
@@ -2314,7 +2324,7 @@ function Dialog({
     sample_gallery: <DataTable headers={["Sample", "Purpose", "Status"]} rows={[["Reflective PLS-SEM", "Core workflow", "Ready"], ["Mediation", "Indirect effects", "Ready"], ["CB-SEM CFA", "Reflective measurement", "Ready"], ["NCA", "Necessity analysis", "Ready"]]} />,
     import_data: <ImportDataWizard data={data} />,
     calculation_setup: <CalculationSetupDialog />,
-    method_scope: <><p>Validated for documented QuickPLS scope. Unsupported variants remain blocked or explicitly marked.</p><DataTable headers={["Evidence", "Status"]} rows={[["Independent reference", "Passed"], ["Tolerance", "1e-6 where conventions match"], ["Runtime dependency", "Offline, no R required at runtime"]]} /></>,
+    method_scope: <><p>This method is available for the listed model and data requirements. Unsupported setups remain unavailable or are marked Experimental.</p><DataTable headers={["Detail", "Value"]} rows={[["Method reference", "Available"], ["Comparison tolerance", "1e-6 where conventions match"], ["Runtime dependency", "Offline, no R required at runtime"]]} /></>,
     export_options: <><PropertyRow label="Preset" value="Reviewer Pack" /><PropertyRow label="Tables" value="CSV, HTML, XLSX" /><PropertyRow label="Figure" value="SVG" /><PropertyRow label="Include interpretation notes" value="Yes" /></>,
     help_shortcuts: <DataTable headers={["Shortcut", "Action"]} rows={[["Ctrl+N", "New project"], ["Ctrl+O", "Open project"], ["Ctrl+S", "Save project"], ["F5", "Run calculation"], ["Delete", "Delete selected object"]]} />,
     settings: <SettingsScreen />,
@@ -2322,13 +2332,13 @@ function Dialog({
     documentation: <div className="np-doc-browser">
       {[
         ["Quick Start", "Open or import a dataset, create constructs in Model, choose a method in Setup, run the calculation, then review Results and Report."],
-        ["Data Import", "Use raw CSV/XLSX/SAV files where available. Matrix imports require sample size and are limited to compatible analysis scopes."],
+        ["Data Import", "Use raw CSV/XLSX/SAV files where available. Matrix imports require sample size and a compatible analysis setup."],
         ["SEM Designer", "Create constructs, assign indicators, draw paths/covariances, arrange the diagram, and check publication layout before export."],
-        ["Method Setup", "QuickPLS recommends only methods that match the current dataset, model shape, and validated scope boundaries."],
-        ["Running Analyses", "Runs record the data fingerprint, recipe fingerprint, seed, worker count, warnings, and method scope status."],
+        ["Method Setup", "QuickPLS recommends only methods that match the current dataset, model shape, and stated requirements."],
+        ["Running Analyses", "Runs record the data fingerprint, recipe fingerprint, seed, worker count, warnings, and requirements status."],
         ["Results Interpretation", "Use result-specific findings as guidance. Thresholds are aids, not universal pass/fail rules."],
         ["Report Export", "SVG is the audited diagram export. CSV, HTML, and XLSX table exports use existing report pipelines."],
-        ["Trust Center", "Review validation evidence, known differences, release integrity, and supported method scope before reporting."],
+        ["Trust Center", "Review method references, known limitations, release integrity, and requirements before reporting."],
       ].map(([title, text]) => <section key={title}><h3>{title}</h3><p>{text}</p></section>)}
     </div>,
     data_transform: <DataTransformDialog close={close} />,

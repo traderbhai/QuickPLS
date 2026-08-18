@@ -240,7 +240,7 @@ export const methodCards = [
   { lane: "Available after setup", name: "PLS Predict", status: "Needs target", reason: "Choose prediction target and folds.", outputs: "Q-squared predict, RMSE, MAE" },
   { lane: "Available after setup", name: "Importance Performance Map", status: "Needs target", reason: "Requires a selected endogenous construct.", outputs: "Importance and performance table" },
   { lane: "Available after setup", name: "MGA / MICOM", status: "Needs group", reason: "Requires an observed group column.", outputs: "Invariance and group differences" },
-  { lane: "Not applicable", name: "PLSc", status: "Blocked", reason: "Only reflective model variants in documented scope.", outputs: "Consistent loadings and paths" },
+  { lane: "Not applicable", name: "PLSc", status: "Blocked", reason: "Only reflective model variants meet the listed requirements.", outputs: "Consistent loadings and paths" },
   { lane: "Not applicable", name: "Second-order Constructs", status: "No hierarchy", reason: "No hierarchical construct in this model.", outputs: "Higher-order construct estimates" },
   { lane: "Not applicable", name: "Gaussian Copula", status: "Diagnostics", reason: "Requires suitable nonnormal predictors.", outputs: "Endogeneity diagnostic" },
 ];
@@ -255,12 +255,12 @@ export const resultRows = [
 ];
 
 export const trustRows = [
-  ["Reflective measurement", "Supported", "Validated", "Core PLS, PLSc, CB-SEM scope"],
-  ["Formative measurement", "Supported", "Validated", "PLS and GSCA bounded scope"],
-  ["Mediation effects", "Supported", "Validated", "Bootstrap recommended for inference"],
-  ["CB-SEM CFA", "Limited", "Validated scope", "Raw-data reflective single-group scope"],
-  ["Ordinal WLSMV", "Not supported", "Post-v2", "No publication claim"],
-  ["SmartPLS project import", "Not supported", "Explicitly excluded", "No reverse-engineering claim"],
+  ["Reflective measurement", "Supported", "Supported setup", "Core PLS, PLSc, and CB-SEM requirements"],
+  ["Formative measurement", "Supported", "Supported setup", "PLS and GSCA requirements"],
+  ["Mediation effects", "Supported", "Supported setup", "Bootstrap recommended for inference"],
+  ["CB-SEM CFA", "Limited", "Supported setup", "Raw-data reflective single-group requirements"],
+  ["Ordinal WLSMV", "Not supported", "Not available", "Ordinal estimation is not available in this setup"],
+  ["SmartPLS project import", "Not supported", "Not available", "Use neutral raw-data or matrix exchange"],
 ];
 
 export const fallbackNativePrototypeData: NativePrototypeData = {
@@ -299,7 +299,7 @@ export const fallbackNativePrototypeData: NativePrototypeData = {
     ["NCA", "Not Applicable", "Needs X and Y", "No clear NCA inputs detected. Define one X variable and one Y variable."],
   ],
   messages: [
-    ["5/14/2025 9:15:02 AM", "INFO", "Validation", "Project 'Customer_Experience.qpls' validated successfully.", "Customer_Experience.qpls"],
+    ["5/14/2025 9:15:02 AM", "INFO", "Project check", "Project 'Customer_Experience.qpls' passed its readiness checks.", "Customer_Experience.qpls"],
     ["5/14/2025 9:14:58 AM", "INFO", "Data", "Dataset 'CX_Data.csv' loaded. 512 cases, 34 variables.", "Customer_Experience.qpls"],
     ["5/14/2025 9:14:47 AM", "INFO", "Run", "PLS Algorithm completed in 00:00:03.187", "Customer_Experience.qpls"],
   ],
@@ -324,7 +324,7 @@ export const fallbackNativePrototypeData: NativePrototypeData = {
     findings: [["Review", "Low Loadings", "3 indicators"], ["Info", "Strong Paths", "5 paths"]],
     interpretationTitle: "Selected Path",
     interpretationBody: "Select a path or result row to review value-specific interpretation.",
-    reportWording: "The selected model was estimated within the documented QuickPLS scope.",
+    reportWording: "The selected model was estimated with the supported setup and listed requirements.",
   },
   runSummary: {
     state: "Ready",

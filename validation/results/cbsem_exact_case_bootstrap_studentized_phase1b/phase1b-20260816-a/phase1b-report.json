@@ -1,0 +1,89 @@
+{
+  "acceptance_summary": {
+    "accepted_cases": 5,
+    "reasons": [],
+    "status": "all_predeclared_cases_accepted",
+    "total_cases": 5
+  },
+  "case_receipts": [
+    {
+      "acceptance_reasons": [],
+      "case_id": "resource_n180_v9_p18_d18_b5000_w12_seed19001",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase1b/phase1b-20260816-a/cases/resource_n180_v9_p18_d18_b5000_w12_seed19001.json",
+      "sha256": "21c5adf7d7217b80552cd9307b57cf059e97851a9d26c3702ae136e508c34156",
+      "status": "accepted_resource_candidate_evidence"
+    },
+    {
+      "acceptance_reasons": [],
+      "case_id": "stability_n180_v9_p18_d18_b5000_w12_seed19002",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase1b/phase1b-20260816-a/cases/stability_n180_v9_p18_d18_b5000_w12_seed19002.json",
+      "sha256": "3b6f3f84ba8c64d79eb4a8bd5b9f794ad258fd0cbacdea5d97929fa81ffd416b",
+      "status": "accepted_resource_candidate_evidence"
+    },
+    {
+      "acceptance_reasons": [],
+      "case_id": "resource_n180_v9_p18_d18_b10000_w12_seed29001",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase1b/phase1b-20260816-a/cases/resource_n180_v9_p18_d18_b10000_w12_seed29001.json",
+      "sha256": "183c40bd7e0483b0f5ac41362ebb732f05e370439e5f2cfb14b005884576b7e9",
+      "status": "accepted_resource_candidate_evidence"
+    },
+    {
+      "acceptance_reasons": [],
+      "case_id": "stability_n180_v9_p18_d18_b10000_w12_seed29002",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase1b/phase1b-20260816-a/cases/stability_n180_v9_p18_d18_b10000_w12_seed29002.json",
+      "sha256": "09941f210c539ddebfd8e34b3bb833a6e8188edb288cccdb364355821378d415",
+      "status": "accepted_resource_candidate_evidence"
+    },
+    {
+      "acceptance_reasons": [],
+      "case_id": "cancellation_n180_v9_p18_d18_b10000_w12_seed39001",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase1b/phase1b-20260816-a/cases/cancellation_n180_v9_p18_d18_b10000_w12_seed39001.json",
+      "sha256": "f263a3945e36289769276125db61455bf65ab6760a272dde69fa268638d1454f",
+      "status": "accepted_resource_candidate_evidence"
+    }
+  ],
+  "hardware": {
+    "architecture": "AMD64",
+    "logical_cores": 12,
+    "os": "Windows",
+    "os_release": "11",
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase1b_report_v1",
+  "manifest_path": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_manifest_v1.json",
+  "manifest_sha256": "51619f155ebf5921dbf77978fd8726591c3d9059139616fa776d2d0ffbffc256",
+  "physical_memory_bytes": 16442789888,
+  "qualification_boundary": {
+    "missing_evidence": [
+      "authoritative_canonical_v11_bytes",
+      "authoritative_text_export_v11_bytes",
+      "coverage_and_failure_rate_simulation",
+      "broader_dimension_and_model_axes",
+      "package_and_integration_gates"
+    ],
+    "status": "blocked_not_product_qualification"
+  },
+  "run_id": "phase1b-20260816-a",
+  "schema_version": 1,
+  "source_binding": {
+    "binary_path": "target/release/examples/cbsem_exact_case_bootstrap_studentized_benchmark.exe",
+    "binary_sha256": "ae07b26bc72a4f2e2f1a6ffa72fd3caaf2ed6ee50c399073773e6a7655d6e5b4",
+    "data_path": "validation/results/v07_cbsem.csv",
+    "data_sha256": "bbe3db1d036264accf6793c717694672e42ebdc3c47ad412429fb0bfe2fca65d",
+    "recipe_path": "validation/results/v07_cfa.recipe.json",
+    "recipe_sha256": "589c913cd349da4c2a61ae6a1bfbcf0000d6986fe8e886595c5afbb2b356ae19",
+    "rust_example_path": "crates/qpls-resampling/examples/cbsem_exact_case_bootstrap_studentized_benchmark.rs",
+    "rust_example_sha256": "1a1578488d204ba4368b7f5b715669a40f025a4a7e4cb2c450e321a1b00956b0"
+  },
+  "status": "phase1b_applied_resource_candidate_evidence_passed_qualification_blocked",
+  "validation_binding": {
+    "case_schema_path": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_case_v1.schema.json",
+    "case_schema_sha256": "08be413415bccd5aee7760110c8d5aa3dc01d7e15b264a3656bb21297a3f721f",
+    "manifest_schema_path": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_manifest_v1.schema.json",
+    "manifest_schema_sha256": "ae59e1059f11870d9bc591785d85873ff0d433e61726e8524e64fe377b7c67e9",
+    "report_schema_path": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_report_v1.schema.json",
+    "report_schema_sha256": "6490f32e45279079009a04db46d4be9d9e196626635d35cb926cebc4f4b9eae8",
+    "runner_path": "validation/cbsem_exact_case_bootstrap_studentized_phase1b.py",
+    "runner_sha256": "5d9b815f54bcc9bc3b13ab427f9bad53b173f4f4f352c258d1dc90d946814559"
+  }
+}

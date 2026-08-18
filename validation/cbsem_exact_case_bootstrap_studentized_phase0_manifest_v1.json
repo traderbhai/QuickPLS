@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase0_manifest_v1",
+  "status": "predeclared_measurement_matrix_no_caps_or_qualification",
+  "source_binding": {
+    "data_path": "validation/results/v07_cbsem.csv",
+    "data_sha256": "bbe3db1d036264accf6793c717694672e42ebdc3c47ad412429fb0bfe2fca65d",
+    "recipe_path": "validation/results/v07_cfa.recipe.json",
+    "recipe_sha256": "589c913cd349da4c2a61ae6a1bfbcf0000d6986fe8e886595c5afbb2b356ae19",
+    "rust_example": "crates/qpls-resampling/examples/cbsem_exact_case_bootstrap_studentized_benchmark.rs",
+    "standalone_measurement_schema": "validation/cbsem_exact_case_bootstrap_studentized_benchmark_v1.schema.json",
+    "phase0_report_schema": "validation/cbsem_exact_case_bootstrap_studentized_phase0_report_v1.schema.json"
+  },
+  "execution_policy": {
+    "probe_runs": 1,
+    "survivor_warmup_runs": 1,
+    "survivor_measured_runs": 5,
+    "aggregate_statistics": ["median", "p95_type7"],
+    "append_only_result_paths": true,
+    "explicit_execute_required": true,
+    "vary_scheduler_workers_only": true,
+    "cap_decision": "not_permitted_from_phase0"
+  },
+  "stop_criteria": {
+    "maximum_peak_working_set_fraction_of_physical_ram": 0.5,
+    "maximum_text_export_proxy_bytes": 134217728,
+    "maximum_project_document_proxy_bytes": 268435456,
+    "maximum_cancellation_terminal_latency_seconds": 1.0,
+    "maximum_orphan_processes": 0,
+    "exact_repeated_scientific_digest_required": true,
+    "exact_worker_scientific_digest_required": true,
+    "size_scope": "combined_s2_json_is_a_conservative_phase0_proxy_only_until_v11_canonical_and_export_builders_are_authoritative",
+    "stop_effect": "stop_the_case_and_skip_only_manifest_declared_dependants"
+  },
+  "dimension_contract": {
+    "N": "complete_case_sample_size_from_public_exact_bootstrap_source",
+    "V": "observed_variable_count_from_public_compiled_sem_model",
+    "P": "stable_free_parameter_row_count_from_public_s1_refit",
+    "D": "null_until_optimizer_dimension_is_exposed_by_a_public_api"
+  },
+  "cases": [
+    {
+      "case_id": "compact_b500_w1",
+      "order": 1,
+      "mode": "full",
+      "rows": 40,
+      "factors": 1,
+      "replicates": 500,
+      "workers": 1,
+      "cancel_after": null,
+      "roles": ["compact", "resample_axis_floor"],
+      "depends_on": [],
+      "survivor_policy": "probe_then_one_warmup_five_measured_if_no_stop"
+    },
+    {
+      "case_id": "n_axis_n40_f3_b1000_w1",
+      "order": 2,
+      "mode": "full",
+      "rows": 40,
+      "factors": 3,
+      "replicates": 1000,
+      "workers": 1,
+      "cancel_after": null,
+      "roles": ["N_axis_low", "V_P_axis_high_at_low_N"],
+      "depends_on": ["compact_b500_w1"],
+      "survivor_policy": "probe_then_one_warmup_five_measured_if_no_stop"
+    },
+    {
+      "case_id": "factor_axis_n180_f1_b1000_w1",
+      "order": 3,
+      "mode": "full",
+      "rows": 180,
+      "factors": 1,
+      "replicates": 1000,
+      "workers": 1,
+      "cancel_after": null,
+      "roles": ["V_P_axis_low", "N_axis_high_at_low_V_P"],
+      "depends_on": ["compact_b500_w1"],
+      "survivor_policy": "probe_then_one_warmup_five_measured_if_no_stop"
+    },
+    {
+      "case_id": "factor_axis_n180_f2_b1000_w1",
+      "order": 4,
+      "mode": "full",
+      "rows": 180,
+      "factors": 2,
+      "replicates": 1000,
+      "workers": 1,
+      "cancel_after": null,
+      "roles": ["V_P_axis_middle"],
+      "depends_on": ["factor_axis_n180_f1_b1000_w1"],
+      "survivor_policy": "probe_then_one_warmup_five_measured_if_no_stop"
+    },
+    {
+      "case_id": "availability_floor_n180_f3_b1000_w1",
+      "order": 5,
+      "mode": "full",
+      "rows": 180,
+      "factors": 3,
+      "replicates": 1000,
+      "workers": 1,
+      "cancel_after": null,
+      "roles": ["availability_floor", "N_axis_high", "V_P_axis_high", "worker_matrix"],
+      "depends_on": ["factor_axis_n180_f2_b1000_w1", "n_axis_n40_f3_b1000_w1"],
+      "survivor_policy": "probe_then_one_warmup_five_measured_if_no_stop"
+    },
+    {
+      "case_id": "availability_floor_n180_f3_b1000_w4",
+      "order": 6,
+      "mode": "full",
+      "rows": 180,
+      "factors": 3,
+      "replicates": 1000,
+      "workers": 4,
+      "cancel_after": null,
+      "roles": ["availability_floor", "worker_matrix"],
+      "depends_on": ["availability_floor_n180_f3_b1000_w1"],
+      "survivor_policy": "probe_then_one_warmup_five_measured_if_no_stop"
+    },
+    {
+      "case_id": "availability_floor_n180_f3_b1000_w12",
+      "order": 7,
+      "mode": "full",
+      "rows": 180,
+      "factors": 3,
+      "replicates": 1000,
+      "workers": 12,
+      "cancel_after": null,
+      "roles": ["availability_floor", "worker_matrix"],
+      "depends_on": ["availability_floor_n180_f3_b1000_w4"],
+      "survivor_policy": "probe_then_one_warmup_five_measured_if_no_stop"
+    },
+    {
+      "case_id": "result_size_n180_f3_b2000_w4",
+      "order": 8,
+      "mode": "full",
+      "rows": 180,
+      "factors": 3,
+      "replicates": 2000,
+      "workers": 4,
+      "cancel_after": null,
+      "roles": ["result_size_axis", "resample_axis_high"],
+      "depends_on": ["availability_floor_n180_f3_b1000_w4"],
+      "survivor_policy": "probe_then_one_warmup_five_measured_if_no_stop"
+    },
+    {
+      "case_id": "cancellation_n180_f3_b1000_w4",
+      "order": 9,
+      "mode": "cancellation",
+      "rows": 180,
+      "factors": 3,
+      "replicates": 1000,
+      "workers": 4,
+      "cancel_after": 10,
+      "roles": ["cancellation"],
+      "depends_on": ["availability_floor_n180_f3_b1000_w4"],
+      "survivor_policy": "single_typed_cancellation_probe_only"
+    }
+  ],
+  "worker_invariance_group": [
+    "availability_floor_n180_f3_b1000_w1",
+    "availability_floor_n180_f3_b1000_w4",
+    "availability_floor_n180_f3_b1000_w12"
+  ]
+}

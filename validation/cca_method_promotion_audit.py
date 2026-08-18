@@ -19,7 +19,7 @@ RESULTS = ROOT / "validation" / "results"
 CCA_METHOD_VERSION = "cca_composite_residual_v1"
 CCA_MODEL_VERSION = "recursive_standardized_composite_path_model_v1"
 CCA_PROVENANCE_METHOD_VERSION = (
-    "pls_pm_v1+cca_composite_residual_v1+pls_mediation_v1+pls_assessment_v7"
+    "pls_pm_v1+cca_composite_residual_v1+cca_residual_diagnostics_v1+pls_mediation_v1+pls_assessment_v8"
 )
 
 

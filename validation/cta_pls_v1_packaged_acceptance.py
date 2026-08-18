@@ -37,9 +37,14 @@ FACTORY_RAW_REPORT = REPORT_ROOT / "cta_pls_v1_packaged_raw.json"
 FACTORY_ARCHIVE = REPORT_ROOT / "cta_pls_v1_packaged.qpls"
 FACTORY_XLSX = REPORT_ROOT / "cta_pls_v1_packaged.xlsx"
 FACTORY_NETWORK = REPORT_ROOT / "cta_pls_v1_network_samples.jsonl"
+FACTORY_SCREENSHOT_ROOT = REPORT_ROOT / "packaged_screenshots"
 RUNTIME_XLSX = ROOT / "validation" / "results" / "cta_pls_v1_packaged_runtime.xlsx"
 RUNTIME_NETWORK = ROOT / "validation" / "results" / "cta_pls_v1_network_runtime.jsonl"
 DESKTOP = ROOT / "target" / "release" / "quickpls-desktop.exe"
+SCREENSHOT_SNAPSHOT_POLICY = "factory_owned_content_addressed_no_overwrite_v1"
+FACTORY_SCREENSHOT_RELATIVE_ROOT = Path(
+    "validation/results/method_factory/cta_pls_v1/packaged_screenshots"
+)
 PROJECT_ENTRY = "project.json"
 MANIFEST_ENTRY = "manifest.json"
 EXPECTED_PAIRINGS = [
@@ -55,7 +60,7 @@ EXPECTED_SHEET_ORDER = [
     "Total effects",
     "CTA-PLS tetrad summary",
     "CTA-PLS tetrads",
-    "CTA-PLS scope and exclusions",
+    "CTA-PLS requirements and exclus",
     "Construct reliability and valid",
     "Cross loadings",
     "Fornell-Larcker criterion",
@@ -65,6 +70,7 @@ EXPECTED_SHEET_ORDER = [
     "Inner VIF values",
     "f-square effect sizes",
     "Model fit",
+    "Model fit details",
     "Construct cross-validated redun",
     "Run provenance",
 ]
@@ -275,7 +281,7 @@ def verify_exact_values(raw: dict[str, Any], project: dict[str, Any], tables: di
     checks = {
         "same_run_restored": reopen["sameRunRestored"] is True and reopen["expectedRunId"] == run_id and reopen["selectedRunId"] == run_id,
         "archive_identity": archived["provenance"]["method"] == "cta_pls"
-        and archived["provenance"]["method_version"] == "pls_pm_v1+cta_pls_tetrad_v1+pls_mediation_v1+pls_assessment_v7"
+        and archived["provenance"]["method_version"] == "pls_pm_v1+cta_pls_tetrad_v1+pls_mediation_v1+pls_assessment_v8"
         and archived["payload"]["estimation"]["method_version"] == "cta_pls_tetrad_v1"
         and cta["method_version"] == "cta_pls_tetrad_v1",
         "ui_matches_archive": ui_rows == expected_rows,
@@ -436,6 +442,196 @@ def screenshot_integrity(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _snapshot_failure(reason: str, **details: Any) -> dict[str, Any]:
+    return {
+        "passed": False,
+        "storage_policy": SCREENSHOT_SNAPSHOT_POLICY,
+        "reason": reason,
+        **details,
+    }
+
+
+def _artifact_descriptor(path: Path, root: Path) -> dict[str, Any]:
+    resolved_root = root.resolve()
+    resolved = path.resolve()
+    if resolved_root not in resolved.parents or not resolved.is_file():
+        raise ValueError(f"artifact is missing or outside the repository root: {path}")
+    return {
+        "path": resolved.relative_to(resolved_root).as_posix(),
+        "size": resolved.stat().st_size,
+        "sha256": sha256_file(resolved),
+    }
+
+
+def snapshot_validated_screenshots(
+    validated: dict[str, Any],
+    *,
+    root: Path = ROOT,
+    destination_root: Path | None = None,
+) -> dict[str, Any]:
+    """Copy a validated screenshot set into immutable, content-addressed storage.
+
+    Existing snapshot bytes are never overwritten. A changed source after the
+    initial validation, or a changed existing snapshot, makes the gate fail.
+    """
+
+    resolved_root = root.resolve()
+    expected_destination = (resolved_root / FACTORY_SCREENSHOT_RELATIVE_ROOT).resolve()
+    destination = (destination_root or expected_destination).resolve()
+    if destination != expected_destination or resolved_root not in destination.parents:
+        return _snapshot_failure(
+            "snapshot destination is not the CTA method-factory screenshot root",
+            expected_directory=expected_destination.relative_to(resolved_root).as_posix(),
+        )
+    if validated.get("passed") is not True:
+        return _snapshot_failure("source screenshot integrity did not pass")
+
+    rows = validated.get("artifacts")
+    paths = validated.get("paths")
+    if not isinstance(rows, list) or not rows or not isinstance(paths, list):
+        return _snapshot_failure("validated screenshot descriptors are missing")
+    if len(rows) != len(paths) or len(paths) != len(set(paths)):
+        return _snapshot_failure("validated screenshot descriptors are not one-to-one")
+
+    sources: list[tuple[Path, dict[str, Any]]] = []
+    for row in rows:
+        if not isinstance(row, dict) or row.get("passed") is not True:
+            return _snapshot_failure("a source screenshot descriptor is not passing")
+        relative = row.get("path")
+        if not isinstance(relative, str) or not relative or Path(relative).is_absolute():
+            return _snapshot_failure("a source screenshot path is not repository-relative")
+        source = (resolved_root / relative).resolve()
+        try:
+            actual = _artifact_descriptor(source, resolved_root)
+        except (OSError, ValueError) as error:
+            return _snapshot_failure("a source screenshot is missing or unsafe", error=str(error))
+        expected = {
+            "path": relative.replace("\\", "/"),
+            "size": row.get("size"),
+            "sha256": row.get("sha256"),
+        }
+        if actual != expected:
+            return _snapshot_failure(
+                "a source screenshot changed after validation",
+                expected=expected,
+                actual=actual,
+            )
+        sources.append((source, actual))
+
+    source_descriptors = sorted((row for _, row in sources), key=lambda row: row["path"])
+    if sorted(paths) != [row["path"] for row in source_descriptors]:
+        return _snapshot_failure("validated screenshot paths do not match their descriptors")
+    snapshot_id = hashlib.sha256(
+        json.dumps(
+            source_descriptors,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    ).hexdigest()
+    snapshot_directory = destination / snapshot_id
+    try:
+        snapshot_directory.mkdir(parents=True, exist_ok=True)
+    except OSError as error:
+        return _snapshot_failure("the screenshot snapshot directory could not be created", error=str(error))
+
+    copied: list[dict[str, Any]] = []
+    for source, expected in sources:
+        source_key = hashlib.sha256(expected["path"].encode("utf-8")).hexdigest()[:16]
+        target = snapshot_directory / f"{source_key}-{source.name}"
+        created = False
+        try:
+            with target.open("xb") as output:
+                created = True
+                with source.open("rb") as input_file:
+                    shutil.copyfileobj(input_file, output)
+        except FileExistsError:
+            pass
+        except OSError as error:
+            if created:
+                target.unlink(missing_ok=True)
+            return _snapshot_failure("a screenshot copy could not be completed", error=str(error))
+
+        try:
+            actual = _artifact_descriptor(target, resolved_root)
+        except (OSError, ValueError) as error:
+            if created:
+                target.unlink(missing_ok=True)
+            return _snapshot_failure("a copied screenshot is missing or unsafe", error=str(error))
+        if actual["size"] != expected["size"] or actual["sha256"] != expected["sha256"]:
+            if created:
+                target.unlink(missing_ok=True)
+            return _snapshot_failure(
+                "an immutable screenshot snapshot already differs from its validated source",
+                expected=expected,
+                actual=actual,
+            )
+        copied.append(actual)
+
+    copied.sort(key=lambda row: row["path"])
+    copied_paths = [row["path"] for row in copied]
+    return {
+        "passed": len(copied) == len(source_descriptors)
+        and len(copied_paths) == len(set(copied_paths)),
+        "storage_policy": SCREENSHOT_SNAPSHOT_POLICY,
+        "factory_owned": True,
+        "snapshot_id": snapshot_id,
+        "directory": snapshot_directory.relative_to(resolved_root).as_posix(),
+        "source_artifact_count": len(source_descriptors),
+        "copied_artifact_count": len(copied),
+        "required_responsive_screenshots": validated.get(
+            "required_responsive_screenshots", []
+        ),
+        "artifacts": copied,
+        "paths": copied_paths,
+    }
+
+
+def screenshot_snapshot_source_paths(
+    snapshot: dict[str, Any], *, root: Path = ROOT
+) -> list[str]:
+    """Revalidate immutable copies immediately before binding the identity."""
+
+    if snapshot.get("passed") is not True:
+        raise ValueError("CTA screenshot snapshot is not passing")
+    if snapshot.get("storage_policy") != SCREENSHOT_SNAPSHOT_POLICY:
+        raise ValueError("CTA screenshot snapshot storage policy is not exact")
+    snapshot_id = snapshot.get("snapshot_id")
+    if not isinstance(snapshot_id, str) or not re.fullmatch(r"[0-9a-f]{64}", snapshot_id):
+        raise ValueError("CTA screenshot snapshot ID is invalid")
+    expected_directory = (FACTORY_SCREENSHOT_RELATIVE_ROOT / snapshot_id).as_posix()
+    if snapshot.get("directory") != expected_directory or snapshot.get("factory_owned") is not True:
+        raise ValueError("CTA screenshot snapshot is not factory-owned")
+
+    rows = snapshot.get("artifacts")
+    paths = snapshot.get("paths")
+    if not isinstance(rows, list) or not rows or not isinstance(paths, list):
+        raise ValueError("CTA screenshot snapshot descriptors are missing")
+    if (
+        snapshot.get("source_artifact_count") != len(rows)
+        or snapshot.get("copied_artifact_count") != len(rows)
+        or len(rows) != len(paths)
+        or len(paths) != len(set(paths))
+    ):
+        raise ValueError("CTA screenshot snapshot is not a one-to-one copy")
+
+    actual_paths: list[str] = []
+    prefix = f"{expected_directory}/"
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {"path", "size", "sha256"}:
+            raise ValueError("CTA screenshot snapshot contains a malformed descriptor")
+        relative = row.get("path")
+        if not isinstance(relative, str) or not relative.startswith(prefix):
+            raise ValueError("CTA screenshot snapshot contains a shared or unsafe path")
+        actual = _artifact_descriptor(root / relative, root)
+        if actual != row:
+            raise ValueError("CTA screenshot snapshot bytes changed after copying")
+        actual_paths.append(relative)
+    if sorted(paths) != sorted(actual_paths):
+        raise ValueError("CTA screenshot snapshot path list is not exact")
+    return sorted(actual_paths)
+
+
 def source_freshness() -> dict[str, Any]:
     if not DESKTOP.is_file() or not CLI.is_file():
         return {"passed": False, "reason": "release binaries missing"}
@@ -533,7 +729,12 @@ def main() -> int:
     tables = read_xlsx_tables(FACTORY_XLSX)
     exact = verify_exact_values(raw, project, tables)
     offline = read_network_observation(FACTORY_NETWORK)
-    screenshots = screenshot_integrity(raw)
+    screenshots = snapshot_validated_screenshots(
+        screenshot_integrity(raw), destination_root=FACTORY_SCREENSHOT_ROOT
+    )
+    screenshot_sources = (
+        screenshot_snapshot_source_paths(screenshots) if screenshots["passed"] else []
+    )
     mutations = fail_closed_mutations(FACTORY_ARCHIVE)
     invalid = raw["checks"]["ctaPlsInvalidSetup"]
     reopen = raw["checks"]["ctaPlsSaveReopen"]
@@ -607,7 +808,7 @@ def main() -> int:
             *sorted(GATE_SOURCES),
             *build_source_paths(), repository_path(FACTORY_RAW_REPORT),
             repository_path(FACTORY_ARCHIVE), repository_path(FACTORY_XLSX), repository_path(FACTORY_NETWORK),
-            *screenshots["paths"],
+            *screenshot_sources,
         ],
         execution=execution,
     )

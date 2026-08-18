@@ -1,7 +1,7 @@
 # REGRESSION_LOGISTIC_V2
 
-Status: current backend and project-persistence contract for the bounded native
-binary logistic workflow.
+Status: Supported in Standard for the exact native binary logistic workflow
+documented below.
 
 `regression_logistic_v2` fits an intercept plus selected unstandardized numeric
 predictors and controls by deterministic Newton IRLS. It uses listwise complete

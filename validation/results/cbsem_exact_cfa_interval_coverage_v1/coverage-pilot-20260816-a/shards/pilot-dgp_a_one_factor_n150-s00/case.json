@@ -1,0 +1,1582 @@
+{
+  "binary_sha256": "459b8845a7ecc4f7f5b18c9e22b70be19752dcd3699608c95d040944d4402482",
+  "cancellation": null,
+  "dataset_receipts": [
+    {
+      "coverage_evaluated": true,
+      "data_sha256": "83334009984470b3228ebbd32cf8f21a70e6354010646d6494bcc730afcdd49b",
+      "dataset_index": 0,
+      "dgp_id": "dgp_a_one_factor_n150",
+      "digest_authentication": {
+        "checks": {
+          "base_point_result": 1,
+          "bootstrap_schedule_positions": 5000,
+          "bootstrap_source_rows": 5000,
+          "compiler_analytical_identity": 1,
+          "complete_case_universe": 1,
+          "delete_one_sampling_positions": 150,
+          "delete_one_source_rows": 150,
+          "model_scientific_identity": 1,
+          "original_sampling_positions": 1,
+          "original_source_rows": 1,
+          "outer_recipe_analytical_identity": 1,
+          "plan": 1,
+          "scientific_result": 1,
+          "source_dataset_fingerprint": 1
+        },
+        "compact_evidence_typed_sha256": "60e13b57dd9001e6b1124024fbe8d4439058ac8756e17455f4d7e7f45862e1c1",
+        "data_sha256": "83334009984470b3228ebbd32cf8f21a70e6354010646d6494bcc730afcdd49b",
+        "document_typed_sha256": "bedf23e4532784f902cbfc9a2d48415c6a6463cc37edb96e487e79d73319bf8e",
+        "kind": "cbsem_exact_cfa_interval_coverage_digest_verification_receipt_v1",
+        "method": "bound_rust_exact_schedule_and_source_verifier_v1",
+        "reasons": [],
+        "schema_version": 1,
+        "scientific_result_sha256": "9a77943f7790143d399ae0ff1983c99dd374d5de2028df19967b83f6acd1ed19",
+        "source_dataset_fingerprint": "74705a4b07cee4c686b52b3c4a67c1cb107c267613399bd9b4a0b970a488c0c4",
+        "status": "accepted"
+      },
+      "integrity_reasons": [
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6132:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6132:adjusted_upper_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6133:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6133:adjusted_upper_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6131:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6132:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6133:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:variance_6631:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6132:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6132:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6133:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6131:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6131:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6132:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6132:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6133:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:variance_6631:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:variance_6631:upper",
+        "oracle:arithmetic_mismatch:percentile:variance_6631:bias"
+      ],
+      "ledger": {
+        "delete_one_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "failure_rate_inference_unit": "dataset_not_bootstrap_replicate",
+        "point_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "point_failures": 0,
+        "point_successes": 5000,
+        "requested_replicates": 5000,
+        "standard_error_unavailable": 0,
+        "standard_error_unavailable_counts_by_reason": {
+          "derivative_unavailable": 0,
+          "information_not_positive_definite": 0,
+          "invalid_information_variance_or_standard_error": 0,
+          "numerical_information_failure": 0,
+          "singular_information": 0
+        },
+        "studentized_usable": 5000
+      },
+      "manifest_sha256": "9a29e710f6a90c5ed4ee12b3392a8e85d20ca87ed604df9a9c42efc699878d88",
+      "methods": [
+        {
+          "available": true,
+          "method": "percentile",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.6156906433682113,
+              "interval_upper": 1.0092089539116622,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5950178852051395,
+              "interval_upper": 0.9260462724771104,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.11553612468654977,
+              "interval_upper": 0.5910173036463863,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.356017304026258,
+              "interval_upper": 0.7533929753850006,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.4082836183519567,
+              "interval_upper": 0.8241452363614881,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.9539471301702703,
+              "interval_upper": 1.9380175444179826,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": true,
+          "method": "studentized",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.622837617649008,
+              "interval_upper": 1.0028692051312547,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5912445593623556,
+              "interval_upper": 0.9159782213281826,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.15794986464470911,
+              "interval_upper": 0.5996609360597644,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.40736803299643165,
+              "interval_upper": 0.8092593489164355,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.44841242742273535,
+              "interval_upper": 0.8758570506069159,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.9820492375351919,
+              "interval_upper": 2.004504103356728,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": true,
+          "method": "bca",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.6066496908125454,
+              "interval_upper": 0.9980771008595997,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5816020643959349,
+              "interval_upper": 0.9136381506142541,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.13777480059041422,
+              "interval_upper": 0.6112966769180819,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.3863750069040878,
+              "interval_upper": 0.7937494182820739,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.4420035440240371,
+              "interval_upper": 0.8704413136836686,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 1.0014959587307017,
+              "interval_upper": 2.032785926312815,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "arithmetic_checks": 78,
+        "base_inference_available": true,
+        "bca_inference_available": true,
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "endpoint_checks": 36,
+        "endpoint_relative_tolerance": 1e-12,
+        "kind": "cbsem_exact_cfa_interval_coverage_oracle_receipt_v1",
+        "parameter_count": 6,
+        "point_failures": 0,
+        "point_successes": 5000,
+        "reasons": [
+          "arithmetic_mismatch:bca:parameter_6631_6132:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6132:adjusted_upper_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6133:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6133:adjusted_upper_probability",
+          "arithmetic_mismatch:bca:residual_variance_6131:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:residual_variance_6132:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:residual_variance_6133:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:variance_6631:adjusted_lower_probability",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6132:lower",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6132:upper",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6133:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6131:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6131:upper",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6132:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6132:upper",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6133:lower",
+          "arithmetic_mismatch:endpoint:bca:variance_6631:lower",
+          "arithmetic_mismatch:endpoint:bca:variance_6631:upper",
+          "arithmetic_mismatch:percentile:variance_6631:bias"
+        ],
+        "requested_replicates": 5000,
+        "schema_version": 1,
+        "status": "rejected",
+        "studentized_inference_available": true,
+        "studentized_usable": 5000
+      },
+      "scientific_result_sha256": "9a77943f7790143d399ae0ff1983c99dd374d5de2028df19967b83f6acd1ed19",
+      "seeds": {
+        "bootstrap": 5294735045687119601,
+        "data": 6092212602183209866,
+        "oracle": 14805516420314083093
+      },
+      "stage": "pilot",
+      "status": "rejected"
+    },
+    {
+      "coverage_evaluated": true,
+      "data_sha256": "e8cea42d43d05241ceb0aa83b171afe9ea650f5e5eb942779aa966b6adca87ae",
+      "dataset_index": 1,
+      "dgp_id": "dgp_a_one_factor_n150",
+      "digest_authentication": {
+        "checks": {
+          "base_point_result": 1,
+          "bootstrap_schedule_positions": 5000,
+          "bootstrap_source_rows": 5000,
+          "compiler_analytical_identity": 1,
+          "complete_case_universe": 1,
+          "delete_one_sampling_positions": 150,
+          "delete_one_source_rows": 150,
+          "model_scientific_identity": 1,
+          "original_sampling_positions": 1,
+          "original_source_rows": 1,
+          "outer_recipe_analytical_identity": 1,
+          "plan": 1,
+          "scientific_result": 1,
+          "source_dataset_fingerprint": 1
+        },
+        "compact_evidence_typed_sha256": "8598b5662a2a8236cf83cc074a093525b8f796a95d361467774598378b5ef51c",
+        "data_sha256": "e8cea42d43d05241ceb0aa83b171afe9ea650f5e5eb942779aa966b6adca87ae",
+        "document_typed_sha256": "d60021fd73a4d278b98b09e8340d4004c494da93c91db00d160dc5b7945a1365",
+        "kind": "cbsem_exact_cfa_interval_coverage_digest_verification_receipt_v1",
+        "method": "bound_rust_exact_schedule_and_source_verifier_v1",
+        "reasons": [],
+        "schema_version": 1,
+        "scientific_result_sha256": "c2fe017ecef83f7f88d8b9e571d28d21b08c70ae8a53aaed91eee6ae9c197ec4",
+        "source_dataset_fingerprint": "0a70ed148d081221aec76ac2acbece3c98740ace64189375b1cf7b5d0ee9188b",
+        "status": "accepted"
+      },
+      "integrity_reasons": [
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6132:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6132:adjusted_upper_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6133:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6133:adjusted_upper_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6131:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6132:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6133:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:variance_6631:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6132:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6132:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6133:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6131:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6132:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6132:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6133:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:variance_6631:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:variance_6631:upper"
+      ],
+      "ledger": {
+        "delete_one_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "failure_rate_inference_unit": "dataset_not_bootstrap_replicate",
+        "point_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "point_failures": 0,
+        "point_successes": 5000,
+        "requested_replicates": 5000,
+        "standard_error_unavailable": 0,
+        "standard_error_unavailable_counts_by_reason": {
+          "derivative_unavailable": 0,
+          "information_not_positive_definite": 0,
+          "invalid_information_variance_or_standard_error": 0,
+          "numerical_information_failure": 0,
+          "singular_information": 0
+        },
+        "studentized_usable": 5000
+      },
+      "manifest_sha256": "9a29e710f6a90c5ed4ee12b3392a8e85d20ca87ed604df9a9c42efc699878d88",
+      "methods": [
+        {
+          "available": true,
+          "method": "percentile",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.592344826964825,
+              "interval_upper": 0.963091159541009,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5176937330433633,
+              "interval_upper": 0.8830542309358926,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.15477632522717621,
+              "interval_upper": 0.6785871650483023,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.36571566452161447,
+              "interval_upper": 0.8068860558259574,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.554838970689691,
+              "interval_upper": 1.0804776109700946,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 1.0021103850128794,
+              "interval_upper": 2.0816440836642998,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": true,
+          "method": "studentized",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5998143576418432,
+              "interval_upper": 0.9654148242372631,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5219438391073831,
+              "interval_upper": 0.8774785132509054,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.2023021825292075,
+              "interval_upper": 0.6896681878898976,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.40694252739718834,
+              "interval_upper": 0.8502137224531197,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.6071108364476032,
+              "interval_upper": 1.151859128416552,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 1.0218782606720773,
+              "interval_upper": 2.140373095046159,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": true,
+          "method": "bca",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.578924898799803,
+              "interval_upper": 0.94966120393911,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5058868619040986,
+              "interval_upper": 0.8695585663671191,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.18712314661549692,
+              "interval_upper": 0.7015799173889719,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.4047634860172559,
+              "interval_upper": 0.8548063650581003,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.6083800791076597,
+              "interval_upper": 1.151647546081789,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 1.051253475488497,
+              "interval_upper": 2.167307378542813,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "arithmetic_checks": 78,
+        "base_inference_available": true,
+        "bca_inference_available": true,
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "endpoint_checks": 36,
+        "endpoint_relative_tolerance": 1e-12,
+        "kind": "cbsem_exact_cfa_interval_coverage_oracle_receipt_v1",
+        "parameter_count": 6,
+        "point_failures": 0,
+        "point_successes": 5000,
+        "reasons": [
+          "arithmetic_mismatch:bca:parameter_6631_6132:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6132:adjusted_upper_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6133:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6133:adjusted_upper_probability",
+          "arithmetic_mismatch:bca:residual_variance_6131:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:residual_variance_6132:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:residual_variance_6133:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:variance_6631:adjusted_lower_probability",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6132:lower",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6132:upper",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6133:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6131:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6132:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6132:upper",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6133:lower",
+          "arithmetic_mismatch:endpoint:bca:variance_6631:lower",
+          "arithmetic_mismatch:endpoint:bca:variance_6631:upper"
+        ],
+        "requested_replicates": 5000,
+        "schema_version": 1,
+        "status": "rejected",
+        "studentized_inference_available": true,
+        "studentized_usable": 5000
+      },
+      "scientific_result_sha256": "c2fe017ecef83f7f88d8b9e571d28d21b08c70ae8a53aaed91eee6ae9c197ec4",
+      "seeds": {
+        "bootstrap": 7840010502570700827,
+        "data": 10943829398368110659,
+        "oracle": 12339709929417676353
+      },
+      "stage": "pilot",
+      "status": "rejected"
+    },
+    {
+      "coverage_evaluated": true,
+      "data_sha256": "9b688d7c1752f67686fe75814711434231996d34ea722a76af084c1dec9730c4",
+      "dataset_index": 2,
+      "dgp_id": "dgp_a_one_factor_n150",
+      "digest_authentication": {
+        "checks": {
+          "base_point_result": 1,
+          "bootstrap_schedule_positions": 5000,
+          "bootstrap_source_rows": 5000,
+          "compiler_analytical_identity": 1,
+          "complete_case_universe": 1,
+          "delete_one_sampling_positions": 150,
+          "delete_one_source_rows": 150,
+          "model_scientific_identity": 1,
+          "original_sampling_positions": 1,
+          "original_source_rows": 1,
+          "outer_recipe_analytical_identity": 1,
+          "plan": 1,
+          "scientific_result": 1,
+          "source_dataset_fingerprint": 1
+        },
+        "compact_evidence_typed_sha256": "a65b79d2b88df1839af8c7681ca48e6e0c7091c36485db45cd60a44d7dc1f1f5",
+        "data_sha256": "9b688d7c1752f67686fe75814711434231996d34ea722a76af084c1dec9730c4",
+        "document_typed_sha256": "ac154f049d530aa112ad1e6f46261c13122e1614da075ae770456cf9e8633fe6",
+        "kind": "cbsem_exact_cfa_interval_coverage_digest_verification_receipt_v1",
+        "method": "bound_rust_exact_schedule_and_source_verifier_v1",
+        "reasons": [],
+        "schema_version": 1,
+        "scientific_result_sha256": "8b4d29b71d9772eacd1806b0f9020db692160654b9c600cb6472337adb6d4441",
+        "source_dataset_fingerprint": "0d40af990e1b9d839bfc02181062473ccb0479ea1a2bdefe34a719d7e6a71ac3",
+        "status": "accepted"
+      },
+      "integrity_reasons": [
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6132:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6133:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6133:adjusted_upper_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6131:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6132:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6133:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:variance_6631:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6132:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6132:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6133:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6131:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6131:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6132:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6133:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6133:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:variance_6631:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:variance_6631:upper",
+        "oracle:arithmetic_mismatch:percentile:parameter_6631_6132:bias",
+        "oracle:arithmetic_mismatch:percentile:parameter_6631_6133:bias",
+        "oracle:arithmetic_mismatch:percentile:variance_6631:bias"
+      ],
+      "ledger": {
+        "delete_one_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "failure_rate_inference_unit": "dataset_not_bootstrap_replicate",
+        "point_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "point_failures": 0,
+        "point_successes": 5000,
+        "requested_replicates": 5000,
+        "standard_error_unavailable": 0,
+        "standard_error_unavailable_counts_by_reason": {
+          "derivative_unavailable": 0,
+          "information_not_positive_definite": 0,
+          "invalid_information_variance_or_standard_error": 0,
+          "numerical_information_failure": 0,
+          "singular_information": 0
+        },
+        "studentized_usable": 5000
+      },
+      "manifest_sha256": "9a29e710f6a90c5ed4ee12b3392a8e85d20ca87ed604df9a9c42efc699878d88",
+      "methods": [
+        {
+          "available": true,
+          "method": "percentile",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.49432742029437754,
+              "interval_upper": 0.8484400370971557,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.4779239847004055,
+              "interval_upper": 0.759423357206574,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 5.394430412574722e-08,
+              "interval_upper": 0.5987639616204179,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.48294500527915435,
+              "interval_upper": 0.8558731460366461,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.4151078555715409,
+              "interval_upper": 0.732897534931138,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 1.063755964398541,
+              "interval_upper": 2.1053186583500634,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": true,
+          "method": "studentized",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5096519086204416,
+              "interval_upper": 0.8652858738261581,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.48956937181770677,
+              "interval_upper": 0.7626879935724816,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.040704553306070757,
+              "interval_upper": 0.5830322901630314,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5187289185727979,
+              "interval_upper": 0.9027019490003774,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.4435915918176301,
+              "interval_upper": 0.7754291979996296,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 1.1084461453810914,
+              "interval_upper": 2.188752327753864,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": true,
+          "method": "bca",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5034545966709032,
+              "interval_upper": 0.8567438063772485,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.4803234993907277,
+              "interval_upper": 0.7617819981463163,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.05853219772067343,
+              "interval_upper": 0.6433618715926778,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5175600297376508,
+              "interval_upper": 0.9103246655812144,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.43644962357763356,
+              "interval_upper": 0.7637446653781511,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 1.0923294990499233,
+              "interval_upper": 2.143983314293308,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "arithmetic_checks": 78,
+        "base_inference_available": true,
+        "bca_inference_available": true,
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "endpoint_checks": 36,
+        "endpoint_relative_tolerance": 1e-12,
+        "kind": "cbsem_exact_cfa_interval_coverage_oracle_receipt_v1",
+        "parameter_count": 6,
+        "point_failures": 0,
+        "point_successes": 5000,
+        "reasons": [
+          "arithmetic_mismatch:bca:parameter_6631_6132:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6133:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6133:adjusted_upper_probability",
+          "arithmetic_mismatch:bca:residual_variance_6131:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:residual_variance_6132:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:residual_variance_6133:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:variance_6631:adjusted_lower_probability",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6132:lower",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6132:upper",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6133:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6131:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6131:upper",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6132:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6133:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6133:upper",
+          "arithmetic_mismatch:endpoint:bca:variance_6631:lower",
+          "arithmetic_mismatch:endpoint:bca:variance_6631:upper",
+          "arithmetic_mismatch:percentile:parameter_6631_6132:bias",
+          "arithmetic_mismatch:percentile:parameter_6631_6133:bias",
+          "arithmetic_mismatch:percentile:variance_6631:bias"
+        ],
+        "requested_replicates": 5000,
+        "schema_version": 1,
+        "status": "rejected",
+        "studentized_inference_available": true,
+        "studentized_usable": 5000
+      },
+      "scientific_result_sha256": "8b4d29b71d9772eacd1806b0f9020db692160654b9c600cb6472337adb6d4441",
+      "seeds": {
+        "bootstrap": 17163237495678724051,
+        "data": 13448666947757367351,
+        "oracle": 15913396129628550661
+      },
+      "stage": "pilot",
+      "status": "rejected"
+    },
+    {
+      "coverage_evaluated": true,
+      "data_sha256": "3f528183c5de4984ce4f5cd6b725353200c39e783a3c10336072c979101fcdd7",
+      "dataset_index": 3,
+      "dgp_id": "dgp_a_one_factor_n150",
+      "digest_authentication": {
+        "checks": {
+          "base_point_result": 1,
+          "bootstrap_schedule_positions": 5000,
+          "bootstrap_source_rows": 5000,
+          "compiler_analytical_identity": 1,
+          "complete_case_universe": 1,
+          "delete_one_sampling_positions": 150,
+          "delete_one_source_rows": 150,
+          "model_scientific_identity": 1,
+          "original_sampling_positions": 1,
+          "original_source_rows": 1,
+          "outer_recipe_analytical_identity": 1,
+          "plan": 1,
+          "scientific_result": 1,
+          "source_dataset_fingerprint": 1
+        },
+        "compact_evidence_typed_sha256": "efff31f54a5d9a66ab02a8c1d2e7bf4f784079ac6b0a1226911a36f1ce6cca8a",
+        "data_sha256": "3f528183c5de4984ce4f5cd6b725353200c39e783a3c10336072c979101fcdd7",
+        "document_typed_sha256": "698cf293ac92551f1b88b65f2d02308a5b9bdff13424862efc9d187e64a575ad",
+        "kind": "cbsem_exact_cfa_interval_coverage_digest_verification_receipt_v1",
+        "method": "bound_rust_exact_schedule_and_source_verifier_v1",
+        "reasons": [],
+        "schema_version": 1,
+        "scientific_result_sha256": "8178ca4de7c2381f87ddd5ff96e1b2a9f5c1333af281a2544d7d7b4efff83773",
+        "source_dataset_fingerprint": "ba7d19ed9919a6a2e5404cf8f07e88a2b6d56ff7bed52c75bfa96bf92bff6b45",
+        "status": "accepted"
+      },
+      "integrity_reasons": [
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6132:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6132:adjusted_upper_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6133:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6133:adjusted_upper_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6131:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6131:adjusted_upper_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6132:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6133:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:variance_6631:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6132:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6132:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6133:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6131:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6132:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6133:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:variance_6631:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:variance_6631:upper"
+      ],
+      "ledger": {
+        "delete_one_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "failure_rate_inference_unit": "dataset_not_bootstrap_replicate",
+        "point_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "point_failures": 0,
+        "point_successes": 5000,
+        "requested_replicates": 5000,
+        "standard_error_unavailable": 2,
+        "standard_error_unavailable_counts_by_reason": {
+          "derivative_unavailable": 0,
+          "information_not_positive_definite": 0,
+          "invalid_information_variance_or_standard_error": 0,
+          "numerical_information_failure": 0,
+          "singular_information": 2
+        },
+        "studentized_usable": 4998
+      },
+      "manifest_sha256": "9a29e710f6a90c5ed4ee12b3392a8e85d20ca87ed604df9a9c42efc699878d88",
+      "methods": [
+        {
+          "available": true,
+          "method": "percentile",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": false,
+              "covered_unconditional": false,
+              "interval_lower": 0.3737467894589388,
+              "interval_upper": 0.7701313777778732,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.3542346559289153,
+              "interval_upper": 0.757421958996143,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 1.4174779954697044e-09,
+              "interval_upper": 0.5812516580997942,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": false,
+              "covered_unconditional": false,
+              "interval_lower": 0.5996595370102727,
+              "interval_upper": 1.0285960936969656,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5908816074350389,
+              "interval_upper": 1.0253631403157488,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.9435822885421975,
+              "interval_upper": 1.8132406232138676,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": true,
+          "method": "studentized",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": false,
+              "covered_unconditional": false,
+              "interval_lower": 0.2922183912134475,
+              "interval_upper": 0.6807240872548803,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.271303505508824,
+              "interval_upper": 0.6559730119416202,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": false,
+              "covered_unconditional": false,
+              "interval_lower": -0.5236705837225396,
+              "interval_upper": 0.3248788010221818,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": false,
+              "covered_unconditional": false,
+              "interval_lower": 0.7011754695072249,
+              "interval_upper": 1.1594016485454741,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.6647961206407362,
+              "interval_upper": 1.1222860305470872,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 1.1179463259125648,
+              "interval_upper": 2.154553648277093,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": true,
+          "method": "bca",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": false,
+              "covered_unconditional": false,
+              "interval_lower": 0.3497387429036775,
+              "interval_upper": 0.7326381715430608,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.3399048496381502,
+              "interval_upper": 0.7216701539752997,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 1.3701906129166531e-09,
+              "interval_upper": 0.5771166756786413,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": false,
+              "covered_unconditional": false,
+              "interval_lower": 0.6613709318370405,
+              "interval_upper": 1.0955255382315336,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.6612533354686103,
+              "interval_upper": 1.1126316895966362,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.9912182028301743,
+              "interval_upper": 1.857355277150666,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "arithmetic_checks": 78,
+        "base_inference_available": true,
+        "bca_inference_available": true,
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "endpoint_checks": 36,
+        "endpoint_relative_tolerance": 1e-12,
+        "kind": "cbsem_exact_cfa_interval_coverage_oracle_receipt_v1",
+        "parameter_count": 6,
+        "point_failures": 0,
+        "point_successes": 5000,
+        "reasons": [
+          "arithmetic_mismatch:bca:parameter_6631_6132:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6132:adjusted_upper_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6133:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6133:adjusted_upper_probability",
+          "arithmetic_mismatch:bca:residual_variance_6131:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:residual_variance_6131:adjusted_upper_probability",
+          "arithmetic_mismatch:bca:residual_variance_6132:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:residual_variance_6133:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:variance_6631:adjusted_lower_probability",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6132:lower",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6132:upper",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6133:upper",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6131:upper",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6132:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6133:lower",
+          "arithmetic_mismatch:endpoint:bca:variance_6631:lower",
+          "arithmetic_mismatch:endpoint:bca:variance_6631:upper"
+        ],
+        "requested_replicates": 5000,
+        "schema_version": 1,
+        "status": "rejected",
+        "studentized_inference_available": true,
+        "studentized_usable": 4998
+      },
+      "scientific_result_sha256": "8178ca4de7c2381f87ddd5ff96e1b2a9f5c1333af281a2544d7d7b4efff83773",
+      "seeds": {
+        "bootstrap": 11250899610796000265,
+        "data": 8855166421258781024,
+        "oracle": 17787833137669212641
+      },
+      "stage": "pilot",
+      "status": "rejected"
+    },
+    {
+      "coverage_evaluated": true,
+      "data_sha256": "c64b44da975f3a3b0e20f8e8d052d99614f7eef46b96e7b03b8b60bee1729bcc",
+      "dataset_index": 4,
+      "dgp_id": "dgp_a_one_factor_n150",
+      "digest_authentication": {
+        "checks": {
+          "base_point_result": 1,
+          "bootstrap_schedule_positions": 5000,
+          "bootstrap_source_rows": 5000,
+          "compiler_analytical_identity": 1,
+          "complete_case_universe": 1,
+          "delete_one_sampling_positions": 150,
+          "delete_one_source_rows": 150,
+          "model_scientific_identity": 1,
+          "original_sampling_positions": 1,
+          "original_source_rows": 1,
+          "outer_recipe_analytical_identity": 1,
+          "plan": 1,
+          "scientific_result": 1,
+          "source_dataset_fingerprint": 1
+        },
+        "compact_evidence_typed_sha256": "d573ca113f2b58e15c3c267f860935de9d819888ad59c77e3b1cf60ea1ca6c99",
+        "data_sha256": "c64b44da975f3a3b0e20f8e8d052d99614f7eef46b96e7b03b8b60bee1729bcc",
+        "document_typed_sha256": "61441fa16ba915428952dd2dfd335e3d24e7ba4c3986708cc7972b55b030f5cf",
+        "kind": "cbsem_exact_cfa_interval_coverage_digest_verification_receipt_v1",
+        "method": "bound_rust_exact_schedule_and_source_verifier_v1",
+        "reasons": [],
+        "schema_version": 1,
+        "scientific_result_sha256": "425e088d5cbfc875ae3bb5d2d545b51c4696415ccb7fe892d1850512333c396f",
+        "source_dataset_fingerprint": "d33d053a48feab85fc654d2c2b3e24c9ec87d11838a169ad43a12afcd95d9370",
+        "status": "accepted"
+      },
+      "integrity_reasons": [
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6132:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6133:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:parameter_6631_6133:adjusted_upper_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6131:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6132:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:residual_variance_6133:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:bca:variance_6631:adjusted_lower_probability",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6132:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6132:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6133:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:parameter_6631_6133:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6131:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6131:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6132:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:residual_variance_6133:upper",
+        "oracle:arithmetic_mismatch:endpoint:bca:variance_6631:lower",
+        "oracle:arithmetic_mismatch:endpoint:bca:variance_6631:upper",
+        "oracle:arithmetic_mismatch:percentile:parameter_6631_6133:bias"
+      ],
+      "ledger": {
+        "delete_one_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "failure_rate_inference_unit": "dataset_not_bootstrap_replicate",
+        "point_failure_counts_by_kind": {
+          "inadmissible_solution": 0,
+          "moment_matrix_not_positive_definite": 0,
+          "non_convergence": 0,
+          "numerical_failure": 0
+        },
+        "point_failures": 0,
+        "point_successes": 5000,
+        "requested_replicates": 5000,
+        "standard_error_unavailable": 0,
+        "standard_error_unavailable_counts_by_reason": {
+          "derivative_unavailable": 0,
+          "information_not_positive_definite": 0,
+          "invalid_information_variance_or_standard_error": 0,
+          "numerical_information_failure": 0,
+          "singular_information": 0
+        },
+        "studentized_usable": 5000
+      },
+      "manifest_sha256": "9a29e710f6a90c5ed4ee12b3392a8e85d20ca87ed604df9a9c42efc699878d88",
+      "methods": [
+        {
+          "available": true,
+          "method": "percentile",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.7010421300743304,
+              "interval_upper": 1.0033694534068078,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5788894013470463,
+              "interval_upper": 0.9031758063657035,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.23292755564479392,
+              "interval_upper": 0.654109525909206,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.407374880849571,
+              "interval_upper": 0.8735179512120004,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": false,
+              "covered_unconditional": false,
+              "interval_lower": 0.382492519130598,
+              "interval_upper": 0.7034703222533095,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.9080406141865361,
+              "interval_upper": 1.7591320026567931,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": true,
+          "method": "studentized",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.7044801165339905,
+              "interval_upper": 1.0022057758190683,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5830021063801869,
+              "interval_upper": 0.8961703755315883,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.2753656429129654,
+              "interval_upper": 0.6871579501696253,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.45154066789176067,
+              "interval_upper": 0.934229389921329,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.416575282563726,
+              "interval_upper": 0.7433926972375394,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.9316833861625612,
+              "interval_upper": 1.816775579952366,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        },
+        {
+          "available": true,
+          "method": "bca",
+          "parameters": [
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.7069120534946441,
+              "interval_upper": 1.0159062226838895,
+              "parameter_id": "parameter_6631_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.5761726015261637,
+              "interval_upper": 0.8994321713885086,
+              "parameter_id": "parameter_6631_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.25595157202856156,
+              "interval_upper": 0.6730154095711066,
+              "parameter_id": "residual_variance_6131"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.44402243325749136,
+              "interval_upper": 0.919792350737036,
+              "parameter_id": "residual_variance_6132"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.41207419141367657,
+              "interval_upper": 0.7387782513226266,
+              "parameter_id": "residual_variance_6133"
+            },
+            {
+              "available": true,
+              "covered_conditional": true,
+              "covered_unconditional": true,
+              "interval_lower": 0.9310665246622933,
+              "interval_upper": 1.7996865386092697,
+              "parameter_id": "variance_6631"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "arithmetic_checks": 78,
+        "base_inference_available": true,
+        "bca_inference_available": true,
+        "delete_one_failures": 0,
+        "delete_one_successes": 150,
+        "endpoint_checks": 36,
+        "endpoint_relative_tolerance": 1e-12,
+        "kind": "cbsem_exact_cfa_interval_coverage_oracle_receipt_v1",
+        "parameter_count": 6,
+        "point_failures": 0,
+        "point_successes": 5000,
+        "reasons": [
+          "arithmetic_mismatch:bca:parameter_6631_6132:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6133:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:parameter_6631_6133:adjusted_upper_probability",
+          "arithmetic_mismatch:bca:residual_variance_6131:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:residual_variance_6132:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:residual_variance_6133:adjusted_lower_probability",
+          "arithmetic_mismatch:bca:variance_6631:adjusted_lower_probability",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6132:lower",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6132:upper",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6133:lower",
+          "arithmetic_mismatch:endpoint:bca:parameter_6631_6133:upper",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6131:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6131:upper",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6132:lower",
+          "arithmetic_mismatch:endpoint:bca:residual_variance_6133:upper",
+          "arithmetic_mismatch:endpoint:bca:variance_6631:lower",
+          "arithmetic_mismatch:endpoint:bca:variance_6631:upper",
+          "arithmetic_mismatch:percentile:parameter_6631_6133:bias"
+        ],
+        "requested_replicates": 5000,
+        "schema_version": 1,
+        "status": "rejected",
+        "studentized_inference_available": true,
+        "studentized_usable": 5000
+      },
+      "scientific_result_sha256": "425e088d5cbfc875ae3bb5d2d545b51c4696415ccb7fe892d1850512333c396f",
+      "seeds": {
+        "bootstrap": 4866794012384312907,
+        "data": 5899900434843275048,
+        "oracle": 13162429433147907228
+      },
+      "stage": "pilot",
+      "status": "rejected"
+    }
+  ],
+  "environment": {
+    "architecture": "AMD64",
+    "logical_cores": 12,
+    "numpy": "1.26.4",
+    "os": "Windows",
+    "os_release": "11",
+    "python": "3.13.1"
+  },
+  "kind": "cbsem_exact_cfa_interval_coverage_shard_case_v1",
+  "manifest_sha256": "9a29e710f6a90c5ed4ee12b3392a8e85d20ca87ed604df9a9c42efc699878d88",
+  "qualification_status": "blocked_not_product_qualification",
+  "retained_full_audit_results": [
+    {
+      "artifact_kind": "dataset",
+      "dataset_index": 0,
+      "path": "validation/results/cbsem_exact_cfa_interval_coverage_v1/coverage-pilot-20260816-a/shards/pilot-dgp_a_one_factor_n150-s00/audit/dataset-000000.json",
+      "sha256": "4d0fccd983016df511390b20ec3910536c016db5e53679c2957dfbea565f4e80"
+    },
+    {
+      "artifact_kind": "dataset",
+      "dataset_index": 1,
+      "path": "validation/results/cbsem_exact_cfa_interval_coverage_v1/coverage-pilot-20260816-a/shards/pilot-dgp_a_one_factor_n150-s00/audit/dataset-000001.json",
+      "sha256": "f557e4cc237cb0cef14d6f6018c28f569019373f508c1b42061042280b907ffb"
+    },
+    {
+      "artifact_kind": "dataset",
+      "dataset_index": 2,
+      "path": "validation/results/cbsem_exact_cfa_interval_coverage_v1/coverage-pilot-20260816-a/shards/pilot-dgp_a_one_factor_n150-s00/audit/dataset-000002.json",
+      "sha256": "3073fb04d1827c84c30463e2b160b29d5bab9d99d770307fb671154bc9c5fd86"
+    },
+    {
+      "artifact_kind": "dataset",
+      "dataset_index": 3,
+      "path": "validation/results/cbsem_exact_cfa_interval_coverage_v1/coverage-pilot-20260816-a/shards/pilot-dgp_a_one_factor_n150-s00/audit/dataset-000003.json",
+      "sha256": "fa10d00ddfd0c9142ffd073690d07e89bd22a1cd10b8633762a4da035297d2ff"
+    },
+    {
+      "artifact_kind": "dataset",
+      "dataset_index": 4,
+      "path": "validation/results/cbsem_exact_cfa_interval_coverage_v1/coverage-pilot-20260816-a/shards/pilot-dgp_a_one_factor_n150-s00/audit/dataset-000004.json",
+      "sha256": "9f7f51a2ca5a181e69f253e2333dc1a19ec577c1941a3e96fb4f11346fcd7a7a"
+    }
+  ],
+  "retention_policy": {
+    "append_only_outputs": true,
+    "compact_receipts_for_other_datasets": true,
+    "full_audit_results_per_shard": 1,
+    "retain_all_integrity_failures": true
+  },
+  "schema_version": 1,
+  "shard": {
+    "dataset_indices": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "dgp_id": "dgp_a_one_factor_n150",
+    "executable": true,
+    "replicates": 5000,
+    "shard_id": "pilot-dgp_a_one_factor_n150-s00",
+    "shard_ordinal": 0,
+    "stage": "pilot",
+    "workers": 12
+  },
+  "status": "rejected_validation_shard",
+  "worker_replay": {
+    "dataset_index": 0,
+    "digest_authentication": {
+      "checks": {
+        "base_point_result": 1,
+        "bootstrap_schedule_positions": 5000,
+        "bootstrap_source_rows": 5000,
+        "compiler_analytical_identity": 1,
+        "complete_case_universe": 1,
+        "delete_one_sampling_positions": 150,
+        "delete_one_source_rows": 150,
+        "model_scientific_identity": 1,
+        "original_sampling_positions": 1,
+        "original_source_rows": 1,
+        "outer_recipe_analytical_identity": 1,
+        "plan": 1,
+        "scientific_result": 1,
+        "source_dataset_fingerprint": 1
+      },
+      "compact_evidence_typed_sha256": "60e13b57dd9001e6b1124024fbe8d4439058ac8756e17455f4d7e7f45862e1c1",
+      "data_sha256": "83334009984470b3228ebbd32cf8f21a70e6354010646d6494bcc730afcdd49b",
+      "document_typed_sha256": "49335eb34b7fe30816651053bed5ac1c1bc67947f4f6b268cbbb89bbb5eaf8c1",
+      "kind": "cbsem_exact_cfa_interval_coverage_digest_verification_receipt_v1",
+      "method": "bound_rust_exact_schedule_and_source_verifier_v1",
+      "reasons": [],
+      "schema_version": 1,
+      "scientific_result_sha256": "9a77943f7790143d399ae0ff1983c99dd374d5de2028df19967b83f6acd1ed19",
+      "source_dataset_fingerprint": "74705a4b07cee4c686b52b3c4a67c1cb107c267613399bd9b4a0b970a488c0c4",
+      "status": "accepted"
+    },
+    "primary_scientific_result_sha256": "9a77943f7790143d399ae0ff1983c99dd374d5de2028df19967b83f6acd1ed19",
+    "primary_workers": 12,
+    "reasons": [],
+    "replay_scientific_result_sha256": "9a77943f7790143d399ae0ff1983c99dd374d5de2028df19967b83f6acd1ed19",
+    "replay_workers": 1,
+    "status": "accepted"
+  }
+}

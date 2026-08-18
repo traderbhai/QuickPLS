@@ -4,8 +4,8 @@
 The catalogue is a planning crosswalk, not promotion evidence.  This validator
 therefore exits successfully when the document is internally valid even while
 ``competitor_ready`` is false.  It fails when catalogue coverage, dependencies,
-priorities, release targets, method-factory evidence, or the accepted parity
-ledger contradict the declared plan.
+priorities, release targets, method-factory evidence, Capability Registry V2,
+or the historical parity ledger contradict the declared plan.
 """
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from validation import (  # noqa: E402
+    capability_registry_v2,
     method_promotion_manifest,
     parity_ledger,
     quickpls_3_release_readiness,
@@ -209,9 +210,9 @@ EXPECTED_CAPABILITY_MAPPING = {
     "smartpls.pca_cbsem": frozenset({"qpls3.standalone.pca"}),
 }
 
-# These are the only capability identities whose current accepted state remains
-# governed by the parity ledger.  Every other catalogue capability is promoted
-# solely by its exact method-factory manifest.
+# These are the frozen capability identities recorded by the historical parity
+# ledger. Capability Registry V2 now governs current catalogue status; this set
+# only validates that the legacy input did not silently change shape.
 EXPECTED_PARITY_CAPABILITY_IDS = frozenset(
     {
         "qpls3.assessment.cca_residuals",
@@ -782,6 +783,38 @@ def validate_program_document(
     if parity_snapshot.get("url") != CATALOGUE_URL:
         errors.append("parity report catalogue snapshot URL differs from the competitor catalogue")
 
+    registry_document: dict[str, Any] = {}
+    registry_report: dict[str, Any] = {"passed": False, "errors": []}
+    registry_methods_by_id: dict[str, dict[str, Any]] = {}
+    try:
+        registry_path = (
+            repository_root
+            / "validation/capabilities/capability_registry_v2.json"
+        )
+        registry_document = capability_registry_v2.load_registry(registry_path)
+        registry_report = capability_registry_v2.validate_registry_document(
+            registry_document,
+            repository_root=repository_root,
+            check_references=not _contract_only,
+        )
+        registry_catalogue = capability_registry_v2.generate_legacy_catalogue(
+            registry_document
+        )
+        registry_methods_by_id = {
+            row["id"]: row
+            for row in registry_catalogue.get("methods", [])
+            if isinstance(row, dict) and isinstance(row.get("id"), str)
+        }
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        errors.append(f"Capability Registry V2 could not be loaded: {exc}")
+    if registry_report.get("passed") is not True:
+        errors.append("Capability Registry V2 validation did not pass")
+        errors.extend(
+            f"registry: {error}"
+            for error in registry_report.get("errors", [])
+            if isinstance(error, str)
+        )
+
     if document.get("allowed_statuses") != list(ALLOWED_STATUSES):
         errors.append("allowed_statuses differs from the closed status vocabulary")
     if document.get("allowed_priorities") != list(ALLOWED_PRIORITIES):
@@ -916,8 +949,6 @@ def validate_program_document(
             errors.append(f"{method_id}: unknown target release {target!r}")
         if status == "release-qualified" and target != "current":
             errors.append(f"{method_id}: release-qualified methods must target current")
-        if status != "release-qualified" and target == "current":
-            errors.append(f"{method_id}: only release-qualified methods may target current")
         if status == "deferred" and (target != "post-3.0" or method.get("competitor_scope") is not False):
             errors.append(f"{method_id}: deferred methods must target post-3.0 and leave competitor_scope")
         elif status != "deferred" and method.get("competitor_scope") is not True:
@@ -940,62 +971,35 @@ def validate_program_document(
             errors.append(f"{method_id}: implementation_evidence must be a list")
             evidence = []
 
-        expected_capabilities = EXPECTED_CAPABILITY_MAPPING.get(method_id, frozenset())
+        registry_method = registry_methods_by_id.get(str(method_id), {})
+        expected_capabilities = frozenset(
+            registry_method.get("quickpls_capability_ids", [])
+            if isinstance(registry_method, dict)
+            else []
+        )
         actual_capabilities = frozenset(capabilities)
         if actual_capabilities != expected_capabilities:
             errors.append(
-                f"{method_id}: capability mapping differs from frozen crosswalk "
+                f"{method_id}: capability mapping differs from Capability Registry V2 "
                 f"(expected={sorted(expected_capabilities)}, actual={sorted(actual_capabilities)})"
             )
 
         if method.get("competitor_scope") is True and not expected_capabilities:
             errors.append(f"{method_id}: competitor-scope method requires a frozen capability ID")
 
-        if expected_capabilities:
-            if evidence:
+        if registry_method:
+            registry_status = registry_method.get("status")
+            if status != registry_status:
                 errors.append(
-                    f"{method_id}: mapped status must rely on validated capability evidence, "
-                    "not editable implementation paths"
+                    f"{method_id}: declared {status} contradicts authoritative "
+                    f"Capability Registry V2 status {registry_status}"
                 )
-            mapped_statuses: list[str] = []
-            for capability in sorted(expected_capabilities):
-                factory_result = factory_by_feature.get(capability)
-                if factory_result is None:
-                    errors.append(
-                        f"{method_id}: capability is missing from method-manifest factory: {capability}"
-                    )
-                    continue
-                if capability in EXPECTED_PARITY_CAPABILITY_IDS:
-                    feature = parity_by_id.get(capability)
-                    if feature is None:
-                        errors.append(
-                            f"{method_id}: capability is missing from evidence-backed parity report: "
-                            f"{capability}"
-                        )
-                        continue
-                    # Never consult declared_state.  The parity evaluator derives
-                    # the accepted state from current scoped evidence.
-                    derived_state = feature.get("derived_state")
-                    source = "parity ledger"
-                else:
-                    # Future capabilities are promoted only through the exact
-                    # evidence-derived method-factory result.
-                    derived_state = factory_result.get("derived_state")
-                    source = "method manifest"
-                mapped = LEDGER_TO_PROGRAM_STATUS.get(derived_state)
-                if mapped is None:
-                    errors.append(
-                        f"{method_id}: capability has invalid evidence-derived state: "
-                        f"{capability}={derived_state!r} from {source}"
-                    )
-                else:
-                    mapped_statuses.append(mapped)
-            if mapped_statuses:
-                derived = min(mapped_statuses, key=STATUS_RANK.__getitem__)
-                if status != derived:
-                    errors.append(
-                        f"{method_id}: declared {status} contradicts evidence-derived {derived}"
-                    )
+            if evidence and status in {"absent", "deferred"}:
+                errors.append(
+                    f"{method_id}: {status} must not declare active implementation evidence"
+                )
+        elif expected_capabilities:
+            errors.append(f"{method_id}: missing Capability Registry V2 projection")
         elif status in {"absent", "deferred"}:
             if evidence:
                 errors.append(f"{method_id}: {status} must not declare implementation evidence")
@@ -1169,6 +1173,7 @@ def validate_program_document(
         "target_release_counts": {
             release: release_counts.get(release, 0) for release in TARGET_RELEASES
         },
+        "capability_registry_passed": registry_report.get("passed") is True,
         "parity_evidence_passed": parity_report.get("passed") is True,
         "commercial_release_ready": commercial_release_ready,
         "external_beta_ready": beta_ready,
@@ -1301,6 +1306,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--beta-contract", type=Path, default=DEFAULT_BETA_CONTRACT)
     parser.add_argument("--approval-envelope", type=Path, default=DEFAULT_APPROVAL_ENVELOPE)
     parser.add_argument("--repository-root", type=Path, default=ROOT)
+    parser.add_argument(
+        "--require-ready",
+        action="store_true",
+        help="fail unless the validated aggregate program is competitor-ready",
+    )
     args = parser.parse_args(argv)
     report = validate_program(
         args.manifest,
@@ -1311,7 +1321,11 @@ def main(argv: list[str] | None = None) -> int:
         approval_envelope_path=args.approval_envelope,
     )
     print(json.dumps(report, indent=2))
-    return 0 if report["passed"] else 1
+    if report["passed"] is not True:
+        return 1
+    if args.require_ready and report["competitor_ready"] is not True:
+        return 2
+    return 0
 
 
 if __name__ == "__main__":

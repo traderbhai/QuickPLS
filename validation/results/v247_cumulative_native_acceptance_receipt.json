@@ -1,120 +1,137 @@
 ﻿{
-    "schema_version":  1,
+    "schema_version":  2,
     "kind":  "quickpls_v247_cumulative_native_acceptance_receipt",
     "passed":  true,
-    "supervisor_started_at_utc":  "2026-08-13T19:02:56.9977028Z",
-    "completed_at_utc":  "2026-08-13T19:17:18.6025307Z",
+    "supervisor_started_at_utc":  "2026-08-18T13:21:47.8724420Z",
+    "completed_at_utc":  "2026-08-18T13:37:14.0225398Z",
     "report":  "validation/results/v247_tauri_native_acceptance.json",
-    "checks":  177,
-    "unique_checks":  177,
+    "checks":  191,
+    "unique_checks":  191,
     "failures":  0,
     "console_errors":  0,
-    "report_sha256":  "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
-    "report_size":  499999,
+    "report_sha256":  "3b43522cef76c2592b2d1eb694c2d4bdee7cebddae193271581e18062e487f8e",
+    "report_size":  666842,
     "final_scope":  "regression_bootstrap",
     "graceful_process_cleanup_verified":  true,
+    "acceptance_contract":  {
+                                "path":  "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+                                "contract_id":  "quickpls.packaged_windows_acceptance.v2",
+                                "contract_version":  "2026-08-14",
+                                "required_check_count":  191,
+                                "sha256":  "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954"
+                            },
+    "assembler":  {
+                      "path":  "validation/assemble_v247_cumulative_native_acceptance.py",
+                      "size":  8734,
+                      "sha256":  "c54d5319fd2647dd4b37eeb2d9fa1ea45f97cd513b0d1c91692b4b98c76a6413"
+                  },
+    "full_report":  {
+                        "path":  "validation/results/v247_tauri_native_acceptance_full.json",
+                        "size":  339370,
+                        "sha256":  "82ba1c94f6b925c8cde6e4ce6cda84d350825d54782582b991e8e0df2ef205d4"
+                    },
     "exports":  [
                     {
                         "role":  "generic",
-                        "path":  "validation/results/v247-native-full-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  18322,
-                        "sha256":  "c440f7f9317d20822e1f789eee7d5dd50508b78899c734d4149fa2a1d76c116a"
+                        "path":  "validation/results/v247-native-full-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  19513,
+                        "sha256":  "567384fc7b1230e2dd112eb6d4168464e670e6860604672adabc87b28b6ebd7c"
                     },
                     {
                         "role":  "bootstrap",
-                        "path":  "validation/results/v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  22849,
-                        "sha256":  "566577b9e9284fbbb161f3624812c756a291e209e0214613614f74423d5c6564"
+                        "path":  "validation/results/v247-native-pls-bootstrap-v4-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  28553,
+                        "sha256":  "acf909a28e98cdb3cfca6945e726badef2344278aa43d04853153e774eb0c40c"
                     },
                     {
                         "role":  "plsc",
-                        "path":  "validation/results/v247-native-plsc-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  17912,
-                        "sha256":  "f4b3be660d05782fd0e21651691fdee69a543661d96f0ba8ad1a91f87f6d76cc"
+                        "path":  "validation/results/v247-native-plsc-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  19069,
+                        "sha256":  "e2bac4a2499a77a27023aa3f7d49abed8e741f9e4cb480125461036ca5dde527"
                     },
                     {
                         "role":  "wpls",
-                        "path":  "validation/results/v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  16626,
-                        "sha256":  "0e5ae92fbea1c01d6c1aecc0f54e4aab3339e3a813b1fa1e5194bb453cfee87d"
+                        "path":  "validation/results/v247-native-wpls-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  17803,
+                        "sha256":  "0c33db19dae1581b89f84d4ec558585f6f30e601d30428f35f5b48c7892b46a4"
                     },
                     {
                         "role":  "mga",
-                        "path":  "validation/results/v247-native-mga-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  20177,
-                        "sha256":  "981f0f19bdf676fc351fcec6228693e79d87d77513c8ca0108fb70b88781ce1c"
+                        "path":  "validation/results/v247-native-mga-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  22084,
+                        "sha256":  "2fbbb3d89d370a2fabe366a5014424906892a8cab1811828ca40f77cfb9a49cf"
                     },
                     {
                         "role":  "cca",
-                        "path":  "validation/results/v247-native-cca-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  19847,
-                        "sha256":  "88f0c7ebe89f88cbd103138c06a905243f275d10e20a68744f44b22066ca9c6f"
+                        "path":  "validation/results/v247-native-cca-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  21040,
+                        "sha256":  "f812508b06b6b859b89dcdd99c7001116cc4f40db247572515c253d4d76792e7"
                     },
                     {
                         "role":  "ipma",
-                        "path":  "validation/results/v247-native-ipma-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  20276,
-                        "sha256":  "1f35fc5b2f3c982961d8f3f50eb06058683cb80bdf56e32da58898a5cc658fe7"
+                        "path":  "validation/results/v247-native-ipma-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  21425,
+                        "sha256":  "e8b7b1466bfcb1ac9ce1ffd043804675e750cf6371a9c9b7eeed1b28445a70e1"
                     },
                     {
                         "role":  "nca",
-                        "path":  "validation/results/v247-native-nca-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  9598,
-                        "sha256":  "47f2a7661251dca02865098e74400e6c759996dae6d8b340d4e22dea449f03fc"
+                        "path":  "validation/results/v247-native-nca-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  10466,
+                        "sha256":  "7bf08f65acdbcb80264af2442d719426124b67a44f6ae8f5f022faab81b005cf"
                     },
                     {
                         "role":  "prediction",
-                        "path":  "validation/results/v247-native-prediction-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  23909,
-                        "sha256":  "4989b708c004d5d4c11da7f03edfa77a4215bd062ca4125a5d1f4184eee50f41"
+                        "path":  "validation/results/v247-native-prediction-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  25054,
+                        "sha256":  "350a3c52b4eb974b7ea9a69784f115009f8330312f9a2b25db926b904a3b846d"
                     },
                     {
                         "role":  "hoc",
-                        "path":  "validation/results/v247-native-hoc-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  15425,
-                        "sha256":  "0f2d1aaaa2c7850a8ae4aa359829da11a8ff7176a725dc1a7ab778ac9bf8f3ca"
+                        "path":  "validation/results/v247-native-hoc-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  14767,
+                        "sha256":  "6a959ac317c691a897bff5791104ad5ae1e17aeaf9c8753629342a5cc63e5bd9"
                     },
                     {
                         "role":  "pca",
-                        "path":  "validation/results/v247-native-pca-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  15753,
-                        "sha256":  "aa1c239fb1440eea018ef4398c87b49de61eea4f21bb2f727ffc952ff6b072af"
+                        "path":  "validation/results/v247-native-pca-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  15892,
+                        "sha256":  "a93a1c29ce5acf73994f1ea0ade75ad9fa911acca9d8eb271cb56c412126f2d1"
                     },
                     {
                         "role":  "ols",
-                        "path":  "validation/results/v247-native-ols-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  13543,
-                        "sha256":  "7b9c99bbcf170bf637e9ec9fd8cedf54bc6b1e6429862a3daac70eed8898b86b"
+                        "path":  "validation/results/v247-native-ols-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  13731,
+                        "sha256":  "f3b508cc732b106a690612184224778bbc36e53ee3c97760720bb3ed488f7cd7"
                     },
                     {
                         "role":  "cbsem",
-                        "path":  "validation/results/v247-native-cbsem-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  17783,
-                        "sha256":  "8aa8806d744e9c4956eb553b508c514edde9c7e433e1cd70dc1b3a748f38c485"
+                        "path":  "validation/results/v247-native-cbsem-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  18115,
+                        "sha256":  "6e381cb55160eeceb90608fd2b13da9410805778c7ab748a1dead5210433e033"
                     },
                     {
                         "role":  "gsca",
-                        "path":  "validation/results/v247-native-gsca-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  11437,
-                        "sha256":  "f8ae0f82bca02b9809b133f9359ae33f5dfc7659e387523f3152c16f6fb849af"
+                        "path":  "validation/results/v247-native-gsca-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  11448,
+                        "sha256":  "d27aca5f119f3dca1a1eec4ef6e51b357957e77df52395c192564fbe8838a6fc"
                     },
                     {
                         "role":  "logistic",
-                        "path":  "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  16133,
-                        "sha256":  "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a"
+                        "path":  "validation/results/v247-native-logistic-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  16298,
+                        "sha256":  "11da29fc67cd6a77e0f6232937053da9fdecad528be5748b4d620431a051f8a1"
                     },
                     {
                         "role":  "regression_bootstrap_ols",
-                        "path":  "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  18281,
-                        "sha256":  "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367"
+                        "path":  "validation/results/v247-native-regression-bootstrap-ols-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  18429,
+                        "sha256":  "0b4b386090fdb6227aa5d03626763eaa4491b683e2f973fbeb4fd77602c154e7"
                     },
                     {
                         "role":  "regression_bootstrap_logistic",
-                        "path":  "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
-                        "size":  21909,
-                        "sha256":  "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa"
+                        "path":  "validation/results/v247-native-regression-bootstrap-logistic-20260818-185148319-41048-0399187a.xlsx",
+                        "size":  22041,
+                        "sha256":  "303c21da98fa88a66d90b6a06ec61f48ce50bd6312b22ecf6536f69979ee581d"
                     }
                 ]
 }

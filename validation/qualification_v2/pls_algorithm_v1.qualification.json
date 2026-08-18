@@ -1,0 +1,893 @@
+{
+  "comparison_contract": {
+    "outputs": [
+      {
+        "absolute_tolerance": 1e-08,
+        "orientation_keys": [
+          "construct_id",
+          "anchor_indicator_id"
+        ],
+        "output_id": "outer_weights",
+        "rationale": "Weights are orientation-equivalent; tolerances cover floating-point accumulation differences between independent implementations.",
+        "relative_tolerance": 1e-06,
+        "rule": "sign_orientation"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "outer_loadings",
+        "rationale": "Loadings have a fixed declared orientation and are compared elementwise across values near and away from zero.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "orientation_keys": [
+          "construct_id",
+          "anchor_indicator_id"
+        ],
+        "output_id": "construct_scores",
+        "rationale": "Composite scores are equivalent up to the frozen anchor orientation before numerical comparison.",
+        "relative_tolerance": 1e-06,
+        "rule": "sign_orientation"
+      },
+      {
+        "maximum_principal_angle_degrees": 0.1,
+        "output_id": "construct_score_subspace",
+        "projector_tolerance": 1e-08,
+        "rationale": "Near-degenerate score solutions can have non-unique bases while spanning the same scientifically relevant subspace.",
+        "rule": "subspace"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "output_id": "path_coefficients",
+        "rationale": "Standardized paths require elementwise accuracy with absolute protection around zero and relative protection elsewhere.",
+        "relative_tolerance": 1e-06,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-08,
+        "elementwise_tolerance": 1e-07,
+        "norm": "frobenius",
+        "output_id": "effects_matrix",
+        "rationale": "The effect matrix requires both a global Frobenius bound and an elementwise cap so localized errors cannot hide.",
+        "relative_tolerance": 1e-06,
+        "rule": "matrix_norm"
+      },
+      {
+        "absolute_tolerance": 1e-09,
+        "output_id": "r_squared",
+        "rationale": "Explained-variance proportions require tight absolute and relative agreement within their bounded scale.",
+        "relative_tolerance": 1e-07,
+        "rule": "abs_relative"
+      },
+      {
+        "output_id": "convergence_status",
+        "rationale": "Termination classifications and diagnostic labels are deterministic categorical contract outputs.",
+        "rule": "exact"
+      },
+      {
+        "acceptance_interval": [
+          0.9,
+          1.0
+        ],
+        "confidence_level": 0.95,
+        "maximum_half_width": 0.01,
+        "output_id": "recovery_coverage",
+        "rationale": "Recovery is a simulation proportion, so acceptance is governed by a predeclared confidence interval and precision bound.",
+        "rule": "monte_carlo_interval"
+      }
+    ]
+  },
+  "evidence_contract": {
+    "receipt_contract": {
+      "hardware_fingerprint_required": true,
+      "hash_algorithm": "sha256",
+      "identity_fields": [
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "build_fingerprint"
+      ],
+      "scenario_set_hash_required": true,
+      "source_descriptors_required": true
+    },
+    "receipts": [],
+    "required_roles": [
+      "method_contract",
+      "kernel_execution",
+      "oracle_independence",
+      "generative_recovery",
+      "adversarial_boundaries",
+      "archive_persistence",
+      "cross_format_export",
+      "frontend_contract",
+      "packaged_windows_e2e",
+      "performance_scale"
+    ]
+  },
+  "identity": {
+    "capability_cell": {
+      "capability_id": "smartpls.pls_algorithm",
+      "capability_version": "pls_pm_v1",
+      "cell_id": "qpls3.pls.algorithm",
+      "registry_schema_version": 2
+    },
+    "execution_kind": "iterative",
+    "method_version": "pls_pm_v1",
+    "potentially_long_running": true,
+    "qualification_id": "qpls3.pls.algorithm.qualification_v2",
+    "spec_frozen_at_utc": "2026-08-15T01:00:00Z"
+  },
+  "migration": {
+    "source_kind": "qualification_v1_manifest",
+    "source_manifest_path": "validation/methods/pls_algorithm_v1.manifest.json",
+    "source_schema_version": 1,
+    "status": "compatibility_only",
+    "unresolved_items": [
+      "future_full_parity.coverage.sum_score_and_predefined_weight_semantics_beyond_bounded_unit_variance_execution",
+      "future_full_parity.coverage.standard_mean_centered_unstandardized_result_breadth",
+      "future_full_parity.coverage.full_supported_sem_model_shapes_through_sem_model_v4_compiler",
+      "future_full_parity.coverage.complete_location_parameter_and_result_table_breadth",
+      "future_full_parity.evidence.current_product_build_receipt",
+      "future_full_parity.evidence.product_to_oracle_comparison_receipt",
+      "future_full_parity.evidence.standard_individual_initial_outer_weights_matrix",
+      "future_full_parity.evidence.unit_custom_mixed_fixed_only_score_execution_matrix",
+      "future_full_parity.evidence.qualification_sized_bias_recovery_and_failure_simulation",
+      "future_full_parity.evidence.product_adversarial_and_worker_matrix",
+      "future_full_parity.evidence.real_runner_schema6_roundtrip_and_tamper_receipt",
+      "future_full_parity.evidence.cross_format_semantic_readback",
+      "future_full_parity.evidence.frontend_and_packaged_windows_receipts",
+      "future_full_parity.evidence.performance_scale_soak_and_cancellation_receipts",
+      "future_full_parity.evidence.independent_scientific_review"
+    ]
+  },
+  "operational_contract": {
+    "archive": {
+      "corruption_cases": [
+        "feature_identity",
+        "method_version",
+        "dataset_fingerprint",
+        "checksum",
+        "duplicate_entry",
+        "malformed_payload",
+        "legacy_reinterpretation",
+        "interrupted_save"
+      ],
+      "current_schema_version": 6,
+      "future_schema_policy": "verified_read_only",
+      "readable_schema_versions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "writable_schema_versions": [
+        6
+      ]
+    },
+    "cancellation": {
+      "archive_unchanged": true,
+      "maximum_latency_seconds": 1,
+      "no_partial_committed_result": true,
+      "no_partial_visible_result": true,
+      "phases": [
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "validate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "estimate"
+        },
+        {
+          "applicability": "not_applicable",
+          "not_applicable_reason": "The core PLS Algorithm estimator does not resample; resampling methods own separate capability cells.",
+          "phase": "resample"
+        },
+        {
+          "applicability": "not_applicable",
+          "not_applicable_reason": "The core PLS Algorithm capability does not run candidate-model comparison.",
+          "phase": "compare"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "export"
+        }
+      ],
+      "required_for_potentially_long_operations": true,
+      "same_settings_retry": true
+    },
+    "export": {
+      "canonical_projection_id": "canonical_result_document_v2.pls_algorithm",
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf",
+        "png"
+      ],
+      "provenance_required": true,
+      "same_run_required": true,
+      "semantic_readback_formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf"
+      ],
+      "validation_witness_excluded": true
+    },
+    "performance": {
+      "baseline_policy": {
+        "maximum_memory_regression_percent": 20,
+        "maximum_runtime_regression_percent": 20,
+        "measured_runs": 5,
+        "statistic": "median",
+        "warmup_runs": 1
+      },
+      "budgets": [
+        {
+          "hardware_class_id": "windows_standard_6c16g",
+          "maximum_cancellation_latency_seconds": 0.5,
+          "maximum_elapsed_seconds": 2,
+          "maximum_peak_working_set_bytes": 536870912,
+          "maximum_result_bytes": 10485760,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "windows_standard_6c16g",
+          "maximum_cancellation_latency_seconds": 0.5,
+          "maximum_elapsed_seconds": 15,
+          "maximum_peak_working_set_bytes": 1073741824,
+          "maximum_result_bytes": 52428800,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "windows_standard_6c16g",
+          "maximum_cancellation_latency_seconds": 0.75,
+          "maximum_elapsed_seconds": 180,
+          "maximum_peak_working_set_bytes": 4294967296,
+          "maximum_result_bytes": 262144000,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "windows_standard_6c16g",
+          "maximum_cancellation_latency_seconds": 1,
+          "maximum_elapsed_seconds": 3600,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 1073741824,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "windows_standard_6c16g",
+          "maximum_cancellation_latency_seconds": 1,
+          "maximum_elapsed_seconds": 7200,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "compound_stress"
+        }
+      ],
+      "hardware_classes": [
+        {
+          "architecture": "x86_64",
+          "id": "windows_standard_6c16g",
+          "minimum_logical_cores": 6,
+          "minimum_memory_gib": 16,
+          "notes": "Product-finalization Standard reference hardware; not a customer minimum-system claim.",
+          "os_family": "windows"
+        }
+      ]
+    },
+    "windows": {
+      "accessible_tables_required": true,
+      "display_scale_percent": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "keyboard_only_required": true,
+      "offline_required": true,
+      "package_kinds": [
+        "installed",
+        "portable"
+      ],
+      "real_pointer_required": true,
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ]
+    }
+  },
+  "scenario_contract": {
+    "axes": [
+      {
+        "id": "model_topology",
+        "label": "Structural topology",
+        "values": [
+          {
+            "description": "Recursive chain with mediation.",
+            "id": "chain"
+          },
+          {
+            "description": "Branching and converging recursive model.",
+            "id": "fork_and_join"
+          }
+        ]
+      },
+      {
+        "id": "measurement_model",
+        "label": "Measurement model",
+        "values": [
+          {
+            "description": "All construct blocks use Mode A.",
+            "id": "mode_a_reflective"
+          },
+          {
+            "description": "At least one Mode A and one Mode B block.",
+            "id": "mixed_mode_a_b"
+          }
+        ]
+      },
+      {
+        "id": "data_distribution",
+        "label": "Data distribution",
+        "values": [
+          {
+            "description": "Finite Gaussian population with known parameters.",
+            "id": "gaussian"
+          },
+          {
+            "description": "Finite skewed and heavy-tailed population.",
+            "id": "heavy_tailed_skewed"
+          }
+        ]
+      },
+      {
+        "id": "missingness",
+        "label": "Missingness",
+        "values": [
+          {
+            "description": "No missing values.",
+            "id": "complete"
+          },
+          {
+            "description": "Five percent missing completely at random with listwise deletion.",
+            "id": "listwise_five_percent"
+          }
+        ]
+      },
+      {
+        "id": "input_type",
+        "label": "Input representation",
+        "values": [
+          {
+            "description": "Supported row-level numeric data.",
+            "id": "raw_rows"
+          },
+          {
+            "description": "Negative-contract scenario requiring an explicit not-applicable diagnostic.",
+            "id": "summary_matrix_rejection"
+          }
+        ]
+      },
+      {
+        "id": "workload",
+        "label": "Execution workload",
+        "values": [
+          {
+            "description": "One estimator invocation.",
+            "id": "single_fit"
+          },
+          {
+            "description": "One hundred deterministic fits with distinct scenario seeds.",
+            "id": "batched_one_hundred_fits"
+          }
+        ]
+      },
+      {
+        "id": "workers",
+        "label": "Worker count",
+        "values": [
+          {
+            "description": "Serial execution.",
+            "id": "one_worker"
+          },
+          {
+            "description": "All workers allowed by the reference hardware profile.",
+            "id": "reference_parallel_workers"
+          }
+        ]
+      }
+    ],
+    "complexity_profiles": [
+      {
+        "applicability": "required",
+        "description": "Small hand-checkable problem for exact contracts and diagnostic behavior.",
+        "id": "micro_exact",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 2,
+          "groups": 1,
+          "indicators": 4,
+          "resamples": 0,
+          "rows": 20
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Typical applied research model and sample size.",
+        "id": "applied",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 10,
+          "groups": 1,
+          "indicators": 40,
+          "resamples": 0,
+          "rows": 1000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Large but routine desktop workload.",
+        "id": "large",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 25,
+          "groups": 1,
+          "indicators": 100,
+          "resamples": 0,
+          "rows": 25000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Each declared maximum dimension is exercised separately while other dimensions remain applied-sized.",
+        "id": "maximum_axis",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 100,
+          "groups": 1,
+          "indicators": 300,
+          "resamples": 0,
+          "rows": 100000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Multiple high dimensions combined to expose memory, cancellation, and output-size interactions.",
+        "id": "compound_stress",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 100,
+          "groups": 1,
+          "indicators": 300,
+          "resamples": 0,
+          "rows": 100000
+        }
+      }
+    ],
+    "mandatory_combinations": [
+      {
+        "coverage": "pairwise",
+        "id": "applied_pairwise_matrix",
+        "profile_id": "applied",
+        "purpose": "Expand the Cartesian selections and retain a deterministic pairwise covering array across all required axes.",
+        "selections": {
+          "data_distribution": [
+            "gaussian",
+            "heavy_tailed_skewed"
+          ],
+          "input_type": [
+            "raw_rows",
+            "summary_matrix_rejection"
+          ],
+          "measurement_model": [
+            "mode_a_reflective",
+            "mixed_mode_a_b"
+          ],
+          "missingness": [
+            "complete",
+            "listwise_five_percent"
+          ],
+          "model_topology": [
+            "chain",
+            "fork_and_join"
+          ],
+          "workers": [
+            "one_worker",
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "single_fit",
+            "batched_one_hundred_fits"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "micro_exact_hand_check",
+        "profile_id": "micro_exact",
+        "purpose": "Exercise exact termination and coefficient fixtures on the smallest supported valid model.",
+        "selections": {
+          "data_distribution": [
+            "gaussian"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "mode_a_reflective"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "chain"
+          ],
+          "workers": [
+            "one_worker"
+          ],
+          "workload": [
+            "single_fit"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "large_parallel_repeatability",
+        "profile_id": "large",
+        "purpose": "Compare exact serialized results under serial and parallel scheduling at large scale.",
+        "selections": {
+          "data_distribution": [
+            "heavy_tailed_skewed"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "mixed_mode_a_b"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "fork_and_join"
+          ],
+          "workers": [
+            "one_worker",
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "batched_one_hundred_fits"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_rows_limit",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum row count while other workload dimensions remain controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "mode_a_reflective",
+            "mixed_mode_a_b"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "chain",
+            "fork_and_join"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "single_fit"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_indicators_limit",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum indicator count while other workload dimensions remain controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "mixed_mode_a_b"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "fork_and_join"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "single_fit"
+          ]
+        },
+        "stressed_dimensions": [
+          "indicators"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_constructs_limit",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum construct count while other workload dimensions remain controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "mixed_mode_a_b"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "fork_and_join"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "single_fit"
+          ]
+        },
+        "stressed_dimensions": [
+          "constructs"
+        ]
+      },
+      {
+        "coverage": "compound",
+        "id": "compound_cancellation_and_memory",
+        "profile_id": "compound_stress",
+        "purpose": "Combine high dimensions with cancellation, bounded memory, archive integrity, and retry equivalence checks.",
+        "selections": {
+          "data_distribution": [
+            "heavy_tailed_skewed"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "mixed_mode_a_b"
+          ],
+          "missingness": [
+            "listwise_five_percent"
+          ],
+          "model_topology": [
+            "fork_and_join"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "batched_one_hundred_fits"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows",
+          "indicators",
+          "constructs"
+        ]
+      }
+    ],
+    "monte_carlo_policy": {
+      "confidence_level": 0.95,
+      "failed_fits_in_denominator": true,
+      "maximum_half_width": 0.01
+    }
+  },
+  "schema_version": 2,
+  "scientific_contract": {
+    "data_predicates": [
+      {
+        "diagnostic_code": "pls_raw_rows_required",
+        "expression": "Input is row-level numeric data; summary matrices are rejected before estimation.",
+        "id": "raw_numeric_input",
+        "on_violation": "not_applicable"
+      },
+      {
+        "diagnostic_code": "pls_insufficient_or_degenerate_data",
+        "expression": "After preprocessing, at least three finite rows remain and each used indicator has non-zero sample variance.",
+        "id": "retained_sample_support",
+        "on_violation": "error"
+      }
+    ],
+    "estimands": [
+      {
+        "definition": "Converged PLS construct scores, outer weights, outer loadings, and the score subspace for the declared weighting scheme and orientation convention.",
+        "id": "composite_solution",
+        "label": "Composite measurement solution",
+        "output_ids": [
+          "outer_weights",
+          "outer_loadings",
+          "construct_scores",
+          "construct_score_subspace"
+        ],
+        "unit": "standardized coefficient or score"
+      },
+      {
+        "definition": "Standardized direct paths, total effects, and endogenous construct explained variance computed from the converged composite scores.",
+        "id": "structural_solution",
+        "label": "Structural model solution",
+        "output_ids": [
+          "path_coefficients",
+          "effects_matrix",
+          "r_squared"
+        ],
+        "unit": "standardized coefficient or proportion"
+      },
+      {
+        "definition": "Deterministic convergence classification under the declared tolerance and maximum-iteration policy.",
+        "id": "optimization_status",
+        "label": "Iteration termination status",
+        "output_ids": [
+          "convergence_status"
+        ],
+        "unit": "categorical status"
+      },
+      {
+        "definition": "Across retained and failed fits, the proportion of simulated populations for which the declared recovery criterion is satisfied.",
+        "id": "recovery_quality",
+        "label": "Monte Carlo recovery quality",
+        "output_ids": [
+          "recovery_coverage"
+        ],
+        "unit": "proportion"
+      }
+    ],
+    "model_predicates": [
+      {
+        "diagnostic_code": "pls_model_cycle_or_unknown_construct",
+        "expression": "The directed structural graph is acyclic and every edge references two declared constructs.",
+        "id": "recursive_inner_model",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "pls_measurement_block_not_identified",
+        "expression": "Every construct has at least one uniquely assigned indicator and a supported Mode A or Mode B block.",
+        "id": "identified_measurement_blocks",
+        "on_violation": "error"
+      }
+    ],
+    "oracle_exception": null,
+    "oracles": [
+      {
+        "citation": "Wold, H. (1982), Soft Modeling: The Basic Design and Some Extensions.",
+        "covered_estimand_ids": [
+          "composite_solution",
+          "structural_solution",
+          "optimization_status",
+          "recovery_quality"
+        ],
+        "id": "wold_primary_method",
+        "implementation": null,
+        "independence_group": "primary_literature_wold",
+        "kind": "primary_literature",
+        "locator": "docs/methods/PLS_PM_V1.md",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Rademaker and Schuberth, cSEM package documentation and source release 0.6.1.",
+        "covered_estimand_ids": [
+          "composite_solution",
+          "structural_solution",
+          "optimization_status",
+          "recovery_quality"
+        ],
+        "id": "r_csem_reference",
+        "implementation": {
+          "maintainer": "Independent cSEM maintainers",
+          "name": "cSEM",
+          "version": "0.6.1"
+        },
+        "independence_group": "r_csem_0_6_1",
+        "kind": "independent_implementation",
+        "locator": "validation/r_csem_reference.R",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "python-plspm package documentation and source release 0.5.7.",
+        "covered_estimand_ids": [
+          "composite_solution",
+          "structural_solution",
+          "optimization_status",
+          "recovery_quality"
+        ],
+        "id": "python_plspm_reference",
+        "implementation": {
+          "maintainer": "Independent python-plspm maintainers",
+          "name": "python-plspm",
+          "version": "0.5.7"
+        },
+        "independence_group": "python_plspm_0_5_7",
+        "kind": "independent_implementation",
+        "locator": "validation/python_plspm_reference.py",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "preprocessing": [
+      {
+        "applies_to": [
+          "raw_numeric_rows"
+        ],
+        "id": "missing_value_policy",
+        "operation": "Apply the declared row-wise missing-value policy before any moments are computed.",
+        "order": 0,
+        "parameters": {
+          "default": "listwise",
+          "empty_after_filter": "error"
+        }
+      },
+      {
+        "applies_to": [
+          "retained_numeric_rows"
+        ],
+        "id": "sample_standardization",
+        "operation": "Center each indicator and scale by the sample standard deviation with denominator n minus one.",
+        "order": 1,
+        "parameters": {
+          "ddof": 1,
+          "zero_variance": "error"
+        }
+      },
+      {
+        "applies_to": [
+          "outer_weights",
+          "outer_loadings",
+          "construct_scores"
+        ],
+        "id": "deterministic_orientation",
+        "operation": "Orient each construct so the deterministic anchor indicator has a non-negative loading.",
+        "order": 2,
+        "parameters": {
+          "anchor": "first_declared_nonzero_loading",
+          "tie_break": "indicator_id"
+        }
+      }
+    ]
+  }
+}

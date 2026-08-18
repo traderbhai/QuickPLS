@@ -2,6 +2,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { AnalysisUiSettings, Dataset, RunMonitorState } from "../types";
+import { capabilityAvailabilityV2 } from "../domain/capabilitySurfaceV2";
+import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
+import type { MethodCapabilityRegistryReaderV2 } from "../domain/methodCapabilityRegistryV2";
 import NativeCalculationDialog from "./NativeCalculationDialog";
 
 const settings: AnalysisUiSettings = {
@@ -94,6 +97,28 @@ const runMonitor: RunMonitorState = {
   logs: [],
 };
 
+const processLabsRegistry: MethodCapabilityRegistryReaderV2 = {
+  quickPlsCell(cellId) {
+    return capabilityRegistryV2.quickPlsCell(cellId).map((match) => {
+      if (cellId !== "qpls3.standalone.process") return match;
+      return {
+        ...match,
+        cell: {
+          ...match.cell,
+          coverage_state: "partial",
+          evidence_state: "engine_only",
+          surface: "labs",
+        },
+      };
+    });
+  },
+  availability(capabilityId, cellId, experimentalLabsEnabled) {
+    const match = this.quickPlsCell(cellId).find((candidate) => candidate.row.capability_id === capabilityId);
+    if (!match) throw new Error(`Missing PROCESS test capability cell ${capabilityId}::${cellId}`);
+    return capabilityAvailabilityV2(match.cell, experimentalLabsEnabled);
+  },
+};
+
 describe("native PROCESS v2 graph authoring", () => {
   it("uses stable ordered row identities so controlled select edits retain focus", () => {
     const source = readFileSync("src/native/NativeProcessSetup.tsx", "utf8");
@@ -108,6 +133,8 @@ describe("native PROCESS v2 graph authoring", () => {
   it("renders explicit paths, reusable moderator coding, first/second stage and mixed three-way controls", () => {
     const markup = renderToStaticMarkup(<NativeCalculationDialog
       kind="regression"
+      experimentalLabsEnabled
+      capabilityRegistry={processLabsRegistry}
       setKind={() => undefined}
       settings={settings}
       setSettings={() => undefined}
@@ -136,8 +163,8 @@ describe("native PROCESS v2 graph authoring", () => {
     expect(markup).toContain("7/8 graph predictors");
     expect(markup).toMatch(/data-process-control="true" disabled=""[^>]*><span>D<\/span>/);
     expect(markup).toContain("40 global listwise-complete cases");
-    expect(markup).toContain("Candidate scope");
-    expect(markup).not.toContain("<span>Validated scope</span>");
+    expect(markup).toContain("Experimental");
+    expect(markup).toContain("<span>Supported setup</span>");
     expect(markup).not.toMatch(/PROCESS model [0-9]+/i);
   });
 });

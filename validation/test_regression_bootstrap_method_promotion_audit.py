@@ -523,7 +523,7 @@ class RegressionBootstrapPromotionAuditTests(unittest.TestCase):
                 "visibleModelNodes": 0,
                 "analyzeCommandCount": 1,
                 "dialogOpened": True,
-                "catalogCount": 15,
+                "catalogCount": audit._canonical_native_catalogue_count(),
                 "selectedMethod": "Regression",
                 "linkage": {"linkage": True},
                 "category": "Standalone analysis",

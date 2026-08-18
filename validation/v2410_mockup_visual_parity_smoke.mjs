@@ -23,7 +23,7 @@ const dialogOpeners = {
   new_project: ["File", "New Project"],
   import_data: ["Data", "Import Data"],
   calculation_setup: ["Calculate", "Setup Calculation"],
-  method_scope: ["Tools", "Method Scope"],
+  method_scope: ["Tools", "Method Details"],
   export_options: ["Report", "Export Options"],
   help_shortcuts: ["Help", "Shortcuts"],
   settings: ["Tools", "Preferences"],

@@ -22,10 +22,10 @@
                   "--",
                   "--exact"
                 ],
-                "duration_seconds": 1.568,
+                "duration_seconds": 3.076,
                 "returncode": 0,
-                "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.42s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-d402665705c44efe.exe)\n",
-                "stdout_tail": "\nrunning 1 test\ntest tests::indexed_samples_are_repeatable_and_replicate_specific ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n"
+                "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.47s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-b2b9382888ef1d5a.exe)\n",
+                "stdout_tail": "\nrunning 1 test\ntest tests::indexed_samples_are_repeatable_and_replicate_specific ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 105 filtered out; finished in 0.00s\n\n"
               },
               "package": "qpls-resampling",
               "passed": true,
@@ -42,10 +42,10 @@
                   "--",
                   "--exact"
                 ],
-                "duration_seconds": 1.435,
+                "duration_seconds": 2.758,
                 "returncode": 0,
-                "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.24s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-d402665705c44efe.exe)\n",
-                "stdout_tail": "\nrunning 1 test\ntest tests::pls_bootstrap_is_exactly_invariant_to_worker_count ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.04s\n\n"
+                "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.35s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-b2b9382888ef1d5a.exe)\n",
+                "stdout_tail": "\nrunning 1 test\ntest tests::pls_bootstrap_is_exactly_invariant_to_worker_count ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 105 filtered out; finished in 0.07s\n\n"
               },
               "package": "qpls-resampling",
               "passed": true,
@@ -62,10 +62,10 @@
                   "--",
                   "--exact"
                 ],
-                "duration_seconds": 1.67,
+                "duration_seconds": 2.88,
                 "returncode": 0,
-                "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.42s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
-                "stdout_tail": "\nrunning 1 test\ntest tests::bootstrap_pls_payload_round_trips_with_recipe_provenance ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.08s\n\n"
+                "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.09s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-1c5316a49d695ac2.exe)\n     Running tests\\pls_model_comparison_schema6.rs (target\\debug\\deps\\pls_model_comparison_schema6-9640385ad6045b51.exe)\n     Running tests\\schema6_sem_model_v4_authoring_shapes.rs (target\\debug\\deps\\schema6_sem_model_v4_authoring_shapes-399eb9324137a89e.exe)\n",
+                "stdout_tail": "\nrunning 1 test\ntest tests::bootstrap_pls_payload_round_trips_with_recipe_provenance ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 0.23s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n"
               },
               "package": "qpls-project",
               "passed": true,
@@ -1451,7 +1451,7 @@
                   "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a.quickpls.json",
                   "--allow-experimental"
                 ],
-                "duration_seconds": 2.763,
+                "duration_seconds": 4.655,
                 "returncode": 0,
                 "stderr_tail": "",
                 "stdout_tail": "wrote analysis result validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a.quickpls.json\n"
@@ -1459,7 +1459,7 @@
               "failed_replicates": 8,
               "recipe": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a.recipe.json",
               "result": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a.quickpls.json",
-              "result_sha256": "6fb71905298ec16655387d037d61c5f83e6b2dec606db7031e98584cc24ebc83",
+              "result_sha256": "87b0b5e290ae547ab81b1e8c8130318677979a18fe560337f3680d791c38f346",
               "usable_replicates": 9991
             },
             "original_seed_a_repeat": {
@@ -1474,7 +1474,7 @@
                   "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_repeat.quickpls.json",
                   "--allow-experimental"
                 ],
-                "duration_seconds": 2.695,
+                "duration_seconds": 4.728,
                 "returncode": 0,
                 "stderr_tail": "",
                 "stdout_tail": "wrote analysis result validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_repeat.quickpls.json\n"
@@ -1482,7 +1482,7 @@
               "failed_replicates": 8,
               "recipe": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_repeat.recipe.json",
               "result": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_repeat.quickpls.json",
-              "result_sha256": "728671ee421fbee6161dcb06d6e4a3717ec69fbd865c41507ac67ce9da830802",
+              "result_sha256": "d72fd886a2ced9c214089c7e644ed24219ccfa933d97412181897a1df3714c28",
               "usable_replicates": 9991
             },
             "original_seed_a_worker_1": {
@@ -1497,7 +1497,7 @@
                   "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_worker_1.quickpls.json",
                   "--allow-experimental"
                 ],
-                "duration_seconds": 6.783,
+                "duration_seconds": 10.993,
                 "returncode": 0,
                 "stderr_tail": "",
                 "stdout_tail": "wrote analysis result validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_worker_1.quickpls.json\n"
@@ -1505,7 +1505,7 @@
               "failed_replicates": 8,
               "recipe": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_worker_1.recipe.json",
               "result": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_worker_1.quickpls.json",
-              "result_sha256": "5f848d18061581db09cc8d5eda120b824ab59aa12d30f1933f47ae1bf918d825",
+              "result_sha256": "cb9a334e5ad1c78a9d16f48e0f87fa7c947a659e3684596e1b2ec644ecc05913",
               "usable_replicates": 9991
             },
             "original_seed_b": {
@@ -1520,7 +1520,7 @@
                   "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_b.quickpls.json",
                   "--allow-experimental"
                 ],
-                "duration_seconds": 2.689,
+                "duration_seconds": 4.403,
                 "returncode": 0,
                 "stderr_tail": "",
                 "stdout_tail": "wrote analysis result validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_b.quickpls.json\n"
@@ -1528,7 +1528,7 @@
               "failed_replicates": 17,
               "recipe": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_b.recipe.json",
               "result": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_b.quickpls.json",
-              "result_sha256": "753c701a5904def8517e6a59c7499f8b32d7a70b92a137ec1e639e4bd87d2c1d",
+              "result_sha256": "6e14b47a8624973dc529991c95ee671cc61c669776ebc63383b5905ad1c2b2c2",
               "usable_replicates": 9982
             },
             "reordered_seed_a": {
@@ -1543,7 +1543,7 @@
                   "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_a.quickpls.json",
                   "--allow-experimental"
                 ],
-                "duration_seconds": 2.721,
+                "duration_seconds": 4.619,
                 "returncode": 0,
                 "stderr_tail": "",
                 "stdout_tail": "wrote analysis result validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_a.quickpls.json\n"
@@ -1551,7 +1551,7 @@
               "failed_replicates": 8,
               "recipe": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_a.recipe.json",
               "result": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_a.quickpls.json",
-              "result_sha256": "871bc4c230230470555544ad47e06b53a50ee92859f209988608fda3e891bdee",
+              "result_sha256": "cb7c92cca1d20ab4caa125591ccd198bfe5fe2cf1ca57fafbbe1effa0233ebf0",
               "usable_replicates": 9991
             },
             "reordered_seed_b": {
@@ -1566,7 +1566,7 @@
                   "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_b.quickpls.json",
                   "--allow-experimental"
                 ],
-                "duration_seconds": 2.726,
+                "duration_seconds": 4.53,
                 "returncode": 0,
                 "stderr_tail": "",
                 "stdout_tail": "wrote analysis result validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_b.quickpls.json\n"
@@ -1574,7 +1574,7 @@
               "failed_replicates": 17,
               "recipe": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_b.recipe.json",
               "result": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_b.quickpls.json",
-              "result_sha256": "f392ad4cadaedb41f6069b211dc866d3b54d965df6371142b860178c22c147f9",
+              "result_sha256": "7a0842d50c0c29525e2115672031119bfa6506f4a41947c3316c659191abdf9e",
               "usable_replicates": 9982
             }
           },
@@ -1598,10 +1598,10 @@
               "--",
               "--exact"
             ],
-            "duration_seconds": 1.67,
+            "duration_seconds": 2.88,
             "returncode": 0,
-            "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.42s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
-            "stdout_tail": "\nrunning 1 test\ntest tests::bootstrap_pls_payload_round_trips_with_recipe_provenance ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.08s\n\n"
+            "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.09s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-1c5316a49d695ac2.exe)\n     Running tests\\pls_model_comparison_schema6.rs (target\\debug\\deps\\pls_model_comparison_schema6-9640385ad6045b51.exe)\n     Running tests\\schema6_sem_model_v4_authoring_shapes.rs (target\\debug\\deps\\schema6_sem_model_v4_authoring_shapes-399eb9324137a89e.exe)\n",
+            "stdout_tail": "\nrunning 1 test\ntest tests::bootstrap_pls_payload_round_trips_with_recipe_provenance ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 0.23s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\n\n"
           },
           "package": "qpls-project",
           "passed": true,
@@ -1619,7 +1619,7 @@
     "row_sorting_introduced": false
   },
   "feature_id": "qpls3.inference.bootstrap",
-  "generated_at_utc": "2026-08-13T19:00:46.963618Z",
+  "generated_at_utc": "2026-08-18T03:54:18.172729Z",
   "method_version": "indexed_resampling_v4",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -1633,13 +1633,13 @@
     },
     {
       "path": "crates/qpls-project/src/lib.rs",
-      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-      "size": 660277
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
     },
     {
       "path": "crates/qpls-resampling/src/lib.rs",
-      "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
-      "size": 170900
+      "sha256": "5aec61b8090183912bce7da7f9855344a882e691aea2336baf8c72c4272cc8ec",
+      "size": 244850
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -1653,8 +1653,8 @@
     },
     {
       "path": "validation/methods/pls_bootstrap_v4.manifest.json",
-      "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
-      "size": 15803
+      "sha256": "f43015dbd38e34448b9b1cdb5cfc67f1f42fc0e4a606bcd2409679b36a8174ee",
+      "size": 19827
     },
     {
       "path": "validation/pls_bootstrap_release_boundary_gate.py",
@@ -1693,8 +1693,8 @@
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a.quickpls.json",
-      "sha256": "6fb71905298ec16655387d037d61c5f83e6b2dec606db7031e98584cc24ebc83",
-      "size": 22761
+      "sha256": "87b0b5e290ae547ab81b1e8c8130318677979a18fe560337f3680d791c38f346",
+      "size": 37106
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a.recipe.json",
@@ -1703,8 +1703,8 @@
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_repeat.quickpls.json",
-      "sha256": "728671ee421fbee6161dcb06d6e4a3717ec69fbd865c41507ac67ce9da830802",
-      "size": 22761
+      "sha256": "d72fd886a2ced9c214089c7e644ed24219ccfa933d97412181897a1df3714c28",
+      "size": 37109
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_repeat.recipe.json",
@@ -1713,8 +1713,8 @@
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_worker_1.quickpls.json",
-      "sha256": "5f848d18061581db09cc8d5eda120b824ab59aa12d30f1933f47ae1bf918d825",
-      "size": 22758
+      "sha256": "cb9a334e5ad1c78a9d16f48e0f87fa7c947a659e3684596e1b2ec644ecc05913",
+      "size": 37106
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_a_worker_1.recipe.json",
@@ -1723,8 +1723,8 @@
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_b.quickpls.json",
-      "sha256": "753c701a5904def8517e6a59c7499f8b32d7a70b92a137ec1e639e4bd87d2c1d",
-      "size": 23992
+      "sha256": "6e14b47a8624973dc529991c95ee671cc61c669776ebc63383b5905ad1c2b2c2",
+      "size": 38747
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_original_seed_b.recipe.json",
@@ -1733,8 +1733,8 @@
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_a.quickpls.json",
-      "sha256": "871bc4c230230470555544ad47e06b53a50ee92859f209988608fda3e891bdee",
-      "size": 22727
+      "sha256": "cb7c92cca1d20ab4caa125591ccd198bfe5fe2cf1ca57fafbbe1effa0233ebf0",
+      "size": 37057
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_a.recipe.json",
@@ -1743,8 +1743,8 @@
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_b.quickpls.json",
-      "sha256": "f392ad4cadaedb41f6069b211dc866d3b54d965df6371142b860178c22c147f9",
-      "size": 23978
+      "sha256": "7a0842d50c0c29525e2115672031119bfa6506f4a41947c3316c659191abdf9e",
+      "size": 38734
     },
     {
       "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_boundary_reordered_seed_b.recipe.json",
@@ -1753,8 +1753,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pls_bootstrap_v4_factory_evidence.py",

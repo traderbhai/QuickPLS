@@ -261,15 +261,15 @@
       "properties": {
         "passed": { "const": true },
         "model": { "type": "object" },
-        "catalogCount": { "const": 15 },
+        "catalogCount": { "const": 18 },
         "selectedMethod": { "const": "Structural Path Randomization" },
         "permutations": { "$ref": "#/$defs/permutationInput" },
         "workers": { "$ref": "#/$defs/workerInput" },
         "seed": { "$ref": "#/$defs/seedInput" },
         "bootstrapControls": { "const": 0 },
         "groupControls": { "const": 0 },
-        "scopeLabel": { "const": "Candidate scope" },
-        "scope": { "const": "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
+        "scopeLabel": { "const": "Validated scope" },
+        "scope": { "const": "Supported for the documented bounded scope: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
         "blockers": { "type": "array", "maxItems": 0 },
         "startLabel": { "const": "Start path randomization" },
         "startEnabled": { "const": true },
@@ -286,15 +286,15 @@
         "startLabel", "startEnabled"
       ],
       "properties": {
-        "catalogCount": { "const": 15 },
+        "catalogCount": { "const": 18 },
         "selectedMethod": { "const": "Structural Path Randomization" },
         "permutations": { "$ref": "#/$defs/permutationInput" },
         "workers": { "$ref": "#/$defs/numericInput" },
         "seed": { "$ref": "#/$defs/seedInput" },
         "bootstrapControls": { "const": 0 },
         "groupControls": { "const": 0 },
-        "scopeLabel": { "const": "Candidate scope" },
-        "scope": { "const": "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
+        "scopeLabel": { "const": "Validated scope" },
+        "scope": { "const": "Supported for the documented bounded scope: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
         "blockers": { "type": "array", "maxItems": 0 },
         "startLabel": { "enum": ["Start path randomization", "Retry path randomization"] },
         "startEnabled": { "const": true }
@@ -444,7 +444,7 @@
         "group": { "const": "Inference" },
         "tableId": { "const": "permutation" },
         "title": { "const": "Structural path randomization" },
-        "warning": { "const": "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
+        "warning": { "const": "Supported for the documented bounded scope: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
         "columns": { "const": ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"] },
         "rows": {
           "type": "array", "minItems": 2, "maxItems": 2,
@@ -473,7 +473,7 @@
                 "Dataset fingerprint": { "type": "string", "minLength": 1 },
                 "Recipe": { "type": "string", "minLength": 1 },
                 "Engine": { "type": "string", "minLength": 1 },
-                "Method version": { "const": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1" },
+                "Method version": { "const": "pls_pm_v1+pls_mediation_v1+pls_assessment_v8+freedman_lane_permutation_v1" },
                 "Weighting": { "const": "path" },
                 "Preprocessing": { "const": "standardized" }
               }
@@ -494,8 +494,7 @@
         "expectedSharedStrings": { "const": [
           "Structural path randomization",
           "Run provenance",
-          "experimental",
-          "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+          "Supported for the documented bounded scope: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
           "Randomization method",
           "freedman_lane_permutation_v1",
           "Randomization operation",
@@ -508,8 +507,8 @@
           "Structural path coefficients conditional on fixed original PLS construct scores",
           "Pathwise probability",
           "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment",
-          "Qualification status",
-          "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"
+          "Availability",
+          "Supported within the documented fixed-score scope"
         ] },
         "nativeXlsx": {
           "type": "object", "additionalProperties": false,
@@ -627,8 +626,7 @@
         "requiredSharedStrings": { "const": [
           "Structural path randomization",
           "Run provenance",
-          "experimental",
-          "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+          "Supported for the documented bounded scope: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
           "Randomization method",
           "freedman_lane_permutation_v1",
           "Randomization operation",
@@ -641,8 +639,8 @@
           "Structural path coefficients conditional on fixed original PLS construct scores",
           "Pathwise probability",
           "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment",
-          "Qualification status",
-          "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"
+          "Availability",
+          "Supported within the documented fixed-score scope"
         ] },
         "requiredSheets": { "const": ["Structural path randomization", "Run provenance"] }
       }
@@ -672,7 +670,7 @@
         "sameRunRestored": { "const": true }, "initialSelectedTable": { "const": "model_estimates" }, "rows": { "const": 2 },
         "columns": { "const": ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"] },
         "values": { "type": "array", "minItems": 2, "maxItems": 2 },
-        "warning": { "const": "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
+        "warning": { "const": "Supported for the documented bounded scope: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
         "archiveChecksumMatches": { "const": true }
       }
     },

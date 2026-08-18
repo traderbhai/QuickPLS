@@ -1,0 +1,106 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "checks": {
+      "all_declared_test_sources_exist": true,
+      "prebuilt_engine_identity": {
+        "path": "target/debug/qpls.exe",
+        "sha256": "f16cc51db4eafb31b8ad6eac37d12c0c163b4169df8abf3ecc703761a7a03fe2",
+        "size": 55822848
+      },
+      "targeted_vitest_passed": true,
+      "test_file_count": 4
+    },
+    "execution": {
+      "command": [
+        "npx.cmd",
+        "vitest",
+        "run",
+        "src/domain/resultInterpretation.test.ts",
+        "src/domain/resultTables.test.ts",
+        "src/native/nativeExportTables.test.ts",
+        "src/native/nativeResults.test.ts"
+      ],
+      "duration_seconds": 11.172,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  4 passed (4)\n      Tests  68 passed (68)\n   Start at  12:17:42\n   Duration  3.53s (transform 2.36s, setup 0ms, import 5.22s, tests 444ms, environment 1ms)\n\n"
+    },
+    "kind": "quickpls_phase3_native_source_gate",
+    "method": "mediation_v1",
+    "packaged_workflow_not_claimed": true,
+    "passed": true,
+    "path": "validation/results/method_factory/mediation_v1/native_gate.json",
+    "schema_version": 1,
+    "tests": [
+      "src/domain/resultInterpretation.test.ts",
+      "src/domain/resultTables.test.ts",
+      "src/native/nativeExportTables.test.ts",
+      "src/native/nativeResults.test.ts"
+    ]
+  },
+  "feature_id": "qpls3.pls.mediation",
+  "generated_at_utc": "2026-08-14T06:47:46.065628Z",
+  "method_version": "pls_mediation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "frontend_report+export_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/domain/resultInterpretation.test.ts",
+      "sha256": "af03f8774fff17cae4370abf5669bd939aac6aa108a81a55e8b730bd5155bff1",
+      "size": 10590
+    },
+    {
+      "path": "src/domain/resultTables.test.ts",
+      "sha256": "de58261b6650a9916e360eddb7d86f8423d9a87d022c9131c46b6fae5e6516e7",
+      "size": 22203
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "7dde0ff853611f936204f9db2ac1fb8b8a8f4755c7b6ab6ff467465c86e533b4",
+      "size": 19426
+    },
+    {
+      "path": "src/native/nativeResults.test.ts",
+      "sha256": "beab538ebf63a742b8562fa31ab994e83a1707d2ec46d16ba9d25fe2663c8c51",
+      "size": 122091
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/mediation_v1.manifest.json",
+      "sha256": "c26ca3b8c2e2689e7b0b76feac57d2a8ecbfc611858cc6a45afb35a2880e656f",
+      "size": 12853
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "cf198e70e5cf16d2a0aa39a5d4c1bb4fabc9b59027c7fa59bbd8b634b4870ed2",
+      "size": 30271
+    },
+    {
+      "path": "validation/results/method_factory/mediation_v1/native_gate.json",
+      "sha256": "055471b9d354c523ec691ba0e513aec5f2f8a46768cd5d2ddea0112a9b4505b5",
+      "size": 1274
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "8ba98f6953e8cacba11b3e927c9c607e48ca5c3a21b9b8d8207e7ac874b5c833",
+      "size": 2402
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+use crate::CapabilityCellReferenceV2;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -19,6 +20,7 @@ pub const ENGINE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub enum AnalysisMethod {
     PlsPm,
     Bootstrap,
+    PlsSampleSizePower,
     Plsc,
     Wpls,
     Cca,
@@ -42,6 +44,7 @@ impl AnalysisMethod {
         match self {
             Self::PlsPm => "pls_pm",
             Self::Bootstrap => "bootstrap",
+            Self::PlsSampleSizePower => "pls_sample_size_power",
             Self::Plsc => "plsc",
             Self::Wpls => "wpls",
             Self::Cca => "cca",
@@ -167,6 +170,76 @@ pub enum Preprocessing {
 pub enum MissingDataPolicy {
     #[default]
     ListwiseDeletion,
+    /// Recipe-v4-only continuous raw-data preparation. Schema-v3 execution
+    /// remains fail-closed in `validate_recipe`.
+    MeanReplacement,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum HtmtBootstrapIntervalFamily {
+    Percentile,
+    #[default]
+    BiasCorrectedPercentile,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum HtmtBootstrapTestTail {
+    #[default]
+    OneTailedUpper,
+    TwoSided,
+}
+
+/// Direction of the general PLS case-bootstrap test for a zero parameter.
+/// The historical two-sided normal-reference result remains the default wire
+/// contract; explicit one-sided selections add a ledger-derived typed summary.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum PlsBootstrapTestTail {
+    #[default]
+    TwoSided,
+    OneSidedGreater,
+    OneSidedLess,
+}
+
+impl PlsBootstrapTestTail {
+    pub fn is_default(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+/// Selected hypothesis for the bounded two-group PLSc permutation contract.
+/// Directional variants always use the canonical Group A minus Group B
+/// contrast. The historical two-sided contract remains the default wire.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum PlscPermutationTestTail {
+    #[default]
+    TwoSided,
+    GroupAGreater,
+    GroupALess,
+}
+
+impl PlscPermutationTestTail {
+    pub fn is_default(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(deny_unknown_fields)]
+pub struct HtmtBootstrapInferenceConfig {
+    #[serde(default)]
+    pub interval_family: HtmtBootstrapIntervalFamily,
+    #[serde(default)]
+    pub test_tail: HtmtBootstrapTestTail,
+}
+
+impl HtmtBootstrapInferenceConfig {
+    pub fn is_default(&self) -> bool {
+        *self == Self::default()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -176,6 +249,8 @@ pub struct AnalysisSettings {
     pub tolerance: f64,
     pub max_iterations: u32,
     pub bootstrap_samples: u32,
+    #[serde(default, skip_serializing_if = "PlsBootstrapTestTail::is_default")]
+    pub bootstrap_test_tail: PlsBootstrapTestTail,
     #[serde(default)]
     pub studentized_inner_samples: u32,
     #[serde(default)]
@@ -191,16 +266,30 @@ pub struct AnalysisSettings {
     pub missing_data: MissingDataPolicy,
     #[serde(default)]
     pub case_weight_column: Option<String>,
+    #[serde(
+        default,
+        skip_serializing_if = "HtmtBootstrapInferenceConfig::is_default"
+    )]
+    pub htmt_bootstrap_inference: HtmtBootstrapInferenceConfig,
 }
+
+/// Fixed SmartPLS 4 values for the current PLS-SEM algorithm surface. Older
+/// expert recipes remain readable, but the configured-v2 parity contract is
+/// executable only with these exact values.
+pub const PLS_ALGORITHM_FIXED_MAX_ITERATIONS: u32 = 3_000;
+pub const PLS_ALGORITHM_FIXED_STOP_CRITERION: f64 = 1e-7;
+
+pub const PLS_INITIAL_OUTER_WEIGHTS_CONTRACT_VERSION_V2: &str = "pls_initial_outer_weights_v2";
 
 impl Default for AnalysisSettings {
     fn default() -> Self {
         Self {
             method: AnalysisMethod::PlsPm,
             weighting_scheme: WeightingScheme::Path,
-            tolerance: 1e-7,
-            max_iterations: 3_000,
+            tolerance: PLS_ALGORITHM_FIXED_STOP_CRITERION,
+            max_iterations: PLS_ALGORITHM_FIXED_MAX_ITERATIONS,
             bootstrap_samples: 0,
+            bootstrap_test_tail: PlsBootstrapTestTail::default(),
             studentized_inner_samples: 0,
             permutation_samples: 0,
             seed: 20_260_718,
@@ -209,7 +298,45 @@ impl Default for AnalysisSettings {
             preprocessing: Preprocessing::Standardized,
             missing_data: MissingDataPolicy::ListwiseDeletion,
             case_weight_column: None,
+            htmt_bootstrap_inference: HtmtBootstrapInferenceConfig::default(),
         }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PlsInitialOuterWeightV2 {
+    pub construct_id: String,
+    pub indicator_id: String,
+    pub value: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum PlsInitialOuterWeightsV2 {
+    Standard,
+    Individual {
+        weights: Vec<PlsInitialOuterWeightV2>,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PlsAlgorithmConfigV2 {
+    pub initialization_contract_version: String,
+    pub initial_outer_weights: PlsInitialOuterWeightsV2,
+}
+
+impl PlsAlgorithmConfigV2 {
+    pub fn standard() -> Self {
+        Self {
+            initialization_contract_version: PLS_INITIAL_OUTER_WEIGHTS_CONTRACT_VERSION_V2.into(),
+            initial_outer_weights: PlsInitialOuterWeightsV2::Standard,
+        }
+    }
+
+    pub fn has_exact_contract_version(&self) -> bool {
+        self.initialization_contract_version == PLS_INITIAL_OUTER_WEIGHTS_CONTRACT_VERSION_V2
     }
 }
 
@@ -274,6 +401,76 @@ pub enum CbsemInput {
     Raw,
     Covariance,
     Correlation,
+}
+
+/// First publication-eligible CB-SEM resampling selector. The historical
+/// `bootstrap_samples` field by itself identified an analytical normal-interval
+/// preview; a new executable recipe must opt into this explicit v2 contract.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CbsemBootstrapAlgorithm {
+    CaseResamplingFullMl,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CbsemBootstrapInterval {
+    PercentileType7,
+    AnalyticStudentizedType7,
+    BcaType7,
+}
+
+/// Selected zero-null hypothesis-test tail for exact CB-SEM case bootstrap.
+/// Two-sided remains the default and is omitted from recipe bytes.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum CbsemBootstrapTestTail {
+    #[default]
+    TwoSided,
+    OneSidedGreater,
+    OneSidedLess,
+}
+
+impl CbsemBootstrapTestTail {
+    pub fn is_default(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+/// Compiler-derived eligibility of one stable exact-CFA free parameter for a
+/// zero-null case-bootstrap hypothesis test. Consumers must bind these rows to
+/// the scheduler's stable-ID order; point-estimate signs are not eligibility.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CbsemExactCaseBootstrapZeroNullEligibilityV1 {
+    pub parameter_id: String,
+    pub status: CbsemExactCaseBootstrapZeroNullEligibilityStatusV1,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
+pub enum CbsemExactCaseBootstrapZeroNullEligibilityStatusV1 {
+    Available,
+    Unavailable {
+        reason: CbsemExactCaseBootstrapZeroNullUnavailableReasonV1,
+    },
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CbsemExactCaseBootstrapZeroNullUnavailableReasonV1 {
+    NonregularVarianceBoundary,
+    ZeroNullOutsideOpenDomain,
+    UnsupportedParameterFamily,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CbsemBootstrapConfigV2 {
+    pub algorithm: CbsemBootstrapAlgorithm,
+    pub interval: CbsemBootstrapInterval,
+    #[serde(default, skip_serializing_if = "CbsemBootstrapTestTail::is_default")]
+    pub test_tail: CbsemBootstrapTestTail,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -444,6 +641,145 @@ pub enum NcaCeiling {
     Both,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PlsPowerDistribution {
+    StandardNormal,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PlsPowerMissingData {
+    None,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PlsPowerInference {
+    CaseBootstrapNormalReferenceTwoSided,
+    CaseBootstrapNullCenteredTwoSidedPlusOne,
+}
+
+pub const PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_CAPABILITY_ID: &str =
+    "smartpls.pls_power_analysis";
+pub const PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_CELL_ID: &str =
+    "qpls3.pls.posthoc_technical_minimum_sample_size";
+pub const PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_CAPABILITY_VERSION: &str =
+    "pls_posthoc_technical_minimum_sample_size_v2";
+pub const PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_METHOD_VERSION: &str =
+    "inverse_square_root_posthoc_v2";
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PlsPosthocTechnicalMinimumSampleSizeInferenceV2 {
+    PointEstimateOnly,
+    CaseBootstrapNormalReferenceTwoSided,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2 {
+    PlsAlgorithm,
+    PlsBootstrap,
+}
+
+/// Exact, versioned opt-in for the retrospective inverse-square-root result.
+///
+/// Keeping the option separate from prospective Monte Carlo power prevents a
+/// completed PLS run from silently gaining a second analytical claim. The
+/// four-field option-cell identity and estimator method version are carried on
+/// the wire so a drifted or relabelled request fails closed.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct PlsPosthocTechnicalMinimumSampleSizeConfigV2 {
+    pub capability_cell: CapabilityCellReferenceV2,
+    pub method_version: String,
+    pub base_analysis: PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2,
+    pub inference: PlsPosthocTechnicalMinimumSampleSizeInferenceV2,
+}
+
+impl PlsPosthocTechnicalMinimumSampleSizeConfigV2 {
+    fn exact_v2(
+        base_analysis: PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2,
+        inference: PlsPosthocTechnicalMinimumSampleSizeInferenceV2,
+    ) -> Self {
+        Self {
+            capability_cell: CapabilityCellReferenceV2 {
+                registry_schema_version: 2,
+                capability_id: PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_CAPABILITY_ID.into(),
+                cell_id: PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_CELL_ID.into(),
+                capability_version: PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_CAPABILITY_VERSION
+                    .into(),
+            },
+            method_version: PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_METHOD_VERSION.into(),
+            base_analysis,
+            inference,
+        }
+    }
+
+    pub fn point_estimate_v2() -> Self {
+        Self::exact_v2(
+            PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsAlgorithm,
+            PlsPosthocTechnicalMinimumSampleSizeInferenceV2::PointEstimateOnly,
+        )
+    }
+
+    pub fn bootstrap_v2() -> Self {
+        Self::exact_v2(
+            PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsBootstrap,
+            PlsPosthocTechnicalMinimumSampleSizeInferenceV2::CaseBootstrapNormalReferenceTwoSided,
+        )
+    }
+
+    pub fn is_exact_v2(&self) -> bool {
+        self.capability_cell.registry_schema_version == 2
+            && self.capability_cell.capability_id
+                == PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_CAPABILITY_ID
+            && self.capability_cell.cell_id == PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_CELL_ID
+            && self.capability_cell.capability_version
+                == PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_CAPABILITY_VERSION
+            && self.method_version == PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_METHOD_VERSION
+    }
+
+    pub fn has_coherent_base_and_inference(&self) -> bool {
+        matches!(
+            (self.base_analysis, self.inference),
+            (
+                PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsAlgorithm,
+                PlsPosthocTechnicalMinimumSampleSizeInferenceV2::PointEstimateOnly,
+            ) | (
+                PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsBootstrap,
+                PlsPosthocTechnicalMinimumSampleSizeInferenceV2::CaseBootstrapNormalReferenceTwoSided,
+            )
+        )
+    }
+}
+
+/// Explicit prospective Monte Carlo design for the bounded PLS power
+/// workflow. No effect, reliability, distribution, missingness, target test,
+/// or simulation count is inferred from the current dataset.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PlsSampleSizePowerConfig {
+    pub scenario_identity: String,
+    pub predictor_construct: String,
+    pub outcome_construct: String,
+    pub predictor_indicator_loadings: Vec<f64>,
+    pub outcome_indicator_loadings: Vec<f64>,
+    pub population_path: f64,
+    pub exogenous_distribution: PlsPowerDistribution,
+    pub structural_disturbance_distribution: PlsPowerDistribution,
+    pub indicator_error_distribution: PlsPowerDistribution,
+    pub missing_data: PlsPowerMissingData,
+    pub inference: PlsPowerInference,
+    pub sample_size_grid: Vec<u32>,
+    pub alpha: f64,
+    pub target_power: f64,
+    pub interval_confidence_level: f64,
+    pub monte_carlo_replicates: u32,
+    pub bootstrap_replicates: u32,
+}
+
 impl NcaCeiling {
     const fn as_str(self) -> &'static str {
         match self {
@@ -460,9 +796,19 @@ impl NcaCeiling {
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum MethodConfig {
     PlsAlgorithm,
+    PlsAlgorithmConfiguredV2(PlsAlgorithmConfigV2),
     PlsBootstrap,
     PlsPermutation,
+    PlsPosthocTechnicalMinimumSampleSize(PlsPosthocTechnicalMinimumSampleSizeConfigV2),
+    PlsSampleSizePower(PlsSampleSizePowerConfig),
     Plsc,
+    PlscPermutation {
+        group_column: String,
+        group_a: String,
+        group_b: String,
+        #[serde(default, skip_serializing_if = "PlscPermutationTestTail::is_default")]
+        test_tail: PlscPermutationTestTail,
+    },
     Wpls,
     Cca,
     CtaPls,
@@ -483,6 +829,17 @@ pub enum MethodConfig {
         permutation_samples: u32,
         configural_invariance_confirmed: bool,
     },
+    /// Exact MICOM-only execution contract.  This is intentionally distinct
+    /// from the historical combined `Mga` configuration so a MICOM run cannot
+    /// silently execute structural-path permutation MGA or inherit its retry
+    /// semantics.
+    Micom {
+        group_column: String,
+        group_a: String,
+        group_b: String,
+        permutation_samples: u32,
+        configural_invariance_confirmed: bool,
+    },
     Ipma {
         targets: Vec<String>,
     },
@@ -492,6 +849,8 @@ pub enum MethodConfig {
         input: CbsemInput,
         mean_structure: bool,
         bootstrap_samples: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        bootstrap_v2: Option<CbsemBootstrapConfigV2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         group_column: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -524,9 +883,19 @@ pub enum MethodConfig {
 #[serde(tag = "kind", rename_all = "snake_case")]
 enum MethodConfigWire {
     PlsAlgorithm,
+    PlsAlgorithmConfiguredV2(PlsAlgorithmConfigV2),
     PlsBootstrap,
     PlsPermutation,
+    PlsPosthocTechnicalMinimumSampleSize(PlsPosthocTechnicalMinimumSampleSizeConfigV2),
+    PlsSampleSizePower(PlsSampleSizePowerConfig),
     Plsc,
+    PlscPermutation {
+        group_column: String,
+        group_a: String,
+        group_b: String,
+        #[serde(default)]
+        test_tail: PlscPermutationTestTail,
+    },
     Wpls,
     Cca,
     CtaPls,
@@ -547,6 +916,13 @@ enum MethodConfigWire {
         permutation_samples: u32,
         configural_invariance_confirmed: bool,
     },
+    Micom {
+        group_column: String,
+        group_a: String,
+        group_b: String,
+        permutation_samples: u32,
+        configural_invariance_confirmed: bool,
+    },
     Ipma {
         targets: Vec<String>,
     },
@@ -556,6 +932,8 @@ enum MethodConfigWire {
         input: CbsemInput,
         mean_structure: bool,
         bootstrap_samples: u32,
+        #[serde(default)]
+        bootstrap_v2: Option<CbsemBootstrapConfigV2>,
         #[serde(default)]
         group_column: Option<String>,
         #[serde(default)]
@@ -588,9 +966,27 @@ impl From<MethodConfigWire> for MethodConfig {
     fn from(value: MethodConfigWire) -> Self {
         match value {
             MethodConfigWire::PlsAlgorithm => Self::PlsAlgorithm,
+            MethodConfigWire::PlsAlgorithmConfiguredV2(config) => {
+                Self::PlsAlgorithmConfiguredV2(config)
+            }
             MethodConfigWire::PlsBootstrap => Self::PlsBootstrap,
             MethodConfigWire::PlsPermutation => Self::PlsPermutation,
+            MethodConfigWire::PlsPosthocTechnicalMinimumSampleSize(config) => {
+                Self::PlsPosthocTechnicalMinimumSampleSize(config)
+            }
+            MethodConfigWire::PlsSampleSizePower(config) => Self::PlsSampleSizePower(config),
             MethodConfigWire::Plsc => Self::Plsc,
+            MethodConfigWire::PlscPermutation {
+                group_column,
+                group_a,
+                group_b,
+                test_tail,
+            } => Self::PlscPermutation {
+                group_column,
+                group_a,
+                group_b,
+                test_tail,
+            },
             MethodConfigWire::Wpls => Self::Wpls,
             MethodConfigWire::Cca => Self::Cca,
             MethodConfigWire::CtaPls => Self::CtaPls,
@@ -613,6 +1009,19 @@ impl From<MethodConfigWire> for MethodConfig {
                 permutation_samples,
                 configural_invariance_confirmed,
             },
+            MethodConfigWire::Micom {
+                group_column,
+                group_a,
+                group_b,
+                permutation_samples,
+                configural_invariance_confirmed,
+            } => Self::Micom {
+                group_column,
+                group_a,
+                group_b,
+                permutation_samples,
+                configural_invariance_confirmed,
+            },
             MethodConfigWire::Ipma { targets } => Self::Ipma { targets },
             MethodConfigWire::Cbsem {
                 model_type,
@@ -620,6 +1029,7 @@ impl From<MethodConfigWire> for MethodConfig {
                 input,
                 mean_structure,
                 bootstrap_samples,
+                bootstrap_v2,
                 group_column,
                 invariance_steps,
             } => Self::Cbsem {
@@ -628,6 +1038,7 @@ impl From<MethodConfigWire> for MethodConfig {
                 input,
                 mean_structure,
                 bootstrap_samples,
+                bootstrap_v2,
                 group_column,
                 invariance_steps,
             },
@@ -696,6 +1107,39 @@ impl<'de> Deserialize<'de> for MethodConfig {
             | "moderated_mediation"
             | "gsca"
             | "legacy" => &["kind"],
+            "pls_algorithm_configured_v2" => &[
+                "kind",
+                "initialization_contract_version",
+                "initial_outer_weights",
+            ],
+            "pls_posthoc_technical_minimum_sample_size" => &[
+                "kind",
+                "capability_cell",
+                "method_version",
+                "base_analysis",
+                "inference",
+            ],
+            "pls_sample_size_power" => &[
+                "kind",
+                "scenario_identity",
+                "predictor_construct",
+                "outcome_construct",
+                "predictor_indicator_loadings",
+                "outcome_indicator_loadings",
+                "population_path",
+                "exogenous_distribution",
+                "structural_disturbance_distribution",
+                "indicator_error_distribution",
+                "missing_data",
+                "inference",
+                "sample_size_grid",
+                "alpha",
+                "target_power",
+                "interval_confidence_level",
+                "monte_carlo_replicates",
+                "bootstrap_replicates",
+            ],
+            "plsc_permutation" => &["kind", "group_column", "group_a", "group_b", "test_tail"],
             "predict" => &["kind", "pls_pos", "fimix"],
             "mga" => &[
                 "kind",
@@ -703,6 +1147,14 @@ impl<'de> Deserialize<'de> for MethodConfig {
                 "group_a",
                 "group_b",
                 "methods",
+                "permutation_samples",
+                "configural_invariance_confirmed",
+            ],
+            "micom" => &[
+                "kind",
+                "group_column",
+                "group_a",
+                "group_b",
                 "permutation_samples",
                 "configural_invariance_confirmed",
             ],
@@ -714,6 +1166,7 @@ impl<'de> Deserialize<'de> for MethodConfig {
                 "input",
                 "mean_structure",
                 "bootstrap_samples",
+                "bootstrap_v2",
                 "group_column",
                 "invariance_steps",
             ],
@@ -750,9 +1203,15 @@ impl MethodConfig {
     pub const fn kind(&self) -> &'static str {
         match self {
             Self::PlsAlgorithm => "pls_algorithm",
+            Self::PlsAlgorithmConfiguredV2(_) => "pls_algorithm_configured_v2",
             Self::PlsBootstrap => "pls_bootstrap",
             Self::PlsPermutation => "pls_permutation",
+            Self::PlsPosthocTechnicalMinimumSampleSize(_) => {
+                "pls_posthoc_technical_minimum_sample_size"
+            }
+            Self::PlsSampleSizePower(_) => "pls_sample_size_power",
             Self::Plsc => "plsc",
+            Self::PlscPermutation { .. } => "plsc_permutation",
             Self::Wpls => "wpls",
             Self::Cca => "cca",
             Self::CtaPls => "cta_pls",
@@ -761,6 +1220,7 @@ impl MethodConfig {
             Self::ModeratedMediation => "moderated_mediation",
             Self::Predict { .. } => "predict",
             Self::Mga { .. } => "mga",
+            Self::Micom { .. } => "micom",
             Self::Ipma { .. } => "ipma",
             Self::Cbsem { .. } => "cbsem",
             Self::Pca { .. } => "pca",
@@ -773,10 +1233,17 @@ impl MethodConfig {
 
     pub const fn supports_method(&self, method: AnalysisMethod) -> bool {
         match self {
-            Self::PlsAlgorithm | Self::PlsBootstrap | Self::PlsPermutation => {
+            Self::PlsAlgorithm
+            | Self::PlsAlgorithmConfiguredV2(_)
+            | Self::PlsBootstrap
+            | Self::PlsPermutation
+            | Self::PlsPosthocTechnicalMinimumSampleSize(_) => {
                 matches!(method, AnalysisMethod::PlsPm)
             }
-            Self::Plsc => matches!(method, AnalysisMethod::Plsc),
+            Self::PlsSampleSizePower(_) => matches!(method, AnalysisMethod::PlsSampleSizePower),
+            Self::Plsc | Self::PlscPermutation { .. } => {
+                matches!(method, AnalysisMethod::Plsc)
+            }
             Self::Wpls => matches!(method, AnalysisMethod::Wpls),
             Self::Cca => matches!(method, AnalysisMethod::Cca),
             Self::CtaPls => matches!(method, AnalysisMethod::CtaPls),
@@ -784,7 +1251,7 @@ impl MethodConfig {
             Self::NonlinearEffects => matches!(method, AnalysisMethod::NonlinearEffects),
             Self::ModeratedMediation => matches!(method, AnalysisMethod::ModeratedMediation),
             Self::Predict { .. } => matches!(method, AnalysisMethod::Predict),
-            Self::Mga { .. } => matches!(method, AnalysisMethod::Mga),
+            Self::Mga { .. } | Self::Micom { .. } => matches!(method, AnalysisMethod::Mga),
             Self::Ipma { .. } => matches!(method, AnalysisMethod::Ipma),
             Self::Cbsem { .. } => matches!(method, AnalysisMethod::Cbsem),
             Self::Pca { .. } => matches!(method, AnalysisMethod::Pca),
@@ -801,6 +1268,27 @@ impl MethodConfig {
             AnalysisMethod::PlsPm if settings.permutation_samples > 0 => Self::PlsPermutation,
             AnalysisMethod::PlsPm => Self::PlsAlgorithm,
             AnalysisMethod::Bootstrap => Self::PlsBootstrap,
+            AnalysisMethod::PlsSampleSizePower => {
+                Self::PlsSampleSizePower(PlsSampleSizePowerConfig {
+                    scenario_identity: String::new(),
+                    predictor_construct: String::new(),
+                    outcome_construct: String::new(),
+                    predictor_indicator_loadings: Vec::new(),
+                    outcome_indicator_loadings: Vec::new(),
+                    population_path: f64::NAN,
+                    exogenous_distribution: PlsPowerDistribution::StandardNormal,
+                    structural_disturbance_distribution: PlsPowerDistribution::StandardNormal,
+                    indicator_error_distribution: PlsPowerDistribution::StandardNormal,
+                    missing_data: PlsPowerMissingData::None,
+                    inference: PlsPowerInference::CaseBootstrapNullCenteredTwoSidedPlusOne,
+                    sample_size_grid: Vec::new(),
+                    alpha: f64::NAN,
+                    target_power: f64::NAN,
+                    interval_confidence_level: f64::NAN,
+                    monte_carlo_replicates: 0,
+                    bootstrap_replicates: 0,
+                })
+            }
             AnalysisMethod::Plsc => Self::Plsc,
             AnalysisMethod::Wpls => Self::Wpls,
             AnalysisMethod::Cca => Self::Cca,
@@ -832,6 +1320,7 @@ impl MethodConfig {
                 input: CbsemInput::Raw,
                 mean_structure: false,
                 bootstrap_samples: 0,
+                bootstrap_v2: None,
                 group_column: None,
                 invariance_steps: Vec::new(),
             },
@@ -912,6 +1401,36 @@ impl MethodConfig {
                     configural_invariance_confirmed.to_string(),
                 );
             }
+            Self::Micom {
+                group_column,
+                group_a,
+                group_b,
+                permutation_samples,
+                configural_invariance_confirmed,
+            } => {
+                metadata.insert("mga_group_column".into(), group_column.clone());
+                metadata.insert("mga_group_a".into(), group_a.clone());
+                metadata.insert("mga_group_b".into(), group_b.clone());
+                metadata.insert("group_methods".into(), "micom".into());
+                metadata.insert(
+                    "group_permutation_samples".into(),
+                    permutation_samples.to_string(),
+                );
+                metadata.insert(
+                    "micom_configural_confirmed".into(),
+                    configural_invariance_confirmed.to_string(),
+                );
+            }
+            Self::PlscPermutation {
+                group_column,
+                group_a,
+                group_b,
+                test_tail: _,
+            } => {
+                metadata.insert("mga_group_column".into(), group_column.clone());
+                metadata.insert("mga_group_a".into(), group_a.clone());
+                metadata.insert("mga_group_b".into(), group_b.clone());
+            }
             Self::Ipma { targets } => {
                 metadata.insert("ipma_targets".into(), targets.join(","));
             }
@@ -921,6 +1440,7 @@ impl MethodConfig {
                 input,
                 mean_structure,
                 bootstrap_samples,
+                bootstrap_v2: _,
                 group_column,
                 invariance_steps,
             } => {
@@ -1052,8 +1572,11 @@ impl MethodConfig {
                 );
             }
             Self::PlsAlgorithm
+            | Self::PlsAlgorithmConfiguredV2(_)
             | Self::PlsBootstrap
             | Self::PlsPermutation
+            | Self::PlsPosthocTechnicalMinimumSampleSize(_)
+            | Self::PlsSampleSizePower(_)
             | Self::Plsc
             | Self::Wpls
             | Self::Cca
@@ -1161,6 +1684,14 @@ pub enum AnalysisRecipeMigrationError {
         "historical PROCESS v1 recipes are archive-readable only and cannot be migrated into executable schema-v3 recipes; author a graph-defined PROCESS v2 recipe"
     )]
     ArchiveOnlyProcessV1,
+    #[error(
+        "PLS sample-size/power has no historical schema-v2 representation; author an explicit schema-v3 typed recipe"
+    )]
+    ProspectivePowerRequiresV3,
+    #[error(
+        "consistent PLSc bootstrapping has no executable schema-v2 representation; author an explicit schema-v3 PLSc recipe so historical output is not reinterpreted"
+    )]
+    ConsistentBootstrapRequiresV3,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -1330,12 +1861,126 @@ mod contract_tests {
     }
 
     #[test]
+    fn mean_replacement_has_an_explicit_wire_value_without_changing_the_default() {
+        assert_eq!(
+            serde_json::to_value(MissingDataPolicy::MeanReplacement).unwrap(),
+            serde_json::json!("mean_replacement")
+        );
+        assert_eq!(
+            serde_json::from_value::<MissingDataPolicy>(serde_json::json!("mean_replacement"))
+                .unwrap(),
+            MissingDataPolicy::MeanReplacement
+        );
+        assert_eq!(
+            AnalysisSettings::default().missing_data,
+            MissingDataPolicy::ListwiseDeletion
+        );
+    }
+
+    #[test]
+    fn htmt_bootstrap_selection_is_typed_and_default_wire_compatible() {
+        let encoded_default = serde_json::to_value(AnalysisSettings::default()).unwrap();
+        assert!(encoded_default.get("htmt_bootstrap_inference").is_none());
+        let decoded_default: AnalysisSettings = serde_json::from_value(encoded_default).unwrap();
+        assert_eq!(
+            decoded_default.htmt_bootstrap_inference,
+            HtmtBootstrapInferenceConfig::default()
+        );
+
+        let mut configured = AnalysisSettings::default();
+        configured.htmt_bootstrap_inference = HtmtBootstrapInferenceConfig {
+            interval_family: HtmtBootstrapIntervalFamily::Percentile,
+            test_tail: HtmtBootstrapTestTail::TwoSided,
+        };
+        let encoded = serde_json::to_value(&configured).unwrap();
+        assert_eq!(
+            encoded["htmt_bootstrap_inference"],
+            serde_json::json!({
+                "interval_family": "percentile",
+                "test_tail": "two_sided"
+            })
+        );
+        assert_eq!(
+            serde_json::from_value::<AnalysisSettings>(encoded).unwrap(),
+            configured
+        );
+    }
+
+    #[test]
+    fn pls_bootstrap_test_tail_is_typed_and_preserves_default_settings_bytes() {
+        #[derive(Serialize)]
+        struct LegacyDefaultSettingsWire<'a> {
+            method: &'a AnalysisMethod,
+            weighting_scheme: &'a WeightingScheme,
+            tolerance: f64,
+            max_iterations: u32,
+            bootstrap_samples: u32,
+            studentized_inner_samples: u32,
+            permutation_samples: u32,
+            seed: u64,
+            workers: usize,
+            confidence_level: f64,
+            preprocessing: &'a Preprocessing,
+            missing_data: &'a MissingDataPolicy,
+            case_weight_column: &'a Option<String>,
+        }
+
+        let default = AnalysisSettings::default();
+        let historical = LegacyDefaultSettingsWire {
+            method: &default.method,
+            weighting_scheme: &default.weighting_scheme,
+            tolerance: default.tolerance,
+            max_iterations: default.max_iterations,
+            bootstrap_samples: default.bootstrap_samples,
+            studentized_inner_samples: default.studentized_inner_samples,
+            permutation_samples: default.permutation_samples,
+            seed: default.seed,
+            workers: default.workers,
+            confidence_level: default.confidence_level,
+            preprocessing: &default.preprocessing,
+            missing_data: &default.missing_data,
+            case_weight_column: &default.case_weight_column,
+        };
+        assert_eq!(
+            serde_json::to_vec(&default).unwrap(),
+            serde_json::to_vec(&historical).unwrap()
+        );
+        let decoded: AnalysisSettings =
+            serde_json::from_slice(&serde_json::to_vec(&historical).unwrap()).unwrap();
+        assert_eq!(decoded.bootstrap_test_tail, PlsBootstrapTestTail::TwoSided);
+
+        for (tail, wire) in [
+            (PlsBootstrapTestTail::OneSidedGreater, "one_sided_greater"),
+            (PlsBootstrapTestTail::OneSidedLess, "one_sided_less"),
+        ] {
+            let mut configured = default.clone();
+            configured.bootstrap_test_tail = tail;
+            let encoded = serde_json::to_value(&configured).unwrap();
+            assert_eq!(encoded["bootstrap_test_tail"], wire);
+            assert_eq!(
+                serde_json::from_value::<AnalysisSettings>(encoded).unwrap(),
+                configured
+            );
+        }
+    }
+
+    #[test]
     fn method_config_native_kind_wire_names_are_stable() {
         let configs = vec![
             MethodConfig::PlsAlgorithm,
+            MethodConfig::PlsAlgorithmConfiguredV2(PlsAlgorithmConfigV2::standard()),
             MethodConfig::PlsBootstrap,
             MethodConfig::PlsPermutation,
+            MethodConfig::PlsPosthocTechnicalMinimumSampleSize(
+                PlsPosthocTechnicalMinimumSampleSizeConfigV2::point_estimate_v2(),
+            ),
             MethodConfig::Plsc,
+            MethodConfig::PlscPermutation {
+                group_column: "group".into(),
+                group_a: "A".into(),
+                group_b: "B".into(),
+                test_tail: PlscPermutationTestTail::TwoSided,
+            },
             MethodConfig::Wpls,
             MethodConfig::Cca,
             MethodConfig::CtaPls,
@@ -1357,6 +2002,13 @@ mod contract_tests {
                 permutation_samples: 5_000,
                 configural_invariance_confirmed: true,
             },
+            MethodConfig::Micom {
+                group_column: "group".into(),
+                group_a: "A".into(),
+                group_b: "B".into(),
+                permutation_samples: 5_000,
+                configural_invariance_confirmed: true,
+            },
             MethodConfig::Ipma {
                 targets: vec!["y".into()],
             },
@@ -1366,6 +2018,7 @@ mod contract_tests {
                 input: CbsemInput::Raw,
                 mean_structure: false,
                 bootstrap_samples: 0,
+                bootstrap_v2: None,
                 group_column: None,
                 invariance_steps: Vec::new(),
             },
@@ -1393,9 +2046,12 @@ mod contract_tests {
         ];
         let expected = [
             "pls_algorithm",
+            "pls_algorithm_configured_v2",
             "pls_bootstrap",
             "pls_permutation",
+            "pls_posthoc_technical_minimum_sample_size",
             "plsc",
+            "plsc_permutation",
             "wpls",
             "cca",
             "cta_pls",
@@ -1404,6 +2060,7 @@ mod contract_tests {
             "moderated_mediation",
             "predict",
             "mga",
+            "micom",
             "ipma",
             "cbsem",
             "pca",
@@ -1433,6 +2090,138 @@ mod contract_tests {
                 .collect::<Vec<String>>(),
             expected
         );
+    }
+
+    #[test]
+    fn configured_pls_initialization_v2_has_an_exact_backward_distinct_wire() {
+        let config = MethodConfig::PlsAlgorithmConfiguredV2(PlsAlgorithmConfigV2 {
+            initialization_contract_version: PLS_INITIAL_OUTER_WEIGHTS_CONTRACT_VERSION_V2.into(),
+            initial_outer_weights: PlsInitialOuterWeightsV2::Individual {
+                weights: vec![PlsInitialOuterWeightV2 {
+                    construct_id: "x".into(),
+                    indicator_id: "x1".into(),
+                    value: -1.0,
+                }],
+            },
+        });
+        let encoded = serde_json::to_value(&config).unwrap();
+        assert_eq!(
+            encoded,
+            serde_json::json!({
+                "kind": "pls_algorithm_configured_v2",
+                "initialization_contract_version": "pls_initial_outer_weights_v2",
+                "initial_outer_weights": {
+                    "kind": "individual",
+                    "weights": [{
+                        "construct_id": "x",
+                        "indicator_id": "x1",
+                        "value": -1.0
+                    }]
+                }
+            })
+        );
+        assert_eq!(
+            serde_json::from_value::<MethodConfig>(encoded.clone()).unwrap(),
+            config
+        );
+        let legacy = serde_json::to_value(MethodConfig::PlsAlgorithm).unwrap();
+        assert_eq!(legacy, serde_json::json!({"kind": "pls_algorithm"}));
+
+        let mut nested_unknown = encoded;
+        nested_unknown["initial_outer_weights"]["unexpected"] = serde_json::json!(true);
+        assert!(serde_json::from_value::<MethodConfig>(nested_unknown).is_err());
+    }
+
+    #[test]
+    fn posthoc_technical_minimum_sample_size_config_has_an_exact_tamper_evident_wire_identity() {
+        let config = MethodConfig::PlsPosthocTechnicalMinimumSampleSize(
+            PlsPosthocTechnicalMinimumSampleSizeConfigV2::bootstrap_v2(),
+        );
+        let encoded = serde_json::to_value(&config).unwrap();
+        assert_eq!(encoded["kind"], "pls_posthoc_technical_minimum_sample_size");
+        assert_eq!(
+            encoded["capability_cell"]["cell_id"],
+            PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_CELL_ID
+        );
+        assert_eq!(
+            encoded["method_version"],
+            PLS_POSTHOC_TECHNICAL_MINIMUM_SAMPLE_SIZE_METHOD_VERSION
+        );
+        assert_eq!(encoded["base_analysis"], "pls_bootstrap");
+        assert_eq!(
+            encoded["inference"],
+            "case_bootstrap_normal_reference_two_sided"
+        );
+        assert_eq!(
+            serde_json::from_value::<MethodConfig>(encoded.clone()).unwrap(),
+            config
+        );
+
+        let mut unknown = encoded;
+        unknown["unexpected"] = serde_json::json!(true);
+        assert!(serde_json::from_value::<MethodConfig>(unknown).is_err());
+    }
+
+    #[test]
+    fn plsc_permutation_method_config_is_exact_and_rejects_unknown_or_missing_groups() {
+        let encoded = serde_json::to_value(MethodConfig::PlscPermutation {
+            group_column: "group".into(),
+            group_a: "A".into(),
+            group_b: "B".into(),
+            test_tail: PlscPermutationTestTail::TwoSided,
+        })
+        .unwrap();
+        assert_eq!(
+            encoded,
+            serde_json::json!({
+                "kind": "plsc_permutation",
+                "group_column": "group",
+                "group_a": "A",
+                "group_b": "B"
+            })
+        );
+        assert!(serde_json::from_value::<MethodConfig>(encoded.clone()).is_ok());
+
+        let mut unknown = encoded.clone();
+        unknown["mga_group_a"] = serde_json::json!("A");
+        assert!(serde_json::from_value::<MethodConfig>(unknown).is_err());
+
+        let mut missing = encoded;
+        missing.as_object_mut().unwrap().remove("group_b");
+        assert!(serde_json::from_value::<MethodConfig>(missing).is_err());
+
+        for (test_tail, wire) in [
+            (PlscPermutationTestTail::GroupAGreater, "group_a_greater"),
+            (PlscPermutationTestTail::GroupALess, "group_a_less"),
+        ] {
+            let configured = MethodConfig::PlscPermutation {
+                group_column: "group".into(),
+                group_a: "A".into(),
+                group_b: "B".into(),
+                test_tail,
+            };
+            let encoded = serde_json::to_value(&configured).unwrap();
+            assert_eq!(encoded["test_tail"], wire);
+            assert_eq!(
+                serde_json::from_value::<MethodConfig>(encoded).unwrap(),
+                configured
+            );
+        }
+
+        let decoded_default = serde_json::from_value::<MethodConfig>(serde_json::json!({
+            "kind": "plsc_permutation",
+            "group_column": "group",
+            "group_a": "A",
+            "group_b": "B"
+        }))
+        .unwrap();
+        assert!(matches!(
+            decoded_default,
+            MethodConfig::PlscPermutation {
+                test_tail: PlscPermutationTestTail::TwoSided,
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -1571,6 +2360,7 @@ mod contract_tests {
                 input: CbsemInput::Covariance,
                 mean_structure: true,
                 bootstrap_samples: 999,
+                bootstrap_v2: None,
                 group_column: Some("group".into()),
                 invariance_steps: vec![
                     CbsemInvarianceStep::Configural,
@@ -1744,6 +2534,68 @@ mod contract_tests {
             "bootstrap_samples": 0
         });
         assert!(serde_json::from_value::<MethodConfig>(explicit_zero).is_ok());
+    }
+
+    #[test]
+    fn cbsem_bootstrap_test_tail_is_typed_and_default_wire_compatible() {
+        let historical = serde_json::json!({
+            "algorithm": "case_resampling_full_ml",
+            "interval": "percentile_type7"
+        });
+        let decoded: CbsemBootstrapConfigV2 = serde_json::from_value(historical.clone()).unwrap();
+        assert_eq!(decoded.test_tail, CbsemBootstrapTestTail::TwoSided);
+        assert_eq!(serde_json::to_value(decoded).unwrap(), historical);
+
+        for (tail, wire) in [
+            (CbsemBootstrapTestTail::OneSidedGreater, "one_sided_greater"),
+            (CbsemBootstrapTestTail::OneSidedLess, "one_sided_less"),
+        ] {
+            let config = CbsemBootstrapConfigV2 {
+                algorithm: CbsemBootstrapAlgorithm::CaseResamplingFullMl,
+                interval: CbsemBootstrapInterval::PercentileType7,
+                test_tail: tail,
+            };
+            let encoded = serde_json::to_value(&config).unwrap();
+            assert_eq!(encoded["test_tail"], wire);
+            assert_eq!(
+                serde_json::from_value::<CbsemBootstrapConfigV2>(encoded).unwrap(),
+                config
+            );
+        }
+        assert!(
+            serde_json::from_value::<CbsemBootstrapConfigV2>(serde_json::json!({
+                "algorithm": "case_resampling_full_ml",
+                "interval": "percentile_type7",
+                "test_tail": "one_sided"
+            }))
+            .is_err()
+        );
+
+        let studentized = CbsemBootstrapConfigV2 {
+            algorithm: CbsemBootstrapAlgorithm::CaseResamplingFullMl,
+            interval: CbsemBootstrapInterval::AnalyticStudentizedType7,
+            test_tail: CbsemBootstrapTestTail::TwoSided,
+        };
+        assert_eq!(
+            serde_json::to_value(studentized).unwrap(),
+            serde_json::json!({
+                "algorithm": "case_resampling_full_ml",
+                "interval": "analytic_studentized_type7"
+            })
+        );
+
+        let bca = CbsemBootstrapConfigV2 {
+            algorithm: CbsemBootstrapAlgorithm::CaseResamplingFullMl,
+            interval: CbsemBootstrapInterval::BcaType7,
+            test_tail: CbsemBootstrapTestTail::TwoSided,
+        };
+        assert_eq!(
+            serde_json::to_value(bca).unwrap(),
+            serde_json::json!({
+                "algorithm": "case_resampling_full_ml",
+                "interval": "bca_type7"
+            })
+        );
     }
 
     #[test]
@@ -2034,6 +2886,19 @@ mod contract_tests {
             ambiguous.normalize_legacy_v2().unwrap_err(),
             AnalysisRecipeMigrationError::AmbiguousPlsInference
         );
+
+        let mut historical_plsc_bootstrap_settings = AnalysisSettings::default();
+        historical_plsc_bootstrap_settings.method = AnalysisMethod::Plsc;
+        historical_plsc_bootstrap_settings.bootstrap_samples = 1_000;
+        let historical_plsc_bootstrap = fixture_recipe(
+            LEGACY_ANALYSIS_RECIPE_SCHEMA_VERSION,
+            historical_plsc_bootstrap_settings,
+            BTreeMap::new(),
+        );
+        assert_eq!(
+            historical_plsc_bootstrap.normalize_legacy_v2().unwrap_err(),
+            AnalysisRecipeMigrationError::ConsistentBootstrapRequiresV3
+        );
     }
 
     #[test]
@@ -2141,12 +3006,86 @@ pub enum AnalysisPayload {
         #[serde(default)]
         permutation: Option<serde_json::Value>,
     },
+    PlsSampleSizePowerV1 {
+        analysis: serde_json::Value,
+    },
+    PlsSampleSizePowerV2 {
+        analysis: serde_json::Value,
+    },
     Legacy {
         value: serde_json::Value,
     },
 }
 
 impl AnalysisResult {
+    pub fn completed_pls_sample_size_power(
+        recipe: &AnalysisRecipe,
+        method_version: impl Into<String>,
+        started_at: DateTime<Utc>,
+        analysis: serde_json::Value,
+        warnings: impl IntoIterator<Item = String>,
+    ) -> Self {
+        Self {
+            schema_version: RESULT_SCHEMA_VERSION,
+            id: Uuid::new_v4(),
+            status: RunStatus::Completed,
+            provenance: RunProvenance {
+                recipe_id: recipe.id,
+                dataset_fingerprint: recipe.dataset_fingerprint.clone(),
+                method: recipe.settings.method,
+                method_version: method_version.into(),
+                engine_version: ENGINE_VERSION.into(),
+                seed: recipe.settings.seed,
+                settings: recipe.settings.clone(),
+                started_at,
+                completed_at: Utc::now(),
+            },
+            diagnostics: warnings
+                .into_iter()
+                .map(|message| Diagnostic {
+                    code: "pls_sample_size_power.warning".into(),
+                    level: DiagnosticLevel::Warning,
+                    message,
+                })
+                .collect(),
+            payload: AnalysisPayload::PlsSampleSizePowerV1 { analysis },
+        }
+    }
+
+    pub fn completed_pls_sample_size_power_v2(
+        recipe: &AnalysisRecipe,
+        method_version: impl Into<String>,
+        started_at: DateTime<Utc>,
+        analysis: serde_json::Value,
+        warnings: impl IntoIterator<Item = String>,
+    ) -> Self {
+        Self {
+            schema_version: RESULT_SCHEMA_VERSION,
+            id: Uuid::new_v4(),
+            status: RunStatus::Completed,
+            provenance: RunProvenance {
+                recipe_id: recipe.id,
+                dataset_fingerprint: recipe.dataset_fingerprint.clone(),
+                method: recipe.settings.method,
+                method_version: method_version.into(),
+                engine_version: ENGINE_VERSION.into(),
+                seed: recipe.settings.seed,
+                settings: recipe.settings.clone(),
+                started_at,
+                completed_at: Utc::now(),
+            },
+            diagnostics: warnings
+                .into_iter()
+                .map(|message| Diagnostic {
+                    code: "pls_sample_size_power.warning".into(),
+                    level: DiagnosticLevel::Warning,
+                    message,
+                })
+                .collect(),
+            payload: AnalysisPayload::PlsSampleSizePowerV2 { analysis },
+        }
+    }
+
     pub fn completed_pls(
         recipe: &AnalysisRecipe,
         method_version: impl Into<String>,
@@ -2289,7 +3228,13 @@ impl AnalysisRecipe {
             AnalysisMethod::Mga
             | AnalysisMethod::Pca
             | AnalysisMethod::Regression
-            | AnalysisMethod::Nca => {
+            | AnalysisMethod::Nca
+            | AnalysisMethod::PlsSampleSizePower => {
+                return Err(
+                    AnalysisRecipeConstructionError::ExplicitMethodConfigRequired(settings.method),
+                );
+            }
+            AnalysisMethod::Plsc if settings.permutation_samples > 0 => {
                 return Err(
                     AnalysisRecipeConstructionError::ExplicitMethodConfigRequired(settings.method),
                 );
@@ -2304,6 +3249,7 @@ impl AnalysisRecipe {
                 input: CbsemInput::Raw,
                 mean_structure: false,
                 bootstrap_samples: 0,
+                bootstrap_v2: None,
                 group_column: None,
                 invariance_steps: Vec::new(),
             },
@@ -2380,6 +3326,13 @@ impl AnalysisRecipe {
         {
             return Err(AnalysisRecipeMigrationError::BootstrapAliasWithoutSamples);
         }
+        if self.settings.method == AnalysisMethod::Plsc
+            && (self.settings.bootstrap_samples > 0
+                || self.settings.studentized_inner_samples > 0
+                || self.settings.permutation_samples > 0)
+        {
+            return Err(AnalysisRecipeMigrationError::ConsistentBootstrapRequiresV3);
+        }
 
         let mut settings = self.settings.clone();
         if settings.method == AnalysisMethod::Bootstrap {
@@ -2398,6 +3351,9 @@ impl AnalysisRecipe {
                 (config, &[])
             }
             AnalysisMethod::Bootstrap => (MethodConfig::PlsBootstrap, &[]),
+            AnalysisMethod::PlsSampleSizePower => {
+                return Err(AnalysisRecipeMigrationError::ProspectivePowerRequiresV3);
+            }
             AnalysisMethod::Plsc => (MethodConfig::Plsc, &[]),
             AnalysisMethod::Wpls => (MethodConfig::Wpls, &[]),
             AnalysisMethod::Cca => (MethodConfig::Cca, &[]),
@@ -2943,6 +3899,9 @@ fn legacy_cbsem_config(
             false,
         )?,
         bootstrap_samples: legacy_u32(metadata, &["cbsem_bootstrap_samples"], Some(0))?,
+        // Historical metadata described the analytical v1 preview only.
+        // Migration never promotes it into genuine case resampling.
+        bootstrap_v2: None,
         group_column: legacy_alias_value(metadata, &["cbsem_group_column"])?,
         invariance_steps,
     })

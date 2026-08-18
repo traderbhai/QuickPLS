@@ -8,12 +8,12 @@ import type {
 export const NATIVE_STRUCTURAL_PATH_RANDOMIZATION_METHOD_VERSION = "freedman_lane_permutation_v1";
 export const NATIVE_STRUCTURAL_PATH_RANDOMIZATION_OPERATION = "pls_pm_freedman_lane_v1";
 export const NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING =
-  "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.";
+  "Supported for the documented bounded scope: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.";
 
 const CURRENT_PLS_METHOD_VERSION = "pls_pm_v1";
 const CURRENT_PLS_MEDIATION_METHOD_VERSION = "pls_mediation_v1";
 const CURRENT_PLS_MODERATION_METHOD_VERSION = "pls_two_stage_moderation_v1";
-const CURRENT_PLS_ASSESSMENT_METHOD_VERSION = "pls_assessment_v7";
+const CURRENT_PLS_ASSESSMENT_METHOD_VERSION = "pls_assessment_v8";
 const MINIMUM_PERMUTATIONS = 99;
 const MAXIMUM_PERMUTATIONS = 10_000;
 
@@ -180,7 +180,7 @@ export function nativeStructuralPathRandomizationTable(
   return {
     id: "permutation",
     title: "Structural path randomization",
-    status: "experimental",
+    status: "validated",
     warning: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
     columns: ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
     rows: projection.parameters

@@ -1,0 +1,88 @@
+{
+  "created_at": "2026-08-13T00:00:00Z",
+  "dataset_fingerprint": "v2:3059e03201151df5c58ac7e9f55a83b317e17395792f6f9ce5766fde6c0d17ed",
+  "id": "6be07987-01ec-57ed-a2da-cd85b8633e48",
+  "metadata": {
+    "status": "validated_v1_2_4_cbsem_single_group_bounded_scope"
+  },
+  "method_config": {
+    "bootstrap_samples": 0,
+    "estimator": "ml",
+    "input": "raw",
+    "kind": "cbsem",
+    "mean_structure": false,
+    "model_type": "sem"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x1",
+          "x2",
+          "x3"
+        ],
+        "mode": "reflective",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "m",
+        "indicators": [
+          "m1",
+          "m2",
+          "m3"
+        ],
+        "mode": "reflective",
+        "name": "M",
+        "short_name": "M"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y1",
+          "y2",
+          "y3"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "e94d421d-8bf0-50e7-92a1-e9be2ac6fd1d",
+    "interactions": [],
+    "name": "CB-SEM ML v1 factory fixture",
+    "paths": [
+      {
+        "source": "x",
+        "target": "m"
+      },
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "m",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 3000,
+    "method": "cbsem",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260813,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-07,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

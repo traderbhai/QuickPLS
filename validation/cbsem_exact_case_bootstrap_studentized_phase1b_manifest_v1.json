@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase1b_manifest_v1",
+  "status": "predeclared_applied_resource_candidate_evidence_product_qualification_blocked",
+  "source_binding": {
+    "data_path": "validation/results/v07_cbsem.csv",
+    "data_sha256": "bbe3db1d036264accf6793c717694672e42ebdc3c47ad412429fb0bfe2fca65d",
+    "recipe_path": "validation/results/v07_cfa.recipe.json",
+    "recipe_sha256": "589c913cd349da4c2a61ae6a1bfbcf0000d6986fe8e886595c5afbb2b356ae19",
+    "rust_example_path": "crates/qpls-resampling/examples/cbsem_exact_case_bootstrap_studentized_benchmark.rs",
+    "rust_example_sha256": "1a1578488d204ba4368b7f5b715669a40f025a4a7e4cb2c450e321a1b00956b0",
+    "binary_path": "target/release/examples/cbsem_exact_case_bootstrap_studentized_benchmark.exe",
+    "binary_sha256": "ae07b26bc72a4f2e2f1a6ffa72fd3caaf2ed6ee50c399073773e6a7655d6e5b4"
+  },
+  "validation_binding": {
+    "runner_path": "validation/cbsem_exact_case_bootstrap_studentized_phase1b.py",
+    "runner_sha256": "5d9b815f54bcc9bc3b13ab427f9bad53b173f4f4f352c258d1dc90d946814559",
+    "manifest_schema_path": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_manifest_v1.schema.json",
+    "manifest_schema_sha256": "ae59e1059f11870d9bc591785d85873ff0d433e61726e8524e64fe377b7c67e9",
+    "case_schema_path": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_case_v1.schema.json",
+    "case_schema_sha256": "08be413415bccd5aee7760110c8d5aa3dc01d7e15b264a3656bb21297a3f721f",
+    "report_schema_path": "validation/cbsem_exact_case_bootstrap_studentized_phase1b_report_v1.schema.json",
+    "report_schema_sha256": "6490f32e45279079009a04db46d4be9d9e196626635d35cb926cebc4f4b9eae8"
+  },
+  "phase0_runtime_binding": {
+    "report_path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/phase0-report.json",
+    "report_sha256": "37c489462887485b102252c7074b3be8a7fa9d302535bb011b558d6e0de5479e",
+    "baseline_case_path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/cases/availability_floor_n180_f3_b1000_w12.json",
+    "baseline_case_sha256": "c2a58c89d9d5fd8679ab3bb16a8b41c10bff3477dfa3cea7780ecdcda91c2644",
+    "baseline_replicates": 1000,
+    "baseline_workers": 12,
+    "baseline_p95_elapsed_seconds": 3.8149020597338676,
+    "safety_factor": 2.0
+  },
+  "dimension_contract": {
+    "n_complete_cases": 180,
+    "v_observed_variables": 9,
+    "p_free_parameter_rows": 18,
+    "d_optimizer_dimensions": 18
+  },
+  "execution_policy": {
+    "resource_probe_runs": 1,
+    "resource_warmup_runs": 1,
+    "resource_measured_runs": 5,
+    "stability_runs": 1,
+    "cancellation_runs": 1,
+    "append_only_result_paths": true,
+    "explicit_execute_required": true,
+    "no_cross_case_dependency_stops": true,
+    "resource_survivor_policy": "stop_same_seed_repeats_after_first_irreversible_rejection_continue_all_independent_cases"
+  },
+  "acceptance_contract": {
+    "runtime_formula": "phase0_same_n_v_p_w_p95_seconds_times_target_b_over_baseline_b_times_safety_factor",
+    "minimum_usable_fraction": 0.9,
+    "minimum_usable_floor": 1000,
+    "one_sided_failure_bound_method": "clopper_pearson_beta_quantile_one_sided_v1",
+    "one_sided_confidence_level": 0.95,
+    "maximum_total_unusable_fraction_upper_bound": 0.1,
+    "retry_policy": "no_retry_fixed_preplanned_primary_draws_v1",
+    "max_attempts_per_replicate": 1,
+    "known_point_failure_kinds": [
+      "moment_matrix_not_positive_definite",
+      "non_convergence",
+      "inadmissible_solution",
+      "numerical_failure"
+    ],
+    "known_standard_error_unavailable_reasons": [
+      "singular_information",
+      "information_not_positive_definite",
+      "invalid_information_variance_or_standard_error",
+      "derivative_unavailable",
+      "numerical_information_failure"
+    ],
+    "maximum_peak_working_set_fraction_of_physical_ram": 0.5,
+    "maximum_text_export_proxy_bytes": 134217728,
+    "maximum_project_document_proxy_bytes": 268435456,
+    "maximum_cancellation_terminal_latency_seconds": 1.0,
+    "maximum_orphan_processes": 0,
+    "exact_same_seed_digest_across_resource_runs": true
+  },
+  "qualification_boundary": {
+    "status": "blocked_not_product_qualification",
+    "missing_evidence": [
+      "authoritative_canonical_v11_bytes",
+      "authoritative_text_export_v11_bytes",
+      "coverage_and_failure_rate_simulation",
+      "broader_dimension_and_model_axes",
+      "package_and_integration_gates"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "resource_n180_v9_p18_d18_b5000_w12_seed19001",
+      "order": 1,
+      "mode": "resource",
+      "replicates": 5000,
+      "workers": 12,
+      "seed": 19001,
+      "cancel_after": null,
+      "maximum_single_run_elapsed_seconds": 38.149020597338676,
+      "maximum_p95_elapsed_seconds": 38.149020597338676
+    },
+    {
+      "case_id": "stability_n180_v9_p18_d18_b5000_w12_seed19002",
+      "order": 2,
+      "mode": "stability",
+      "replicates": 5000,
+      "workers": 12,
+      "seed": 19002,
+      "cancel_after": null,
+      "maximum_single_run_elapsed_seconds": 38.149020597338676,
+      "maximum_p95_elapsed_seconds": null
+    },
+    {
+      "case_id": "resource_n180_v9_p18_d18_b10000_w12_seed29001",
+      "order": 3,
+      "mode": "resource",
+      "replicates": 10000,
+      "workers": 12,
+      "seed": 29001,
+      "cancel_after": null,
+      "maximum_single_run_elapsed_seconds": 76.29804119467735,
+      "maximum_p95_elapsed_seconds": 76.29804119467735
+    },
+    {
+      "case_id": "stability_n180_v9_p18_d18_b10000_w12_seed29002",
+      "order": 4,
+      "mode": "stability",
+      "replicates": 10000,
+      "workers": 12,
+      "seed": 29002,
+      "cancel_after": null,
+      "maximum_single_run_elapsed_seconds": 76.29804119467735,
+      "maximum_p95_elapsed_seconds": null
+    },
+    {
+      "case_id": "cancellation_n180_v9_p18_d18_b10000_w12_seed39001",
+      "order": 5,
+      "mode": "cancellation",
+      "replicates": 10000,
+      "workers": 12,
+      "seed": 39001,
+      "cancel_after": 10,
+      "maximum_single_run_elapsed_seconds": null,
+      "maximum_p95_elapsed_seconds": null
+    }
+  ]
+}

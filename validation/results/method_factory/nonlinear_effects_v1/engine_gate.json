@@ -1,0 +1,39 @@
+{
+  "checks": {
+    "claim_limited_to": "fixed-score quadratic point diagnostics",
+    "passed": true,
+    "scenarios": [
+      {
+        "passed": true,
+        "report": "validation/results/method_factory/nonlinear_effects_v1/work/scenario_00/reference_report.json",
+        "report_sha256": "fe12a5cffbeccf35a2556be6854258571bfcc557ae3738624669ec45c7514e2b",
+        "sample_size": 140,
+        "scientific_failures": {},
+        "seed": 20260719,
+        "warning_present": false
+      },
+      {
+        "passed": true,
+        "report": "validation/results/method_factory/nonlinear_effects_v1/work/scenario_01/reference_report.json",
+        "report_sha256": "f27d7d4e559fe7a4145ae7634e833dab3f91fb929e671afaac174f94740d14f5",
+        "sample_size": 220,
+        "scientific_failures": {},
+        "seed": 20260814,
+        "warning_present": false
+      }
+    ],
+    "scope_warning_gap": "the former generic experimental warning is absent from the engine payload"
+  },
+  "completed_at_utc": "2026-08-18T00:10:53.731137Z",
+  "kind": "quickpls_phase3_current_engine_gate",
+  "method": "nonlinear_effects_v1",
+  "passed": true,
+  "prebuilt_cli": {
+    "path": "target/debug/qpls.exe",
+    "sha256": "ad982f935cced0de90627d25d941c38d74adf6b19882364b037ca3b9fb01c8b0",
+    "size": 66081792
+  },
+  "recipe_policy": "historical fixtures copied to explicit schema v3; source fixtures preserved",
+  "schema_version": 1,
+  "started_at_utc": "2026-08-18T00:10:50.649773Z"
+}

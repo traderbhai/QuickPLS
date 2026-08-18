@@ -1,4 +1,21 @@
 mod archive_integrity;
+mod canonical_result_document_v2;
+mod data_lineage_v1;
+mod missing_data_execution_v1;
+mod pls_score_execution_v2;
+mod project_archive_v6_save_copy;
+mod project_archive_v6_upgrade_zip;
+mod project_archive_v6_zip;
+mod project_schema_v6;
+
+pub use canonical_result_document_v2::*;
+pub use data_lineage_v1::*;
+pub use missing_data_execution_v1::*;
+pub use pls_score_execution_v2::*;
+pub use project_archive_v6_save_copy::*;
+pub use project_archive_v6_upgrade_zip::*;
+pub use project_archive_v6_zip::*;
+pub use project_schema_v6::*;
 
 use archive_integrity::{
     ArchiveIntegrityError, DEFAULT_ARCHIVE_LIMITS, MAX_MANIFEST_UNCOMPRESSED_BYTES,
@@ -10,50 +27,96 @@ use chrono::{DateTime, Utc};
 use qpls_assessment::{
     ASSESSMENT_METHOD_VERSION, ASSESSMENT_METHOD_VERSION_V1, ASSESSMENT_METHOD_VERSION_V2,
     ASSESSMENT_METHOD_VERSION_V3, ASSESSMENT_METHOD_VERSION_V4, ASSESSMENT_METHOD_VERSION_V5,
-    ASSESSMENT_METHOD_VERSION_V6, AssessmentResult, HTMT_ORIGINAL_METHOD_VERSION,
-    HTMT_PLUS_METHOD_VERSION, HtmtAssessment, HtmtStatus, RHO_A_METHOD_VERSION, RhoAStatus,
-    variance_inflation_factor,
+    ASSESSMENT_METHOD_VERSION_V6, ASSESSMENT_METHOD_VERSION_V7, AssessmentResult,
+    CCA_RESIDUAL_DIAGNOSTICS_MATRIX_CONVENTION, CCA_RESIDUAL_DIAGNOSTICS_METHOD_VERSION,
+    CcaResidualDiagnosticCell, FitCriterionValue, HTMT_ORIGINAL_METHOD_VERSION,
+    HTMT_PLUS_METHOD_VERSION, HtmtAssessment, HtmtStatus, PLS_MODEL_FIT_EXACT_INFERENCE_PROCEDURE,
+    PLS_MODEL_FIT_GEODESIC_LOGARITHM, PLS_MODEL_FIT_MATRIX_CONVENTION,
+    PLS_MODEL_FIT_METHOD_VERSION, RHO_A_METHOD_VERSION, RhoAStatus,
+    pls_model_fit_degrees_of_freedom, pls_model_fit_matches_v2_contract, variance_inflation_factor,
 };
 use qpls_core::{
     ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisPayload, AnalysisRecipe,
     AnalysisResult, AnalysisSettings, Diagnostic, DiagnosticLevel, ENGINE_VERSION,
-    HigherOrderMethod, MeasurementMode, MissingDataPolicy, ModelSpec, Preprocessing,
-    RESULT_SCHEMA_VERSION, RunProvenance, RunStatus, Severity, WeightingScheme,
-    ipma_predecessor_constructs, resolve_ipma_targets, validate_recipe,
+    HigherOrderMethod, HtmtBootstrapInferenceConfig, HtmtBootstrapIntervalFamily,
+    HtmtBootstrapTestTail, MeasurementMode, MethodConfig, MissingDataPolicy, ModelSpec,
+    PlsBootstrapTestTail, PlscPermutationTestTail, Preprocessing, RESULT_SCHEMA_VERSION,
+    RunProvenance, RunStatus, Severity, WeightingScheme, ipma_predecessor_constructs,
+    resolve_ipma_targets, validate_recipe,
 };
 use qpls_data::{Dataset, DatasetDescriptor, dataset_from_descriptor, write_arrow};
 use qpls_estimation::{
+    CBSEM_BOOTSTRAP_ALGORITHM_V2, CBSEM_BOOTSTRAP_INTERVAL_METHOD_V2,
+    CBSEM_BOOTSTRAP_MAX_ATTEMPTS_PER_REPLICATE_V2, CBSEM_BOOTSTRAP_METHOD_VERSION_V2,
+    CBSEM_BOOTSTRAP_MINIMUM_USABLE_FRACTION_V2, CBSEM_BOOTSTRAP_RETRY_POLICY_V2,
+    CBSEM_BOOTSTRAP_STREAM_TOKEN_V2, CBSEM_BOOTSTRAP_VALIDATION_WITNESS_V2,
     CBSEM_FIT_METHOD_VERSION, CBSEM_ML_METHOD_VERSION, CBSEM_MODIFICATION_INDICES_METHOD_VERSION,
     CCA_METHOD_VERSION, CFA_ML_METHOD_VERSION, CTA_PLS_METHOD_VERSION,
-    CVPAT_INDICATOR_BENCHMARK_METHOD_VERSION, CbsemMatrixCell, GSCA_ALGORITHM_VERSION,
-    GSCA_METHOD_VERSION, GSCA_METHOD_VERSION_V1, IPMA_METHOD_VERSION, IPMA_PERFORMANCE_SCALE,
-    MICOM_METHOD_VERSION, MICOM_METHOD_VERSION_V1, MediationAnalysis, NCA_METHOD_VERSION,
-    NCA_METHOD_VERSION_V1, NcaAnalysis, PCA_METHOD_VERSION, PLS_MEDIATION_METHOD_VERSION,
-    PLS_METHOD_VERSION, PLS_MGA_METHOD_VERSION, PLS_MGA_METHOD_VERSION_V1,
-    PLS_MGA_PERMUTATION_METHOD_VERSION, PLS_MGA_PERMUTATION_METHOD_VERSION_V1,
-    PLS_PREDICT_METHOD_VERSION, PLS_PREDICT_METHOD_VERSION_V1,
-    PLS_PREDICT_REPEATED_KFOLD_METHOD_VERSION, PLS_TWO_STAGE_MODERATION_METHOD_VERSION,
-    PLSC_METHOD_VERSION, PLSC_METHOD_VERSION_V1, PcaAnalysis, PlsPredictAnalysis,
-    PlsPredictCvpatBenchmarkAssessment, PlsPredictErrorMetrics, PlsPredictIndicatorTarget,
-    PlsResult, ProcessBootstrapAnalysis, ProcessGraphAnalysis, REGRESSION_LOGISTIC_METHOD_VERSION,
-    REGRESSION_LOGISTIC_METHOD_VERSION_V1, REGRESSION_OLS_METHOD_VERSION,
-    REGRESSION_PROCESS_METHOD_VERSION, REGRESSION_PROCESS_METHOD_VERSION_V1, RegressionAnalysis,
-    RegressionBootstrapAnalysis, RegressionBootstrapBcaInterval, RegressionBootstrapCoefficient,
-    RegressionBootstrapOddsRatio, RegressionBootstrapTest, WPLS_METHOD_VERSION,
-    analyze_mediation_effects_with_tolerance, analyze_moderation, nca_analysis_matches_v2_contract,
-    process_bootstrap_estimands,
+    CVPAT_INDICATOR_BENCHMARK_METHOD_VERSION, CbsemMatrixCell,
+    GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION, GSCA_ALGORITHM_VERSION, GSCA_METHOD_VERSION,
+    GSCA_METHOD_VERSION_V1, IPMA_METHOD_VERSION, IPMA_PERFORMANCE_SCALE, MICOM_METHOD_VERSION,
+    MICOM_METHOD_VERSION_V1, MICOM_METHOD_VERSION_V2, MICOM_METHOD_VERSION_V3_LEGACY_COMBINED,
+    MICOM_METHOD_VERSION_V4, MediationAnalysis, NCA_METHOD_VERSION, NCA_METHOD_VERSION_V1,
+    NcaAnalysis, PCA_METHOD_VERSION, PLS_MEDIATION_METHOD_VERSION, PLS_METHOD_VERSION,
+    PLS_MGA_METHOD_VERSION, PLS_MGA_METHOD_VERSION_V1, PLS_MGA_METHOD_VERSION_V2,
+    PLS_MGA_METHOD_VERSION_V3_LEGACY_COMBINED, PLS_MGA_PERMUTATION_METHOD_VERSION,
+    PLS_MGA_PERMUTATION_METHOD_VERSION_V1, PLS_MGA_PERMUTATION_METHOD_VERSION_V2,
+    PLS_MGA_PERMUTATION_METHOD_VERSION_V3_LEGACY_COMBINED,
+    PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_METHOD_VERSION,
+    PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_METHOD_VERSION_V1, PLS_PREDICT_METHOD_VERSION,
+    PLS_PREDICT_METHOD_VERSION_V1, PLS_PREDICT_REPEATED_KFOLD_METHOD_VERSION,
+    PLS_TWO_STAGE_MODERATION_METHOD_VERSION, PLSC_METHOD_VERSION, PLSC_METHOD_VERSION_V1,
+    PcaAnalysis, PlsPathSignificance, PlsPredictAnalysis, PlsPredictCvpatBenchmarkAssessment,
+    PlsPredictErrorMetrics, PlsPredictIndicatorTarget, PlsResult, ProcessBootstrapAnalysis,
+    ProcessGraphAnalysis, REGRESSION_LOGISTIC_METHOD_VERSION,
+    REGRESSION_LOGISTIC_METHOD_VERSION_V1, REGRESSION_LOGISTIC_SCOPE_WARNING,
+    REGRESSION_OLS_METHOD_VERSION, REGRESSION_OLS_SCOPE_WARNING, REGRESSION_PROCESS_METHOD_VERSION,
+    REGRESSION_PROCESS_METHOD_VERSION_V1, RegressionAnalysis, RegressionBootstrapAnalysis,
+    RegressionBootstrapBcaInterval, RegressionBootstrapCoefficient, RegressionBootstrapOddsRatio,
+    RegressionBootstrapTest, WPLS_METHOD_VERSION, analyze_mediation_effects_with_tolerance,
+    analyze_moderation, nca_analysis_matches_v2_contract, pls_posthoc_minimum_sample_size,
+    pls_posthoc_minimum_sample_size_v2, process_bootstrap_estimands,
 };
 use qpls_resampling::{
-    PERMUTATION_METHOD_VERSION, PROCESS_BOOTSTRAP_ALGORITHM, PROCESS_BOOTSTRAP_INTERVAL_POLICY,
-    PROCESS_BOOTSTRAP_METHOD_VERSION, PROCESS_BOOTSTRAP_STREAM_TOKEN,
-    PROCESS_BOOTSTRAP_TEST_REFERENCE, PROCESS_BOOTSTRAP_VALIDATION_WITNESS_VERSION,
-    PlsBootstrapResult, PlsPermutationResult, REGRESSION_BOOTSTRAP_ALGORITHM,
+    HTMT_BOOTSTRAP_CONFIGURABLE_DECISION_RULE, HTMT_BOOTSTRAP_CRITICAL_VALUE,
+    HTMT_BOOTSTRAP_DECISION_RULE, HTMT_BOOTSTRAP_EQUIVALENT_TWO_SIDED_CONFIDENCE_LEVEL,
+    HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION, HTMT_BOOTSTRAP_INTERVAL_METHOD,
+    HTMT_BOOTSTRAP_MINIMUM_USABLE_FRACTION, HTMT_BOOTSTRAP_PERCENTILE_INTERVAL_METHOD,
+    HTMT_BOOTSTRAP_REPLICATE_INDEX_DIGEST_METHOD, HTMT_BOOTSTRAP_SIGNIFICANCE_LEVEL,
+    HTMT_BOOTSTRAP_TEST_TYPE, HTMT_BOOTSTRAP_TWO_SIDED_TEST_TYPE,
+    HTMT_CONFIGURABLE_BOOTSTRAP_INFERENCE_METHOD_VERSION, HTMT_ORIGINAL_BOOTSTRAP_METHOD_VERSION,
+    HTMT_ORIGINAL_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION, HTMT_PLUS_BOOTSTRAP_METHOD_VERSION,
+    HTMT_PLUS_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION, HtmtBootstrapInference,
+    HtmtBootstrapInferenceBundle, HtmtBootstrapInferenceCell, HtmtBootstrapInferenceStatus,
+    PERMUTATION_METHOD_VERSION, PLS_BOOTSTRAP_LEGACY_FAILURE_REASON_CODE,
+    PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION, PLS_MODEL_FIT_EXACT_METHOD_VERSION,
+    PLS_MODEL_FIT_EXACT_RECIPE_SELECTOR, PLS_SAMPLE_SIZE_POWER_CAPABILITY_ID,
+    PLS_SAMPLE_SIZE_POWER_METHOD_VERSION, PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2,
+    PLS_SAMPLE_SIZE_POWER_RECIPE_SCHEMA_VERSION, PLS_SAMPLE_SIZE_POWER_RECIPE_SCHEMA_VERSION_V2,
+    PLSC_CONSISTENT_BOOTSTRAP_METHOD_VERSION, PLSC_CONSISTENT_PERMUTATION_METHOD_VERSION,
+    PLSC_CONSISTENT_PERMUTATION_SCHEDULER_VERSION,
+    PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION, PROCESS_BOOTSTRAP_ALGORITHM,
+    PROCESS_BOOTSTRAP_INTERVAL_POLICY, PROCESS_BOOTSTRAP_METHOD_VERSION,
+    PROCESS_BOOTSTRAP_STREAM_TOKEN, PROCESS_BOOTSTRAP_TEST_REFERENCE,
+    PROCESS_BOOTSTRAP_VALIDATION_WITNESS_VERSION, PlsBootstrapResult,
+    PlsBootstrapTestTailInference, PlsModelFitExactInference, PlsPermutationResult,
+    PlsPowerDistributionV1, PlsPowerEstimatorSettingsV1, PlsPowerInferenceV1,
+    PlsPowerMissingDataV1, PlsResamplingParameterFamily, PlsResamplingParameterIdentity,
+    PlsSampleSizePowerRecipeV1, PlsSampleSizePowerResultV1, PlscConsistentBootstrapResult,
+    PlscConsistentPermutationResult, REGRESSION_BOOTSTRAP_ALGORITHM,
     REGRESSION_BOOTSTRAP_INTERVAL_POLICY, REGRESSION_BOOTSTRAP_METHOD_VERSION,
     REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION, REGRESSION_BOOTSTRAP_STREAM_TOKEN,
     REGRESSION_BOOTSTRAP_TEST_REFERENCE, REGRESSION_BOOTSTRAP_VALIDATION_WITNESS_VERSION,
     RESAMPLING_METHOD_VERSION, RESAMPLING_METHOD_VERSION_V1, RESAMPLING_METHOD_VERSION_V2,
-    RESAMPLING_METHOD_VERSION_V3, STUDENTIZED_METHOD_VERSION, normal_reference_test,
+    RESAMPLING_METHOD_VERSION_V3, ReflectiveGaussianPathDesignV1, STUDENTIZED_METHOD_VERSION,
+    bootstrap_indices, cbsem_bootstrap_base_result_sha256, cbsem_bootstrap_primary_operation,
+    cbsem_bootstrap_required_usable_replicates, cbsem_bootstrap_sample_indices_sha256,
+    cbsem_bootstrap_scientific_recipe_sha256, normal_reference_test,
+    pls_bootstrap_failure_reason_code, summarize_cbsem_percentile_intervals,
     summarize_process_bootstrap_estimands, summarize_regression_bootstrap_coefficients,
+    validate_pls_bootstrap_test_tail_contract, validate_pls_model_fit_exact_inference,
+    validate_plsc_consistent_bootstrap_result, validate_plsc_consistent_permutation_result,
+    validate_result as validate_pls_sample_size_power_result,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -70,6 +133,116 @@ use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
 pub const PROJECT_ARCHIVE_VERSION: u32 = 5;
 const PROJECT_ARCHIVE_VERSION_V4: u32 = 4;
+
+#[derive(Debug, Clone, Copy)]
+struct RejectDuplicateJsonKeys;
+
+impl<'de> serde::de::DeserializeSeed<'de> for RejectDuplicateJsonKeys {
+    type Value = ();
+
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_any(RejectDuplicateJsonKeysVisitor)
+    }
+}
+
+struct RejectDuplicateJsonKeysVisitor;
+
+impl<'de> serde::de::Visitor<'de> for RejectDuplicateJsonKeysVisitor {
+    type Value = ();
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("JSON without duplicate object keys")
+    }
+
+    fn visit_bool<E>(self, _value: bool) -> Result<Self::Value, E> {
+        Ok(())
+    }
+
+    fn visit_i64<E>(self, _value: i64) -> Result<Self::Value, E> {
+        Ok(())
+    }
+
+    fn visit_u64<E>(self, _value: u64) -> Result<Self::Value, E> {
+        Ok(())
+    }
+
+    fn visit_f64<E>(self, _value: f64) -> Result<Self::Value, E> {
+        Ok(())
+    }
+
+    fn visit_str<E>(self, _value: &str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Ok(())
+    }
+
+    fn visit_string<E>(self, _value: String) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Ok(())
+    }
+
+    fn visit_none<E>(self) -> Result<Self::Value, E> {
+        Ok(())
+    }
+
+    fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        serde::de::DeserializeSeed::deserialize(RejectDuplicateJsonKeys, deserializer)
+    }
+
+    fn visit_unit<E>(self) -> Result<Self::Value, E> {
+        Ok(())
+    }
+
+    fn visit_seq<A>(self, mut sequence: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::SeqAccess<'de>,
+    {
+        while sequence
+            .next_element_seed(RejectDuplicateJsonKeys)?
+            .is_some()
+        {}
+        Ok(())
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        let mut keys = BTreeSet::new();
+        while let Some(key) = map.next_key::<String>()? {
+            if !keys.insert(key.clone()) {
+                return Err(serde::de::Error::custom(format!(
+                    "duplicate JSON object key `{key}`"
+                )));
+            }
+            map.next_value_seed(RejectDuplicateJsonKeys)?;
+        }
+        Ok(())
+    }
+}
+
+fn reject_duplicate_json_object_keys(
+    bytes: &[u8],
+    document_name: &str,
+) -> Result<(), ProjectError> {
+    let mut deserializer = serde_json::Deserializer::from_slice(bytes);
+    serde::de::DeserializeSeed::deserialize(RejectDuplicateJsonKeys, &mut deserializer)
+        .and_then(|()| deserializer.end())
+        .map_err(|error| {
+            ProjectError::Invalid(format!(
+                "{document_name} contains invalid or duplicate-key JSON: {error}"
+            ))
+        })
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProjectManifest {
@@ -285,6 +458,18 @@ impl Project {
                     .into(),
             ));
         }
+        if result.provenance.method == AnalysisMethod::Cbsem
+            && result
+                .provenance
+                .method_version
+                .split('+')
+                .any(|version| version == qpls_estimation::CBSEM_BOOTSTRAP_METHOD_VERSION)
+        {
+            return Err(ProjectError::Invalid(
+                "historical cbsem_bootstrap_v1 analytical intervals are archive-readable only and cannot be appended as new bootstrap evidence"
+                    .into(),
+            ));
+        }
         if recipe.schema_version != ANALYSIS_RECIPE_SCHEMA_VERSION {
             return Err(ProjectError::Invalid(format!(
                 "historical analysis recipe schema {} is archive-readable but cannot be appended as a new result; explicitly migrate it to schema v{} first",
@@ -307,13 +492,19 @@ impl Project {
                 matches!(
                     version,
                     PLS_MGA_METHOD_VERSION_V1
+                        | PLS_MGA_METHOD_VERSION_V2
+                        | PLS_MGA_METHOD_VERSION_V3_LEGACY_COMBINED
                         | PLS_MGA_PERMUTATION_METHOD_VERSION_V1
+                        | PLS_MGA_PERMUTATION_METHOD_VERSION_V2
+                        | PLS_MGA_PERMUTATION_METHOD_VERSION_V3_LEGACY_COMBINED
                         | MICOM_METHOD_VERSION_V1
+                        | MICOM_METHOD_VERSION_V2
+                        | MICOM_METHOD_VERSION_V3_LEGACY_COMBINED
                 )
             })
         {
             return Err(ProjectError::Invalid(
-                "historical MGA/MICOM v1 results are archive-readable but cannot be appended as new scientific evidence"
+                "historical combined MGA/MICOM v1-v3 results are archive-readable but cannot be appended as new scientific evidence"
                     .into(),
             ));
         }
@@ -406,6 +597,8 @@ pub fn save_project(path: &Path, project: &Project) -> Result<ProjectManifest, P
     if project.read_only {
         return Err(ProjectError::ReadOnly);
     }
+    validate_project_data_lineage_resident_v1(&project.datasets, &project.layouts)
+        .map_err(|error| ProjectError::Invalid(error.to_string()))?;
     if transaction_journal_path(path).exists() {
         recover_incomplete_save(path)?;
         if transaction_journal_path(path).exists() {
@@ -499,9 +692,15 @@ pub fn load_project(path: &Path) -> Result<Project, ProjectError> {
         MAX_MANIFEST_UNCOMPRESSED_BYTES,
     )
     .map_err(map_archive_integrity_error)?;
+    reject_duplicate_json_object_keys(&manifest_bytes, "manifest.json")?;
     let manifest_value: serde_json::Value = serde_json::from_slice(&manifest_bytes)?;
     let mut manifest: ProjectManifest = serde_json::from_value(manifest_value.clone())?;
     let source_archive_version = manifest.schema_version;
+    if source_archive_version == PROJECT_ARCHIVE_SCHEMA_V6_VERSION {
+        return Err(ProjectError::Invalid(
+            "archive schema version 6 requires the dedicated strict schema-6 ZIP reader".to_owned(),
+        ));
+    }
     if source_archive_version >= PROJECT_ARCHIVE_VERSION
         && manifest_value.get("checksum_algorithm").is_none()
     {
@@ -527,6 +726,7 @@ pub fn load_project(path: &Path) -> Result<Project, ProjectError> {
         MAX_PROJECT_DOCUMENT_UNCOMPRESSED_BYTES,
     )
     .map_err(map_archive_integrity_error)?;
+    reject_duplicate_json_object_keys(&project_bytes, PROJECT_ENTRY_NAME)?;
     let (document, future, future_unsupported) = match source_archive_version {
         0 => {
             return Err(ProjectError::Invalid(
@@ -577,7 +777,7 @@ pub fn load_project(path: &Path) -> Result<Project, ProjectError> {
         .map_err(map_archive_integrity_error)?;
         datasets.push(dataset_from_descriptor(descriptor, &bytes)?);
     }
-    Ok(Project {
+    let project = Project {
         manifest,
         datasets,
         models: document.models,
@@ -589,7 +789,10 @@ pub fn load_project(path: &Path) -> Result<Project, ProjectError> {
         migration_pending: !future && source_archive_version < PROJECT_ARCHIVE_VERSION,
         compatibility_notices,
         future_unsupported,
-    })
+    };
+    validate_project_data_lineage_resident_v1(&project.datasets, &project.layouts)
+        .map_err(|error| ProjectError::Invalid(error.to_string()))?;
+    Ok(project)
 }
 
 fn migrate_document(schema_version: u32, bytes: &[u8]) -> Result<ProjectDocument, ProjectError> {
@@ -864,6 +1067,7 @@ fn process_v2_pls_root_keys_are_declared(estimation: &serde_json::Value) -> bool
                 | "regression"
                 | "nca"
                 | "gsca"
+                | "posthoc_minimum_sample_size"
                 | "r_squared"
                 | "warnings"
         )
@@ -902,6 +1106,7 @@ fn executable_pls_payload_method_version(method: AnalysisMethod) -> Option<&'sta
         AnalysisMethod::Wpls => Some(WPLS_METHOD_VERSION),
         AnalysisMethod::Cca => Some(CCA_METHOD_VERSION),
         AnalysisMethod::CtaPls => Some(CTA_PLS_METHOD_VERSION),
+        AnalysisMethod::Endogeneity => Some(GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION),
         AnalysisMethod::Predict => Some(PLS_PREDICT_METHOD_VERSION),
         AnalysisMethod::Mga => Some(PLS_MGA_METHOD_VERSION),
         AnalysisMethod::Ipma => Some(IPMA_METHOD_VERSION),
@@ -941,7 +1146,7 @@ fn validate_cca_payload_contract(
     result: &AnalysisResult,
     estimation: &PlsResult,
     recipe: Option<&AnalysisRecipe>,
-    assessment_method_version: &str,
+    assessment: &AssessmentResult,
 ) -> bool {
     let Some(recipe) = recipe else {
         return false;
@@ -1021,9 +1226,17 @@ fn validate_cca_payload_contract(
         return false;
     }
 
-    let expected_provenance_version = format!(
-        "{PLS_METHOD_VERSION}+{CCA_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{assessment_method_version}"
-    );
+    let expected_provenance_version = if assessment.method_version == ASSESSMENT_METHOD_VERSION {
+        format!(
+            "{PLS_METHOD_VERSION}+{CCA_METHOD_VERSION}+{CCA_RESIDUAL_DIAGNOSTICS_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{}",
+            assessment.method_version
+        )
+    } else {
+        format!(
+            "{PLS_METHOD_VERSION}+{CCA_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{}",
+            assessment.method_version
+        )
+    };
     if result.provenance.method_version != expected_provenance_version
         || estimation.method_version != CCA_METHOD_VERSION
         || !estimation.control_estimates.is_empty()
@@ -1111,7 +1324,241 @@ fn validate_cca_payload_contract(
         computed_max = computed_max.max(row.absolute_residual);
     }
 
-    actual_pairs == expected_pairs && close_enough(cca.max_absolute_residual, computed_max)
+    actual_pairs == expected_pairs
+        && close_enough(cca.max_absolute_residual, computed_max)
+        && if assessment.method_version == ASSESSMENT_METHOD_VERSION {
+            assessment
+                .cca_residual_diagnostics
+                .as_ref()
+                .is_some_and(|diagnostics| {
+                    validate_cca_residual_diagnostics(diagnostics, recipe, cca)
+                })
+        } else {
+            assessment.cca_residual_diagnostics.is_none()
+        }
+}
+
+fn validate_cca_residual_diagnostics(
+    diagnostics: &qpls_assessment::CcaResidualDiagnostics,
+    recipe: &AnalysisRecipe,
+    cca: &qpls_estimation::CcaAnalysis,
+) -> bool {
+    let construct_order = recipe
+        .model
+        .constructs
+        .iter()
+        .map(|construct| construct.id.clone())
+        .collect::<Vec<_>>();
+    let expected_pairs = (1..construct_order.len())
+        .flat_map(|right| (0..right).map(move |left| (left, right)))
+        .collect::<Vec<_>>();
+    if diagnostics.method_version != CCA_RESIDUAL_DIAGNOSTICS_METHOD_VERSION
+        || diagnostics.estimator_method_version != CCA_METHOD_VERSION
+        || diagnostics.model != cca.model
+        || diagnostics.construct_order != construct_order
+        || diagnostics.matrix_convention != CCA_RESIDUAL_DIAGNOSTICS_MATRIX_CONVENTION
+        || diagnostics.expected_pair_count != expected_pairs.len()
+        || diagnostics.available_pair_count != expected_pairs.len()
+        || diagnostics.unavailable_pair_count != 0
+        || diagnostics.cells.len() != expected_pairs.len()
+        || !diagnostics.failures.is_empty()
+        || diagnostics.max_absolute_residual.map(f64::to_bits)
+            != Some(cca.max_absolute_residual.to_bits())
+        || diagnostics.source_max_absolute_residual.map(f64::to_bits)
+            != Some(cca.max_absolute_residual.to_bits())
+        || diagnostics.warnings != cca.warnings
+    {
+        return false;
+    }
+    expected_pairs
+        .iter()
+        .enumerate()
+        .all(|(pair_index, (left_index, right_index))| {
+            let left = &construct_order[*left_index];
+            let right = &construct_order[*right_index];
+            let Some(source) = cca
+                .correlations
+                .iter()
+                .find(|row| row.left == *left && row.right == *right)
+            else {
+                return false;
+            };
+            matches!(
+                &diagnostics.cells[pair_index],
+                CcaResidualDiagnosticCell::Available {
+                    pair_index: actual_index,
+                    left: actual_left,
+                    right: actual_right,
+                    observed,
+                    reproduced,
+                    residual,
+                    absolute_residual,
+                } if *actual_index == pair_index
+                    && actual_left == left
+                    && actual_right == right
+                    && observed.to_bits() == source.observed.to_bits()
+                    && reproduced.to_bits() == source.reproduced.to_bits()
+                    && residual.to_bits() == source.residual.to_bits()
+                    && absolute_residual.to_bits() == source.absolute_residual.to_bits()
+            )
+        })
+}
+
+fn validate_endogeneity_payload_contract(
+    result: &AnalysisResult,
+    estimation: &PlsResult,
+    recipe: Option<&AnalysisRecipe>,
+    assessment_method_version: &str,
+) -> bool {
+    const TRANSFORM: &str = "rankit_inverse_normal_v1";
+    const WEAK_APPLICABILITY_WARNING: &str = "Predictor score skewness is below the experimental applicability threshold; Gaussian-copula evidence is weak for near-normal predictors.";
+    const SCOPE_WARNING: &str = "Gaussian-copula endogeneity diagnostics are validated for the documented QuickPLS v1.2.3 diagnostic scope and assume nonnormal predictor scores; use as a diagnostic, not proof of causality.";
+
+    let Some(recipe) = recipe else {
+        return false;
+    };
+    if recipe.settings.method != AnalysisMethod::Endogeneity
+        || !matches!(
+            recipe.settings.weighting_scheme,
+            WeightingScheme::Path | WeightingScheme::Factor
+        )
+        || recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion
+        || recipe.settings.case_weight_column.is_some()
+        || recipe.settings.bootstrap_samples > 0
+        || recipe.settings.studentized_inner_samples > 0
+        || recipe.settings.permutation_samples > 0
+        || recipe.model.constructs.len() < 2
+        || recipe.model.paths.is_empty()
+        || !recipe.model.controls.is_empty()
+        || !recipe.model.interactions.is_empty()
+        || !recipe.model.higher_order_constructs.is_empty()
+    {
+        return false;
+    }
+
+    let construct_ids = recipe
+        .model
+        .constructs
+        .iter()
+        .map(|construct| construct.id.as_str())
+        .collect::<BTreeSet<_>>();
+    if construct_ids.len() != recipe.model.constructs.len()
+        || recipe.model.constructs.iter().any(|construct| {
+            construct.id.trim().is_empty()
+                || construct.indicators.is_empty()
+                || construct
+                    .indicators
+                    .iter()
+                    .any(|indicator| indicator.trim().is_empty())
+        })
+    {
+        return false;
+    }
+
+    let mut recipe_paths = BTreeSet::new();
+    for path in &recipe.model.paths {
+        if path.source == path.target
+            || !construct_ids.contains(path.source.as_str())
+            || !construct_ids.contains(path.target.as_str())
+            || !recipe_paths.insert((path.source.as_str(), path.target.as_str()))
+        {
+            return false;
+        }
+    }
+    let path_coefficients = estimation
+        .paths
+        .iter()
+        .map(|path| {
+            (
+                (path.source.as_str(), path.target.as_str()),
+                path.coefficient,
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    if path_coefficients.len() != estimation.paths.len()
+        || path_coefficients.keys().copied().collect::<BTreeSet<_>>() != recipe_paths
+    {
+        return false;
+    }
+
+    let expected_provenance_version = format!(
+        "{PLS_METHOD_VERSION}+{GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{assessment_method_version}"
+    );
+    if result.provenance.method_version != expected_provenance_version
+        || estimation.method_version != GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION
+        || !estimation.control_estimates.is_empty()
+        || estimation.plsc.is_some()
+        || estimation.nonlinear_effects.is_some()
+        || estimation.moderated_mediation.is_some()
+        || estimation.cta_pls.is_some()
+        || estimation.wpls.is_some()
+        || estimation.cca.is_some()
+        || estimation.predict.is_some()
+        || estimation.segmentation.is_some()
+        || estimation.mga.is_some()
+        || estimation.micom.is_some()
+        || estimation.mga_permutation.is_some()
+        || estimation.fimix.is_some()
+        || estimation.ipma.is_some()
+        || estimation.cbsem.is_some()
+        || estimation.pca.is_some()
+        || estimation.regression.is_some()
+        || estimation.nca.is_some()
+        || estimation.gsca.is_some()
+    {
+        return false;
+    }
+
+    let Some(analysis) = estimation.endogeneity.as_ref() else {
+        return false;
+    };
+    if analysis.method_version != GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION
+        || analysis.method_version != estimation.method_version
+        || analysis.transform != TRANSFORM
+        || analysis.estimates.len() != recipe_paths.len()
+    {
+        return false;
+    }
+
+    let mut estimate_paths = BTreeSet::new();
+    let mut expected_warnings = Vec::new();
+    for estimate in &analysis.estimates {
+        let pair = (estimate.source.as_str(), estimate.target.as_str());
+        let Some(path_coefficient) = path_coefficients.get(&pair) else {
+            return false;
+        };
+        let applicable = estimate.predictor_skewness.abs() >= 0.5;
+        let expected_warning = (!applicable).then_some(WEAK_APPLICABILITY_WARNING);
+        if !estimate_paths.insert(pair)
+            || !estimate.path_coefficient.is_finite()
+            || !close_enough(estimate.path_coefficient, *path_coefficient)
+            || !estimate.copula_coefficient.is_finite()
+            || !estimate.standard_error.is_finite()
+            || estimate.standard_error <= 0.0
+            || !estimate.t_statistic.is_finite()
+            || !close_enough(
+                estimate.t_statistic,
+                estimate.copula_coefficient / estimate.standard_error,
+            )
+            || !estimate.p_value_two_sided.is_finite()
+            || !(0.0..=1.0).contains(&estimate.p_value_two_sided)
+            || !estimate.predictor_skewness.is_finite()
+            || estimate.applicable != applicable
+            || estimate.warning.as_deref() != expected_warning
+        {
+            return false;
+        }
+        if !applicable {
+            expected_warnings.push(format!(
+                "{} -> {} has near-symmetric predictor scores; interpret Gaussian-copula diagnostics cautiously",
+                estimate.source, estimate.target
+            ));
+        }
+    }
+    expected_warnings.push(SCOPE_WARNING.to_string());
+    estimate_paths == recipe_paths
+        && analysis.warnings == expected_warnings
+        && estimation.warnings.ends_with(&expected_warnings)
 }
 
 fn validate_cta_pls_payload_contract(
@@ -1367,68 +1814,309 @@ fn cbsem_matrix_from_cells(
     Some(matrix)
 }
 
+fn cbsem_bootstrap_intervals_match(
+    left: &[qpls_estimation::CbsemBootstrapParameterIntervalV2],
+    right: &[qpls_estimation::CbsemBootstrapParameterIntervalV2],
+) -> bool {
+    left.len() == right.len()
+        && left.iter().zip(right).all(|(left, right)| {
+            left.parameter == right.parameter
+                && left.usable_replicates == right.usable_replicates
+                && close_enough(left.original, right.original)
+                && close_enough(left.bootstrap_mean, right.bootstrap_mean)
+                && close_enough(left.bias, right.bias)
+                && close_enough(left.standard_error, right.standard_error)
+                && close_enough(left.percentile_lower, right.percentile_lower)
+                && close_enough(left.percentile_upper, right.percentile_upper)
+        })
+}
+
+/// Strict recomputation boundary for archiveable CB-SEM bootstrap v2. This
+/// intentionally accepts a scientifically completed below-threshold result,
+/// but only with unavailable inference, no intervals, and the full exact
+/// failure ledger/witness accounting.
+fn validate_cbsem_bootstrap_v2_payload_contract(
+    bootstrap: &qpls_estimation::CbsemBootstrapAnalysisV2,
+    base: &PlsResult,
+    recipe: &AnalysisRecipe,
+) -> bool {
+    let Some(qpls_core::MethodConfig::Cbsem {
+        estimator,
+        input,
+        mean_structure,
+        bootstrap_samples,
+        bootstrap_v2: Some(config),
+        group_column,
+        invariance_steps,
+        ..
+    }) = recipe.method_config.as_ref()
+    else {
+        return false;
+    };
+    let Some(cbsem) = base.cbsem.as_ref() else {
+        return false;
+    };
+    let witness = &bootstrap.validation_witness;
+    let parameter_names = cbsem
+        .parameters
+        .iter()
+        .filter(|parameter| !parameter.fixed)
+        .map(|parameter| parameter.name.clone())
+        .collect::<Vec<_>>();
+    let original_estimates = cbsem
+        .parameters
+        .iter()
+        .filter(|parameter| !parameter.fixed)
+        .map(|parameter| parameter.estimate)
+        .collect::<Vec<_>>();
+    let requested = *bootstrap_samples;
+    let required = cbsem_bootstrap_required_usable_replicates(requested);
+    let success_indices = witness
+        .successful_replicates
+        .iter()
+        .map(|row| row.replicate_index)
+        .collect::<Vec<_>>();
+    let failure_indices = bootstrap
+        .failures
+        .iter()
+        .map(|row| row.replicate_index)
+        .collect::<Vec<_>>();
+    let valid_failure_code = |code: &str| {
+        matches!(
+            code,
+            "insufficient_complete_cases"
+                | "constant_indicator"
+                | "rank_deficient"
+                | "singular_covariance"
+                | "ml_nonconvergence"
+                | "numerical_failure"
+                | "inadmissible_or_unsupported_refit"
+                | "invalid_indicator"
+                | "ml_refit_error"
+                | "missing_cbsem_payload"
+                | "sample_size_mismatch"
+                | "parameter_identity_mismatch"
+                | "nonfinite_ml_fit"
+        )
+    };
+    if *estimator != qpls_core::CbsemEstimator::Ml
+        || *input != qpls_core::CbsemInput::Raw
+        || *mean_structure
+        || group_column.is_some()
+        || !invariance_steps.is_empty()
+        || config.algorithm != qpls_core::CbsemBootstrapAlgorithm::CaseResamplingFullMl
+        || config.interval != qpls_core::CbsemBootstrapInterval::PercentileType7
+        || !(500..=10_000).contains(&requested)
+        || recipe.settings.confidence_level.to_bits() != 0.95_f64.to_bits()
+        || bootstrap.method_version != CBSEM_BOOTSTRAP_METHOD_VERSION_V2
+        || bootstrap.algorithm != CBSEM_BOOTSTRAP_ALGORITHM_V2
+        || bootstrap.interval_method != CBSEM_BOOTSTRAP_INTERVAL_METHOD_V2
+        || bootstrap.retry_policy != CBSEM_BOOTSTRAP_RETRY_POLICY_V2
+        || bootstrap.confidence_level.to_bits() != recipe.settings.confidence_level.to_bits()
+        || bootstrap.requested_replicates != requested
+        || bootstrap.attempted_fits != requested
+        || bootstrap.usable_replicates as usize != witness.successful_replicates.len()
+        || bootstrap.failed_replicates as usize != bootstrap.failures.len()
+        || bootstrap.usable_replicates + bootstrap.failed_replicates != requested
+        || bootstrap.minimum_usable_fraction.to_bits()
+            != CBSEM_BOOTSTRAP_MINIMUM_USABLE_FRACTION_V2.to_bits()
+        || bootstrap.minimum_usable_replicates as usize != required
+        || bootstrap.max_attempts_per_replicate != CBSEM_BOOTSTRAP_MAX_ATTEMPTS_PER_REPLICATE_V2
+        || bootstrap.complete_case_sample_size != cbsem.sample_size
+        || bootstrap.seed != recipe.settings.seed
+        || bootstrap.stream_token != CBSEM_BOOTSTRAP_STREAM_TOKEN_V2
+        || witness.method_version != CBSEM_BOOTSTRAP_VALIDATION_WITNESS_V2
+        || witness.dataset_fingerprint != recipe.dataset_fingerprint
+        || witness.parameter_names != parameter_names
+        || witness.parameter_names.is_empty()
+        || success_indices.windows(2).any(|pair| pair[0] >= pair[1])
+        || failure_indices.windows(2).any(|pair| pair[0] >= pair[1])
+        || witness.successful_replicates.iter().any(|row| {
+            row.replicate_index >= requested
+                || row.sample_indices_sha256.len() != 64
+                || row.iterations == 0
+                || row.iterations > recipe.settings.max_iterations
+                || !row.objective.is_finite()
+                || row.objective < 0.0
+                || row.parameter_estimates.len() != parameter_names.len()
+                || row
+                    .parameter_estimates
+                    .iter()
+                    .any(|value| !value.is_finite())
+        })
+        || bootstrap.failures.iter().any(|failure| {
+            failure.replicate_index >= requested
+                || failure.sample_indices_sha256.len() != 64
+                || !valid_failure_code(&failure.reason_code)
+                || failure.message.trim().is_empty()
+        })
+    {
+        return false;
+    }
+    if cbsem_bootstrap_scientific_recipe_sha256(recipe)
+        .ok()
+        .as_deref()
+        != Some(witness.recipe_sha256.as_str())
+        || cbsem_bootstrap_base_result_sha256(base).ok().as_deref()
+            != Some(witness.base_result_sha256.as_str())
+    {
+        return false;
+    }
+    let mut all_indices = success_indices;
+    all_indices.extend(failure_indices);
+    all_indices.sort_unstable();
+    if all_indices != (0..requested).collect::<Vec<_>>() {
+        return false;
+    }
+    if witness.successful_replicates.iter().any(|row| {
+        let positions = bootstrap_indices(
+            bootstrap.complete_case_sample_size,
+            bootstrap.seed,
+            cbsem_bootstrap_primary_operation(),
+            row.replicate_index,
+        );
+        cbsem_bootstrap_sample_indices_sha256(bootstrap.seed, row.replicate_index, &positions)
+            != row.sample_indices_sha256
+    }) || bootstrap.failures.iter().any(|row| {
+        let positions = bootstrap_indices(
+            bootstrap.complete_case_sample_size,
+            bootstrap.seed,
+            cbsem_bootstrap_primary_operation(),
+            row.replicate_index,
+        );
+        cbsem_bootstrap_sample_indices_sha256(bootstrap.seed, row.replicate_index, &positions)
+            != row.sample_indices_sha256
+    }) {
+        return false;
+    }
+    let available = bootstrap.usable_replicates as usize >= required;
+    let unavailable_message = format!(
+        "CB-SEM bootstrap inference is unavailable because {} usable primary fits are below the required {required}; no intervals were emitted.",
+        bootstrap.usable_replicates
+    );
+    let mut expected_warnings = vec![
+        "CB-SEM bootstrap v2 uses raw complete-case resampling with replacement and a full production ML refit for every preplanned draw.".to_string(),
+        "The engine executes exactly B preplanned primary draws with no retry or replacement draw; failed fits remain explicit and count against the frozen usable-replicate threshold.".to_string(),
+    ];
+    if available {
+        expected_warnings.push(
+            "Percentile Type-7 intervals are reported from usable full-refit estimates without normal-theory substitution."
+                .to_string(),
+        );
+    } else {
+        expected_warnings.push(unavailable_message.clone());
+    }
+    if !bootstrap.failures.is_empty() {
+        expected_warnings.push(format!(
+            "{} of {} preplanned ML bootstrap fits failed and were excluded; {} usable primary draws remain.",
+            bootstrap.failures.len(), requested, bootstrap.usable_replicates
+        ));
+    }
+    if bootstrap.warnings != expected_warnings {
+        return false;
+    }
+    match (&bootstrap.inference, available) {
+        (qpls_estimation::CbsemBootstrapInferenceV2::Available, true) => {
+            summarize_cbsem_percentile_intervals(
+                &parameter_names,
+                &original_estimates,
+                &witness.successful_replicates,
+                recipe.settings.confidence_level,
+            )
+            .is_ok_and(|expected| {
+                !expected.is_empty()
+                    && cbsem_bootstrap_intervals_match(&expected, &bootstrap.intervals)
+            })
+        }
+        (
+            qpls_estimation::CbsemBootstrapInferenceV2::Unavailable {
+                reason_code,
+                message,
+            },
+            false,
+        ) => {
+            reason_code == "insufficient_usable_replicates"
+                && message == &unavailable_message
+                && bootstrap.intervals.is_empty()
+        }
+        _ => false,
+    }
+}
+
 fn validate_cbsem_payload_contract(
     result: &AnalysisResult,
     estimation: &PlsResult,
     recipe: Option<&AnalysisRecipe>,
     assessment_method_version: &str,
 ) -> bool {
-    const SCOPE_WARNING: &str = "CB-SEM/CFA ML v1 is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective ML scope; bootstrap, unrestricted multigroup/invariance, robust, ordinal, and FIML estimators remain experimental or unsupported.";
+    const SCOPE_WARNING: &str = "CB-SEM/CFA ML v1 is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective ML scope; CB-SEM bootstrap v2 is a genuine raw complete-case full-ML candidate implementation under a frozen contract but remains unqualified pending release evidence; the legacy analytical cbsem_bootstrap_v1 preview is archive-only, and unrestricted multigroup/invariance, robust, ordinal, and FIML estimators remain experimental or unsupported.";
 
     let Some(recipe) = recipe else {
         return false;
     };
-    let (model_type, configured_scope_valid) =
-        if recipe.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION {
-            let Some(qpls_core::MethodConfig::Cbsem {
-                model_type,
-                estimator,
-                input,
-                mean_structure,
-                bootstrap_samples,
-                group_column,
-                invariance_steps,
-            }) = recipe.method_config.as_ref()
-            else {
-                return false;
-            };
-            (
-                match model_type {
-                    qpls_core::CbsemModelType::Cfa => "cfa".to_string(),
-                    qpls_core::CbsemModelType::Sem => "sem".to_string(),
-                },
-                *estimator == qpls_core::CbsemEstimator::Ml
-                    && *input == qpls_core::CbsemInput::Raw
-                    && !*mean_structure
-                    && *bootstrap_samples == 0
-                    && group_column.is_none()
-                    && invariance_steps.is_empty(),
-            )
-        } else {
-            let Some(model_type) = metadata_value(recipe, "cbsem_model_type", "cbsem.model_type")
-            else {
-                return false;
-            };
-            let metadata_is_absent_or = |key: &str, accepted: &str| {
-                recipe
-                    .metadata
-                    .get(key)
-                    .is_none_or(|value| value.trim().eq_ignore_ascii_case(accepted))
-            };
-            let no_cbsem_bootstrap = recipe
-                .metadata
-                .get("cbsem_bootstrap_samples")
-                .is_none_or(|value| value.trim().parse::<usize>().ok() == Some(0));
-            (
-                model_type.to_string(),
-                metadata_value(recipe, "cbsem_input", "cbsem.input") == Some("raw")
-                    && metadata_is_absent_or("cbsem_estimator", "ml")
-                    && metadata_is_absent_or("cbsem_mean_structure", "false")
-                    && no_cbsem_bootstrap
-                    && !recipe.metadata.contains_key("cbsem_group_column")
-                    && !recipe.metadata.contains_key("cbsem_invariance_steps"),
-            )
+    let (model_type, configured_scope_valid, bootstrap_v2_requested) = if recipe.schema_version
+        == ANALYSIS_RECIPE_SCHEMA_VERSION
+    {
+        let Some(qpls_core::MethodConfig::Cbsem {
+            model_type,
+            estimator,
+            input,
+            mean_structure,
+            bootstrap_samples,
+            bootstrap_v2,
+            group_column,
+            invariance_steps,
+        }) = recipe.method_config.as_ref()
+        else {
+            return false;
         };
+        (
+            match model_type {
+                qpls_core::CbsemModelType::Cfa => "cfa".to_string(),
+                qpls_core::CbsemModelType::Sem => "sem".to_string(),
+            },
+            *estimator == qpls_core::CbsemEstimator::Ml
+                && *input == qpls_core::CbsemInput::Raw
+                && !*mean_structure
+                && match bootstrap_v2 {
+                    Some(config) => {
+                        (500..=10_000).contains(bootstrap_samples)
+                            && config.algorithm
+                                == qpls_core::CbsemBootstrapAlgorithm::CaseResamplingFullMl
+                            && config.interval == qpls_core::CbsemBootstrapInterval::PercentileType7
+                    }
+                    None => *bootstrap_samples == 0,
+                }
+                && group_column.is_none()
+                && invariance_steps.is_empty(),
+            bootstrap_v2.is_some(),
+        )
+    } else {
+        let Some(model_type) = metadata_value(recipe, "cbsem_model_type", "cbsem.model_type")
+        else {
+            return false;
+        };
+        let metadata_is_absent_or = |key: &str, accepted: &str| {
+            recipe
+                .metadata
+                .get(key)
+                .is_none_or(|value| value.trim().eq_ignore_ascii_case(accepted))
+        };
+        let no_cbsem_bootstrap = recipe
+            .metadata
+            .get("cbsem_bootstrap_samples")
+            .is_none_or(|value| value.trim().parse::<usize>().ok() == Some(0));
+        (
+            model_type.to_string(),
+            metadata_value(recipe, "cbsem_input", "cbsem.input") == Some("raw")
+                && metadata_is_absent_or("cbsem_estimator", "ml")
+                && metadata_is_absent_or("cbsem_mean_structure", "false")
+                && no_cbsem_bootstrap
+                && !recipe.metadata.contains_key("cbsem_group_column")
+                && !recipe.metadata.contains_key("cbsem_invariance_steps"),
+            false,
+        )
+    };
     let expected_method_version = match model_type.as_str() {
         "cfa" => CFA_ML_METHOD_VERSION,
         "sem" => CBSEM_ML_METHOD_VERSION,
@@ -1442,7 +2130,7 @@ fn validate_cbsem_payload_contract(
         || recipe.settings.bootstrap_samples > 0
         || recipe.settings.studentized_inner_samples > 0
         || recipe.settings.permutation_samples > 0
-        || recipe.settings.workers != 1
+        || (!bootstrap_v2_requested && recipe.settings.workers != 1)
         || !configured_scope_valid
         || !recipe.model.controls.is_empty()
         || !recipe.model.interactions.is_empty()
@@ -1492,9 +2180,15 @@ fn validate_cbsem_payload_contract(
         }
     }
 
-    let expected_provenance_version = format!(
-        "{PLS_METHOD_VERSION}+{expected_method_version}+{CBSEM_FIT_METHOD_VERSION}+{CBSEM_MODIFICATION_INDICES_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{assessment_method_version}"
-    );
+    let expected_provenance_version = if bootstrap_v2_requested {
+        format!(
+            "{PLS_METHOD_VERSION}+{expected_method_version}+{CBSEM_FIT_METHOD_VERSION}+{CBSEM_MODIFICATION_INDICES_METHOD_VERSION}+{CBSEM_BOOTSTRAP_METHOD_VERSION_V2}+{PLS_MEDIATION_METHOD_VERSION}+{assessment_method_version}"
+        )
+    } else {
+        format!(
+            "{PLS_METHOD_VERSION}+{expected_method_version}+{CBSEM_FIT_METHOD_VERSION}+{CBSEM_MODIFICATION_INDICES_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{assessment_method_version}"
+        )
+    };
     let Some(cbsem) = estimation.cbsem.as_ref() else {
         return false;
     };
@@ -1515,6 +2209,10 @@ fn validate_cbsem_payload_contract(
         || cbsem.sample_size != estimation.used_observations
         || cbsem.sample_size < 10
         || cbsem.bootstrap.is_some()
+        || cbsem.bootstrap_v2.is_some() != bootstrap_v2_requested
+        || cbsem.exact_case_bootstrap.is_some()
+        || cbsem.exact_case_bootstrap_studentized.is_some()
+        || cbsem.exact_case_bootstrap_bca.is_some()
         || cbsem.multigroup.is_some()
         || cbsem.warnings.len() != cbsem.diagnostics.len() + 1
         || cbsem.warnings.first().map(String::as_str) != Some(SCOPE_WARNING)
@@ -1538,6 +2236,13 @@ fn validate_cbsem_payload_contract(
         || estimation.regression.is_some()
         || estimation.nca.is_some()
         || estimation.gsca.is_some()
+    {
+        return false;
+    }
+    if bootstrap_v2_requested
+        && cbsem.bootstrap_v2.as_ref().is_none_or(|bootstrap| {
+            !validate_cbsem_bootstrap_v2_payload_contract(bootstrap, estimation, recipe)
+        })
     {
         return false;
     }
@@ -2704,15 +3409,11 @@ impl RegressionPersistenceKind {
 
     fn scope_warning(&self, method_version: &str) -> &'static str {
         match self {
-            Self::Ols => {
-                "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
-            }
+            Self::Ols => REGRESSION_OLS_SCOPE_WARNING,
             Self::Logistic if method_version == REGRESSION_LOGISTIC_METHOD_VERSION_V1 => {
                 "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported."
             }
-            Self::Logistic => {
-                "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported."
-            }
+            Self::Logistic => REGRESSION_LOGISTIC_SCOPE_WARNING,
             Self::Process(ProcessPersistenceContract::Graph { .. }) => {
                 "PROCESS v2 is an independently implemented graph-defined observed-variable path-analysis workflow; it does not execute copied numbered templates."
             }
@@ -6618,6 +7319,15 @@ fn valid_sha256_token(value: &str) -> bool {
     })
 }
 
+fn permutation_plan_sha256(ledger: &[qpls_estimation::MicomPermutationLedgerEntry]) -> String {
+    let mut digest = Sha256::new();
+    for entry in ledger {
+        digest.update(entry.replicate.to_le_bytes());
+        digest.update(entry.partition_sha256.as_bytes());
+    }
+    format!("sha256:{:x}", digest.finalize())
+}
+
 fn validate_mga_payload_contract(
     result: &AnalysisResult,
     estimation: &PlsResult,
@@ -6649,11 +7359,70 @@ fn validate_mga_payload_contract(
     {
         return false;
     }
+    if estimation.method_version == MICOM_METHOD_VERSION {
+        let group_methods = recipe
+            .metadata
+            .get("group_methods")
+            .map(|methods| {
+                methods
+                    .split(',')
+                    .map(str::trim)
+                    .filter(|method| !method.is_empty())
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let Some(micom) = estimation.micom.as_ref() else {
+            return false;
+        };
+        return matches!(
+            recipe.method_config.as_ref(),
+            Some(MethodConfig::Micom { .. })
+        ) && group_methods.len() == 1
+            && group_methods[0].eq_ignore_ascii_case("micom")
+            && recipe
+                .metadata
+                .get("micom_configural_confirmed")
+                .is_some_and(|value| value.eq_ignore_ascii_case("true"))
+            && recipe.settings.weighting_scheme == WeightingScheme::Path
+            && recipe.settings.preprocessing == Preprocessing::Standardized
+            && recipe.settings.missing_data == MissingDataPolicy::ListwiseDeletion
+            && recipe.model.interactions.is_empty()
+            && recipe.model.higher_order_constructs.is_empty()
+            && estimation.mga.is_none()
+            && estimation.mga_permutation.is_none()
+            && validate_micom_contract(
+                result,
+                recipe,
+                micom,
+                group_column,
+                group_a,
+                group_b,
+                MICOM_METHOD_VERSION,
+            );
+    }
     if estimation.method_version == PLS_MGA_METHOD_VERSION_V1 {
         return validate_legacy_mga_v1(result, estimation, recipe, group_column, group_a, group_b);
     }
-    if estimation.method_version != PLS_MGA_METHOD_VERSION
-        || recipe.settings.weighting_scheme != WeightingScheme::Path
+    let (expected_mga_version, expected_permutation_version, expected_micom_version) =
+        match estimation.method_version.as_str() {
+            PLS_MGA_METHOD_VERSION => (
+                PLS_MGA_METHOD_VERSION,
+                PLS_MGA_PERMUTATION_METHOD_VERSION,
+                MICOM_METHOD_VERSION_V4,
+            ),
+            PLS_MGA_METHOD_VERSION_V3_LEGACY_COMBINED => (
+                PLS_MGA_METHOD_VERSION_V3_LEGACY_COMBINED,
+                PLS_MGA_PERMUTATION_METHOD_VERSION_V3_LEGACY_COMBINED,
+                MICOM_METHOD_VERSION_V3_LEGACY_COMBINED,
+            ),
+            PLS_MGA_METHOD_VERSION_V2 => (
+                PLS_MGA_METHOD_VERSION_V2,
+                PLS_MGA_PERMUTATION_METHOD_VERSION_V2,
+                MICOM_METHOD_VERSION_V2,
+            ),
+            _ => return false,
+        };
+    if recipe.settings.weighting_scheme != WeightingScheme::Path
         || recipe.settings.preprocessing != Preprocessing::Standardized
         || recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion
         || !recipe.model.interactions.is_empty()
@@ -6664,7 +7433,7 @@ fn validate_mga_payload_contract(
     let Some(mga) = estimation.mga.as_ref() else {
         return false;
     };
-    if mga.method_version != PLS_MGA_METHOD_VERSION
+    if mga.method_version != expected_mga_version
         || mga.method_version != estimation.method_version
         || mga.group_column != group_column
         || mga.groups.len() != 2
@@ -6814,20 +7583,57 @@ fn validate_mga_payload_contract(
             };
             let attempted = permutation.attempted_permutations.unwrap_or_default();
             let failed = permutation.failed_permutations.unwrap_or_default();
+            let exact_combined = expected_permutation_version == PLS_MGA_PERMUTATION_METHOD_VERSION;
+            let accounting_valid = if exact_combined {
+                let ledger_usable = permutation
+                    .permutation_ledger
+                    .iter()
+                    .filter(|entry| {
+                        entry.step2_status == qpls_estimation::MicomPermutationStatus::Usable
+                    })
+                    .count();
+                attempted == requested_samples
+                    && permutation.usable_permutations == ledger_usable
+                    && failed == requested_samples.saturating_sub(ledger_usable)
+                    && permutation.retry_policy.as_deref() == Some("none")
+                    && permutation
+                        .permutation_plan_sha256
+                        .as_deref()
+                        .is_some_and(valid_sha256_token)
+                    && permutation.permutation_plan_sha256.as_deref()
+                        == Some(permutation_plan_sha256(&permutation.permutation_ledger).as_str())
+                    && permutation.permutation_ledger.len() == requested_samples
+                    && permutation.permutation_ledger.iter().enumerate().all(
+                        |(replicate, entry)| {
+                            entry.replicate == replicate
+                                && entry.partition_sha256.len() == 64
+                                && entry.partition_sha256.bytes().all(|byte| {
+                                    byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)
+                                })
+                                && entry.group_a_rows == mga.groups[0].observations
+                                && entry.group_b_rows == mga.groups[1].observations
+                                && (entry.step2_status
+                                    == qpls_estimation::MicomPermutationStatus::Usable)
+                                    == entry.step2_failure_code.is_none()
+                        },
+                    )
+            } else {
+                permutation.usable_permutations == requested_samples
+                    && attempted >= permutation.usable_permutations
+                    && attempted.saturating_sub(permutation.usable_permutations) == failed
+            };
             if !(5_000..=10_000).contains(&requested_samples)
-                || permutation.method_version != PLS_MGA_PERMUTATION_METHOD_VERSION
+                || permutation.method_version != expected_permutation_version
                 || permutation.group_column != group_column
                 || permutation.permutation_samples != requested_samples
-                || permutation.usable_permutations != requested_samples
-                || attempted < permutation.usable_permutations
-                || attempted.saturating_sub(permutation.usable_permutations) != failed
+                || !accounting_valid
                 || permutation.comparisons.len() != recipe.model.paths.len()
                 || permutation.measurement_comparisons.len() != mga.measurement_comparisons.len()
                 || !result
                     .provenance
                     .method_version
                     .split('+')
-                    .any(|version| version == PLS_MGA_PERMUTATION_METHOD_VERSION)
+                    .any(|version| version == expected_permutation_version)
             {
                 return false;
             }
@@ -6886,7 +7692,29 @@ fn validate_mga_payload_contract(
     let Some(micom) = estimation.micom.as_ref() else {
         return false;
     };
-    validate_micom_v2(result, recipe, micom, group_column, group_a, group_b)
+    if expected_micom_version == MICOM_METHOD_VERSION_V4 {
+        let Some(permutation) = estimation.mga_permutation.as_ref() else {
+            return false;
+        };
+        if permutation.permutation_plan_sha256 != micom.permutation_plan_sha256
+            || permutation.permutation_ledger != micom.permutation_ledger
+            || permutation.usable_permutations
+                != micom.step2_usable_permutations.unwrap_or_default()
+            || permutation.failed_permutations.unwrap_or_default()
+                != micom.step2_failed_permutations.unwrap_or_default()
+        {
+            return false;
+        }
+    }
+    validate_micom_contract(
+        result,
+        recipe,
+        micom,
+        group_column,
+        group_a,
+        group_b,
+        expected_micom_version,
+    )
 }
 
 fn valid_probability(value: f64) -> bool {
@@ -6940,37 +7768,109 @@ fn validate_mga_group_measurement(
         })
 }
 
-fn validate_micom_v2(
+fn validate_micom_contract(
     result: &AnalysisResult,
     recipe: &AnalysisRecipe,
     micom: &qpls_estimation::MicomAnalysis,
     group_column: &str,
     group_a: &str,
     group_b: &str,
+    expected_method_version: &str,
 ) -> bool {
     let Some(confidence_level) = micom.confidence_level else {
         return false;
     };
     let attempted = micom.attempted_permutations.unwrap_or_default();
     let failed = micom.failed_permutations.unwrap_or_default();
-    if micom.method_version != MICOM_METHOD_VERSION
+    let exact_no_retry = matches!(
+        expected_method_version,
+        MICOM_METHOD_VERSION | MICOM_METHOD_VERSION_V4
+    );
+    let accounting_valid = if exact_no_retry {
+        let step2_usable = micom.step2_usable_permutations.unwrap_or_default();
+        let step2_failed = micom.step2_failed_permutations.unwrap_or_default();
+        let step3_usable = micom.step3_usable_permutations.unwrap_or_default();
+        let step3_failed = micom.step3_failed_permutations.unwrap_or_default();
+        let ledger_step2_usable = micom
+            .permutation_ledger
+            .iter()
+            .filter(|entry| entry.step2_status == qpls_estimation::MicomPermutationStatus::Usable)
+            .count();
+        let ledger_step3_usable = micom
+            .permutation_ledger
+            .iter()
+            .filter(|entry| entry.step3_status == qpls_estimation::MicomPermutationStatus::Usable)
+            .count();
+        attempted == micom.permutation_samples
+            && micom.retry_policy.as_deref() == Some("none")
+            && micom.step1_status.as_deref() == Some("confirmed_by_researcher_review")
+            && micom.step1_computed == Some(false)
+            && micom.permutation_ledger.len() == micom.permutation_samples
+            && micom
+                .permutation_ledger
+                .iter()
+                .enumerate()
+                .all(|(replicate, entry)| {
+                    entry.replicate == replicate
+                        && entry.partition_sha256.len() == 64
+                        && entry
+                            .partition_sha256
+                            .bytes()
+                            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+                        && entry.group_a_rows == micom.groups[0].observations
+                        && entry.group_b_rows == micom.groups[1].observations
+                        && (entry.step2_status == qpls_estimation::MicomPermutationStatus::Usable)
+                            == entry.step2_failure_code.is_none()
+                        && (entry.step3_status == qpls_estimation::MicomPermutationStatus::Usable)
+                            == entry.step3_failure_code.is_none()
+                })
+            && step2_usable == ledger_step2_usable
+            && step2_usable <= micom.permutation_samples
+            && step2_failed == micom.permutation_samples.saturating_sub(step2_usable)
+            && step3_usable == ledger_step3_usable
+            && step3_usable <= micom.permutation_samples
+            && step3_failed == micom.permutation_samples.saturating_sub(step3_usable)
+            && step2_usable >= 19
+            && step3_usable >= 19
+            && micom.usable_permutations == step2_usable.min(step3_usable)
+            && failed
+                == micom
+                    .permutation_samples
+                    .saturating_sub(micom.usable_permutations)
+            && micom
+                .permutation_plan_sha256
+                .as_deref()
+                .is_some_and(valid_sha256_token)
+            && micom.permutation_plan_sha256.as_deref()
+                == Some(permutation_plan_sha256(&micom.permutation_ledger).as_str())
+    } else {
+        micom.usable_permutations == micom.permutation_samples
+            && attempted >= micom.usable_permutations
+            && attempted.saturating_sub(micom.usable_permutations) == failed
+    };
+    if micom.method_version != expected_method_version
         || micom.group_column != group_column
         || micom.permutation_samples < 5_000
         || micom.permutation_samples > 10_000
-        || micom.usable_permutations != micom.permutation_samples
-        || attempted < micom.usable_permutations
-        || attempted.saturating_sub(micom.usable_permutations) != failed
+        || !accounting_valid
         || !close_enough(confidence_level, recipe.settings.confidence_level)
         || micom.groups.len() != 2
         || micom.groups[0].group != group_a
         || micom.groups[1].group != group_b
         || micom.groups.iter().any(|group| group.observations < 10)
+        || micom.groups[0]
+            .observations
+            .max(micom.groups[1].observations)
+            > micom.groups[0]
+                .observations
+                .min(micom.groups[1].observations)
+                .saturating_mul(10)
         || micom.constructs.len() != recipe.model.constructs.len()
         || !result
             .provenance
             .method_version
             .split('+')
-            .any(|version| version == MICOM_METHOD_VERSION)
+            .any(|version| version == expected_method_version)
     {
         return false;
     }
@@ -7037,7 +7937,7 @@ fn validate_micom_v2(
             && variance_b.is_finite()
             && variance_b > 0.0
             && row.variance_difference.is_finite()
-            && close_enough(row.variance_difference, (variance_a / variance_b).ln())
+            && close_enough(row.variance_difference, variance_a.ln() - variance_b.ln())
             && variance_lower.is_finite()
             && variance_upper.is_finite()
             && variance_lower <= variance_upper
@@ -7259,6 +8159,8 @@ fn validate_mediation_contract(
     }
     Ok(())
 }
+
+const TWO_STAGE_SCOPE_WARNING_PREFIX: &str = "Disjoint two-stage higher-order estimation";
 
 fn validate_higher_order_contract(
     result: &AnalysisResult,
@@ -7501,10 +8403,12 @@ fn validate_higher_order_contract(
             .r_squared
             .get(&path.target)
             .is_none_or(|value| !close_enough(*value, expected_r_squared))
-        || !estimation
+        || estimation
             .warnings
             .iter()
-            .any(|warning| warning.contains("Two-stage higher-order constructs"))
+            .filter(|warning| warning.starts_with(TWO_STAGE_SCOPE_WARNING_PREFIX))
+            .count()
+            != 1
     {
         return Err(invalid());
     }
@@ -7810,6 +8714,69 @@ fn compatibility_notices(results: &[AnalysisResult]) -> Vec<ProjectCompatibility
     notices
 }
 
+fn posthoc_bootstrap_significance(
+    result_id: Uuid,
+    bootstrap: Option<&serde_json::Value>,
+    paths: &[qpls_estimation::PathEstimate],
+) -> Result<Option<Vec<PlsPathSignificance>>, ProjectError> {
+    let Some(bootstrap) = bootstrap else {
+        return Ok(None);
+    };
+    let bootstrap: PlsBootstrapResult =
+        serde_json::from_value(bootstrap.clone()).map_err(|error| {
+            ProjectError::Invalid(format!(
+                "result {result_id} has invalid linked PLS bootstrap inference for its post-hoc technical sample-size result: {error}"
+            ))
+        })?;
+    let expected_paths = paths
+        .iter()
+        .map(|path| ((path.source.clone(), path.target.clone()), path.coefficient))
+        .collect::<BTreeMap<_, _>>();
+    if expected_paths.len() != paths.len() {
+        return Err(ProjectError::Invalid(format!(
+            "result {result_id} has duplicate PLS path identities for its post-hoc technical sample-size result"
+        )));
+    }
+    let mut seen = BTreeSet::new();
+    let mut significance = Vec::with_capacity(paths.len());
+    for parameter in &bootstrap.percentile.parameters {
+        let Ok((kind, parts)) = serde_json::from_str::<(String, Vec<String>)>(&parameter.parameter)
+        else {
+            continue;
+        };
+        if kind != "path" {
+            continue;
+        }
+        if parts.len() != 2 {
+            return Err(ProjectError::Invalid(format!(
+                "result {result_id} has a malformed linked PLS path identity for its post-hoc technical sample-size result"
+            )));
+        }
+        let identity = (parts[0].clone(), parts[1].clone());
+        let Some(expected_original) = expected_paths.get(&identity) else {
+            return Err(ProjectError::Invalid(format!(
+                "result {result_id} has a foreign linked PLS path identity for its post-hoc technical sample-size result"
+            )));
+        };
+        if !seen.insert(identity) || parameter.original.to_bits() != expected_original.to_bits() {
+            return Err(ProjectError::Invalid(format!(
+                "result {result_id} has duplicate or coefficient-mismatched linked PLS path inference for its post-hoc technical sample-size result"
+            )));
+        }
+        significance.push(PlsPathSignificance {
+            source: parts[0].clone(),
+            target: parts[1].clone(),
+            p_value_two_sided: parameter.p_value_two_sided,
+        });
+    }
+    if seen.len() != expected_paths.len() {
+        return Err(ProjectError::Invalid(format!(
+            "result {result_id} is missing linked PLS path inference for its post-hoc technical sample-size result"
+        )));
+    }
+    Ok(Some(significance))
+}
+
 fn validate_result_contracts_internal(
     results: &[AnalysisResult],
     recipes: &[AnalysisRecipe],
@@ -7858,6 +8825,17 @@ fn validate_result_contracts_internal(
     let recipes = effective_recipes.as_slice();
 
     for result in results {
+        match &result.payload {
+            AnalysisPayload::PlsSampleSizePowerV1 { analysis } => {
+                validate_pls_sample_size_power_contract(result, analysis, recipes, false)?;
+                continue;
+            }
+            AnalysisPayload::PlsSampleSizePowerV2 { analysis } => {
+                validate_pls_sample_size_power_contract(result, analysis, recipes, true)?;
+                continue;
+            }
+            _ => {}
+        }
         let (estimation, assessment, bootstrap, permutation) = match &result.payload {
             AnalysisPayload::PlsPmV1 {
                 estimation,
@@ -7879,6 +8857,8 @@ fn validate_result_contracts_internal(
                 bootstrap.as_ref(),
                 permutation.as_ref(),
             ),
+            AnalysisPayload::PlsSampleSizePowerV1 { .. }
+            | AnalysisPayload::PlsSampleSizePowerV2 { .. } => unreachable!(),
             AnalysisPayload::Legacy { .. } => continue,
         };
         if result.provenance.method != result.provenance.settings.method {
@@ -7917,6 +8897,71 @@ fn validate_result_contracts_internal(
                     result.id
                 ))
             })?;
+        let posthoc_recipe_config = recipes
+            .iter()
+            .find(|recipe| recipe.id == result.provenance.recipe_id)
+            .and_then(|recipe| match recipe.method_config.as_ref() {
+                Some(qpls_core::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(config)) => {
+                    Some(config)
+                }
+                _ => None,
+            });
+        if let Some(stored) = estimation.posthoc_minimum_sample_size.as_ref() {
+            let expected = match stored.method_version.as_str() {
+                PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_METHOD_VERSION_V1 => {
+                    pls_posthoc_minimum_sample_size(&estimation.paths, estimation.used_observations)
+                }
+                PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_METHOD_VERSION => {
+                    let significance =
+                        posthoc_bootstrap_significance(result.id, bootstrap, &estimation.paths)?;
+                    Some(pls_posthoc_minimum_sample_size_v2(
+                        &estimation.paths,
+                        estimation.used_observations,
+                        significance.as_deref(),
+                    ))
+                }
+                _ => None,
+            };
+            let typed_opt_in_valid = posthoc_recipe_config.is_none_or(|config| {
+                config.is_exact_v2()
+                    && config.has_coherent_base_and_inference()
+                    && config.method_version == stored.method_version
+                    && result
+                        .provenance
+                        .method_version
+                        .split('+')
+                        .any(|version| version == config.method_version)
+                    && match (config.base_analysis, config.inference) {
+                        (
+                            qpls_core::PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsAlgorithm,
+                            qpls_core::PlsPosthocTechnicalMinimumSampleSizeInferenceV2::PointEstimateOnly,
+                        ) => {
+                            bootstrap.is_none()
+                        }
+                        (
+                            qpls_core::PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsBootstrap,
+                            qpls_core::PlsPosthocTechnicalMinimumSampleSizeInferenceV2::CaseBootstrapNormalReferenceTwoSided,
+                        ) => {
+                            bootstrap.is_some()
+                        }
+                        _ => false,
+                    }
+            });
+            if result.provenance.method != AnalysisMethod::PlsPm
+                || expected.as_ref() != Some(stored)
+                || !typed_opt_in_valid
+            {
+                return Err(ProjectError::Invalid(format!(
+                    "result {} has an invalid post-hoc technical sample-size result",
+                    result.id
+                )));
+            }
+        } else if posthoc_recipe_config.is_some() {
+            return Err(ProjectError::Invalid(format!(
+                "result {} omitted its explicitly requested post-hoc technical sample-size result",
+                result.id
+            )));
+        }
         if matches!(
             result.provenance.method,
             AnalysisMethod::Nca
@@ -8063,6 +9108,7 @@ fn validate_result_contracts_internal(
             && assessment.method_version == NCA_NOT_APPLICABLE_ASSESSMENT_VERSION;
         let supported_assessment = nca_not_applicable_assessment
             || assessment.method_version == ASSESSMENT_METHOD_VERSION
+            || assessment.method_version == ASSESSMENT_METHOD_VERSION_V7
             || assessment.method_version == ASSESSMENT_METHOD_VERSION_V6
             || assessment.method_version == ASSESSMENT_METHOD_VERSION_V5
             || assessment.method_version == ASSESSMENT_METHOD_VERSION_V4
@@ -8084,7 +9130,12 @@ fn validate_result_contracts_internal(
             AnalysisMethod::Plsc => is_supported_plsc_method_version(&estimation.method_version),
             AnalysisMethod::Mga => matches!(
                 estimation.method_version.as_str(),
-                PLS_MGA_METHOD_VERSION | PLS_MGA_METHOD_VERSION_V1
+                MICOM_METHOD_VERSION
+                    | MICOM_METHOD_VERSION_V4
+                    | PLS_MGA_METHOD_VERSION
+                    | PLS_MGA_METHOD_VERSION_V3_LEGACY_COMBINED
+                    | PLS_MGA_METHOD_VERSION_V2
+                    | PLS_MGA_METHOD_VERSION_V1
             ),
             AnalysisMethod::Nca => matches!(
                 estimation.method_version.as_str(),
@@ -8122,13 +9173,16 @@ fn validate_result_contracts_internal(
                 }) && estimation.plsc.is_none()
                     && estimation.predict.is_none()
             }
-            AnalysisMethod::Cca => validate_cca_payload_contract(
+            AnalysisMethod::Cca => {
+                validate_cca_payload_contract(result, &estimation, recipe, &assessment)
+            }
+            AnalysisMethod::CtaPls => validate_cta_pls_payload_contract(
                 result,
                 &estimation,
                 recipe,
                 &assessment.method_version,
             ),
-            AnalysisMethod::CtaPls => validate_cta_pls_payload_contract(
+            AnalysisMethod::Endogeneity => validate_endogeneity_payload_contract(
                 result,
                 &estimation,
                 recipe,
@@ -8180,21 +9234,25 @@ fn validate_result_contracts_internal(
             validate_moderation_contract(result, moderation_payload_present, &estimation, recipe)?;
             validate_higher_order_contract(result, &estimation, &assessment, recipe)?;
         }
-        if matches!(
+        let has_any_resampling = result.provenance.settings.bootstrap_samples > 0
+            || result.provenance.settings.studentized_inner_samples > 0
+            || result.provenance.settings.permutation_samples > 0
+            || bootstrap.is_some()
+            || permutation.is_some();
+        let has_unsupported_plsc_resampling = result.provenance.method == AnalysisMethod::Plsc
+            && result.provenance.settings.studentized_inner_samples > 0;
+        let method_rejects_all_resampling = matches!(
             result.provenance.method,
-            AnalysisMethod::Plsc
-                | AnalysisMethod::Wpls
+            AnalysisMethod::Wpls
                 | AnalysisMethod::Cca
                 | AnalysisMethod::CtaPls
+                | AnalysisMethod::Endogeneity
                 | AnalysisMethod::Predict
                 | AnalysisMethod::Mga
                 | AnalysisMethod::Ipma
                 | AnalysisMethod::Nca
-        ) && (result.provenance.settings.bootstrap_samples > 0
-            || result.provenance.settings.studentized_inner_samples > 0
-            || result.provenance.settings.permutation_samples > 0
-            || bootstrap.is_some()
-            || permutation.is_some())
+        );
+        if has_unsupported_plsc_resampling || (method_rejects_all_resampling && has_any_resampling)
         {
             return Err(ProjectError::Invalid(format!(
                 "result {} contains unsupported resampling for method {}",
@@ -8204,6 +9262,7 @@ fn validate_result_contracts_internal(
         let supports_f_squared = matches!(
             assessment.method_version.as_str(),
             ASSESSMENT_METHOD_VERSION
+                | ASSESSMENT_METHOD_VERSION_V7
                 | ASSESSMENT_METHOD_VERSION_V6
                 | ASSESSMENT_METHOD_VERSION_V5
                 | ASSESSMENT_METHOD_VERSION_V4
@@ -8212,17 +9271,21 @@ fn validate_result_contracts_internal(
         let supports_fit = matches!(
             assessment.method_version.as_str(),
             ASSESSMENT_METHOD_VERSION
+                | ASSESSMENT_METHOD_VERSION_V7
                 | ASSESSMENT_METHOD_VERSION_V6
                 | ASSESSMENT_METHOD_VERSION_V5
                 | ASSESSMENT_METHOD_VERSION_V4
         );
         let supports_rho_a = matches!(
             assessment.method_version.as_str(),
-            ASSESSMENT_METHOD_VERSION | ASSESSMENT_METHOD_VERSION_V6 | ASSESSMENT_METHOD_VERSION_V5
+            ASSESSMENT_METHOD_VERSION
+                | ASSESSMENT_METHOD_VERSION_V7
+                | ASSESSMENT_METHOD_VERSION_V6
+                | ASSESSMENT_METHOD_VERSION_V5
         );
         let supports_explicit_htmt = matches!(
             assessment.method_version.as_str(),
-            ASSESSMENT_METHOD_VERSION | ASSESSMENT_METHOD_VERSION_V6
+            ASSESSMENT_METHOD_VERSION | ASSESSMENT_METHOD_VERSION_V7 | ASSESSMENT_METHOD_VERSION_V6
         );
         let supports_legacy_htmt = matches!(
             assessment.method_version.as_str(),
@@ -8306,299 +9369,468 @@ fn validate_result_contracts_internal(
                 result.id
             )));
         }
+        let envelope_has_test_tail_version = result
+            .provenance
+            .method_version
+            .split('+')
+            .any(|version| version == PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION);
+        let has_general_pls_bootstrap =
+            result.provenance.method == AnalysisMethod::PlsPm && bootstrap.is_some();
+        if (result.provenance.settings.bootstrap_test_tail != PlsBootstrapTestTail::TwoSided
+            || envelope_has_test_tail_version
+            || bootstrap.is_some_and(|value| value.get("test_tail_inference").is_some()))
+            && !has_general_pls_bootstrap
+        {
+            return Err(ProjectError::Invalid(format!(
+                "result {} attributes a general PLS bootstrap test tail without a general PLS bootstrap payload",
+                result.id
+            )));
+        }
+        let envelope_has_model_fit_exact_version = result
+            .provenance
+            .method_version
+            .split('+')
+            .any(|version| version == PLS_MODEL_FIT_EXACT_METHOD_VERSION);
+        let recipe_requests_model_fit_exact = recipe
+            .and_then(|recipe| recipe.metadata.get(PLS_MODEL_FIT_EXACT_RECIPE_SELECTOR))
+            .is_some_and(|value| value == "true");
+        if bootstrap.is_none()
+            && (envelope_has_model_fit_exact_version || recipe_requests_model_fit_exact)
+        {
+            return Err(ProjectError::Invalid(format!(
+                "result {} attributes PLS model-fit exact inference without its bootstrap payload",
+                result.id
+            )));
+        }
         if permutation.is_none() && result.provenance.settings.permutation_samples != 0 {
             return Err(ProjectError::Invalid(format!(
                 "result {} is missing requested permutation inference",
                 result.id
             )));
         }
-        if let Some(bootstrap) = bootstrap {
-            let bootstrap: PlsBootstrapResult =
-                serde_json::from_value(bootstrap.clone()).map_err(|error| {
-                    ProjectError::Invalid(format!(
-                        "result {} has an invalid PLS bootstrap payload: {error}",
-                        result.id
-                    ))
-                })?;
-            let parameter_names = bootstrap
-                .percentile
-                .parameters
-                .iter()
-                .map(|parameter| parameter.parameter.as_str())
-                .collect::<std::collections::HashSet<_>>();
-            let failed_indices = bootstrap
-                .failed_replicates
-                .iter()
-                .map(|failure| failure.replicate_index)
-                .collect::<std::collections::HashSet<_>>();
-            let required_usable = ((bootstrap.plan.replicates as f64 * 0.9).ceil() as u32).max(2);
-            let supported_version = bootstrap.method_version == RESAMPLING_METHOD_VERSION
-                || bootstrap.method_version == RESAMPLING_METHOD_VERSION_V3
-                || bootstrap.method_version == RESAMPLING_METHOD_VERSION_V2
-                || bootstrap.method_version == RESAMPLING_METHOD_VERSION_V1;
-            let envelope_has_bootstrap_version = result
+        if permutation.is_none()
+            && result
                 .provenance
                 .method_version
                 .split('+')
-                .any(|version| version == bootstrap.method_version);
-            let valid_parameter_identities = bootstrap.percentile.parameters.iter().all(|row| {
-                if bootstrap.method_version != RESAMPLING_METHOD_VERSION_V1 {
-                    serde_json::from_str::<(String, Vec<String>)>(&row.parameter)
-                        .is_ok_and(|(kind, parts)| !kind.trim().is_empty() && !parts.is_empty())
-                } else {
-                    !row.parameter.trim().is_empty()
+                .any(|version| version == PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION)
+        {
+            return Err(ProjectError::Invalid(format!(
+                "result {} attributes a PLSc selected tail without a permutation payload",
+                result.id
+            )));
+        }
+        if let Some(bootstrap) = bootstrap {
+            if result.provenance.method == AnalysisMethod::Plsc {
+                let bootstrap: PlscConsistentBootstrapResult =
+                    serde_json::from_value(bootstrap.clone()).map_err(|error| {
+                        ProjectError::Invalid(format!(
+                            "result {} has an invalid PLSc consistent-bootstrap payload: {error}",
+                            result.id
+                        ))
+                    })?;
+                let envelope_has_consistent_bootstrap_version = result
+                    .provenance
+                    .method_version
+                    .split('+')
+                    .any(|version| version == PLSC_CONSISTENT_BOOTSTRAP_METHOD_VERSION);
+                let envelope_has_resampling_version = result
+                    .provenance
+                    .method_version
+                    .split('+')
+                    .any(|version| version == RESAMPLING_METHOD_VERSION);
+                if !envelope_has_consistent_bootstrap_version || !envelope_has_resampling_version {
+                    return Err(ProjectError::Invalid(format!(
+                        "result {} does not attribute its PLSc consistent-bootstrap method versions",
+                        result.id
+                    )));
                 }
-            });
-            let valid_bca = if bootstrap.method_version == RESAMPLING_METHOD_VERSION
-                || bootstrap.method_version == RESAMPLING_METHOD_VERSION_V3
-            {
-                bootstrap.bca.as_ref().is_some_and(|bca| {
-                    let bca_names = bca
-                        .parameters
-                        .iter()
-                        .map(|parameter| parameter.parameter.as_str())
-                        .collect::<std::collections::HashSet<_>>();
-                    bca.confidence_level == result.provenance.settings.confidence_level
-                        && bca.jackknife_case_count == estimation.used_observations
-                        && bca_names == parameter_names
-                        && bca_names.len() == bca.parameters.len()
-                        && bca.parameters.iter().all(|parameter| {
-                            let available = match (
-                                parameter.bias_correction,
-                                parameter.acceleration,
-                                parameter.lower,
-                                parameter.upper,
-                                &parameter.unavailable_reason,
-                            ) {
-                                (Some(z0), Some(acceleration), Some(lower), Some(upper), None) => {
-                                    z0.is_finite()
-                                        && acceleration.is_finite()
-                                        && lower.is_finite()
-                                        && upper.is_finite()
-                                        && lower <= upper
-                                }
-                                _ => false,
-                            };
-                            let unavailable = parameter.bias_correction.is_none()
-                                && parameter.acceleration.is_none()
-                                && parameter.lower.is_none()
-                                && parameter.upper.is_none()
-                                && parameter
-                                    .unavailable_reason
-                                    .as_ref()
-                                    .is_some_and(|reason| !reason.trim().is_empty());
-                            available || unavailable
-                        })
-                })
+                validate_plsc_consistent_bootstrap_result(
+                    &bootstrap,
+                    &estimation,
+                    &result.provenance.settings,
+                )
+                .map_err(|error| {
+                    ProjectError::Invalid(format!(
+                        "result {} PLSc consistent-bootstrap provenance is inconsistent: {error}",
+                        result.id
+                    ))
+                })?;
+                if !validate_pls_model_fit_exact_link(
+                    bootstrap.model_fit_exact_inference.as_ref(),
+                    result,
+                    &assessment,
+                    &estimation,
+                    recipe,
+                ) {
+                    return Err(ProjectError::Invalid(format!(
+                        "result {} PLSc model-fit exact inference linkage is inconsistent",
+                        result.id
+                    )));
+                }
             } else {
-                bootstrap.bca.is_none()
-            };
-            let valid_studentized = if bootstrap.method_version == RESAMPLING_METHOD_VERSION {
-                if result.provenance.settings.studentized_inner_samples == 0 {
-                    bootstrap.studentized.is_none()
+                let test_tail_inference = bootstrap
+                    .get("test_tail_inference")
+                    .map(|value| {
+                        serde_json::from_value::<PlsBootstrapTestTailInference>(value.clone())
+                    })
+                    .transpose()
+                    .map_err(|error| {
+                        ProjectError::Invalid(format!(
+                            "result {} has a malformed PLS bootstrap test-tail receipt: {error}",
+                            result.id
+                        ))
+                    })?;
+                let bootstrap: PlsBootstrapResult = serde_json::from_value(bootstrap.clone())
+                    .map_err(|error| {
+                        ProjectError::Invalid(format!(
+                            "result {} has an invalid PLS bootstrap payload: {error}",
+                            result.id
+                        ))
+                    })?;
+                validate_pls_bootstrap_test_tail_contract(
+                    &bootstrap,
+                    test_tail_inference.as_ref(),
+                    result.provenance.settings.bootstrap_test_tail,
+                    envelope_has_test_tail_version,
+                )
+                .map_err(|error| {
+                    ProjectError::Invalid(format!(
+                        "result {} bootstrap test-tail provenance is inconsistent: {error}",
+                        result.id
+                    ))
+                })?;
+                let parameter_names = bootstrap
+                    .percentile
+                    .parameters
+                    .iter()
+                    .map(|parameter| parameter.parameter.as_str())
+                    .collect::<std::collections::HashSet<_>>();
+                let failed_indices = bootstrap
+                    .failed_replicates
+                    .iter()
+                    .map(|failure| failure.replicate_index)
+                    .collect::<std::collections::HashSet<_>>();
+                let invalid_failed_replicate = bootstrap.failed_replicates.iter().any(|failure| {
+                    failure.message.trim().is_empty()
+                        || failure.reason_code.trim().is_empty()
+                        || (failure.reason_code != PLS_BOOTSTRAP_LEGACY_FAILURE_REASON_CODE
+                            && failure.reason_code
+                                != pls_bootstrap_failure_reason_code(&failure.message))
+                });
+                let required_usable =
+                    ((bootstrap.plan.replicates as f64 * 0.9).ceil() as u32).max(2);
+                let supported_version = bootstrap.method_version == RESAMPLING_METHOD_VERSION
+                    || bootstrap.method_version == RESAMPLING_METHOD_VERSION_V3
+                    || bootstrap.method_version == RESAMPLING_METHOD_VERSION_V2
+                    || bootstrap.method_version == RESAMPLING_METHOD_VERSION_V1;
+                let envelope_has_bootstrap_version = result
+                    .provenance
+                    .method_version
+                    .split('+')
+                    .any(|version| version == bootstrap.method_version);
+                let valid_parameter_identities = if bootstrap.method_version
+                    == RESAMPLING_METHOD_VERSION
+                {
+                    validate_current_pls_resampling_parameter_map(&bootstrap, &estimation)
                 } else {
-                    bootstrap.studentized.as_ref().is_some_and(|studentized| {
-                        let studentized_names = studentized
+                    bootstrap.percentile.parameters.iter().all(|row| {
+                        if bootstrap.method_version != RESAMPLING_METHOD_VERSION_V1 {
+                            serde_json::from_str::<(String, Vec<String>)>(&row.parameter).is_ok_and(
+                                |(kind, parts)| !kind.trim().is_empty() && !parts.is_empty(),
+                            )
+                        } else {
+                            !row.parameter.trim().is_empty()
+                        }
+                    })
+                };
+                let valid_bca = if bootstrap.method_version == RESAMPLING_METHOD_VERSION
+                    || bootstrap.method_version == RESAMPLING_METHOD_VERSION_V3
+                {
+                    bootstrap.bca.as_ref().is_some_and(|bca| {
+                        let bca_names = bca
                             .parameters
                             .iter()
                             .map(|parameter| parameter.parameter.as_str())
                             .collect::<std::collections::HashSet<_>>();
-                        let required_primary =
-                            ((bootstrap.plan.replicates as f64 * 0.9).ceil() as u32).max(2);
-                        studentized.confidence_level == result.provenance.settings.confidence_level
-                            && studentized.method_version == STUDENTIZED_METHOD_VERSION
-                            && studentized.inner_replicates
-                                == result.provenance.settings.studentized_inner_samples
-                            && (99..=999).contains(&studentized.inner_replicates)
-                            && studentized.inner_replicates % 2 == 1
-                            && studentized.minimum_usable_fraction == 0.9
-                            && studentized.stream_domain == "pls_pm_studentized_inner_v1"
-                            && bootstrap.plan.replicates >= 999
-                            && match &studentized.failure {
-                                Some(failure) => {
-                                    studentized.parameters.is_empty()
-                                        && failure.reason_code == "nested_infrastructure_failure"
-                                        && failure.first_primary_replicate
-                                            < bootstrap.plan.replicates
-                                        && failure.failed_primary_replicates > 0
-                                        && failure.failed_primary_replicates
-                                            <= bootstrap.usable_replicates
-                                        && !failure.message.trim().is_empty()
-                                }
-                                None => {
-                                    studentized_names == parameter_names
-                                        && studentized_names.len() == studentized.parameters.len()
-                                        && studentized.parameters.iter().all(|parameter| {
-                                            let percentile_parameter =
-                                                bootstrap.percentile.parameters.iter().find(
-                                                    |candidate| {
+                        bca.confidence_level == result.provenance.settings.confidence_level
+                            && bca.jackknife_case_count == estimation.used_observations
+                            && bca_names == parameter_names
+                            && bca_names.len() == bca.parameters.len()
+                            && bca.parameters.iter().all(|parameter| {
+                                let available = match (
+                                    parameter.bias_correction,
+                                    parameter.acceleration,
+                                    parameter.lower,
+                                    parameter.upper,
+                                    &parameter.unavailable_reason,
+                                ) {
+                                    (
+                                        Some(z0),
+                                        Some(acceleration),
+                                        Some(lower),
+                                        Some(upper),
+                                        None,
+                                    ) => {
+                                        z0.is_finite()
+                                            && acceleration.is_finite()
+                                            && lower.is_finite()
+                                            && upper.is_finite()
+                                            && lower <= upper
+                                    }
+                                    _ => false,
+                                };
+                                let unavailable = parameter.bias_correction.is_none()
+                                    && parameter.acceleration.is_none()
+                                    && parameter.lower.is_none()
+                                    && parameter.upper.is_none()
+                                    && parameter
+                                        .unavailable_reason
+                                        .as_ref()
+                                        .is_some_and(|reason| !reason.trim().is_empty());
+                                available || unavailable
+                            })
+                    })
+                } else {
+                    bootstrap.bca.is_none()
+                };
+                let valid_studentized = if bootstrap.method_version == RESAMPLING_METHOD_VERSION {
+                    if result.provenance.settings.studentized_inner_samples == 0 {
+                        bootstrap.studentized.is_none()
+                    } else {
+                        bootstrap.studentized.as_ref().is_some_and(|studentized| {
+                            let studentized_names = studentized
+                                .parameters
+                                .iter()
+                                .map(|parameter| parameter.parameter.as_str())
+                                .collect::<std::collections::HashSet<_>>();
+                            let required_primary =
+                                ((bootstrap.plan.replicates as f64 * 0.9).ceil() as u32).max(2);
+                            studentized.confidence_level
+                                == result.provenance.settings.confidence_level
+                                && studentized.method_version == STUDENTIZED_METHOD_VERSION
+                                && studentized.inner_replicates
+                                    == result.provenance.settings.studentized_inner_samples
+                                && (99..=999).contains(&studentized.inner_replicates)
+                                && studentized.inner_replicates % 2 == 1
+                                && studentized.minimum_usable_fraction == 0.9
+                                && studentized.stream_domain == "pls_pm_studentized_inner_v1"
+                                && bootstrap.plan.replicates >= 999
+                                && match &studentized.failure {
+                                    Some(failure) => {
+                                        studentized.parameters.is_empty()
+                                            && failure.reason_code
+                                                == "nested_infrastructure_failure"
+                                            && failure.first_primary_replicate
+                                                < bootstrap.plan.replicates
+                                            && failure.failed_primary_replicates > 0
+                                            && failure.failed_primary_replicates
+                                                <= bootstrap.usable_replicates
+                                            && !failure.message.trim().is_empty()
+                                    }
+                                    None => {
+                                        studentized_names == parameter_names
+                                            && studentized_names.len()
+                                                == studentized.parameters.len()
+                                            && studentized.parameters.iter().all(|parameter| {
+                                                let percentile_parameter = bootstrap
+                                                    .percentile
+                                                    .parameters
+                                                    .iter()
+                                                    .find(|candidate| {
                                                         candidate.parameter == parameter.parameter
-                                                    },
-                                                );
-                                            let identity_matches = percentile_parameter
-                                                .is_some_and(|source| {
-                                                    approximately_equal(
-                                                        parameter.original,
-                                                        source.original,
-                                                        1e-12,
-                                                    ) && approximately_equal(
-                                                        parameter.outer_standard_error,
-                                                        source.standard_error,
-                                                        1e-12,
-                                                    )
-                                                });
-                                            let scale_is_valid = parameter.outer_scale.is_finite()
-                                                && parameter.outer_scale
-                                                    >= parameter.original.abs().max(1.0);
-                                            let zero_threshold =
-                                                64.0 * f64::EPSILON * parameter.outer_scale;
-                                            let available = match (
-                                                parameter.lower_pivot,
-                                                parameter.upper_pivot,
-                                                parameter.lower,
-                                                parameter.upper,
-                                                &parameter.unavailable_reason,
-                                            ) {
-                                                (
-                                                    Some(lower_pivot),
-                                                    Some(upper_pivot),
-                                                    Some(lower),
-                                                    Some(upper),
-                                                    None,
-                                                ) => {
-                                                    let expected_lower = parameter.original
-                                                        - upper_pivot
-                                                            * parameter.outer_standard_error;
-                                                    let expected_upper = parameter.original
-                                                        - lower_pivot
-                                                            * parameter.outer_standard_error;
-                                                    lower_pivot.is_finite()
-                                                        && upper_pivot.is_finite()
-                                                        && lower.is_finite()
-                                                        && upper.is_finite()
-                                                        && lower <= upper
-                                                        && lower_pivot <= upper_pivot
-                                                        && approximately_equal(
-                                                            lower,
-                                                            expected_lower,
-                                                            1e-10,
+                                                    });
+                                                let identity_matches = percentile_parameter
+                                                    .is_some_and(|source| {
+                                                        approximately_equal(
+                                                            parameter.original,
+                                                            source.original,
+                                                            1e-12,
+                                                        ) && approximately_equal(
+                                                            parameter.outer_standard_error,
+                                                            source.standard_error,
+                                                            1e-12,
                                                         )
-                                                        && approximately_equal(
-                                                            upper,
-                                                            expected_upper,
-                                                            1e-10,
-                                                        )
-                                                        && parameter.usable_primary_replicates
-                                                            >= required_primary
-                                                        && parameter.usable_primary_replicates
-                                                            <= bootstrap.usable_replicates
-                                                        && parameter.outer_standard_error
-                                                            > zero_threshold
-                                                }
-                                                _ => false,
-                                            };
-                                            let reason_matches = parameter
-                                                .unavailable_reason
-                                                .as_deref()
-                                                .is_some_and(|reason| match reason {
-                                                    "insufficient_pivots" => {
-                                                        parameter.usable_primary_replicates
-                                                            < required_primary
-                                                    }
-                                                    "zero_outer_standard_error" => {
-                                                        parameter.usable_primary_replicates
-                                                            >= required_primary
-                                                            && parameter.outer_standard_error
-                                                                <= zero_threshold
-                                                    }
-                                                    "invalid_bounds" => {
-                                                        parameter.usable_primary_replicates
-                                                            >= required_primary
+                                                    });
+                                                let scale_is_valid =
+                                                    parameter.outer_scale.is_finite()
+                                                        && parameter.outer_scale
+                                                            >= parameter.original.abs().max(1.0);
+                                                let zero_threshold =
+                                                    64.0 * f64::EPSILON * parameter.outer_scale;
+                                                let available = match (
+                                                    parameter.lower_pivot,
+                                                    parameter.upper_pivot,
+                                                    parameter.lower,
+                                                    parameter.upper,
+                                                    &parameter.unavailable_reason,
+                                                ) {
+                                                    (
+                                                        Some(lower_pivot),
+                                                        Some(upper_pivot),
+                                                        Some(lower),
+                                                        Some(upper),
+                                                        None,
+                                                    ) => {
+                                                        let expected_lower = parameter.original
+                                                            - upper_pivot
+                                                                * parameter.outer_standard_error;
+                                                        let expected_upper = parameter.original
+                                                            - lower_pivot
+                                                                * parameter.outer_standard_error;
+                                                        lower_pivot.is_finite()
+                                                            && upper_pivot.is_finite()
+                                                            && lower.is_finite()
+                                                            && upper.is_finite()
+                                                            && lower <= upper
+                                                            && lower_pivot <= upper_pivot
+                                                            && approximately_equal(
+                                                                lower,
+                                                                expected_lower,
+                                                                1e-10,
+                                                            )
+                                                            && approximately_equal(
+                                                                upper,
+                                                                expected_upper,
+                                                                1e-10,
+                                                            )
+                                                            && parameter.usable_primary_replicates
+                                                                >= required_primary
+                                                            && parameter.usable_primary_replicates
+                                                                <= bootstrap.usable_replicates
                                                             && parameter.outer_standard_error
                                                                 > zero_threshold
                                                     }
                                                     _ => false,
-                                                });
-                                            let unavailable = parameter.lower_pivot.is_none()
-                                                && parameter.upper_pivot.is_none()
-                                                && parameter.lower.is_none()
-                                                && parameter.upper.is_none()
-                                                && parameter.usable_primary_replicates
-                                                    <= bootstrap.usable_replicates
-                                                && reason_matches;
-                                            identity_matches
-                                                && scale_is_valid
-                                                && parameter.original.is_finite()
-                                                && parameter.outer_standard_error.is_finite()
-                                                && parameter.outer_standard_error >= 0.0
-                                                && (available || unavailable)
-                                        })
+                                                };
+                                                let reason_matches = parameter
+                                                    .unavailable_reason
+                                                    .as_deref()
+                                                    .is_some_and(|reason| match reason {
+                                                        "insufficient_pivots" => {
+                                                            parameter.usable_primary_replicates
+                                                                < required_primary
+                                                        }
+                                                        "zero_outer_standard_error" => {
+                                                            parameter.usable_primary_replicates
+                                                                >= required_primary
+                                                                && parameter.outer_standard_error
+                                                                    <= zero_threshold
+                                                        }
+                                                        "invalid_bounds" => {
+                                                            parameter.usable_primary_replicates
+                                                                >= required_primary
+                                                                && parameter.outer_standard_error
+                                                                    > zero_threshold
+                                                        }
+                                                        _ => false,
+                                                    });
+                                                let unavailable = parameter.lower_pivot.is_none()
+                                                    && parameter.upper_pivot.is_none()
+                                                    && parameter.lower.is_none()
+                                                    && parameter.upper.is_none()
+                                                    && parameter.usable_primary_replicates
+                                                        <= bootstrap.usable_replicates
+                                                    && reason_matches;
+                                                identity_matches
+                                                    && scale_is_valid
+                                                    && parameter.original.is_finite()
+                                                    && parameter.outer_standard_error.is_finite()
+                                                    && parameter.outer_standard_error >= 0.0
+                                                    && (available || unavailable)
+                                            })
+                                    }
                                 }
-                            }
-                    })
-                }
-            } else {
-                bootstrap.studentized.is_none()
-                    && result.provenance.settings.studentized_inner_samples == 0
-            };
-            let valid_moderation_binding = match recipe
-                .and_then(|recipe| recipe.model.interactions.first())
-            {
-                None => true,
-                Some(interaction) => {
-                    let parameter_identity = serde_json::to_string(&(
-                        "path",
-                        [
-                            interaction.product_construct.as_str(),
-                            interaction.outcome.as_str(),
-                        ],
-                    ))
-                    .expect("moderation bootstrap parameter identity must serialize");
-                    let stored_effect = estimation.moderation.estimates.iter().find(|estimate| {
-                        estimate.interaction == interaction.id
-                            && estimate.product_construct == interaction.product_construct
-                            && estimate.outcome == interaction.outcome
-                    });
-                    let parameter = bootstrap
-                        .percentile
-                        .parameters
-                        .iter()
-                        .find(|parameter| parameter.parameter == parameter_identity);
-                    match (stored_effect, parameter) {
-                        (Some(stored_effect), Some(parameter)) => {
-                            parameter.original.to_bits()
-                                == stored_effect.interaction_effect.to_bits()
-                        }
-                        _ => false,
+                        })
                     }
-                }
-            };
-            if !supported_version
-                || !envelope_has_bootstrap_version
-                || bootstrap.plan.replicates == 0
-                || bootstrap.plan.replicates != result.provenance.settings.bootstrap_samples
-                || bootstrap.plan.master_seed != result.provenance.settings.seed
-                || bootstrap.plan.operation != "pls_pm_bootstrap_v1"
-                || bootstrap.usable_replicates as usize + bootstrap.failed_replicates.len()
-                    != bootstrap.plan.replicates as usize
-                || bootstrap.usable_replicates < required_usable
-                || failed_indices.len() != bootstrap.failed_replicates.len()
-                || failed_indices
-                    .iter()
-                    .any(|index| *index >= bootstrap.plan.replicates)
-                || bootstrap.percentile.confidence_level
-                    != result.provenance.settings.confidence_level
-                || parameter_names.len() != bootstrap.percentile.parameters.len()
-                || bootstrap.percentile.parameters.is_empty()
-                || !valid_parameter_identities
-                || !valid_bca
-                || !valid_studentized
-                || !valid_moderation_binding
-                || bootstrap.percentile.parameters.iter().any(|parameter| {
-                    let expected =
-                        normal_reference_test(parameter.original, parameter.standard_error);
-                    let valid_normal_test =
-                        if bootstrap.method_version == RESAMPLING_METHOD_VERSION_V1 {
+                } else {
+                    bootstrap.studentized.is_none()
+                        && result.provenance.settings.studentized_inner_samples == 0
+                };
+                let valid_moderation_binding = match recipe
+                    .and_then(|recipe| recipe.model.interactions.first())
+                {
+                    None => true,
+                    Some(interaction) => {
+                        let parameter_identity = serde_json::to_string(&(
+                            "path",
+                            [
+                                interaction.product_construct.as_str(),
+                                interaction.outcome.as_str(),
+                            ],
+                        ))
+                        .expect("moderation bootstrap parameter identity must serialize");
+                        let stored_effect =
+                            estimation.moderation.estimates.iter().find(|estimate| {
+                                estimate.interaction == interaction.id
+                                    && estimate.product_construct == interaction.product_construct
+                                    && estimate.outcome == interaction.outcome
+                            });
+                        let parameter = bootstrap
+                            .percentile
+                            .parameters
+                            .iter()
+                            .find(|parameter| parameter.parameter == parameter_identity);
+                        match (stored_effect, parameter) {
+                            (Some(stored_effect), Some(parameter)) => {
+                                parameter.original.to_bits()
+                                    == stored_effect.interaction_effect.to_bits()
+                            }
+                            _ => false,
+                        }
+                    }
+                };
+                let htmt_config = recipe
+                    .map(|recipe| recipe.settings.htmt_bootstrap_inference)
+                    .unwrap_or_default();
+                let expected_htmt = expected_htmt_bootstrap_contract(htmt_config);
+                let envelope_has_htmt_inference_version = result
+                    .provenance
+                    .method_version
+                    .split('+')
+                    .any(|version| version == expected_htmt.bundle_method_version);
+                let envelope_has_other_htmt_inference_version =
+                    result.provenance.method_version.split('+').any(|version| {
+                        matches!(
+                            version,
+                            HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION
+                                | HTMT_CONFIGURABLE_BOOTSTRAP_INFERENCE_METHOD_VERSION
+                        ) && version != expected_htmt.bundle_method_version
+                    });
+                let valid_htmt_inference = match (
+                    bootstrap.htmt_inference.as_ref(),
+                    envelope_has_htmt_inference_version,
+                ) {
+                    (Some(bundle), true) => {
+                        !envelope_has_other_htmt_inference_version
+                            && validate_htmt_bootstrap_bundle(
+                                bundle,
+                                &bootstrap,
+                                &assessment,
+                                htmt_config,
+                            )
+                    }
+                    // Historical indexed-resampling v4 archives predate the
+                    // separately versioned complete HTMT inference payload.
+                    (None, false) => {
+                        htmt_config.is_default() && !envelope_has_other_htmt_inference_version
+                    }
+                    _ => false,
+                };
+                let valid_model_fit_exact_inference = validate_pls_model_fit_exact_link(
+                    bootstrap.model_fit_exact_inference.as_ref(),
+                    result,
+                    &assessment,
+                    &estimation,
+                    recipe,
+                );
+                let invalid_percentile_parameter =
+                    bootstrap.percentile.parameters.iter().any(|parameter| {
+                        let expected =
+                            normal_reference_test(parameter.original, parameter.standard_error);
+                        let valid_normal_test = if bootstrap.method_version
+                            == RESAMPLING_METHOD_VERSION_V1
+                        {
                             parameter.t_statistic.is_none() && parameter.p_value_two_sided.is_none()
                         } else {
                             match (parameter.t_statistic, parameter.p_value_two_sided, expected) {
@@ -8617,26 +9849,188 @@ fn validate_result_contracts_internal(
                                 _ => false,
                             }
                         };
-                    parameter.parameter.trim().is_empty()
-                        || parameter.usable_replicates != bootstrap.usable_replicates
-                        || !parameter.original.is_finite()
-                        || !parameter.bootstrap_mean.is_finite()
-                        || !parameter.bias.is_finite()
-                        || !parameter.standard_error.is_finite()
-                        || parameter.standard_error < 0.0
-                        || !parameter.lower.is_finite()
-                        || !parameter.upper.is_finite()
-                        || parameter.lower > parameter.upper
-                        || !valid_normal_test
-                })
-            {
-                return Err(ProjectError::Invalid(format!(
-                    "result {} bootstrap provenance is inconsistent",
-                    result.id
-                )));
+                        parameter.parameter.trim().is_empty()
+                            || parameter.usable_replicates != bootstrap.usable_replicates
+                            || !parameter.original.is_finite()
+                            || !parameter.bootstrap_mean.is_finite()
+                            || !parameter.bias.is_finite()
+                            || !parameter.standard_error.is_finite()
+                            || parameter.standard_error < 0.0
+                            || !parameter.lower.is_finite()
+                            || !parameter.upper.is_finite()
+                            || parameter.lower > parameter.upper
+                            || !valid_normal_test
+                    });
+                let mut inconsistencies = Vec::new();
+                let mut require = |condition: bool, code: &'static str| {
+                    if !condition {
+                        inconsistencies.push(code);
+                    }
+                };
+                require(supported_version, "unsupported_method_version");
+                require(
+                    envelope_has_bootstrap_version,
+                    "missing_envelope_method_version",
+                );
+                require(bootstrap.plan.replicates > 0, "zero_replicates");
+                require(
+                    bootstrap.plan.replicates == result.provenance.settings.bootstrap_samples,
+                    "replicate_count_settings_mismatch",
+                );
+                require(
+                    bootstrap.plan.master_seed == result.provenance.settings.seed,
+                    "seed_settings_mismatch",
+                );
+                require(
+                    bootstrap.plan.operation == "pls_pm_bootstrap_v1",
+                    "operation_mismatch",
+                );
+                require(
+                    bootstrap.usable_replicates as usize + bootstrap.failed_replicates.len()
+                        == bootstrap.plan.replicates as usize,
+                    "replicate_accounting_mismatch",
+                );
+                require(
+                    bootstrap.usable_replicates >= required_usable,
+                    "insufficient_usable_replicates",
+                );
+                require(
+                    failed_indices.len() == bootstrap.failed_replicates.len(),
+                    "duplicate_failed_replicate_indices",
+                );
+                require(
+                    !failed_indices
+                        .iter()
+                        .any(|index| *index >= bootstrap.plan.replicates),
+                    "failed_replicate_index_out_of_range",
+                );
+                require(
+                    !invalid_failed_replicate,
+                    "invalid_failed_replicate_disclosure",
+                );
+                require(
+                    bootstrap.percentile.confidence_level
+                        == result.provenance.settings.confidence_level,
+                    "confidence_level_settings_mismatch",
+                );
+                require(
+                    parameter_names.len() == bootstrap.percentile.parameters.len(),
+                    "duplicate_parameter_identities",
+                );
+                require(
+                    !bootstrap.percentile.parameters.is_empty(),
+                    "empty_parameter_set",
+                );
+                require(valid_parameter_identities, "invalid_parameter_identity");
+                require(valid_bca, "invalid_bca_contract");
+                require(valid_studentized, "invalid_studentized_contract");
+                require(valid_moderation_binding, "invalid_moderation_binding");
+                require(valid_htmt_inference, "invalid_htmt_inference");
+                require(
+                    valid_model_fit_exact_inference,
+                    "invalid_model_fit_exact_inference",
+                );
+                require(
+                    !invalid_percentile_parameter,
+                    "invalid_percentile_parameter",
+                );
+                if !inconsistencies.is_empty() {
+                    return Err(ProjectError::Invalid(format!(
+                        "result {} bootstrap provenance is inconsistent: {}",
+                        result.id,
+                        inconsistencies.join(", ")
+                    )));
+                }
             }
         }
         if let Some(permutation) = permutation {
+            let raw_selected_tail = permutation.get("selected_tail_inference").is_some();
+            let selected_tail_marker_count = result
+                .provenance
+                .method_version
+                .split('+')
+                .filter(|version| {
+                    *version == PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION
+                })
+                .count();
+            let envelope_has_selected_tail_version = selected_tail_marker_count != 0;
+            if result.provenance.method != AnalysisMethod::Plsc
+                && (raw_selected_tail || envelope_has_selected_tail_version)
+            {
+                return Err(ProjectError::Invalid(format!(
+                    "result {} attributes a PLSc selected tail outside consistent permutation",
+                    result.id
+                )));
+            }
+            if result.provenance.method == AnalysisMethod::Plsc {
+                let permutation: PlscConsistentPermutationResult =
+                    serde_json::from_value(permutation.clone()).map_err(|error| {
+                        ProjectError::Invalid(format!(
+                            "result {} has an invalid PLSc consistent-permutation payload: {error}",
+                            result.id
+                        ))
+                    })?;
+                let recipe = recipe.ok_or_else(|| {
+                    ProjectError::Invalid(format!(
+                        "result {} PLSc consistent permutation requires its immutable recipe context",
+                        result.id
+                    ))
+                })?;
+                let expected_selected_tail = match recipe.method_config.as_ref() {
+                    Some(MethodConfig::PlscPermutation { test_tail, .. }) => *test_tail,
+                    _ => {
+                        return Err(ProjectError::Invalid(format!(
+                            "result {} PLSc consistent permutation lacks its typed recipe configuration",
+                            result.id
+                        )));
+                    }
+                };
+                let expects_selected_tail =
+                    expected_selected_tail != PlscPermutationTestTail::TwoSided;
+                if raw_selected_tail != expects_selected_tail
+                    || selected_tail_marker_count != if expects_selected_tail { 1 } else { 0 }
+                {
+                    return Err(ProjectError::Invalid(format!(
+                        "result {} PLSc selected-tail receipt, recipe selection, and runner marker disagree",
+                        result.id
+                    )));
+                }
+                let envelope_has_consistent_permutation_version = result
+                    .provenance
+                    .method_version
+                    .split('+')
+                    .any(|version| version == PLSC_CONSISTENT_PERMUTATION_METHOD_VERSION);
+                let envelope_has_scheduler_version = result
+                    .provenance
+                    .method_version
+                    .split('+')
+                    .any(|version| version == PLSC_CONSISTENT_PERMUTATION_SCHEDULER_VERSION);
+                if !envelope_has_consistent_permutation_version
+                    || !envelope_has_scheduler_version
+                    || result
+                        .provenance
+                        .method_version
+                        .split('+')
+                        .any(|version| version == PERMUTATION_METHOD_VERSION)
+                {
+                    return Err(ProjectError::Invalid(format!(
+                        "result {} does not attribute the exact PLSc consistent-permutation method and scheduler",
+                        result.id
+                    )));
+                }
+                validate_plsc_consistent_permutation_result(
+                    &permutation,
+                    &estimation,
+                    recipe,
+                )
+                .map_err(|error| {
+                    ProjectError::Invalid(format!(
+                        "result {} PLSc consistent-permutation provenance is inconsistent: {error}",
+                        result.id
+                    ))
+                })?;
+                continue;
+            }
             let permutation: PlsPermutationResult = serde_json::from_value(permutation.clone())
                 .map_err(|error| {
                     ProjectError::Invalid(format!(
@@ -8716,6 +10110,131 @@ fn validate_result_contracts_internal(
                 )));
             }
         }
+    }
+    Ok(())
+}
+
+fn validate_pls_sample_size_power_contract(
+    result: &AnalysisResult,
+    analysis: &serde_json::Value,
+    recipes: &[AnalysisRecipe],
+    is_v2: bool,
+) -> Result<(), ProjectError> {
+    let version_label = if is_v2 { "v2" } else { "v1" };
+    let invalid = |message: &str| {
+        ProjectError::Invalid(format!(
+            "result {} has an invalid PLS sample-size/power {version_label} contract: {message}",
+            result.id,
+        ))
+    };
+    let recipe = recipes
+        .iter()
+        .find(|recipe| recipe.id == result.provenance.recipe_id)
+        .ok_or_else(|| invalid("referenced analysis recipe is missing"))?;
+    let Some(qpls_core::MethodConfig::PlsSampleSizePower(config)) = recipe.method_config.as_ref()
+    else {
+        return Err(invalid("typed method_config is missing"));
+    };
+    let expected_method_version = if is_v2 {
+        PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2
+    } else {
+        PLS_SAMPLE_SIZE_POWER_METHOD_VERSION
+    };
+    let expected_recipe_schema = if is_v2 {
+        PLS_SAMPLE_SIZE_POWER_RECIPE_SCHEMA_VERSION_V2
+    } else {
+        PLS_SAMPLE_SIZE_POWER_RECIPE_SCHEMA_VERSION
+    };
+    let expected_inference = if is_v2 {
+        PlsPowerInferenceV1::CaseBootstrapNullCenteredTwoSidedPlusOne
+    } else {
+        PlsPowerInferenceV1::CaseBootstrapNormalReferenceTwoSided
+    };
+    let config_identity_matches = matches!(
+        (is_v2, config.inference),
+        (
+            true,
+            qpls_core::PlsPowerInference::CaseBootstrapNullCenteredTwoSidedPlusOne
+        ) | (
+            false,
+            qpls_core::PlsPowerInference::CaseBootstrapNormalReferenceTwoSided
+        )
+    );
+    if result.schema_version != RESULT_SCHEMA_VERSION
+        || result.status != RunStatus::Completed
+        || result.provenance.method != AnalysisMethod::PlsSampleSizePower
+        || result.provenance.settings.method != AnalysisMethod::PlsSampleSizePower
+        || result.provenance.method_version != expected_method_version
+        || result.provenance.recipe_id != recipe.id
+        || result.provenance.settings != recipe.settings
+        || result.provenance.seed != recipe.settings.seed
+        || result.provenance.dataset_fingerprint != recipe.dataset_fingerprint
+        || result.provenance.completed_at < result.provenance.started_at
+        || !config_identity_matches
+    {
+        return Err(invalid(
+            "result envelope and immutable recipe provenance differ",
+        ));
+    }
+    let power_recipe = PlsSampleSizePowerRecipeV1 {
+        schema_version: expected_recipe_schema,
+        capability_id: PLS_SAMPLE_SIZE_POWER_CAPABILITY_ID.into(),
+        method_version: expected_method_version.into(),
+        scenario_identity: config.scenario_identity.clone(),
+        design: ReflectiveGaussianPathDesignV1 {
+            predictor_construct: config.predictor_construct.clone(),
+            outcome_construct: config.outcome_construct.clone(),
+            predictor_indicator_loadings: config.predictor_indicator_loadings.clone(),
+            outcome_indicator_loadings: config.outcome_indicator_loadings.clone(),
+            population_path: config.population_path,
+            exogenous_distribution: PlsPowerDistributionV1::StandardNormal,
+            structural_disturbance_distribution: PlsPowerDistributionV1::StandardNormal,
+            indicator_error_distribution: PlsPowerDistributionV1::StandardNormal,
+            missing_data: PlsPowerMissingDataV1::None,
+        },
+        estimator: PlsPowerEstimatorSettingsV1 {
+            weighting_scheme: recipe.settings.weighting_scheme.clone(),
+            preprocessing: recipe.settings.preprocessing.clone(),
+            tolerance: recipe.settings.tolerance,
+            max_iterations: recipe.settings.max_iterations,
+        },
+        inference: expected_inference,
+        sample_size_grid: config.sample_size_grid.clone(),
+        alpha: config.alpha,
+        target_power: config.target_power,
+        confidence_level: config.interval_confidence_level,
+        monte_carlo_replicates: config.monte_carlo_replicates,
+        bootstrap_replicates: config.bootstrap_replicates,
+        master_seed: recipe.settings.seed,
+        workers: recipe.settings.workers,
+    };
+    let power_result: PlsSampleSizePowerResultV1 = serde_json::from_value(analysis.clone())
+        .map_err(|error| {
+            invalid(&format!(
+                "typed analytical payload failed to parse: {error}"
+            ))
+        })?;
+    validate_pls_sample_size_power_result(&power_recipe, &power_result)
+        .map_err(|error| invalid(&error.to_string()))?;
+    let expected_messages = power_result
+        .warnings
+        .iter()
+        .chain(power_result.exclusions.iter())
+        .collect::<Vec<_>>();
+    if result.diagnostics.len() != expected_messages.len()
+        || result
+            .diagnostics
+            .iter()
+            .zip(expected_messages)
+            .any(|(diagnostic, expected)| {
+                diagnostic.code != "pls_sample_size_power.warning"
+                    || diagnostic.level != DiagnosticLevel::Warning
+                    || &diagnostic.message != expected
+            })
+    {
+        return Err(invalid(
+            "stored warning/exclusion diagnostics differ from the analytical payload",
+        ));
     }
     Ok(())
 }
@@ -8827,6 +10346,474 @@ fn validate_htmt_assessment(
     Ok(())
 }
 
+fn validate_pls_model_fit_exact_link(
+    exact: Option<&PlsModelFitExactInference>,
+    result: &AnalysisResult,
+    assessment: &AssessmentResult,
+    estimation: &PlsResult,
+    recipe: Option<&AnalysisRecipe>,
+) -> bool {
+    let envelope_has_version = result
+        .provenance
+        .method_version
+        .split('+')
+        .any(|version| version == PLS_MODEL_FIT_EXACT_METHOD_VERSION);
+    let selector_is_enabled = recipe
+        .and_then(|recipe| recipe.metadata.get(PLS_MODEL_FIT_EXACT_RECIPE_SELECTOR))
+        .is_some_and(|value| value == "true");
+    match (exact, envelope_has_version, selector_is_enabled, recipe) {
+        (Some(exact), true, true, Some(recipe)) => {
+            assessment.model_fit.as_ref().is_some_and(|point_fit| {
+                validate_pls_model_fit_exact_inference(exact, point_fit, estimation, recipe).is_ok()
+            })
+        }
+        (None, false, false, _) => true,
+        _ => false,
+    }
+}
+
+fn expected_pls_resampling_parameter_values(
+    estimation: &PlsResult,
+) -> Option<BTreeMap<String, u64>> {
+    fn insert(
+        values: &mut BTreeMap<String, u64>,
+        family: PlsResamplingParameterFamily,
+        components: &[&str],
+        value: f64,
+    ) -> bool {
+        if !value.is_finite() {
+            return false;
+        }
+        let Ok(identity) = PlsResamplingParameterIdentity::new(family, components.iter().copied())
+        else {
+            return false;
+        };
+        values.insert(identity.encode(), value.to_bits()).is_none()
+    }
+
+    let mut values = BTreeMap::new();
+    for outer in &estimation.outer_estimates {
+        if !insert(
+            &mut values,
+            PlsResamplingParameterFamily::OuterLoading,
+            &[&outer.construct, &outer.indicator],
+            outer.loading,
+        ) || !insert(
+            &mut values,
+            PlsResamplingParameterFamily::OuterWeight,
+            &[&outer.construct, &outer.indicator],
+            outer.weight,
+        ) {
+            return None;
+        }
+    }
+    for path in &estimation.paths {
+        if !insert(
+            &mut values,
+            PlsResamplingParameterFamily::Path,
+            &[&path.source, &path.target],
+            path.coefficient,
+        ) {
+            return None;
+        }
+    }
+    for effect in &estimation.effects {
+        let components = [effect.source.as_str(), effect.target.as_str()];
+        for (family, value) in [
+            (PlsResamplingParameterFamily::DirectEffect, effect.direct),
+            (
+                PlsResamplingParameterFamily::IndirectEffect,
+                effect.indirect,
+            ),
+            (PlsResamplingParameterFamily::TotalEffect, effect.total),
+        ] {
+            if !insert(&mut values, family, &components, value) {
+                return None;
+            }
+        }
+    }
+    for (construct, value) in &estimation.r_squared {
+        if !insert(
+            &mut values,
+            PlsResamplingParameterFamily::RSquared,
+            &[construct],
+            *value,
+        ) {
+            return None;
+        }
+    }
+    Some(values)
+}
+
+fn validate_current_pls_resampling_parameter_map(
+    bootstrap: &PlsBootstrapResult,
+    estimation: &PlsResult,
+) -> bool {
+    let Some(expected) = expected_pls_resampling_parameter_values(estimation) else {
+        return false;
+    };
+    let mut actual = BTreeMap::new();
+    for row in &bootstrap.percentile.parameters {
+        let Ok(identity) = PlsResamplingParameterIdentity::decode(&row.parameter) else {
+            return false;
+        };
+        if identity.encode() != row.parameter
+            || !row.original.is_finite()
+            || actual
+                .insert(row.parameter.clone(), row.original.to_bits())
+                .is_some()
+        {
+            return false;
+        }
+    }
+    actual == expected
+}
+
+#[derive(Debug, Clone, Copy)]
+struct ExpectedHtmtBootstrapContract {
+    bundle_method_version: &'static str,
+    plus_method_version: &'static str,
+    original_method_version: &'static str,
+    interval_method: &'static str,
+    test_type: &'static str,
+    equivalent_two_sided_confidence_level: f64,
+    decision_rule: &'static str,
+    interval_unavailable_reason: &'static str,
+    requires_bias_correction: bool,
+}
+
+fn expected_htmt_bootstrap_contract(
+    config: HtmtBootstrapInferenceConfig,
+) -> ExpectedHtmtBootstrapContract {
+    let configurable = !config.is_default();
+    ExpectedHtmtBootstrapContract {
+        bundle_method_version: if configurable {
+            HTMT_CONFIGURABLE_BOOTSTRAP_INFERENCE_METHOD_VERSION
+        } else {
+            HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION
+        },
+        plus_method_version: if configurable {
+            HTMT_PLUS_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION
+        } else {
+            HTMT_PLUS_BOOTSTRAP_METHOD_VERSION
+        },
+        original_method_version: if configurable {
+            HTMT_ORIGINAL_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION
+        } else {
+            HTMT_ORIGINAL_BOOTSTRAP_METHOD_VERSION
+        },
+        interval_method: match config.interval_family {
+            HtmtBootstrapIntervalFamily::Percentile => HTMT_BOOTSTRAP_PERCENTILE_INTERVAL_METHOD,
+            HtmtBootstrapIntervalFamily::BiasCorrectedPercentile => HTMT_BOOTSTRAP_INTERVAL_METHOD,
+        },
+        test_type: match config.test_tail {
+            HtmtBootstrapTestTail::OneTailedUpper => HTMT_BOOTSTRAP_TEST_TYPE,
+            HtmtBootstrapTestTail::TwoSided => HTMT_BOOTSTRAP_TWO_SIDED_TEST_TYPE,
+        },
+        equivalent_two_sided_confidence_level: match config.test_tail {
+            HtmtBootstrapTestTail::OneTailedUpper => {
+                HTMT_BOOTSTRAP_EQUIVALENT_TWO_SIDED_CONFIDENCE_LEVEL
+            }
+            HtmtBootstrapTestTail::TwoSided => 1.0 - HTMT_BOOTSTRAP_SIGNIFICANCE_LEVEL,
+        },
+        decision_rule: if configurable {
+            HTMT_BOOTSTRAP_CONFIGURABLE_DECISION_RULE
+        } else {
+            HTMT_BOOTSTRAP_DECISION_RULE
+        },
+        interval_unavailable_reason: if configurable {
+            "htmt.bootstrap.selected_interval_unavailable"
+        } else {
+            "htmt.bootstrap.bias_corrected_interval_unavailable"
+        },
+        requires_bias_correction: config.interval_family
+            == HtmtBootstrapIntervalFamily::BiasCorrectedPercentile,
+    }
+}
+
+fn validate_htmt_bootstrap_bundle(
+    bundle: &HtmtBootstrapInferenceBundle,
+    bootstrap: &PlsBootstrapResult,
+    assessment: &AssessmentResult,
+    config: HtmtBootstrapInferenceConfig,
+) -> bool {
+    let expected = expected_htmt_bootstrap_contract(config);
+    if bundle.method_version != expected.bundle_method_version {
+        return false;
+    }
+    let Some(point_plus) = assessment.htmt_plus.as_ref() else {
+        return false;
+    };
+    let Some(point_original) = assessment.htmt_original.as_ref() else {
+        return false;
+    };
+    let globally_failed = bootstrap
+        .failed_replicates
+        .iter()
+        .map(|failure| failure.replicate_index)
+        .collect::<std::collections::HashSet<_>>();
+    validate_htmt_bootstrap_artifact(
+        &bundle.htmt_plus,
+        point_plus,
+        expected.plus_method_version,
+        HTMT_PLUS_METHOD_VERSION,
+        true,
+        bootstrap.plan.replicates,
+        &globally_failed,
+        expected,
+    ) && validate_htmt_bootstrap_artifact(
+        &bundle.htmt_original,
+        point_original,
+        expected.original_method_version,
+        HTMT_ORIGINAL_METHOD_VERSION,
+        false,
+        bootstrap.plan.replicates,
+        &globally_failed,
+        expected,
+    )
+}
+
+fn validate_htmt_bootstrap_artifact(
+    artifact: &HtmtBootstrapInference,
+    point: &HtmtAssessment,
+    expected_method_version: &str,
+    expected_point_method_version: &str,
+    expected_absolute: bool,
+    requested_replicates: u32,
+    globally_failed: &std::collections::HashSet<u32>,
+    expected: ExpectedHtmtBootstrapContract,
+) -> bool {
+    let expected_minimum =
+        ((f64::from(requested_replicates) * HTMT_BOOTSTRAP_MINIMUM_USABLE_FRACTION).ceil() as u32)
+            .max(2);
+    let dimension = point.constructs.len();
+    if artifact.method_version != expected_method_version
+        || artifact.point_method_version != expected_point_method_version
+        || artifact.constructs != point.constructs
+        || artifact.correlation_type != "pearson"
+        || artifact.correlation_type != point.correlation_type
+        || artifact.absolute_correlations != expected_absolute
+        || artifact.absolute_correlations != point.absolute_correlations
+        || artifact.interval_method != expected.interval_method
+        || artifact.test_type != expected.test_type
+        || artifact.significance_level.to_bits() != HTMT_BOOTSTRAP_SIGNIFICANCE_LEVEL.to_bits()
+        || artifact.equivalent_two_sided_confidence_level.to_bits()
+            != expected.equivalent_two_sided_confidence_level.to_bits()
+        || artifact.critical_value.to_bits() != HTMT_BOOTSTRAP_CRITICAL_VALUE.to_bits()
+        || artifact.decision_rule != expected.decision_rule
+        || artifact.replicate_index_digest_method != HTMT_BOOTSTRAP_REPLICATE_INDEX_DIGEST_METHOD
+        || artifact.requested_replicates != requested_replicates
+        || artifact.minimum_usable_replicates != expected_minimum
+        || artifact.retry_policy != "no_retry_fixed_preplanned_primary_draws_v1"
+        || artifact.cells.len() != dimension
+        || artifact.cells.iter().any(|row| row.len() != dimension)
+        || point.cells.len() != dimension
+        || point.cells.iter().any(|row| row.len() != dimension)
+    {
+        return false;
+    }
+    for row in 0..dimension {
+        for column in 0..dimension {
+            let cell = &artifact.cells[row][column];
+            if cell != &artifact.cells[column][row]
+                || !validate_htmt_bootstrap_cell(
+                    cell,
+                    &point.cells[row][column],
+                    row == column,
+                    expected_absolute,
+                    requested_replicates,
+                    expected_minimum,
+                    globally_failed,
+                    expected,
+                )
+            {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn validate_htmt_bootstrap_cell(
+    cell: &HtmtBootstrapInferenceCell,
+    point: &qpls_assessment::HtmtCell,
+    diagonal: bool,
+    expected_absolute: bool,
+    requested_replicates: u32,
+    minimum_usable: u32,
+    globally_failed: &std::collections::HashSet<u32>,
+    expected: ExpectedHtmtBootstrapContract,
+) -> bool {
+    let summaries_absent = cell.bootstrap_mean.is_none()
+        && cell.bias.is_none()
+        && cell.standard_error.is_none()
+        && cell.bias_correction.is_none()
+        && cell.lower.is_none()
+        && cell.upper.is_none()
+        && cell.replicate_min.is_none()
+        && cell.replicate_max.is_none()
+        && cell.below_original == 0
+        && cell.tied_original == 0;
+    let no_index_ledger = cell.usable_replicate_indices_sha256.is_none()
+        && cell.pair_unavailable_replicates.is_empty();
+    if diagonal {
+        return cell.status == HtmtBootstrapInferenceStatus::NotApplicable
+            && cell.reason.as_deref() == Some("htmt.bootstrap.diagonal_not_inferred")
+            && cell.original == point.value
+            && cell.usable_replicates == 0
+            && cell.failed_replicates == 0
+            && cell.upper_bound_below_critical_value.is_none()
+            && no_index_ledger
+            && summaries_absent;
+    }
+    match point.status {
+        HtmtStatus::NotApplicable | HtmtStatus::Unavailable => {
+            let expected_status = if point.status == HtmtStatus::NotApplicable {
+                HtmtBootstrapInferenceStatus::NotApplicable
+            } else {
+                HtmtBootstrapInferenceStatus::Unavailable
+            };
+            cell.status == expected_status
+                && cell.reason == point.reason
+                && cell.original == point.value
+                && cell.usable_replicates == 0
+                && cell.failed_replicates == 0
+                && cell.upper_bound_below_critical_value.is_none()
+                && no_index_ledger
+                && summaries_absent
+        }
+        HtmtStatus::Available => {
+            let Some(original) = point.value else {
+                return false;
+            };
+            if cell.original != Some(original)
+                || cell.usable_replicates > requested_replicates
+                || cell.failed_replicates
+                    != requested_replicates.saturating_sub(cell.usable_replicates)
+            {
+                return false;
+            }
+            let mut pair_unavailable = std::collections::HashSet::new();
+            if cell.pair_unavailable_replicates.iter().any(|entry| {
+                entry.replicate_index >= requested_replicates
+                    || globally_failed.contains(&entry.replicate_index)
+                    || entry.reason_code.trim().is_empty()
+                    || !pair_unavailable.insert(entry.replicate_index)
+            }) {
+                return false;
+            }
+            let usable_indices = (0..requested_replicates)
+                .filter(|index| {
+                    !globally_failed.contains(index) && !pair_unavailable.contains(index)
+                })
+                .collect::<Vec<_>>();
+            if usable_indices.len() != cell.usable_replicates as usize
+                || cell.usable_replicate_indices_sha256.as_deref()
+                    != Some(htmt_replicate_index_digest(&usable_indices).as_str())
+            {
+                return false;
+            }
+            if cell.status == HtmtBootstrapInferenceStatus::Unavailable {
+                let valid_reason = match cell.reason.as_deref() {
+                    Some("htmt.bootstrap.insufficient_usable_replicates") => {
+                        cell.usable_replicates < minimum_usable
+                    }
+                    Some(reason) if reason == expected.interval_unavailable_reason => {
+                        cell.usable_replicates >= minimum_usable
+                    }
+                    _ => false,
+                };
+                return valid_reason
+                    && cell.upper_bound_below_critical_value.is_none()
+                    && summaries_absent;
+            }
+            if cell.status != HtmtBootstrapInferenceStatus::Available
+                || cell.reason.is_some()
+                || cell.usable_replicates < minimum_usable
+                || cell.upper_bound_below_critical_value
+                    != cell
+                        .upper
+                        .map(|upper| upper < HTMT_BOOTSTRAP_CRITICAL_VALUE)
+            {
+                return false;
+            }
+            let (
+                Some(mean),
+                Some(bias),
+                Some(standard_error),
+                Some(lower),
+                Some(upper),
+                Some(replicate_min),
+                Some(replicate_max),
+            ) = (
+                cell.bootstrap_mean,
+                cell.bias,
+                cell.standard_error,
+                cell.lower,
+                cell.upper,
+                cell.replicate_min,
+                cell.replicate_max,
+            )
+            else {
+                return false;
+            };
+            if ![
+                original,
+                mean,
+                bias,
+                standard_error,
+                lower,
+                upper,
+                replicate_min,
+                replicate_max,
+            ]
+            .iter()
+            .all(|value| value.is_finite())
+                || standard_error < 0.0
+                || replicate_min > replicate_max
+                || mean < replicate_min
+                || mean > replicate_max
+                || lower < replicate_min
+                || upper > replicate_max
+                || lower > upper
+                || (expected_absolute
+                    && [original, mean, lower, upper, replicate_min, replicate_max]
+                        .iter()
+                        .any(|value| *value < 0.0))
+                || !approximately_equal(bias, mean - original, 1e-12)
+                || cell.below_original + cell.tied_original > cell.usable_replicates
+                || match (expected.requires_bias_correction, cell.bias_correction) {
+                    (true, Some(value)) => !value.is_finite(),
+                    (false, None) => false,
+                    _ => true,
+                }
+            {
+                return false;
+            }
+            if !expected.requires_bias_correction {
+                return true;
+            }
+            let Some(z0) = cell.bias_correction else {
+                return false;
+            };
+            let count = f64::from(cell.usable_replicates);
+            let probability =
+                ((f64::from(cell.below_original) + 0.5 * f64::from(cell.tied_original)) / count)
+                    .clamp(0.5 / count, 1.0 - 0.5 / count);
+            let expected_z0 = Normal::standard().inverse_cdf(probability);
+            expected_z0.is_finite() && approximately_equal(z0, expected_z0, 1e-12)
+        }
+    }
+}
+
+fn htmt_replicate_index_digest(indices: &[u32]) -> String {
+    let mut digest = Sha256::new();
+    for index in indices {
+        digest.update(index.to_le_bytes());
+    }
+    format!("{:x}", digest.finalize())
+}
+
 fn effective_assessment_indicator_count(recipe: &AnalysisRecipe, construct_id: &str) -> usize {
     recipe
         .model
@@ -8845,6 +10832,60 @@ fn effective_assessment_indicator_count(recipe: &AnalysisRecipe, construct_id: &
                 .map(|construct| construct.indicators.len())
                 .unwrap_or(0)
         })
+}
+
+fn effective_model_fit_indicator_order(recipe: &AnalysisRecipe) -> Vec<String> {
+    let two_stage_higher_order = recipe
+        .model
+        .higher_order_constructs
+        .iter()
+        .filter(|higher_order| higher_order.method == HigherOrderMethod::TwoStage)
+        .map(|higher_order| (higher_order.id.as_str(), higher_order))
+        .collect::<BTreeMap<_, _>>();
+    let mut indicators = Vec::new();
+    for construct in &recipe.model.constructs {
+        if let Some(higher_order) = two_stage_higher_order.get(construct.id.as_str()) {
+            indicators.extend(
+                higher_order
+                    .components
+                    .iter()
+                    .map(|component| format!("__qpls_hoc_{}_{}", higher_order.id, component)),
+            );
+        } else {
+            indicators.extend(construct.indicators.iter().cloned());
+        }
+    }
+    indicators
+}
+
+fn fit_criterion_is_legacy_default(value: &FitCriterionValue) -> bool {
+    matches!(
+        value,
+        FitCriterionValue::Unavailable { reason_code }
+            if reason_code == "model_fit.legacy_not_recorded"
+    )
+}
+
+fn fit_criterion_is_valid(
+    value: &FitCriterionValue,
+    nonnegative: bool,
+    allowed_unavailable_reasons: &[&str],
+) -> bool {
+    match value {
+        FitCriterionValue::Available { value } => {
+            value.is_finite() && (!nonnegative || *value >= 0.0)
+        }
+        FitCriterionValue::Unavailable { reason_code } => {
+            allowed_unavailable_reasons.contains(&reason_code.as_str())
+        }
+    }
+}
+
+fn fit_criterion_available(value: &FitCriterionValue) -> Option<f64> {
+    match value {
+        FitCriterionValue::Available { value } => Some(*value),
+        FitCriterionValue::Unavailable { .. } => None,
+    }
 }
 
 fn validate_assessment_current(
@@ -8910,7 +10951,10 @@ fn validate_assessment_current(
     }
     if matches!(
         assessment.method_version.as_str(),
-        ASSESSMENT_METHOD_VERSION | ASSESSMENT_METHOD_VERSION_V6 | ASSESSMENT_METHOD_VERSION_V5
+        ASSESSMENT_METHOD_VERSION
+            | ASSESSMENT_METHOD_VERSION_V7
+            | ASSESSMENT_METHOD_VERSION_V6
+            | ASSESSMENT_METHOD_VERSION_V5
     ) {
         let recognized_warnings = [
             "rho_a.two_indicator_limited_information",
@@ -9097,7 +11141,7 @@ fn validate_assessment_current(
     }
     if matches!(
         assessment.method_version.as_str(),
-        ASSESSMENT_METHOD_VERSION | ASSESSMENT_METHOD_VERSION_V6
+        ASSESSMENT_METHOD_VERSION | ASSESSMENT_METHOD_VERSION_V7 | ASSESSMENT_METHOD_VERSION_V6
     ) {
         validate_htmt_assessment(
             assessment.htmt_plus.as_ref().ok_or_else(invalid)?,
@@ -9254,6 +11298,7 @@ fn validate_assessment_current(
     if matches!(
         assessment.method_version.as_str(),
         ASSESSMENT_METHOD_VERSION
+            | ASSESSMENT_METHOD_VERSION_V7
             | ASSESSMENT_METHOD_VERSION_V6
             | ASSESSMENT_METHOD_VERSION_V5
             | ASSESSMENT_METHOD_VERSION_V4
@@ -9298,12 +11343,31 @@ fn validate_assessment_current(
     if matches!(
         assessment.method_version.as_str(),
         ASSESSMENT_METHOD_VERSION
+            | ASSESSMENT_METHOD_VERSION_V7
             | ASSESSMENT_METHOD_VERSION_V6
             | ASSESSMENT_METHOD_VERSION_V5
             | ASSESSMENT_METHOD_VERSION_V4
     ) {
-        let indicator_count = estimation.outer_estimates.len();
         let fit = assessment.model_fit.as_ref().ok_or_else(invalid)?;
+        // Model fit is defined over the estimator's effective measurement
+        // model. Two-stage HOCs replace the HOC's empty indicator block with
+        // deterministic component-score indicators. Interaction products are
+        // still excluded because they do not alter the declared indicator
+        // blocks used by this projection.
+        let expected_current_indicator_order = recipe
+            .map(effective_model_fit_indicator_order)
+            .unwrap_or_else(|| {
+                estimation
+                    .outer_estimates
+                    .iter()
+                    .map(|estimate| estimate.indicator.clone())
+                    .collect()
+            });
+        let indicator_count = if assessment.method_version == ASSESSMENT_METHOD_VERSION {
+            expected_current_indicator_order.len()
+        } else {
+            estimation.outer_estimates.len()
+        };
         let fit_rows = [&fit.saturated, &fit.estimated];
         let fit_denominator = (indicator_count * (indicator_count + 1) / 2) as f64;
         if indicator_count == 0
@@ -9316,6 +11380,120 @@ fn validate_assessment_current(
             })
         {
             return Err(invalid());
+        }
+        if assessment.method_version == ASSESSMENT_METHOD_VERSION {
+            let matrix_unavailable_reasons = [
+                "model_fit.observed_matrix_not_square",
+                "model_fit.observed_matrix_non_finite",
+                "model_fit.observed_matrix_not_symmetric",
+                "model_fit.observed_matrix_not_correlation",
+                "model_fit.observed_matrix_not_positive_definite",
+                "model_fit.implied_matrix_not_square",
+                "model_fit.implied_matrix_non_finite",
+                "model_fit.implied_matrix_not_symmetric",
+                "model_fit.implied_matrix_not_correlation",
+                "model_fit.implied_matrix_not_positive_definite",
+                "model_fit.matrix_dimension_mismatch",
+                "model_fit.maximum_likelihood_discrepancy_invalid",
+                "model_fit.geodesic_eigendecomposition_failed",
+                "model_fit.geodesic_nonpositive_eigenvalue",
+                "model_fit.geodesic_non_finite",
+                "model_fit.non_finite_criterion",
+            ];
+            let degree_unavailable_reasons = [
+                "model_fit.degrees_of_freedom_insufficient_model",
+                "model_fit.degrees_of_freedom_nonpositive",
+            ];
+            let nfi_unavailable_reasons = [
+                matrix_unavailable_reasons.as_slice(),
+                &[
+                    "model_fit.null_model_chi_square_zero",
+                    "model_fit.chi_square_unavailable",
+                    "model_fit.null_model_chi_square_unavailable",
+                ],
+            ]
+            .concat();
+            let row_contract_valid = fit_rows.iter().all(|row| {
+                fit_criterion_is_valid(&row.d_g, true, &matrix_unavailable_reasons)
+                    && fit_criterion_is_valid(&row.chi_square, true, &matrix_unavailable_reasons)
+                    && fit_criterion_is_valid(
+                        &row.degrees_of_freedom,
+                        true,
+                        &degree_unavailable_reasons,
+                    )
+                    && fit_criterion_is_valid(&row.nfi, false, &nfi_unavailable_reasons)
+                    && row.degrees_of_freedom.value().is_none_or(|value| {
+                        value.fract().abs() <= 1e-10
+                            && value <= (indicator_count * (indicator_count - 1) / 2) as f64
+                    })
+            });
+            let nfi_formula_valid = fit_rows.iter().all(|row| {
+                match (
+                    fit_criterion_available(&row.chi_square),
+                    fit_criterion_available(&fit.null_model_chi_square),
+                    fit_criterion_available(&row.nfi),
+                ) {
+                    (Some(chi_square), Some(null_chi_square), Some(nfi))
+                        if null_chi_square > f64::EPSILON =>
+                    {
+                        approximately_equal(nfi, 1.0 - chi_square / null_chi_square, 1e-10)
+                    }
+                    (Some(_), Some(null_chi_square), None) if null_chi_square <= f64::EPSILON => {
+                        row.nfi.reason_code() == Some("model_fit.null_model_chi_square_zero")
+                    }
+                    (None, _, None) | (_, None, None) => true,
+                    _ => false,
+                }
+            });
+            let degree_formula_valid = recipe.is_none_or(|recipe| {
+                !recipe.model.higher_order_constructs.is_empty()
+                    || (fit.saturated.degrees_of_freedom
+                        == pls_model_fit_degrees_of_freedom(recipe, true)
+                        && fit.estimated.degrees_of_freedom
+                            == pls_model_fit_degrees_of_freedom(recipe, false))
+            });
+            if fit.method_version != PLS_MODEL_FIT_METHOD_VERSION
+                || fit.analytical_sample_size != estimation.used_observations
+                || fit.indicator_order != expected_current_indicator_order
+                || fit.matrix_convention != PLS_MODEL_FIT_MATRIX_CONVENTION
+                || fit.geodesic_logarithm != PLS_MODEL_FIT_GEODESIC_LOGARITHM
+                || !pls_model_fit_matches_v2_contract(fit, estimation.used_observations)
+                || !fit_criterion_is_valid(
+                    &fit.null_model_chi_square,
+                    true,
+                    &matrix_unavailable_reasons,
+                )
+                || !row_contract_valid
+                || !nfi_formula_valid
+                || !degree_formula_valid
+                || fit.exact_fit_inference.procedure != PLS_MODEL_FIT_EXACT_INFERENCE_PROCEDURE
+                || fit.exact_fit_inference.status != "unavailable"
+                || fit.exact_fit_inference.reason_code
+                    != "model_fit.adapted_bollen_stine_not_implemented"
+            {
+                return Err(invalid());
+            }
+        } else {
+            let legacy_fit_values = fit_rows.iter().all(|row| {
+                fit_criterion_is_legacy_default(&row.d_g)
+                    && fit_criterion_is_legacy_default(&row.chi_square)
+                    && fit_criterion_is_legacy_default(&row.degrees_of_freedom)
+                    && fit_criterion_is_legacy_default(&row.nfi)
+            });
+            if !fit.method_version.is_empty()
+                || fit.analytical_sample_size != 0
+                || !fit.indicator_order.is_empty()
+                || !fit.matrix_convention.is_empty()
+                || !fit.geodesic_logarithm.is_empty()
+                || !fit.observed_correlation.is_empty()
+                || !fit.saturated_implied_correlation.is_empty()
+                || !fit.estimated_implied_correlation.is_empty()
+                || !fit_criterion_is_legacy_default(&fit.null_model_chi_square)
+                || fit.exact_fit_inference != Default::default()
+                || !legacy_fit_values
+            {
+                return Err(invalid());
+            }
         }
         let valid_distances = [7usize, 5, 6, 8, 9, 10, 11, 12]
             .into_iter()
@@ -10164,6 +12342,131 @@ mod tests {
         )
     }
 
+    fn runner_generated_pls_algorithm() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let dataset = import_delimited_bytes(
+            b"x1,x2,y1,y2\n1,2,2,1\n2,3,3,2\n3,5,4,4\n4,4,6,5\n5,6,7,7\n6,7,9,8\n",
+            "posthoc-minimum-sample-size.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let recipe = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: Uuid::new_v4(),
+            created_at: Utc::now(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: ModelSpec {
+                id: Uuid::new_v4(),
+                name: "Posthoc minimum sample size".into(),
+                constructs: vec![
+                    qpls_core::Construct {
+                        id: "x".into(),
+                        name: "X".into(),
+                        short_name: "X".into(),
+                        mode: MeasurementMode::Reflective,
+                        indicators: vec!["x1".into(), "x2".into()],
+                    },
+                    qpls_core::Construct {
+                        id: "y".into(),
+                        name: "Y".into(),
+                        short_name: "Y".into(),
+                        mode: MeasurementMode::Reflective,
+                        indicators: vec!["y1".into(), "y2".into()],
+                    },
+                ],
+                paths: vec![qpls_core::StructuralPath {
+                    source: "x".into(),
+                    target: "y".into(),
+                }],
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            settings: AnalysisSettings::default(),
+            method_config: Some(qpls_core::MethodConfig::PlsAlgorithm),
+            metadata: BTreeMap::new(),
+        };
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
+    }
+
+    fn runner_generated_pls_sample_size_power_v2() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let dataset = import_delimited_bytes(
+            b"x1,x2,x3,y1,y2,y3\n1,2,1,2,1,2\n2,3,2,3,2,3\n3,4,3,4,3,4\n4,5,4,5,4,5\n5,6,5,6,5,6\n6,7,6,7,6,7\n",
+            "prospective-power-v2-project-anchor.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut settings = AnalysisSettings::default();
+        settings.method = AnalysisMethod::PlsSampleSizePower;
+        settings.seed = 20_260_818;
+        settings.workers = 1;
+        settings.confidence_level = 0.95;
+        settings.tolerance = 1e-7;
+        settings.max_iterations = 3_000;
+        let recipe = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: Uuid::new_v4(),
+            created_at: Utc::now(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: ModelSpec {
+                id: Uuid::new_v4(),
+                name: "Prospective power v2".into(),
+                constructs: vec![
+                    qpls_core::Construct {
+                        id: "x".into(),
+                        name: "Predictor".into(),
+                        short_name: "X".into(),
+                        mode: MeasurementMode::Reflective,
+                        indicators: vec!["x1".into(), "x2".into(), "x3".into()],
+                    },
+                    qpls_core::Construct {
+                        id: "y".into(),
+                        name: "Outcome".into(),
+                        short_name: "Y".into(),
+                        mode: MeasurementMode::Reflective,
+                        indicators: vec!["y1".into(), "y2".into(), "y3".into()],
+                    },
+                ],
+                paths: vec![qpls_core::StructuralPath {
+                    source: "x".into(),
+                    target: "y".into(),
+                }],
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            settings,
+            method_config: Some(qpls_core::MethodConfig::PlsSampleSizePower(
+                qpls_core::PlsSampleSizePowerConfig {
+                    scenario_identity: "project_round_trip_v2".into(),
+                    predictor_construct: "x".into(),
+                    outcome_construct: "y".into(),
+                    predictor_indicator_loadings: vec![0.8, 0.8, 0.8],
+                    outcome_indicator_loadings: vec![0.8, 0.8, 0.8],
+                    population_path: 0.3,
+                    exogenous_distribution: qpls_core::PlsPowerDistribution::StandardNormal,
+                    structural_disturbance_distribution:
+                        qpls_core::PlsPowerDistribution::StandardNormal,
+                    indicator_error_distribution: qpls_core::PlsPowerDistribution::StandardNormal,
+                    missing_data: qpls_core::PlsPowerMissingData::None,
+                    inference:
+                        qpls_core::PlsPowerInference::CaseBootstrapNullCenteredTwoSidedPlusOne,
+                    sample_size_grid: vec![30, 40],
+                    alpha: 0.05,
+                    target_power: 0.8,
+                    interval_confidence_level: 0.95,
+                    monte_carlo_replicates: 100,
+                    bootstrap_replicates: 99,
+                },
+            )),
+            metadata: BTreeMap::new(),
+        };
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
+    }
+
     fn runner_generated_prediction() -> (Dataset, AnalysisRecipe, AnalysisResult) {
         let dataset = import_delimited_bytes(
             include_bytes!("../../../validation/results/plspredict_holdout_reference.csv"),
@@ -10208,6 +12511,41 @@ mod tests {
         (dataset, recipe, result)
     }
 
+    fn runner_generated_micom_v31() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/mga_reference.csv"),
+            "mga_reference.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/mga_reference.recipe.json"
+        ))
+        .unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe
+            .metadata
+            .insert("group_methods".into(), "micom,mga_permutation".into());
+        recipe
+            .metadata
+            .insert("group_permutation_samples".into(), "5000".into());
+        recipe
+            .metadata
+            .insert("micom_configural_confirmed".into(), "true".into());
+        let mut recipe = recipe.migrated_v3().unwrap();
+        recipe.method_config = Some(MethodConfig::Micom {
+            group_column: "group".into(),
+            group_a: "A".into(),
+            group_b: "B".into(),
+            permutation_samples: 5_000,
+            configural_invariance_confirmed: true,
+        });
+        recipe.metadata.remove("status");
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
+    }
+
     fn runner_generated_cca() -> (Dataset, AnalysisRecipe, AnalysisResult) {
         let dataset = import_delimited_bytes(
             include_bytes!("../../../validation/results/cca_reference.csv"),
@@ -10237,6 +12575,22 @@ mod tests {
         ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.workers = 1;
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
+    }
+
+    fn runner_generated_endogeneity() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/endogeneity_reference.csv"),
+            "endogeneity_reference.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = migrated_execution_recipe(include_bytes!(
+            "../../../validation/results/endogeneity_reference.recipe.json"
+        ));
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
     }
@@ -10324,6 +12678,236 @@ mod tests {
         recipe.metadata.remove("status");
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
+    }
+
+    fn runner_generated_listwise_cbsem() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let csv = include_str!("../../../validation/results/lavaan_latent_regression_sem.csv");
+        // The second physical row is incomplete, leaving a deliberately
+        // non-contiguous raw-row frame: complete-case positions 0,1,2,... map
+        // to physical rows 0,2,3,... . Bootstrap witnesses must bind the
+        // former, while the estimator receives the latter.
+        let csv = csv.replacen("-1.2160480476,", ",", 1);
+        let dataset = import_delimited_bytes(
+            csv.as_bytes(),
+            "lavaan_latent_regression_sem_listwise_gap.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/lavaan_latent_regression_sem.recipe.json"
+        ))
+        .unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.workers = 1;
+        recipe.settings.bootstrap_samples = 0;
+        recipe.settings.studentized_inner_samples = 0;
+        recipe.settings.permutation_samples = 0;
+        recipe
+            .metadata
+            .insert("cbsem_model_type".into(), "sem".into());
+        recipe
+            .metadata
+            .insert("cbsem_estimator".into(), "ml".into());
+        recipe.metadata.insert("cbsem_input".into(), "raw".into());
+        recipe
+            .metadata
+            .insert("cbsem_mean_structure".into(), "false".into());
+        let recipe = recipe.migrated_v3().unwrap();
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
+    }
+
+    fn cbsem_bootstrap_v2_recipe(point_recipe: &AnalysisRecipe, workers: usize) -> AnalysisRecipe {
+        let mut recipe = point_recipe.clone();
+        recipe.settings.workers = workers;
+        recipe.settings.confidence_level = 0.95;
+        let Some(qpls_core::MethodConfig::Cbsem {
+            bootstrap_samples,
+            bootstrap_v2,
+            ..
+        }) = recipe.method_config.as_mut()
+        else {
+            panic!("expected current typed CB-SEM recipe");
+        };
+        *bootstrap_samples = 1_000;
+        *bootstrap_v2 = Some(qpls_core::CbsemBootstrapConfigV2 {
+            algorithm: qpls_core::CbsemBootstrapAlgorithm::CaseResamplingFullMl,
+            interval: qpls_core::CbsemBootstrapInterval::PercentileType7,
+            test_tail: qpls_core::CbsemBootstrapTestTail::TwoSided,
+        });
+        assert!(
+            validate_recipe(&recipe)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error),
+            "valid synthetic CB-SEM bootstrap recipe rejected: {:#?}",
+            validate_recipe(&recipe)
+        );
+        recipe
+    }
+
+    fn synthetic_cbsem_bootstrap_v2(
+        base: &PlsResult,
+        recipe: &AnalysisRecipe,
+        usable_replicates: u32,
+    ) -> qpls_estimation::CbsemBootstrapAnalysisV2 {
+        let qpls_core::MethodConfig::Cbsem {
+            bootstrap_samples: requested,
+            ..
+        } = recipe.method_config.as_ref().unwrap()
+        else {
+            panic!("expected typed CB-SEM recipe");
+        };
+        let cbsem = base.cbsem.as_ref().unwrap();
+        let parameter_names = cbsem
+            .parameters
+            .iter()
+            .filter(|parameter| !parameter.fixed)
+            .map(|parameter| parameter.name.clone())
+            .collect::<Vec<_>>();
+        let original_estimates = cbsem
+            .parameters
+            .iter()
+            .filter(|parameter| !parameter.fixed)
+            .map(|parameter| parameter.estimate)
+            .collect::<Vec<_>>();
+        let successful_replicates = (0..usable_replicates)
+            .map(|replicate_index| {
+                let positions = bootstrap_indices(
+                    cbsem.sample_size,
+                    recipe.settings.seed,
+                    cbsem_bootstrap_primary_operation(),
+                    replicate_index,
+                );
+                let centered = f64::from(replicate_index % 23) - 11.0;
+                qpls_estimation::CbsemBootstrapWitnessReplicateV2 {
+                    replicate_index,
+                    sample_indices_sha256: cbsem_bootstrap_sample_indices_sha256(
+                        recipe.settings.seed,
+                        replicate_index,
+                        &positions,
+                    ),
+                    iterations: 1,
+                    objective: cbsem.objective + f64::from(replicate_index % 7) * 1e-10,
+                    parameter_estimates: original_estimates
+                        .iter()
+                        .enumerate()
+                        .map(|(index, estimate)| estimate + centered * 1e-5 * (index + 1) as f64)
+                        .collect(),
+                }
+            })
+            .collect::<Vec<_>>();
+        let failures = (usable_replicates..*requested)
+            .map(|replicate_index| {
+                let positions = bootstrap_indices(
+                    cbsem.sample_size,
+                    recipe.settings.seed,
+                    cbsem_bootstrap_primary_operation(),
+                    replicate_index,
+                );
+                qpls_estimation::CbsemBootstrapFailedReplicateV2 {
+                    replicate_index,
+                    sample_indices_sha256: cbsem_bootstrap_sample_indices_sha256(
+                        recipe.settings.seed,
+                        replicate_index,
+                        &positions,
+                    ),
+                    reason_code: "ml_nonconvergence".into(),
+                    message: "synthetic deterministic nonconvergence fixture".into(),
+                }
+            })
+            .collect::<Vec<_>>();
+        let required = cbsem_bootstrap_required_usable_replicates(*requested);
+        let available = usable_replicates as usize >= required;
+        let unavailable_message = format!(
+            "CB-SEM bootstrap inference is unavailable because {usable_replicates} usable primary fits are below the required {required}; no intervals were emitted."
+        );
+        let inference = if available {
+            qpls_estimation::CbsemBootstrapInferenceV2::Available
+        } else {
+            qpls_estimation::CbsemBootstrapInferenceV2::Unavailable {
+                reason_code: "insufficient_usable_replicates".into(),
+                message: unavailable_message.clone(),
+            }
+        };
+        let intervals = if available {
+            summarize_cbsem_percentile_intervals(
+                &parameter_names,
+                &original_estimates,
+                &successful_replicates,
+                recipe.settings.confidence_level,
+            )
+            .unwrap()
+        } else {
+            Vec::new()
+        };
+        let mut warnings = vec![
+            "CB-SEM bootstrap v2 uses raw complete-case resampling with replacement and a full production ML refit for every preplanned draw.".into(),
+            "The engine executes exactly B preplanned primary draws with no retry or replacement draw; failed fits remain explicit and count against the frozen usable-replicate threshold.".into(),
+        ];
+        if available {
+            warnings.push(
+                "Percentile Type-7 intervals are reported from usable full-refit estimates without normal-theory substitution."
+                    .into(),
+            );
+        } else {
+            warnings.push(unavailable_message);
+        }
+        if !failures.is_empty() {
+            warnings.push(format!(
+                "{} of {} preplanned ML bootstrap fits failed and were excluded; {usable_replicates} usable primary draws remain.",
+                failures.len(), requested
+            ));
+        }
+        qpls_estimation::CbsemBootstrapAnalysisV2 {
+            method_version: CBSEM_BOOTSTRAP_METHOD_VERSION_V2.into(),
+            algorithm: CBSEM_BOOTSTRAP_ALGORITHM_V2.into(),
+            interval_method: CBSEM_BOOTSTRAP_INTERVAL_METHOD_V2.into(),
+            retry_policy: CBSEM_BOOTSTRAP_RETRY_POLICY_V2.into(),
+            confidence_level: recipe.settings.confidence_level,
+            requested_replicates: *requested,
+            attempted_fits: *requested,
+            usable_replicates,
+            failed_replicates: *requested - usable_replicates,
+            minimum_usable_fraction: CBSEM_BOOTSTRAP_MINIMUM_USABLE_FRACTION_V2,
+            minimum_usable_replicates: required as u32,
+            max_attempts_per_replicate: CBSEM_BOOTSTRAP_MAX_ATTEMPTS_PER_REPLICATE_V2,
+            complete_case_sample_size: cbsem.sample_size,
+            seed: recipe.settings.seed,
+            stream_token: CBSEM_BOOTSTRAP_STREAM_TOKEN_V2.into(),
+            inference,
+            intervals,
+            failures,
+            validation_witness: qpls_estimation::CbsemBootstrapValidationWitnessV2 {
+                method_version: CBSEM_BOOTSTRAP_VALIDATION_WITNESS_V2.into(),
+                dataset_fingerprint: recipe.dataset_fingerprint.clone(),
+                recipe_sha256: cbsem_bootstrap_scientific_recipe_sha256(recipe).unwrap(),
+                base_result_sha256: cbsem_bootstrap_base_result_sha256(base).unwrap(),
+                parameter_names,
+                successful_replicates,
+            },
+            warnings,
+        }
+    }
+
+    fn completed_cbsem_bootstrap_v2_result(
+        point_result: &AnalysisResult,
+        recipe: &AnalysisRecipe,
+        base: &PlsResult,
+        bootstrap: qpls_estimation::CbsemBootstrapAnalysisV2,
+    ) -> AnalysisResult {
+        let mut attached = base.clone();
+        attached.cbsem.as_mut().unwrap().bootstrap_v2 = Some(bootstrap);
+        let mut result = point_result.clone();
+        result.provenance.recipe_id = recipe.id;
+        result.provenance.dataset_fingerprint = recipe.dataset_fingerprint.clone();
+        result.provenance.seed = recipe.settings.seed;
+        result.provenance.settings = recipe.settings.clone();
+        result.provenance.method_version = format!(
+            "{PLS_METHOD_VERSION}+{CBSEM_ML_METHOD_VERSION}+{CBSEM_FIT_METHOD_VERSION}+{CBSEM_MODIFICATION_INDICES_METHOD_VERSION}+{CBSEM_BOOTSTRAP_METHOD_VERSION_V2}+{PLS_MEDIATION_METHOD_VERSION}+{ASSESSMENT_METHOD_VERSION}"
+        );
+        *estimation_payload_mut(&mut result) = serde_json::to_value(attached).unwrap();
+        result
     }
 
     fn runner_generated_ipma() -> (Dataset, AnalysisRecipe, AnalysisResult) {
@@ -10754,6 +13338,10 @@ mod tests {
             AnalysisPayload::PlsPmV1 { estimation, .. }
             | AnalysisPayload::PlsPmV2 { estimation, .. }
             | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
+            AnalysisPayload::PlsSampleSizePowerV1 { .. }
+            | AnalysisPayload::PlsSampleSizePowerV2 { .. } => {
+                panic!("expected a typed PLS estimation payload, received sample-size power")
+            }
             AnalysisPayload::Legacy { .. } => panic!("expected a typed PLS payload"),
         }
     }
@@ -10763,6 +13351,23 @@ mod tests {
             AnalysisPayload::PlsPmV1 { estimation, .. }
             | AnalysisPayload::PlsPmV2 { estimation, .. }
             | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
+            AnalysisPayload::PlsSampleSizePowerV1 { .. }
+            | AnalysisPayload::PlsSampleSizePowerV2 { .. } => {
+                panic!("expected a typed PLS estimation payload, received sample-size power")
+            }
+            AnalysisPayload::Legacy { .. } => panic!("expected a typed PLS payload"),
+        }
+    }
+
+    fn assessment_payload_mut(result: &mut AnalysisResult) -> &mut serde_json::Value {
+        match &mut result.payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. }
+            | AnalysisPayload::PlsPmV2 { assessment, .. }
+            | AnalysisPayload::PlsPmV3 { assessment, .. } => assessment,
+            AnalysisPayload::PlsSampleSizePowerV1 { .. }
+            | AnalysisPayload::PlsSampleSizePowerV2 { .. } => {
+                panic!("expected a typed PLS assessment payload, received sample-size power")
+            }
             AnalysisPayload::Legacy { .. } => panic!("expected a typed PLS payload"),
         }
     }
@@ -11019,7 +13624,7 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("future.qpls");
         save_project(&path, &Project::new("Future compatible project")).unwrap();
-        let future_version = PROJECT_ARCHIVE_VERSION + 1;
+        let future_version = PROJECT_ARCHIVE_SCHEMA_V6_VERSION + 1;
         set_archive_schema_version(&path, future_version);
         let project_json = zip_entry_bytes(&path, "project.json");
 
@@ -11085,7 +13690,7 @@ mod tests {
                 }));
             serde_json::to_vec_pretty(&document).unwrap()
         });
-        set_archive_schema_version(&path, PROJECT_ARCHIVE_VERSION + 1);
+        set_archive_schema_version(&path, PROJECT_ARCHIVE_SCHEMA_V6_VERSION + 1);
 
         let restored = load_project(&path).unwrap();
         assert!(restored.read_only);
@@ -11620,7 +14225,7 @@ mod tests {
         let mut autosaved = project.clone();
         autosaved.manifest.name = "Writable autosave".into();
         save_autosave(&path, &autosaved).unwrap();
-        set_archive_schema_version(&path, PROJECT_ARCHIVE_VERSION + 1);
+        set_archive_schema_version(&path, PROJECT_ARCHIVE_SCHEMA_V6_VERSION + 1);
 
         let (restored, source) = load_project_with_autosave(&path).unwrap();
         assert!(restored.read_only);
@@ -11872,6 +14477,408 @@ mod tests {
     }
 
     #[test]
+    fn runner_generated_pls_posthoc_minimum_sample_size_round_trips_and_rejects_tampering() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory
+            .path()
+            .join("pls-posthoc-minimum-sample-size.qpls");
+        let (dataset, mut recipe, _) = runner_generated_pls_algorithm();
+        recipe.method_config = Some(
+            qpls_core::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(
+                qpls_core::PlsPosthocTechnicalMinimumSampleSizeConfigV2::point_estimate_v2(),
+            ),
+        );
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        assert_eq!(result.provenance.method, AnalysisMethod::PlsPm);
+        let stored: PlsResult =
+            serde_json::from_value(estimation_payload(&result).clone()).unwrap();
+        let technical = stored.posthoc_minimum_sample_size.as_ref().unwrap();
+        assert_eq!(
+            Some(technical),
+            Some(&pls_posthoc_minimum_sample_size_v2(
+                &stored.paths,
+                stored.used_observations,
+                None,
+            ))
+        );
+        assert_eq!(
+            technical.status,
+            qpls_estimation::PlsPosthocMinimumSampleSizeStatus::InferenceUnavailable
+        );
+
+        let mut project = Project::new("PLS posthoc minimum sample size");
+        project.datasets.push(dataset);
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results.len(), 1);
+        let reopened_estimation: PlsResult =
+            serde_json::from_value(estimation_payload(&reopened.results[0]).clone()).unwrap();
+        assert_eq!(
+            reopened_estimation.posthoc_minimum_sample_size,
+            stored.posthoc_minimum_sample_size
+        );
+
+        let mut historical_unwrapped_recipe = recipe.clone();
+        historical_unwrapped_recipe.method_config = Some(qpls_core::MethodConfig::PlsAlgorithm);
+        Project::new("historical automatic posthoc payload")
+            .append_validated_result(historical_unwrapped_recipe, result.clone())
+            .expect("historical unwrapped post-hoc archives must remain readable");
+
+        let mut forged_required = result.clone();
+        estimation_payload_mut(&mut forged_required)["posthoc_minimum_sample_size"]["technically_required_sample_size"] =
+            serde_json::json!(1);
+        assert!(matches!(
+            Project::new("forged technical requirement")
+                .append_validated_result(recipe.clone(), forged_required),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut forged_driver = result.clone();
+        estimation_payload_mut(&mut forged_driver)["posthoc_minimum_sample_size"]["driver_source"] =
+            serde_json::json!("unknown");
+        assert!(matches!(
+            Project::new("forged technical driver")
+                .append_validated_result(recipe.clone(), forged_driver),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut undeclared = result;
+        estimation_payload_mut(&mut undeclared)["posthoc_minimum_sample_size"]["extra"] =
+            serde_json::json!(true);
+        assert!(matches!(
+            Project::new("undeclared technical field")
+                .append_validated_result(recipe.clone(), undeclared),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut missing_payload = reopened.results[0].clone();
+        estimation_payload_mut(&mut missing_payload)["posthoc_minimum_sample_size"] =
+            serde_json::Value::Null;
+        assert!(matches!(
+            Project::new("missing opted posthoc payload")
+                .append_validated_result(recipe.clone(), missing_payload),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut mismatched_base_recipe = recipe.clone();
+        let Some(qpls_core::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(config)) =
+            mismatched_base_recipe.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        config.base_analysis =
+            qpls_core::PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsBootstrap;
+        config.inference =
+            qpls_core::PlsPosthocTechnicalMinimumSampleSizeInferenceV2::CaseBootstrapNormalReferenceTwoSided;
+        assert!(matches!(
+            Project::new("mismatched opted posthoc base")
+                .append_validated_result(mismatched_base_recipe, reopened.results[0].clone()),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut drifted_recipe = recipe;
+        let Some(qpls_core::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(config)) =
+            drifted_recipe.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        config.method_version = "inverse_square_root_posthoc_v1".into();
+        assert!(matches!(
+            Project::new("drifted opted posthoc version")
+                .append_validated_result(drifted_recipe, reopened.results[0].clone()),
+            Err(ProjectError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn runner_generated_pls_sample_size_power_v2_round_trips_and_rejects_contract_tampering() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("pls-sample-size-power-v2.qpls");
+        let (dataset, recipe, result) = runner_generated_pls_sample_size_power_v2();
+        let analysis = match &result.payload {
+            AnalysisPayload::PlsSampleSizePowerV2 { analysis } => analysis,
+            _ => panic!("expected an exact PLS sample-size/power v2 payload"),
+        };
+        let power: PlsSampleSizePowerResultV1 = serde_json::from_value(analysis.clone()).unwrap();
+        assert_eq!(
+            power.method_version,
+            PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2
+        );
+        assert_eq!(
+            power.schema_version,
+            qpls_resampling::PLS_SAMPLE_SIZE_POWER_RESULT_SCHEMA_VERSION_V2
+        );
+        assert!(
+            power
+                .outcomes
+                .iter()
+                .filter(|outcome| outcome.successful)
+                .all(|outcome| {
+                    outcome.bootstrap_requested_replicates == Some(99)
+                        && outcome.bootstrap_usable_replicates.is_some()
+                        && outcome.bootstrap_failed_replicates.is_some()
+                        && outcome.bootstrap_two_sided_exceedances.is_some()
+                })
+        );
+
+        let mut project = Project::new("Prospective power v2 round trip");
+        project.datasets.push(dataset);
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results, vec![result.clone()]);
+        assert_eq!(reopened.recipes, vec![recipe.clone()]);
+
+        let reject = |name: &str, tampered_recipe: AnalysisRecipe, tampered: AnalysisResult| {
+            assert!(matches!(
+                Project::new(name).append_validated_result(tampered_recipe, tampered),
+                Err(ProjectError::Invalid(_))
+            ));
+        };
+
+        let mut relabeled = result.clone();
+        relabeled.provenance.method_version = PLS_SAMPLE_SIZE_POWER_METHOD_VERSION.into();
+        reject("relabeled power v2", recipe.clone(), relabeled);
+
+        let mut changed_tail = result.clone();
+        let AnalysisPayload::PlsSampleSizePowerV2 { analysis } = &mut changed_tail.payload else {
+            unreachable!()
+        };
+        analysis["outcomes"][0]["bootstrap_two_sided_exceedances"] = serde_json::json!(1);
+        reject("changed power v2 tail", recipe.clone(), changed_tail);
+
+        let mut changed_probability = result.clone();
+        let AnalysisPayload::PlsSampleSizePowerV2 { analysis } = &mut changed_probability.payload
+        else {
+            unreachable!()
+        };
+        analysis["outcomes"][0]["p_value_two_sided"] = serde_json::json!(0.123);
+        reject(
+            "changed power v2 probability",
+            recipe.clone(),
+            changed_probability,
+        );
+
+        let mut historical_inference = recipe;
+        let Some(qpls_core::MethodConfig::PlsSampleSizePower(config)) =
+            historical_inference.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        config.inference = qpls_core::PlsPowerInference::CaseBootstrapNormalReferenceTwoSided;
+        reject("historical power inference", historical_inference, result);
+    }
+
+    #[test]
+    fn runner_generated_pls_model_fit_v2_round_trips_and_rejects_semantic_tampering() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("pls-model-fit-v2.qpls");
+        let (dataset, recipe, result) = runner_generated_pls_algorithm();
+        let assessment_value = match &result.payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. } => assessment,
+            other => panic!("runner returned unexpected PLS payload: {other:?}"),
+        };
+        let assessment: AssessmentResult =
+            serde_json::from_value(assessment_value.clone()).unwrap();
+        let fit = assessment.model_fit.as_ref().unwrap();
+        assert_eq!(fit.method_version, PLS_MODEL_FIT_METHOD_VERSION);
+        assert_eq!(fit.analytical_sample_size, dataset.batch.num_rows());
+        assert!(pls_model_fit_matches_v2_contract(
+            fit,
+            fit.analytical_sample_size
+        ));
+
+        let mut project = Project::new("PLS model fit v2");
+        project.datasets.push(dataset);
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert!(analysis_results_scientifically_equivalent(
+            &reopened.results[0],
+            &result,
+        ));
+        let reopened_assessment = match &reopened.results[0].payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. } => assessment,
+            other => panic!("reopened unexpected PLS payload: {other:?}"),
+        };
+        let reopened_assessment: AssessmentResult =
+            serde_json::from_value(reopened_assessment.clone()).unwrap();
+        let reopened_fit = reopened_assessment.model_fit.as_ref().unwrap();
+        assert_eq!(reopened_fit.method_version, fit.method_version);
+        assert_eq!(
+            reopened_fit.analytical_sample_size,
+            fit.analytical_sample_size
+        );
+        assert_eq!(reopened_fit.indicator_order, fit.indicator_order);
+        assert_eq!(reopened_fit.matrix_convention, fit.matrix_convention);
+        assert_eq!(reopened_fit.geodesic_logarithm, fit.geodesic_logarithm);
+        assert_eq!(reopened_fit.exact_fit_inference, fit.exact_fit_inference);
+        assert!(pls_model_fit_matches_v2_contract(
+            reopened_fit,
+            fit.analytical_sample_size,
+        ));
+
+        let assert_rejected = |tampered: AnalysisResult| {
+            assert!(matches!(
+                Project::new("Rejected PLS model fit")
+                    .append_validated_result(recipe.clone(), tampered),
+                Err(ProjectError::Invalid(_))
+            ));
+        };
+
+        let mut scalar = result.clone();
+        if let AnalysisPayload::PlsPmV1 { assessment, .. } = &mut scalar.payload {
+            assessment["model_fit"]["estimated"]["d_g"]["value"] = serde_json::json!(999.0);
+        }
+        assert_rejected(scalar);
+
+        let mut matrix = result.clone();
+        if let AnalysisPayload::PlsPmV1 { assessment, .. } = &mut matrix.payload {
+            assessment["model_fit"]["estimated_implied_correlation"][0][1] =
+                serde_json::json!(0.75);
+        }
+        assert_rejected(matrix);
+
+        let mut sample_size = result.clone();
+        if let AnalysisPayload::PlsPmV1 { assessment, .. } = &mut sample_size.payload {
+            assessment["model_fit"]["analytical_sample_size"] = serde_json::json!(2);
+        }
+        assert_rejected(sample_size);
+
+        let mut logarithm = result.clone();
+        if let AnalysisPayload::PlsPmV1 { assessment, .. } = &mut logarithm.payload {
+            assessment["model_fit"]["geodesic_logarithm"] = serde_json::json!("base_10_logarithm");
+        }
+        assert_rejected(logarithm);
+
+        let mut fake_exact_version = result.clone();
+        fake_exact_version
+            .provenance
+            .method_version
+            .push_str(&format!("+{PLS_MODEL_FIT_EXACT_METHOD_VERSION}"));
+        assert_rejected(fake_exact_version);
+
+        let mut fake_exact_recipe = recipe.clone();
+        fake_exact_recipe
+            .metadata
+            .insert(PLS_MODEL_FIT_EXACT_RECIPE_SELECTOR.into(), "true".into());
+        assert!(matches!(
+            Project::new("Rejected exact-fit selector without payload")
+                .append_validated_result(fake_exact_recipe, result.clone()),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut fake_exact_fit = result;
+        if let AnalysisPayload::PlsPmV1 { assessment, .. } = &mut fake_exact_fit.payload {
+            assessment["model_fit"]["exact_fit_inference"]["status"] =
+                serde_json::json!("available");
+        }
+        assert_rejected(fake_exact_fit);
+    }
+
+    #[test]
+    fn inference_aware_pls_posthoc_sample_size_reopens_with_its_linked_bootstrap() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("pls-posthoc-with-bootstrap.qpls");
+        let (dataset, mut recipe, _) = runner_generated_pls_algorithm();
+        recipe.settings.bootstrap_samples = 99;
+        recipe.settings.workers = 2;
+        recipe.method_config = Some(
+            qpls_core::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(
+                qpls_core::PlsPosthocTechnicalMinimumSampleSizeConfigV2::bootstrap_v2(),
+            ),
+        );
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        let stored: PlsResult =
+            serde_json::from_value(estimation_payload(&result).clone()).unwrap();
+        let technical = stored.posthoc_minimum_sample_size.as_ref().unwrap();
+        assert_eq!(
+            technical.significance_source.as_deref(),
+            Some(qpls_estimation::PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_SIGNIFICANCE_SOURCE)
+        );
+        assert!(!matches!(
+            technical.status,
+            qpls_estimation::PlsPosthocMinimumSampleSizeStatus::InferenceUnavailable
+                | qpls_estimation::PlsPosthocMinimumSampleSizeStatus::InferenceIncomplete
+        ));
+
+        let mut project = Project::new("Inference-aware PLS posthoc sample size");
+        project.datasets.push(dataset);
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results.len(), 1);
+        let reopened_estimation: PlsResult =
+            serde_json::from_value(estimation_payload(&reopened.results[0]).clone()).unwrap();
+        assert_eq!(
+            reopened_estimation.posthoc_minimum_sample_size,
+            stored.posthoc_minimum_sample_size
+        );
+
+        let mut forged_formula_direction = result.clone();
+        estimation_payload_mut(&mut forged_formula_direction)["posthoc_minimum_sample_size"]["test"] =
+            serde_json::json!("two_sided");
+        assert!(matches!(
+            Project::new("forged posthoc formula direction")
+                .append_validated_result(recipe.clone(), forged_formula_direction),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut forged_significance_direction = result.clone();
+        estimation_payload_mut(&mut forged_significance_direction)["posthoc_minimum_sample_size"]
+            ["significance_source"] = serde_json::json!("pls_bootstrap_normal_reference_one_sided");
+        assert!(matches!(
+            Project::new("forged posthoc significance direction")
+                .append_validated_result(recipe.clone(), forged_significance_direction),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut mismatched_bootstrap_original = result.clone();
+        let bootstrap = match &mut mismatched_bootstrap_original.payload {
+            AnalysisPayload::PlsPmV2 { bootstrap, .. } => bootstrap,
+            other => panic!("runner returned unexpected PLS bootstrap payload: {other:?}"),
+        };
+        let path_parameter = bootstrap["percentile"]["parameters"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|parameter| {
+                serde_json::from_str::<(String, Vec<String>)>(
+                    parameter["parameter"].as_str().unwrap_or_default(),
+                )
+                .is_ok_and(|(kind, parts)| kind == "path" && parts.len() == 2)
+            })
+            .unwrap();
+        let original = path_parameter["original"].as_f64().unwrap();
+        let statistic = path_parameter["t_statistic"].as_f64().unwrap();
+        path_parameter["original"] = serde_json::json!(-original);
+        path_parameter["t_statistic"] = serde_json::json!(-statistic);
+        assert!(matches!(
+            Project::new("coefficient-mismatched posthoc bootstrap")
+                .append_validated_result(recipe.clone(), mismatched_bootstrap_original),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut forged = result;
+        estimation_payload_mut(&mut forged)["posthoc_minimum_sample_size"]["significant_path_count"] =
+            serde_json::json!(999);
+        assert!(matches!(
+            Project::new("forged inference-aware technical result")
+                .append_validated_result(recipe, forged),
+            Err(ProjectError::Invalid(_))
+        ));
+    }
+
+    #[test]
     fn runner_generated_cca_appends_round_trips_and_rejects_contract_tampering() {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("cca.qpls");
@@ -11880,7 +14887,7 @@ mod tests {
         assert_eq!(
             result.provenance.method_version,
             format!(
-                "{PLS_METHOD_VERSION}+{CCA_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{ASSESSMENT_METHOD_VERSION}"
+                "{PLS_METHOD_VERSION}+{CCA_METHOD_VERSION}+{CCA_RESIDUAL_DIAGNOSTICS_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{ASSESSMENT_METHOD_VERSION}"
             )
         );
 
@@ -11910,6 +14917,22 @@ mod tests {
             estimation["cca"]["model"].as_str(),
             Some("recursive_standardized_composite_path_model_v1")
         );
+        let assessment = match &reopened.results[0].payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. } => assessment,
+            other => panic!("runner returned unexpected CCA payload: {other:?}"),
+        };
+        assert_eq!(
+            assessment["cca_residual_diagnostics"]["method_version"].as_str(),
+            Some(CCA_RESIDUAL_DIAGNOSTICS_METHOD_VERSION)
+        );
+        assert_eq!(
+            assessment["cca_residual_diagnostics"]["available_pair_count"].as_u64(),
+            assessment["cca_residual_diagnostics"]["expected_pair_count"].as_u64()
+        );
+        assert_eq!(
+            assessment["cca_residual_diagnostics"]["unavailable_pair_count"].as_u64(),
+            Some(0)
+        );
 
         let assert_rejected_atomically =
             |tampered: AnalysisResult, tampered_recipe: AnalysisRecipe| {
@@ -11927,6 +14950,28 @@ mod tests {
             "{PLS_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{ASSESSMENT_METHOD_VERSION}"
         );
         assert_rejected_atomically(missing_provenance_version, recipe.clone());
+
+        let mut missing_diagnostics_provenance = result.clone();
+        missing_diagnostics_provenance.provenance.method_version = missing_diagnostics_provenance
+            .provenance
+            .method_version
+            .split('+')
+            .filter(|version| *version != CCA_RESIDUAL_DIAGNOSTICS_METHOD_VERSION)
+            .collect::<Vec<_>>()
+            .join("+");
+        assert_rejected_atomically(missing_diagnostics_provenance, recipe.clone());
+
+        let mut missing_diagnostics = result.clone();
+        assessment_payload_mut(&mut missing_diagnostics)
+            .as_object_mut()
+            .unwrap()
+            .remove("cca_residual_diagnostics");
+        assert_rejected_atomically(missing_diagnostics, recipe.clone());
+
+        let mut mismatched_diagnostics = result.clone();
+        assessment_payload_mut(&mut mismatched_diagnostics)["cca_residual_diagnostics"]["cells"]
+            [0]["residual"] = serde_json::json!(0.5);
+        assert_rejected_atomically(mismatched_diagnostics, recipe.clone());
 
         let mut mismatched_nested_version = result.clone();
         estimation_payload_mut(&mut mismatched_nested_version)["cca"]["method_version"] =
@@ -12061,6 +15106,113 @@ mod tests {
         resampled.provenance.settings.permutation_samples = 999;
         let mut resampled_recipe = recipe;
         resampled_recipe.settings.permutation_samples = 999;
+        assert_rejected_atomically(resampled, resampled_recipe);
+    }
+
+    #[test]
+    fn runner_generated_endogeneity_appends_round_trips_and_rejects_contract_tampering() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("gaussian-copula-endogeneity.qpls");
+        let (dataset, recipe, result) = runner_generated_endogeneity();
+        assert_eq!(result.provenance.method, AnalysisMethod::Endogeneity);
+        assert_eq!(
+            result.provenance.method_version,
+            format!(
+                "{PLS_METHOD_VERSION}+{GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{ASSESSMENT_METHOD_VERSION}"
+            )
+        );
+
+        let mut project = Project::new("Runner Gaussian-copula endogeneity persistence");
+        project.datasets.push(dataset);
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results.len(), 1);
+        let estimation = match &reopened.results[0].payload {
+            AnalysisPayload::PlsPmV1 { estimation, .. } => estimation,
+            other => panic!("runner returned unexpected endogeneity payload: {other:?}"),
+        };
+        assert_eq!(
+            estimation["method_version"],
+            GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION
+        );
+        assert_eq!(
+            estimation["endogeneity"]["method_version"],
+            GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION
+        );
+        assert_eq!(
+            estimation["endogeneity"]["transform"],
+            "rankit_inverse_normal_v1"
+        );
+        assert_eq!(
+            estimation["endogeneity"]["estimates"]
+                .as_array()
+                .unwrap()
+                .len(),
+            2
+        );
+
+        let assert_rejected_atomically =
+            |tampered: AnalysisResult, tampered_recipe: AnalysisRecipe| {
+                let mut rejected = Project::new("Rejected Gaussian-copula endogeneity");
+                assert!(matches!(
+                    rejected.append_validated_result(tampered_recipe, tampered),
+                    Err(ProjectError::Invalid(_))
+                ));
+                assert!(rejected.recipes.is_empty());
+                assert!(rejected.results.is_empty());
+            };
+
+        let mut legacy_envelope = result.clone();
+        legacy_envelope.provenance.method_version = format!(
+            "{PLS_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{ASSESSMENT_METHOD_VERSION}"
+        );
+        assert_rejected_atomically(legacy_envelope, recipe.clone());
+
+        let mut nested_version = result.clone();
+        estimation_payload_mut(&mut nested_version)["endogeneity"]["method_version"] =
+            serde_json::json!("gaussian_copula_endogeneity_v0");
+        assert_rejected_atomically(nested_version, recipe.clone());
+
+        let mut transform = result.clone();
+        estimation_payload_mut(&mut transform)["endogeneity"]["transform"] =
+            serde_json::json!("different_rank_policy");
+        assert_rejected_atomically(transform, recipe.clone());
+
+        let mut coefficient = result.clone();
+        estimation_payload_mut(&mut coefficient)["endogeneity"]["estimates"][0]["copula_coefficient"] =
+            serde_json::json!(999.0);
+        assert_rejected_atomically(coefficient, recipe.clone());
+
+        let mut applicability = result.clone();
+        let current =
+            estimation_payload_mut(&mut applicability)["endogeneity"]["estimates"][0]["applicable"]
+                .as_bool()
+                .unwrap();
+        estimation_payload_mut(&mut applicability)["endogeneity"]["estimates"][0]["applicable"] =
+            serde_json::json!(!current);
+        assert_rejected_atomically(applicability, recipe.clone());
+
+        let mut duplicate = result.clone();
+        let first = estimation_payload_mut(&mut duplicate)["endogeneity"]["estimates"][0].clone();
+        estimation_payload_mut(&mut duplicate)["endogeneity"]["estimates"][1] = first;
+        assert_rejected_atomically(duplicate, recipe.clone());
+
+        let mut malformed = result.clone();
+        estimation_payload_mut(&mut malformed)["endogeneity"]["estimates"][0]["standard_error"] =
+            serde_json::json!("not-a-number");
+        assert_rejected_atomically(malformed, recipe.clone());
+
+        let mut fingerprint = result.clone();
+        fingerprint.provenance.dataset_fingerprint = "sha256:tampered".into();
+        assert_rejected_atomically(fingerprint, recipe.clone());
+
+        let mut resampled = result;
+        resampled.provenance.settings.bootstrap_samples = 999;
+        let mut resampled_recipe = recipe;
+        resampled_recipe.settings.bootstrap_samples = 999;
         assert_rejected_atomically(resampled, resampled_recipe);
     }
 
@@ -12327,6 +15479,375 @@ mod tests {
             "warnings": []
         });
         assert_rejected_atomically(unrelated_payload, sem_recipe);
+    }
+
+    #[test]
+    fn cbsem_bootstrap_v1_read_only() {
+        let (_dataset, recipe, mut result) = runner_generated_cbsem("sem");
+        result.provenance.method_version = format!(
+            "{}+{}",
+            result.provenance.method_version,
+            qpls_estimation::CBSEM_BOOTSTRAP_METHOD_VERSION
+        );
+        // Historical outer envelopes still deserialize so existing projects
+        // can be inspected, but the append boundary never accepts v1
+        // analytical intervals as newly generated evidence.
+        let readable: AnalysisResult =
+            serde_json::from_slice(&serde_json::to_vec(&result).unwrap()).unwrap();
+        assert!(
+            readable
+                .provenance
+                .method_version
+                .contains(qpls_estimation::CBSEM_BOOTSTRAP_METHOD_VERSION)
+        );
+        assert!(matches!(
+            Project::new("Legacy CB-SEM bootstrap").append_validated_result(recipe, readable),
+            Err(ProjectError::Invalid(message))
+                if message.contains("archive-readable only")
+                    && message.contains("cbsem_bootstrap_v1")
+        ));
+    }
+
+    #[test]
+    fn cbsem_bootstrap_v2_rejects_tampering() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("cbsem-bootstrap-v2-unavailable.qpls");
+        let (dataset, point_recipe, point_result) = runner_generated_listwise_cbsem();
+        let base: PlsResult =
+            serde_json::from_value(estimation_payload(&point_result).clone()).unwrap();
+        assert_eq!(base.omitted_observations, 1);
+        assert_eq!(base.used_observations + base.omitted_observations, 240);
+        assert_eq!(base.cbsem.as_ref().unwrap().sample_size, 239);
+
+        let recipe = cbsem_bootstrap_v2_recipe(&point_recipe, 4);
+        let effective_recipe = recipe.with_effective_metadata().unwrap();
+        assert_eq!(
+            cbsem_bootstrap_scientific_recipe_sha256(&recipe).unwrap(),
+            cbsem_bootstrap_scientific_recipe_sha256(&effective_recipe).unwrap(),
+            "typed recipe and derived legacy compatibility view need one scientific digest"
+        );
+        let available = synthetic_cbsem_bootstrap_v2(&base, &recipe, 1_000);
+        assert!(validate_cbsem_bootstrap_v2_payload_contract(
+            &available, &base, &recipe
+        ));
+
+        // The second physical row is missing. The persisted witness hashes
+        // complete-case frame positions; substituting mapped physical row
+        // numbers must fail even though both vectors have the same length.
+        let positions = bootstrap_indices(
+            239,
+            recipe.settings.seed,
+            cbsem_bootstrap_primary_operation(),
+            0,
+        );
+        let physical_rows = positions
+            .iter()
+            .map(|position| if *position == 0 { 0 } else { position + 1 })
+            .collect::<Vec<_>>();
+        let wrong_physical_digest =
+            cbsem_bootstrap_sample_indices_sha256(recipe.settings.seed, 0, &physical_rows);
+        assert_ne!(
+            available.validation_witness.successful_replicates[0].sample_indices_sha256,
+            wrong_physical_digest
+        );
+        let mut physical_row_tamper = available.clone();
+        physical_row_tamper.validation_witness.successful_replicates[0].sample_indices_sha256 =
+            wrong_physical_digest;
+        assert!(!validate_cbsem_bootstrap_v2_payload_contract(
+            &physical_row_tamper,
+            &base,
+            &recipe
+        ));
+
+        let mut interval_tamper = available.clone();
+        interval_tamper.intervals[0].percentile_lower += 0.01;
+        assert!(!validate_cbsem_bootstrap_v2_payload_contract(
+            &interval_tamper,
+            &base,
+            &recipe
+        ));
+
+        let mut recipe_identity_tamper = available.clone();
+        recipe_identity_tamper.validation_witness.recipe_sha256 = "0".repeat(64);
+        assert!(!validate_cbsem_bootstrap_v2_payload_contract(
+            &recipe_identity_tamper,
+            &base,
+            &recipe
+        ));
+
+        let mut base_identity_tamper = available.clone();
+        base_identity_tamper.validation_witness.base_result_sha256 = "f".repeat(64);
+        assert!(!validate_cbsem_bootstrap_v2_payload_contract(
+            &base_identity_tamper,
+            &base,
+            &recipe
+        ));
+
+        let mut confidence_tamper = recipe.clone();
+        confidence_tamper.settings.confidence_level = 0.90;
+        assert!(!validate_cbsem_bootstrap_v2_payload_contract(
+            &available,
+            &base,
+            &confidence_tamper
+        ));
+
+        // A below-threshold scientific completion is valid persisted output:
+        // it keeps all 1,000 planned indices, the exact failure ledger, and no
+        // inferential interval.
+        let unavailable = synthetic_cbsem_bootstrap_v2(&base, &recipe, 999);
+        assert!(matches!(
+            unavailable.inference,
+            qpls_estimation::CbsemBootstrapInferenceV2::Unavailable { .. }
+        ));
+        assert!(unavailable.intervals.is_empty());
+        assert_eq!(unavailable.failures.len(), 1);
+        assert!(validate_cbsem_bootstrap_v2_payload_contract(
+            &unavailable,
+            &base,
+            &recipe
+        ));
+        let result =
+            completed_cbsem_bootstrap_v2_result(&point_result, &recipe, &base, unavailable);
+        let attached_for_validation: PlsResult =
+            serde_json::from_value(estimation_payload(&result).clone()).unwrap();
+        assert!(
+            validate_cbsem_payload_contract(
+                &result,
+                &attached_for_validation,
+                Some(&recipe),
+                ASSESSMENT_METHOD_VERSION,
+            ),
+            "synthetic v2 result must satisfy the complete CB-SEM archive contract"
+        );
+        let assessment_version = match &result.payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. }
+            | AnalysisPayload::PlsPmV2 { assessment, .. }
+            | AnalysisPayload::PlsPmV3 { assessment, .. } => {
+                assessment["method_version"].as_str().unwrap()
+            }
+            _ => unreachable!(),
+        };
+        assert_eq!(assessment_version, ASSESSMENT_METHOD_VERSION);
+        assert!(
+            result
+                .provenance
+                .method_version
+                .split('+')
+                .any(|version| version == assessment_version)
+        );
+        assert!(
+            result
+                .provenance
+                .method_version
+                .split('+')
+                .any(|version| version == attached_for_validation.method_version)
+        );
+        let mut project = Project::new("CB-SEM bootstrap v2 unavailable inference");
+        project.datasets.push(dataset.clone());
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        let round_result: AnalysisResult =
+            serde_json::from_slice(&serde_json::to_vec_pretty(&result).unwrap()).unwrap();
+        let round_base: PlsResult =
+            serde_json::from_value(estimation_payload(&round_result).clone()).unwrap();
+        assert_eq!(
+            cbsem_bootstrap_base_result_sha256(&attached_for_validation).unwrap(),
+            cbsem_bootstrap_base_result_sha256(&round_base).unwrap(),
+            "base point-result identity must survive JSON archival"
+        );
+        assert!(validate_cbsem_payload_contract(
+            &round_result,
+            &round_base,
+            Some(&recipe),
+            ASSESSMENT_METHOD_VERSION,
+        ));
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results.len(), 1);
+        let reopened_estimation: PlsResult =
+            serde_json::from_value(estimation_payload(&reopened.results[0]).clone()).unwrap();
+        let reopened_bootstrap = reopened_estimation.cbsem.unwrap().bootstrap_v2.unwrap();
+        assert!(matches!(
+            reopened_bootstrap.inference,
+            qpls_estimation::CbsemBootstrapInferenceV2::Unavailable { .. }
+        ));
+        assert!(reopened_bootstrap.intervals.is_empty());
+        assert_eq!(reopened_bootstrap.failures.len(), 1);
+
+        let unknown_sibling = directory.path().join("cbsem-v2-unknown-sibling.qpls");
+        fs::copy(&path, &unknown_sibling).unwrap();
+        rewrite_zip_entry_with_manifest_checksum(&unknown_sibling, PROJECT_ENTRY_NAME, |bytes| {
+            let mut document: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+            document["results"][0]["payload"]["estimation"]["cbsem"]["undeclared_bootstrap_sibling"] =
+                serde_json::json!(true);
+            serde_json::to_vec_pretty(&document).unwrap()
+        });
+        assert!(matches!(
+            load_project(&unknown_sibling),
+            Err(ProjectError::Invalid(message))
+                if message.contains("invalid PLS estimation payload")
+                    && message.contains("undeclared_bootstrap_sibling")
+        ));
+
+        let duplicate_key = directory.path().join("cbsem-v2-duplicate-key.qpls");
+        fs::copy(&path, &duplicate_key).unwrap();
+        rewrite_zip_entry_with_manifest_checksum(&duplicate_key, PROJECT_ENTRY_NAME, |bytes| {
+            let document = String::from_utf8(bytes.to_vec()).unwrap();
+            assert!(document.contains("\"bootstrap_v2\": {"));
+            document
+                .replacen(
+                    "\"bootstrap_v2\": {",
+                    "\"bootstrap_v2\": null,\n          \"bootstrap_v2\": {",
+                    1,
+                )
+                .into_bytes()
+        });
+        assert!(matches!(
+            load_project(&duplicate_key),
+            Err(ProjectError::Invalid(message))
+                if message.contains("duplicate JSON object key `bootstrap_v2`")
+        ));
+
+        let mut ledger_tamper = result.clone();
+        estimation_payload_mut(&mut ledger_tamper)["cbsem"]["bootstrap_v2"]["failures"][0]["sample_indices_sha256"] =
+            serde_json::json!("a".repeat(64));
+        let mut rejected = Project::new("Tampered failure ledger");
+        rejected.datasets.push(dataset.clone());
+        assert!(matches!(
+            rejected.append_validated_result(recipe.clone(), ledger_tamper),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut provenance_tamper = result;
+        provenance_tamper.provenance.settings.workers = 1;
+        let mut rejected = Project::new("Tampered worker provenance");
+        rejected.datasets.push(dataset);
+        assert!(matches!(
+            rejected.append_validated_result(recipe, provenance_tamper),
+            Err(ProjectError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn cbsem_bootstrap_v2_500_pilot_persists_as_typed_unavailable_and_binds_count() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("cbsem-bootstrap-v2-500-pilot.qpls");
+        let (dataset, point_recipe, point_result) = runner_generated_listwise_cbsem();
+        let base: PlsResult =
+            serde_json::from_value(estimation_payload(&point_result).clone()).unwrap();
+        let mut recipe = cbsem_bootstrap_v2_recipe(&point_recipe, 4);
+        let Some(qpls_core::MethodConfig::Cbsem {
+            bootstrap_samples, ..
+        }) = recipe.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        *bootstrap_samples = 500;
+        assert!(
+            validate_recipe(&recipe)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error)
+        );
+
+        let pilot = synthetic_cbsem_bootstrap_v2(&base, &recipe, 500);
+        assert_eq!(pilot.requested_replicates, 500);
+        assert_eq!(pilot.usable_replicates, 500);
+        assert_eq!(pilot.failed_replicates, 0);
+        assert_eq!(pilot.minimum_usable_replicates, 1_000);
+        assert!(matches!(
+            &pilot.inference,
+            qpls_estimation::CbsemBootstrapInferenceV2::Unavailable {
+                reason_code,
+                ..
+            } if reason_code == "insufficient_usable_replicates"
+        ));
+        assert!(pilot.intervals.is_empty());
+        assert!(validate_cbsem_bootstrap_v2_payload_contract(
+            &pilot, &base, &recipe
+        ));
+
+        let result =
+            completed_cbsem_bootstrap_v2_result(&point_result, &recipe, &base, pilot.clone());
+        let mut project = Project::new("CB-SEM bootstrap v2 500 pilot");
+        project.datasets.push(dataset.clone());
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        let reopened_estimation: PlsResult =
+            serde_json::from_value(estimation_payload(&reopened.results[0]).clone()).unwrap();
+        let reopened_pilot = reopened_estimation.cbsem.unwrap().bootstrap_v2.unwrap();
+        assert_eq!(reopened_pilot.requested_replicates, 500);
+        assert_eq!(reopened_pilot.minimum_usable_replicates, 1_000);
+        assert!(matches!(
+            &reopened_pilot.inference,
+            qpls_estimation::CbsemBootstrapInferenceV2::Unavailable { .. }
+        ));
+        assert!(reopened_pilot.intervals.is_empty());
+
+        let mut count_tamper = result;
+        estimation_payload_mut(&mut count_tamper)["cbsem"]["bootstrap_v2"]["requested_replicates"] =
+            serde_json::json!(501);
+        let mut rejected = Project::new("Tampered 500-pilot count");
+        rejected.datasets.push(dataset);
+        assert!(matches!(
+            rejected.append_validated_result(recipe, count_tamper),
+            Err(ProjectError::Invalid(_))
+        ));
+    }
+
+    #[test]
+    fn cbsem_bootstrap_v2_cancellation_restart_and_worker_provenance_are_exact() {
+        let (dataset, point_recipe, point_result) = runner_generated_cbsem("sem");
+        let base: PlsResult =
+            serde_json::from_value(estimation_payload(&point_result).clone()).unwrap();
+        let one_worker = cbsem_bootstrap_v2_recipe(&point_recipe, 1);
+        let four_workers = cbsem_bootstrap_v2_recipe(&point_recipe, 4);
+        assert_eq!(
+            cbsem_bootstrap_scientific_recipe_sha256(&one_worker).unwrap(),
+            cbsem_bootstrap_scientific_recipe_sha256(&four_workers).unwrap()
+        );
+        assert_ne!(
+            serde_json::to_vec(&one_worker).unwrap(),
+            serde_json::to_vec(&four_workers).unwrap()
+        );
+
+        let execution =
+            qpls_core::ValidatedExecutionRecipe::for_dataset(&four_workers, &dataset.fingerprint.0)
+                .unwrap();
+        assert!(matches!(
+            qpls_resampling::bootstrap_cbsem_ml_validated(
+                &dataset,
+                &execution,
+                &base,
+                4,
+                || true,
+                |_| {}
+            ),
+            Err(qpls_resampling::CbsemBootstrapError::Resampling(
+                qpls_resampling::ResamplingError::Cancelled
+            ))
+        ));
+
+        // Cancellation emits no partial result. Restarting from the same
+        // immutable recipe regenerates the same indexed plan and analytical
+        // payload; operational worker count is deliberately excluded from it.
+        let uninterrupted = synthetic_cbsem_bootstrap_v2(&base, &one_worker, 1_000);
+        let restarted = synthetic_cbsem_bootstrap_v2(&base, &four_workers, 1_000);
+        assert_eq!(uninterrupted, restarted);
+        let result =
+            completed_cbsem_bootstrap_v2_result(&point_result, &four_workers, &base, restarted);
+        assert_eq!(result.provenance.settings.workers, 4);
+        let mut tampered = result.clone();
+        tampered.provenance.settings.workers = 1;
+        let mut rejected = Project::new("Worker provenance cannot be normalized");
+        rejected.datasets.push(dataset);
+        assert!(matches!(
+            rejected.append_validated_result(four_workers, tampered),
+            Err(ProjectError::Invalid(_))
+        ));
     }
 
     #[test]
@@ -12665,6 +16186,10 @@ mod tests {
             "deterministic_newton_irls_v1"
         );
         assert_eq!(regression["fit"]["pseudo_r_squared_method"], "mcfadden_v1");
+        assert_eq!(
+            regression["warnings"],
+            serde_json::json!([REGRESSION_LOGISTIC_SCOPE_WARNING])
+        );
 
         let mut project = Project::new("Logistic v2 persistence");
         project.datasets.push(dataset);
@@ -12719,6 +16244,11 @@ mod tests {
         estimation_payload_mut(&mut tampered_probability)["regression"]["predictions"][0]["probability"] =
             serde_json::json!(0.75);
         reject_atomically(tampered_probability);
+
+        let mut tampered_scope_warning = result.clone();
+        estimation_payload_mut(&mut tampered_scope_warning)["regression"]["warnings"][0] =
+            serde_json::json!("tampered validated-scope warning");
+        reject_atomically(tampered_scope_warning);
 
         let mut tampered_for_save = reopened;
         estimation_payload_mut(&mut tampered_for_save.results[0])["regression"]["logistic"]["classification"]
@@ -13763,6 +17293,10 @@ mod tests {
         );
         assert_eq!(estimation["regression"]["regression_type"], "ols");
         assert_eq!(
+            estimation["regression"]["warnings"],
+            serde_json::json!([REGRESSION_OLS_SCOPE_WARNING])
+        );
+        assert_eq!(
             estimation["regression"]["coefficients"]
                 .as_array()
                 .unwrap()
@@ -13807,6 +17341,11 @@ mod tests {
         estimation_payload_mut(&mut tampered_prediction)["regression"]["predictions"][0]["residual"] =
             serde_json::json!(99.0);
         assert_rejected_atomically(tampered_prediction, recipe.clone());
+
+        let mut tampered_scope_warning = result.clone();
+        estimation_payload_mut(&mut tampered_scope_warning)["regression"]["warnings"][0] =
+            serde_json::json!("tampered validated-scope warning");
+        assert_rejected_atomically(tampered_scope_warning, recipe.clone());
 
         let mut mismatched_recipe = recipe.clone();
         mismatched_recipe
@@ -14214,27 +17753,23 @@ mod tests {
     }
 
     #[test]
-    fn validated_append_and_archive_round_trip_preserve_explicit_mga_contract() {
+    fn validated_append_and_archive_round_trip_preserve_exact_micom_v31_contract() {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("mga.qpls");
-        let (dataset, recipe, result) = runner_generated_mga();
+        let (dataset, recipe, result) = runner_generated_micom_v31();
         assert_eq!(result.provenance.method, AnalysisMethod::Mga);
         assert!(
             result
                 .provenance
                 .method_version
                 .split('+')
-                .any(|version| version == PLS_MGA_METHOD_VERSION)
+                .any(|version| version == MICOM_METHOD_VERSION)
         );
-        assert!(
-            result
-                .provenance
-                .method_version
-                .split('+')
-                .any(|version| version == PLS_MGA_PERMUTATION_METHOD_VERSION)
-        );
+        assert!(!result.provenance.method_version.split('+').any(|version| {
+            version == PLS_MGA_METHOD_VERSION || version == PLS_MGA_PERMUTATION_METHOD_VERSION
+        }));
 
-        let mut project = Project::new("Validated MGA persistence");
+        let mut project = Project::new("MICOM v3.1 persistence");
         project.datasets.push(dataset);
         project
             .append_validated_result(recipe.clone(), result.clone())
@@ -14248,29 +17783,177 @@ mod tests {
         assert_eq!(effective_metadata["mga_group_b"], "B");
         let estimation = match &reopened.results[0].payload {
             AnalysisPayload::PlsPmV1 { estimation, .. } => estimation,
-            other => panic!("runner returned unexpected MGA payload: {other:?}"),
+            other => panic!("runner returned unexpected MICOM payload: {other:?}"),
         };
-        assert_eq!(estimation["mga"]["groups"][0]["group"], "A");
-        assert_eq!(estimation["mga"]["groups"][1]["group"], "B");
+        assert!(estimation["mga"].is_null());
+        assert!(estimation["mga_permutation"].is_null());
         assert_eq!(estimation["micom"]["method_version"], MICOM_METHOD_VERSION);
         assert_eq!(
             estimation["micom"]["constructs"].as_array().unwrap().len(),
             3
         );
+        assert_eq!(estimation["micom"]["retry_policy"], "none");
+        assert_eq!(estimation["micom"]["attempted_permutations"], 5000);
         assert_eq!(
-            estimation["mga"]["measurement_comparisons"]
+            estimation["micom"]["permutation_ledger"]
                 .as_array()
                 .unwrap()
                 .len(),
-            12
+            5000
         );
-        assert_eq!(estimation["mga_permutation"]["permutation_samples"], 5000);
+    }
+
+    #[test]
+    fn validated_append_and_archive_round_trip_preserve_exact_combined_mga_v4_contract() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("combined-mga-v4.qpls");
+        let (dataset, recipe, result) = runner_generated_mga();
+        let mut project = Project::new("Combined MGA v4 persistence");
+        project.datasets.push(dataset.clone());
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.recipes.len(), 1);
+        assert_eq!(reopened.results.len(), 1);
         assert_eq!(
-            estimation["mga_permutation"]["measurement_comparisons"]
+            reopened.results[0].provenance.dataset_fingerprint,
+            dataset.fingerprint.0
+        );
+        let estimation = match &reopened.results[0].payload {
+            AnalysisPayload::PlsPmV1 { estimation, .. } => estimation,
+            other => panic!("runner returned unexpected MGA payload: {other:?}"),
+        };
+        assert_eq!(estimation["method_version"], PLS_MGA_METHOD_VERSION);
+        assert_eq!(estimation["mga"]["method_version"], PLS_MGA_METHOD_VERSION);
+        assert_eq!(
+            estimation["mga_permutation"]["method_version"],
+            PLS_MGA_PERMUTATION_METHOD_VERSION
+        );
+        assert_eq!(
+            estimation["micom"]["method_version"],
+            MICOM_METHOD_VERSION_V4
+        );
+        assert_eq!(estimation["mga_permutation"]["retry_policy"], "none");
+        assert_eq!(
+            estimation["mga_permutation"]["attempted_permutations"],
+            5000
+        );
+        assert_eq!(
+            estimation["mga_permutation"]["permutation_plan_sha256"],
+            estimation["micom"]["permutation_plan_sha256"]
+        );
+        assert_eq!(
+            estimation["mga_permutation"]["permutation_ledger"],
+            estimation["micom"]["permutation_ledger"]
+        );
+        assert_eq!(
+            estimation["mga_permutation"]["permutation_ledger"]
                 .as_array()
                 .unwrap()
                 .len(),
-            12
+            5000
+        );
+    }
+
+    #[test]
+    fn historical_mga_v2_reopens_but_cannot_be_appended_as_v4_evidence() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("historical-mga-v2.qpls");
+        let (dataset, recipe, mut result) = runner_generated_mga();
+        result.provenance.method_version = result
+            .provenance
+            .method_version
+            .replace(PLS_MGA_METHOD_VERSION, PLS_MGA_METHOD_VERSION_V2)
+            .replace(
+                PLS_MGA_PERMUTATION_METHOD_VERSION,
+                PLS_MGA_PERMUTATION_METHOD_VERSION_V2,
+            )
+            .replace(MICOM_METHOD_VERSION_V4, MICOM_METHOD_VERSION_V2);
+        let estimation = estimation_payload_mut(&mut result);
+        estimation["method_version"] = serde_json::json!(PLS_MGA_METHOD_VERSION_V2);
+        estimation["mga"]["method_version"] = serde_json::json!(PLS_MGA_METHOD_VERSION_V2);
+        estimation["mga_permutation"]["method_version"] =
+            serde_json::json!(PLS_MGA_PERMUTATION_METHOD_VERSION_V2);
+        estimation["micom"]["method_version"] = serde_json::json!(MICOM_METHOD_VERSION_V2);
+
+        let mut rejected = Project::new("Reject historical MGA v2 append");
+        rejected.datasets.push(dataset.clone());
+        assert!(matches!(
+            rejected.append_validated_result(recipe.clone(), result.clone()),
+            Err(ProjectError::Invalid(message)) if message.contains("v1-v3") && message.contains("archive-readable")
+        ));
+        assert!(rejected.recipes.is_empty());
+        assert!(rejected.results.is_empty());
+
+        let mut archived = Project::new("Historical MGA v2 archive");
+        archived.datasets.push(dataset);
+        archived.recipes.push(recipe);
+        archived.results.push(result);
+        save_project(&path, &archived).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results.len(), 1);
+        assert!(
+            reopened.results[0]
+                .provenance
+                .method_version
+                .split('+')
+                .any(|version| version == PLS_MGA_METHOD_VERSION_V2)
+        );
+    }
+
+    #[test]
+    fn historical_combined_mga_v3_reopens_but_cannot_be_appended_as_v4_evidence() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("historical-combined-mga-v3.qpls");
+        let (dataset, recipe, mut result) = runner_generated_mga();
+        result.provenance.method_version = result
+            .provenance
+            .method_version
+            .replace(
+                PLS_MGA_METHOD_VERSION,
+                PLS_MGA_METHOD_VERSION_V3_LEGACY_COMBINED,
+            )
+            .replace(
+                PLS_MGA_PERMUTATION_METHOD_VERSION,
+                PLS_MGA_PERMUTATION_METHOD_VERSION_V3_LEGACY_COMBINED,
+            )
+            .replace(
+                MICOM_METHOD_VERSION_V4,
+                MICOM_METHOD_VERSION_V3_LEGACY_COMBINED,
+            );
+        let estimation = estimation_payload_mut(&mut result);
+        estimation["method_version"] = serde_json::json!(PLS_MGA_METHOD_VERSION_V3_LEGACY_COMBINED);
+        estimation["mga"]["method_version"] =
+            serde_json::json!(PLS_MGA_METHOD_VERSION_V3_LEGACY_COMBINED);
+        estimation["mga_permutation"]["method_version"] =
+            serde_json::json!(PLS_MGA_PERMUTATION_METHOD_VERSION_V3_LEGACY_COMBINED);
+        estimation["micom"]["method_version"] =
+            serde_json::json!(MICOM_METHOD_VERSION_V3_LEGACY_COMBINED);
+
+        let mut rejected = Project::new("Reject historical combined MGA v3 append");
+        rejected.datasets.push(dataset.clone());
+        assert!(matches!(
+            rejected.append_validated_result(recipe.clone(), result.clone()),
+            Err(ProjectError::Invalid(message)) if message.contains("v1-v3") && message.contains("archive-readable")
+        ));
+        assert!(rejected.recipes.is_empty());
+        assert!(rejected.results.is_empty());
+
+        let mut archived = Project::new("Historical combined MGA v3 archive");
+        archived.datasets.push(dataset);
+        archived.recipes.push(recipe);
+        archived.results.push(result);
+        save_project(&path, &archived).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results.len(), 1);
+        assert!(
+            reopened.results[0]
+                .provenance
+                .method_version
+                .split('+')
+                .any(|version| version == PLS_MGA_METHOD_VERSION_V3_LEGACY_COMBINED)
         );
     }
 
@@ -14292,6 +17975,11 @@ mod tests {
         for (name, mut tampered) in [
             ("measurement difference", result.clone()),
             ("MICOM decision", result.clone()),
+            ("attempt count", result.clone()),
+            ("partition ledger", result.clone()),
+            ("coordinated plan digest", result.clone()),
+            ("permutation probability", result.clone()),
+            ("dataset fingerprint", result.clone()),
             ("historical version", result.clone()),
         ] {
             match name {
@@ -14307,13 +17995,37 @@ mod tests {
                     estimation_payload_mut(&mut tampered)["micom"]["constructs"][0]["full_invariance"] =
                         serde_json::json!(!current);
                 }
+                "attempt count" => {
+                    estimation_payload_mut(&mut tampered)["mga_permutation"]["attempted_permutations"] =
+                        serde_json::json!(4999);
+                }
+                "partition ledger" => {
+                    estimation_payload_mut(&mut tampered)["mga_permutation"]["permutation_ledger"]
+                        .as_array_mut()
+                        .unwrap()
+                        .pop();
+                }
+                "coordinated plan digest" => {
+                    let digest = format!("sha256:{}", "0".repeat(64));
+                    estimation_payload_mut(&mut tampered)["mga_permutation"]["permutation_plan_sha256"] =
+                        serde_json::json!(digest);
+                    estimation_payload_mut(&mut tampered)["micom"]["permutation_plan_sha256"] =
+                        serde_json::json!(digest);
+                }
+                "permutation probability" => {
+                    estimation_payload_mut(&mut tampered)["mga_permutation"]["comparisons"][0]["empirical_p_value_two_sided"] =
+                        serde_json::json!(1.1);
+                }
+                "dataset fingerprint" => {
+                    tampered.provenance.dataset_fingerprint = "sha256:altered".into();
+                }
                 "historical version" => {
                     estimation_payload_mut(&mut tampered)["micom"]["method_version"] =
                         serde_json::json!(MICOM_METHOD_VERSION_V1);
                     tampered.provenance.method_version = tampered
                         .provenance
                         .method_version
-                        .replace(MICOM_METHOD_VERSION, MICOM_METHOD_VERSION_V1);
+                        .replace(MICOM_METHOD_VERSION_V4, MICOM_METHOD_VERSION_V1);
                 }
                 _ => unreachable!(),
             }
@@ -14502,6 +18214,17 @@ mod tests {
                 .method_version
                 .split('+')
                 .any(|version| version == PLS_TWO_STAGE_MODERATION_METHOD_VERSION)
+        );
+        let stored_assessment = match &result.payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. } => assessment,
+            other => panic!("runner returned unexpected moderation payload: {other:?}"),
+        };
+        let stored_assessment: AssessmentResult =
+            serde_json::from_value(stored_assessment.clone()).unwrap();
+        assert_eq!(
+            stored_assessment.model_fit.unwrap().indicator_order,
+            ["x", "m", "y"],
+            "generated two-stage interaction scores are not observed model-fit indicators"
         );
 
         let mut project = Project::new("Validated moderation persistence");
@@ -14719,12 +18442,34 @@ mod tests {
         let (dataset, recipe, result) = runner_generated_higher_order();
         let estimation: PlsResult =
             serde_json::from_value(estimation_payload_mut(&mut result.clone()).clone()).unwrap();
+        let assessment = match &result.payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. }
+            | AnalysisPayload::PlsPmV2 { assessment, .. }
+            | AnalysisPayload::PlsPmV3 { assessment, .. } => assessment,
+            AnalysisPayload::PlsSampleSizePowerV1 { .. }
+            | AnalysisPayload::PlsSampleSizePowerV2 { .. }
+            | AnalysisPayload::Legacy { .. } => {
+                panic!("expected a typed PLS assessment payload")
+            }
+        };
+        assert_eq!(
+            assessment["model_fit"]["indicator_order"],
+            serde_json::json!(["x1", "z1", "__qpls_hoc_hoc_x", "__qpls_hoc_hoc_z", "y1"])
+        );
         assert_eq!(recipe.model.higher_order_constructs.len(), 1);
         assert!(
             estimation
                 .outer_estimates
                 .iter()
                 .any(|row| { row.construct == "hoc" && row.indicator == "__qpls_hoc_hoc_x" })
+        );
+        assert_eq!(
+            estimation
+                .warnings
+                .iter()
+                .filter(|warning| warning.starts_with(TWO_STAGE_SCOPE_WARNING_PREFIX))
+                .count(),
+            1
         );
 
         let mut project = Project::new("Validated disjoint two-stage HOC persistence");
@@ -14800,6 +18545,41 @@ mod tests {
                 ));
             };
 
+        let mut missing_scope_warning = result.clone();
+        estimation_payload_mut(&mut missing_scope_warning)["warnings"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|warning| {
+                !warning
+                    .as_str()
+                    .is_some_and(|warning| warning.starts_with(TWO_STAGE_SCOPE_WARNING_PREFIX))
+            });
+        reject(
+            "missing HOC scope warning",
+            recipe.clone(),
+            missing_scope_warning,
+        );
+
+        let mut altered_scope_warning = result.clone();
+        let warning = estimation_payload_mut(&mut altered_scope_warning)["warnings"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|warning| {
+                warning
+                    .as_str()
+                    .is_some_and(|warning| warning.starts_with(TWO_STAGE_SCOPE_WARNING_PREFIX))
+            })
+            .unwrap();
+        *warning = serde_json::json!(
+            "Disjoint two-stage HOC estimation uses lower-order component scores without the qualified scope wording."
+        );
+        reject(
+            "altered HOC scope warning",
+            recipe.clone(),
+            altered_scope_warning,
+        );
+
         let mut tampered_loading = result.clone();
         let outer = estimation_payload_mut(&mut tampered_loading)["outer_estimates"]
             .as_array_mut()
@@ -14814,6 +18594,24 @@ mod tests {
         estimation_payload_mut(&mut tampered_path)["paths"][0]["coefficient"] =
             serde_json::json!(0.123);
         reject("tampered HOC path", recipe.clone(), tampered_path);
+
+        let mut tampered_fit_indicator_order = result.clone();
+        let assessment = match &mut tampered_fit_indicator_order.payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. }
+            | AnalysisPayload::PlsPmV2 { assessment, .. }
+            | AnalysisPayload::PlsPmV3 { assessment, .. } => assessment,
+            AnalysisPayload::PlsSampleSizePowerV1 { .. }
+            | AnalysisPayload::PlsSampleSizePowerV2 { .. }
+            | AnalysisPayload::Legacy { .. } => {
+                unreachable!()
+            }
+        };
+        assessment["model_fit"]["indicator_order"][2] = serde_json::json!("forged_hoc_score");
+        reject(
+            "tampered HOC model-fit indicator order",
+            recipe.clone(),
+            tampered_fit_indicator_order,
+        );
 
         let mut missing_generated_indicator = result.clone();
         estimation_payload_mut(&mut missing_generated_indicator)["outer_estimates"]
@@ -14894,6 +18692,20 @@ mod tests {
             .append_validated_result(recipe.clone(), result.clone())
             .unwrap();
 
+        let mut tampered_htmt_diagonal = result.clone();
+        let bootstrap = match &mut tampered_htmt_diagonal.payload {
+            AnalysisPayload::PlsPmV2 { bootstrap, .. } => bootstrap,
+            other => panic!("runner returned unexpected moderation bootstrap payload: {other:?}"),
+        };
+        assert!(bootstrap["htmt_inference"]["htmt_plus"]["cells"][0][0]["original"].is_null());
+        bootstrap["htmt_inference"]["htmt_plus"]["cells"][0][0]["original"] =
+            serde_json::json!(1.0);
+        assert!(matches!(
+            Project::new("tampered inapplicable HTMT bootstrap diagonal")
+                .append_validated_result(recipe.clone(), tampered_htmt_diagonal),
+            Err(ProjectError::Invalid(_))
+        ));
+
         let interaction = &recipe.model.interactions[0];
         let parameter_identity = serde_json::to_string(&(
             "path",
@@ -14952,6 +18764,295 @@ mod tests {
                 .append_validated_result(recipe, tampered_identity),
             Err(ProjectError::Invalid(_))
         ));
+    }
+
+    #[test]
+    fn plsc_consistent_bootstrap_round_trips_and_rejects_tampering_atomically() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("plsc-consistent-bootstrap.qpls");
+        let (dataset, mut recipe) = pls_family_fixture(AnalysisMethod::Plsc);
+        recipe.settings.bootstrap_samples = 1_000;
+        recipe.settings.studentized_inner_samples = 0;
+        recipe.settings.permutation_samples = 0;
+        recipe.settings.workers = 2;
+        recipe.method_config = Some(qpls_core::MethodConfig::Plsc);
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+
+        let mut project = Project::new("PLSc consistent-bootstrap persistence");
+        project.datasets.push(dataset);
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let restored = load_project(&path).unwrap();
+        assert_eq!(restored.recipes, project.recipes);
+        assert!(analysis_results_scientifically_equivalent(
+            &restored.results[0],
+            &result,
+        ));
+
+        let mut tampered = result.clone();
+        let bootstrap = match &mut tampered.payload {
+            AnalysisPayload::PlsPmV2 { bootstrap, .. } => bootstrap,
+            other => panic!("runner returned unexpected PLSc bootstrap payload: {other:?}"),
+        };
+        bootstrap["original_parameter_values_sha256"] = serde_json::json!("not-a-sha256");
+
+        let mut rejected = Project::new("Reject tampered PLSc consistent bootstrap");
+        let error = rejected
+            .append_validated_result(recipe.clone(), tampered)
+            .unwrap_err();
+        assert!(matches!(
+            error,
+            ProjectError::Invalid(message) if message.contains("point-parameter digest")
+        ));
+        assert!(rejected.recipes.is_empty());
+        assert!(rejected.results.is_empty());
+
+        let mut tampered_witness = result;
+        let bootstrap = match &mut tampered_witness.payload {
+            AnalysisPayload::PlsPmV2 { bootstrap, .. } => bootstrap,
+            other => panic!("runner returned unexpected PLSc bootstrap payload: {other:?}"),
+        };
+        let parameters = bootstrap["successful_replicates"][0]["parameters"]
+            .as_object_mut()
+            .unwrap();
+        let value = parameters.values_mut().next().unwrap();
+        *value = serde_json::json!(value.as_f64().unwrap() + 0.125);
+
+        let mut rejected = Project::new("Reject tampered PLSc bootstrap witness");
+        assert!(matches!(
+            rejected.append_validated_result(recipe, tampered_witness),
+            Err(ProjectError::Invalid(_))
+        ));
+        assert!(rejected.recipes.is_empty());
+        assert!(rejected.results.is_empty());
+    }
+
+    #[test]
+    fn plsc_consistent_permutation_round_trips_and_rejects_semantic_tampering_atomically() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("plsc-consistent-permutation.qpls");
+        let dataset = import_delimited_bytes(
+            include_bytes!(
+                "../../../validation/fixtures/plsc_consistent_permutation_two_group.csv"
+            ),
+            "plsc_consistent_permutation_two_group.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = migrated_execution_recipe(include_bytes!(
+            "../../../validation/results/micom_v2_reference.recipe.json"
+        ));
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.method = AnalysisMethod::Plsc;
+        recipe.settings.bootstrap_samples = 0;
+        recipe.settings.studentized_inner_samples = 0;
+        recipe.settings.permutation_samples = 99;
+        recipe.settings.workers = 2;
+        recipe.settings.confidence_level = 0.95;
+        recipe.settings.case_weight_column = None;
+        recipe.method_config = Some(qpls_core::MethodConfig::PlscPermutation {
+            group_column: "group".into(),
+            group_a: "A".into(),
+            group_b: "B".into(),
+            test_tail: PlscPermutationTestTail::TwoSided,
+        });
+        recipe.metadata.clear();
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        assert!(!result.provenance.method_version.split('+').any(|version| {
+            version == PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION
+        }));
+        assert!(matches!(
+            &result.payload,
+            AnalysisPayload::PlsPmV3 { permutation: Some(value), .. }
+                if value.get("selected_tail_inference").is_none()
+        ));
+
+        let mut project = Project::new("PLSc consistent-permutation persistence");
+        project.datasets.push(dataset);
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let restored = load_project(&path).unwrap();
+        assert_eq!(restored.recipes, project.recipes);
+        assert!(analysis_results_scientifically_equivalent(
+            &restored.results[0],
+            &result,
+        ));
+
+        let mut selected_recipe = recipe.clone();
+        let Some(MethodConfig::PlscPermutation { test_tail, .. }) =
+            selected_recipe.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        *test_tail = PlscPermutationTestTail::GroupAGreater;
+        let mut selected = result.clone();
+        selected.provenance.method_version.push('+');
+        selected
+            .provenance
+            .method_version
+            .push_str(PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION);
+        let selected_permutation = match &mut selected.payload {
+            AnalysisPayload::PlsPmV3 {
+                permutation: Some(permutation),
+                ..
+            } => permutation,
+            _ => unreachable!(),
+        };
+        let selected_parameters = selected_permutation["directional_inference"]["parameters"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|parameter| {
+                serde_json::json!({
+                    "parameter": parameter["parameter"],
+                    "selected_exceedances": parameter["greater_or_equal"],
+                    "selected_p_value": parameter["p_value_greater"],
+                    "permutations": parameter["permutations"]
+                })
+            })
+            .collect::<Vec<_>>();
+        selected_permutation["selected_tail_inference"] = serde_json::json!({
+            "method_version": PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION,
+            "orientation": "group_a_minus_group_b",
+            "selected_test_tail": "group_a_greater",
+            "parameters": selected_parameters
+        });
+        validate_result_contracts_with_recipes(&[selected.clone()], &[selected_recipe.clone()])
+            .unwrap();
+        assert!(
+            validate_result_contracts_with_recipes(&[selected.clone()], &[recipe.clone()]).is_err()
+        );
+        let selected_path = directory.path().join("plsc-selected-tail.qpls");
+        let mut selected_project = restored.clone();
+        selected_project.recipes = vec![selected_recipe.clone()];
+        selected_project.results = vec![selected.clone()];
+        save_project(&selected_path, &selected_project).unwrap();
+        assert!(analysis_results_scientifically_equivalent(
+            &load_project(&selected_path).unwrap().results[0],
+            &selected,
+        ));
+
+        let mut wrong_selected_probability = selected.clone();
+        if let AnalysisPayload::PlsPmV3 {
+            permutation: Some(value),
+            ..
+        } = &mut wrong_selected_probability.payload
+        {
+            value["selected_tail_inference"]["parameters"][0]["selected_p_value"] =
+                serde_json::json!(0.5);
+        }
+        assert!(
+            validate_result_contracts_with_recipes(
+                &[wrong_selected_probability],
+                &[selected_recipe.clone()],
+            )
+            .is_err()
+        );
+        let mut wrong_selection = selected.clone();
+        if let AnalysisPayload::PlsPmV3 {
+            permutation: Some(value),
+            ..
+        } = &mut wrong_selection.payload
+        {
+            value["selected_tail_inference"]["selected_test_tail"] =
+                serde_json::json!("group_a_less");
+        }
+        assert!(
+            validate_result_contracts_with_recipes(&[wrong_selection], &[selected_recipe.clone()],)
+                .is_err()
+        );
+        let mut wrong_order = selected.clone();
+        if let AnalysisPayload::PlsPmV3 {
+            permutation: Some(value),
+            ..
+        } = &mut wrong_order.payload
+        {
+            value["selected_tail_inference"]["parameters"]
+                .as_array_mut()
+                .unwrap()
+                .swap(0, 1);
+        }
+        assert!(
+            validate_result_contracts_with_recipes(&[wrong_order], &[selected_recipe.clone()],)
+                .is_err()
+        );
+        let mut missing_selected = selected.clone();
+        if let AnalysisPayload::PlsPmV3 {
+            permutation: Some(value),
+            ..
+        } = &mut missing_selected.payload
+        {
+            value
+                .as_object_mut()
+                .unwrap()
+                .remove("selected_tail_inference");
+        }
+        assert!(validate_result_contracts_with_recipes(
+            &[missing_selected],
+            &[selected_recipe.clone()],
+        )
+        .is_err());
+        let mut missing_selected_marker = selected;
+        missing_selected_marker.provenance.method_version = missing_selected_marker
+            .provenance
+            .method_version
+            .split('+')
+            .filter(|version| *version != PLSC_CONSISTENT_PERMUTATION_SELECTED_TAIL_METHOD_VERSION)
+            .collect::<Vec<_>>()
+            .join("+");
+        assert!(
+            validate_result_contracts_with_recipes(&[missing_selected_marker], &[selected_recipe],)
+                .is_err()
+        );
+
+        let reject = |name: &str, tampered: AnalysisResult| {
+            let mut rejected = Project::new(name);
+            assert!(matches!(
+                rejected.append_validated_result(recipe.clone(), tampered),
+                Err(ProjectError::Invalid(_))
+            ));
+            assert!(rejected.recipes.is_empty());
+            assert!(rejected.results.is_empty());
+        };
+
+        let mut tampered_assignment = result.clone();
+        let permutation = match &mut tampered_assignment.payload {
+            AnalysisPayload::PlsPmV3 {
+                permutation: Some(permutation),
+                ..
+            } => permutation,
+            other => panic!("runner returned unexpected PLSc permutation payload: {other:?}"),
+        };
+        permutation["permutation_ledger"][0]["label_assignment_sha256"] =
+            serde_json::json!("0".repeat(64));
+        reject("tampered PLSc label-assignment digest", tampered_assignment);
+
+        let mut tampered_probability = result;
+        let permutation = match &mut tampered_probability.payload {
+            AnalysisPayload::PlsPmV3 {
+                permutation: Some(permutation),
+                ..
+            } => permutation,
+            other => panic!("runner returned unexpected PLSc permutation payload: {other:?}"),
+        };
+        let probability = permutation["parameters"][0]["p_value_two_sided"]
+            .as_f64()
+            .unwrap();
+        permutation["parameters"][0]["p_value_two_sided"] =
+            serde_json::json!(if probability < 0.5 {
+                probability + 0.25
+            } else {
+                probability - 0.25
+            });
+        reject(
+            "tampered PLSc permutation probability",
+            tampered_probability,
+        );
     }
 
     #[test]
@@ -15077,7 +19178,7 @@ mod tests {
         let result = AnalysisResult::completed_pls_bootstrap(
             &recipe,
             &format!(
-                "pls_pm_v1+{PLS_MEDIATION_METHOD_VERSION}+{ASSESSMENT_METHOD_VERSION}+{RESAMPLING_METHOD_VERSION}"
+                "pls_pm_v1+{PLS_MEDIATION_METHOD_VERSION}+{ASSESSMENT_METHOD_VERSION}+{RESAMPLING_METHOD_VERSION}+{HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION}"
             ),
             Utc::now(),
             serde_json::to_value(estimation).unwrap(),
@@ -15090,13 +19191,212 @@ mod tests {
         project.recipes.push(recipe);
         project.results.push(result);
         save_project(&path, &project).unwrap();
-        let restored = load_project(&path).unwrap();
+        let mut restored = load_project(&path).unwrap();
         assert!(matches!(
             restored.results[0].payload,
             AnalysisPayload::PlsPmV2 { .. }
         ));
         assert_eq!(restored.results[0].provenance.settings.bootstrap_samples, 8);
         assert_eq!(restored.results[0].provenance.settings.workers, 2);
+
+        let mut one_sided_recipe = restored.recipes[0].clone();
+        one_sided_recipe.settings.bootstrap_test_tail =
+            qpls_core::PlsBootstrapTestTail::OneSidedGreater;
+        let mut one_sided = restored.results[0].clone();
+        one_sided.provenance.settings.bootstrap_test_tail =
+            qpls_core::PlsBootstrapTestTail::OneSidedGreater;
+        one_sided.provenance.method_version.push('+');
+        one_sided
+            .provenance
+            .method_version
+            .push_str(PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION);
+        let bootstrap = match &mut one_sided.payload {
+            AnalysisPayload::PlsPmV2 { bootstrap, .. } => bootstrap,
+            other => panic!("expected PLS bootstrap payload, received {other:?}"),
+        };
+        let usable = bootstrap["usable_replicates"].as_u64().unwrap();
+        let receipt_parameters = bootstrap["percentile"]["parameters"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|parameter| {
+                serde_json::json!({
+                    "parameter": parameter["parameter"],
+                    "usable_replicates": usable,
+                    "two_sided_exceedances": usable,
+                    "greater_or_equal_exceedances": usable,
+                    "less_or_equal_exceedances": usable,
+                    "p_value_two_sided": 1.0,
+                    "p_value_greater": 1.0,
+                    "p_value_less": 1.0
+                })
+            })
+            .collect::<Vec<_>>();
+        bootstrap["test_tail_inference"] = serde_json::json!({
+            "method_version": PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION,
+            "selected_test_tail": "one_sided_greater",
+            "parameters": receipt_parameters
+        });
+        validate_result_contracts_with_recipes(&[one_sided.clone()], &[one_sided_recipe.clone()])
+            .unwrap();
+
+        let one_sided_path = directory.path().join("bootstrap-one-sided.qpls");
+        let mut one_sided_project = restored.clone();
+        one_sided_project.recipes = vec![one_sided_recipe.clone()];
+        one_sided_project.results = vec![one_sided.clone()];
+        save_project(&one_sided_path, &one_sided_project).unwrap();
+        let reopened_one_sided = load_project(&one_sided_path).unwrap();
+        assert_eq!(
+            reopened_one_sided.results[0]
+                .provenance
+                .settings
+                .bootstrap_test_tail,
+            qpls_core::PlsBootstrapTestTail::OneSidedGreater
+        );
+        let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &reopened_one_sided.results[0].payload
+        else {
+            panic!("expected reopened one-sided bootstrap payload")
+        };
+        assert_eq!(
+            bootstrap["test_tail_inference"]["selected_test_tail"],
+            "one_sided_greater"
+        );
+
+        let mut missing_marker = one_sided.clone();
+        missing_marker.provenance.method_version = missing_marker
+            .provenance
+            .method_version
+            .split('+')
+            .filter(|version| *version != PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION)
+            .collect::<Vec<_>>()
+            .join("+");
+        let error =
+            validate_result_contracts_with_recipes(&[missing_marker], &[one_sided_recipe.clone()])
+                .unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("nondefault_tail_missing_method_version")
+        );
+
+        let mut missing_receipt = one_sided.clone();
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut missing_receipt.payload {
+            bootstrap
+                .as_object_mut()
+                .unwrap()
+                .remove("test_tail_inference");
+        }
+        let error =
+            validate_result_contracts_with_recipes(&[missing_receipt], &[one_sided_recipe.clone()])
+                .unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("nondefault_tail_missing_receipt")
+        );
+
+        let mut injected_default = restored.results[0].clone();
+        if let (
+            AnalysisPayload::PlsPmV2 { bootstrap, .. },
+            AnalysisPayload::PlsPmV2 {
+                bootstrap: source, ..
+            },
+        ) = (&mut injected_default.payload, &one_sided.payload)
+        {
+            bootstrap["test_tail_inference"] = source["test_tail_inference"].clone();
+        }
+        assert!(
+            validate_result_contracts_with_recipes(&[injected_default], &restored.recipes).is_err()
+        );
+
+        let mut wrong_tail = one_sided.clone();
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut wrong_tail.payload {
+            bootstrap["test_tail_inference"]["selected_test_tail"] =
+                serde_json::json!("one_sided_less");
+        }
+        assert!(
+            validate_result_contracts_with_recipes(&[wrong_tail], &[one_sided_recipe.clone()])
+                .is_err()
+        );
+
+        let mut malformed_receipt = one_sided.clone();
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut malformed_receipt.payload {
+            bootstrap["test_tail_inference"] = serde_json::json!({"unexpected": true});
+        }
+        assert!(
+            validate_result_contracts_with_recipes(
+                &[malformed_receipt],
+                &[one_sided_recipe.clone()]
+            )
+            .is_err()
+        );
+
+        let mut wrong_probability = one_sided;
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut wrong_probability.payload {
+            bootstrap["test_tail_inference"]["parameters"][0]["p_value_greater"] =
+                serde_json::json!(0.5);
+        }
+        assert!(
+            validate_result_contracts_with_recipes(&[wrong_probability], &[one_sided_recipe])
+                .is_err()
+        );
+
+        let mut missing_htmt_marker = restored.results[0].clone();
+        missing_htmt_marker.provenance.method_version = missing_htmt_marker
+            .provenance
+            .method_version
+            .split('+')
+            .filter(|version| *version != HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION)
+            .collect::<Vec<_>>()
+            .join("+");
+        let error =
+            validate_result_contracts_with_recipes(&[missing_htmt_marker], &restored.recipes)
+                .unwrap_err();
+        assert!(error.to_string().contains("invalid_htmt_inference"));
+
+        let mut missing_htmt_payload = restored.results[0].clone();
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut missing_htmt_payload.payload {
+            bootstrap.as_object_mut().unwrap().remove("htmt_inference");
+        }
+        let error =
+            validate_result_contracts_with_recipes(&[missing_htmt_payload], &restored.recipes)
+                .unwrap_err();
+        assert!(error.to_string().contains("invalid_htmt_inference"));
+
+        let mut tampered_htmt_decision = restored.results[0].clone();
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut tampered_htmt_decision.payload {
+            let cell = &mut bootstrap["htmt_inference"]["htmt_plus"]["cells"][0][1];
+            cell["upper_bound_below_critical_value"] =
+                serde_json::json!(!cell["upper_bound_below_critical_value"].as_bool().unwrap());
+        }
+        assert!(matches!(
+            validate_result_contracts(&[tampered_htmt_decision]),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut tampered_htmt_index_digest = restored.results[0].clone();
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut tampered_htmt_index_digest.payload
+        {
+            bootstrap["htmt_inference"]["htmt_plus"]["cells"][0][1]["usable_replicate_indices_sha256"] =
+                serde_json::json!("00".repeat(32));
+        }
+        assert!(matches!(
+            validate_result_contracts(&[tampered_htmt_index_digest]),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        // Continue the generic legacy/studentized compatibility checks with
+        // the explicitly historical pre-HTMT-inference v4 payload shape.
+        restored.results[0].provenance.method_version = restored.results[0]
+            .provenance
+            .method_version
+            .split('+')
+            .filter(|version| *version != HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION)
+            .collect::<Vec<_>>()
+            .join("+");
+        if let AnalysisPayload::PlsPmV2 { bootstrap, .. } = &mut restored.results[0].payload {
+            bootstrap.as_object_mut().unwrap().remove("htmt_inference");
+        }
 
         let mut studentized_current = restored.results[0].clone();
         studentized_current.provenance.settings.bootstrap_samples = 999;
@@ -15270,6 +19570,29 @@ mod tests {
                 assessment.as_object_mut().unwrap().remove(field);
             }
         };
+        let downgrade_model_fit = |assessment: &mut serde_json::Value| {
+            let fit = assessment["model_fit"].as_object_mut().unwrap();
+            for field in [
+                "method_version",
+                "analytical_sample_size",
+                "indicator_order",
+                "matrix_convention",
+                "geodesic_logarithm",
+                "observed_correlation",
+                "saturated_implied_correlation",
+                "estimated_implied_correlation",
+                "null_model_chi_square",
+                "exact_fit_inference",
+            ] {
+                fit.remove(field);
+            }
+            for model in ["saturated", "estimated"] {
+                let row = fit[model].as_object_mut().unwrap();
+                for field in ["d_g", "chi_square", "degrees_of_freedom", "nfi"] {
+                    row.remove(field);
+                }
+            }
+        };
 
         let mut legacy_assessment_v1 = restored.results[0].clone();
         legacy_assessment_v1.provenance.method_version = format!(
@@ -15339,6 +19662,7 @@ mod tests {
         if let AnalysisPayload::PlsPmV2 { assessment, .. } = &mut legacy_assessment_v4.payload {
             assessment["method_version"] = serde_json::json!(ASSESSMENT_METHOD_VERSION_V4);
             downgrade_htmt(assessment, true);
+            downgrade_model_fit(assessment);
             strip_rho_a(assessment);
         }
         validate_result_contracts(&[legacy_assessment_v4.clone()]).unwrap();
@@ -15357,6 +19681,7 @@ mod tests {
         if let AnalysisPayload::PlsPmV2 { assessment, .. } = &mut legacy_assessment_v5.payload {
             assessment["method_version"] = serde_json::json!(ASSESSMENT_METHOD_VERSION_V5);
             downgrade_htmt(assessment, true);
+            downgrade_model_fit(assessment);
         }
         validate_result_contracts_with_recipes(&[legacy_assessment_v5], &restored.recipes).unwrap();
 
@@ -15890,6 +20215,148 @@ mod tests {
             Err(ProjectError::Invalid(_))
         ));
     }
+
+    #[test]
+    fn htmt_bootstrap_contract_is_derived_from_recipe_configuration() {
+        let default = expected_htmt_bootstrap_contract(HtmtBootstrapInferenceConfig::default());
+        assert_eq!(
+            default.bundle_method_version,
+            HTMT_BOOTSTRAP_INFERENCE_METHOD_VERSION
+        );
+        assert_eq!(
+            default.plus_method_version,
+            HTMT_PLUS_BOOTSTRAP_METHOD_VERSION
+        );
+        assert_eq!(
+            default.original_method_version,
+            HTMT_ORIGINAL_BOOTSTRAP_METHOD_VERSION
+        );
+        assert_eq!(default.interval_method, HTMT_BOOTSTRAP_INTERVAL_METHOD);
+        assert_eq!(default.test_type, HTMT_BOOTSTRAP_TEST_TYPE);
+        assert_eq!(
+            default.equivalent_two_sided_confidence_level.to_bits(),
+            HTMT_BOOTSTRAP_EQUIVALENT_TWO_SIDED_CONFIDENCE_LEVEL.to_bits()
+        );
+        assert_eq!(default.decision_rule, HTMT_BOOTSTRAP_DECISION_RULE);
+        assert_eq!(
+            default.interval_unavailable_reason,
+            "htmt.bootstrap.bias_corrected_interval_unavailable"
+        );
+        assert!(default.requires_bias_correction);
+
+        let configurable = expected_htmt_bootstrap_contract(HtmtBootstrapInferenceConfig {
+            interval_family: HtmtBootstrapIntervalFamily::Percentile,
+            test_tail: HtmtBootstrapTestTail::TwoSided,
+        });
+        assert_eq!(
+            configurable.bundle_method_version,
+            HTMT_CONFIGURABLE_BOOTSTRAP_INFERENCE_METHOD_VERSION
+        );
+        assert_eq!(
+            configurable.plus_method_version,
+            HTMT_PLUS_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION
+        );
+        assert_eq!(
+            configurable.original_method_version,
+            HTMT_ORIGINAL_CONFIGURABLE_BOOTSTRAP_METHOD_VERSION
+        );
+        assert_eq!(
+            configurable.interval_method,
+            HTMT_BOOTSTRAP_PERCENTILE_INTERVAL_METHOD
+        );
+        assert_eq!(configurable.test_type, HTMT_BOOTSTRAP_TWO_SIDED_TEST_TYPE);
+        assert_eq!(
+            configurable.equivalent_two_sided_confidence_level.to_bits(),
+            (1.0 - HTMT_BOOTSTRAP_SIGNIFICANCE_LEVEL).to_bits()
+        );
+        assert_eq!(
+            configurable.decision_rule,
+            HTMT_BOOTSTRAP_CONFIGURABLE_DECISION_RULE
+        );
+        assert_eq!(
+            configurable.interval_unavailable_reason,
+            "htmt.bootstrap.selected_interval_unavailable"
+        );
+        assert!(!configurable.requires_bias_correction);
+
+        assert_ne!(
+            configurable.bundle_method_version,
+            default.bundle_method_version
+        );
+        assert_ne!(configurable.decision_rule, default.decision_rule);
+    }
+
+    #[test]
+    fn indexed_resampling_v4_requires_complete_bit_exact_typed_parameter_map() {
+        let (_, _, result) = runner_generated_pls_algorithm();
+        let estimation: PlsResult =
+            serde_json::from_value(estimation_payload(&result).clone()).unwrap();
+        let expected = expected_pls_resampling_parameter_values(&estimation).unwrap();
+        assert!(!expected.is_empty());
+        let parameters = expected
+            .iter()
+            .map(
+                |(parameter, original)| qpls_resampling::BootstrapParameterInference {
+                    parameter: parameter.clone(),
+                    original: f64::from_bits(*original),
+                    bootstrap_mean: f64::from_bits(*original),
+                    bias: 0.0,
+                    standard_error: 0.1,
+                    lower: f64::from_bits(*original) - 0.1,
+                    upper: f64::from_bits(*original) + 0.1,
+                    usable_replicates: 2,
+                    t_statistic: None,
+                    p_value_two_sided: None,
+                },
+            )
+            .collect();
+        let bootstrap = PlsBootstrapResult {
+            method_version: RESAMPLING_METHOD_VERSION.into(),
+            plan: qpls_resampling::BootstrapPlan {
+                replicates: 2,
+                master_seed: 1,
+                operation: "contract_test".into(),
+            },
+            usable_replicates: 2,
+            failed_replicates: Vec::new(),
+            percentile: qpls_resampling::PercentileInference {
+                confidence_level: 0.95,
+                parameters,
+            },
+            bca: None,
+            studentized: None,
+            htmt_inference: None,
+            model_fit_exact_inference: None,
+        };
+        assert!(validate_current_pls_resampling_parameter_map(
+            &bootstrap,
+            &estimation
+        ));
+
+        let mut incomplete = bootstrap.clone();
+        incomplete.percentile.parameters.pop();
+        assert!(!validate_current_pls_resampling_parameter_map(
+            &incomplete,
+            &estimation
+        ));
+
+        let mut changed_value = bootstrap.clone();
+        let original = changed_value.percentile.parameters[0].original;
+        changed_value.percentile.parameters[0].original =
+            f64::from_bits(original.to_bits().wrapping_add(1));
+        assert!(!validate_current_pls_resampling_parameter_map(
+            &changed_value,
+            &estimation
+        ));
+
+        let mut malformed_identity = bootstrap;
+        malformed_identity.percentile.parameters[0].parameter = "[\"path\",[]]".into();
+        assert!(!validate_current_pls_resampling_parameter_map(
+            &malformed_identity,
+            &estimation
+        ));
+    }
+
     #[test]
     fn changed_payload_is_rejected_by_its_manifest_checksum() {
         let directory = tempfile::tempdir().unwrap();

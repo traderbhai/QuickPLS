@@ -6,33 +6,50 @@ This program defines the evidence and delivery work required before QuickPLS can
 
 The machine-readable source of truth is [`validation/quickpls_3_competitor_catalogue.json`](../validation/quickpls_3_competitor_catalogue.json). The fail-closed validator is [`validation/quickpls_3_competitor_program.py`](../validation/quickpls_3_competitor_program.py).
 
+That JSON file is now a generated compatibility projection. Current coverage,
+evidence, and surface truth comes only from Capability Registry V2. The older
+parity ledger remains a validated historical input and cannot promote a current
+catalogue row. Commercial-release and signing material later in this legacy
+document is outside the Product Finalization Program completion contract.
+
 ## Frozen catalogue baseline
 
 The crosswalk freezes the 45 named entries in the [official SmartPLS algorithms and techniques catalogue](https://smartpls.com/documentation/algorithms-and-techniques/) using the canonical 2026-08-12 snapshot already bound into the parity ledger and release evidence; the same list was reverified on 2026-08-13 without changing evidence identity. It preserves the catalogue order and family names. PCA appears at both position 5 under Estimation & Core Algorithm and position 45 under CB-SEM and CFA; both rows intentionally map to the same bounded QuickPLS PCA capability.
 
 The snapshot is a comparison baseline, not a statement that QuickPLS implements every option behind each SmartPLS page. A source-page change requires a reviewed snapshot update rather than a silent edit.
 
-## Current evidence baseline
+## Historical pre-refresh evidence baseline
 
-The validated catalogue currently derives:
+The counts in this section record the fail-closed reconciliation checkpoint before the scoped-method promotion program. They remain useful for audit chronology but are not current product availability. Current status is derived from Capability Registry V2 plus the active method manifests.
+
+At that recorded checkpoint, the validated catalogue derived:
 
 | Status | Catalogue entries | Meaning |
 | --- | ---: | --- |
-| `release-qualified` | 3 | A current QuickPLS capability has complete scoped method and packaged acceptance evidence through its parity-ledger or strict-factory evidence path. |
-| `native-qualified` | 20 | An accepted native QuickPLS capability exists, but a current method-scoped release evidence pair is still required. |
-| `engine-preview` | 0 | The status remains available for future evidence-derived factory promotion, but no row currently qualifies. |
-| `absent` | 20 | The exact method manifest does not yet derive accepted engine, archive, native, or release evidence. Existing source code or historical audits cannot override this state. |
+| `release-qualified` | 0 | No current catalogue row has complete source-bound release evidence. |
+| `native-qualified` | 0 | No current catalogue row has complete source-bound native evidence. |
+| `engine-preview` | 4 | Three rows derive archive-qualified and one derives engine-only; the schema-v1 projection intentionally groups both as an engine preview. |
+| `absent` | 39 | The current exact option cell does not derive accepted executable evidence. Existing source code or historical audits cannot override this state. |
 | `deferred` | 2 | Intentionally outside the QuickPLS 3 competitor claim gate, with a disclosed legacy rationale. |
 
-These counts cover catalogue entries, not unique QuickPLS capabilities. Every one of the 43 competitor-scope rows maps to a stable capability ID; reviewed PCA, MICOM/MGA, PLSpredict/CVPAT, PROCESS, and CB-SEM/CFA contexts share capabilities, while the Permutation row deliberately maps two capabilities. Together the rows map to 38 factory capabilities. The complete 40-manifest set additionally retains the deferred Blindfolding contract and QuickPLS moderated-mediation extension.
+These counts cover catalogue entries, not unique QuickPLS capabilities. Every one of the 43 competitor-scope rows maps to a stable option-cell identity; reviewed PCA, MICOM/MGA, PLSpredict/CVPAT, PROCESS, and CB-SEM/CFA contexts share capabilities, while the sample-size/power and Permutation rows each map two independently governed cells. Together the rows map 39 option-cell identities: 38 method-manifest capabilities plus the separate post-hoc technical sample-size cell contract. The complete 40-manifest set additionally retains the deferred Blindfolding contract and QuickPLS moderated-mediation extension.
 
-The validator uses two evidence paths and no editable completion flags. The 17 capabilities already governed by the parity ledger derive their accepted status from that evaluator's current evidence-backed `derived_state`. The other 21 catalogue capabilities derive status only from the exact matching method-factory result. Raw ledger labels, catalogue status strings, source files, and historical audit artifacts cannot promote a row. The frozen mapping rejects missing IDs, borrowed IDs, duplicate edges, and cross-row reuse outside the documented shared contexts.
+The validator uses one current authority chain and no editable completion flags: Registry V2 option cells are checked against the live state re-derived by the exact method-manifest validator. An invalid linked manifest or a registry state above that derivation fails closed. Raw parity-ledger labels, catalogue status strings, source files, and historical audit artifacts cannot promote a row. The generated crosswalk rejects missing IDs, borrowed IDs, duplicate edges, and cross-row reuse outside the documented shared contexts. At the recorded checkpoint, no active row derived native- or release-qualified evidence.
 
 `competitor_ready` is currently `false` by design.
+
+The shared Permutation row is now a scoped Standard only for the coupled exactly-two-group MICOM/permutation-MGA v4 workflow and the separately qualified single-model fixed-score Structural Path Randomization v1 workflow. Broader generic permutation claims, measurement-model refits, heteroskedastic or broader non-Gaussian structural inference, multiplicity adjustment, and alternative MGA designs remain excluded.
 
 Final readiness also requires the evidence-derived external-beta gate in [`validation/quickpls_external_beta.json`](../validation/quickpls_external_beta.json) and [`validation/results/quickpls_3_competitor_approval.json`](../validation/results/quickpls_3_competitor_approval.json). The approval file is intentionally absent until final approval. A planned beta contract is structurally valid but not beta-ready; an absent approval is a pending gate, while a present stale or incomplete envelope fails validation.
 
 ## Gap inventory
+
+### Retained engine/archive foundations
+
+- Moderation, mediation, and higher-order models have freshly rerun engine and archive evidence only. Native and release evidence is absent.
+- Nonlinear relationships derives engine-only evidence. Persistence, native authoring/results/export, and packaged evidence remain absent.
+
+Each capability remains bounded by its own missing release evidence or failed release gate and cannot become `release-qualified` from another method's package evidence.
 
 ### Not yet factory-qualified
 
@@ -46,18 +63,13 @@ Final readiness also requires the evidence-derived external-beta gate in [`valid
 - Consistent MGA
 - PLS-POS
 - FIMIX-PLS
-- Moderation
-- Mediation
-- Nonlinear relationships
-- Higher-order models
-- Gaussian-copula endogeneity diagnostics
 - CB-SEM bootstrapping
 - CB-SEM multigroup analysis
 - CB-SEM measurement invariance
 - CB-SEM model comparison
 - CB-SEM moderator analysis
 
-These rows currently derive `absent`. Some have bounded implementation or scaffolding in the repository, but that is not promotion evidence. A row can move to `engine-preview`, `native-qualified`, or `release-qualified` only when its exact manifest derives the corresponding state.
+All other active rows currently derive `absent`, including the PLS core and bootstrap families, PLSc/WPLS/PCA, prediction and assessment workflows, Gaussian-copula endogeneity, GSCA, regression/PROCESS, CB-SEM/CFA, and the advanced group/segmentation/model-comparison families. Some have bounded implementation or scaffolding in the repository, but that is not qualification evidence. A row can advance only after its exact current evidence is regenerated and the Registry V2 cross-check passes.
 
 ### Intentionally deferred
 
@@ -93,7 +105,7 @@ Each competitive-scope catalogue row must become `release-qualified` through a b
 7. Verify displayed values and CSV/XLSX/HTML/SVG outputs against the same completed run.
 8. Persist strict provenance and prove explicit save, close, reopen, and tamper rejection.
 9. Execute the exact packaged Windows application and retain method-scoped acceptance evidence.
-10. Promote the exact method manifest from current scoped evidence carrying the capability ID, method version, and catalogue snapshot identity; for the 17 established parity capabilities, separately promote the parity ledger from its accepted evidence path.
+10. Promote the exact method manifest from current scoped evidence carrying the capability ID, method version, and catalogue snapshot identity, then update the exact Registry V2 option cell only after the live registry-to-manifest cross-check passes. The historical parity ledger cannot promote the cell.
 
 Unsupported variants must remain blocked, hidden, or clearly disclosed. A descriptive comparison screen, source-code path, or historical passing report is not enough to promote a method.
 
@@ -159,4 +171,4 @@ The validator exits zero when the roadmap is internally valid even though planne
 - invalid commercial-readiness, external-beta, or method-manifest reports; missing manifest coverage; snapshot drift; or invalid competitor claim-gate references.
 - a present aggregate approval with missing bindings, digest drift, unsafe timing, an unapproved commercial decision, or any bound input/report mismatch.
 
-To update the frozen vendor baseline, review the official catalogue, change the snapshot and closed expected catalogue together, explain additions/removals in this document, and add mutation tests. To promote a QuickPLS row, first promote its exact method manifest; when the capability is one of the established parity-ledger set, promote that ledger through its accepted evidence process as well. Changing only this catalogue must fail validation.
+To update the frozen vendor baseline, review the official catalogue, change the snapshot and closed expected catalogue together, explain additions/removals in this document, and add mutation tests. To promote a QuickPLS row, first promote its exact method manifest and then the exact Registry V2 option cell. Changing only this generated catalogue or the historical parity ledger must fail validation.

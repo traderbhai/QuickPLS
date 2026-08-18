@@ -1,0 +1,7 @@
+{
+  "receipt_fixture_schema_version": 1,
+  "fixture_only": true,
+  "role": "performance_scale",
+  "legacy_artifact": "validation/results/performance_release_publication_audit.json",
+  "note": "Compatibility fixture only; this is not product qualification evidence."
+}

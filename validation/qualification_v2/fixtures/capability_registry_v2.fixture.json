@@ -1,0 +1,42 @@
+{
+  "registry_schema_version": 2,
+  "registry_id": "quickpls.capability_registry_v2.fixture",
+  "capabilities": [
+    {
+      "capability_id": "smartpls.pls_algorithm",
+      "coverage_state": "partial",
+      "evidence_state": "release_qualified",
+      "qualification_links": [
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "capability_version": "pls_pm_v1"
+        }
+      ],
+      "option_cells": [
+        {
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "capability_version": "pls_pm_v1",
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "labs",
+          "qualification_spec": {
+            "references": [
+              "validation/methods/pls_algorithm_v1.manifest.json"
+            ],
+            "links": [
+              {
+                "registry_schema_version": 2,
+                "capability_id": "smartpls.pls_algorithm",
+                "cell_id": "qpls3.pls.algorithm",
+                "capability_version": "pls_pm_v1"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

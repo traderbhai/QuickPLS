@@ -1,0 +1,1055 @@
+{
+  "schema_version": 2,
+  "identity": {
+    "capability_cell": {
+      "registry_schema_version": 2,
+      "capability_id": "smartpls.pls_power_analysis",
+      "capability_version": "pls_posthoc_technical_minimum_sample_size_v2",
+      "cell_id": "qpls3.pls.posthoc_technical_minimum_sample_size"
+    },
+    "execution_kind": "hybrid",
+    "method_version": "pls_posthoc_technical_minimum_sample_size_v2",
+    "potentially_long_running": true,
+    "qualification_id": "qpls3.pls.posthoc_technical_minimum_sample_size.qualification_v2",
+    "spec_frozen_at_utc": "2026-08-14T18:00:00Z"
+  },
+  "migration": {
+    "source_kind": "qualification_v1_manifest",
+    "source_manifest_path": "validation/capabilities/pls_posthoc_technical_minimum_sample_size_v2.cell.manifest.json",
+    "source_schema_version": 1,
+    "status": "compatibility_only",
+    "unresolved_items": [
+      "qualification.immutable_source_bound_receipts_pending_coordinated_refresh",
+      "export.svg_pdf_png_semantic_readback_pending_coordinated_refresh",
+      "packaged_windows.exact_cell_acceptance_pending_coordinated_release_build"
+    ]
+  },
+  "scientific_contract": {
+    "estimands": [
+      {
+        "id": "significance_aware_driver_selection",
+        "label": "Significance-aware structural-path driver",
+        "definition": "Match every finite structural path to one complete linked two-sided normal-reference PLS bootstrap probability, select probabilities at or below 0.05, and choose the smallest absolute significant coefficient with stable source-then-target tie-breaking; otherwise return the exact typed unavailable state.",
+        "unit": "stable path identities, probability, coefficient magnitude, counts, and typed status",
+        "output_ids": [
+          "result_status",
+          "eligible_path_count",
+          "significant_path_count",
+          "driver_source_id",
+          "driver_target_id",
+          "driver_p_value_two_sided",
+          "minimum_absolute_path_coefficient"
+        ]
+      },
+      {
+        "id": "inverse_square_root_technical_requirement",
+        "label": "Retrospective inverse-square-root technical requirement",
+        "definition": "For a nonzero finite selected driver beta_min, report ceil((2.486 / abs(beta_min))^2), the linked complete-case analytical sample size, and whether the analytical sample meets the technical requirement without clamping, epsilon substitution, or prospective-power interpretation.",
+        "unit": "observations and deterministic adequacy decision",
+        "output_ids": [
+          "technically_required_sample_size",
+          "analytical_sample_size",
+          "meets_technical_requirement"
+        ]
+      },
+      {
+        "id": "method_assumption_provenance",
+        "label": "Formula and selection-test provenance",
+        "definition": "Record separately the directional formula assumptions alpha 0.05 and power 0.80 from the two-sided bootstrap significance-selection source and threshold, together with the frozen selection rule.",
+        "unit": "exact method identifiers and fixed scalar assumptions",
+        "output_ids": [
+          "formula_constant",
+          "formula_alpha",
+          "formula_power",
+          "formula_test_direction",
+          "selection_rule",
+          "significance_source",
+          "significance_alpha"
+        ]
+      }
+    ],
+    "preprocessing": [
+      {
+        "id": "linked_pls_analytical_sample",
+        "order": 0,
+        "operation": "Use the exact finite model-wide complete-case rows and structural path estimates produced by the linked PLS-SEM point estimator; never derive a new sample or substitute missing values with zero.",
+        "parameters": {
+          "missing_policy": "inherits_pls_listwise_deletion",
+          "path_coefficients": "linked_point_estimate",
+          "prospective_power": false
+        },
+        "applies_to": [
+          "raw_numeric_pls_data",
+          "linked_pls_point_result"
+        ]
+      },
+      {
+        "id": "exact_path_inference_identity_join",
+        "order": 1,
+        "operation": "Join each structural path to exactly one bootstrap path parameter by source and target stable IDs; reject missing, duplicate, foreign, nonfinite, or out-of-range probabilities as inference_incomplete.",
+        "parameters": {
+          "identity": "source,target",
+          "probability_field": "p_value_two_sided",
+          "probability_range": "[0,1]",
+          "complete_join_required": true
+        },
+        "applies_to": [
+          "linked_pls_bootstrap_when_present"
+        ]
+      },
+      {
+        "id": "significant_driver_selection",
+        "order": 2,
+        "operation": "Retain paths with two-sided normal-reference bootstrap p at or below 0.05, then order by absolute coefficient, source stable ID, and target stable ID.",
+        "parameters": {
+          "alternative": "two_sided",
+          "alpha": 0.05,
+          "tie_break": "absolute_coefficient,source_id,target_id"
+        },
+        "applies_to": [
+          "complete_path_inference"
+        ]
+      },
+      {
+        "id": "inverse_square_root_calculation",
+        "order": 3,
+        "operation": "Apply the frozen directional inverse-square-root formula and ceiling only to the selected nonzero finite driver, preserving typed zero and supported-integer-range failures.",
+        "parameters": {
+          "constant": 2.486,
+          "alpha": 0.05,
+          "power": 0.8,
+          "formula_test": "directional",
+          "rounding": "ceiling",
+          "maximum_exact_integer": 9007199254740991
+        },
+        "applies_to": [
+          "selected_driver_path"
+        ]
+      }
+    ],
+    "model_predicates": [
+      {
+        "id": "pls_sem_result_only",
+        "expression": "The result belongs to the PLS-SEM algorithm cell, uses one valid recursive PLS model, and does not treat prospective Monte Carlo power as this result.",
+        "on_violation": "not_applicable",
+        "diagnostic_code": "posthoc_sample_size.pls_sem_result_required"
+      },
+      {
+        "id": "structural_path_identity_integrity",
+        "expression": "Every structural path has nonempty unique source and target stable IDs and a finite coefficient; a model with no structural path receives the explicit not_applicable_no_structural_path state.",
+        "on_violation": "error",
+        "diagnostic_code": "posthoc_sample_size.invalid_structural_path_identity"
+      },
+      {
+        "id": "optional_complete_bootstrap_link",
+        "expression": "Point-only PLS returns inference_unavailable; a numeric technical requirement requires one complete linked current PLS bootstrap probability for every structural path.",
+        "on_violation": "error",
+        "diagnostic_code": "posthoc_sample_size.incomplete_bootstrap_link"
+      }
+    ],
+    "data_predicates": [
+      {
+        "id": "raw_numeric_input_inherited",
+        "expression": "Input is raw numeric row-level data accepted by the qualified PLS estimator; covariance and correlation matrices are rejected for this bounded cell.",
+        "on_violation": "not_applicable",
+        "diagnostic_code": "posthoc_sample_size.raw_rows_required"
+      },
+      {
+        "id": "analytical_sample_binding",
+        "expression": "The reported analytical sample size equals the linked estimator used_observations count after its declared missing-data treatment.",
+        "on_violation": "error",
+        "diagnostic_code": "posthoc_sample_size.analytical_sample_mismatch"
+      },
+      {
+        "id": "finite_probability_and_integer_boundary",
+        "expression": "All supplied selection probabilities are finite in [0,1], coefficients are finite, and a numeric requirement is emitted only within the exact JSON integer boundary.",
+        "on_violation": "error",
+        "diagnostic_code": "posthoc_sample_size.numeric_boundary"
+      }
+    ],
+    "oracles": [
+      {
+        "id": "kock_hadaya_2018_inverse_square_root",
+        "kind": "primary_literature",
+        "citation": "Kock, N., and Hadaya, P. (2018). Minimum sample size estimation in PLS-SEM: The inverse square root and gamma-exponential methods. Information Systems Journal 28(1), 227-261.",
+        "locator": "https://doi.org/10.1111/isj.12131",
+        "independence_group": "primary_inverse_square_root_method",
+        "runtime_policy": "no_runtime_dependency",
+        "implementation": null,
+        "covered_estimand_ids": [
+          "significance_aware_driver_selection",
+          "inverse_square_root_technical_requirement",
+          "method_assumption_provenance"
+        ]
+      },
+      {
+        "id": "smartpls_official_published_examples",
+        "kind": "published_fixture",
+        "citation": "SmartPLS PLS-SEM Post Hoc Power Analysis official examples 0.10 through 0.40 and documented 5 percent, 80 percent, directional assumptions.",
+        "locator": "https://www.smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-power/",
+        "independence_group": "smartpls_official_documented_examples",
+        "runtime_policy": "development_validation_only",
+        "implementation": null,
+        "covered_estimand_ids": [
+          "inverse_square_root_technical_requirement",
+          "method_assumption_provenance"
+        ]
+      },
+      {
+        "id": "transparent_python_v2_reference",
+        "kind": "independent_implementation",
+        "citation": "Transparent Python standard-library implementation of identity matching, two-sided significance selection, stable ties, typed boundaries, ceiling arithmetic, and adequacy comparison.",
+        "locator": "validation/pls_posthoc_technical_sample_size_contract.py",
+        "independence_group": "python_standard_library_reference",
+        "runtime_policy": "development_validation_only",
+        "implementation": {
+          "name": "QuickPLS posthoc technical sample-size transparent Python oracle",
+          "version": "inverse_square_root_posthoc_v2",
+          "maintainer": "QuickPLS validation-only reference"
+        },
+        "covered_estimand_ids": [
+          "significance_aware_driver_selection",
+          "inverse_square_root_technical_requirement",
+          "method_assumption_provenance"
+        ]
+      },
+      {
+        "id": "required_independent_r_reference",
+        "kind": "independent_implementation",
+        "citation": "Independent base-R implementation of the complete v2 identity, selection, boundary, and formula contract, executed against the transparent Python implementation over a frozen 24-scenario seeded matrix.",
+        "locator": "validation/oracles/pls_posthoc_technical_sample_size_v2_reference.R",
+        "independence_group": "required_independent_r_reference",
+        "runtime_policy": "development_validation_only",
+        "implementation": {
+          "name": "QuickPLS independent base-R posthoc technical sample-size oracle",
+          "version": "inverse_square_root_posthoc_v2_reference_v1",
+          "maintainer": "QuickPLS validation-only reference"
+        },
+        "covered_estimand_ids": [
+          "significance_aware_driver_selection",
+          "inverse_square_root_technical_requirement",
+          "method_assumption_provenance"
+        ]
+      }
+    ],
+    "oracle_exception": null
+  },
+  "scenario_contract": {
+    "axes": [
+      {
+        "id": "model_topology",
+        "label": "Structural topology",
+        "values": [
+          {
+            "id": "no_structural_path",
+            "description": "No structural path, requiring an explicit not-applicable result."
+          },
+          {
+            "id": "single_path",
+            "description": "One eligible structural path with a unique driver."
+          },
+          {
+            "id": "branching_with_ties",
+            "description": "Several paths including equal absolute coefficients requiring stable tie-breaking."
+          }
+        ]
+      },
+      {
+        "id": "measurement_model",
+        "label": "PLS measurement model",
+        "values": [
+          {
+            "id": "reflective_mode_a",
+            "description": "Reflective Mode A blocks."
+          },
+          {
+            "id": "formative_mode_b",
+            "description": "Formative Mode B blocks within supported PLS estimation."
+          }
+        ]
+      },
+      {
+        "id": "data_distribution",
+        "label": "Data distribution",
+        "values": [
+          {
+            "id": "gaussian",
+            "description": "Well-conditioned approximately Gaussian indicators."
+          },
+          {
+            "id": "skewed_heavy_tail",
+            "description": "Skewed and heavy-tailed finite indicators."
+          }
+        ]
+      },
+      {
+        "id": "missingness",
+        "label": "Missing-data pattern",
+        "values": [
+          {
+            "id": "complete",
+            "description": "No missing model values."
+          },
+          {
+            "id": "listwise_mcar",
+            "description": "Deterministic MCAR values handled by inherited listwise deletion."
+          }
+        ]
+      },
+      {
+        "id": "input_type",
+        "label": "Input representation",
+        "values": [
+          {
+            "id": "raw_rows",
+            "description": "Supported raw observation input."
+          },
+          {
+            "id": "summary_matrix_rejected",
+            "description": "Covariance or correlation input rejected for this bounded cell."
+          }
+        ]
+      },
+      {
+        "id": "workload",
+        "label": "Inference workload",
+        "values": [
+          {
+            "id": "point_only",
+            "description": "PLS point result with typed inference_unavailable status."
+          },
+          {
+            "id": "bootstrap_linked",
+            "description": "Complete linked PLS bootstrap inference and numeric or typed boundary result."
+          }
+        ]
+      },
+      {
+        "id": "workers",
+        "label": "Worker scheduling",
+        "values": [
+          {
+            "id": "one_worker",
+            "description": "Serial execution."
+          },
+          {
+            "id": "four_workers",
+            "description": "Parallel execution with identical scientific result."
+          }
+        ]
+      },
+      {
+        "id": "significance_boundary",
+        "label": "Significance and metadata boundary",
+        "values": [
+          {
+            "id": "two_sided_p_at_alpha",
+            "description": "Two-sided bootstrap p exactly 0.05 is included."
+          },
+          {
+            "id": "no_significant_path",
+            "description": "Every complete two-sided probability exceeds 0.05."
+          },
+          {
+            "id": "one_sided_metadata_rejected",
+            "description": "One-sided selection metadata is rejected and never conflated with the directional formula."
+          }
+        ]
+      }
+    ],
+    "complexity_profiles": [
+      {
+        "id": "micro_exact",
+        "description": "Executed 24-scenario Python-versus-base-R formula, identity, tie, reorder, and typed-boundary matrix.",
+        "applicability": "required",
+        "not_applicable_reason": null,
+        "workload": {
+          "rows": null,
+          "indicators": null,
+          "constructs": null,
+          "resamples": null,
+          "groups": 1,
+          "candidate_models": 24
+        }
+      },
+      {
+        "id": "applied",
+        "description": "Executed compact linked PLS bootstrap fixture with exact one-worker/four-worker payload invariance.",
+        "applicability": "required",
+        "not_applicable_reason": null,
+        "workload": {
+          "rows": 6,
+          "indicators": 4,
+          "constructs": 2,
+          "resamples": 99,
+          "groups": 1,
+          "candidate_models": 24
+        }
+      },
+      {
+        "id": "large",
+        "description": "No separate large-scale post-hoc kernel profile is claimed.",
+        "applicability": "not_applicable",
+        "not_applicable_reason": "The deterministic post-hoc kernel consumes a completed path summary; linked PLS estimation and bootstrap scale belong to their separately qualified base cells.",
+        "workload": {
+          "rows": null,
+          "indicators": null,
+          "constructs": null,
+          "resamples": null,
+          "groups": null,
+          "candidate_models": null
+        }
+      },
+      {
+        "id": "maximum_axis",
+        "description": "No independent maximum-axis claim is made for this derived result.",
+        "applicability": "not_applicable",
+        "not_applicable_reason": "Maximum rows, indicators, constructs, and resamples are properties of the linked PLS/bootstrap run, not of this deterministic derived-result kernel.",
+        "workload": {
+          "rows": null,
+          "indicators": null,
+          "constructs": null,
+          "resamples": null,
+          "groups": null,
+          "candidate_models": null
+        }
+      },
+      {
+        "id": "compound_stress",
+        "description": "No independent compound-stress or soak claim is made for this derived result.",
+        "applicability": "not_applicable",
+        "not_applicable_reason": "Compound execution, cancellation, and soak behavior are inherited from the linked PLS/bootstrap run and remain governed by those separately qualified cells.",
+        "workload": {
+          "rows": null,
+          "indicators": null,
+          "constructs": null,
+          "resamples": null,
+          "groups": null,
+          "candidate_models": null
+        }
+      }
+    ],
+    "mandatory_combinations": [
+      {
+        "id": "all_axis_pairwise_contract",
+        "profile_id": "applied",
+        "coverage": "pairwise",
+        "purpose": "Cover every pair of declared axis values, including negative input and one-sided metadata boundaries.",
+        "stressed_dimensions": [],
+        "selections": {
+          "model_topology": [
+            "no_structural_path",
+            "single_path",
+            "branching_with_ties"
+          ],
+          "measurement_model": [
+            "reflective_mode_a",
+            "formative_mode_b"
+          ],
+          "data_distribution": [
+            "gaussian",
+            "skewed_heavy_tail"
+          ],
+          "missingness": [
+            "complete",
+            "listwise_mcar"
+          ],
+          "input_type": [
+            "raw_rows",
+            "summary_matrix_rejected"
+          ],
+          "workload": [
+            "point_only",
+            "bootstrap_linked"
+          ],
+          "workers": [
+            "one_worker",
+            "four_workers"
+          ],
+          "significance_boundary": [
+            "two_sided_p_at_alpha",
+            "no_significant_path",
+            "one_sided_metadata_rejected"
+          ]
+        }
+      },
+      {
+        "id": "micro_formula_ties_and_boundaries",
+        "profile_id": "micro_exact",
+        "coverage": "targeted",
+        "purpose": "Reproduce published formula examples, stable ties, p equal to 0.05, zero, nonfinite, and no-path states.",
+        "stressed_dimensions": [],
+        "selections": {
+          "model_topology": [
+            "no_structural_path",
+            "single_path",
+            "branching_with_ties"
+          ],
+          "measurement_model": [
+            "reflective_mode_a"
+          ],
+          "data_distribution": [
+            "gaussian"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "workload": [
+            "point_only"
+          ],
+          "workers": [
+            "one_worker"
+          ],
+          "significance_boundary": [
+            "two_sided_p_at_alpha",
+            "no_significant_path",
+            "one_sided_metadata_rejected"
+          ]
+        }
+      },
+      {
+        "id": "applied_gui_cli_archive_equivalence",
+        "profile_id": "applied",
+        "coverage": "targeted",
+        "purpose": "Require one completed run to agree across runner, native table, CLI rows, canonical document, exports, and archive reopen.",
+        "stressed_dimensions": [],
+        "selections": {
+          "model_topology": [
+            "branching_with_ties"
+          ],
+          "measurement_model": [
+            "reflective_mode_a"
+          ],
+          "data_distribution": [
+            "gaussian"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "workload": [
+            "bootstrap_linked"
+          ],
+          "workers": [
+            "one_worker",
+            "four_workers"
+          ],
+          "significance_boundary": [
+            "two_sided_p_at_alpha"
+          ]
+        }
+      },
+      {
+        "id": "large_worker_and_export_determinism",
+        "profile_id": "large",
+        "coverage": "targeted",
+        "purpose": "Deferred: no separate large post-hoc kernel profile is claimed beyond the compact linked worker-invariance fixture.",
+        "stressed_dimensions": [],
+        "selections": {
+          "model_topology": [
+            "branching_with_ties"
+          ],
+          "measurement_model": [
+            "reflective_mode_a",
+            "formative_mode_b"
+          ],
+          "data_distribution": [
+            "skewed_heavy_tail"
+          ],
+          "missingness": [
+            "listwise_mcar"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "workload": [
+            "bootstrap_linked"
+          ],
+          "workers": [
+            "one_worker",
+            "four_workers"
+          ],
+          "significance_boundary": [
+            "two_sided_p_at_alpha"
+          ]
+        }
+      },
+      {
+        "id": "maximum_rows",
+        "profile_id": "maximum_axis",
+        "coverage": "targeted",
+        "purpose": "Deferred to the separately qualified linked PLS/bootstrap cells; no post-hoc maximum-rows claim.",
+        "stressed_dimensions": [
+          "rows"
+        ],
+        "selections": {
+          "model_topology": [
+            "no_structural_path"
+          ],
+          "measurement_model": [
+            "reflective_mode_a"
+          ],
+          "data_distribution": [
+            "gaussian"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "workload": [
+            "point_only"
+          ],
+          "workers": [
+            "four_workers"
+          ],
+          "significance_boundary": [
+            "two_sided_p_at_alpha"
+          ]
+        }
+      },
+      {
+        "id": "maximum_indicators",
+        "profile_id": "maximum_axis",
+        "coverage": "targeted",
+        "purpose": "Deferred to the separately qualified linked PLS/bootstrap cells; no post-hoc maximum-indicators claim.",
+        "stressed_dimensions": [
+          "indicators"
+        ],
+        "selections": {
+          "model_topology": [
+            "branching_with_ties"
+          ],
+          "measurement_model": [
+            "reflective_mode_a"
+          ],
+          "data_distribution": [
+            "gaussian"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "workload": [
+            "point_only"
+          ],
+          "workers": [
+            "four_workers"
+          ],
+          "significance_boundary": [
+            "two_sided_p_at_alpha"
+          ]
+        }
+      },
+      {
+        "id": "maximum_constructs",
+        "profile_id": "maximum_axis",
+        "coverage": "targeted",
+        "purpose": "Deferred to the separately qualified linked PLS/bootstrap cells; no post-hoc maximum-constructs claim.",
+        "stressed_dimensions": [
+          "constructs"
+        ],
+        "selections": {
+          "model_topology": [
+            "branching_with_ties"
+          ],
+          "measurement_model": [
+            "reflective_mode_a"
+          ],
+          "data_distribution": [
+            "gaussian"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "workload": [
+            "point_only"
+          ],
+          "workers": [
+            "four_workers"
+          ],
+          "significance_boundary": [
+            "two_sided_p_at_alpha"
+          ]
+        }
+      },
+      {
+        "id": "maximum_resamples",
+        "profile_id": "maximum_axis",
+        "coverage": "targeted",
+        "purpose": "Deferred to the separately qualified linked bootstrap cell; no separate post-hoc maximum-resamples claim.",
+        "stressed_dimensions": [
+          "resamples"
+        ],
+        "selections": {
+          "model_topology": [
+            "no_structural_path"
+          ],
+          "measurement_model": [
+            "reflective_mode_a"
+          ],
+          "data_distribution": [
+            "gaussian"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "workload": [
+            "bootstrap_linked"
+          ],
+          "workers": [
+            "four_workers"
+          ],
+          "significance_boundary": [
+            "two_sided_p_at_alpha"
+          ]
+        }
+      },
+      {
+        "id": "compound_execution_persistence_and_cancel",
+        "profile_id": "compound_stress",
+        "coverage": "compound",
+        "purpose": "Deferred to the linked base cells; no separate post-hoc compound-stress or soak claim.",
+        "stressed_dimensions": [
+          "rows",
+          "indicators",
+          "constructs",
+          "resamples"
+        ],
+        "selections": {
+          "model_topology": [
+            "branching_with_ties"
+          ],
+          "measurement_model": [
+            "reflective_mode_a",
+            "formative_mode_b"
+          ],
+          "data_distribution": [
+            "skewed_heavy_tail"
+          ],
+          "missingness": [
+            "listwise_mcar"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "workload": [
+            "bootstrap_linked"
+          ],
+          "workers": [
+            "four_workers"
+          ],
+          "significance_boundary": [
+            "two_sided_p_at_alpha"
+          ]
+        }
+      }
+    ],
+    "monte_carlo_policy": {
+      "confidence_level": 0.95,
+      "maximum_half_width": 0.01,
+      "failed_fits_in_denominator": true
+    }
+  },
+  "comparison_contract": {
+    "outputs": [
+      {
+        "output_id": "result_status",
+        "rule": "exact",
+        "rationale": "Typed availability and boundary states must match exactly."
+      },
+      {
+        "output_id": "eligible_path_count",
+        "rule": "exact",
+        "rationale": "The eligible structural-path count is deterministic and integer-valued."
+      },
+      {
+        "output_id": "significant_path_count",
+        "rule": "exact",
+        "rationale": "The selected two-sided threshold count is deterministic, including null and zero states."
+      },
+      {
+        "output_id": "driver_source_id",
+        "rule": "exact",
+        "rationale": "Stable driver source identity must agree exactly after deterministic tie-breaking."
+      },
+      {
+        "output_id": "driver_target_id",
+        "rule": "exact",
+        "rationale": "Stable driver target identity must agree exactly after deterministic tie-breaking."
+      },
+      {
+        "output_id": "driver_p_value_two_sided",
+        "rule": "abs_relative",
+        "rationale": "Finite two-sided normal-reference probabilities are compared on probability scale.",
+        "absolute_tolerance": 1e-12,
+        "relative_tolerance": 1e-12
+      },
+      {
+        "output_id": "minimum_absolute_path_coefficient",
+        "rule": "abs_relative",
+        "rationale": "The selected absolute coefficient is compared at floating-point estimator precision.",
+        "absolute_tolerance": 1e-12,
+        "relative_tolerance": 1e-12
+      },
+      {
+        "output_id": "technically_required_sample_size",
+        "rule": "exact",
+        "rationale": "The ceiling formula yields one exact integer or a typed missing value."
+      },
+      {
+        "output_id": "analytical_sample_size",
+        "rule": "exact",
+        "rationale": "The linked complete-case analytical sample count must agree exactly."
+      },
+      {
+        "output_id": "meets_technical_requirement",
+        "rule": "exact",
+        "rationale": "The adequacy comparison is a deterministic Boolean or typed missing value."
+      },
+      {
+        "output_id": "formula_constant",
+        "rule": "exact",
+        "rationale": "The frozen inverse-square-root constant is exactly 2.486."
+      },
+      {
+        "output_id": "formula_alpha",
+        "rule": "exact",
+        "rationale": "The formula metadata fixes alpha at 0.05."
+      },
+      {
+        "output_id": "formula_power",
+        "rule": "exact",
+        "rationale": "The formula metadata fixes power at 0.80."
+      },
+      {
+        "output_id": "formula_test_direction",
+        "rule": "exact",
+        "rationale": "Directional formula metadata must never be relabeled as two-sided inference."
+      },
+      {
+        "output_id": "selection_rule",
+        "rule": "exact",
+        "rationale": "The statistically-significant weakest-path selection rule is a frozen identifier."
+      },
+      {
+        "output_id": "significance_source",
+        "rule": "exact",
+        "rationale": "The current v2 selection source is explicitly two-sided normal-reference PLS bootstrap inference."
+      },
+      {
+        "output_id": "significance_alpha",
+        "rule": "exact",
+        "rationale": "The selection threshold is exactly 0.05 when inference is present and missing otherwise."
+      }
+    ]
+  },
+  "operational_contract": {
+    "performance": {
+      "hardware_classes": [
+        {
+          "id": "standard_windows",
+          "os_family": "windows",
+          "architecture": "x86_64",
+          "minimum_logical_cores": 6,
+          "minimum_memory_gib": 16,
+          "notes": "QuickPLS Standard reference hardware on Windows 11."
+        },
+        {
+          "id": "workstation_windows",
+          "os_family": "windows",
+          "architecture": "x86_64",
+          "minimum_logical_cores": 12,
+          "minimum_memory_gib": 32,
+          "notes": "QuickPLS Workstation reference hardware on Windows 11."
+        }
+      ],
+      "baseline_policy": {
+        "warmup_runs": 1,
+        "measured_runs": 5,
+        "statistic": "p95",
+        "maximum_runtime_regression_percent": 20,
+        "maximum_memory_regression_percent": 20
+      },
+      "budgets": [
+        {
+          "profile_id": "micro_exact",
+          "hardware_class_id": "standard_windows",
+          "maximum_elapsed_seconds": 5,
+          "maximum_peak_working_set_bytes": 536870912,
+          "maximum_result_bytes": 1048576,
+          "maximum_cancellation_latency_seconds": 1
+        },
+        {
+          "profile_id": "applied",
+          "hardware_class_id": "standard_windows",
+          "maximum_elapsed_seconds": 120,
+          "maximum_peak_working_set_bytes": 4294967296,
+          "maximum_result_bytes": 52428800,
+          "maximum_cancellation_latency_seconds": 1
+        },
+        {
+          "profile_id": "micro_exact",
+          "hardware_class_id": "workstation_windows",
+          "maximum_elapsed_seconds": 5,
+          "maximum_peak_working_set_bytes": 536870912,
+          "maximum_result_bytes": 1048576,
+          "maximum_cancellation_latency_seconds": 1
+        },
+        {
+          "profile_id": "applied",
+          "hardware_class_id": "workstation_windows",
+          "maximum_elapsed_seconds": 120,
+          "maximum_peak_working_set_bytes": 4294967296,
+          "maximum_result_bytes": 52428800,
+          "maximum_cancellation_latency_seconds": 1
+        }
+      ]
+    },
+    "archive": {
+      "current_schema_version": 6,
+      "readable_schema_versions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "writable_schema_versions": [
+        5,
+        6
+      ],
+      "future_schema_policy": "verified_read_only",
+      "corruption_cases": [
+        "feature_identity",
+        "method_version",
+        "dataset_fingerprint",
+        "checksum",
+        "duplicate_entry",
+        "malformed_payload",
+        "legacy_reinterpretation",
+        "interrupted_save"
+      ]
+    },
+    "export": {
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf",
+        "png"
+      ],
+      "semantic_readback_formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf"
+      ],
+      "canonical_projection_id": "posthoc_minimum_sample_size_v2",
+      "same_run_required": true,
+      "provenance_required": true,
+      "validation_witness_excluded": true
+    },
+    "windows": {
+      "package_kinds": [
+        "installed",
+        "portable"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
+      "display_scale_percent": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "offline_required": true,
+      "keyboard_only_required": true,
+      "accessible_tables_required": true,
+      "real_pointer_required": true
+    },
+    "cancellation": {
+      "required_for_potentially_long_operations": true,
+      "maximum_latency_seconds": 1,
+      "phases": [
+        {
+          "phase": "validate",
+          "applicability": "required",
+          "not_applicable_reason": null
+        },
+        {
+          "phase": "estimate",
+          "applicability": "required",
+          "not_applicable_reason": null
+        },
+        {
+          "phase": "resample",
+          "applicability": "required",
+          "not_applicable_reason": null
+        },
+        {
+          "phase": "compare",
+          "applicability": "not_applicable",
+          "not_applicable_reason": "This result does not execute a competing-model comparison."
+        },
+        {
+          "phase": "export",
+          "applicability": "required",
+          "not_applicable_reason": null
+        }
+      ],
+      "no_partial_visible_result": true,
+      "no_partial_committed_result": true,
+      "archive_unchanged": true,
+      "same_settings_retry": true
+    }
+  },
+  "evidence_contract": {
+    "required_roles": [
+      "method_contract",
+      "kernel_execution",
+      "oracle_independence",
+      "adversarial_boundaries",
+      "archive_persistence",
+      "cross_format_export",
+      "frontend_contract",
+      "packaged_windows_e2e"
+    ],
+    "receipt_contract": {
+      "hash_algorithm": "sha256",
+      "identity_fields": [
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "build_fingerprint"
+      ],
+      "source_descriptors_required": true,
+      "hardware_fingerprint_required": true,
+      "scenario_set_hash_required": true
+    },
+    "receipts": []
+  }
+}

@@ -1,21 +1,22 @@
 {
   "passed": true,
-  "generatedAt": "2026-08-13T19:36:08.715Z",
+  "generatedAt": "2026-08-18T13:52:32.491Z",
   "endpoint": "http://127.0.0.1:9222",
   "runtime": "tauri-webview2-cdp",
   "focusedRun": {
     "scope": "pca",
     "priorGeneratedAt": null,
-    "completedAt": "2026-08-13T19:37:15.253Z"
+    "completedAt": "2026-08-18T13:53:40.357Z"
   },
   "checks": {
     "pcaFixtureProvisioning": {
       "sourceCsv": "D:\\QuickPLS\\validation\\results\\v08_extended_methods_fixture.csv",
-      "project": "D:\\QuickPLS\\validation\\results\\v247-native-pca-1786649768712-22396.qpls",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-pca-1787061152485-3376.qpls",
       "projectName": "Native PCA Acceptance",
       "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
-      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-pca-1786649768712-22396.qpls",
-      "stderr": ""
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-pca-1787061152485-3376.qpls",
+      "stderr": "",
+      "importAttempts": 1
     },
     "runtimePreflight": {
       "passed": true,
@@ -48,7 +49,8 @@
         "shellVisible": true,
         "tauriRuntime": true
       },
-      "sameOrigin": true
+      "sameOrigin": true,
+      "experimentalLabsPreferenceRestored": true
     },
     "runtime": {
       "title": "QuickPLS",
@@ -61,7 +63,7 @@
       "surface": "launcher"
     },
     "pcaFixture": {
-      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-pca-1786649768712-22396.qpls",
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-pca-1787061152485-3376.qpls",
       "status": "ReadyNative PCA Acceptancev08_extended_methods_fixture.csv140 cases0 constructsDataOffline",
       "cases": 140,
       "columns": [
@@ -90,7 +92,7 @@
       }
     },
     "pcaDialog": {
-      "catalogCount": 15,
+      "catalogCount": 18,
       "canonicalCatalogKinds": [
         "pls_algorithm",
         "plsc",
@@ -101,7 +103,10 @@
         "ipma",
         "cbsem",
         "pls_bootstrap",
+        "plsc_bootstrap",
         "pls_permutation",
+        "pls_posthoc_technical_minimum_sample_size",
+        "pls_sample_size_power",
         "mga",
         "predict",
         "nca",
@@ -118,7 +123,10 @@
         "ipma",
         "cbsem",
         "pls_bootstrap",
+        "plsc_bootstrap",
         "pls_permutation",
+        "pls_posthoc_technical_minimum_sample_size",
+        "pls_sample_size_power",
         "mga",
         "predict",
         "nca",
@@ -166,7 +174,7 @@
       "detail": "standalone PCA left its active lifecycle before the evidence snapshot completed."
     },
     "pcaResult": {
-      "runId": "98be6078-1ad2-41e7-8354-8449abbc8549",
+      "runId": "842fff18-ee0a-40ec-8ea6-960c2d6d583f",
       "runLabel": "Principal Component Analysis run",
       "initialSelectedTable": "pca_component_summary",
       "treeItems": [
@@ -342,7 +350,7 @@
         ]
       },
       "scope": {
-        "rows": 10,
+        "rows": 11,
         "headers": [
           "Field",
           "Value"
@@ -385,6 +393,10 @@
             "None"
           ],
           [
+            "Validated scope",
+            "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling."
+          ],
+          [
             "Method version",
             "pca_v1"
           ]
@@ -400,15 +412,16 @@
         "Input matrix": "Correlation matrix of standardized variables",
         "Missing data": "Listwise deletion",
         "Rotation": "None",
+        "Validated scope": "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling.",
         "Method version": "pca_v1"
       },
       "runDetails": {
         "properties": {
           "Run": "Principal Component Analysis run",
           "Method": "Principal Component Analysis",
-          "Created": "14/8/2026, 1:06:40 am",
+          "Created": "18/8/2026, 7:23:04 pm",
           "Dataset fingerprint": "v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb",
-          "Recipe": "99f901ff-390e-4ce0-95ed-837b6d790721",
+          "Recipe": "6e6e23ba-4941-4f4a-9dbf-c664bad7a473",
           "Engine": "2.46.0",
           "Method version": "pca_v1",
           "Variables": "5",
@@ -451,8 +464,8 @@
             "event": "ready",
             "mainWindow": {
               "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-              "handle": 13042718,
-              "pid": 64628,
+              "handle": 2097920,
+              "pid": 56724,
               "title": "QuickPLS"
             },
             "passed": true,
@@ -467,17 +480,17 @@
             },
             "dialog": {
               "className": "#32770",
-              "directOwner": 13042718,
-              "handle": 24970102,
-              "pid": 64628,
-              "rootOwner": 13042718,
+              "directOwner": 2097920,
+              "handle": 2622558,
+              "pid": 56724,
+              "rootOwner": 2097920,
               "title": "Save As"
             },
             "event": "complete",
             "mainWindow": {
               "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-              "handle": 13042718,
-              "pid": 64628,
+              "handle": 2097920,
+              "pid": 56724,
               "title": "QuickPLS"
             },
             "passed": true,
@@ -510,6 +523,8 @@
                 "Component scores",
                 "Run provenance",
                 "Cumulative variance threshold",
+                "Validated scope",
+                "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling.",
                 "pca_v1"
               ],
               "requiredSheets": [
@@ -519,7 +534,7 @@
                 "Component scores",
                 "Run provenance"
               ],
-              "sha256": "98c0ff9c9905430b4fcb3824741aca65be73ce077d6772b5330264ed55ece43d",
+              "sha256": "2f2960cc9d672e9f2b26441854f0c423149d046479e82ebb6d218f31b5db9cba",
               "sheetNames": [
                 "Component summary",
                 "Component loadings and weights",
@@ -527,7 +542,7 @@
                 "Component scores",
                 "Run provenance"
               ],
-              "size": 15751
+              "size": 15894
             },
             "transport": {
               "exitCode": 0,
@@ -538,8 +553,8 @@
                   "event": "ready",
                   "mainWindow": {
                     "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-                    "handle": 13042718,
-                    "pid": 64628,
+                    "handle": 2097920,
+                    "pid": 56724,
                     "title": "QuickPLS"
                   },
                   "passed": true,
@@ -554,17 +569,17 @@
                   },
                   "dialog": {
                     "className": "#32770",
-                    "directOwner": 13042718,
-                    "handle": 24970102,
-                    "pid": 64628,
-                    "rootOwner": 13042718,
+                    "directOwner": 2097920,
+                    "handle": 2622558,
+                    "pid": 56724,
+                    "rootOwner": 2097920,
                     "title": "Save As"
                   },
                   "event": "complete",
                   "mainWindow": {
                     "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-                    "handle": 13042718,
-                    "pid": 64628,
+                    "handle": 2097920,
+                    "pid": 56724,
                     "title": "QuickPLS"
                   },
                   "passed": true,
@@ -597,6 +612,8 @@
                       "Component scores",
                       "Run provenance",
                       "Cumulative variance threshold",
+                      "Validated scope",
+                      "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling.",
                       "pca_v1"
                     ],
                     "requiredSheets": [
@@ -606,7 +623,7 @@
                       "Component scores",
                       "Run provenance"
                     ],
-                    "sha256": "98c0ff9c9905430b4fcb3824741aca65be73ce077d6772b5330264ed55ece43d",
+                    "sha256": "2f2960cc9d672e9f2b26441854f0c423149d046479e82ebb6d218f31b5db9cba",
                     "sheetNames": [
                       "Component summary",
                       "Component loadings and weights",
@@ -614,7 +631,7 @@
                       "Component scores",
                       "Run provenance"
                     ],
-                    "size": 15751
+                    "size": 15894
                   }
                 }
               ],
@@ -624,7 +641,7 @@
         },
         "appFeedback": "Saved pca_v1_packaged.xlsx.",
         "file": {
-          "size": 15751,
+          "size": 15894,
           "isFile": true
         },
         "workbookSheets": [
@@ -637,16 +654,16 @@
       }
     },
     "pcaSaveReopen": {
-      "expectedRunId": "98be6078-1ad2-41e7-8354-8449abbc8549",
-      "selectedRunId": "98be6078-1ad2-41e7-8354-8449abbc8549",
+      "expectedRunId": "842fff18-ee0a-40ec-8ea6-960c2d6d583f",
+      "selectedRunId": "842fff18-ee0a-40ec-8ea6-960c2d6d583f",
       "sameRunRestored": true,
       "summaryRows": 4,
       "loadingRows": 20,
-      "scopeRows": 10,
+      "scopeRows": 11,
       "archive": {
         "manifestEngineVersion": "2.46.0",
         "packageVersion": "2.46.0",
-        "resultId": "98be6078-1ad2-41e7-8354-8449abbc8549",
+        "resultId": "842fff18-ee0a-40ec-8ea6-960c2d6d583f",
         "resultStatus": "completed",
         "provenanceMethod": "pca",
         "provenanceMethodVersion": "pca_v1",
@@ -713,7 +730,7 @@
         "finiteScores": true,
         "thresholdCrossing": true,
         "warnings": [
-          "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+          "Standalone PCA v1 supports the model, data, and settings listed in Method Details; incompatible setups remain blocked."
         ],
         "unrelatedPayloads": [],
         "recipe": {
@@ -757,6 +774,38 @@
     "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\113-tauri-native-pca-results-1536x794.png",
     "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\114-tauri-native-pca-export-1536x794.png",
     "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\115-tauri-native-pca-reopened-1536x794.png"
+  ],
+  "screenshotArtifacts": [
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/110-tauri-native-pca-fixture-data-1536x794.png",
+      "size": 293531,
+      "sha256": "1e08babe865ffecf52cd0fb52c3bd1341ce7dabd7d368d59d82fe5a011a00340"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/111-tauri-native-pca-dialog-1536x794.png",
+      "size": 273099,
+      "sha256": "629221b2e56104bba7a72f42248a55309cc5ca41896a8b29f8ccd79fecfdb84b"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/112-tauri-native-pca-running-1536x794.png",
+      "size": 230639,
+      "sha256": "e9b31dad8c7f9998141772c6871359a0b2f3cd2a954e6044f6c312de9c9a0480"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/113-tauri-native-pca-results-1536x794.png",
+      "size": 80418,
+      "sha256": "c0f1deea24f84bd142cbb23958de86667d366384c738fb52b6907d1a3da12266"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/114-tauri-native-pca-export-1536x794.png",
+      "size": 104232,
+      "sha256": "eb688f725822e765dbd347cd9edfa18abc7b9d7ea43e37774f4dd2ae15864590"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/115-tauri-native-pca-reopened-1536x794.png",
+      "size": 77353,
+      "sha256": "6b74d204d5935940e28b946f7a0dc70c5ad8acd16151200b26b55371fbda9b13"
+    }
   ],
   "consoleErrors": [],
   "failures": []

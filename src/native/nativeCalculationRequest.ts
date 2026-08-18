@@ -61,6 +61,31 @@ export function parseNativeCalculationRequest(value: unknown): NativeCalculation
     || settings.workers < 1
     || settings.workers > 64
   )) return null;
+  if (kind === "mga") {
+    const groupMethods = (settings.groupMethods ?? "")
+      .split(",")
+      .map((method) => method.trim())
+      .filter(Boolean);
+    const groupA = settings.groupAValue?.trim() ?? "";
+    const groupB = settings.groupBValue?.trim() ?? "";
+    if (!settings.groupColumn?.trim()
+      || !groupA
+      || !groupB
+      || groupA === groupB
+      || groupMethods.length !== 2
+      || groupMethods[0] !== "micom"
+      || groupMethods[1] !== "mga_permutation"
+      || settings.micomConfiguralConfirmed !== true
+      || !Number.isInteger(settings.groupPermutationSamples)
+      || settings.groupPermutationSamples! < 5_000
+      || settings.groupPermutationSamples! > 10_000
+      || settings.weightingScheme !== "path"
+      || settings.preprocessing !== "standardized"
+      || settings.bootstrapSamples !== 0
+      || settings.studentizedInnerSamples !== 0
+      || settings.permutationSamples !== 0
+      || Boolean(settings.caseWeightColumn?.trim())) return null;
+  }
   const process = kind === "regression" && settings.regressionType === "process";
   if (process) {
     const graph = nativeProcessGraphAssessment(settings);

@@ -1,0 +1,112 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "commands": [
+      {
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "qpls-cli",
+          "typed_power_v2_export_exposes_exact_tail_accounting_and_rejects_tampering",
+          "--",
+          "--nocapture"
+        ],
+        "duration_seconds": 55.295,
+        "returncode": 0,
+        "stderr_tail": "    Blocking waiting for file lock on build directory\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 54.80s\n     Running unittests src\\main.rs (target\\debug\\deps\\qpls-e2390cb85b1f9a14.exe)\n",
+        "stdout_tail": "\nrunning 1 test\ntest tests::typed_power_v2_export_exposes_exact_tail_accounting_and_rejects_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.09s\n\n"
+      },
+      {
+        "command": [
+          "npm.cmd",
+          "test",
+          "--",
+          "--run",
+          "src/domain/methodStatus.test.ts",
+          "src/domain/methodApplicability.test.ts",
+          "src/native/nativeAnalysisRecipe.test.ts",
+          "src/native/nativePlsSampleSizePower.test.ts"
+        ],
+        "duration_seconds": 13.411,
+        "returncode": 0,
+        "stderr_tail": "",
+        "stdout_tail": "\n> quickpls@2.46.0 test\n> vitest run --run src/domain/methodStatus.test.ts src/domain/methodApplicability.test.ts src/native/nativeAnalysisRecipe.test.ts src/native/nativePlsSampleSizePower.test.ts\n\n\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  4 passed (4)\n      Tests  83 passed (83)\n   Start at  12:29:50\n   Duration  5.63s (transform 4.16s, setup 0ms, import 7.40s, tests 391ms, environment 1ms)\n\n"
+      }
+    ],
+    "independent_calibration": {
+      "bootstrap_failure_rate": 1.443001443001443e-05,
+      "pooled_null_rate": 0.058333333333333334,
+      "pooled_null_wilson_95": [
+        0.042239474556454035,
+        0.08004669467231493
+      ],
+      "sha256": "a590ebdff5dd7dcf9078d3ef048372eade13206f82a7c2b923390689c8f512ff",
+      "signal_rejection_rate": 0.75
+    }
+  },
+  "feature_id": "qpls3.pls.sample_size_power",
+  "generated_at_utc": "2026-08-18T06:59:56.741969Z",
+  "method_version": "pls_sample_size_power_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "native",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.ts",
+      "sha256": "57d3c19c60f621d356a5d310ff462dd2056c8785a6aed0f699506a4e820e1d38",
+      "size": 59934
+    },
+    {
+      "path": "src/native/nativeExportTables.ts",
+      "sha256": "6ce1244a6be88c0035a6113b070f5c876b46807623f96c949f1d41c985aa6ba7",
+      "size": 42765
+    },
+    {
+      "path": "src/native/nativePlsSampleSizePower.test.ts",
+      "sha256": "a84ae883ad752c8621379a4031602b0669534ea00062cee8d87097caf7a40ede",
+      "size": 11659
+    },
+    {
+      "path": "src/native/nativePlsSampleSizePower.ts",
+      "sha256": "f883cd394249323165aed67b5d5a40f7701bb82bacd7e8a022e42472f5df22fd",
+      "size": 34376
+    },
+    {
+      "path": "src/native/nativeResults.ts",
+      "sha256": "86159a6227f9c404ba7056f7002ccc8ccd637c003489e1e4cb1b5328275c4007",
+      "size": 350624
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_sample_size_power_v2.manifest.json",
+      "sha256": "e17b2d0ed1a6cbca2a2665c00be01096a33083db30bb7ef3c59aebcad70a5e1e",
+      "size": 16760
+    },
+    {
+      "path": "validation/pls_sample_size_power_v2_factory.py",
+      "sha256": "d9630f4625f6d0ce865d26940570c9db76e7eadb3a4d612bdfd98cdc7556c565",
+      "size": 8085
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

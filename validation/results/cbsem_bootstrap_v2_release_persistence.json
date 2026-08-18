@@ -1,0 +1,22 @@
+{
+  "kind": "cbsem_bootstrap_v2_persistence_v2",
+  "passed": false,
+  "feature_id": "qpls3.cbsem.bootstrap",
+  "method_version": "cbsem_bootstrap_v2",
+  "structural_checks_passed": true,
+  "semantic_replay_authentication": "not_implemented",
+  "checks": {
+    "archive_checksums_existing": true,
+    "outer_recipe_settings_provenance_bound": true,
+    "outer_dataset_fingerprint_bound": true,
+    "v2_scientific_witness_fields_present": true,
+    "structural_v2_summary_validator_present": true,
+    "legacy_v1_read_only_test_present": true,
+    "v2_tamper_mutation_tests_present": true,
+    "coordinated_rewrite_gap_documented": true
+  },
+  "blockers": [
+    "coordinated_witness_semantic_rewrite_not_replayed"
+  ],
+  "note": "The validator binds identities, provenance, accounting, sample-position hashes, and summaries derived from stored estimates. It does not currently rerun every sampled full-ML fit, so coordinated semantic witness rewrites are not authenticated."
+}

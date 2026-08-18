@@ -7,9 +7,11 @@ license.workspace = true
 [dependencies]
 arrow.workspace = true
 faer.workspace = true
+libm = "=0.2.16"
 qpls-core = { path = "../qpls-core" }
 qpls-data = { path = "../qpls-data" }
 qpls-estimation = { path = "../qpls-estimation" }
+qpls-assessment = { path = "../qpls-assessment" }
 rand.workspace = true
 rand_chacha.workspace = true
 rayon.workspace = true

@@ -74,7 +74,7 @@ function dataItem(dataset: Dataset, nativeDesktop: boolean): ReadinessItem {
       id: "data",
       label: "Data",
       detail: hasVisibleData
-        ? "This dataset is available for design/preview, but it has not been imported into the desktop project with a reproducible fingerprint. Load the validation fixture or import your data before running."
+        ? "This dataset is available for design or preview, but it has not been imported into the desktop project with a reproducible fingerprint. Load the bundled example or import your data before running."
         : "Import a dataset into the project so QuickPLS can fingerprint the analysis input.",
       status: "blocked",
       actionLabel: "Open data",
@@ -163,7 +163,7 @@ function methodItem(methodName: string, methodStatus: string, applicability: Ret
   return {
     id: "method",
     label: "Method",
-    detail: applicability.reason || `${methodName} is ${methodStatus === "validated" ? "validated for the documented supported scope" : "available with experimental watermarking"}.`,
+    detail: applicability.reason || `${methodName} is ${methodStatus === "validated" ? "supported for the current model and data requirements" : "Experimental and marked in exports"}.`,
     status: applicability.status === "experimental" || methodStatus !== "validated" ? "warning" : "ready",
   };
 }

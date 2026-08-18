@@ -1,0 +1,1196 @@
+{
+  "fragment_schema_version": 1,
+  "fragment_id": "quickpls.wave0.cbsem_cfa_official.v1",
+  "frozen_on": "2026-08-14",
+  "capability_ids": [
+    "smartpls.cbsem",
+    "smartpls.cbsem_bootstrapping",
+    "smartpls.cbsem_model_comparison",
+    "smartpls.cbsem_mga",
+    "smartpls.cbsem_measurement_invariance",
+    "smartpls.cbsem_moderator",
+    "smartpls.cfa",
+    "smartpls.pca_cbsem"
+  ],
+  "cell_assessments": [
+    {
+      "qualification_link": {"registry_schema_version": 2, "capability_id": "smartpls.cbsem", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"},
+      "parity_obligation": {"capture_state": "captured", "parity_role": "active_parity"}
+    },
+    {
+      "qualification_link": {"registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_bootstrap_v2"},
+      "parity_obligation": {"capture_state": "captured", "parity_role": "active_parity"}
+    },
+    {
+      "qualification_link": {"registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1"},
+      "parity_obligation": {"capture_state": "captured", "parity_role": "active_parity"}
+    },
+    {
+      "qualification_link": {"registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2"},
+      "parity_obligation": {"capture_state": "captured", "parity_role": "active_parity"}
+    },
+    {
+      "qualification_link": {"registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2"},
+      "parity_obligation": {"capture_state": "captured", "parity_role": "active_parity"}
+    },
+    {
+      "qualification_link": {"registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1"},
+      "parity_obligation": {"capture_state": "captured", "parity_role": "active_parity"}
+    },
+    {
+      "qualification_link": {"registry_schema_version": 2, "capability_id": "smartpls.cfa", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"},
+      "parity_obligation": {"capture_state": "captured", "parity_role": "active_parity"}
+    },
+    {
+      "qualification_link": {"registry_schema_version": 2, "capability_id": "smartpls.pca_cbsem", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"},
+      "parity_obligation": {"capture_state": "captured", "parity_role": "active_parity"}
+    }
+  ],
+  "dimension_assessments": [
+    {
+      "capability_id": "smartpls.cbsem",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem.settings.ml_optimizer_and_mean_structure",
+        "description": "SmartPLS documents graphical common-factor CB-SEM with maximum-likelihood estimation, configurable iterations and starts, two stopping criteria, three special-assumption switches, and three mean-structure choices.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"],
+        "acceptance_criteria": [
+          "The settings contract exposes ML maximum iterations, configured starts, the documented default and one-zero strategies, gradient and objective stopping tolerances, each documented special assumption, and each documented mean-structure policy.",
+          "Every chosen option is stored in the recipe and Run Details and reaches the compiled parameter table; no dormant option is advertised.",
+          "A dated desktop capture inventories any additional current setting, option dependency, and disabled state not enumerated by the public page."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem.defaults.documented_numerical_values",
+        "description": "The documented defaults are 1,000 maximum iterations, a 1e-6 gradient criterion, a 1e-9 function-value criterion, and no mean structure; starting-value tables define parameter-family values for the default and one-zero strategies.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"],
+        "acceptance_criteria": [
+          "A new CB-SEM recipe records 1000, 1e-6, 1e-9, and no mean structure unless the user changes them.",
+          "The default strategy initializes loadings at 1.0, paths and covariances at 0.0, residual variances at 0.5 times indicator variance, and latent variances at 0.05; one-zero uses 1.0, 0.0, 1.0, and 1.0 respectively.",
+          "A live-app fixture records the initial UI state of each special-assumption switch instead of inferring it from its description."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem.model_shapes.common_factor_sem",
+        "description": "The documented estimand is a graphical covariance-based SEM whose constructs are common factors and whose covariance and optional mean structures are explicitly identified.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"],
+        "acceptance_criteria": [
+          "Common-factor measurement, structural regressions, explicitly drawn covariances, configured starts, and mean/intercept constraints compile into executable parameters rather than presentation objects.",
+          "Special assumptions can add exogenous latent correlations, within-construct causal-indicator correlations, and fixed causal-indicator variances exactly as selected and disclose every implied parameter.",
+          "A dated model-shape inventory records the current desktop behavior for observed structural variables, cross-loadings, residual covariances, fixed/equality constraints, and reciprocal paths before those shapes are claimed."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem.data_inputs.observed_covariance_contract",
+        "description": "CB-SEM tests the hypothesized common-factor model against the covariance matrix of the observed data; a mean structure additionally consumes observed means.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"],
+        "acceptance_criteria": [
+          "The result records the exact covariance matrix, sample size, variable ordering, and, when used, mean vector derived from or supplied with the analytical data.",
+          "Raw-data, covariance-matrix, and correlation-matrix routes are independently tested and only routes confirmed by a dated desktop fixture count toward behavioral parity.",
+          "Missing-value treatment, weights, and matrix metadata are never inferred or silently converted."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem.preprocessing.covariance_means_and_starts",
+        "description": "The documented preparation constructs the observed covariance structure, optionally adds a mean structure, then applies selected parameter starts and special assumptions before ML optimization.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"],
+        "acceptance_criteria": [
+          "Parameter-table compilation is deterministic under graph-ID and declaration reordering and records each free, fixed, derived, implied, and equality-constrained parameter.",
+          "Configured starting values override strategy values only when the documented switch is enabled; causal-indicator variance implication overrides a user value only when selected and is disclosed.",
+          "Scale handling and missing-data preprocessing are frozen by a separate data contract and cannot vary between GUI and CLI."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem.outputs.estimates_fit_and_convergence_inventory",
+        "description": "The public page demonstrates CB-SEM results and textbook replication but does not enumerate every current table, statistic, precision rule, or report tier.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"],
+        "acceptance_criteria": [
+          "A dated desktop capture enumerates every estimate, fit, residual, quality, convergence, parameter, and model-summary table with ordering, labels, precision, exclusions, and important-versus-complete behavior.",
+          "QuickPLS reproduces the frozen semantic inventory from one canonical result document across GUI, CLI, archive, CSV, XLSX, HTML, SVG, and PNG where applicable.",
+          "The current registry state remains partial and Labs despite release-qualified bounded evidence; this capture alone cannot promote the cell to full."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem.charts.live_surface_inventory_required",
+        "description": "The public documentation includes a result screenshot but does not define a complete analytical-chart contract.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"],
+        "acceptance_criteria": [
+          "A dated current-desktop fixture inventories every chart, source table, selectable parameter, display default, accessibility label, and export behavior; an empty inventory must be evidenced.",
+          "Every implemented chart is a view over canonical stored values and cannot recompute or alter the fitted model."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem.failures.identification_convergence_and_admissibility",
+        "description": "The documented optimizer must reach its gradient or objective stopping rule; mean structures require identification constraints, and downstream comparison requires identified, converged, admissible solutions.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"],
+        "acceptance_criteria": [
+          "Underidentification, non-positive-definite input or implied covariance, singular information, nonconvergence, Heywood estimates, unstable feedback, and violated bounds produce specific diagnostics without fabricated standard errors or silent fallback.",
+          "The run records final objective, gradient norm, iteration count, termination reason, admissibility checks, and affected parameter IDs.",
+          "Changing a scientific diagram relation changes the compiled table and result or fails before execution with a corrective diagnostic."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem.workflows.graph_to_ml_result",
+        "description": "The documented workflow builds the CB-SEM model graphically, chooses ML algorithm settings, estimates the model, and inspects a linked result; textbook examples serve as behavioral fixtures.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"],
+        "acceptance_criteria": [
+          "Diagram, parameter table, recipe, estimator plan, result, save/reopen, and exports preserve the same model semantics and exact run identity.",
+          "At least one successful and one invalid textbook CFA/SEM workflow pass through the packaged GUI and CLI with no network dependency.",
+          "Current QuickPLS coverage remains partial and the capability remains Labs until every documented and live-captured option cell is implemented and release-qualified."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_bootstrap.settings.resamples_results_intervals_tests_seed",
+        "description": "SmartPLS documents the number of same-size case-resample subsamples, most-important or complete output, percentile, studentized, or BCa intervals, one- or two-sided tests, significance level, and random or fixed seed.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_bootstrap_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"],
+        "acceptance_criteria": [
+          "The recipe persists the requested resample count, result amount, interval method, test side, significance level, and seed policy/value.",
+          "Only interval and test combinations implemented for every selected parameter family are selectable; unsupported combinations fail in preflight.",
+          "A dated desktop capture records the exact current selectable resample values, parameter-family selectors, seed defaults, and control dependencies not stated by the page."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_bootstrap.defaults.documented_and_open",
+        "description": "The documented interval default is percentile and the documented significance default is 5%; 500 is suggested for an initial evaluation and 5,000 or 10,000 for final results rather than stated as a universal subsample default.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_bootstrap_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"],
+        "acceptance_criteria": [
+          "A new recipe defaults to percentile intervals and alpha 0.05 and records those values explicitly.",
+          "The UI distinguishes a 500-replicate initial workflow from 5000/10000 final workflows without relabeling a recommendation as a fixed algorithm default.",
+          "Test side, result amount, seed policy, and any default replicate count remain open until verified by a dated current-desktop capture."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_bootstrap.model_shapes.refittable_cbsem",
+        "description": "The procedure follows an estimated CB-SEM model and applies inference to CB-SEM results such as structural path coefficients.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_bootstrap_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"],
+        "acceptance_criteria": [
+          "Every selected bootstrap replicate refits the complete linked CB-SEM parameter table rather than perturbing only the requested output coefficient.",
+          "Fixed, equality-constrained, mean-structure, covariance, group, and moderation parameters are either correctly resampled and reported or rejected before execution with an option-specific reason.",
+          "A live result inventory identifies every parameter family covered by most-important and complete modes."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_bootstrap.data_inputs.original_cases_same_n",
+        "description": "Each bootstrap sample is drawn with replacement from the original dataset and contains the same number of observations as that dataset.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_bootstrap_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"],
+        "acceptance_criteria": [
+          "The resample ledger stores or deterministically reproduces exactly n source-row indices for each requested replicate, with replacement, from the linked analytical sample.",
+          "Matrix-only input without case-level observations cannot be presented as case-resample bootstrap and returns a typed incompatibility unless an independently documented matrix-bootstrap contract exists.",
+          "Missing-data preprocessing occurs at the documented stage and is identical under fixed seed across GUI, CLI, and worker counts."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_bootstrap.preprocessing.full_refit_and_interval_inputs",
+        "description": "Bootstrapping forms an empirical sampling distribution by same-n sampling with replacement and uses it to compute standard errors, p values, and selected nonparametric intervals.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_bootstrap_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"],
+        "acceptance_criteria": [
+          "Percentile, studentized, and BCa computations use independently audited formulas and the same retained replicate ledger; studentization and BCa prerequisites are explicit.",
+          "Sign and factor orientation are aligned by a deterministic documented rule before summarizing latent-parameter distributions.",
+          "Failed or inadmissible fits remain counted with replicate index and reason and are never silently retried or replaced."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_bootstrap.outputs_inference_and_ledger",
+        "description": "The documented inferential outputs include empirical standard errors, confidence intervals, and p values, with a faster most-important set and a slower complete set.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_bootstrap_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"],
+        "acceptance_criteria": [
+          "Every included parameter table links original estimate, bootstrap mean/bias where applicable, standard error, interval bounds, p value, test side, alpha, requested count, successful count, and failed-fit count.",
+          "A dated desktop capture freezes the exact most-important and complete table inventories, ordering, labels, precision, and significance presentation.",
+          "Current QuickPLS coverage and evidence remain absent and the cell remains Labs until full native, archive, packaged, oracle, and simulation qualification passes."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_bootstrap.charts.live_distribution_inventory",
+        "description": "The public page does not enumerate the current bootstrap charts or their display controls.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_bootstrap_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"],
+        "acceptance_criteria": [
+          "A dated desktop capture inventories every distribution or interval chart, source replicates, selected parameter, reference line, defaults, accessibility semantics, and export behavior; an empty inventory must be evidenced.",
+          "Chart values round-trip from the canonical replicate/result payload and match the corresponding table summaries."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_bootstrap.failures_base_fit_replicates_and_cancellation",
+        "description": "Bootstrapping is downstream of CB-SEM estimation and becomes unreliable when the base model or too many resampled fits are unidentified, nonconverged, or inadmissible.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_bootstrap_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"],
+        "acceptance_criteria": [
+          "An unidentified, nonconverged, or inadmissible base result blocks execution with exact corrective diagnostics.",
+          "Every failed replicate is retained; each table reports effective counts and suppresses inference with a typed reason when its pre-registered reliability threshold is not met.",
+          "Cancellation reaches a terminal cancelled state without committing a partial visible result or changing the archive."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_bootstrap.workflows_initial_and_final_inference",
+        "description": "The documented workflow estimates CB-SEM first, uses about 500 subsamples for an initial evaluation, then 5,000 or 10,000 for final results and selects the appropriate result depth and inference options.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_bootstrap_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"],
+        "acceptance_criteria": [
+          "The user can launch a bootstrap only from a compatible completed CB-SEM run, see workload/progress, cancel safely, and reopen/export the exact linked result.",
+          "Fixed-seed reruns reproduce resample indices and scientific results across supported worker counts; random-seed runs record the realized seed.",
+          "The UI explains the time tradeoff of replicate count and result amount without presenting an initial 500-replicate run as automatically final."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_model_comparison",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_model_comparison.settings_model_special_assumptions_means",
+        "description": "The LRT setup selects a comparison model and applies matched estimator/optimizer settings, special assumptions, and one of the documented mean-structure policies.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-model-comparison/"],
+        "acceptance_criteria": [
+          "The setup selects an immutable compatible saved comparison run/model and displays the focal and comparison identities before execution.",
+          "Estimator, optimizer, special-assumption, and mean-structure differences are either normalized by an explicit documented workflow or blocked with the exact mismatch.",
+          "A dated desktop capture freezes all model selectors, option dependencies, and defaults not enumerated by the page."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_model_comparison",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_model_comparison.defaults_no_mean_and_matched_runs",
+        "description": "No mean structure is the documented default; the comparison contract requires the same estimation method and optimizer settings for both models.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-model-comparison/"],
+        "acceptance_criteria": [
+          "A new comparison uses no mean structure unless the linked runs use the same explicitly selected alternative.",
+          "The system does not silently re-estimate two saved results under hidden shared settings; any required re-estimation creates separately identified runs.",
+          "The initial state of each special-assumption switch remains open until a dated current-desktop capture verifies it."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_model_comparison",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_model_comparison.model_shapes_nested_restrictions",
+        "description": "The documented LRT compares nested CB-SEM models in which the less restricted model has more free parameters and fewer degrees of freedom than the more restricted model.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-model-comparison/"],
+        "acceptance_criteria": [
+          "Nesting is validated from canonical parameter tables, equality labels, fixed values, and mean-structure constraints rather than filename or free-parameter count alone.",
+          "Adding or removing equality restrictions, fixed parameters, loadings, paths, or covariances is accepted only when it creates a mathematically nested pair over identical observed variables.",
+          "Non-nested theory alternatives are not labeled as this LRT."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_model_comparison",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_model_comparison.data_inputs_identical_covariance_basis",
+        "description": "Both models must use the identical dataset and indicator set and therefore the same covariance matrix input.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-model-comparison/"],
+        "acceptance_criteria": [
+          "Dataset fingerprint, analytical row set, indicator identities/order, covariance matrix, sample size, missing-data treatment, weights, and mean vector where applicable must match exactly.",
+          "Same column labels over different data or differently filtered samples fail compatibility before calculation.",
+          "The report exposes each compatibility check and its source run."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_model_comparison",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_model_comparison.preprocessing_lrt_difference",
+        "description": "The LRT computes the more-restricted model chi-square minus the less-restricted model chi-square and evaluates it with the corresponding degrees-of-freedom difference.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-model-comparison/"],
+        "acceptance_criteria": [
+          "The focal and comparison orientation is derived from verified restriction nesting, and delta chi-square and delta degrees of freedom use that same orientation.",
+          "Matched ML objective scaling and degrees of freedom are independently checked on hand cases and external references.",
+          "No robust or scaled correction is applied or advertised unless its corresponding estimator and correction contract are separately implemented and qualified."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_model_comparison",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_model_comparison.outputs_lrt_and_compatibility",
+        "description": "The documented result is a chi-square difference test of equal fit versus better fit for the less restricted model, with degrees of freedom equal to the parameter-count difference.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-model-comparison/"],
+        "acceptance_criteria": [
+          "The result includes both run/model IDs, restriction orientation, each chi-square and df, delta chi-square, delta df, p value, decision threshold, and a semantic compatibility report.",
+          "A dated desktop capture freezes every additional table, label, precision rule, interpretation state, and export field.",
+          "Current QuickPLS coverage and evidence remain absent and the cell remains Labs until exact nesting, LRT, archive, and packaged qualification passes."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_model_comparison",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_model_comparison.charts_live_inventory",
+        "description": "The public page does not document an analytical chart for the LRT workflow.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-model-comparison/"],
+        "acceptance_criteria": [
+          "A dated current-desktop fixture confirms the chart inventory and its controls; an empty inventory must be evidenced rather than assumed.",
+          "Any QuickPLS comparison visualization is labeled as additional and derives only from the stored LRT payload."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_model_comparison",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_model_comparison.failures_compatibility_nesting_admissibility",
+        "description": "The documented LRT requires identical data and indicators, the same method/settings, identified and admissible converged solutions, and a nested model pair.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-model-comparison/"],
+        "acceptance_criteria": [
+          "Each failed prerequisite produces a distinct blocking code naming both affected runs and the exact mismatch or inadmissibility.",
+          "Negative delta df, inconsistent restriction mapping, ambiguous parameter correspondence, or non-nested models cannot yield a p value.",
+          "Historical or future-version runs that cannot prove semantic compatibility remain readable but comparison-ineligible."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_model_comparison",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_model_comparison.workflows_saved_nested_models",
+        "description": "The documented user selects a comparison model file for a focal CB-SEM model, verifies the compatibility/nesting requirements, and interprets the chi-square difference test.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-model-comparison/"],
+        "acceptance_criteria": [
+          "The user can choose compatible immutable saved runs, see why incompatible choices are disabled, execute the LRT, and reopen/export the result with both source links intact.",
+          "Equality-constraint and omitted-parameter textbook fixtures cover significant and nonsignificant comparisons plus every documented invalid setup.",
+          "Model comparison used by invariance calls the same qualified LRT kernel and compatibility checks."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_mga",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_mga.settings_groups_and_constraints",
+        "description": "SmartPLS MGA selects predefined groups and permits fixed-value, within-model equality, and across-group equality constraints while estimating the same SEM for each group.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-multigroup-analysis/"],
+        "acceptance_criteria": [
+          "The setup persists an ordered group definition and every parameter constraint by stable parameter ID, value/equality label, and group scope.",
+          "Across-group constraints are distinct from equality constraints inside one group and compile into a simultaneous or mathematically equivalent group parameter table.",
+          "A dated desktop capture inventories group-count limits, selectors, estimator options, constraint editor behavior, and current defaults."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_mga",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_mga.defaults_unconstrained_group_models",
+        "description": "Without user-specified cross-group constraints, SmartPLS estimates the same model separately for each selected group.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-multigroup-analysis/"],
+        "acceptance_criteria": [
+          "New MGA setup imposes no across-group equality constraint unless the user selects one or enters an invariance workflow that defines it.",
+          "Identification constraints already present in the scientific model remain explicit and are not mistaken for substantive cross-group equality constraints.",
+          "Default group selection, reference group, estimator settings, and any comparison threshold remain open until current-desktop capture."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_mga",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_mga.model_shapes_same_sem_multiple_groups",
+        "description": "The same CB-SEM structure is fitted across predefined subpopulations, with optional parameter constraints and established measurement invariance before substantive group comparison.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-multigroup-analysis/"],
+        "acceptance_criteria": [
+          "Every group consumes the same canonical variables and relation topology, with differences expressed only through explicit group overrides and constraints.",
+          "Fixed loadings, equal loadings or paths, and across-group equality constraints affect the correct group parameter cells and survive save/reopen.",
+          "Arbitrary declared group counts are supported where the current SmartPLS fixture confirms them; pairwise-only behavior is never generalized to omnibus output."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_mga",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_mga.data_inputs_predefined_group_partitions",
+        "description": "MGA uses predefined groups such as gender, region, or treatment and fits the common model to the observations in each group.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-multigroup-analysis/"],
+        "acceptance_criteria": [
+          "The recipe records group-variable identity, allowed values/filters, stable labels, included and excluded counts, missing-group handling, and each group analytical sample fingerprint.",
+          "Groups are nonempty, disjoint when the selected workflow requires a partition, and evaluated against identical observed-variable bindings.",
+          "Case, frequency, and sampling weights are never treated as group membership and unsupported group-weight combinations fail preflight."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_mga",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_mga.preprocessing_group_estimation_and_constraints",
+        "description": "SmartPLS estimates the specified model by group and applies fixed, equality, or across-group constraints selected by the researcher.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-multigroup-analysis/"],
+        "acceptance_criteria": [
+          "Group sample statistics and likelihood contributions are computed from actual group rows; scaled-pooled or synthetic group estimates cannot satisfy the contract.",
+          "Parameter correspondence uses stable semantic IDs and remains invariant to group-label exchange after canonical relabeling.",
+          "Constraint compilation, identification, optimization, and admissibility diagnostics are retained separately for every group and for the combined constrained system."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_mga",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_mga.outputs_group_estimates_and_comparisons",
+        "description": "The documented purpose is to assess model stability and compare parameter estimates across subpopulations, subject to measurement invariance.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-multigroup-analysis/"],
+        "acceptance_criteria": [
+          "Results include per-group sample counts, convergence/admissibility, estimates, standard errors and fit summaries, applied constraints, and valid cross-group parameter comparisons.",
+          "A dated desktop capture freezes every table, comparison statistic, reference-group convention, ordering, precision, chart, and export field.",
+          "Current QuickPLS coverage and evidence remain absent and the cell remains Labs until genuine group estimation, invariance linkage, and qualification are complete."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_mga",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_mga.charts_live_group_inventory",
+        "description": "The public MGA page does not enumerate group-comparison charts or their controls.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-multigroup-analysis/"],
+        "acceptance_criteria": [
+          "A dated current-desktop fixture inventories every group chart, source table, group/parameter selector, default, accessibility semantic, and export behavior; an empty inventory must be evidenced.",
+          "Group colors always have non-color labels and chart values match canonical per-group tables."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_mga",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_mga.failures_invariance_groups_and_group_fits",
+        "description": "Measurement invariance is a documented requirement for meaningful MGA, and every selected group must support an identified, estimable common model.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-multigroup-analysis/"],
+        "acceptance_criteria": [
+          "Missing or failed required invariance, empty groups, incompatible variables, underidentified group models, infeasible constraints, nonconvergence, or inadmissible group solutions block or qualify comparison with a typed group-specific reason.",
+          "Extreme imbalance and too-small groups receive workload/scientific diagnostics without silently merging or dropping a group.",
+          "No synthetic preview or pooled approximation is presented as MGA output."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_mga",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_mga.workflows_invariance_then_group_comparison",
+        "description": "The documented workflow declares groups, establishes measurement invariance, estimates the same SEM per group with any selected constraints, and compares stable parameters.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-multigroup-analysis/"],
+        "acceptance_criteria": [
+          "The setup links the exact invariance assessment, group definitions, constraints, model, data, and estimator recipe; stale dependencies invalidate rather than silently update the run.",
+          "Users can inspect group-specific and comparison results, save/reopen, and export with exact source links and constraint provenance.",
+          "Packaged fixtures cover two and multiple groups, constrained and unconstrained models, label exchange, imbalance, and invalid invariance."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_measurement_invariance",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_invariance.settings_levels_and_sequences",
+        "description": "SmartPLS documents configural, weak/loading, strong/intercept, strong plus means, strict/residual, and strict plus means models, organized into basic and strict sequences.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-measurement-invariance/"],
+        "acceptance_criteria": [
+          "The setup exposes both complete predefined sequences and each documented model level with its exact loading, intercept, residual-variance, and construct-mean constraints.",
+          "Group selection and estimator/optimizer settings are stored with all generated nested models.",
+          "A dated desktop capture freezes sequence defaults, stopping behavior after a failed level, partial-invariance controls if present, and all disabled-state rules."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_measurement_invariance",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_invariance.defaults_configural_unconstrained",
+        "description": "The configural model is the documented unconstrained group default; the public page describes both basic and strict sequences but does not identify a universal default sequence.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-measurement-invariance/"],
+        "acceptance_criteria": [
+          "Configural estimation applies the same structure in every group with no across-group equality constraints.",
+          "QuickPLS does not invent a default basic-versus-strict sequence; the current desktop choice and any remembered preference require dated evidence.",
+          "Generated constraint sets are visible before execution and stored immutably."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_measurement_invariance",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_invariance.model_shapes_group_measurement_hierarchy",
+        "description": "Invariance compares the same measurement structure across groups while progressively constraining loadings, intercepts, residual variances, and construct means.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-measurement-invariance/"],
+        "acceptance_criteria": [
+          "Configural uses the same structure; weak constrains all loadings; strong adds intercept equality and fixes construct means to zero only in the first group; strong-plus-means also equalizes construct means.",
+          "Strict adds residual-variance equality to strong while retaining first-group-zero/others-free means; strict-plus-means also equalizes construct means.",
+          "Identification constraints and substantive invariance constraints remain separately typed and auditable."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_measurement_invariance",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_invariance.data_inputs_common_groups_and_indicators",
+        "description": "The assessment uses predefined groups measured by the same indicator/construct structure so nested equality restrictions can be compared.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-measurement-invariance/"],
+        "acceptance_criteria": [
+          "The recipe records stable group definitions, per-group counts/fingerprints, shared indicator bindings, category/value coding where relevant, missing treatment, weights, and mean-vector availability.",
+          "Different indicator sets, transformations, analytical rows outside the declared grouping, or incompatible scale metadata block the sequence.",
+          "Every generated level uses the same frozen group samples and covariance/mean inputs."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_measurement_invariance",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_invariance.preprocessing_exact_constraint_sequences",
+        "description": "Basic proceeds configural, weak, strong, strong-plus-means; strict proceeds configural, weak, strong, strict, strict-plus-means and deliberately skips strong-plus-means.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-measurement-invariance/"],
+        "acceptance_criteria": [
+          "Generated parameter tables match the documented constraint additions at every level and preserve the exact sequence adjacency.",
+          "Each adjacent comparison uses the same qualified CB-SEM LRT kernel, data compatibility, nesting validation, and admissibility checks.",
+          "Group declaration order and label exchange leave aligned scientific conclusions invariant."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_measurement_invariance",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_invariance.outputs_level_models_and_nested_tests",
+        "description": "The result must make each progressively constrained model and its nested comparison visible so users can judge whether measurement equivalence holds before MGA.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-measurement-invariance/"],
+        "acceptance_criteria": [
+          "For every level, results identify applied constraints, group estimates/fit/admissibility, chi-square and df, adjacent delta chi-square/df/p value, and the exact sequence decision.",
+          "A dated desktop capture freezes all tables, labels, decision wording, thresholds, precision, charts, and export fields.",
+          "Current QuickPLS coverage and evidence remain absent and the cell remains Labs until every predefined level and sequence is genuinely estimated and qualified."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_measurement_invariance",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_invariance.charts_live_sequence_inventory",
+        "description": "The public invariance page documents constraint tables and sequences but does not enumerate the current chart surface.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-measurement-invariance/"],
+        "acceptance_criteria": [
+          "A dated desktop fixture inventories every level/sequence visualization, source tables, selectors, defaults, accessibility semantics, and export behavior; an empty inventory must be evidenced.",
+          "Any QuickPLS progression visualization links every decision marker to its exact nested-test row and does not replace the table evidence."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_measurement_invariance",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_invariance.failures_group_models_constraints_and_nesting",
+        "description": "Meaningful invariance requires comparable group models whose progressively constrained forms remain identified, converged, admissible, and nested.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-measurement-invariance/"],
+        "acceptance_criteria": [
+          "Empty groups, mismatched structures, missing mean inputs, underidentification, infeasible equality constraints, nonconvergence, inadmissibility, or non-nesting stop the affected comparison with a level- and group-specific code.",
+          "A failed level is never silently skipped to claim a later level; downstream status names the unresolved prerequisite.",
+          "Partial invariance, if later supported, is explicitly user-authored and cannot overwrite the predefined complete-sequence result."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_measurement_invariance",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_invariance.workflows_predefined_sequence_before_mga",
+        "description": "The documented workflow evaluates a selected basic or strict nested-model sequence before substantive CB-SEM multigroup analysis.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-measurement-invariance/"],
+        "acceptance_criteria": [
+          "The user chooses groups and sequence, previews generated constraints, runs the levels with progress/cancellation, inspects each nested comparison, and links an accepted assessment to MGA.",
+          "Save/reopen and exports preserve every generated model, run identity, constraint set, comparison, warning, and decision without recalculation.",
+          "Packaged fixtures exercise every level, both sequences, pass/fail branches, group-label exchange, invalid inputs, and cancellation."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_moderator",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_moderator.settings_two_way_interaction_approaches",
+        "description": "SmartPLS currently documents two-way CB-SEM interactions with generic indicator, product indicator, mean centering, double mean centering, and orthogonalization approaches.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-moderation/"],
+        "acceptance_criteria": [
+          "The interaction dialog exposes exactly the documented computation approaches for an eligible two-way path and persists the selected approach with predictor, moderator, outcome, and moderated-path IDs.",
+          "Generated construct/indicator previews disclose the resulting number and binding of product indicators before execution.",
+          "A dated desktop capture freezes every approach-specific option, automatic main-effect rule, disabled state, and current default beyond the facts documented on the page."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_moderator",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_moderator.defaults_double_mean_centering",
+        "description": "Double mean centering is the documented default interaction computation approach for SmartPLS CB-SEM moderation.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-moderation/"],
+        "acceptance_criteria": [
+          "A newly authored eligible interaction selects double mean centering unless the user chooses another documented approach.",
+          "Simple-slope display uses low, mean, and high moderator levels corresponding to one standard deviation below, the mean, and one standard deviation above; any alternate probe values require explicit selection.",
+          "Bootstrap settings retain their own documented defaults and are not silently inherited from point estimation."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_moderator",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_moderator.model_shapes_path_on_path_two_way",
+        "description": "The user draws a moderation path from a moderator construct onto an existing predictor-to-outcome path, causing SmartPLS to generate a predictor-by-moderator construct linked to the outcome; only two-way interactions are supported.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-moderation/"],
+        "acceptance_criteria": [
+          "Moderation is stored as a scientific relation targeting a stable structural-path ID, and its generated interaction construct and outcome path compile into the CB-SEM parameter table.",
+          "Predictor, moderator, outcome, both main effects, interaction effect, and generated measurement terms survive save/reopen and remain traceable to the authored moderation relation.",
+          "Three-way and higher interactions are blocked as outside this parity contract instead of being routed through a PLS or LMS implementation."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_moderator",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_moderator.data_inputs_indicator_level_products",
+        "description": "The documented approaches compute interaction indicators from the predictor and moderator indicators and estimate the generated interaction inside the linked CB-SEM model.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-moderation/"],
+        "acceptance_criteria": [
+          "Raw case-level indicator values and exact analytical rows are available for every product, centering, and orthogonalization operation.",
+          "Matrix-only input is rejected for approaches that require unobserved case-level products unless a separately documented sufficient-statistics implementation is qualified.",
+          "Missing handling, transformations, scales, and group filters are applied consistently to main-effect and generated interaction indicators and recorded in lineage."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_moderator",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_moderator.preprocessing_documented_computations",
+        "description": "Product approaches multiply predictor and moderator indicators; mean centering centers before products; double mean centering additionally subtracts the product of indicator means; orthogonalization removes main-effect-explained product variance.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-moderation/"],
+        "acceptance_criteria": [
+          "Each approach is frozen with independently tested equations, indicator pairing/order, centering constants, residualization design matrix, and deterministic naming.",
+          "The generic and product-indicator approaches are distinguished by current-desktop fixtures wherever their generated terms or constraints differ; identical wording is not assumed to imply identical execution.",
+          "Generated columns are analysis-local derived terms with reproducible lineage and never overwrite source data."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_moderator",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_moderator.outputs_effect_inference_and_probes",
+        "description": "The documented workflow returns standardized path coefficients, uses CB-SEM bootstrapping for the interaction significance, and provides a simple-slope plot for interpretation.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-moderation/"],
+        "acceptance_criteria": [
+          "Results link the interaction estimate to its computation approach, main effects, conditional-effect equation, probe values, simple slopes, and bootstrap inference payload.",
+          "A dated desktop capture freezes the complete interaction, generated-indicator, conditional-effect, inference, fit, and interpretation table inventory with precision/export rules.",
+          "Current QuickPLS coverage and evidence remain absent and the cell remains Labs until product-indicator parity, bootstrap inference, probing, and packaged qualification pass."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_moderator",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_moderator.charts_simple_slopes",
+        "description": "The documented Simple Slope Plot shows the predictor-to-outcome relationship when the moderator is one standard deviation below its mean, at its mean, and one standard deviation above its mean.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-moderation/"],
+        "acceptance_criteria": [
+          "The three labeled slope lines use stored conditional-effect coefficients and exact stored moderator mean/standard deviation; color is never the only differentiator.",
+          "A dated desktop capture freezes axis definitions/ranges, line defaults, confidence display if present, controls, table linkage, and image/vector export behavior.",
+          "Chart customization changes presentation only and never analytical probe values unless the user explicitly requests and reruns a new probe specification."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_moderator",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_moderator.failures_ineligible_path_products_and_bootstrap",
+        "description": "The documented method requires an eligible existing structural path, predictor and moderator indicator sets, an estimable generated interaction, and a separate bootstrap run for significance.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-moderation/"],
+        "acceptance_criteria": [
+          "A missing/deleted target path, higher-order interaction, empty indicator block, zero-variance product, rank-deficient products, underidentified generated factor, nonconvergence, or inadmissibility returns an object-specific corrective diagnostic.",
+          "Product-count workload and collinearity are previewed before execution; no terms are silently dropped.",
+          "Point estimates without a successful linked bootstrap are never presented as bootstrap significance."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cbsem_moderator",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cbsem_moderator.workflows_author_generate_estimate_bootstrap_probe",
+        "description": "The user defines predictor, outcome, and moderator constructs, draws the moderator onto the structural path, chooses an interaction computation, estimates CB-SEM, bootstraps the interaction, and inspects simple slopes.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-moderation/"],
+        "acceptance_criteria": [
+          "The complete authoring flow works by pointer and keyboard, displays generated terms before estimation, and keeps the scientific moderation relation synchronized with the parameter table.",
+          "Estimation, bootstrap, simple slopes, save/reopen, comparison, and exports maintain exact model/data/run linkage.",
+          "Packaged fixtures cover all five approaches, multiple eligible two-way interactions, invalid targets, high product counts, inference failure, and cancellation."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cfa",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cfa.settings_ml_optimizer_and_mean_structure",
+        "description": "SmartPLS CFA uses ML with maximum iterations, configured/default/one-zero starts, gradient and function-value stopping criteria, three special assumptions, and three mean-structure choices.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cfa", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cfa/"],
+        "acceptance_criteria": [
+          "CFA setup exposes and persists every documented ML optimizer, start, special-assumption, and mean-structure option while preventing structural-only settings from leaking into measurement-only analysis.",
+          "All settings compile into the same general CB-SEM parameter-table kernel with a CFA model-shape restriction rather than a separate numerical special case.",
+          "A dated desktop capture inventories any current CFA-only options, dependencies, and disabled states not present on the page."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cfa",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cfa.defaults_documented_numerics_and_loading_starts",
+        "description": "CFA documents 1,000 iterations, 1e-6 gradient and 1e-9 function-value criteria, no mean structure, Fabin-style default loading starts, and one-zero loading starts of 1.0.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cfa", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cfa/"],
+        "acceptance_criteria": [
+          "A new CFA recipe records 1000, 1e-6, 1e-9, and no mean structure unless changed; one-zero sets loadings/residual variances/latent variances to 1.0 and paths/covariances to 0.0.",
+          "The CFA page's Fabin-style default loading starts are implemented for CFA and not overwritten by the CB-SEM page's 1.0 default-loading table.",
+          "A dated same-version desktop fixture reconciles the page-specific difference and freezes exact Fabin computation and special-assumption switch defaults before full parity."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cfa",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cfa.model_shapes_hypothesized_common_factor_measurement",
+        "description": "CFA validates a hypothesized factor structure relating measured indicators to latent common-factor constructs before structural relationships are evaluated.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cfa", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cfa/"],
+        "acceptance_criteria": [
+          "Reflective common-factor loadings, factor covariances, indicator residual variances/covariances, cross-loadings, causal-indicator configurations where documented, fixed/equality constraints, and mean/intercept structures are represented in the canonical parameter table.",
+          "A measurement-only CFA cannot silently estimate structural regressions; selecting general SEM changes the declared analysis capability and recipe.",
+          "A dated desktop model-shape inventory confirms every authorable CFA relation and identification configuration before it is claimed."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cfa",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cfa.data_inputs_covariance_and_optional_means",
+        "description": "CFA models the covariance structure of measured indicators and optionally their means/intercepts under an identified mean structure.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cfa", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cfa/"],
+        "acceptance_criteria": [
+          "Results bind exact indicator ordering, sample size, covariance input, and, when used, mean vector to the linked dataset or supplied matrix metadata.",
+          "Raw, covariance, and correlation inputs are each advertised only after current-desktop behavior and scientific sufficiency are verified for the selected mean structure.",
+          "Scale, missing, group, weight, and transformation policies remain explicit and reproducible."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cfa",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cfa.preprocessing_covariance_means_identification_starts",
+        "description": "The analytical input is converted to the covariance and optional mean structure, identification constraints are applied, and configured or selected default starts initialize ML optimization.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cfa", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cfa/"],
+        "acceptance_criteria": [
+          "Factor-scale identification, fixed/equality constraints, factor means, observed intercepts, residuals, and all implied special-assumption parameters compile deterministically by stable ID.",
+          "Fabin, one-zero, and configured starts are independently tested and recorded; no missing or invalid start is silently replaced during optimization.",
+          "The same preprocessed sufficient statistics and parameter table are consumed across GUI, CLI, archive revalidation, and oracle fixtures."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cfa",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cfa.outputs_measurement_fit_and_parameter_inventory",
+        "description": "The public CFA page demonstrates textbook-replicating results but does not enumerate every parameter, fit, residual, validity, diagnostic, or report table in the current desktop.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cfa", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cfa/"],
+        "acceptance_criteria": [
+          "A dated desktop capture freezes every measurement estimate, covariance/correlation, residual, fit, reliability/validity, modification, convergence, parameter, and model-summary table with exact ordering, labels, precision, and export behavior.",
+          "All outputs derive from the common canonical CB-SEM result model and identify CFA as measurement-only.",
+          "Current QuickPLS coverage remains partial and Labs despite release-qualified bounded ML evidence; capture alone cannot promote the cell to full."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cfa",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cfa.charts_live_surface_inventory",
+        "description": "The public page includes a CFA result screenshot but does not define the complete analytical-chart surface.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cfa", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cfa/"],
+        "acceptance_criteria": [
+          "A dated current-desktop fixture inventories every CFA chart, source table, selector, default, accessibility semantic, and export behavior; an empty inventory must be evidenced.",
+          "Diagram result overlays and charts render stored canonical values and remain synchronized with parameter IDs after save/reopen."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cfa",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cfa.failures_factor_identification_and_admissibility",
+        "description": "CFA optimization and optional mean structure require an identified factor model that converges to an admissible solution under the documented criteria.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cfa", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cfa/"],
+        "acceptance_criteria": [
+          "Underidentified factors/means, duplicate equality labels, non-positive-definite input, singular information, nonconvergence, Heywood estimates, invalid bounds, and inadmissible implied covariance produce typed object- and parameter-specific diagnostics.",
+          "No absolute-value variance conversion, zero-gradient substitution, or identity-information fallback can produce a successful result.",
+          "The result ledger records convergence/admissibility evidence even when inference or downstream comparison is blocked."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.cfa",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "cfa.workflows_graph_measurement_fit_review",
+        "description": "The documented workflow graphically specifies a hypothesized factor model, estimates it with CB-SEM ML, and reviews the measurement results before structural modeling; textbook examples are available.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.cfa", "cell_id": "qpls3.cbsem.ml", "capability_version": "cbsem_ml_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cfa/"],
+        "acceptance_criteria": [
+          "Users can author by pointer and keyboard, inspect the synchronized parameter table, preflight identification/data, estimate, inspect results, and carry an accepted factor model into SEM without silent reinterpretation.",
+          "Textbook CFA fixtures cover covariance-only and mean structures, constraints, residual covariances, invalid models, save/reopen, and semantic exports in packaged and CLI flows.",
+          "Historical bounded runs remain readable and clearly distinct from newly compiled SemModelV4 runs."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.pca_cbsem",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "pca_cbsem.settings_standardized_only",
+        "description": "SmartPLS CB-SEM-project PCA offers standardized results only, based on the indicator correlation matrix, and uses eigenvalue decomposition.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_cbsem", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-pca/"],
+        "acceptance_criteria": [
+          "The parity settings do not offer unstandardized PCA results or a covariance-matrix computation mode.",
+          "The recipe records standardized/correlation/eigen decomposition and the retention rule even though each has only one documented parity value.",
+          "A dated desktop capture inventories any component-count override, missing-data setting, score option, rotation control, or disabled state before it is claimed."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.pca_cbsem",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "pca_cbsem.defaults_correlation_and_eigenvalue_one",
+        "description": "Standardized correlation-matrix outcomes are the only documented result type, and an eigenvalue of 1 is the decision criterion for retained components.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_cbsem", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-pca/"],
+        "acceptance_criteria": [
+          "A new PCA recipe explicitly records standardized correlation input and an eigenvalue-one retention threshold.",
+          "The boundary behavior at eigenvalue exactly 1, numerical tolerance, tie ordering, and any user override are frozen by hand cases plus a dated current-desktop fixture rather than inferred from the prose.",
+          "No rotation or inferential default is invented when the page does not document one."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.pca_cbsem",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "pca_cbsem.model_shapes_graphical_observed_variable_pca",
+        "description": "SmartPLS supports graphical PCA models that reduce observed indicators to uncorrelated principal components as exploratory analysis alongside, but not identical to, CB-SEM or PLS-SEM.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_cbsem", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-pca/"],
+        "acceptance_criteria": [
+          "PCA input variables and generated components have distinct observed/derived semantics and cannot be mislabeled as common factors or structural paths.",
+          "Graphical declarations, variable order, retained components, and presentation survive save/reopen and compile to the same PCA plan.",
+          "A dated desktop fixture freezes allowable graph shapes, minimum/maximum indicators, multiple PCA blocks, and any downstream score binding."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.pca_cbsem",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "pca_cbsem.data_inputs_indicator_correlation_matrix",
+        "description": "The documented standardized PCA is based on the correlation matrix of the selected observed indicators.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_cbsem", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-pca/"],
+        "acceptance_criteria": [
+          "The result records selected indicator IDs/order, analytical row count, means and standard deviations used for standardization, correlation matrix, missing policy, and source fingerprint.",
+          "User-supplied correlation input is advertised only if a dated desktop fixture confirms it and required sample-size/metadata behavior is frozen.",
+          "Nominal, identifier, constant, nonfinite, and otherwise ineligible columns fail preflight with column-specific corrective guidance."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.pca_cbsem",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "pca_cbsem.preprocessing_standardize_correlate_eigendecompose",
+        "description": "The documented computation standardizes indicators, forms their correlation matrix, performs eigenvalue decomposition, and uses the eigenvalue-one rule to decide retained components.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_cbsem", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-pca/"],
+        "acceptance_criteria": [
+          "Standardization denominator, correlation convention, symmetric eigensolver, descending eigen ordering, sign orientation, near-tie handling, and retention-boundary tolerance are deterministic and independently tested.",
+          "Row and variable reordering preserve aligned results, and positive affine rescaling leaves standardized PCA invariant within the qualified tolerance.",
+          "Missing-data preprocessing and any score computation use the same stored standardization parameters."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.pca_cbsem",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "pca_cbsem.outputs_components_variance_live_inventory",
+        "description": "The public page describes uncorrelated components, captured variance, eigenvalues, and retention but does not enumerate every current results table or score/export option.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_cbsem", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-pca/"],
+        "acceptance_criteria": [
+          "A dated desktop capture freezes every eigenvalue, explained/cumulative variance, loading/vector, score, correlation, quality, retention, and summary table with ordering, labels, precision, and export rules.",
+          "Component sign alignment is documented so comparison and save/reopen do not report false scientific differences.",
+          "Current QuickPLS coverage remains partial and Labs despite release-qualified bounded PCA evidence; the shared cell cannot be promoted until both official PCA catalogue rows have their distinct workflows fully closed."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.pca_cbsem",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "pca_cbsem.charts_live_exploratory_inventory",
+        "description": "The public page does not enumerate current scree, variance, loading, score, or biplot charts and controls.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_cbsem", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-pca/"],
+        "acceptance_criteria": [
+          "A dated current-desktop fixture inventories every PCA chart, source table, axis/component selector, retention marker, default, accessibility semantic, and export behavior; an empty inventory must be evidenced.",
+          "All chart points and thresholds round-trip from canonical result data and remain sign-aligned with tables."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.pca_cbsem",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "pca_cbsem.failures_degenerate_or_invalid_correlation",
+        "description": "Standardized correlation-based eigen decomposition requires enough valid numeric indicators and rows, nonzero finite variances, and a usable symmetric correlation matrix.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_cbsem", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-pca/"],
+        "acceptance_criteria": [
+          "Too few indicators/cases, constant or nonfinite variables, missing-data exhaustion, malformed or non-symmetric correlations, materially non-positive-semidefinite input, eigensolver failure, and unrepresentable scores produce typed diagnostics.",
+          "Near-singular and repeated-eigenvalue cases use deterministic subspace/sign handling or clearly disclose non-unique orientation.",
+          "No NaN, infinity, silent variable deletion, or covariance-mode fallback reaches results."
+        ]
+      }]
+    },
+    {
+      "capability_id": "smartpls.pca_cbsem",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [{
+        "item_id": "pca_cbsem.workflows_graphical_exploratory_analysis",
+        "description": "The documented workflow creates a graphical PCA model within a CB-SEM or PLS-SEM project, runs standardized eigen decomposition, and uses retained uncorrelated components for exploratory data reduction.",
+        "trace_cells": [{"registry_schema_version": 2, "capability_id": "smartpls.pca_cbsem", "cell_id": "qpls3.standalone.pca", "capability_version": "pca_v1"}],
+        "official_references": ["https://smartpls.com/documentation/algorithms-and-techniques/cbsem-pca/"],
+        "acceptance_criteria": [
+          "Users can author/select indicators, preflight, estimate, inspect retention/results/charts, generate qualified scores where documented, save/reopen, and export with exact data/run provenance.",
+          "The CB-SEM-project catalogue entry and PLS-PCA entry share one scientifically identical kernel/evidence where applicable but preserve distinct official workflow references and acceptance rows.",
+          "Packaged fixtures cover micro exact, applied, repeated-eigenvalue, constant-variable, missing-data, save/reopen, export-readback, and keyboard workflows."
+        ]
+      }]
+    }
+  ]
+}

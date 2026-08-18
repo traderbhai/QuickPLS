@@ -1,0 +1,122 @@
+{
+  "blockers": [
+    "The typed missing-data policy exposes only listwise deletion and the validated CB-SEM rule requires it.",
+    "No case-pattern likelihood, missingness diagnostics, auxiliary-variable policy, independent reference, MAR simulation, archive, native workflow, or method manifest exists.",
+    "Mean imputation or listwise deletion cannot be relabeled as FIML."
+  ],
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "contract_valid": true,
+    "derived_state_matches_contract": true,
+    "forbidden_engine_markers_absent": true,
+    "preview_relabeling_forbidden": true,
+    "promotion_identity_matches": true,
+    "promotion_manifest_valid_or_explicitly_uncreated": true,
+    "source_binding_complete": true,
+    "source_probes_present": true,
+    "untracked_promotion_manifests_absent": true
+  },
+  "declared_current_state": "absent",
+  "dependencies": [
+    "cbsem_ml_baseline"
+  ],
+  "derived_current_state": "absent",
+  "feature_id": "qpls3.cbsem.fiml",
+  "forbidden_engine_markers": [
+    {
+      "absent": true,
+      "locations": [],
+      "marker": "CBSEM_FIML_METHOD_VERSION"
+    },
+    {
+      "absent": true,
+      "locations": [],
+      "marker": "MissingDataPolicy::Fiml"
+    }
+  ],
+  "generated_at_utc": "2026-08-14T00:48:40.980971Z",
+  "ineligible_preview_versions": [],
+  "method_version": "cbsem_fiml_v1",
+  "passed": true,
+  "phase5_track_complete": false,
+  "promotion_manifest_result": null,
+  "report_kind": "quickpls_phase5_support_boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+      "size": 114179
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "1a7b3c22ac7690d8af203165eabeacc253e3df21f3da1c7d42c69fdeeaad5ec0",
+      "size": 194148
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+      "size": 653641
+    },
+    {
+      "path": "docs/PHASE5_CBSEM_EXPANSION_STATUS.md",
+      "sha256": "44f367628322065d800677f4d81c85df71917cf4ef65321368b1360c43bf6b5d",
+      "size": 5176
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/phase5_cbsem_expansion_audit.py",
+      "sha256": "a6125beb2954a5836022e72d09fe5767995b879f4cc7e19bdbb9a1180fe2ff21",
+      "size": 19268
+    },
+    {
+      "path": "validation/phase5_cbsem_expansion_contract.json",
+      "sha256": "96651d284fdd6fed85aee227ab2ab366b14e533eecf49f9903fe160687fee5d6",
+      "size": 13256
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_phase5_cbsem_expansion_audit.py",
+      "sha256": "fabfef9bbdebc476020ed78becdb7b7d20cadbcf2707070b0725958bcf91b987",
+      "size": 6382
+    }
+  ],
+  "source_binding_error": null,
+  "source_probes": [
+    {
+      "error": null,
+      "found": true,
+      "needle": "pub enum MissingDataPolicy",
+      "path": "crates/qpls-core/src/contract.rs"
+    },
+    {
+      "error": null,
+      "found": true,
+      "needle": "ListwiseDeletion",
+      "path": "crates/qpls-core/src/contract.rs"
+    },
+    {
+      "error": null,
+      "found": true,
+      "needle": "cbsem.listwise_required",
+      "path": "crates/qpls-core/src/validation.rs"
+    }
+  ],
+  "support_classification": "absent_contract_scaffold_only",
+  "target_state": "release_qualified",
+  "track_id": "cbsem_fiml",
+  "unexpected_promotion_manifests": []
+}

@@ -1,0 +1,501 @@
+{
+  "schema_version": 2,
+  "document_id": "result_00000000-0000-0000-0000-000000003001",
+  "title": "PLS-SEM results",
+  "provenance": {
+    "run_id": "00000000-0000-0000-0000-000000003001",
+    "project_id": "85b8308c-4edf-437d-97c3-5466983af7c1",
+    "model_id": "00000000-0000-0000-0000-000000001001",
+    "model_digest": "b47cf04b4e8cf688a6ed09692686cf38769f9235989d1d0157e2af3d7200b4eb",
+    "dataset_id": "208d673d-2abc-44be-b454-1d48c95b4288",
+    "dataset_fingerprint": "9b814a8a22eace42776bc479c637de36bc973dfd8a7b3d5b3e60baba98803373",
+    "recipe_id": "00000000-0000-0000-0000-000000002001",
+    "recipe_digest": "99a0735a511e09ddf814c025c8d0c8b1501cd0ad9e5356618b71d3d322f7a650",
+    "capability_cell": {
+      "registry_schema_version": 2,
+      "capability_id": "smartpls.pls_algorithm",
+      "cell_id": "qpls3.pls.algorithm",
+      "capability_version": "pls_pm_v1"
+    },
+    "method_version": "pls_pm_v1",
+    "engine_version": "compiled_recipe_v4_pls_plan_v2_execution_v3",
+    "seed": 20260815,
+    "workers": 1,
+    "started_at": "2026-08-15T00:00:02Z",
+    "completed_at": "2026-08-15T00:00:03Z"
+  },
+  "capability_cells": [
+    {
+      "registry_schema_version": 2,
+      "capability_id": "smartpls.pls_algorithm",
+      "cell_id": "qpls3.pls.algorithm",
+      "capability_version": "pls_pm_v1"
+    }
+  ],
+  "sections": [
+    {
+      "id": "run_details",
+      "title": "Run details",
+      "description": "Convergence and observation accounting.",
+      "table_ids": [
+        "estimation_summary"
+      ],
+      "chart_ids": [],
+      "capability_cells": [
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "capability_version": "pls_pm_v1"
+        }
+      ]
+    },
+    {
+      "id": "measurement_model",
+      "title": "Measurement model",
+      "description": "Composite outer-model estimates.",
+      "table_ids": [
+        "outer_model"
+      ],
+      "chart_ids": [],
+      "capability_cells": [
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "capability_version": "pls_pm_v1"
+        }
+      ]
+    },
+    {
+      "id": "structural_model",
+      "title": "Structural model",
+      "description": "Structural coefficients, effects, and explained variance.",
+      "table_ids": [
+        "structural_paths",
+        "effects",
+        "r_squared"
+      ],
+      "chart_ids": [],
+      "capability_cells": [
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "capability_version": "pls_pm_v1"
+        }
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "id": "estimation_summary",
+      "title": "Estimation summary",
+      "description": "Core convergence and observation accounting for this run.",
+      "columns": [
+        {
+          "id": "converged",
+          "label": "Converged",
+          "data_type": "boolean",
+          "description": "Whether the production PLS estimator converged.",
+          "role": "diagnostic"
+        },
+        {
+          "id": "iterations",
+          "label": "Iterations",
+          "data_type": "number",
+          "description": "Number of outer iterations completed.",
+          "role": "estimate",
+          "default_precision": 6
+        },
+        {
+          "id": "used_observations",
+          "label": "Used observations",
+          "data_type": "number",
+          "description": "Rows retained for estimation.",
+          "role": "estimate",
+          "default_precision": 6
+        },
+        {
+          "id": "omitted_observations",
+          "label": "Omitted observations",
+          "data_type": "number",
+          "description": "Rows omitted by the configured missing-data policy.",
+          "role": "estimate",
+          "default_precision": 6
+        }
+      ],
+      "rows": [
+        {
+          "id": "run",
+          "cells": [
+            {
+              "kind": "boolean",
+              "value": true
+            },
+            {
+              "kind": "number",
+              "value": 41.0
+            },
+            {
+              "kind": "number",
+              "value": 6.0
+            },
+            {
+              "kind": "number",
+              "value": 0.0
+            }
+          ]
+        }
+      ],
+      "footnote_ids": [],
+      "capability_cells": [
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "capability_version": "pls_pm_v1"
+        }
+      ]
+    },
+    {
+      "id": "outer_model",
+      "title": "Outer model",
+      "description": "Composite weights and loadings from the converged point estimate.",
+      "columns": [
+        {
+          "id": "construct",
+          "label": "Construct",
+          "data_type": "text",
+          "description": "Composite construct identifier.",
+          "role": "label"
+        },
+        {
+          "id": "indicator",
+          "label": "Indicator",
+          "data_type": "text",
+          "description": "Observed indicator identifier.",
+          "role": "label"
+        },
+        {
+          "id": "weight",
+          "label": "Weight",
+          "data_type": "number",
+          "description": "Estimated outer weight.",
+          "role": "estimate",
+          "default_precision": 6
+        },
+        {
+          "id": "loading",
+          "label": "Loading",
+          "data_type": "number",
+          "description": "Estimated outer loading.",
+          "role": "estimate",
+          "default_precision": 6
+        }
+      ],
+      "rows": [
+        {
+          "id": "outer_0000",
+          "cells": [
+            {
+              "kind": "text",
+              "value": "construct:x"
+            },
+            {
+              "kind": "text",
+              "value": "x1"
+            },
+            {
+              "kind": "number",
+              "value": 0.9931024669655094
+            },
+            {
+              "kind": "number",
+              "value": 0.999997031784727
+            }
+          ]
+        },
+        {
+          "id": "outer_0001",
+          "cells": [
+            {
+              "kind": "text",
+              "value": "construct:x"
+            },
+            {
+              "kind": "text",
+              "value": "x2"
+            },
+            {
+              "kind": "number",
+              "value": 0.007312417232503632
+            },
+            {
+              "kind": "number",
+              "value": 0.9436661717999838
+            }
+          ]
+        },
+        {
+          "id": "outer_0002",
+          "cells": [
+            {
+              "kind": "text",
+              "value": "construct:y"
+            },
+            {
+              "kind": "text",
+              "value": "y1"
+            },
+            {
+              "kind": "number",
+              "value": 0.4059946462381855
+            },
+            {
+              "kind": "number",
+              "value": 0.9936768792478233
+            }
+          ]
+        },
+        {
+          "id": "outer_0003",
+          "cells": [
+            {
+              "kind": "text",
+              "value": "construct:y"
+            },
+            {
+              "kind": "text",
+              "value": "y2"
+            },
+            {
+              "kind": "number",
+              "value": 0.5983115130460896
+            },
+            {
+              "kind": "number",
+              "value": 0.997093477104393
+            }
+          ]
+        }
+      ],
+      "footnote_ids": [],
+      "capability_cells": [
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "capability_version": "pls_pm_v1"
+        }
+      ]
+    },
+    {
+      "id": "structural_paths",
+      "title": "Structural paths",
+      "description": "Estimated direct structural path coefficients.",
+      "columns": [
+        {
+          "id": "source",
+          "label": "Source",
+          "data_type": "text",
+          "description": "Predictor construct identifier.",
+          "role": "label"
+        },
+        {
+          "id": "target",
+          "label": "Target",
+          "data_type": "text",
+          "description": "Outcome construct identifier.",
+          "role": "label"
+        },
+        {
+          "id": "coefficient",
+          "label": "Coefficient",
+          "data_type": "number",
+          "description": "Estimated direct path coefficient.",
+          "role": "estimate",
+          "default_precision": 6
+        }
+      ],
+      "rows": [
+        {
+          "id": "path_0000",
+          "cells": [
+            {
+              "kind": "text",
+              "value": "construct:x"
+            },
+            {
+              "kind": "text",
+              "value": "construct:y"
+            },
+            {
+              "kind": "number",
+              "value": 0.9984476221341361
+            }
+          ]
+        }
+      ],
+      "footnote_ids": [],
+      "capability_cells": [
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "capability_version": "pls_pm_v1"
+        }
+      ]
+    },
+    {
+      "id": "effects",
+      "title": "Effects",
+      "description": "Direct, indirect, and total effects implied by the structural model.",
+      "columns": [
+        {
+          "id": "source",
+          "label": "Source",
+          "data_type": "text",
+          "description": "Predictor construct identifier.",
+          "role": "label"
+        },
+        {
+          "id": "target",
+          "label": "Target",
+          "data_type": "text",
+          "description": "Outcome construct identifier.",
+          "role": "label"
+        },
+        {
+          "id": "direct",
+          "label": "Direct",
+          "data_type": "number",
+          "description": "Direct effect.",
+          "role": "estimate",
+          "default_precision": 6
+        },
+        {
+          "id": "indirect",
+          "label": "Indirect",
+          "data_type": "number",
+          "description": "Total indirect effect.",
+          "role": "estimate",
+          "default_precision": 6
+        },
+        {
+          "id": "total",
+          "label": "Total",
+          "data_type": "number",
+          "description": "Direct plus indirect effect.",
+          "role": "estimate",
+          "default_precision": 6
+        }
+      ],
+      "rows": [
+        {
+          "id": "effect_0000",
+          "cells": [
+            {
+              "kind": "text",
+              "value": "construct:x"
+            },
+            {
+              "kind": "text",
+              "value": "construct:y"
+            },
+            {
+              "kind": "number",
+              "value": 0.9984476221341361
+            },
+            {
+              "kind": "number",
+              "value": 0.0
+            },
+            {
+              "kind": "number",
+              "value": 0.9984476221341361
+            }
+          ]
+        }
+      ],
+      "footnote_ids": [],
+      "capability_cells": [
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "capability_version": "pls_pm_v1"
+        }
+      ]
+    },
+    {
+      "id": "r_squared",
+      "title": "R-squared",
+      "description": "Explained variance for endogenous constructs.",
+      "columns": [
+        {
+          "id": "construct",
+          "label": "Construct",
+          "data_type": "text",
+          "description": "Endogenous construct identifier.",
+          "role": "label"
+        },
+        {
+          "id": "r_squared",
+          "label": "R-squared",
+          "data_type": "number",
+          "description": "Coefficient of determination.",
+          "role": "estimate",
+          "default_precision": 6
+        }
+      ],
+      "rows": [
+        {
+          "id": "r_squared_0000",
+          "cells": [
+            {
+              "kind": "text",
+              "value": "construct:y"
+            },
+            {
+              "kind": "number",
+              "value": 0.9968976541453111
+            }
+          ]
+        }
+      ],
+      "footnote_ids": [],
+      "capability_cells": [
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.pls_algorithm",
+          "cell_id": "qpls3.pls.algorithm",
+          "capability_version": "pls_pm_v1"
+        }
+      ]
+    }
+  ],
+  "charts": [],
+  "notices": [],
+  "exclusions": [
+    {
+      "id": "point_estimation_only",
+      "capability_cell": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.pls_algorithm",
+        "cell_id": "qpls3.pls.algorithm",
+        "capability_version": "pls_pm_v1"
+      },
+      "title": "Point estimation only",
+      "reason": "This Recipe-v4 execution slice does not include resampling or assessment add-ons."
+    }
+  ],
+  "footnotes": [],
+  "presentation": {
+    "default_section_id": "structural_model",
+    "default_table_id": "structural_paths",
+    "precision": 4,
+    "missing_value_label": "—",
+    "chart_defaults": {}
+  }
+}

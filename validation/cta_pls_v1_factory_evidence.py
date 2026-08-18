@@ -64,9 +64,10 @@ def method_spec_report() -> bool:
     ]
     fragments = {fragment: fragment in text for fragment in required_fragments}
     bounded_scope = (
-        "descriptive scope" in text
+        "scoped Standard QuickPLS workflow" in text
+        and "descriptive scope" in text
         and "does not classify either measurement shape" in text
-        and "broader inferential CTA-PLS decision rules remain unsupported" in text
+        and "Broader inferential CTA-PLS decision rules remain unsupported" in text
     )
     checks = {
         "passed": all(fragments.values()) and bounded_scope,

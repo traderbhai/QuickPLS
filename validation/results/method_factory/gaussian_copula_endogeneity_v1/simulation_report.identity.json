@@ -1,0 +1,424 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "behavioral_rules": {
+      "null_flag_rate_at_most_0_25": true,
+      "signal_detection_rate_at_least_0_75": true,
+      "skew_applicability_present_for_x": true
+    },
+    "coverage": {
+      "copula_signals": [
+        0.0,
+        0.4
+      ],
+      "replicates_per_cell": 4,
+      "sample_sizes": [
+        120,
+        240
+      ]
+    },
+    "independent_numeric_agreement": true,
+    "method_version": "gaussian_copula_endogeneity_v1",
+    "null_flag_rate": 0.125,
+    "passed": true,
+    "scenario_count": 16,
+    "scenarios": [
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.0,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 3.0857457700150803e-09,
+          "p_value_two_sided": 2.205022275880708e-09,
+          "predictor_skewness": 2.6645352591003757e-15,
+          "standard_error": 6.57599197317893e-10,
+          "t_statistic": 3.4943692384103997e-09
+        },
+        "name": "simulation_n120_g0_r0",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n120_g0_r0.quickpls.json",
+        "output_sha256": "240cfb5f593ff0a6e266784427664b402d463a30baa8469ffb11615c5fc67c46",
+        "passed": true,
+        "sample_size": 120,
+        "seed": 2026082600,
+        "x_applicability": true,
+        "x_copula_p_value": 0.11873489662609393
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.0,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 6.0769367316027e-10,
+          "p_value_two_sided": 9.108522824874399e-10,
+          "predictor_skewness": 3.469446951953614e-16,
+          "standard_error": 4.1259295979756416e-10,
+          "t_statistic": 1.7321399869985044e-09
+        },
+        "name": "simulation_n120_g0_r1",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n120_g0_r1.quickpls.json",
+        "output_sha256": "91f8e8b6e1209ffb6040a5ea548acdb71bf34a3e9b7b3e641acc60ed6bb3a021",
+        "passed": true,
+        "sample_size": 120,
+        "seed": 2026082601,
+        "x_applicability": true,
+        "x_copula_p_value": 0.5080834125427027
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.0,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 1.106482572232892e-08,
+          "p_value_two_sided": 1.608903926753058e-09,
+          "predictor_skewness": 4.996003610813204e-16,
+          "standard_error": 5.48722289828163e-10,
+          "t_statistic": 1.1180671499744221e-08
+        },
+        "name": "simulation_n120_g0_r2",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n120_g0_r2.quickpls.json",
+        "output_sha256": "25d22a070773e2b5edee0caf33f100d2537063fd5299c7b81a56409c55127ddb",
+        "passed": true,
+        "sample_size": 120,
+        "seed": 2026082602,
+        "x_applicability": true,
+        "x_copula_p_value": 0.24754018860709825
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.0,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 1.8603791118732005e-08,
+          "p_value_two_sided": 1.4700471395734382e-08,
+          "predictor_skewness": 8.881784197001252e-16,
+          "standard_error": 1.0133889283281405e-09,
+          "t_statistic": 2.0578621751088377e-08
+        },
+        "name": "simulation_n120_g0_r3",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n120_g0_r3.quickpls.json",
+        "output_sha256": "a9b52bb090905bae1853d02abc1a16c3982aec4967d1aed749a3fe08f58fe8e8",
+        "passed": true,
+        "sample_size": 120,
+        "seed": 2026082603,
+        "x_applicability": true,
+        "x_copula_p_value": 0.8445840024267273
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.4,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 6.945194003238342e-09,
+          "p_value_two_sided": 6.055040913111043e-09,
+          "predictor_skewness": 8.881784197001252e-16,
+          "standard_error": 2.5054508467903247e-09,
+          "t_statistic": 7.71341560068528e-09
+        },
+        "name": "simulation_n120_g4_r0",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n120_g4_r0.quickpls.json",
+        "output_sha256": "ea682c4e9470a8353670e9e95473cb7b9151b09d452148b13d120d46ef359cfb",
+        "passed": true,
+        "sample_size": 120,
+        "seed": 2026082640,
+        "x_applicability": true,
+        "x_copula_p_value": 1.220629426645914e-06
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.4,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 1.5798013730528027e-09,
+          "p_value_two_sided": 3.6703318162523146e-09,
+          "predictor_skewness": 8.881784197001252e-16,
+          "standard_error": 1.4942602710732444e-11,
+          "t_statistic": 5.060556307334707e-09
+        },
+        "name": "simulation_n120_g4_r1",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n120_g4_r1.quickpls.json",
+        "output_sha256": "482b3055b4664559357b460495601fe5f4635231d4f3ba42015238be20643e67",
+        "passed": true,
+        "sample_size": 120,
+        "seed": 2026082641,
+        "x_applicability": true,
+        "x_copula_p_value": 0.0042762270191401
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.4,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 1.2559471240791709e-09,
+          "p_value_two_sided": 1.8794676925892873e-09,
+          "predictor_skewness": 8.881784197001252e-16,
+          "standard_error": 6.385109108109077e-11,
+          "t_statistic": 2.9888395092214637e-09
+        },
+        "name": "simulation_n120_g4_r2",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n120_g4_r2.quickpls.json",
+        "output_sha256": "c23043a8f45e4dd1c0ad0f72504e6c10e6827979bd309825b0ca06fdc4add701",
+        "passed": true,
+        "sample_size": 120,
+        "seed": 2026082642,
+        "x_applicability": true,
+        "x_copula_p_value": 0.21242717428180713
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.4,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 1.9435282480606553e-08,
+          "p_value_two_sided": 1.8111667166031964e-08,
+          "predictor_skewness": 8.881784197001252e-16,
+          "standard_error": 8.153896446927433e-10,
+          "t_statistic": 2.287217318319712e-08
+        },
+        "name": "simulation_n120_g4_r3",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n120_g4_r3.quickpls.json",
+        "output_sha256": "a75a3711e0f1fb9d4edc6e842b666597a68ae657269d901d753ac835fa59904e",
+        "passed": true,
+        "sample_size": 120,
+        "seed": 2026082643,
+        "x_applicability": true,
+        "x_copula_p_value": 0.0016556690224309722
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.0,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 2.5136190177910134e-09,
+          "p_value_two_sided": 3.6153806615146777e-09,
+          "predictor_skewness": 1.7763568394002505e-15,
+          "standard_error": 5.330842434148053e-10,
+          "t_statistic": 4.538982495416732e-09
+        },
+        "name": "simulation_n240_g0_r0",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n240_g0_r0.quickpls.json",
+        "output_sha256": "38a0cf581cc78388f1935f41849e68423bfbc61843c73570a921ff29801ffdf9",
+        "passed": true,
+        "sample_size": 240,
+        "seed": 2026083800,
+        "x_applicability": true,
+        "x_copula_p_value": 0.017927495311420794
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.0,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 2.5486566190835447e-09,
+          "p_value_two_sided": 1.3197509751705638e-09,
+          "predictor_skewness": 2.949029909160572e-16,
+          "standard_error": 7.794345169287453e-10,
+          "t_statistic": 2.3062957099639902e-09
+        },
+        "name": "simulation_n240_g0_r1",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n240_g0_r1.quickpls.json",
+        "output_sha256": "646f48bd0480cfa11da515bc3f1802d4a2c7a04aa36f9bea4080fb3e4d75cddc",
+        "passed": true,
+        "sample_size": 240,
+        "seed": 2026083801,
+        "x_applicability": true,
+        "x_copula_p_value": 0.17675450796868275
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.0,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 6.339598984661521e-10,
+          "p_value_two_sided": 1.289667261872296e-09,
+          "predictor_skewness": 2.220446049250313e-15,
+          "standard_error": 1.5622513283020112e-09,
+          "t_statistic": 1.6168590043219577e-09
+        },
+        "name": "simulation_n240_g0_r2",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n240_g0_r2.quickpls.json",
+        "output_sha256": "5c0a78917ff4d336b285088d4669dfba77ddd3bb46d4c6d5b10698d5159e9752",
+        "passed": true,
+        "sample_size": 240,
+        "seed": 2026083802,
+        "x_applicability": true,
+        "x_copula_p_value": 0.9935731818868845
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.0,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 3.5993356073404925e-09,
+          "p_value_two_sided": 3.4581881247497392e-09,
+          "predictor_skewness": 4.440892098500626e-16,
+          "standard_error": 1.077724576248329e-10,
+          "t_statistic": 7.139633551034308e-09
+        },
+        "name": "simulation_n240_g0_r3",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n240_g0_r3.quickpls.json",
+        "output_sha256": "d443ff7249cc61672e5a8bed2020dec82340b69617d4e6f012dc4d9d6b830ade",
+        "passed": true,
+        "sample_size": 240,
+        "seed": 2026083803,
+        "x_applicability": true,
+        "x_copula_p_value": 0.7034483614943023
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.4,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 1.3458215875061796e-08,
+          "p_value_two_sided": 4.030826741829863e-09,
+          "predictor_skewness": 2.6645352591003757e-15,
+          "standard_error": 3.345468346793723e-11,
+          "t_statistic": 1.6693481041940572e-08
+        },
+        "name": "simulation_n240_g4_r0",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n240_g4_r0.quickpls.json",
+        "output_sha256": "59c5c3ece379cca55ae2dc6b5a4e5eb7aa9fdfb45c24347f0a2886b69d0d3845",
+        "passed": true,
+        "sample_size": 240,
+        "seed": 2026083840,
+        "x_applicability": true,
+        "x_copula_p_value": 0.0010212299351171072
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.4,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 7.564938675486133e-10,
+          "p_value_two_sided": 5.449460743767176e-10,
+          "predictor_skewness": 3.552713678800501e-15,
+          "standard_error": 1.025292628575869e-10,
+          "t_statistic": 4.438502010373213e-09
+        },
+        "name": "simulation_n240_g4_r1",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n240_g4_r1.quickpls.json",
+        "output_sha256": "59a794803096c8d158ddede9c2ce37dfadae520466ca1d06067c6eb66580d262",
+        "passed": true,
+        "sample_size": 240,
+        "seed": 2026083841,
+        "x_applicability": true,
+        "x_copula_p_value": 7.187379247319825e-08
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.4,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 1.8139941077022215e-08,
+          "p_value_two_sided": 1.8712844385149197e-08,
+          "predictor_skewness": 1.7763568394002505e-15,
+          "standard_error": 1.43451850398435e-09,
+          "t_statistic": 2.3550620703582936e-08
+        },
+        "name": "simulation_n240_g4_r2",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n240_g4_r2.quickpls.json",
+        "output_sha256": "caa2ec4dc1c45829216f9d534a0f5c157272e973df764f3d5f5dd78c5c7cda2e",
+        "passed": true,
+        "sample_size": 240,
+        "seed": 2026083842,
+        "x_applicability": true,
+        "x_copula_p_value": 0.0004421619327776849
+      },
+      {
+        "applicability_equal": true,
+        "copula_signal": 0.4,
+        "keys_match": true,
+        "max_abs_errors": {
+          "copula_coefficient": 1.7185468603742038e-09,
+          "p_value_two_sided": 1.2977740687647454e-09,
+          "predictor_skewness": 3.552713678800501e-15,
+          "standard_error": 7.800599610696679e-10,
+          "t_statistic": 6.148854980736473e-09
+        },
+        "name": "simulation_n240_g4_r3",
+        "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/simulation_n240_g4_r3.quickpls.json",
+        "output_sha256": "6623f9e9331e9bc56d0a820f21bf4fe1ce5be90ad8feb92d685cdbe3ff1513c4",
+        "passed": true,
+        "sample_size": 240,
+        "seed": 2026083843,
+        "x_applicability": true,
+        "x_copula_p_value": 1.5995799795831545e-08
+      }
+    ],
+    "signal_detection_rate": 0.875,
+    "tolerance": 1e-06
+  },
+  "feature_id": "qpls3.pls.gaussian_copula_endogeneity",
+  "generated_at_utc": "2026-08-14T06:51:54.948374Z",
+  "method_version": "gaussian_copula_endogeneity_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "simulation_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "d847875d0c78a734725de9794aa19cc64d97c6ff732b2b6cdb646dce0398406c",
+      "size": 260752
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+      "size": 114179
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+      "size": 653641
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "0a3f76ad19f897ff2db63be729a92087d8d1cad6b926e4c6908294cdb62e97e0",
+      "size": 54934
+    },
+    {
+      "path": "validation/endogeneity_factory_common.py",
+      "sha256": "9ca62fb82ec04b4056d5c138a99e28c1dd5bf00a2c2c12ffa53b49b26bcd85e9",
+      "size": 14111
+    },
+    {
+      "path": "validation/endogeneity_reference.py",
+      "sha256": "8115798565d2284a770d4b4c5b74ee913f4957fd75b99eb99369c9befc3d0985",
+      "size": 12156
+    },
+    {
+      "path": "validation/endogeneity_simulation.py",
+      "sha256": "88e38d9b6ac0d2b7aabc89472ab6497179e2c11e51203c0640f3b1def50a7a68",
+      "size": 8378
+    },
+    {
+      "path": "validation/higher_order_reference.py",
+      "sha256": "1467a6bf96b1bd84f15d6042ff8bfe8a9605f3fb6826ae8b63428abc614cc66f",
+      "size": 15607
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/gaussian_copula_endogeneity_v1.manifest.json",
+      "sha256": "50e1445c9c8d7131eea334405e5454424982371154ac5d2774e83a5b6fc57320",
+      "size": 14698
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_endogeneity_factory.py",
+      "sha256": "1b2dbb224abd159e0f9179071f67a52dde6b23f227195b75d67cdcd24a203c92",
+      "size": 4689
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    }
+  ]
+}

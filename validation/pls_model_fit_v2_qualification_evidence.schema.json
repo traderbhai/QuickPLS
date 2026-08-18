@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.invalid/schemas/pls_model_fit_v2_qualification_evidence.schema.json",
+  "title": "QuickPLS validation-only PLS model-fit qualification work evidence",
+  "oneOf": [
+    { "$ref": "#/$defs/generative" },
+    { "$ref": "#/$defs/adversarial" }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "blockers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "base": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "kind",
+        "evidence_version",
+        "passed_work_checks",
+        "qualification_role_satisfied",
+        "receipt_eligible",
+        "scenario_set_sha256",
+        "source",
+        "source_sha256",
+        "blockers",
+        "note"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "kind": { "type": "string" },
+        "evidence_version": {
+          "const": "pls_model_fit_v2_qualification_work_evidence_v1"
+        },
+        "passed_work_checks": { "type": "boolean" },
+        "qualification_role_satisfied": { "const": false },
+        "receipt_eligible": { "const": false },
+        "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+        "source": {
+          "const": "validation/pls_model_fit_v2_qualification_evidence.py"
+        },
+        "source_sha256": { "$ref": "#/$defs/sha256" },
+        "blockers": { "$ref": "#/$defs/blockers" },
+        "note": { "type": "string", "minLength": 80 }
+      }
+    },
+    "wilson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "successes",
+        "trials",
+        "estimate",
+        "lower",
+        "upper",
+        "half_width",
+        "confidence"
+      ],
+      "properties": {
+        "successes": { "type": "integer", "minimum": 0 },
+        "trials": { "type": "integer", "minimum": 1 },
+        "estimate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "lower": { "type": "number", "minimum": 0, "maximum": 1 },
+        "upper": { "type": "number", "minimum": 0, "maximum": 1 },
+        "half_width": { "type": "number", "minimum": 0, "maximum": 0.5 },
+        "confidence": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 }
+      }
+    },
+    "generative": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_version",
+            "kind",
+            "evidence_version",
+            "passed_work_checks",
+            "qualification_role_satisfied",
+            "receipt_eligible",
+            "scenario_set_sha256",
+            "source",
+            "source_sha256",
+            "design",
+            "point_recovery",
+            "exact_fit_calibration",
+            "blockers",
+            "note"
+          ],
+          "properties": {
+            "schema_version": { "const": 1 },
+            "kind": {
+              "const": "pls_model_fit_v2_generative_calibration_work_v1"
+            },
+            "evidence_version": {
+              "const": "pls_model_fit_v2_qualification_work_evidence_v1"
+            },
+            "passed_work_checks": { "type": "boolean" },
+            "qualification_role_satisfied": { "const": false },
+            "receipt_eligible": { "const": false },
+            "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+            "source": {
+              "const": "validation/pls_model_fit_v2_qualification_evidence.py"
+            },
+            "source_sha256": { "$ref": "#/$defs/sha256" },
+            "design": {
+              "type": "object",
+              "required": [
+                "point_replicates",
+                "point_rows",
+                "population_proxy_rows",
+                "exact_datasets_per_condition",
+                "exact_draws",
+                "conditions",
+                "distributions",
+                "confidence",
+                "qualification_maximum_half_width"
+              ],
+              "properties": {
+                "point_replicates": { "type": "integer", "minimum": 4 },
+                "point_rows": { "type": "integer", "minimum": 10 },
+                "population_proxy_rows": { "type": "integer", "minimum": 1000 },
+                "exact_datasets_per_condition": { "type": "integer", "minimum": 2 },
+                "exact_draws": { "type": "integer", "minimum": 2 },
+                "conditions": {
+                  "const": ["correct", "misspecified"]
+                },
+                "distributions": {
+                  "const": ["gaussian", "skewed_heavy_tail"]
+                },
+                "confidence": { "const": 0.95 },
+                "qualification_maximum_half_width": { "const": 0.01 }
+              }
+            },
+            "point_recovery": {
+              "type": "object",
+              "required": [
+                "maximum_independent_arithmetic_error",
+                "failed_replicates",
+                "path_rows",
+                "ledger"
+              ],
+              "properties": {
+                "maximum_independent_arithmetic_error": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "failed_replicates": { "type": "array" },
+                "path_rows": { "type": "array", "minItems": 4 },
+                "ledger": { "type": "array", "minItems": 4 }
+              }
+            },
+            "exact_fit_calibration": {
+              "type": "object",
+              "required": [
+                "rows",
+                "failed_datasets",
+                "maximum_wilson_half_width",
+                "precision_gate_passed",
+                "product_draw_minimum_gate_passed"
+              ],
+              "properties": {
+                "rows": {
+                  "type": "array",
+                  "minItems": 12,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "variant",
+                      "criterion",
+                      "condition",
+                      "requested_datasets",
+                      "available_datasets",
+                      "failed_or_unavailable_datasets",
+                      "rejection_0_05",
+                      "rejection_0_01"
+                    ],
+                    "properties": {
+                      "variant": { "enum": ["saturated", "estimated"] },
+                      "criterion": { "enum": ["srmr", "d_uls", "d_g"] },
+                      "condition": { "enum": ["correct", "misspecified"] },
+                      "requested_datasets": { "type": "integer", "minimum": 2 },
+                      "available_datasets": { "type": "integer", "minimum": 0 },
+                      "failed_or_unavailable_datasets": { "type": "integer", "minimum": 0 },
+                      "rejection_0_05": {
+                        "oneOf": [{ "$ref": "#/$defs/wilson" }, { "type": "null" }]
+                      },
+                      "rejection_0_01": {
+                        "oneOf": [{ "$ref": "#/$defs/wilson" }, { "type": "null" }]
+                      }
+                    }
+                  }
+                },
+                "failed_datasets": { "type": "array" },
+                "maximum_wilson_half_width": { "type": "number", "minimum": 0 },
+                "precision_gate_passed": { "type": "boolean" },
+                "product_draw_minimum_gate_passed": { "type": "boolean" }
+              }
+            },
+            "blockers": { "$ref": "#/$defs/blockers" },
+            "note": { "type": "string", "minLength": 80 }
+          }
+        }
+      ]
+    },
+    "adversarial": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_version",
+            "kind",
+            "evidence_version",
+            "passed_work_checks",
+            "qualification_role_satisfied",
+            "receipt_eligible",
+            "scenario_set_sha256",
+            "source",
+            "source_sha256",
+            "case_count",
+            "cases",
+            "blockers",
+            "note"
+          ],
+          "properties": {
+            "schema_version": { "const": 1 },
+            "kind": { "const": "pls_model_fit_v2_adversarial_work_v1" },
+            "evidence_version": {
+              "const": "pls_model_fit_v2_qualification_work_evidence_v1"
+            },
+            "passed_work_checks": { "type": "boolean" },
+            "qualification_role_satisfied": { "const": false },
+            "receipt_eligible": { "const": false },
+            "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+            "source": {
+              "const": "validation/pls_model_fit_v2_qualification_evidence.py"
+            },
+            "source_sha256": { "$ref": "#/$defs/sha256" },
+            "case_count": { "type": "integer", "minimum": 14 },
+            "cases": {
+              "type": "array",
+              "minItems": 14,
+              "items": {
+                "type": "object",
+                "required": ["case_id", "expected", "actual", "passed"],
+                "properties": {
+                  "case_id": { "type": "string", "minLength": 1 },
+                  "expected": {},
+                  "actual": {},
+                  "passed": { "type": "boolean" },
+                  "code": { "type": "string", "minLength": 1 }
+                }
+              }
+            },
+            "blockers": { "$ref": "#/$defs/blockers" },
+            "note": { "type": "string", "minLength": 80 }
+          }
+        }
+      ]
+    }
+  }
+}

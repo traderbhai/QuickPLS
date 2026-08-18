@@ -13,7 +13,7 @@ describe("native CTA-PLS export contract", () => {
     for (const value of [
       "CTA-PLS tetrad summary",
       "CTA-PLS tetrads",
-      "CTA-PLS scope and exclusions",
+      "CTA-PLS requirements and exclusions",
       "cta_pls_tetrad_v1",
       "sample_covariance_of_preprocessed_indicators_v1",
       "sha256:cta",

@@ -18,6 +18,58 @@ UTC = timezone.utc
 
 
 class LegacyReleaseAdapterTests(unittest.TestCase):
+    def test_current_cumulative_contract_count_is_manifest_derived(self) -> None:
+        expected = sum(
+            len(check_set["required_check_ids"])
+            for check_set in adapters.PACKAGED_ACCEPTANCE_CONTRACT["ordered_check_sets"]
+        )
+        self.assertEqual(adapters.EXPECTED_CUMULATIVE_CHECKS, expected)
+
+    def test_process_runtime_sources_use_separate_application_and_postprocess_clocks(self) -> None:
+        config = adapters.METHODS["process_v2"]
+        runtime_sources = set(config["runtime_sources"])
+        postprocess_sources = set(config["postprocess_runtime_sources"])
+        self.assertEqual(
+            postprocess_sources,
+            {"validation/run_v247_process_v2_native_acceptance.ps1"},
+        )
+        self.assertTrue(postprocess_sources.issubset(runtime_sources))
+        self.assertIn("validation/v247_tauri_native_acceptance.mjs", runtime_sources - postprocess_sources)
+        packaged_generated = datetime(2026, 8, 18, 10, 8, tzinfo=UTC)
+        raw_generated = datetime(2026, 8, 18, 10, 9, tzinfo=UTC)
+        postprocess_generated = datetime(2026, 8, 18, 10, 22, tzinfo=UTC)
+        self.assertEqual(
+            adapters._runtime_source_freshness_cutoff(
+                config,
+                "validation/run_v247_process_v2_native_acceptance.ps1",
+                packaged_generated=packaged_generated,
+                raw_generated=raw_generated,
+                postprocess_generated=postprocess_generated,
+            ),
+            ("postprocess", postprocess_generated),
+        )
+        self.assertEqual(
+            adapters._runtime_source_freshness_cutoff(
+                config,
+                "validation/v247_tauri_native_acceptance.mjs",
+                packaged_generated=packaged_generated,
+                raw_generated=raw_generated,
+                postprocess_generated=postprocess_generated,
+            ),
+            ("application", raw_generated),
+        )
+        logistic_config = adapters.METHODS["logistic_regression_v2"]
+        self.assertEqual(
+            adapters._runtime_source_freshness_cutoff(
+                logistic_config,
+                logistic_config["runtime_sources"][0],
+                packaged_generated=packaged_generated,
+                raw_generated=raw_generated,
+                postprocess_generated=postprocess_generated,
+            ),
+            ("packaged", packaged_generated),
+        )
+
     def _documents(self, method: str) -> tuple[dict, dict]:
         config = adapters.METHODS[method]
         generated = "2026-08-13T16:00:00Z"

@@ -6,7 +6,7 @@ export const NATIVE_OLS_MAX_TERMS = 25;
 export const NATIVE_OLS_SCOPE_NOTE =
   "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.";
 export const NATIVE_OLS_ENGINE_SCOPE_WARNING =
-  "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked.";
+  "OLS regression v1 requires numeric complete-case variables and HC3 robust standard errors; incompatible configurations are blocked before calculation.";
 
 export function nativeOlsNumericColumns(dataset: Readonly<Dataset>): string[] {
   return nativeNcaNumericColumns(dataset);
@@ -57,7 +57,7 @@ export function nativeOlsReadiness(
       : !numeric.has(variable)
         ? `The selected variable ${variable} is not numeric`
         : null),
-    settings.robustSe && settings.robustSe !== "hc3" ? "The validated native OLS scope requires HC3 robust standard errors" : null,
+    settings.robustSe && settings.robustSe !== "hc3" ? "OLS regression v1 requires HC3 robust standard errors" : null,
   ].filter((problem): problem is string => Boolean(problem));
 
   const rowCount = dataset.rowCount ?? dataset.rows.length;

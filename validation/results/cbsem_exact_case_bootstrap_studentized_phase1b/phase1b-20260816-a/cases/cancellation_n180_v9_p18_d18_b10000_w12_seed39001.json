@@ -1,0 +1,55 @@
+{
+  "acceptance_reasons": [],
+  "aggregates": null,
+  "cancellation": {
+    "terminal_latency_seconds": 0.0015014,
+    "typed_status": "cancelled_as_requested"
+  },
+  "case": {
+    "cancel_after": 10,
+    "case_id": "cancellation_n180_v9_p18_d18_b10000_w12_seed39001",
+    "maximum_p95_elapsed_seconds": null,
+    "maximum_single_run_elapsed_seconds": null,
+    "mode": "cancellation",
+    "order": 5,
+    "replicates": 10000,
+    "seed": 39001,
+    "workers": 12
+  },
+  "dimensions": {
+    "d_optimizer_dimensions": 18,
+    "n_complete_cases": 180,
+    "p_free_parameter_rows": 18,
+    "v_observed_variables": 9
+  },
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase1b_case_v1",
+  "ledger": null,
+  "manifest_sha256": "51619f155ebf5921dbf77978fd8726591c3d9059139616fa776d2d0ffbffc256",
+  "measured_runs": [],
+  "probe": {
+    "elapsed_seconds": 0.1496238997206092,
+    "exit_code": 0,
+    "index": 0,
+    "orphan_processes": 0,
+    "peak_working_set_bytes": 10448896,
+    "phase": "cancellation",
+    "progress_values": [],
+    "result_bytes": 1270,
+    "scientific_result_sha256": null
+  },
+  "qualification_boundary": {
+    "missing_evidence": [
+      "authoritative_canonical_v11_bytes",
+      "authoritative_text_export_v11_bytes",
+      "coverage_and_failure_rate_simulation",
+      "broader_dimension_and_model_axes",
+      "package_and_integration_gates"
+    ],
+    "status": "blocked_not_product_qualification"
+  },
+  "runtime_acceptance": null,
+  "schema_version": 1,
+  "scientific_result_sha256": null,
+  "status": "accepted_resource_candidate_evidence",
+  "warmup_runs": []
+}

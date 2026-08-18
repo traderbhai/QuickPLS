@@ -1,0 +1,122 @@
+{
+  "admission_policy": "identity_report_requires_separate_manifest_admission_and_review",
+  "blockers": [
+    "fresh_archive_save_close_reopen_execution_not_supplied",
+    "historical_and_future_archive_corpus_not_executed",
+    "interrupted_save_and_cancellation_archive_checks_not_executed"
+  ],
+  "capability_id": "smartpls.htmt",
+  "catalogue_snapshot_date": "2026-08-12",
+  "cell_id": "qpls3.assessment.htmt",
+  "checks": {
+    "source_contract": {
+      "cases": {
+        "archive_integrity_module_present": true,
+        "checksum_validation_present": true,
+        "current_archive_version_declared": true,
+        "decision_tamper_test_present": true,
+        "duplicate_archive_entry_guard_present": true,
+        "future_version_guard_present": true,
+        "method_scoped_round_trip_test_present": true,
+        "pair_unavailable_ledger_validated": true,
+        "usable_index_digest_tamper_test_present": true
+      },
+      "observed_archive_version": 5,
+      "passed": true,
+      "qualification_case_ids": [
+        "feature_identity",
+        "method_version",
+        "dataset_fingerprint",
+        "checksum",
+        "duplicate_entry",
+        "malformed_payload",
+        "legacy_reinterpretation",
+        "interrupted_save",
+        "decision_tamper",
+        "usable_index_digest_tamper",
+        "pair_unavailable_index_tamper",
+        "future_version_read_only",
+        "cancelled_run_archive_unchanged"
+      ]
+    }
+  },
+  "declared_manifest_state": "absent",
+  "feature_id": "qpls3.assessment.htmt",
+  "generated_at_utc": "2026-08-14T17:11:46.839386Z",
+  "manifest_sha256": "58b1977b129a7be7b0b55b24e7fbd736850daa6899c820b21e798463dcada6aa",
+  "method_version": "ringle_et_al_htmt_plus_v1",
+  "passed": true,
+  "qualification_evidence": false,
+  "qualification_id": "qpls3.assessment.htmt.qualification_v2",
+  "qualification_ready": false,
+  "qualification_spec_sha256": "42c84a28ec9ab2ea45a273a74f967ed60be98f6131294ba048ead8464f6e6151",
+  "report_kind": "quickpls_htmt_qualification_identity_report",
+  "role": "persistence_report",
+  "scenario_set_sha256": "b99c7bfa0b50e4a6d5d8f6615a734c490494f7eb68592ba61fe0de4e7eb0abdb",
+  "schema_version": 2,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size_bytes": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "188f946240cfd79957fa4124dda777a8c8cbfd018bc4d4eeaab1d0594fda0c6d",
+      "size_bytes": 762046
+    },
+    {
+      "path": "validation/htmt_plus_v1_factory_common.py",
+      "sha256": "1c08afa6230f67707d0ed09be93c1cd734f0db7f9f43c222f662a6d86b65c194",
+      "size_bytes": 13629
+    },
+    {
+      "path": "validation/htmt_release_persistence_gate.py",
+      "sha256": "8416378d90199e17a5ca4606110a94a4045b0d720def715d5b6f3118d34f0292",
+      "size_bytes": 5288
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size_bytes": 34283
+    },
+    {
+      "path": "validation/methods/htmt_plus_v1.manifest.json",
+      "sha256": "58b1977b129a7be7b0b55b24e7fbd736850daa6899c820b21e798463dcada6aa",
+      "size_bytes": 11390
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size_bytes": 15836
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/htmt_plus_v1.qualification.json",
+      "sha256": "42c84a28ec9ab2ea45a273a74f967ed60be98f6131294ba048ead8464f6e6151",
+      "size_bytes": 33223
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/test_htmt_qualification_v2.py",
+      "sha256": "dd9d6e5ff360ff60f16d5e8520c94bf5a03d909173954d5f9720ddfee14452bb",
+      "size_bytes": 7091
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size_bytes": 21334
+    }
+  ],
+  "source_set_sha256": "57e8bfe03a360fd0c1ec676aaf790011fdb0277a20d28584a95e474a45d82192",
+  "spec_frozen_at_utc": "2026-08-14T16:00:00Z",
+  "stage": "persistence_export"
+}

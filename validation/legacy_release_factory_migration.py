@@ -84,11 +84,13 @@ METHODS: dict[str, dict[str, Any]] = {
             "single_class_outcome_rejected",
             "rank_deficiency_rejected",
             "complete_separation_rejected",
+            "quasi_separation_rejected",
             "nondefault_worker_count_rejected",
         },
         "cli_pointer": (),
         "runtime_command": "powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v247_logistic_native_acceptance.ps1",
-        "archive": "validation/results/v247-native-logistic-1786604241673-47796.qpls",
+        "scoped_report": "validation/results/v247_tauri_native_acceptance_logistic.json",
+        "project_check": "logisticFixture",
         "archive_test_module": "validation.test_logistic_method_promotion_audit",
         "archive_identity_token": "regression_logistic_v2",
         "native_tests": ["src/native/nativeLogistic.test.ts", "src/native/nativeResults.test.ts", "src/native/nativeExportTables.test.ts"],
@@ -117,7 +119,8 @@ METHODS: dict[str, dict[str, Any]] = {
         },
         "cli_pointer": ("artifacts", "tested_cli"),
         "runtime_command": "powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v247_regression_bootstrap_native_acceptance.ps1",
-        "archive": "validation/results/v247-native-regression-bootstrap-1786604468092-21920.qpls",
+        "scoped_report": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json",
+        "project_check": "regressionBootstrapFixture",
         "archive_test_module": "validation.test_regression_bootstrap_method_promotion_audit",
         "archive_identity_token": "regression_bootstrap_v1",
         "native_tests": ["src/native/nativeRegressionBootstrapWitness.test.ts", "src/native/nativeResults.test.ts", "src/native/nativeExportTables.test.ts"],
@@ -158,7 +161,9 @@ METHODS: dict[str, dict[str, Any]] = {
         },
         "cli_pointer": ("artifacts", "tested_cli"),
         "runtime_command": "powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v247_process_v2_native_acceptance.ps1",
-        "archive": "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
+        "scoped_report": "validation/results/v247_tauri_native_acceptance_process_v2.json",
+        "project_check": "processV2FixtureProvisioning",
+        "project_field": "project",
         "archive_test_module": "validation.test_process_v2_method_promotion_audit",
         "archive_identity_token": "regression_process_v2",
         "native_tests": ["src/native/nativeProcess.test.ts", "src/native/NativeProcessSurface.test.tsx", "src/native/nativeResults.test.ts", "src/native/nativeExportTables.test.ts"],
@@ -357,9 +362,27 @@ def write_stage_identity(
 def archive_and_native_reports(
     manifest: dict[str, Any], config: dict[str, Any], output_root: Path
 ) -> tuple[bool, bool]:
-    archive = ROOT / config["archive"]
-    validation = run([str(CLI), "validate", config["archive"], "--json"])
-    inspection = run([str(CLI), "inspect", config["archive"], "--json"])
+    if "scoped_report" in config:
+        scoped_report = strict_load(ROOT / config["scoped_report"])
+        project_check = scoped_report.get("checks", {}).get(config["project_check"], {})
+        project_field = config.get("project_field", "projectPath")
+        project_path = project_check.get(project_field)
+        if not isinstance(project_path, str):
+            raise ValueError(
+                f"{config['scoped_report']} does not expose "
+                f"checks.{config['project_check']}.{project_field}"
+            )
+    else:
+        project_path = config.get("archive")
+        if not isinstance(project_path, str):
+            raise ValueError("method configuration does not expose an archive path")
+    archive = Path(project_path)
+    if not archive.is_absolute():
+        archive = ROOT / archive
+    archive = archive.resolve()
+    archive.relative_to(ROOT.resolve())
+    validation = run([str(CLI), "validate", str(archive), "--json"])
+    inspection = run([str(CLI), "inspect", str(archive), "--json"])
     tamper_execution: dict[str, Any]
     with tempfile.TemporaryDirectory(prefix="quickpls-factory-tamper-") as temporary:
         tampered = Path(temporary) / "tampered.qpls"

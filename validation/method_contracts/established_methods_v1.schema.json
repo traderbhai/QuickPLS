@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/established_methods_v1.schema.json",
+  "title": "QuickPLS established method integration contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "contract_id",
+    "registry",
+    "methods"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "established_methods_v1.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "contract_id": {
+      "const": "quickpls.established_method_integration.v1"
+    },
+    "registry": {
+      "const": "validation/capabilities/capability_registry_v2.json"
+    },
+    "methods": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/method"
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "dottedIdentifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$"
+    },
+    "repoPath": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*$",
+      "not": {
+        "pattern": "(?:^|/)\\.{1,2}(?:/|$)"
+      }
+    },
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "factory_key",
+        "manifest",
+        "runtime",
+        "capability_requirements",
+        "canonical_table_rules",
+        "factory"
+      ],
+      "properties": {
+        "factory_key": {
+          "$ref": "#/$defs/identifier"
+        },
+        "manifest": {
+          "$ref": "#/$defs/repoPath"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "capability_requirements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/capabilityRequirement"
+          }
+        },
+        "canonical_table_rules": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/canonicalTableRule"
+          }
+        },
+        "factory": {
+          "$ref": "#/$defs/factory"
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "analysis_method",
+        "method_config_kind",
+        "workbench_kind",
+        "result_discriminator"
+      ],
+      "properties": {
+        "analysis_method": {
+          "$ref": "#/$defs/identifier"
+        },
+        "method_config_kind": {
+          "$ref": "#/$defs/identifier"
+        },
+        "workbench_kind": {
+          "$ref": "#/$defs/identifier"
+        },
+        "result_discriminator": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "capabilityRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "cell_id",
+        "option",
+        "role"
+      ],
+      "properties": {
+        "capability_id": {
+          "$ref": "#/$defs/dottedIdentifier"
+        },
+        "cell_id": {
+          "$ref": "#/$defs/dottedIdentifier"
+        },
+        "option": {
+          "$ref": "#/$defs/identifier"
+        },
+        "role": {
+          "enum": [
+            "base",
+            "primary"
+          ]
+        }
+      }
+    },
+    "canonicalTableRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "match",
+        "value",
+        "owner_options"
+      ],
+      "properties": {
+        "match": {
+          "const": "prefix"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*_$"
+        },
+        "owner_options": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        }
+      }
+    },
+    "factory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output",
+        "reference_script",
+        "reference_report",
+        "reference_version_pointer",
+        "simulation_test_filter",
+        "boundary_test_filter",
+        "persistence_test_filter"
+      ],
+      "properties": {
+        "output": {
+          "$ref": "#/$defs/identifier"
+        },
+        "reference_script": {
+          "$ref": "#/$defs/repoPath"
+        },
+        "reference_report": {
+          "$ref": "#/$defs/repoPath"
+        },
+        "reference_version_pointer": {
+          "type": "string",
+          "pattern": "^/(?:[^~/]|~[01])+(?:/(?:[^~/]|~[01])+)*$"
+        },
+        "simulation_test_filter": {
+          "$ref": "#/$defs/identifier"
+        },
+        "boundary_test_filter": {
+          "$ref": "#/$defs/identifier"
+        },
+        "persistence_test_filter": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    }
+  }
+}

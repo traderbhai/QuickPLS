@@ -48,11 +48,14 @@ describe("native calculation request", () => {
       settings: {
         ...settings,
         method: "mga",
+        weightingScheme: "path",
+        preprocessing: "standardized",
         groupColumn: "segment",
         groupAValue: "A",
         groupBValue: "B",
-        groupMethods: "mga_permutation",
-        groupPermutationSamples: 1_000,
+        groupMethods: "micom,mga_permutation",
+        groupPermutationSamples: 5_000,
+        micomConfiguralConfirmed: true,
       },
     })).toEqual({
       kind: "mga",
@@ -61,8 +64,24 @@ describe("native calculation request", () => {
         groupColumn: "segment",
         groupAValue: "A",
         groupBValue: "B",
+        groupMethods: "micom,mga_permutation",
       }),
     });
+    expect(parseNativeCalculationRequest({
+      kind: "mga",
+      settings: {
+        ...settings,
+        method: "mga",
+        weightingScheme: "path",
+        preprocessing: "standardized",
+        groupColumn: "segment",
+        groupAValue: "A",
+        groupBValue: "B",
+        groupMethods: "micom",
+        groupPermutationSamples: 5_000,
+        micomConfiguralConfirmed: true,
+      },
+    })).toBeNull();
     expect(parseNativeCalculationRequest({ kind: "cta_pls", settings: { ...settings, method: "cta_pls" } })).toEqual({
       kind: "cta_pls",
       settings: expect.objectContaining({ method: "cta_pls" }),

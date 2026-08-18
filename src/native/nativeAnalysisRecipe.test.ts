@@ -1,9 +1,11 @@
 import type { Edge, Node } from "@xyflow/react";
 import { describe, expect, it } from "vitest";
 import type { AnalysisUiSettings, ConstructData } from "../types";
+import { markNativeCovarianceRoleConversionV4, newNativeScientificCovarianceEdgeV4, withNativeConstructEstimandV4 } from "../domain/semModelV4Authoring";
 import { nativeCalculationSettingsForMode } from "./nativeCalculationMode";
 import {
   NATIVE_ANALYSIS_RECIPE_BOUNDS,
+  NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS,
   NATIVE_ANALYSIS_RECIPE_DESCRIPTORS,
   NATIVE_ANALYSIS_RECIPE_KINDS,
   NativeAnalysisRecipeBuildError,
@@ -114,12 +116,36 @@ function expectFieldError(input: NativeAnalysisRecipeBuildInput, field: string) 
 
 describe("native analysis recipe descriptors", () => {
   it("covers every native calculation entry exactly once with an executable Rust method", () => {
-    expect(NATIVE_ANALYSIS_RECIPE_KINDS).toHaveLength(18);
-    expect(new Set(NATIVE_ANALYSIS_RECIPE_KINDS).size).toBe(18);
-    expect(NATIVE_ANALYSIS_RECIPE_DESCRIPTORS.filter((item) => item.kind !== "pls_permutation").every((item) => item.scopeStatus === "validated")).toBe(true);
+    expect(NATIVE_ANALYSIS_RECIPE_KINDS).toHaveLength(22);
+    expect(new Set(NATIVE_ANALYSIS_RECIPE_KINDS).size).toBe(22);
+    const experimentalKinds = new Set(["plsc_permutation"]);
+    expect(NATIVE_ANALYSIS_RECIPE_DESCRIPTORS.filter((item) => !experimentalKinds.has(item.kind)).every((item) => item.scopeStatus === "validated")).toBe(true);
     expect(nativeAnalysisRecipeDescriptor("pls_permutation")).toMatchObject({
-      scopeStatus: "experimental",
+      scopeStatus: "validated",
       scopeMetadata: "candidate_freedman_lane_path_randomization_scope",
+    });
+    expect(nativeAnalysisRecipeDescriptor("pls_sample_size_power")).toMatchObject({
+      scopeStatus: "validated",
+      scopeMetadata: "supported_pls_sample_size_power_v2_bounded_prospective_scope",
+    });
+    expect(nativeAnalysisRecipeDescriptor("pls_posthoc_technical_minimum_sample_size")).toMatchObject({
+      engineMethod: "pls_pm",
+      family: "Inference",
+      label: "Post-hoc Technical Minimum Sample Size",
+      scopeStatus: "validated",
+      scopeMetadata: "standard_posthoc_technical_minimum_sample_size_v2",
+    });
+    expect(nativeAnalysisRecipeDescriptor("plsc_bootstrap")).toMatchObject({
+      engineMethod: "plsc",
+      family: "Inference",
+      scopeStatus: "validated",
+      scopeMetadata: "validated_plsc_bootstrap_v1_bounded_scope",
+    });
+    expect(nativeAnalysisRecipeDescriptor("plsc_permutation")).toMatchObject({
+      engineMethod: "plsc",
+      family: "Inference",
+      scopeStatus: "experimental",
+      scopeMetadata: "internal_plsc_permutation_v1_bounded_scope",
     });
     expect(NATIVE_ANALYSIS_RECIPE_DESCRIPTORS.map((item) => item.engineMethod)).not.toContain("bootstrap");
     expect(nativeAnalysisRecipeDescriptor("pls_bootstrap").engineMethod).toBe("pls_pm");
@@ -164,7 +190,9 @@ describe("native analysis recipe descriptors", () => {
     expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, method: "bootstrap", bootstrapSamples: 0 })).toBe("pls_bootstrap");
     expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, bootstrapSamples: 5_000 })).toBe("pls_bootstrap");
     expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, method: "bootstrap", bootstrapSamples: 5_000, permutationSamples: 999 })).toBe("pls_permutation");
-    expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, method: "plsc", bootstrapSamples: 5_000, permutationSamples: 999 })).toBe("plsc");
+    expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, method: "plsc", bootstrapSamples: 0 })).toBe("plsc");
+    expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, method: "plsc", bootstrapSamples: 5_000, permutationSamples: 0 })).toBe("plsc_bootstrap");
+    expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, method: "plsc", bootstrapSamples: 0, permutationSamples: 1_000 })).toBe("plsc_permutation");
     expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, method: "predict", bootstrapSamples: 5_000, permutationSamples: 999 })).toBe("predict");
   });
 });
@@ -240,6 +268,33 @@ describe("native recipe model payload", () => {
     expect(recipe.model.paths).toEqual([{ source: "x", target: "y" }]);
     expect(recipe.model.controls).toEqual([{ source: "x", target: "y", label: "Age" }]);
   });
+
+  it("blocks recipe-v3 execution before filtering a newly authored model covariance", () => {
+    const scientific = newNativeScientificCovarianceEdgeV4("cov-x-y", "x", "y");
+    expect(() => buildNativeAnalysisRecipe(makeInput("pls_algorithm", {}, { edges: [...edges, scientific] }))).toThrowError(expect.objectContaining({
+      field: "model",
+      code: "sem_model_v4.execution_path_not_active",
+      message: expect.stringContaining("not active in this calculation yet"),
+    }));
+    expect(() => buildNativeAnalysisRecipe(makeInput("pls_algorithm", {}, {
+      edges: [...edges, { id: "legacy-cov", source: "x", target: "y", data: { role: "covariance" } }],
+    }))).not.toThrow();
+  });
+
+  it("blocks unresolved role conversion and explicit construct representation before v3 can ignore them", () => {
+    const unresolved = markNativeCovarianceRoleConversionV4({ id: "role-converted", source: "x", target: "y", data: { role: "covariance" } });
+    expect(() => buildNativeAnalysisRecipe(makeInput("pls_algorithm", {}, { edges: [...edges, unresolved] }))).toThrowError(expect.objectContaining({
+      field: "model",
+      code: "sem_model_v4.covariance_use_required",
+      message: expect.stringContaining("choose Model covariance, Residual/error covariance, Disturbance covariance, or Presentation only"),
+    }));
+    const authoredNodes = [withNativeConstructEstimandV4(nodes[0], { kind: "composite" }), nodes[1]];
+    expect(() => buildNativeAnalysisRecipe(makeInput("pls_algorithm", {}, { nodes: authoredNodes }))).toThrowError(expect.objectContaining({
+      field: "model",
+      code: "sem_model_v4.construct_execution_path_not_active",
+      message: expect.stringContaining("representation for Predictor"),
+    }));
+  });
 });
 
 describe("primary native PLS calculation payloads", () => {
@@ -261,6 +316,61 @@ describe("primary native PLS calculation payloads", () => {
     });
   });
 
+  it("authors explicit one-sided PLS bootstrap tails while preserving default recipe bytes", () => {
+    const defaultBootstrap = buildNativeAnalysisRecipe(makeInput("pls_bootstrap", { bootstrapSamples: 999 }));
+    expect(defaultBootstrap.settings).not.toHaveProperty("bootstrap_test_tail");
+
+    for (const bootstrapTestTail of ["one_sided_greater", "one_sided_less"] as const) {
+      expect(buildNativeAnalysisRecipe(makeInput("pls_bootstrap", {
+        bootstrapSamples: 999,
+        bootstrapTestTail,
+      })).settings).toMatchObject({ bootstrap_samples: 999, bootstrap_test_tail: bootstrapTestTail });
+    }
+
+    expectFieldError(makeInput("pls_algorithm", { bootstrapTestTail: "one_sided_greater" }), "bootstrapTestTail");
+    expectFieldError(makeInput("plsc_bootstrap", {
+      method: "plsc",
+      bootstrapSamples: 1_000,
+      bootstrapTestTail: "one_sided_less",
+    }), "bootstrapTestTail");
+  });
+
+  it("builds an explicit scoped Standard post-hoc add-on bound to real case-bootstrap inference", () => {
+    const recipe = buildNativeAnalysisRecipe(makeInput(
+      "pls_posthoc_technical_minimum_sample_size",
+      { bootstrapSamples: 5_000, studentizedInnerSamples: 0, permutationSamples: 999 },
+    ));
+
+    expect(recipe.settings).toMatchObject({
+      method: "pls_pm",
+      bootstrap_samples: 5_000,
+      studentized_inner_samples: 0,
+      permutation_samples: 0,
+    });
+    expect(recipe.method_config).toEqual({
+      kind: "pls_posthoc_technical_minimum_sample_size",
+      capability_cell: {
+        registry_schema_version: 2,
+        capability_id: "smartpls.pls_power_analysis",
+        cell_id: "qpls3.pls.posthoc_technical_minimum_sample_size",
+        capability_version: "pls_posthoc_technical_minimum_sample_size_v2",
+      },
+      method_version: "inverse_square_root_posthoc_v2",
+      base_analysis: "pls_bootstrap",
+      inference: "case_bootstrap_normal_reference_two_sided",
+    });
+    expect(recipe.metadata).toEqual({
+      status: "standard_posthoc_technical_minimum_sample_size_v2",
+    });
+    expectFieldError(
+      makeInput("pls_posthoc_technical_minimum_sample_size", {
+        bootstrapSamples: 5_000,
+        studentizedInnerSamples: 199,
+      }),
+      "studentizedInnerSamples",
+    );
+  });
+
   it("uses the current native mode defaults and clamps primary sample counts to their dialog bounds", () => {
     expect(buildNativeAnalysisRecipe(makeInput("pls_bootstrap", { bootstrapSamples: 0 })).settings.bootstrap_samples).toBe(NATIVE_ANALYSIS_RECIPE_BOUNDS.bootstrapSamples.default);
     expect(buildNativeAnalysisRecipe(makeInput("pls_bootstrap", { bootstrapSamples: 1 })).settings.bootstrap_samples).toBe(NATIVE_ANALYSIS_RECIPE_BOUNDS.bootstrapSamples.minimum);
@@ -275,6 +385,87 @@ describe("primary native PLS calculation payloads", () => {
     expectFieldError(makeInput("pls_bootstrap", { bootstrapSamples: 999, studentizedInnerSamples: 100 }), "studentizedInnerSamples");
     expectFieldError(makeInput("pls_bootstrap", { bootstrapSamples: 999, studentizedInnerSamples: 1_001 }), "studentizedInnerSamples");
     expect(buildNativeAnalysisRecipe(makeInput("pls_bootstrap", { bootstrapSamples: 999, studentizedInnerSamples: 999 })).settings.studentized_inner_samples).toBe(999);
+  });
+
+  it("builds a separately attributed full-refit PLSc bootstrap recipe without ignored resampling settings", () => {
+    const recipe = buildNativeAnalysisRecipe(makeInput("plsc_bootstrap", {
+      method: "plsc",
+      weightingScheme: "factor",
+      preprocessing: "mean_centered",
+      bootstrapSamples: 5_000,
+      studentizedInnerSamples: 0,
+      permutationSamples: 0,
+      workers: 4,
+      confidenceLevel: 0.975,
+    }));
+    expect(recipe.settings).toMatchObject({
+      method: "plsc",
+      weighting_scheme: "factor",
+      preprocessing: "mean_centered",
+      bootstrap_samples: 5_000,
+      studentized_inner_samples: 0,
+      permutation_samples: 0,
+      workers: 4,
+      confidence_level: 0.975,
+    });
+    expect(recipe.method_config).toEqual({ kind: "plsc" });
+    expect(recipe.metadata).toEqual({ status: "validated_plsc_bootstrap_v1_bounded_scope" });
+    expectFieldError(makeInput("plsc_bootstrap", { method: "plsc", bootstrapSamples: 999 }), "bootstrapSamples");
+    expectFieldError(makeInput("plsc_bootstrap", { method: "plsc", bootstrapSamples: 10_001 }), "bootstrapSamples");
+    expectFieldError(makeInput("plsc_bootstrap", { method: "plsc", bootstrapSamples: 1_000, studentizedInnerSamples: 99 }), "bootstrapSamples");
+    expectFieldError(makeInput("plsc_bootstrap", { method: "plsc", bootstrapSamples: 1_000, permutationSamples: 999 }), "bootstrapSamples");
+  });
+
+  it("builds the hidden two-group PLSc consistent-permutation recipe without implying MICOM", () => {
+    const recipe = buildNativeAnalysisRecipe(makeInput("plsc_permutation", {
+      method: "plsc",
+      weightingScheme: "factor",
+      preprocessing: "standardized",
+      bootstrapSamples: 0,
+      studentizedInnerSamples: 0,
+      permutationSamples: 1_000,
+      seed: 42,
+      workers: 4,
+      confidenceLevel: 0.95,
+      groupColumn: "group",
+      groupAValue: "A",
+      groupBValue: "B",
+    }));
+    expect(recipe.settings).toMatchObject({
+      method: "plsc",
+      weighting_scheme: "factor",
+      preprocessing: "standardized",
+      bootstrap_samples: 0,
+      studentized_inner_samples: 0,
+      permutation_samples: 1_000,
+      seed: 42,
+      workers: 4,
+      confidence_level: 0.95,
+    });
+    expect(recipe.method_config).toEqual({
+      kind: "plsc_permutation",
+      group_column: "group",
+      group_a: "A",
+      group_b: "B",
+    });
+    expect(recipe.metadata).toEqual({ status: "internal_plsc_permutation_v1_bounded_scope" });
+    expect(recipe.metadata).not.toHaveProperty("group_methods");
+    expect(recipe.metadata).not.toHaveProperty("micom_configural_confirmed");
+    expectFieldError(makeInput("plsc_permutation", {
+      method: "plsc",
+      permutationSamples: 1_000,
+      groupColumn: "group",
+      groupAValue: "A",
+      groupBValue: "B",
+      confidenceLevel: 0.90,
+    }), "confidenceLevel");
+    expectFieldError(makeInput("plsc_permutation", {
+      method: "plsc",
+      permutationSamples: 1_000,
+      groupColumn: "x1",
+      groupAValue: "A",
+      groupBValue: "B",
+    }), "groupColumn");
   });
 });
 
@@ -356,7 +547,9 @@ describe("advanced validated backend family mappings", () => {
       expect(recipe.settings.studentized_inner_samples, kind).toBe(0);
       expect(recipe.settings.permutation_samples, kind).toBe(0);
       expect(recipe.method_config.kind, kind).toBe(kind);
-      expect(recipe.metadata.status, kind).toContain("validated_");
+      expect(recipe.metadata.status, kind).toBe(kind === "pls_sample_size_power"
+        ? "supported_pls_sample_size_power_v2_bounded_prospective_scope"
+        : nativeAnalysisRecipeDescriptor(kind).scopeMetadata);
       expect(Object.keys(recipe.metadata), kind).toEqual(["status"]);
     }
   });
@@ -417,7 +610,7 @@ describe("advanced validated backend family mappings", () => {
     }), "model");
   });
 
-  it.each(["plsc", "cca", "ipma", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation"] as const)("blocks PCA weighting for %s", (kind) => {
+  it.each(["plsc", "plsc_bootstrap", "cca", "ipma", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation"] as const)("blocks PCA weighting for %s", (kind) => {
     expectFieldError(makeInput(kind, { weightingScheme: "pca", ...(kind === "ipma" ? { ipmaTargets: "y" } : {}) }), "weightingScheme");
   });
 
@@ -473,7 +666,7 @@ describe("advanced validated backend family mappings", () => {
     expect(recipe.method_config).toEqual({ kind: "predict" });
   });
 
-  it("maps the explicit bounded joint MICOM and permutation-MGA contract", () => {
+  it("maps the restored combined MICOM and two-group permutation MGA contract", () => {
     const recipe = buildNativeAnalysisRecipe(makeInput("mga", {
       groupColumn: " Group ",
       groupAValue: " Treatment ",
@@ -482,7 +675,7 @@ describe("advanced validated backend family mappings", () => {
       groupPermutationSamples: 10_000,
       micomConfiguralConfirmed: true,
     }));
-    expect(recipe.metadata).toEqual({ status: "validated_micom_v2_and_permutation_mga_v2_bounded_scope" });
+    expect(recipe.metadata).toEqual({ status: "validated_micom_v4_and_permutation_mga_v4_fixed_plan_scope" });
     expect(recipe.method_config).toEqual({
       kind: "mga",
       group_column: "Group",
@@ -497,6 +690,7 @@ describe("advanced validated backend family mappings", () => {
     expectFieldError(makeInput("mga", { groupColumn: "group", groupAValue: "A", groupBValue: "A" }), "groupBValue");
     expectFieldError(makeInput("mga", { groupColumn: "group", groupAValue: "A", groupBValue: "B", groupPermutationSamples: 4_999 }), "groupPermutationSamples");
     expectFieldError(makeInput("mga", { groupColumn: "group", groupAValue: "A", groupBValue: "B", groupMethods: "micom" }), "groupMethods");
+    expectFieldError(makeInput("mga", { groupColumn: "group", groupAValue: "A", groupBValue: "B", groupMethods: "mga_permutation" }), "groupMethods");
     expectFieldError(makeInput("mga", { groupColumn: "group", groupAValue: "A", groupBValue: "B", micomConfiguralConfirmed: false }), "micomConfiguralConfirmed");
   });
 
@@ -560,6 +754,137 @@ describe("advanced validated backend family mappings", () => {
     });
     expect(cfa.metadata).not.toHaveProperty("cbsem_standardization");
 
+    const bootstrap = buildNativeAnalysisRecipe(makeInput("cbsem", {
+      cbsemBootstrapSamples: 500,
+      confidenceLevel: 0.95,
+      workers: 4,
+    }));
+    expect(bootstrap.metadata).toEqual({
+      status: "candidate_cbsem_bootstrap_v2_unqualified_bounded_scope",
+    });
+    expect(bootstrap.method_config).toMatchObject({
+      kind: "cbsem",
+      bootstrap_samples: 500,
+      bootstrap_v2: { algorithm: "case_resampling_full_ml", interval: "percentile_type7" },
+    });
+    expect((bootstrap.method_config as { bootstrap_v2?: unknown }).bootstrap_v2)
+      .not.toHaveProperty("test_tail");
+
+    for (const cbsemBootstrapTestTail of ["one_sided_greater", "one_sided_less"] as const) {
+      const selectedTail = buildNativeAnalysisRecipe(makeInput("cbsem", {
+        cbsemModelType: "cfa",
+        cbsemBootstrapSamples: 1_000,
+        cbsemBootstrapTestTail,
+        confidenceLevel: 0.95,
+        workers: 4,
+      }, { edges: [] }));
+      expect(selectedTail.method_config).toMatchObject({
+        kind: "cbsem",
+        bootstrap_v2: { test_tail: cbsemBootstrapTestTail },
+      });
+      expect(selectedTail.settings).not.toHaveProperty("bootstrap_test_tail");
+    }
+    expectFieldError(makeInput("cbsem", {
+      cbsemBootstrapSamples: 0,
+      cbsemBootstrapTestTail: "one_sided_greater",
+    }), "cbsemBootstrapTestTail");
+
+    const studentized = buildNativeAnalysisRecipe(makeInput("cbsem", {
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 500,
+      cbsemBootstrapInterval: "analytic_studentized_type7",
+      confidenceLevel: 0.95,
+      workers: NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS.workers.maximum,
+    }, { edges: [] }));
+    expect(studentized.method_config).toMatchObject({
+      kind: "cbsem",
+      model_type: "cfa",
+      bootstrap_samples: 500,
+      bootstrap_v2: {
+        algorithm: "case_resampling_full_ml",
+        interval: "analytic_studentized_type7",
+      },
+    });
+    expect((studentized.method_config as { bootstrap_v2?: unknown }).bootstrap_v2)
+      .not.toHaveProperty("test_tail");
+    expectFieldError(makeInput("cbsem", {
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 500,
+      cbsemBootstrapInterval: "analytic_studentized_type7",
+      workers: 13,
+    }, { edges: [] }), "workers");
+    expectFieldError(makeInput("cbsem", {
+      cbsemModelType: "sem",
+      cbsemBootstrapSamples: 500,
+      cbsemBootstrapInterval: "analytic_studentized_type7",
+    }), "cbsemBootstrapInterval");
+    expectFieldError(makeInput("cbsem", {
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 500,
+      cbsemBootstrapInterval: "analytic_studentized_type7",
+      cbsemBootstrapTestTail: "one_sided_greater",
+    }, { edges: [] }), "cbsemBootstrapTestTail");
+    expectFieldError(makeInput("cbsem", {
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 0,
+      cbsemBootstrapInterval: "analytic_studentized_type7",
+    }, { edges: [] }), "cbsemBootstrapInterval");
+    expectFieldError(makeInput("cbsem", {
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 500,
+      cbsemBootstrapInterval: "analytic_studentized_type7",
+    }, {
+      edges: [],
+      nodes: nodes.map((node, index) => ({
+        ...node,
+        data: {
+          ...node.data,
+          indicators: Array.from({ length: 5 }, (_, indicator) => `${index}-${indicator}`),
+        },
+      })),
+    }), "model");
+
+    const bca = buildNativeAnalysisRecipe(makeInput("cbsem", {
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 500,
+      cbsemBootstrapInterval: "bca_type7",
+      confidenceLevel: 0.95,
+      workers: NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS.workers.maximum,
+    }, { edges: [] }));
+    expect(bca.method_config).toMatchObject({
+      kind: "cbsem",
+      model_type: "cfa",
+      bootstrap_samples: 500,
+      bootstrap_v2: {
+        algorithm: "case_resampling_full_ml",
+        interval: "bca_type7",
+      },
+    });
+    expect((bca.method_config as { bootstrap_v2?: unknown }).bootstrap_v2)
+      .not.toHaveProperty("test_tail");
+    expectFieldError(makeInput("cbsem", {
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 500,
+      cbsemBootstrapInterval: "bca_type7",
+      workers: 13,
+    }, { edges: [] }), "workers");
+    expectFieldError(makeInput("cbsem", {
+      cbsemModelType: "sem",
+      cbsemBootstrapSamples: 500,
+      cbsemBootstrapInterval: "bca_type7",
+    }), "cbsemBootstrapInterval");
+    expectFieldError(makeInput("cbsem", {
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 500,
+      cbsemBootstrapInterval: "bca_type7",
+      cbsemBootstrapTestTail: "one_sided_less",
+    }, { edges: [] }), "cbsemBootstrapTestTail");
+    expectFieldError(makeInput("cbsem", {
+      cbsemModelType: "cfa",
+      cbsemBootstrapSamples: 0,
+      cbsemBootstrapInterval: "bca_type7",
+    }, { edges: [] }), "cbsemBootstrapInterval");
+
     const sem = buildNativeAnalysisRecipe(makeInput("cbsem", { cbsemModelType: "sem" }));
     expect(sem.method_config).toMatchObject({ kind: "cbsem", model_type: "sem" });
     expect(sem.model.paths).toEqual([{ source: "x", target: "y" }]);
@@ -568,7 +893,7 @@ describe("advanced validated backend family mappings", () => {
     expectFieldError(makeInput("cbsem", { cbsemMeanStructure: true }), "cbsemMeanStructure");
     expectFieldError(makeInput("cbsem", { cbsemStandardization: "std_lv" }), "cbsemStandardization");
     expectFieldError(makeInput("cbsem", { cbsemGroupColumn: "group" }), "cbsemGroupColumn");
-    expectFieldError(makeInput("cbsem", { cbsemBootstrapSamples: 999 }), "cbsemBootstrapSamples");
+    expectFieldError(makeInput("cbsem", { cbsemBootstrapSamples: 499 }), "cbsemBootstrapSamples");
   });
 
   it("builds only the fixed recursive GSCA ALS v2 scope", () => {
@@ -722,7 +1047,7 @@ describe("advanced validated backend family mappings", () => {
       bootstrapSamples: 999,
       workers: 4,
     }));
-    expect(process.metadata).toEqual({ status: "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope" });
+    expect(process.metadata).toEqual({ status: "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope" });
     expect(process.method_config).toEqual({
       kind: "regression",
       outcome: "y",

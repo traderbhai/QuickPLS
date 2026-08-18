@@ -13,6 +13,7 @@ import {
   reconcileNativeCanonicalProject,
   resolveActiveCanonicalModel,
 } from "./nativeCanonicalProject";
+import { newNativeScientificCovarianceEdgeV4, withNativeConstructEstimandV4 } from "../domain/semModelV4Authoring";
 
 function model(id = "model-1", name = "Canonical model"): NativeCanonicalModelSpec {
   return {
@@ -113,7 +114,7 @@ describe("canonical native project reconciliation", () => {
     }
   });
 
-  it("uses canonical model content while retaining only safe workspace presentation", () => {
+  it("uses canonical model content while retaining covariance presentation without reinterpreting it as a path", () => {
     const snapshot = nativeModelSnapshotFromCanonical(model(), {
       nodes: [
         { id: "x", type: "construct", position: { x: 222, y: 333 }, data: { label: "Stale X", shortName: "OLD", mode: "formative", indicators: ["wrong"] } },
@@ -128,14 +129,35 @@ describe("canonical native project reconciliation", () => {
       data: { label: "Predictor", shortName: "X", mode: "reflective", indicators: ["x1", "x2"] },
     });
     expect(snapshot.edges[0]).toMatchObject({
+      source: "x",
+      target: "y",
+      label: "Baseline control",
+      data: { role: "control", controlLabel: "Baseline control" },
+    });
+    expect(snapshot.edges[1]).toMatchObject({
       id: "stale-edge-id",
       source: "x",
       target: "y",
       type: "straight",
-      label: "Baseline control",
-      data: { role: "control", controlLabel: "Baseline control" },
+      data: { role: "covariance" },
     });
     expect(snapshot.diagramLayout?.constructLayouts.x).toMatchObject({ x: 222, y: 333 });
+  });
+
+  it("preserves versioned construct and covariance authoring metadata through canonical reopen", () => {
+    const x = withNativeConstructEstimandV4({
+      id: "x",
+      type: "construct",
+      position: { x: 10, y: 20 },
+      data: { label: "X", shortName: "X", mode: "reflective", indicators: ["x1", "x2"] },
+    }, { kind: "common_factor", marker_indicator: "x1" });
+    const covariance = newNativeScientificCovarianceEdgeV4("cov-x-y", "x", "y");
+    const snapshot = nativeModelSnapshotFromCanonical(model(), {
+      nodes: [x, { id: "y", type: "construct", position: { x: 200, y: 20 }, data: { label: "Y", shortName: "Y", mode: "reflective", indicators: ["y1", "y2"] } }],
+      edges: [covariance],
+    });
+    expect(snapshot.nodes.find((node) => node.id === "x")?.data.semModelV4).toEqual(x.data.semModelV4);
+    expect(snapshot.edges.find((edge) => edge.id === covariance.id)?.data).toEqual(covariance.data);
   });
 
   it("rebuilds completed runs from canonical results instead of stale workspace payloads", () => {
@@ -242,6 +264,75 @@ describe("canonical native project reconciliation", () => {
     });
 
     expect(nativeRunFromCanonicalResult(bootstrapEnvelope, bootstrapRecipe)?.method).toBe("PLS-SEM Bootstrapping");
+  });
+
+  it("binds explicit one-sided bootstrap receipts to recipe, marker, order, and plus-one arithmetic", () => {
+    const baseEnvelope = envelope();
+    const basePayload = baseEnvelope.payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>;
+    const bootstrapRecipe = recipe({
+      schema_version: 3,
+      settings: {
+        ...recipe().settings,
+        bootstrap_samples: 4,
+        bootstrap_test_tail: "one_sided_greater",
+      },
+      method_config: { kind: "pls_bootstrap" },
+    });
+    const parameters = ["[\"path\",[\"x\",\"y\"]]", "[\"total_effect\",[\"x\",\"y\"]]"];
+    const configured = envelope({
+      provenance: {
+        ...baseEnvelope.provenance,
+        method_version: "pls_pm_v1+indexed_resampling_v4+pls_bootstrap_null_centered_test_tail_v1",
+        settings: bootstrapRecipe.settings,
+      },
+      payload: {
+        kind: "pls_pm_v2",
+        estimation: basePayload.estimation,
+        assessment: basePayload.assessment,
+        bootstrap: {
+          method_version: "indexed_resampling_v4",
+          plan: { replicates: 4, master_seed: 42, operation: "pls_pm_bootstrap_v1" },
+          usable_replicates: 4,
+          failed_replicates: [],
+          percentile: {
+            confidence_level: 0.95,
+            parameters: parameters.map((parameter) => ({ parameter, original: 0.5, bootstrap_mean: 0.5, bias: 0, standard_error: 0.1, lower: 0.3, upper: 0.7, usable_replicates: 4 })),
+          },
+          test_tail_inference: {
+            method_version: "pls_bootstrap_null_centered_test_tail_v1",
+            selected_test_tail: "one_sided_greater",
+            parameters: parameters.map((parameter, index) => ({
+              parameter,
+              usable_replicates: 4,
+              two_sided_exceedances: index + 1,
+              greater_or_equal_exceedances: index + 2,
+              less_or_equal_exceedances: index,
+              p_value_two_sided: (index + 2) / 5,
+              p_value_greater: (index + 3) / 5,
+              p_value_less: (index + 1) / 5,
+            })),
+          },
+        },
+      },
+    });
+    expect(nativeRunFromCanonicalResult(configured, bootstrapRecipe)).not.toBeNull();
+
+    const mutations: Array<(candidate: any) => void> = [
+      (candidate) => { delete candidate.payload.bootstrap.test_tail_inference; },
+      (candidate) => { candidate.payload.bootstrap.test_tail_inference.unexpected = true; },
+      (candidate) => { candidate.payload.bootstrap.test_tail_inference.selected_test_tail = "one_sided_less"; },
+      (candidate) => { candidate.payload.bootstrap.test_tail_inference.method_version = "wrong"; },
+      (candidate) => { candidate.payload.bootstrap.test_tail_inference.parameters.reverse(); },
+      (candidate) => { candidate.payload.bootstrap.test_tail_inference.parameters[0].greater_or_equal_exceedances = 5; },
+      (candidate) => { candidate.payload.bootstrap.test_tail_inference.parameters[0].usable_replicates = 3; },
+      (candidate) => { candidate.payload.bootstrap.test_tail_inference.parameters[0].p_value_greater = 0.61; },
+      (candidate) => { candidate.provenance.method_version = "pls_pm_v1+indexed_resampling_v4"; },
+    ];
+    for (const mutate of mutations) {
+      const candidate = JSON.parse(JSON.stringify(configured)) as AnalysisResultEnvelope;
+      mutate(candidate);
+      expect(nativeRunFromCanonicalResult(candidate, bootstrapRecipe)).toBeNull();
+    }
   });
 
   it("hydrates a bootstrap-only corporate-shaped result and rejects a mixed bootstrap-permutation payload", () => {

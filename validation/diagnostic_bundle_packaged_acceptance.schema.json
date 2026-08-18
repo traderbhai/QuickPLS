@@ -117,7 +117,7 @@
           "crates/qpls-runner/Cargo.toml", "src-tauri/Cargo.toml"
         ] },
         "tauri_configs": { "const": ["src-tauri/tauri.conf.json"] },
-        "package_build_script": { "const": "tsc -b && vite build" },
+        "package_build_script": { "const": "npm run typecheck:build && npm run build:bundle" },
         "package_tauri_script": { "const": "tauri" },
         "tauri_before_build_command": { "const": "npm run build" },
         "tauri_frontend_dist": { "const": "../dist" }

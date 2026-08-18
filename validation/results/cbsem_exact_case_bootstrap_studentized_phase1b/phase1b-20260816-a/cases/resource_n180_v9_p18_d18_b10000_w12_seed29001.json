@@ -1,0 +1,239 @@
+{
+  "acceptance_reasons": [],
+  "aggregates": {
+    "median_elapsed_seconds": 35.21377979964018,
+    "median_working_set_bytes": 72970240,
+    "p95_elapsed_seconds": 36.37446614000946,
+    "p95_result_bytes": 19162346.0,
+    "p95_working_set_bytes": 81404723.2
+  },
+  "cancellation": null,
+  "case": {
+    "cancel_after": null,
+    "case_id": "resource_n180_v9_p18_d18_b10000_w12_seed29001",
+    "maximum_p95_elapsed_seconds": 76.29804119467735,
+    "maximum_single_run_elapsed_seconds": 76.29804119467735,
+    "mode": "resource",
+    "order": 3,
+    "replicates": 10000,
+    "seed": 29001,
+    "workers": 12
+  },
+  "dimensions": {
+    "d_optimizer_dimensions": 18,
+    "n_complete_cases": 180,
+    "p_free_parameter_rows": 18,
+    "v_observed_variables": 9
+  },
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase1b_case_v1",
+  "ledger": {
+    "attempted_refits": 10000,
+    "base_inference_status": "available",
+    "max_attempts_per_replicate": 1,
+    "minimum_usable_replicates": 9000,
+    "one_sided_95_percent_upper_bound": 0.0016956314536428138,
+    "one_sided_bound_method": "clopper_pearson_beta_quantile_one_sided_v1",
+    "one_sided_confidence_level": 0.95,
+    "point_failure_counts_by_kind": {
+      "inadmissible_solution": 0,
+      "moment_matrix_not_positive_definite": 0,
+      "non_convergence": 9,
+      "numerical_failure": 0
+    },
+    "point_failures": [
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 53 iterations (objective 1.7208101508123193, gradient norm 0.000010598407824507276)",
+        "replicate_index": 38,
+        "sample_indices_sha256": "a8fa0c72371c3121448f34958ffcecaa35b1fc15139c89cba0c268d79053fbec",
+        "sampling_positions_sha256": "735ec96313b0683ee6702b47bfa0de3942f002998b638563dd11dda0108296aa"
+      },
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 54 iterations (objective 1.7064082701138652, gradient norm 0.0000128035086149257)",
+        "replicate_index": 1697,
+        "sample_indices_sha256": "59eab7a452d1697e6826e6c58cd95e4d4241f13ac40be779965058ad95fbe2d6",
+        "sampling_positions_sha256": "bb1628bf936d79f5e64ba6f8692b51fa542dec6851d860224f1ae6bc71053e6e"
+      },
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 53 iterations (objective 1.672129922859364, gradient norm 0.000024579574552500547)",
+        "replicate_index": 1917,
+        "sample_indices_sha256": "4048ae328c3ea4066bbb8f6b645fb0350434ea3d482beb28d3d33c97501f233d",
+        "sampling_positions_sha256": "1901aea473c12f76c0b9d7cdbcbe2c521fb1aa34310936a3c7c6c539e41d724b"
+      },
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 51 iterations (objective 1.5124167809006188, gradient norm 0.000018489492181949736)",
+        "replicate_index": 1998,
+        "sample_indices_sha256": "6abe99479d541811f5e5a7e49e314b2890da3644064f1df01a449e5956502b95",
+        "sampling_positions_sha256": "4ba7086faf70ccbd75dc4d2d541a15a55df3e1c07d0b42714028dd12e4f61dad"
+      },
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 52 iterations (objective 1.3604405987939234, gradient norm 0.00001766868140494856)",
+        "replicate_index": 3024,
+        "sample_indices_sha256": "71906dc0a1329ab2a99576d73595effc534200c34394555bbfa99d7bc9c262c6",
+        "sampling_positions_sha256": "295526fdc46bae06dbbf08943eed20c732ef4bf28412188982486132041cde96"
+      },
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 55 iterations (objective 1.7372322630121104, gradient norm 0.00003211793475405967)",
+        "replicate_index": 6659,
+        "sample_indices_sha256": "40ce0febdef402cc1719a04acf62ae842cfc746b79b980e9228374e23026c11e",
+        "sampling_positions_sha256": "3ebc848df667659c6eb9c9f5cf341577540eda79d14c7e4f3e67227b1d927116"
+      },
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 56 iterations (objective 1.3720850886561156, gradient norm 0.00002292946043885595)",
+        "replicate_index": 8433,
+        "sample_indices_sha256": "866f88f2b9aba6b35c04f61b6f9c3e80793d5f36c1435fc6673462a06fa641e0",
+        "sampling_positions_sha256": "ea47dc42cd30e8cc291fc06d55b54cd22c333da6841a1be007411e33fa71a587"
+      },
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer line search failed during bootstrap covariance point refit after 54 iterations (objective 1.4886760030255992, gradient norm 0.00001320136272333336)",
+        "replicate_index": 8864,
+        "sample_indices_sha256": "bb565cc511ea190838828213534aebbc34b4d9d694089636be429cf820b3db83",
+        "sampling_positions_sha256": "5f5c36e75b8516167c1dc5e7c8267f83bf798cffa0e856d39364bddb72119b52"
+      },
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 56 iterations (objective 1.646416251565979, gradient norm 0.000025051281085542796)",
+        "replicate_index": 9151,
+        "sample_indices_sha256": "ab5cbea1b0f4f27c27578662d2571ac5c1d93a5045b8a2c87418bef789bfa8cc",
+        "sampling_positions_sha256": "054240f7a7c43418fe622c9e2287f57aae00a28a3d005aa266573bd81f09166c"
+      }
+    ],
+    "point_failures_count": 9,
+    "point_partition_complete": true,
+    "point_successes": 9991,
+    "replicate_indices_digest_method": "sha256_canonical_json_ordered_u32_array_v1",
+    "requested_replicates": 10000,
+    "retry_policy": "no_retry_fixed_preplanned_primary_draws_v1",
+    "standard_error_available_replicate_indices_sha256": "126629c76f6ee3d75d12aea0d9ae9b7d66f1824ba76f170ba87b543c5827a325",
+    "standard_error_partition_complete": true,
+    "standard_error_unavailable": [
+      {
+        "reason": "singular_information",
+        "replicate_index": 1489
+      }
+    ],
+    "standard_error_unavailable_count": 1,
+    "standard_error_unavailable_counts_by_reason": {
+      "derivative_unavailable": 0,
+      "information_not_positive_definite": 0,
+      "invalid_information_variance_or_standard_error": 0,
+      "numerical_information_failure": 0,
+      "singular_information": 1
+    },
+    "studentized_inference_status": "available",
+    "studentized_usable_refits": 9990,
+    "successful_replicate_indices_sha256": "5292e5079992ee792fbf127fee3bb202108b538477c7bead0346b083c399aa3c",
+    "total_studentized_unusable": 10,
+    "total_studentized_unusable_fraction": 0.001,
+    "upper_bound_threshold": 0.1,
+    "validation_status": "exact_partition_and_typed_outcomes_validated"
+  },
+  "manifest_sha256": "51619f155ebf5921dbf77978fd8726591c3d9059139616fa776d2d0ffbffc256",
+  "measured_runs": [
+    {
+      "elapsed_seconds": 34.88744049984962,
+      "exit_code": 0,
+      "index": 0,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 72601600,
+      "phase": "measured",
+      "progress_values": [],
+      "result_bytes": 19162346,
+      "scientific_result_sha256": "bc865716c8e316c07209ba35e99ec0e072a989a886b1d90a8892a088cc2b9232"
+    },
+    {
+      "elapsed_seconds": 35.129950399976224,
+      "exit_code": 0,
+      "index": 1,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 72531968,
+      "phase": "measured",
+      "progress_values": [],
+      "result_bytes": 19162346,
+      "scientific_result_sha256": "bc865716c8e316c07209ba35e99ec0e072a989a886b1d90a8892a088cc2b9232"
+    },
+    {
+      "elapsed_seconds": 35.21377979964018,
+      "exit_code": 0,
+      "index": 2,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 72970240,
+      "phase": "measured",
+      "progress_values": [],
+      "result_bytes": 19162346,
+      "scientific_result_sha256": "bc865716c8e316c07209ba35e99ec0e072a989a886b1d90a8892a088cc2b9232"
+    },
+    {
+      "elapsed_seconds": 35.649020300246775,
+      "exit_code": 0,
+      "index": 3,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 73248768,
+      "phase": "measured",
+      "progress_values": [],
+      "result_bytes": 19162346,
+      "scientific_result_sha256": "bc865716c8e316c07209ba35e99ec0e072a989a886b1d90a8892a088cc2b9232"
+    },
+    {
+      "elapsed_seconds": 36.555827599950135,
+      "exit_code": 0,
+      "index": 4,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 83443712,
+      "phase": "measured",
+      "progress_values": [],
+      "result_bytes": 19162346,
+      "scientific_result_sha256": "bc865716c8e316c07209ba35e99ec0e072a989a886b1d90a8892a088cc2b9232"
+    }
+  ],
+  "probe": {
+    "elapsed_seconds": 36.04608989972621,
+    "exit_code": 0,
+    "index": 0,
+    "orphan_processes": 0,
+    "peak_working_set_bytes": 72871936,
+    "phase": "probe",
+    "progress_values": [],
+    "result_bytes": 19162346,
+    "scientific_result_sha256": "bc865716c8e316c07209ba35e99ec0e072a989a886b1d90a8892a088cc2b9232"
+  },
+  "qualification_boundary": {
+    "missing_evidence": [
+      "authoritative_canonical_v11_bytes",
+      "authoritative_text_export_v11_bytes",
+      "coverage_and_failure_rate_simulation",
+      "broader_dimension_and_model_axes",
+      "package_and_integration_gates"
+    ],
+    "status": "blocked_not_product_qualification"
+  },
+  "runtime_acceptance": {
+    "evidence_role": "same_seed_resource_repeats_not_independent",
+    "maximum_p95_elapsed_seconds": 76.29804119467735,
+    "maximum_single_run_elapsed_seconds": 76.29804119467735,
+    "observed_p95_elapsed_seconds": 36.37446614000946
+  },
+  "schema_version": 1,
+  "scientific_result_sha256": "bc865716c8e316c07209ba35e99ec0e072a989a886b1d90a8892a088cc2b9232",
+  "status": "accepted_resource_candidate_evidence",
+  "warmup_runs": [
+    {
+      "elapsed_seconds": 35.13153269980103,
+      "exit_code": 0,
+      "index": 0,
+      "orphan_processes": 0,
+      "peak_working_set_bytes": 73003008,
+      "phase": "warmup",
+      "progress_values": [],
+      "result_bytes": 19162346,
+      "scientific_result_sha256": "bc865716c8e316c07209ba35e99ec0e072a989a886b1d90a8892a088cc2b9232"
+    }
+  ]
+}

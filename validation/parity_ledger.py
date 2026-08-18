@@ -185,7 +185,12 @@ def _semantic_report_failures(document: Any) -> list[str]:
                 ):
                     failures.append(f"{child_pointer}=false")
                 if key in {"failures", "errors", "console_errors"}:
-                    if child not in (None, [], {}):
+                    is_zero_count = (
+                        isinstance(child, (int, float))
+                        and not isinstance(child, bool)
+                        and child == 0
+                    )
+                    if child not in (None, [], {}) and not is_zero_count:
                         failures.append(f"{child_pointer} is not empty")
                 walk(child, child_pointer, child_negative_presence)
         elif isinstance(value, list):

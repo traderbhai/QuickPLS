@@ -1,0 +1,1440 @@
+{
+  "fragment_schema_version": 1,
+  "fragment_id": "quickpls.wave0.other_analytical_families_official.v1",
+  "frozen_on": "2026-08-14",
+  "capability_ids": [
+    "smartpls.gsca",
+    "smartpls.logistic_regression",
+    "smartpls.process",
+    "smartpls.process_bootstrapping",
+    "smartpls.regression",
+    "smartpls.regression_bootstrapping"
+  ],
+  "cell_assessments": [
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.gsca",
+        "cell_id": "qpls3.gsca.als",
+        "capability_version": "gsca_als_v2"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.logistic_regression",
+        "cell_id": "qpls3.standalone.logistic",
+        "capability_version": "regression_logistic_v2"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.process",
+        "cell_id": "qpls3.standalone.process",
+        "capability_version": "regression_process_v2"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.process_bootstrapping",
+        "cell_id": "qpls3.standalone.process",
+        "capability_version": "regression_process_v2"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.regression",
+        "cell_id": "qpls3.standalone.ols",
+        "capability_version": "regression_ols_v1"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    },
+    {
+      "qualification_link": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.regression_bootstrapping",
+        "cell_id": "qpls3.standalone.regression_bootstrap",
+        "capability_version": "regression_bootstrap_v1"
+      },
+      "parity_obligation": {
+        "capture_state": "captured",
+        "parity_role": "active_parity"
+      }
+    }
+  ],
+  "dimension_assessments": [
+    {
+      "capability_id": "smartpls.gsca",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "gsca.settings.documented.algorithm_controls",
+          "description": "Documented fact: SmartPLS estimates GSCA with alternating least squares, permits standard or individual initial outer weights, and fixes the hidden maximum-iteration and stop settings at 3,000 and 10^-7.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.gsca",
+              "cell_id": "qpls3.gsca.als",
+              "capability_version": "gsca_als_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/gsca/"
+          ],
+          "acceptance_criteria": [
+            "The setup supports standard and indicator-specific initial weights and records the permanent 3,000-iteration and 10^-7 stopping controls."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.gsca",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "gsca.defaults.documented.initial_weight_default",
+          "description": "Documented fact: SmartPLS sets every initial outer weight to +1 by default.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.gsca",
+              "cell_id": "qpls3.gsca.als",
+              "capability_version": "gsca_als_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/gsca/"
+          ],
+          "acceptance_criteria": [
+            "A fresh GSCA setup initializes every outer weight to +1 and preserves any explicit indicator-level override."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.gsca",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "gsca.model_shapes.documented.composite_structural_model",
+          "description": "Documented fact: GSCA specifies weighted components from observed composite indicators and explicit structural paths, and accommodates reflective, formative, and mediation relationships.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.gsca",
+              "cell_id": "qpls3.gsca.als",
+              "capability_version": "gsca_als_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/gsca/"
+          ],
+          "acceptance_criteria": [
+            "Fixtures cover reflective and formative measurement plus a mediated structural relationship without silently converting components into common factors."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.gsca",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "gsca.data_inputs.open_live_app.input_contract",
+          "description": "Open live-app detail: The official page refers to empirical data but does not freeze accepted input forms, scale metadata, missing-value treatments, or row limits.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.gsca",
+              "cell_id": "qpls3.gsca.als",
+              "capability_version": "gsca_als_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/gsca/"
+          ],
+          "acceptance_criteria": [
+            "Capture the installed SmartPLS data-input and missing-data behavior in a versioned fixture before asserting exact parity for this dimension."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.gsca",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "gsca.preprocessing.open_live_app.scaling_contract",
+          "description": "Open live-app detail: The official page explains weighted component construction but does not state the live application's data scaling or missing-value preprocessing sequence.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.gsca",
+              "cell_id": "qpls3.gsca.als",
+              "capability_version": "gsca_als_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/gsca/"
+          ],
+          "acceptance_criteria": [
+            "Record the current scaling, centering, missing-value, and indicator-orientation behavior in a live-app matrix and test it end to end."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.gsca",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "gsca.outputs.documented.fit_and_parameters",
+          "description": "Documented fact: GSCA assessment includes component weights, structural path coefficients, FIT, adjusted FIT, GFI, and bootstrap significance results.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.gsca",
+              "cell_id": "qpls3.gsca.als",
+              "capability_version": "gsca_als_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/gsca/"
+          ],
+          "acceptance_criteria": [
+            "The canonical result contains weights, paths, FIT, AFIT, GFI, and bootstrap inference with stable table identifiers."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.gsca",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "gsca.charts.open_live_app.chart_inventory",
+          "description": "Open live-app detail: The official page does not enumerate the charts, display defaults, or exportable chart data in the desktop results report.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.gsca",
+              "cell_id": "qpls3.gsca.als",
+              "capability_version": "gsca_als_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/gsca/"
+          ],
+          "acceptance_criteria": [
+            "Capture the installed result-chart inventory and bind each observed chart and default to an export/readback fixture."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.gsca",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "gsca.failure_conditions.open_live_app.failure_ledger",
+          "description": "Open live-app detail: The official page does not specify typed handling for nonconvergence, degenerate composites, collinearity, invalid weights, or failed bootstrap fits.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.gsca",
+              "cell_id": "qpls3.gsca.als",
+              "capability_version": "gsca_als_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/gsca/"
+          ],
+          "acceptance_criteria": [
+            "Build an adversarial live-app ledger for each condition and require QuickPLS to return a qualified result or a specific failure."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.gsca",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "gsca.workflows.documented.four_stage_workflow",
+          "description": "Documented fact: The GSCA workflow specifies the model, estimates weights with ALS, assesses global fit and paths, and interprets structural and measurement results, with bootstrapping for significance.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.gsca",
+              "cell_id": "qpls3.gsca.als",
+              "capability_version": "gsca_als_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/gsca/"
+          ],
+          "acceptance_criteria": [
+            "A complete workflow fixture runs specification, ALS estimation, fit and path assessment, bootstrap inference, save/reopen, and export."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.logistic_regression",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "logistic.settings.documented.ml_controls",
+          "description": "Documented fact: SmartPLS exposes test type, significance level, maximum Newton-Raphson iterations, and a log-likelihood-change stop criterion.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.logistic_regression",
+              "cell_id": "qpls3.standalone.logistic",
+              "capability_version": "regression_logistic_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/logistic-regression/"
+          ],
+          "acceptance_criteria": [
+            "The recipe and Run Details preserve test tail, alpha, iteration limit, and convergence tolerance exactly."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.logistic_regression",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "logistic.defaults.open_live_app.exact_defaults",
+          "description": "Open live-app detail: The official page names the controls and shows an example tolerance but does not freeze every current desktop default.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.logistic_regression",
+              "cell_id": "qpls3.standalone.logistic",
+              "capability_version": "regression_logistic_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/logistic-regression/"
+          ],
+          "acceptance_criteria": [
+            "Capture a fresh installed SmartPLS setup for test type, alpha, iteration limit, stop criterion, intercept, and classification cutoff before claiming default parity."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.logistic_regression",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "logistic.model_shapes.documented.binary_outcome_model",
+          "description": "Documented fact: Logistic regression requires one binary outcome, one or more predictors, and an optional graphically specified intercept; multicategory predictors require contrasts such as dummy variables.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.logistic_regression",
+              "cell_id": "qpls3.standalone.logistic",
+              "capability_version": "regression_logistic_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/logistic-regression/"
+          ],
+          "acceptance_criteria": [
+            "Model fixtures cover binary coding, multiple metric and dummy-coded predictors, and otherwise identical models with and without an intercept."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.logistic_regression",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "logistic.data_inputs.documented.binary_and_predictors",
+          "description": "Documented fact: The dependent variable has exactly two categories, while predictors may be metric or categorical after appropriate contrast coding.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.logistic_regression",
+              "cell_id": "qpls3.standalone.logistic",
+              "capability_version": "regression_logistic_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/logistic-regression/"
+          ],
+          "acceptance_criteria": [
+            "Preflight rejects a non-binary outcome and accepts metric and valid contrast-coded predictors with explicit focal-class coding."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.logistic_regression",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "logistic.preprocessing.documented.dummy_coding_requirement",
+          "description": "Documented fact: Categorical predictors with more than two categories must be converted to appropriate contrasts, such as dummy variables, before estimation.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.logistic_regression",
+              "cell_id": "qpls3.standalone.logistic",
+              "capability_version": "regression_logistic_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/logistic-regression/"
+          ],
+          "acceptance_criteria": [
+            "The data workflow creates reproducible dummy variables with an explicit reference category and preserves their lineage into the run."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.logistic_regression",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "logistic.outputs.documented.complete_logistic_results",
+          "description": "Documented fact: Results include convergence, coefficients, standard errors, z and Wald statistics, p values, odds ratios, likelihood fit measures, pseudo R-squares, predicted probabilities, classes, confusion matrix, classification metrics, and AUC.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.logistic_regression",
+              "cell_id": "qpls3.standalone.logistic",
+              "capability_version": "regression_logistic_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/logistic-regression/"
+          ],
+          "acceptance_criteria": [
+            "The canonical result exposes every documented result family and retains observation-level probabilities and predicted classes."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.logistic_regression",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "logistic.charts.documented.cutoff_and_roc",
+          "description": "Documented fact: SmartPLS provides a cutoff chart for accuracy, sensitivity, specificity, and precision across thresholds, plus an ROC curve and AUC.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.logistic_regression",
+              "cell_id": "qpls3.standalone.logistic",
+              "capability_version": "regression_logistic_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/logistic-regression/"
+          ],
+          "acceptance_criteria": [
+            "Chart data reproduce the documented threshold metrics and ROC coordinates and remain semantically identical after export/readback."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.logistic_regression",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "logistic.failure_conditions.documented.nonconvergence_and_data_failures",
+          "description": "Documented fact: Maximum-iteration nonconvergence, exact predictor collinearity, insufficient outcome-category information, and unstable data patterns require investigation before interpretation.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.logistic_regression",
+              "cell_id": "qpls3.standalone.logistic",
+              "capability_version": "regression_logistic_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/logistic-regression/"
+          ],
+          "acceptance_criteria": [
+            "Adversarial fixtures produce typed failures for a constant or non-binary outcome, perfect collinearity, separation or insufficient class information, and exhausted iterations."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.logistic_regression",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "logistic.workflows.documented.recommended_evaluation",
+          "description": "Documented fact: The recommended workflow verifies convergence, evaluates likelihood fit and coefficients, inspects predictions and classification, examines cutoff behavior and ROC/AUC, then validates predictive performance out of sample when prediction is claimed.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.logistic_regression",
+              "cell_id": "qpls3.standalone.logistic",
+              "capability_version": "regression_logistic_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/logistic-regression/"
+          ],
+          "acceptance_criteria": [
+            "A saved workflow fixture follows the documented sequence and keeps in-sample metrics clearly distinct from out-of-sample validation."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process.settings.documented.metric_and_controls",
+          "description": "Documented fact: SmartPLS exposes unstandardized, mean-centered, and standardized data metrics and a control-variable option for path analysis and PROCESS.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process/"
+          ],
+          "acceptance_criteria": [
+            "The setup records the chosen data metric and control-variable semantics and applies them consistently to every equation."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process.defaults.open_live_app.template_and_metric_defaults",
+          "description": "Open live-app detail: The official page does not freeze the default data metric, control setting, or exact current catalogue of PROCESS templates.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process/"
+          ],
+          "acceptance_criteria": [
+            "Capture a fresh installed setup and template inventory before asserting the default selection or complete template-number parity."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process.model_shapes.documented.observed_path_systems",
+          "description": "Documented fact: Path analysis estimates systems with multiple observed dependent and independent variables; PROCESS covers mediation, moderation, and moderated mediation, with controls where declared.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process/"
+          ],
+          "acceptance_criteria": [
+            "Fixtures cover multiple equations, mediation, moderation, moderated mediation, multiple outcomes, and declared controls."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process.data_inputs.documented.observed_or_equal_weighted",
+          "description": "Documented fact: Variables may be single-item observed constructs, while multi-indicator constructs are composed automatically with equal indicator weights.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process/"
+          ],
+          "acceptance_criteria": [
+            "Fixtures verify single observed variables and equal-weight multi-indicator scores without invoking iterative PLS weighting."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process.preprocessing.documented.data_metric_transformations",
+          "description": "Documented fact: Unstandardized data are unchanged, mean-centered data subtract the mean, and standardized data subtract the mean and divide by the standard deviation.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process/"
+          ],
+          "acceptance_criteria": [
+            "Microcases verify all three transformations and the exact operation order used before score construction and interaction calculation."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process.outputs.documented.generated_process_results",
+          "description": "Documented fact: SmartPLS automatically generates PROCESS path models and returns mediation, moderation, and moderated-mediation results without external calculations.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process/"
+          ],
+          "acceptance_criteria": [
+            "The canonical result includes equation coefficients and the applicable direct, indirect, conditional, and interaction results for each supported template."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process.charts.open_live_app.chart_inventory",
+          "description": "Open live-app detail: The official page shows a model example but does not enumerate conditional-effect plots, confidence bands, display defaults, or export behavior.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process/"
+          ],
+          "acceptance_criteria": [
+            "Capture the installed chart inventory for representative mediation, moderation, and moderated-mediation templates and bind it to visual/export fixtures."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process.failure_conditions.open_live_app.unsupported_shape_ledger",
+          "description": "Open live-app detail: The official page does not specify the exact template limits, invalid graph conditions, missing-data behavior, or typed calculation failures.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process/"
+          ],
+          "acceptance_criteria": [
+            "Record unsupported template and graph combinations plus missing, zero-variance, collinearity, and singular-equation behavior in an adversarial ledger."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process.workflows.documented.automatic_generation",
+          "description": "Documented fact: SmartPLS provides one-step, regression-based path analysis on unstandardized data and automatically generates PROCESS models and their results.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process/"
+          ],
+          "acceptance_criteria": [
+            "A workflow fixture selects a PROCESS form, generates its graph, calculates it, verifies the generated equations, and preserves the run through save/reopen and export."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process_bootstrapping",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process_bootstrap.settings.documented.bootstrap_controls",
+          "description": "Documented fact: SmartPLS exposes subsamples, parallel processing, percentile, studentized, and BCa confidence intervals, test type, and significance level for PROCESS bootstrapping.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process_bootstrapping",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "The recipe preserves all documented controls and the runner uses the selected interval method, tail, alpha, and processor policy."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process_bootstrapping",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process_bootstrap.defaults.documented.percentile_default",
+          "description": "Documented fact: Percentile bootstrapping is the SmartPLS default and recommended general confidence-interval method.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process_bootstrapping",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "A fresh setup selects percentile intervals; the exact installed defaults for all remaining controls are retained as live-app evidence obligations."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process_bootstrapping",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process_bootstrap.model_shapes.documented.path_and_process_parameters",
+          "description": "Documented fact: The procedure repeatedly re-estimates the specified path-analysis or PROCESS model and tests its coefficients.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process_bootstrapping",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "Fixtures bootstrap mediation, moderation, and moderated-mediation coefficients using the same graph and preprocessing as the point estimate."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process_bootstrapping",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process_bootstrap.data_inputs.documented.case_resample_size",
+          "description": "Documented fact: Each bootstrap sample draws observations with replacement and has the original analysis-sample size, reduced when case-by-case missing-data deletion reduced that sample.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process_bootstrapping",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "The resample ledger records source-row indices and exactly matches the effective analysis sample size for every replicate."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process_bootstrapping",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process_bootstrap.preprocessing.documented.with_replacement",
+          "description": "Documented fact: Bootstrap observations are sampled randomly with replacement before the path or PROCESS model is re-estimated.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process_bootstrapping",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "A deterministic microcase verifies replacement, replicate counts, data-metric preprocessing, and fixed-seed repeatability."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process_bootstrapping",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process_bootstrap.outputs.documented.inference_results",
+          "description": "Documented fact: Bootstrap estimates provide standard errors, t values, and 95% confidence intervals for significance testing.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process_bootstrapping",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "The canonical result reports original estimates, bootstrap uncertainty, tests, intervals, requested parameter families, and the complete replicate/failure ledger."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process_bootstrapping",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process_bootstrap.charts.open_live_app.chart_inventory",
+          "description": "Open live-app detail: The official page does not enumerate bootstrap histograms, conditional-effect charts, confidence bands, or their display defaults.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process_bootstrapping",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "Capture the installed results-chart inventory for representative PROCESS templates and bind each chart to canonical data and export fixtures."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process_bootstrapping",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process_bootstrap.failure_conditions.open_live_app.replicate_failure_ledger",
+          "description": "Open live-app detail: The official page does not define how failed resamples, cancellation, invalid intervals, or partial result commitment appear.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process_bootstrapping",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "Capture installed failure behavior and require QuickPLS to retain every failed fit, cancel atomically, and never silently retry or commit partial results."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.process_bootstrapping",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "process_bootstrap.workflows.documented.initial_and_final_runs",
+          "description": "Documented fact: SmartPLS suggests a smaller initial bootstrap such as 1,000 samples and a large final run such as 10,000, with parallel processing affecting speed rather than statistical logic.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.process_bootstrapping",
+              "cell_id": "qpls3.standalone.process",
+              "capability_version": "regression_process_v2"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/path-analysis-and-process-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "A workflow fixture supports initial and final runs, deterministic seed replay, worker-count invariance, progress, cancellation, save/reopen, and export."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression.settings.documented.test_and_se_controls",
+          "description": "Documented fact: SmartPLS exposes one- or two-sided tests, significance level, and HC0, HC3, or HC4 standard-error types.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression",
+              "cell_id": "qpls3.standalone.ols",
+              "capability_version": "regression_ols_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression/"
+          ],
+          "acceptance_criteria": [
+            "The recipe and Run Details preserve test tail, alpha, and standard-error estimator, and inference tables identify the estimator used."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression.defaults.documented.hc0_default",
+          "description": "Documented fact: Normal HC0 standard errors are the SmartPLS default, while HC3 and HC4 are leverage-adjusted alternatives.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression",
+              "cell_id": "qpls3.standalone.ols",
+              "capability_version": "regression_ols_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression/"
+          ],
+          "acceptance_criteria": [
+            "A fresh setup selects HC0; exact installed defaults for test tail and alpha remain bound to a live-app defaults fixture before parity is asserted."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression.model_shapes.documented.simple_multiple_intercept",
+          "description": "Documented fact: SmartPLS supports simple and multiple linear regression with one metric dependent variable, one or more predictors, and an optional graphically specified intercept.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression",
+              "cell_id": "qpls3.standalone.ols",
+              "capability_version": "regression_ols_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression/"
+          ],
+          "acceptance_criteria": [
+            "Fixtures cover one and several predictors plus otherwise identical models with and without the intercept."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression.data_inputs.open_live_app.input_and_missing_contract",
+          "description": "Open live-app detail: The official page defines the regression roles but does not freeze accepted raw or matrix input forms, categorical coding, weights, or missing-data policies.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression",
+              "cell_id": "qpls3.standalone.ols",
+              "capability_version": "regression_ols_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression/"
+          ],
+          "acceptance_criteria": [
+            "Capture the installed data-input, scale, missing-value, and weight compatibility matrix before claiming exact input parity."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression.preprocessing.open_live_app.preprocessing_contract",
+          "description": "Open live-app detail: The official page reports standardized and unstandardized coefficients but does not freeze the live application's centering, scaling, categorical-preparation, or missing-data sequence.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression",
+              "cell_id": "qpls3.standalone.ols",
+              "capability_version": "regression_ols_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression/"
+          ],
+          "acceptance_criteria": [
+            "Record the installed preprocessing sequence in deterministic fixtures and preserve each transformation in dataset lineage."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression.outputs.documented.complete_regression_report",
+          "description": "Documented fact: The report includes summary and ANOVA results, unstandardized and standardized coefficients, R-square and adjusted R-square, VIF and condition index, residual diagnostics, predicted values, Breusch-Pagan, descriptives, covariance/correlation, and integrated IPMA.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression",
+              "cell_id": "qpls3.standalone.ols",
+              "capability_version": "regression_ols_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression/"
+          ],
+          "acceptance_criteria": [
+            "The canonical result exposes every documented result family with stable tables and observation-level fitted values and residuals."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression.charts.documented.diagnostic_and_ipma_charts",
+          "description": "Documented fact: SmartPLS provides predicted-versus-residual, predicted-versus-actual, residual-autocorrelation, QQ, residual-histogram, and regression-IPMA charts.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression",
+              "cell_id": "qpls3.standalone.ols",
+              "capability_version": "regression_ols_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression/"
+          ],
+          "acceptance_criteria": [
+            "Each documented chart is generated from canonical data, has accessible non-colour semantics, and round-trips through supported exports."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression.failure_conditions.open_live_app.failure_ledger",
+          "description": "Open live-app detail: The page explains collinearity, heteroscedasticity, residual assumptions, and leverage concerns but does not specify exact blocking thresholds or typed solver failures.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression",
+              "cell_id": "qpls3.standalone.ols",
+              "capability_version": "regression_ols_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression/"
+          ],
+          "acceptance_criteria": [
+            "Create adversarial fixtures for rank deficiency, zero variance, insufficient residual degrees of freedom, extreme leverage, invalid weights, and missing-data exhaustion."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression.workflows.documented.systematic_evaluation",
+          "description": "Documented fact: The evaluation workflow inspects coefficients and inference, explained variance and ANOVA, collinearity, residual diagnostics and heteroscedasticity, predictions, and integrated IPMA.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression",
+              "cell_id": "qpls3.standalone.ols",
+              "capability_version": "regression_ols_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression/"
+          ],
+          "acceptance_criteria": [
+            "An end-to-end fixture follows the documented order and preserves model, data, settings, diagnostics, charts, and exports."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression_bootstrapping",
+      "dimension": "settings",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression_bootstrap.settings.documented.bootstrap_controls",
+          "description": "Documented fact: SmartPLS exposes samples, amount of results, percentile, studentized, or BCa intervals, test type, significance level, random or fixed seed, and parallel processing.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression_bootstrapping",
+              "cell_id": "qpls3.standalone.regression_bootstrap",
+              "capability_version": "regression_bootstrap_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "The recipe and Run Details preserve every documented setting and the result schema distinguishes important from complete output."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression_bootstrapping",
+      "dimension": "defaults",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression_bootstrap.defaults.documented.percentile_default",
+          "description": "Documented fact: Percentile bootstrap is the default; the page recommends smaller initial runs such as 1,000 and large final runs such as 10,000.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression_bootstrapping",
+              "cell_id": "qpls3.standalone.regression_bootstrap",
+              "capability_version": "regression_bootstrap_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "A fresh setup selects percentile intervals; a versioned live-app fixture records the exact installed defaults for all remaining controls."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression_bootstrapping",
+      "dimension": "model_shapes",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression_bootstrap.model_shapes.documented.linear_regression_refit",
+          "description": "Documented fact: Regression bootstrapping repeatedly re-estimates the same linear regression model and is distinct from maximum-likelihood logistic regression.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression_bootstrapping",
+              "cell_id": "qpls3.standalone.regression_bootstrap",
+              "capability_version": "regression_bootstrap_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "Fixtures cover simple and multiple metric-outcome regressions with identical point-estimate and bootstrap model semantics."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression_bootstrapping",
+      "dimension": "data_inputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression_bootstrap.data_inputs.documented.analysis_sample_size",
+          "description": "Documented fact: Each bootstrap sample contains the original analysis-sample size, or the reduced size after case-by-case missing-data deletion.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression_bootstrapping",
+              "cell_id": "qpls3.standalone.regression_bootstrap",
+              "capability_version": "regression_bootstrap_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "The resample ledger records effective source-row indices, exclusions, and an exact sample count for every replicate."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression_bootstrapping",
+      "dimension": "preprocessing",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression_bootstrap.preprocessing.documented.resample_with_replacement",
+          "description": "Documented fact: Observations are drawn with replacement and the same regression model is re-estimated across samples.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression_bootstrapping",
+              "cell_id": "qpls3.standalone.regression_bootstrap",
+              "capability_version": "regression_bootstrap_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "A deterministic microcase verifies with-replacement indices, preprocessing reuse, fixed-seed replay, and worker-count invariance."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression_bootstrapping",
+      "dimension": "outputs",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression_bootstrap.outputs.documented.bootstrap_result_families",
+          "description": "Documented fact: SmartPLS reports original estimate, bootstrap mean, bootstrap standard error, t and p values, confidence intervals, and optional summaries for R-square, adjusted R-square, and VIF for unstandardized and standardized results.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression_bootstrapping",
+              "cell_id": "qpls3.standalone.regression_bootstrap",
+              "capability_version": "regression_bootstrap_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "The canonical result includes every requested parameter and quality family, confidence interval, bias information, and the complete replicate/failure ledger."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression_bootstrapping",
+      "dimension": "charts",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression_bootstrap.charts.documented.coefficient_histograms",
+          "description": "Documented fact: SmartPLS provides empirical bootstrap histograms for unstandardized and standardized coefficients with a normal-reference curve.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression_bootstrapping",
+              "cell_id": "qpls3.standalone.regression_bootstrap",
+              "capability_version": "regression_bootstrap_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "Histogram bins and reference data round-trip semantically through the canonical result and all supported chart exports."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression_bootstrapping",
+      "dimension": "failure_conditions",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression_bootstrap.failure_conditions.open_live_app.replicate_failure_ledger",
+          "description": "Open live-app detail: The official page does not define failed-refit accounting, invalid intervals, cancellation, memory exhaustion, or partial-result behavior.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression_bootstrapping",
+              "cell_id": "qpls3.standalone.regression_bootstrap",
+              "capability_version": "regression_bootstrap_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "Capture installed behavior and require every failed refit to remain in the ledger, cancellation to be atomic, and no failed sample to be silently replaced."
+          ]
+        }
+      ]
+    },
+    {
+      "capability_id": "smartpls.regression_bootstrapping",
+      "dimension": "workflows",
+      "capture_state": "captured",
+      "acceptance_items": [
+        {
+          "item_id": "regression_bootstrap.workflows.documented.initial_final_reproducible",
+          "description": "Documented fact: The workflow selects Regression Bootstrapping after specifying a linear model, uses smaller initial and large final sample counts, and can fix the seed for exact repetition; parallel processing changes speed rather than logic.",
+          "trace_cells": [
+            {
+              "registry_schema_version": 2,
+              "capability_id": "smartpls.regression_bootstrapping",
+              "cell_id": "qpls3.standalone.regression_bootstrap",
+              "capability_version": "regression_bootstrap_v1"
+            }
+          ],
+          "official_references": [
+            "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/"
+          ],
+          "acceptance_criteria": [
+            "A workflow fixture covers initial and final runs, deterministic replay, worker-count invariance, progress, cancellation, save/reopen, and export/readback."
+          ]
+        }
+      ]
+    }
+  ]
+}
+

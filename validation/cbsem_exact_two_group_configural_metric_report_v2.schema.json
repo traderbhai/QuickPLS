@@ -1,0 +1,1113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cbsem_exact_two_group_configural_metric_report_v2.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "status",
+    "manifest_path",
+    "manifest_sha256",
+    "source_bindings",
+    "supersedes",
+    "fixture",
+    "python_reference",
+    "engine_reference",
+    "engine_python_parity",
+    "lavaan_reference",
+    "qualification_boundary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "kind": {
+      "const": "cbsem_exact_two_group_configural_metric_engine_reference_report_v2"
+    },
+    "status": {
+      "enum": [
+        "engine_reference_evidence_v2_passed_reproducible_product_qualification_blocked",
+        "engine_reference_evidence_v2_rejected_product_qualification_blocked"
+      ]
+    },
+    "manifest_path": {
+      "const": "validation/cbsem_exact_two_group_configural_metric_manifest_v2.json"
+    },
+    "manifest_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source_binding"
+      },
+      "minItems": 9,
+      "maxItems": 9
+    },
+    "fixture": {
+      "$ref": "#/$defs/fixture"
+    },
+    "python_reference": {
+      "$ref": "#/$defs/python_reference"
+    },
+    "engine_reference": {
+      "$ref": "#/$defs/engine_reference"
+    },
+    "engine_python_parity": {
+      "$ref": "#/$defs/parity"
+    },
+    "lavaan_reference": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/lavaan_unavailable"
+        },
+        {
+          "$ref": "#/$defs/lavaan_available"
+        }
+      ]
+    },
+    "qualification_boundary": {
+      "$ref": "#/$defs/qualification_boundary"
+    },
+    "supersedes": {
+      "$ref": "#/$defs/supersedes"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "finite": {
+      "type": "number"
+    },
+    "source_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "vector6": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/finite"
+        },
+        {
+          "$ref": "#/$defs/finite"
+        },
+        {
+          "$ref": "#/$defs/finite"
+        },
+        {
+          "$ref": "#/$defs/finite"
+        },
+        {
+          "$ref": "#/$defs/finite"
+        },
+        {
+          "$ref": "#/$defs/finite"
+        }
+      ],
+      "items": false,
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "matrix6": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/vector6"
+        },
+        {
+          "$ref": "#/$defs/vector6"
+        },
+        {
+          "$ref": "#/$defs/vector6"
+        },
+        {
+          "$ref": "#/$defs/vector6"
+        },
+        {
+          "$ref": "#/$defs/vector6"
+        },
+        {
+          "$ref": "#/$defs/vector6"
+        }
+      ],
+      "items": false,
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "parameter_map": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "loading_x1",
+        "loading_x2",
+        "loading_x3",
+        "loading_y1",
+        "loading_y2",
+        "loading_y3",
+        "factor_variance_f1",
+        "factor_variance_f2",
+        "factor_covariance_f1_f2",
+        "residual_variance_x1",
+        "residual_variance_x2",
+        "residual_variance_x3",
+        "residual_variance_y1",
+        "residual_variance_y2",
+        "residual_variance_y3"
+      ],
+      "properties": {
+        "loading_x1": {
+          "$ref": "#/$defs/finite"
+        },
+        "loading_x2": {
+          "$ref": "#/$defs/finite"
+        },
+        "loading_x3": {
+          "$ref": "#/$defs/finite"
+        },
+        "loading_y1": {
+          "$ref": "#/$defs/finite"
+        },
+        "loading_y2": {
+          "$ref": "#/$defs/finite"
+        },
+        "loading_y3": {
+          "$ref": "#/$defs/finite"
+        },
+        "factor_variance_f1": {
+          "$ref": "#/$defs/finite"
+        },
+        "factor_variance_f2": {
+          "$ref": "#/$defs/finite"
+        },
+        "factor_covariance_f1_f2": {
+          "$ref": "#/$defs/finite"
+        },
+        "residual_variance_x1": {
+          "$ref": "#/$defs/finite"
+        },
+        "residual_variance_x2": {
+          "$ref": "#/$defs/finite"
+        },
+        "residual_variance_x3": {
+          "$ref": "#/$defs/finite"
+        },
+        "residual_variance_y1": {
+          "$ref": "#/$defs/finite"
+        },
+        "residual_variance_y2": {
+          "$ref": "#/$defs/finite"
+        },
+        "residual_variance_y3": {
+          "$ref": "#/$defs/finite"
+        }
+      }
+    },
+    "optimizer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "success",
+        "status",
+        "message",
+        "iterations",
+        "function_evaluations",
+        "maximum_absolute_gradient"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "success": {
+          "const": true
+        },
+        "status": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        },
+        "iterations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "function_evaluations": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximum_absolute_gradient": {
+          "$ref": "#/$defs/finite"
+        }
+      }
+    },
+    "python_group_fit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group",
+        "sample_size",
+        "objective",
+        "chi_square",
+        "parameters",
+        "implied_covariance"
+      ],
+      "properties": {
+        "group": {
+          "enum": [
+            "A",
+            "B"
+          ]
+        },
+        "sample_size": {
+          "enum": [
+            180,
+            220
+          ]
+        },
+        "objective": {
+          "$ref": "#/$defs/finite"
+        },
+        "chi_square": {
+          "$ref": "#/$defs/finite"
+        },
+        "parameters": {
+          "$ref": "#/$defs/parameter_map"
+        },
+        "implied_covariance": {
+          "$ref": "#/$defs/matrix6"
+        },
+        "optimizer": {
+          "$ref": "#/$defs/optimizer"
+        }
+      }
+    },
+    "engine_group_fit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group",
+        "sample_size",
+        "objective",
+        "chi_square",
+        "parameters",
+        "implied_covariance_sha256"
+      ],
+      "properties": {
+        "group": {
+          "enum": [
+            "A",
+            "B"
+          ]
+        },
+        "sample_size": {
+          "enum": [
+            180,
+            220
+          ]
+        },
+        "objective": {
+          "$ref": "#/$defs/finite"
+        },
+        "chi_square": {
+          "$ref": "#/$defs/finite"
+        },
+        "parameters": {
+          "$ref": "#/$defs/parameter_map"
+        },
+        "implied_covariance_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "python_model_fit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "free_dimensions",
+        "observed_moments",
+        "degrees_of_freedom",
+        "objective",
+        "chi_square",
+        "groups"
+      ],
+      "properties": {
+        "free_dimensions": {
+          "enum": [
+            22,
+            26
+          ]
+        },
+        "observed_moments": {
+          "const": 42
+        },
+        "degrees_of_freedom": {
+          "enum": [
+            16,
+            20
+          ]
+        },
+        "objective": {
+          "$ref": "#/$defs/finite"
+        },
+        "chi_square": {
+          "$ref": "#/$defs/finite"
+        },
+        "groups": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/python_group_fit"
+            },
+            {
+              "$ref": "#/$defs/python_group_fit"
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "optimizer": {
+          "$ref": "#/$defs/optimizer"
+        }
+      }
+    },
+    "engine_model_fit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "free_dimensions",
+        "observed_moments",
+        "degrees_of_freedom",
+        "objective",
+        "chi_square",
+        "gradient_norm",
+        "groups"
+      ],
+      "properties": {
+        "free_dimensions": {
+          "enum": [
+            22,
+            26
+          ]
+        },
+        "observed_moments": {
+          "const": 42
+        },
+        "degrees_of_freedom": {
+          "enum": [
+            16,
+            20
+          ]
+        },
+        "objective": {
+          "$ref": "#/$defs/finite"
+        },
+        "chi_square": {
+          "$ref": "#/$defs/finite"
+        },
+        "gradient_norm": {
+          "$ref": "#/$defs/finite"
+        },
+        "groups": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/engine_group_fit"
+            },
+            {
+              "$ref": "#/$defs/engine_group_fit"
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "lrt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "statistic",
+        "degrees_of_freedom",
+        "upper_tail_p_value"
+      ],
+      "properties": {
+        "statistic": {
+          "$ref": "#/$defs/finite"
+        },
+        "degrees_of_freedom": {
+          "const": 4
+        },
+        "upper_tail_p_value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "moment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group",
+        "sample_size",
+        "observed_means",
+        "covariance_ml",
+        "complete_rows_sha256"
+      ],
+      "properties": {
+        "group": {
+          "enum": [
+            "A",
+            "B"
+          ]
+        },
+        "sample_size": {
+          "enum": [
+            180,
+            220
+          ]
+        },
+        "observed_means": {
+          "$ref": "#/$defs/vector6"
+        },
+        "covariance_ml": {
+          "$ref": "#/$defs/matrix6"
+        },
+        "complete_rows_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "python_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtime",
+        "moments",
+        "configural",
+        "metric",
+        "likelihood_ratio_test"
+      ],
+      "properties": {
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "python_version",
+            "numpy_version",
+            "scipy_version",
+            "optimizer_contract"
+          ],
+          "properties": {
+            "python_version": {
+              "type": "string"
+            },
+            "numpy_version": {
+              "type": "string"
+            },
+            "scipy_version": {
+              "type": "string"
+            },
+            "optimizer_contract": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "method",
+                "ftol",
+                "gtol",
+                "configural_maxiter",
+                "metric_maxiter",
+                "maxls",
+                "parameterization"
+              ],
+              "properties": {
+                "method": {
+                  "const": "L-BFGS-B"
+                },
+                "ftol": {
+                  "const": 1e-15
+                },
+                "gtol": {
+                  "const": 1e-10
+                },
+                "configural_maxiter": {
+                  "const": 5000
+                },
+                "metric_maxiter": {
+                  "const": 10000
+                },
+                "maxls": {
+                  "const": 100
+                },
+                "parameterization": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "moments": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "A",
+            "B"
+          ],
+          "properties": {
+            "A": {
+              "$ref": "#/$defs/moment"
+            },
+            "B": {
+              "$ref": "#/$defs/moment"
+            }
+          }
+        },
+        "configural": {
+          "$ref": "#/$defs/python_model_fit"
+        },
+        "metric": {
+          "$ref": "#/$defs/python_model_fit"
+        },
+        "likelihood_ratio_test": {
+          "$ref": "#/$defs/lrt"
+        }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary_path",
+        "primary_sha256",
+        "label_swap_path",
+        "label_swap_sha256",
+        "observed_variable_order",
+        "group_sample_sizes",
+        "label_swap_validation",
+        "dgp"
+      ],
+      "properties": {
+        "primary_path": {
+          "type": "string"
+        },
+        "primary_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "label_swap_path": {
+          "type": "string"
+        },
+        "label_swap_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "observed_variable_order": {
+          "const": [
+            "x1",
+            "x2",
+            "x3",
+            "y1",
+            "y2",
+            "y3"
+          ]
+        },
+        "group_sample_sizes": {
+          "const": {
+            "A": 180,
+            "B": 220
+          }
+        },
+        "label_swap_validation": {
+          "const": "exact_numeric_rows_preserved_group_text_values_exchanged"
+        },
+        "dgp": {
+          "type": "object"
+        }
+      }
+    },
+    "engine_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binary_sha256",
+        "scientific_result_sha256",
+        "method_version",
+        "qualification_status",
+        "data_authority",
+        "configural",
+        "metric",
+        "likelihood_ratio_test",
+        "label_swap_check",
+        "dataset_uuids",
+        "repeat_run_reproducibility"
+      ],
+      "properties": {
+        "binary_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "scientific_result_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "method_version": {
+          "const": "cbsem_exact_two_group_configural_metric_prerequisite_v1"
+        },
+        "qualification_status": {
+          "const": "engine_only_prerequisite_not_product_qualified"
+        },
+        "data_authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dataset_id",
+            "dataset_fingerprint",
+            "combined_authority_sha256",
+            "shared_complete_case_observations",
+            "group_sample_sizes",
+            "group_covariance_sha256",
+            "group_observed_means_sha256"
+          ],
+          "properties": {
+            "dataset_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dataset_fingerprint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "combined_authority_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "shared_complete_case_observations": {
+              "const": 400
+            },
+            "group_sample_sizes": {
+              "const": {
+                "A": 180,
+                "B": 220
+              }
+            },
+            "group_covariance_sha256": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "A",
+                "B"
+              ],
+              "properties": {
+                "A": {
+                  "$ref": "#/$defs/sha256"
+                },
+                "B": {
+                  "$ref": "#/$defs/sha256"
+                }
+              }
+            },
+            "group_observed_means_sha256": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "A",
+                "B"
+              ],
+              "properties": {
+                "A": {
+                  "$ref": "#/$defs/sha256"
+                },
+                "B": {
+                  "$ref": "#/$defs/sha256"
+                }
+              }
+            }
+          }
+        },
+        "configural": {
+          "$ref": "#/$defs/engine_model_fit"
+        },
+        "metric": {
+          "$ref": "#/$defs/engine_model_fit"
+        },
+        "likelihood_ratio_test": {
+          "$ref": "#/$defs/lrt"
+        },
+        "label_swap_check": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "absolute_tolerance",
+            "configural_chi_square_absolute_difference",
+            "metric_chi_square_absolute_difference",
+            "lrt_absolute_difference"
+          ],
+          "properties": {
+            "status": {
+              "const": "accepted"
+            },
+            "absolute_tolerance": {
+              "const": 1e-7
+            },
+            "configural_chi_square_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            },
+            "metric_chi_square_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            },
+            "lrt_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            }
+          }
+        },
+        "dataset_uuids": {
+          "$ref": "#/$defs/dataset_uuids"
+        },
+        "repeat_run_reproducibility": {
+          "$ref": "#/$defs/reproducibility"
+        }
+      }
+    },
+    "tolerances": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "moment_absolute",
+        "parameter_absolute",
+        "implied_covariance_absolute",
+        "objective_absolute",
+        "chi_square_absolute",
+        "p_value_absolute",
+        "label_swap_absolute",
+        "lavaan_chi_square_absolute"
+      ],
+      "properties": {
+        "moment_absolute": {
+          "type": "number"
+        },
+        "parameter_absolute": {
+          "type": "number"
+        },
+        "implied_covariance_absolute": {
+          "type": "number"
+        },
+        "objective_absolute": {
+          "type": "number"
+        },
+        "chi_square_absolute": {
+          "type": "number"
+        },
+        "p_value_absolute": {
+          "type": "number"
+        },
+        "label_swap_absolute": {
+          "type": "number"
+        },
+        "lavaan_chi_square_absolute": {
+          "type": "number"
+        }
+      }
+    },
+    "parity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "failures",
+        "tolerances",
+        "observed"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "accepted",
+            "rejected"
+          ]
+        },
+        "failures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "tolerances": {
+          "$ref": "#/$defs/tolerances"
+        },
+        "observed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximum_moment_absolute_difference",
+            "maximum_parameter_absolute_difference",
+            "maximum_implied_covariance_absolute_difference",
+            "maximum_group_objective_absolute_difference",
+            "configural_chi_square_absolute_difference",
+            "metric_chi_square_absolute_difference",
+            "lrt_absolute_difference",
+            "lrt_p_value_absolute_difference",
+            "label_swap_status",
+            "maximum_label_swap_chi_square_absolute_difference"
+          ],
+          "properties": {
+            "maximum_moment_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            },
+            "maximum_parameter_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            },
+            "maximum_implied_covariance_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            },
+            "maximum_group_objective_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            },
+            "configural_chi_square_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            },
+            "metric_chi_square_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            },
+            "lrt_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            },
+            "lrt_p_value_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            },
+            "label_swap_status": {
+              "const": "accepted"
+            },
+            "maximum_label_swap_chi_square_absolute_difference": {
+              "$ref": "#/$defs/finite"
+            }
+          }
+        }
+      }
+    },
+    "lavaan_unavailable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason",
+        "script_sha256",
+        "required_contract"
+      ],
+      "properties": {
+        "status": {
+          "const": "unavailable_current_host"
+        },
+        "reason": {
+          "const": "Rscript_not_found"
+        },
+        "script_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "required_contract": {
+          "type": "object"
+        }
+      }
+    },
+    "lavaan_available": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "script_sha256",
+        "output_sha256",
+        "runtime",
+        "contract",
+        "observed_options",
+        "group_sample_sizes",
+        "dimensions",
+        "configural_chi_square",
+        "metric_chi_square",
+        "likelihood_ratio_test",
+        "parity"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "accepted",
+            "rejected"
+          ]
+        },
+        "script_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "output_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "runtime": {
+          "type": "object"
+        },
+        "contract": {
+          "type": "object"
+        },
+        "observed_options": {
+          "type": "object"
+        },
+        "group_sample_sizes": {
+          "type": "object"
+        },
+        "dimensions": {
+          "type": "object"
+        },
+        "configural_chi_square": {
+          "$ref": "#/$defs/finite"
+        },
+        "metric_chi_square": {
+          "$ref": "#/$defs/finite"
+        },
+        "likelihood_ratio_test": {
+          "$ref": "#/$defs/lrt"
+        },
+        "parity": {
+          "type": "object"
+        }
+      }
+    },
+    "qualification_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evidence_role",
+        "forbidden_claims",
+        "missing_evidence"
+      ],
+      "properties": {
+        "status": {
+          "const": "blocked_not_product_qualification"
+        },
+        "evidence_role": {
+          "const": "quarantined_engine_reference_only"
+        },
+        "forbidden_claims": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "missing_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "dataset_uuids": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "label_swap"
+      ],
+      "properties": {
+        "primary": {
+          "const": "cb5e2a01-0000-0000-0000-000000000001"
+        },
+        "label_swap": {
+          "const": "cb5e2a01-0000-0000-0000-000000000002"
+        }
+      }
+    },
+    "sha_pair": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/sha256"
+        },
+        {
+          "$ref": "#/$defs/sha256"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "reproducibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "execution_count",
+        "raw_stdout_byte_identical",
+        "canonical_json_identical",
+        "raw_stdout_sha256",
+        "canonical_full_engine_json_sha256"
+      ],
+      "properties": {
+        "status": {
+          "const": "accepted"
+        },
+        "execution_count": {
+          "const": 2
+        },
+        "raw_stdout_byte_identical": {
+          "const": true
+        },
+        "canonical_json_identical": {
+          "const": true
+        },
+        "raw_stdout_sha256": {
+          "$ref": "#/$defs/sha_pair"
+        },
+        "canonical_full_engine_json_sha256": {
+          "$ref": "#/$defs/sha_pair"
+        }
+      }
+    },
+    "supersedes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "disposition",
+        "reason"
+      ],
+      "properties": {
+        "path": {
+          "const": "validation/results/cbsem_exact_two_group_configural_metric/reference-report-v1.json"
+        },
+        "sha256": {
+          "const": "bc430dbd7907d39ed95f278ce8cfa2e8cf28478f1a3486226bcad2192350b919"
+        },
+        "disposition": {
+          "const": "rejected_nondeterministic_import_dataset_identity"
+        },
+        "reason": {
+          "const": "import_generated_random_dataset_uuids_changed_full_engine_json_between_executions"
+        }
+      }
+    }
+  }
+}
+

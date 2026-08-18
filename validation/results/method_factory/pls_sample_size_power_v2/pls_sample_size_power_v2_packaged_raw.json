@@ -1,0 +1,1061 @@
+{
+  "schema_version": "quickpls.packaged_acceptance.v1",
+  "feature_id": "qpls3.pls.sample_size_power",
+  "method_version": "pls_sample_size_power_v2",
+  "catalogue_snapshot_date": "2026-08-12",
+  "acceptance_scope": "pls_sample_size_power",
+  "passed": true,
+  "generatedAt": "2026-08-18T14:01:22.165Z",
+  "endpoint": "http://127.0.0.1:9222",
+  "runtime": "tauri-webview2-cdp",
+  "focusedRun": {
+    "scope": "pls_sample_size_power",
+    "priorGeneratedAt": null,
+    "completedAt": "2026-08-18T14:01:42.887Z"
+  },
+  "checks": {
+    "plsSampleSizePowerFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\lavaan_latent_mediation_sem.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-pls-sample-size-power-1787061682161-29596.qpls",
+      "projectName": "Native Prospective PLS Power Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-pls-sample-size-power-1787061682161-29596.qpls",
+      "stderr": "",
+      "importAttempts": 1
+    },
+    "runtimePreflight": {
+      "passed": true,
+      "expectedOrigin": "http://tauri.localhost",
+      "enumeratedPages": [
+        {
+          "index": 0,
+          "url": "http://tauri.localhost/",
+          "origin": "http://tauri.localhost",
+          "title": "QuickPLS",
+          "shellVisible": true,
+          "tauriRuntime": true
+        }
+      ],
+      "qualifyingPageCount": 1,
+      "preReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "reloadCount": 1,
+      "postReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "sameOrigin": true,
+      "experimentalLabsPreferenceRestored": true
+    },
+    "runtime": {
+      "title": "QuickPLS",
+      "tauriRuntime": true,
+      "viewport": {
+        "width": 1536,
+        "height": 794,
+        "dpr": 1.25
+      },
+      "surface": "launcher"
+    },
+    "plsSampleSizePowerFixture": {
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-sample-size-power-1787061682161-29596.qpls",
+      "status": "ReadyNative Prospective PLS Power Acceptancelavaan_latent_mediation_sem.csv240 cases0 constructsDataOffline",
+      "columns": [
+        "#",
+        "x1",
+        "x2",
+        "x3",
+        "m1",
+        "m2",
+        "m3",
+        "y1",
+        "y2",
+        "y3"
+      ]
+    },
+    "plsSampleSizePowerInitialModel": {
+      "projectName": "Native Prospective PLS Power Acceptance",
+      "importedEditableModels": 0,
+      "name": "Prospective PLS Power Model",
+      "constructs": 0,
+      "structuralPaths": 0
+    },
+    "plsSampleSizePowerInvalidSetup": {
+      "attempted": true,
+      "selectedMethod": "PLS-SEM Sample Size and Power",
+      "startEnabled": false,
+      "blockers": [
+        "Power v2 requires exactly two constructs and one directed path; Both constructs must be ordinary reflective blocks with 3 to 10 indicators; Choose the predictor construct; Choose the outcome construct."
+      ],
+      "modelShapeBlocker": true,
+      "archiveBefore": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveAfter": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveStateUnchanged": true,
+      "resultCreated": false
+    },
+    "plsSampleSizePowerModel": {
+      "constructs": 2,
+      "assignedIndicators": 6,
+      "structuralPaths": 1,
+      "labels": [
+        "Predictor",
+        "Outcome"
+      ]
+    },
+    "plsSampleSizePowerCancellation": {
+      "passed": true,
+      "activeState": {
+        "captured": true,
+        "ariaBusy": "true",
+        "status": "queued",
+        "phase": "Queued",
+        "message": "Native engine accepted the calculation job.",
+        "progressValue": "0",
+        "progressMax": "100",
+        "logEntries": 3,
+        "postCapture": {
+          "ariaBusy": "true",
+          "status": "running",
+          "active": true,
+          "terminalTransitionObserved": false,
+          "terminalTransitionAllowed": false
+        }
+      },
+      "cancelledMessage": "Cancelled0%0%Calculation cancelled.Calculation log (5)7:31:26 pmCalculation cancelled.7:31:26 pmCancellation requested.7:31:26 pmNative calculation job started.7:31:26 pmFrontend readiness checks passed.7:31:26 pmPLS-SEM Sample Size and Power requested.",
+      "cancelledSettings": {
+        "selectedMethod": "PLS-SEM Sample Size and Power",
+        "selectedText": "PLS-SEM Sample Size and PowerProspective Monte Carlo power for exactly one two-construct reflective Gaussian path, evaluated only on an explicit sample-size grid.",
+        "scenario": "packaged_two_construct_path_v2",
+        "predictor": "Predictor (3 indicators)",
+        "outcome": "Outcome (3 indicators)",
+        "grid": "30,40",
+        "monteCarloReplicates": "100",
+        "bootstrapReplicates": "99",
+        "seed": "20260818",
+        "workers": "1",
+        "scope": "RequirementsExactly two ordinary reflective constructs, one predictor-to-outcome path, 3-10 indicators per block, Gaussian latent/disturbance/indicator errors, and no missingness. This is not retrospective observed power or a heuristic sample-size rule.",
+        "workload": "Pre-run desktop workload200 independent datasets; 20,000 PLS fits; 700,000 fitted rows. Hard caps: 250,000 fits and 100,000,000 fitted rows.",
+        "blockers": [],
+        "startEnabled": true,
+        "standardSurface": true
+      },
+      "noPartialVisibleResult": true,
+      "noPartialCommittedResult": true,
+      "archiveStateUnchanged": true,
+      "archiveBefore": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "archiveAfter": {
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "recipeIds": [],
+        "resultIds": [],
+        "runIds": []
+      },
+      "retryEnabled": true,
+      "retrySettings": {
+        "selectedMethod": "PLS-SEM Sample Size and Power",
+        "selectedText": "PLS-SEM Sample Size and PowerProspective Monte Carlo power for exactly one two-construct reflective Gaussian path, evaluated only on an explicit sample-size grid.",
+        "scenario": "packaged_two_construct_path_v2",
+        "predictor": "Predictor (3 indicators)",
+        "outcome": "Outcome (3 indicators)",
+        "grid": "30,40",
+        "monteCarloReplicates": "100",
+        "bootstrapReplicates": "99",
+        "seed": "20260818",
+        "workers": "2",
+        "scope": "RequirementsExactly two ordinary reflective constructs, one predictor-to-outcome path, 3-10 indicators per block, Gaussian latent/disturbance/indicator errors, and no missingness. This is not retrospective observed power or a heuristic sample-size rule.",
+        "workload": "Pre-run desktop workload200 independent datasets; 20,000 PLS fits; 700,000 fitted rows. Hard caps: 250,000 fits and 100,000,000 fitted rows.",
+        "blockers": [],
+        "startEnabled": true,
+        "standardSurface": true
+      },
+      "completedRetryRunId": "e05ec227-f395-455e-b709-c622e294b05e"
+    },
+    "plsSampleSizePowerDialog": {
+      "selectedMethod": "PLS-SEM Sample Size and Power",
+      "selectedText": "PLS-SEM Sample Size and PowerProspective Monte Carlo power for exactly one two-construct reflective Gaussian path, evaluated only on an explicit sample-size grid.",
+      "scenario": "packaged_two_construct_path_v2",
+      "predictor": "Predictor (3 indicators)",
+      "outcome": "Outcome (3 indicators)",
+      "grid": "30,40",
+      "monteCarloReplicates": "100",
+      "bootstrapReplicates": "99",
+      "seed": "20260818",
+      "workers": "2",
+      "scope": "RequirementsExactly two ordinary reflective constructs, one predictor-to-outcome path, 3-10 indicators per block, Gaussian latent/disturbance/indicator errors, and no missingness. This is not retrospective observed power or a heuristic sample-size rule.",
+      "workload": "Pre-run desktop workload200 independent datasets; 20,000 PLS fits; 700,000 fitted rows. Hard caps: 250,000 fits and 100,000,000 fitted rows.",
+      "blockers": [],
+      "startEnabled": true,
+      "standardSurface": true
+    },
+    "plsSampleSizePowerProgress": {
+      "captured": true,
+      "ariaBusy": "true",
+      "status": "queued",
+      "phase": "Queued",
+      "message": "Native engine accepted the calculation job.",
+      "progressValue": "0",
+      "progressMax": "100",
+      "logEntries": 3,
+      "postCapture": {
+        "ariaBusy": "true",
+        "status": "running",
+        "active": true,
+        "terminalTransitionObserved": false,
+        "terminalTransitionAllowed": true
+      },
+      "completedRunProof": {
+        "matched": true,
+        "runId": "e05ec227-f395-455e-b709-c622e294b05e"
+      }
+    },
+    "plsSampleSizePowerResult": {
+      "runId": "e05ec227-f395-455e-b709-c622e294b05e",
+      "runLabel": "PLS-SEM Sample Size and Power Analysis run",
+      "methodVersion": "pls_sample_size_power_v2",
+      "initialSelectedTable": "pls_power_by_sample_size",
+      "treeItems": [
+        "Prospective sample size and power",
+        "Power by sample size",
+        "Bootstrap tail accounting",
+        "Simulation failures",
+        "Design assumptions",
+        "Run provenance"
+      ],
+      "powerRows": 2,
+      "powerValues": [
+        [
+          "30",
+          "100",
+          "100",
+          "100",
+          "0",
+          "45",
+          "0.450000000000",
+          "0.356145379795",
+          "0.547553970026",
+          "false"
+        ],
+        [
+          "40",
+          "100",
+          "100",
+          "100",
+          "0",
+          "49",
+          "0.490000000000",
+          "0.394219989304",
+          "0.586519880660",
+          "false"
+        ]
+      ],
+      "tailRows": 2,
+      "tailValues": [
+        [
+          "30",
+          "100",
+          "9900",
+          "9900",
+          "0",
+          "1035",
+          "99",
+          "99"
+        ],
+        [
+          "40",
+          "100",
+          "9900",
+          "9900",
+          "0",
+          "1400",
+          "99",
+          "99"
+        ]
+      ],
+      "failureRows": 0,
+      "typedFailures": true,
+      "assumptionRows": 12,
+      "provenanceRows": 11,
+      "provenanceMethodVersionPresent": true,
+      "outerAccountingCloses": true,
+      "tailAccountingCloses": true
+    },
+    "plsSampleSizePowerExport": {
+      "selectedRunId": "e05ec227-f395-455e-b709-c622e294b05e",
+      "expectedRunId": "e05ec227-f395-455e-b709-c622e294b05e",
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx",
+        "file": {
+          "size": 11529,
+          "isFile": true
+        },
+        "workbookSheets": [
+          "Power by sample size",
+          "Bootstrap tail accounting",
+          "Simulation failures",
+          "Design assumptions",
+          "Run provenance",
+          "Run provenance (2)"
+        ],
+        "expectedSheets": [
+          "Power by sample size",
+          "Bootstrap tail accounting",
+          "Simulation failures",
+          "Design assumptions",
+          "Run provenance"
+        ],
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 2819270,
+              "pid": 15472,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 2819270,
+              "handle": 2426114,
+              "pid": 15472,
+              "rootOwner": 2819270,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 2819270,
+              "pid": 15472,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx",
+              "requiredSharedStrings": [
+                "pls_sample_size_power_v2",
+                "Bootstrap tail accounting",
+                "Run provenance"
+              ],
+              "requiredSheets": [
+                "Power by sample size",
+                "Bootstrap tail accounting",
+                "Simulation failures",
+                "Design assumptions",
+                "Run provenance"
+              ],
+              "sha256": "1bfe05bddf5ff89ab8f3918ecbfc0894e1ef8d3df307799bff3ab7420d752f6e",
+              "sheetNames": [
+                "Power by sample size",
+                "Bootstrap tail accounting",
+                "Simulation failures",
+                "Design assumptions",
+                "Run provenance",
+                "Run provenance (2)"
+              ],
+              "size": 11529
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 2819270,
+                    "pid": 15472,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 2819270,
+                    "handle": 2426114,
+                    "pid": 15472,
+                    "rootOwner": 2819270,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 2819270,
+                    "pid": 15472,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-pls-power-v2-20260818-193118450.xlsx",
+                    "requiredSharedStrings": [
+                      "pls_sample_size_power_v2",
+                      "Bootstrap tail accounting",
+                      "Run provenance"
+                    ],
+                    "requiredSheets": [
+                      "Power by sample size",
+                      "Bootstrap tail accounting",
+                      "Simulation failures",
+                      "Design assumptions",
+                      "Run provenance"
+                    ],
+                    "sha256": "1bfe05bddf5ff89ab8f3918ecbfc0894e1ef8d3df307799bff3ab7420d752f6e",
+                    "sheetNames": [
+                      "Power by sample size",
+                      "Bootstrap tail accounting",
+                      "Simulation failures",
+                      "Design assumptions",
+                      "Run provenance",
+                      "Run provenance (2)"
+                    ],
+                    "size": 11529
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        }
+      }
+    },
+    "plsSampleSizePowerSaveReopen": {
+      "expectedRunId": "e05ec227-f395-455e-b709-c622e294b05e",
+      "selectedRunId": "e05ec227-f395-455e-b709-c622e294b05e",
+      "sameRunRestored": true,
+      "reopenedPowerRows": 2,
+      "reopenedTailRows": 2,
+      "archiveBeforeReopen": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "runId": "e05ec227-f395-455e-b709-c622e294b05e",
+        "resultStatus": "completed",
+        "runStatus": "completed",
+        "payloadKind": "pls_sample_size_power_v2",
+        "provenanceMethod": "pls_sample_size_power",
+        "provenanceMethodVersion": "pls_sample_size_power_v2",
+        "recipeSchemaVersion": 3,
+        "recipeMethod": "pls_sample_size_power",
+        "recipeMethodConfig": {
+          "kind": "pls_sample_size_power",
+          "scenario_identity": "packaged_two_construct_path_v2",
+          "predictor_construct": "construct-1787061684594",
+          "outcome_construct": "construct-1787061685029",
+          "predictor_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "outcome_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "population_path": 0.3,
+          "exogenous_distribution": "standard_normal",
+          "structural_disturbance_distribution": "standard_normal",
+          "indicator_error_distribution": "standard_normal",
+          "missing_data": "none",
+          "inference": "case_bootstrap_null_centered_two_sided_plus_one",
+          "sample_size_grid": [
+            30,
+            40
+          ],
+          "alpha": 0.05,
+          "target_power": 0.8,
+          "interval_confidence_level": 0.95,
+          "monte_carlo_replicates": 100,
+          "bootstrap_replicates": 99
+        },
+        "rowCount": 2,
+        "outerRequested": 200,
+        "outerAttempted": 200,
+        "outerUsable": 200,
+        "outerFailed": 0,
+        "innerRequested": 19800,
+        "innerUsable": 19800,
+        "innerFailed": 0,
+        "innerExceedances": 2435,
+        "typedOuterFailures": true,
+        "validOutcomes": true,
+        "validRows": true,
+        "decisionValid": true,
+        "checksum": "b305a6b9523dc21ea537024b768fd0fb2873e81f126432e879082d6170b7610d",
+        "immutableRunChecksum": "7d1b5224d9647d4fa36a9275e0e71ca9a1ea9eb2efd13b1d10cc53d2e62c880d"
+      },
+      "archiveAfterReopen": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "runId": "e05ec227-f395-455e-b709-c622e294b05e",
+        "resultStatus": "completed",
+        "runStatus": "completed",
+        "payloadKind": "pls_sample_size_power_v2",
+        "provenanceMethod": "pls_sample_size_power",
+        "provenanceMethodVersion": "pls_sample_size_power_v2",
+        "recipeSchemaVersion": 3,
+        "recipeMethod": "pls_sample_size_power",
+        "recipeMethodConfig": {
+          "kind": "pls_sample_size_power",
+          "scenario_identity": "packaged_two_construct_path_v2",
+          "predictor_construct": "construct-1787061684594",
+          "outcome_construct": "construct-1787061685029",
+          "predictor_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "outcome_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "population_path": 0.3,
+          "exogenous_distribution": "standard_normal",
+          "structural_disturbance_distribution": "standard_normal",
+          "indicator_error_distribution": "standard_normal",
+          "missing_data": "none",
+          "inference": "case_bootstrap_null_centered_two_sided_plus_one",
+          "sample_size_grid": [
+            30,
+            40
+          ],
+          "alpha": 0.05,
+          "target_power": 0.8,
+          "interval_confidence_level": 0.95,
+          "monte_carlo_replicates": 100,
+          "bootstrap_replicates": 99
+        },
+        "rowCount": 2,
+        "outerRequested": 200,
+        "outerAttempted": 200,
+        "outerUsable": 200,
+        "outerFailed": 0,
+        "innerRequested": 19800,
+        "innerUsable": 19800,
+        "innerFailed": 0,
+        "innerExceedances": 2435,
+        "typedOuterFailures": true,
+        "validOutcomes": true,
+        "validRows": true,
+        "decisionValid": true,
+        "checksum": "b305a6b9523dc21ea537024b768fd0fb2873e81f126432e879082d6170b7610d",
+        "immutableRunChecksum": "7d1b5224d9647d4fa36a9275e0e71ca9a1ea9eb2efd13b1d10cc53d2e62c880d"
+      },
+      "archive": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "runId": "e05ec227-f395-455e-b709-c622e294b05e",
+        "resultStatus": "completed",
+        "runStatus": "completed",
+        "payloadKind": "pls_sample_size_power_v2",
+        "provenanceMethod": "pls_sample_size_power",
+        "provenanceMethodVersion": "pls_sample_size_power_v2",
+        "recipeSchemaVersion": 3,
+        "recipeMethod": "pls_sample_size_power",
+        "recipeMethodConfig": {
+          "kind": "pls_sample_size_power",
+          "scenario_identity": "packaged_two_construct_path_v2",
+          "predictor_construct": "construct-1787061684594",
+          "outcome_construct": "construct-1787061685029",
+          "predictor_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "outcome_indicator_loadings": [
+            0.8,
+            0.8,
+            0.8
+          ],
+          "population_path": 0.3,
+          "exogenous_distribution": "standard_normal",
+          "structural_disturbance_distribution": "standard_normal",
+          "indicator_error_distribution": "standard_normal",
+          "missing_data": "none",
+          "inference": "case_bootstrap_null_centered_two_sided_plus_one",
+          "sample_size_grid": [
+            30,
+            40
+          ],
+          "alpha": 0.05,
+          "target_power": 0.8,
+          "interval_confidence_level": 0.95,
+          "monte_carlo_replicates": 100,
+          "bootstrap_replicates": 99
+        },
+        "rowCount": 2,
+        "outerRequested": 200,
+        "outerAttempted": 200,
+        "outerUsable": 200,
+        "outerFailed": 0,
+        "innerRequested": 19800,
+        "innerUsable": 19800,
+        "innerFailed": 0,
+        "innerExceedances": 2435,
+        "typedOuterFailures": true,
+        "validOutcomes": true,
+        "validRows": true,
+        "decisionValid": true,
+        "checksum": "b305a6b9523dc21ea537024b768fd0fb2873e81f126432e879082d6170b7610d",
+        "immutableRunChecksum": "7d1b5224d9647d4fa36a9275e0e71ca9a1ea9eb2efd13b1d10cc53d2e62c880d"
+      }
+    },
+    "plsSampleSizePowerPackagedViewports": {
+      "passed": true,
+      "actualTauriWindow": true,
+      "resizeMechanism": "Browser.setWindowBounds",
+      "targetIdentity": {
+        "targetId": "EE53FDF7AB2C62EE38E6A04624241595",
+        "windowId": 1408401758,
+        "type": "page",
+        "title": "QuickPLS - Native Prospective PLS Power Acceptance *",
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "lookupCommand": "Browser.getWindowForTarget"
+      },
+      "deviceMetricsOverride": {
+        "clearCommand": "Emulation.clearDeviceMetricsOverride",
+        "cleared": true,
+        "pageSetViewportSizeUsed": false,
+        "emulationOnly": false,
+        "playwrightViewportBefore": null
+      },
+      "method": {
+        "slug": "pls_sample_size_power_v2",
+        "version": "pls_sample_size_power_v2",
+        "evidenceCheck": "plsSampleSizePowerResult",
+        "expectedRunId": "e05ec227-f395-455e-b709-c622e294b05e",
+        "expectedRunLabel": "PLS-SEM Sample Size and Power Analysis",
+        "expectedTableId": "pls_power_bootstrap_tail_accounting"
+      },
+      "outerBoundsBefore": {
+        "left": 0,
+        "top": 23,
+        "width": 1536,
+        "height": 793,
+        "windowState": "normal"
+      },
+      "exactViewports": [
+        {
+          "id": "1024x700",
+          "requestedClientViewport": {
+            "width": 1024,
+            "height": 700
+          },
+          "domInnerDimensions": {
+            "width": 1024,
+            "height": 700
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1536,
+            "height": 793,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1024,
+            "height": 701,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 699,
+                "left": 0,
+                "top": 23
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 46,
+                "width": 1024,
+                "height": 700,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 699
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 701,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1024,
+                "height": 702,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 702
+              }
+            },
+            {
+              "attempt": 3,
+              "requestedOuterBounds": {
+                "width": 1024,
+                "height": 700,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1024,
+                "height": 701,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1024,
+                "innerHeight": 700
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "e05ec227-f395-455e-b709-c622e294b05e",
+          "selectedRunLabel": "PLS-SEM Sample Size and Power Analysis run",
+          "selectedTableId": "pls_power_bootstrap_tail_accounting",
+          "resultRows": 2,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\209v-tauri-native-pls-sample-size-power-packaged-viewport-1024x700.png",
+          "passed": true
+        },
+        {
+          "id": "1280x720",
+          "requestedClientViewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "domInnerDimensions": {
+            "width": 1280,
+            "height": 720
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1024,
+            "height": 701,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1280,
+            "height": 721,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1280,
+                "height": 721,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1280,
+                "height": 722,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1280,
+                "innerHeight": 722
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1280,
+                "height": 720,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1280,
+                "height": 721,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1280,
+                "innerHeight": 720
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "e05ec227-f395-455e-b709-c622e294b05e",
+          "selectedRunLabel": "PLS-SEM Sample Size and Power Analysis run",
+          "selectedTableId": "pls_power_bootstrap_tail_accounting",
+          "resultRows": 2,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\209v-tauri-native-pls-sample-size-power-packaged-viewport-1280x720.png",
+          "passed": true
+        },
+        {
+          "id": "1440x900",
+          "requestedClientViewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "domInnerDimensions": {
+            "width": 1440,
+            "height": 900
+          },
+          "outerBoundsBefore": {
+            "left": 0,
+            "top": 23,
+            "width": 1280,
+            "height": 721,
+            "windowState": "normal"
+          },
+          "outerBoundsAfter": {
+            "left": 0,
+            "top": 23,
+            "width": 1440,
+            "height": 901,
+            "windowState": "normal"
+          },
+          "outerBoundsChanged": true,
+          "resizeAttempts": [
+            {
+              "attempt": 1,
+              "requestedOuterBounds": {
+                "width": 1440,
+                "height": 901,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1440,
+                "height": 902,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1440,
+                "innerHeight": 902
+              }
+            },
+            {
+              "attempt": 2,
+              "requestedOuterBounds": {
+                "width": 1440,
+                "height": 900,
+                "left": 0,
+                "top": 0
+              },
+              "observedOuterBounds": {
+                "left": 0,
+                "top": 23,
+                "width": 1440,
+                "height": 901,
+                "windowState": "normal"
+              },
+              "observedDomInnerDimensions": {
+                "innerWidth": 1440,
+                "innerHeight": 900
+              }
+            }
+          ],
+          "origin": "http://tauri.localhost",
+          "tauriRuntime": true,
+          "surface": "results",
+          "noHorizontalOverflow": true,
+          "methodRunLinkage": true,
+          "methodVersionEvidenceBound": true,
+          "selectedRunId": "e05ec227-f395-455e-b709-c622e294b05e",
+          "selectedRunLabel": "PLS-SEM Sample Size and Power Analysis run",
+          "selectedTableId": "pls_power_bootstrap_tail_accounting",
+          "resultRows": 2,
+          "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\209v-tauri-native-pls-sample-size-power-packaged-viewport-1440x900.png",
+          "passed": true
+        }
+      ],
+      "restoredFinalWindowState": {
+        "requested": {
+          "left": 0,
+          "top": 23,
+          "width": 1536,
+          "height": 793,
+          "windowState": "normal"
+        },
+        "actual": {
+          "left": 0,
+          "top": 23,
+          "width": 1536,
+          "height": 793,
+          "windowState": "normal"
+        },
+        "tolerancePixels": 1,
+        "passed": true
+      }
+    },
+    "plsSampleSizePowerFunctionalOffline": {
+      "passed": true,
+      "analyticalWorkflowRequiresInternet": false,
+      "strictZeroProcessEgressClaimed": false,
+      "observedRequestCount": 0,
+      "externalRequestCount": 0,
+      "origins": [],
+      "externalRequests": []
+    },
+    "recentProjectsRestored": true
+  },
+  "screenshots": [
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\200-tauri-native-pls-sample-size-power-invalid-setup-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\201-tauri-native-pls-sample-size-power-cancellation-running-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\202-tauri-native-pls-sample-size-power-running-1440x900.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\209v-tauri-native-pls-sample-size-power-packaged-viewport-1024x700.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\209v-tauri-native-pls-sample-size-power-packaged-viewport-1280x720.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\209v-tauri-native-pls-sample-size-power-packaged-viewport-1440x900.png"
+  ],
+  "screenshotArtifacts": [
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/200-tauri-native-pls-sample-size-power-invalid-setup-1440x900.png",
+      "size": 236036,
+      "sha256": "0f3e1ad1e826c71cafc2818212382a191cd900917ad6d4f760e1bdd203c50f66"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/201-tauri-native-pls-sample-size-power-cancellation-running-1440x900.png",
+      "size": 178852,
+      "sha256": "cac277b75d2f66fbd81303b6208181ce4d0812fadedc18bf08130e208fdbdd4a"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/202-tauri-native-pls-sample-size-power-running-1440x900.png",
+      "size": 178227,
+      "sha256": "22d98de619128419682464eaa8298afcb2dc7238e72ea82bea338920928425dd"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/209v-tauri-native-pls-sample-size-power-packaged-viewport-1024x700.png",
+      "size": 105665,
+      "sha256": "5a0d05a0650e263b5e793294863a19202f252f032677f0f3b9018076aab157ce"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/209v-tauri-native-pls-sample-size-power-packaged-viewport-1280x720.png",
+      "size": 98728,
+      "sha256": "46f665073d5467f2583869059d8253c1488fe470cfc2c5ceccef36d4a61d2768"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/209v-tauri-native-pls-sample-size-power-packaged-viewport-1440x900.png",
+      "size": 101182,
+      "sha256": "d7f49697268c19600b613b16ba43ccfbc01f4d09e494a85a54d954c685a32544"
+    }
+  ],
+  "consoleErrors": [],
+  "failures": []
+}

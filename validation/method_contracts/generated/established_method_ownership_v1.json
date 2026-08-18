@@ -1,0 +1,244 @@
+{
+  "adoption_phase": 2,
+  "consumer_adopted": true,
+  "consumer_sources": {
+    "python_factory": "validation/established_method_factory_common.py",
+    "rust_cli": "crates/qpls-cli/src/main.rs",
+    "rust_core_module": "crates/qpls-core/src/lib.rs",
+    "typescript_canonical": "src/native/nativeCanonicalResultDocumentV2.ts",
+    "typescript_method": "src/domain/methodCapabilityRegistryV2.ts"
+  },
+  "contract_id": "quickpls.established_method_integration.v1",
+  "contract_sha256": "b215a88228a99b6091a744429f2bcad4446bf9ffa0357c13eed53bd6e042de2f",
+  "generated_targets": [
+    "validation/method_contracts/generated/established_method_ownership_v1.json",
+    "src/domain/generated/establishedMethodContractsV1.ts",
+    "crates/qpls-core/src/generated/established_method_contracts_v1.rs"
+  ],
+  "input_paths": [
+    "crates/qpls-cli/src/main.rs",
+    "crates/qpls-core/src/lib.rs",
+    "src/domain/methodCapabilityRegistryV2.ts",
+    "src/native/nativeCanonicalResultDocumentV2.ts",
+    "validation/capabilities/capability_registry_v2.json",
+    "validation/cca_release_reference.py",
+    "validation/established_method_contract_codegen_v1.py",
+    "validation/established_method_factory_common.py",
+    "validation/gsca_release_reference.py",
+    "validation/ipma_release_reference.py",
+    "validation/method_contracts/established_methods_v1.json",
+    "validation/method_contracts/established_methods_v1.schema.json",
+    "validation/methods/cca_residuals_v1.manifest.json",
+    "validation/methods/gsca_als_v2.manifest.json",
+    "validation/methods/ipma_v1.manifest.json",
+    "validation/methods/nca_v2.manifest.json",
+    "validation/methods/pls_algorithm_v1.manifest.json",
+    "validation/nca_release_reference.py",
+    "validation/results/method_factory/cca_residuals_v1/independent_reference.json",
+    "validation/results/method_factory/gsca_als_v2/independent_reference.json",
+    "validation/results/method_factory/ipma_v1/independent_reference.json",
+    "validation/results/method_factory/nca_v2/independent_reference.json"
+  ],
+  "methods": [
+    {
+      "canonical_table_rules": [
+        {
+          "match": "prefix",
+          "owner_options": [
+            "cca"
+          ],
+          "value": "cca_"
+        }
+      ],
+      "capability_requirements": [
+        {
+          "capability_id": "smartpls.pls_algorithm",
+          "capability_version": "pls_pm_v1",
+          "cell_id": "qpls3.pls.algorithm",
+          "identity_manifest": "validation/methods/pls_algorithm_v1.manifest.json",
+          "option": "pls_algorithm",
+          "registry_schema_version": 2,
+          "role": "base"
+        },
+        {
+          "capability_id": "smartpls.cca",
+          "capability_version": "cca_composite_residual_v1",
+          "cell_id": "qpls3.assessment.cca_residuals",
+          "identity_manifest": "validation/methods/cca_residuals_v1.manifest.json",
+          "option": "cca",
+          "registry_schema_version": 2,
+          "role": "primary"
+        }
+      ],
+      "factory": {
+        "boundary_test_filter": "cca_bounded_scope",
+        "output": "cca_residuals_v1",
+        "persistence_test_filter": "runner_generated_cca_appends_round_trips_and_rejects_contract_tampering",
+        "reference_report": "validation/results/method_factory/cca_residuals_v1/independent_reference.json",
+        "reference_script": "validation/cca_release_reference.py",
+        "reference_version_pointer": "/method_version",
+        "simulation_test_filter": "cca_non_saturated_residuals"
+      },
+      "factory_key": "cca",
+      "manifest": "validation/methods/cca_residuals_v1.manifest.json",
+      "manifest_identity": {
+        "feature_id": "qpls3.assessment.cca_residuals",
+        "method_version": "cca_composite_residual_v1",
+        "path": "validation/methods/cca_residuals_v1.manifest.json"
+      },
+      "runtime": {
+        "analysis_method": "cca",
+        "method_config_kind": "cca",
+        "result_discriminator": "cca",
+        "workbench_kind": "cca"
+      }
+    },
+    {
+      "canonical_table_rules": [
+        {
+          "match": "prefix",
+          "owner_options": [
+            "gsca"
+          ],
+          "value": "gsca_"
+        }
+      ],
+      "capability_requirements": [
+        {
+          "capability_id": "smartpls.gsca",
+          "capability_version": "gsca_als_v2",
+          "cell_id": "qpls3.gsca.als",
+          "identity_manifest": "validation/methods/gsca_als_v2.manifest.json",
+          "option": "gsca",
+          "registry_schema_version": 2,
+          "role": "primary"
+        }
+      ],
+      "factory": {
+        "boundary_test_filter": "gsca_als_v2",
+        "output": "gsca_als_v2",
+        "persistence_test_filter": "runner_generated_gsca_als_v2_commits_saves_reopens_and_rejects_contract_tampering",
+        "reference_report": "validation/results/method_factory/gsca_als_v2/independent_reference.json",
+        "reference_script": "validation/gsca_release_reference.py",
+        "reference_version_pointer": "/method_version",
+        "simulation_test_filter": "gsca_als_v2"
+      },
+      "factory_key": "gsca",
+      "manifest": "validation/methods/gsca_als_v2.manifest.json",
+      "manifest_identity": {
+        "feature_id": "qpls3.gsca.als",
+        "method_version": "gsca_als_v2",
+        "path": "validation/methods/gsca_als_v2.manifest.json"
+      },
+      "runtime": {
+        "analysis_method": "gsca",
+        "method_config_kind": "gsca",
+        "result_discriminator": "gsca",
+        "workbench_kind": "gsca"
+      }
+    },
+    {
+      "canonical_table_rules": [
+        {
+          "match": "prefix",
+          "owner_options": [
+            "ipma"
+          ],
+          "value": "ipma_"
+        }
+      ],
+      "capability_requirements": [
+        {
+          "capability_id": "smartpls.pls_algorithm",
+          "capability_version": "pls_pm_v1",
+          "cell_id": "qpls3.pls.algorithm",
+          "identity_manifest": "validation/methods/pls_algorithm_v1.manifest.json",
+          "option": "pls_algorithm",
+          "registry_schema_version": 2,
+          "role": "base"
+        },
+        {
+          "capability_id": "smartpls.ipma",
+          "capability_version": "ipma_v1",
+          "cell_id": "qpls3.assessment.ipma",
+          "identity_manifest": "validation/methods/ipma_v1.manifest.json",
+          "option": "ipma",
+          "registry_schema_version": 2,
+          "role": "primary"
+        }
+      ],
+      "factory": {
+        "boundary_test_filter": "bounded_ipma",
+        "output": "ipma_v1",
+        "persistence_test_filter": "runner_generated_ipma_commits_saves_reopens_and_rejects_contract_tampering",
+        "reference_report": "validation/results/method_factory/ipma_v1/independent_reference.json",
+        "reference_script": "validation/ipma_release_reference.py",
+        "reference_version_pointer": "/method_version",
+        "simulation_test_filter": "bounded_ipma"
+      },
+      "factory_key": "ipma",
+      "manifest": "validation/methods/ipma_v1.manifest.json",
+      "manifest_identity": {
+        "feature_id": "qpls3.assessment.ipma",
+        "method_version": "ipma_v1",
+        "path": "validation/methods/ipma_v1.manifest.json"
+      },
+      "runtime": {
+        "analysis_method": "ipma",
+        "method_config_kind": "ipma",
+        "result_discriminator": "ipma",
+        "workbench_kind": "ipma"
+      }
+    },
+    {
+      "canonical_table_rules": [
+        {
+          "match": "prefix",
+          "owner_options": [
+            "nca"
+          ],
+          "value": "nca_"
+        }
+      ],
+      "capability_requirements": [
+        {
+          "capability_id": "smartpls.nca",
+          "capability_version": "nca_v2",
+          "cell_id": "qpls3.standalone.nca",
+          "identity_manifest": "validation/methods/nca_v2.manifest.json",
+          "option": "nca",
+          "registry_schema_version": 2,
+          "role": "primary"
+        }
+      ],
+      "factory": {
+        "boundary_test_filter": "bounded_nca_v2",
+        "output": "nca_v2",
+        "persistence_test_filter": "runner_generated_nca_v2_commits_saves_reopens_and_rejects_contract_tampering",
+        "reference_report": "validation/results/method_factory/nca_v2/independent_reference.json",
+        "reference_script": "validation/nca_release_reference.py",
+        "reference_version_pointer": "/checks/nca/method_version",
+        "simulation_test_filter": "nca_v2"
+      },
+      "factory_key": "nca",
+      "manifest": "validation/methods/nca_v2.manifest.json",
+      "manifest_identity": {
+        "feature_id": "qpls3.standalone.nca",
+        "method_version": "nca_v2",
+        "path": "validation/methods/nca_v2.manifest.json"
+      },
+      "runtime": {
+        "analysis_method": "nca",
+        "method_config_kind": "nca",
+        "result_discriminator": "nca",
+        "workbench_kind": "nca"
+      }
+    }
+  ],
+  "registry": {
+    "path": "validation/capabilities/capability_registry_v2.json",
+    "registry_schema_version": 2
+  },
+  "schema_version": 1,
+  "shadow_only": false
+}

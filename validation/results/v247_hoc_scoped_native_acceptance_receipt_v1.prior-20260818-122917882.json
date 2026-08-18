@@ -1,0 +1,182 @@
+{
+    "schema_version":  1,
+    "kind":  "quickpls_v247_hoc_scoped_native_acceptance_receipt",
+    "passed":  true,
+    "supervisor_started_at_utc":  "2026-08-18T04:46:50.7206455Z",
+    "completed_at_utc":  "2026-08-18T04:47:47.0457330Z",
+    "scope":  "hoc",
+    "feature_id":  "qpls3.pls.higher_order_two_stage",
+    "method_version":  "pls_pm_v1",
+    "report":  {
+                   "path":  "validation/results/v247_tauri_native_acceptance_hoc.json",
+                   "size":  33214,
+                   "sha256":  "8d40fb4114d7e36b6dfe59b17d15a8540d04d89f5a961da123778e927c975fab"
+               },
+    "executable":  {
+                       "path":  "target/release/quickpls-desktop.exe",
+                       "size":  49971712,
+                       "sha256":  "9bb357155e2451dd2d88568025870a31f98db7d55b3d3f3bf531cb69f959af40"
+                   },
+    "export":  {
+                   "path":  "validation/results/v247-native-hoc-20260818-101202764-24056-3ce2e1a1.xlsx",
+                   "size":  14766,
+                   "sha256":  "cff1724b147a7aad0d47013d77a0f57f0e3fe4aa4db3cb485921b23003c09279"
+               },
+    "project_archive":  {
+                            "path":  "validation/results/v247-native-hoc-1787028414517-56164.qpls",
+                            "size":  16304,
+                            "sha256":  "93a180cde1dfe4206c1d0be34cd2e548769a47308a66ccc5c0216608aa0580d2"
+                        },
+    "screenshots":  [
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/100-tauri-native-hoc-fixture-data-1536x794.png",
+                            "size":  211627,
+                            "sha256":  "bc198d3381136a30aee781d0ff88122b6443acd6df361fca92354c6bf9de2cfd"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/101-tauri-native-hoc-dialog-1536x794.png",
+                            "size":  155399,
+                            "sha256":  "c12fe64f36f6a38c4df1b0ca7e84d4ba06729efbaa15093623e391ca3e19ffb9"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/101a-tauri-native-hoc-invalid-setup-1536x794.png",
+                            "size":  210036,
+                            "sha256":  "60c3a2252e836f7a1733e03586ff32c947e14f9e14a9a7cb1b6617eda49814a5"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/102-tauri-native-hoc-model-1536x794.png",
+                            "size":  169616,
+                            "sha256":  "1d6dd75e0efdd0258e319d45aae7f2e53ecb0c24ea9106c66d2c4c5908c45aad"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/103-tauri-native-hoc-running-1536x794.png",
+                            "size":  176889,
+                            "sha256":  "e51a51767b9365d1433f7f4368e2aa0bb6d4d1a9804bb60b535a3c531de75839"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/104-tauri-native-hoc-results-1536x794.png",
+                            "size":  97190,
+                            "sha256":  "0be5fa01aa0964e59b195956e5c2098ef7881998e7a95a179b9f545f741f6702"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/105-tauri-native-hoc-export-1536x794.png",
+                            "size":  130751,
+                            "sha256":  "7417fa4e267760c21deb8186cd84beeb606394179ac50ff0193824f5d8e82ea0"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/106-tauri-native-hoc-reopened-1536x794.png",
+                            "size":  94652,
+                            "sha256":  "20064ee9364ab5c161d1fce128ce26c727d7fd2d0a36266b344bcac944bb43a9"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/106v-tauri-native-hoc-packaged-viewport-1024x700.png",
+                            "size":  78950,
+                            "sha256":  "47efe9a4d2a7d6ac5f34a755ffea2525ce661f6ebe786e9f91672e7740a49863"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/106v-tauri-native-hoc-packaged-viewport-1280x720.png",
+                            "size":  74641,
+                            "sha256":  "be8f5ad20023da5e0a45895c59640229fbb7eb0bf829db3bd3948c87a5939f14"
+                        },
+                        {
+                            "path":  "validation/results/screens/v247-native-desktop-acceptance/106v-tauri-native-hoc-packaged-viewport-1440x900.png",
+                            "size":  76346,
+                            "sha256":  "a84888221ad6cb5f9b30fdc2559d0788b6c929a9fafb4660908c13dd036a107e"
+                        }
+                    ],
+    "checks":  17,
+    "unique_checks":  17,
+    "check_ids":  [
+                      "hocCalculation",
+                      "hocCompletedRunSaved",
+                      "hocDialog",
+                      "hocExport",
+                      "hocFixture",
+                      "hocFixtureProvisioning",
+                      "hocFunctionalOffline",
+                      "hocInitialModel",
+                      "hocInvalidSetup",
+                      "hocModel",
+                      "hocPackagedViewports",
+                      "hocProgress",
+                      "hocResult",
+                      "hocSaveReopen",
+                      "recentProjectsRestored",
+                      "runtime",
+                      "runtimePreflight"
+                  ],
+    "failures":  0,
+    "console_errors":  0,
+    "runtime":  "tauri-webview2-cdp",
+    "cdp_endpoint":  "http://127.0.0.1:9222",
+    "cdp_loopback_only":  true,
+    "functional_offline":  {
+                               "passed":  true,
+                               "analyticalWorkflowRequiresInternet":  false,
+                               "strictZeroProcessEgressClaimed":  false,
+                               "platformBackgroundEgressOutsidePageRequestScope":  true,
+                               "observedRequestCount":  52,
+                               "externalRequestCount":  0,
+                               "origins":  [
+                                               "http://ipc.localhost",
+                                               "http://tauri.localhost"
+                                           ],
+                               "externalRequests":  [
+
+                                                    ]
+                           },
+    "observed_process_tree":  [
+                                  {
+                                      "process_id":  36876,
+                                      "parent_process_id":  53744,
+                                      "name":  "quickpls-desktop.exe",
+                                      "executable_path":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                                      "creation_date":  "08/18/2026 10:16:52"
+                                  },
+                                  {
+                                      "process_id":  2228,
+                                      "parent_process_id":  36876,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 10:16:52"
+                                  },
+                                  {
+                                      "process_id":  21044,
+                                      "parent_process_id":  2228,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 10:16:52"
+                                  },
+                                  {
+                                      "process_id":  13112,
+                                      "parent_process_id":  2228,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 10:16:52"
+                                  },
+                                  {
+                                      "process_id":  57656,
+                                      "parent_process_id":  2228,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 10:16:52"
+                                  },
+                                  {
+                                      "process_id":  41196,
+                                      "parent_process_id":  2228,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 10:16:52"
+                                  },
+                                  {
+                                      "process_id":  52656,
+                                      "parent_process_id":  2228,
+                                      "name":  "msedgewebview2.exe",
+                                      "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.86\\msedgewebview2.exe",
+                                      "creation_date":  "08/18/2026 10:16:53"
+                                  }
+                              ],
+    "graceful_process_cleanup_verified":  true,
+    "forced_process_cleanup_used":  false,
+    "orphan_processes":  0
+}

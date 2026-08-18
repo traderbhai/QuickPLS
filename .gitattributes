@@ -1,4 +1,5 @@
 * text=auto
+.gitattributes text eol=lf
 
 *.rs text eol=lf
 *.toml text eol=lf
@@ -14,6 +15,41 @@
 *.yml text eol=lf
 *.yaml text eol=lf
 *.ps1 text eol=crlf
+*.R text eol=crlf
+Cargo.lock text eol=lf
+
+# Independent-reference inputs were originally qualified from canonical LF.
+validation/Resolve-Rscript.ps1 text eol=lf
+validation/monitor_quickpls_network.ps1 text eol=lf
+validation/run_cta_pls_native_acceptance.ps1 text eol=lf
+validation/r_csem_reference.R text eol=lf
+validation/r_csem_threecommonfactors_reference.R text eol=lf
+validation/studentized_supplied_reference.R text eol=lf
+
+# These source files were included byte-for-byte in the current signed-off CTA
+# package attestation. Preserve their materialized Windows bytes until that
+# package evidence is regenerated against a canonical-LF source release.
+src/components/ReadinessPanel.tsx text eol=crlf
+src/domain/modelLayout.ts text eol=crlf
+src/domain/modelLayout.test.ts text eol=crlf
+
+# Evidence descriptors bind exact artifact bytes. Preserve the checked-in
+# representation instead of letting checkout filters silently rewrite it.
+validation/results/**/*.identity.json text eol=crlf
+validation/results/**/*.recipe.json text eol=crlf
+validation/results/**/*.csv text eol=crlf
+validation/results/**/*.jsonl text eol=crlf
+validation/results/**/cta_pls_reference_report.json text eol=crlf
+validation/results/**/v247_cumulative_native_acceptance_receipt.json text eol=crlf
+validation/results/**/pls_pca_numpy_reference.json text eol=crlf
+validation/results/**/recomputed_studentized_qualification.json text eol=crlf
+validation/results/**/monte_carlo_studentized_qualification.json text eol=crlf
+validation/results/**/studentized_supplied_reference.json text eol=crlf
+validation/results/**/pls_bootstrap_*_reference.json text eol=crlf
+validation/results/**/pls_bootstrap_external_reference.json text eol=crlf
+validation/results/**/structural_path_randomization_v1_*.json text eol=crlf
+validation/results/method_factory/pls_algorithm_v1/work/independent_reference/*.json text eol=crlf
+validation/results/v247_tauri_native_acceptance_structural_path_randomization.json text eol=crlf
 
 *.png binary
 *.jpg binary

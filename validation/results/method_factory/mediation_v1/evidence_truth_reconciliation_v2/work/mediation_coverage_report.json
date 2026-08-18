@@ -1,0 +1,23 @@
+{
+  "checks": {
+    "baseline_indirect_abs": 0.5866198661181502,
+    "construct_reorder_max_delta": 0.0,
+    "independent_reference_max_delta": 6.94999613415348e-14,
+    "permuted_mediator_drop_ratio": 0.0697466198393737,
+    "permuted_mediator_indirect_abs": 0.04091475279236692,
+    "positive_affine_max_delta": 6.317169010117141e-14,
+    "row_reversal_max_delta": 2.220446049250313e-16
+  },
+  "kind": "pls_mediation_metamorphic_v1",
+  "note": "Bounded deterministic simulation and metamorphic screen; not a full Monte Carlo qualification.",
+  "passed": true,
+  "scenarios": [
+    "base_generated_signal",
+    "positive_affine_transform",
+    "row_reversal",
+    "construct_reorder",
+    "permuted_mediator_degradation"
+  ],
+  "schema_version": 1,
+  "tolerance": 1e-10
+}

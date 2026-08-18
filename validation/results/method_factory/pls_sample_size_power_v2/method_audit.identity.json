@@ -1,0 +1,120 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "final_release_audit": {
+      "archive_matches_visible_run": true,
+      "bounded_claim": "Prospective Monte Carlo power and conservative grid selection for exactly two ordinary reflective constructs joined by one predictor-to-outcome path, with 3-10 declared loadings per block, standard-Gaussian data generation, standardized path-weighted PLS-PM, no missingness, and an indexed null-centered two-sided case-bootstrap plus-one path test.",
+      "cancellation_retry_passes": true,
+      "commercial_zero_egress_passed": false,
+      "exact_scoped_receipt_and_clean_shutdown": true,
+      "excluded_scope": [
+        "Retrospective observed power, heuristic sample-size rules, smoothing, interpolation, and extrapolation are excluded.",
+        "Formative, higher-order, interaction, multigroup, nonlinear, mixture, endogeneity, weighted, clustered, ordinal, matrix-only, multi-path, control-variable, alternate-distribution, and missing-data designs are excluded.",
+        "The result is not a guarantee of convergence, measurement validity, external validity, data quality, or adequacy for an unplanned analysis."
+      ],
+      "invalid_setup_fails_closed": true,
+      "method_functional_offline": true,
+      "outer_and_inner_tail_accounting_close": true,
+      "packaged_artifact": {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pls_sample_size_power_v2/packaged_acceptance.identity.json"
+      },
+      "packaged_identity_passes": true,
+      "passed": true,
+      "platform_background_egress_recorded_truthfully": true,
+      "prior_factory_native": true,
+      "release_evidence_contract_passes": true,
+      "selected_run_xlsx_and_reopen": true,
+      "source_build_and_cli_current": true,
+      "three_actual_packaged_viewports": true,
+      "verified_prior_artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/pls_sample_size_power_v2/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/pls_sample_size_power_v2/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/pls_sample_size_power_v2/native_stage.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ]
+    }
+  },
+  "feature_id": "qpls3.pls.sample_size_power",
+  "generated_at_utc": "2026-08-18T14:01:50.748463Z",
+  "method_version": "pls_sample_size_power_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_sample_size_power_v2.manifest.json",
+      "sha256": "e17b2d0ed1a6cbca2a2665c00be01096a33083db30bb7ef3c59aebcad70a5e1e",
+      "size": 16760
+    },
+    {
+      "path": "validation/phase2_release_packaged_common.py",
+      "sha256": "ac2e758e49d380ce66d8b5987b0d76e1752fb4bf6ad5e6e65f16b1e4e5b15775",
+      "size": 70975
+    },
+    {
+      "path": "validation/pls_sample_size_power_v2_factory.py",
+      "sha256": "d9630f4625f6d0ce865d26940570c9db76e7eadb3a4d612bdfd98cdc7556c565",
+      "size": 8085
+    },
+    {
+      "path": "validation/pls_sample_size_power_v2_factory_audit.py",
+      "sha256": "2d8b28023f5661de7090c7e4aed80e6bbdf1c2e155dc8d79cbbadc147eb0fe71",
+      "size": 7926
+    },
+    {
+      "path": "validation/pls_sample_size_power_v2_packaged_acceptance.py",
+      "sha256": "762e50d48c5eeaa7825babd7e4f9785bb2740ea8b4499aa5ea494dc231be9ca6",
+      "size": 34153
+    },
+    {
+      "path": "validation/results/method_factory/pls_sample_size_power_v2/packaged_acceptance.identity.json",
+      "sha256": "3a7d260594543d791a77580f66bf2bd787d78c869f9c2d111abc5e8f7d6d9ba7",
+      "size": 53260
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

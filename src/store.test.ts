@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { methods } from "./data/sample";
 import { useWorkspace } from "./store";
 import type { AnalysisUiSettings, PlsResult } from "./types";
+import { inspectNativeConstructAuthoringV4, inspectNativeCovarianceAuthoringV4 } from "./domain/semModelV4Authoring";
 
 const minimalResult: PlsResult = {
   method_version: "pls_pm_v1",
@@ -32,13 +33,21 @@ describe("model editor state", () => {
     expect(methods.find((method) => method.id === "moderated_mediation")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "cta_pls")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "predict")?.status).toBe("validated");
-    expect(methods.find((method) => method.id === "mga")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "mga")).toMatchObject({
+      name: "MICOM v3.1",
+      status: "experimental",
+    });
     expect(methods.find((method) => method.id === "ipma")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "regression")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "nca")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "cbsem")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "gsca")?.status).toBe("validated");
-    expect(methods.find((method) => method.id === "permutation")?.status).toBe("experimental");
+    expect(methods.find((method) => method.id === "permutation")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "pls_sample_size_power")).toMatchObject({
+      family: "PLS-SEM",
+      name: "Prospective sample-size and power analysis",
+      status: "validated",
+    });
   });
 
   it("supports undo and redo for construct creation", () => {
@@ -461,6 +470,16 @@ describe("model editor state", () => {
     expect(useWorkspace.getState().analysisSettings.groupMethods).toBe("micom");
   });
 
+  it("applies the MICOM preset without restoring the archived combined MGA workflow", () => {
+    useWorkspace.getState().applyMethodPreset("micom_mga");
+    expect(useWorkspace.getState().analysisSettings).toMatchObject({
+      method: "mga",
+      groupMethods: "micom",
+      groupPermutationSamples: 5_000,
+      micomConfiguralConfirmed: false,
+    });
+  });
+
   it("normalizes studentized bootstrap to qualified odd inner counts", () => {
     useWorkspace.getState().setAnalysisSettings({ studentizedInnerSamples: 100 });
     expect(useWorkspace.getState().analysisSettings.studentizedInnerSamples).toBe(101);
@@ -489,6 +508,35 @@ describe("model editor state", () => {
     });
     expect(useWorkspace.getState().analysisSettings.method).toBe("pls_pm");
     expect(useWorkspace.getState().analysisSettings.caseWeightColumn).toBeNull();
+  });
+
+  it("preserves every bounded prospective power setting through updates and project hydration", () => {
+    const powerSettings: AnalysisUiSettings = {
+      ...useWorkspace.getState().analysisSettings,
+      method: "pls_sample_size_power",
+      plsPowerScenarioIdentity: "planned_study.v1",
+      plsPowerPredictorConstruct: "competence",
+      plsPowerOutcomeConstruct: "satisfaction",
+      plsPowerPredictorLoadings: "0.70,0.75,0.80",
+      plsPowerOutcomeLoadings: "0.72,0.77,0.82",
+      plsPowerPopulationPath: -0.35,
+      plsPowerSampleSizeGrid: "40,80,120",
+      plsPowerAlpha: 0.01,
+      plsPowerTargetPower: 0.90,
+      plsPowerMonteCarloReplicates: 300,
+      plsPowerBootstrapReplicates: 301,
+    };
+    useWorkspace.getState().setAnalysisSettings(powerSettings);
+    expect(useWorkspace.getState().analysisSettings).toMatchObject(powerSettings);
+
+    const current = useWorkspace.getState();
+    current.loadProject({
+      nodes: current.nodes,
+      edges: current.edges,
+      dataset: current.dataset,
+      analysisSettings: powerSettings,
+    });
+    expect(useWorkspace.getState().analysisSettings).toMatchObject(powerSettings);
   });
 
   it("keeps diagram estimates explicit and clears them on project load", () => {
@@ -521,17 +569,60 @@ describe("model editor state", () => {
     expect(useWorkspace.getState().diagramOverlaySettings.selectedRunId).toBeNull();
   });
 
-  it("stores covariance display arcs separately from structural path validation", () => {
+  it("creates a scientific covariance explicitly, prevents duplicates, and keeps conversion undoable", () => {
     const before = useWorkspace.getState().edges.length;
     useWorkspace.getState().addCovariance("competence", "likeability");
     let state = useWorkspace.getState();
     expect(state.edges).toHaveLength(before + 1);
-    expect(state.edges.at(-1)?.data).toEqual({ role: "covariance" });
+    const covarianceId = state.edges.at(-1)!.id;
+    expect(inspectNativeCovarianceAuthoringV4(state.edges.at(-1)!)).toMatchObject({
+      state: "scientific",
+      specification: { origin: "new_authoring", left: null, right: null },
+    });
     useWorkspace.getState().addCovariance("likeability", "competence");
     expect(useWorkspace.getState().edges).toHaveLength(before + 1);
+
+    useWorkspace.getState().convertCovarianceToPresentationV4(covarianceId);
+    expect(inspectNativeCovarianceAuthoringV4(useWorkspace.getState().edges.find((edge) => edge.id === covarianceId)!)).toMatchObject({ state: "presentation_only" });
+    useWorkspace.getState().undo();
+    expect(inspectNativeCovarianceAuthoringV4(useWorkspace.getState().edges.find((edge) => edge.id === covarianceId)!)).toMatchObject({ state: "scientific" });
     useWorkspace.getState().undo();
     state = useWorkspace.getState();
     expect(state.edges).toHaveLength(before);
+  });
+
+  it("preserves covariance authoring intent through project reopen without upgrading legacy arcs", () => {
+    useWorkspace.getState().addCovariance("competence", "likeability");
+    const current = useWorkspace.getState();
+    const scientific = current.edges.find((edge) => edge.data?.role === "covariance")!;
+    const legacy = { id: "legacy-covariance", source: "quality", target: "satisfaction", label: "Old arc", data: { role: "covariance" as const } };
+    const reopenedEdges = JSON.parse(JSON.stringify([...current.edges, legacy]));
+    current.loadProject({ nodes: current.nodes, edges: reopenedEdges, dataset: current.dataset });
+
+    const reopened = useWorkspace.getState();
+    expect(inspectNativeCovarianceAuthoringV4(reopened.edges.find((edge) => edge.id === scientific.id)!)).toMatchObject({ state: "scientific", persisted: true });
+    expect(inspectNativeCovarianceAuthoringV4(reopened.edges.find((edge) => edge.id === legacy.id)!)).toMatchObject({ state: "legacy_unspecified", persisted: false });
+    reopened.convertCovarianceToScientificV4(legacy.id);
+    expect(inspectNativeCovarianceAuthoringV4(useWorkspace.getState().edges.find((edge) => edge.id === legacy.id)!)).toMatchObject({
+      state: "scientific",
+      specification: { origin: "explicit_conversion" },
+    });
+    useWorkspace.getState().undo();
+    expect(inspectNativeCovarianceAuthoringV4(useWorkspace.getState().edges.find((edge) => edge.id === legacy.id)!)).toMatchObject({ state: "legacy_unspecified", persisted: false });
+  });
+
+  it("stores an explicit construct representation without deriving it from measurement mode", () => {
+    const before = useWorkspace.getState().nodes.find((node) => node.id === "competence")!;
+    expect(inspectNativeConstructAuthoringV4(before)).toMatchObject({ state: "legacy_estimand_unspecified", persisted: false });
+    useWorkspace.getState().setConstructEstimandV4("competence", { kind: "common_factor", marker_indicator: "COMP1" });
+    const authored = useWorkspace.getState().nodes.find((node) => node.id === "competence")!;
+    expect(authored.data.mode).toBe(before.data.mode);
+    expect(inspectNativeConstructAuthoringV4(authored)).toMatchObject({
+      state: "common_factor",
+      specification: { marker_indicator: "COMP1" },
+    });
+    useWorkspace.getState().undo();
+    expect(inspectNativeConstructAuthoringV4(useWorkspace.getState().nodes.find((node) => node.id === "competence")!)).toMatchObject({ state: "legacy_estimand_unspecified", persisted: false });
   });
 
   it("loads legacy projects with SEM diagram defaults", () => {

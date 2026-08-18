@@ -30,6 +30,7 @@ import {
   nativeNcaCeilingLabel,
   nativeNcaPlot,
   nativeNcaResultProjection,
+  nativePlsSampleSizePowerResultProjection,
   nativeProcessResultProjection,
   type NativeIpmaPlot,
   type NativeModerationPlot,
@@ -120,6 +121,7 @@ export interface NativeResultsSurfaceProps {
   selectedTable?: ResultTable;
   setSelectedTableId: (id: string) => void;
   propertiesOpen: boolean;
+  openMethodDetails?: () => void;
 }
 
 export default function NativeResultsSurface({
@@ -132,6 +134,7 @@ export default function NativeResultsSurface({
   selectedTable,
   setSelectedTableId,
   propertiesOpen,
+  openMethodDetails,
 }: NativeResultsSurfaceProps) {
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(() => new Set());
   const [focusedTreeItemId, setFocusedTreeItemId] = useState(
@@ -150,6 +153,7 @@ export default function NativeResultsSurface({
   const ncaResult = selectedRun ? nativeNcaResultProjection(selectedRun) : null;
   const cbsemResult = selectedRun ? nativeCbsemResultProjection(selectedRun) : null;
   const gscaResult = selectedRun ? nativeGscaResultProjection(selectedRun) : null;
+  const powerResult = selectedRun ? nativePlsSampleSizePowerResultProjection(selectedRun) : null;
   const predictionV2 = selectedRun?.result?.predict?.method_version === CURRENT_PLS_PREDICT_METHOD_VERSION
     && selectedRun.result.predict.repeated_kfold?.method_version === CURRENT_PLS_PREDICT_REPEATED_METHOD_VERSION
     && /^sha256:[0-9a-f]{64}$/.test(selectedRun.result.predict.repeated_kfold.assignment_digest ?? "")
@@ -205,12 +209,22 @@ export default function NativeResultsSurface({
       </div> : null}
     </aside>
     <section className="nd-document nd-results-document">
-      <div className="nd-document-tab"><BarChart3 size={14} /><span>{selectedRun?.name ?? "Results"}</span></div>
+      <div className="nd-document-tab"><BarChart3 size={14} /><span>{selectedRun?.name ?? "Results"}</span>{selectedRun && openMethodDetails ? <button type="button" className="nd-method-details-link" onClick={openMethodDetails}>Method Details</button> : null}</div>
       {!selectedRun ? <div className="nd-empty"><BarChart3 size={28} /><strong>No completed calculation</strong><span>Choose a method from Calculate to create results.</span></div> : selectedItem?.kind === "diagram" ? <ResultDiagramView run={selectedRun} /> : selectedTable ? <ResultTableView table={selectedTable} run={selectedRun} /> : <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No available output</strong><span>The selected calculation did not produce this result.</span></div>}
     </section>
     {propertiesOpen ? <aside className="nd-properties" aria-label="Result properties">
       <PaneTitle title="Run information" />
-      {processResult ? <dl className="nd-property-list">
+      {powerResult ? <dl className="nd-property-list">
+        <div><dt>Method</dt><dd>Prospective PLS-SEM sample size and power</dd></div>
+        <div><dt>Status</dt><dd>Completed</dd></div>
+        <div><dt>Target path</dt><dd>{powerResult.recipe.design.predictor_construct} -&gt; {powerResult.recipe.design.outcome_construct}</dd></div>
+        <div><dt>Population path</dt><dd>{powerResult.recipe.design.population_path.toFixed(4)}</dd></div>
+        <div><dt>Grid points</dt><dd>{powerResult.recipe.sample_size_grid.join(", ")}</dd></div>
+        <div><dt>Monte Carlo datasets</dt><dd>{powerResult.result.workload.planned_datasets.toLocaleString()}</dd></div>
+        <div><dt>Planned PLS fits</dt><dd>{powerResult.result.workload.estimated_pls_fits.toLocaleString()}</dd></div>
+        <div><dt>Decision</dt><dd>{powerResult.presentation.decisionLabel}</dd></div>
+        <div><dt>Completed</dt><dd>{new Date(selectedRun!.createdAt).toLocaleString()}</dd></div>
+      </dl> : processResult ? <dl className="nd-property-list">
         <div><dt>Method</dt><dd>Graph-defined Path Analysis / PROCESS</dd></div>
         <div><dt>Status</dt><dd>Completed</dd></div>
         <div><dt>Outcome</dt><dd>{processResult.outcome}</dd></div>

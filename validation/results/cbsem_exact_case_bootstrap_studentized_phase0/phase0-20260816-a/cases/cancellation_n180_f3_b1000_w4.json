@@ -1,0 +1,53 @@
+{
+  "aggregates": null,
+  "cancellation": {
+    "terminal_latency_seconds": 0.0002978,
+    "typed_status": "cancelled_as_requested"
+  },
+  "cap_decision": "not_permitted_from_phase0",
+  "case": {
+    "cancel_after": 10,
+    "case_id": "cancellation_n180_f3_b1000_w4",
+    "depends_on": [
+      "availability_floor_n180_f3_b1000_w4"
+    ],
+    "factors": 3,
+    "mode": "cancellation",
+    "order": 9,
+    "replicates": 1000,
+    "roles": [
+      "cancellation"
+    ],
+    "rows": 180,
+    "survivor_policy": "single_typed_cancellation_probe_only",
+    "workers": 4
+  },
+  "dimensions": {
+    "d_note": "Equality-constrained free parameter rows may differ from optimizer dimensions, so D is not inferred from P.",
+    "d_optimizer_dimensions": null,
+    "d_status": "unavailable_not_exposed_by_public_s1_s2_api",
+    "n_complete_cases": 180,
+    "p_free_parameter_rows": 18,
+    "v_observed_variables": 9
+  },
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase0_case_v1",
+  "manifest_sha256": "f64e0afe552a907430cbd32e7d4b1586bae8a9316e1586ed005adc536d70e49e",
+  "measured_runs": [],
+  "probe": {
+    "elapsed_seconds": 0.15391930006444454,
+    "exit_code": 0,
+    "index": 0,
+    "orphan_processes": 0,
+    "peak_working_set_bytes": 10428416,
+    "phase": "measured",
+    "progress_values": [],
+    "result_bytes": 1196,
+    "scientific_result_sha256": null
+  },
+  "representative_metrics": null,
+  "schema_version": 1,
+  "scientific_result_sha256": null,
+  "status": "cancellation_observed",
+  "stop_reasons": [],
+  "warmup_runs": []
+}

@@ -1,0 +1,996 @@
+{
+  "comparison_contract": {
+    "outputs": [
+      {
+        "absolute_tolerance": 1e-10,
+        "elementwise_tolerance": 1e-10,
+        "norm": "maximum",
+        "output_id": "htmt_original_matrix",
+        "rationale": "Original signed HTMT requires exact key membership plus global and elementwise numerical agreement.",
+        "relative_tolerance": 1e-08,
+        "rule": "matrix_norm"
+      },
+      {
+        "absolute_tolerance": 1e-10,
+        "elementwise_tolerance": 1e-10,
+        "norm": "maximum",
+        "output_id": "htmt_plus_matrix",
+        "rationale": "HTMT+ requires exact key membership and preserves legitimate values above one.",
+        "relative_tolerance": 1e-08,
+        "rule": "matrix_norm"
+      },
+      {
+        "absolute_tolerance": 1e-10,
+        "output_id": "htmt_original_bc_lower",
+        "rationale": "Bias-corrected Type-7 endpoint must agree with independent implementations after identical usable-index selection.",
+        "relative_tolerance": 1e-08,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-10,
+        "output_id": "htmt_original_bc_upper",
+        "rationale": "Bias-corrected Type-7 endpoint must agree with independent implementations after identical usable-index selection.",
+        "relative_tolerance": 1e-08,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-10,
+        "output_id": "htmt_plus_bc_lower",
+        "rationale": "Bias-corrected Type-7 endpoint must agree with independent implementations after identical usable-index selection.",
+        "relative_tolerance": 1e-08,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-10,
+        "output_id": "htmt_plus_bc_upper",
+        "rationale": "Bias-corrected Type-7 endpoint must agree with independent implementations after identical usable-index selection.",
+        "relative_tolerance": 1e-08,
+        "rule": "abs_relative"
+      },
+      {
+        "output_id": "htmt_original_decision_0_90",
+        "rationale": "The decision is exactly upper less than .90; equality must fail.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "htmt_plus_decision_0_90",
+        "rationale": "The decision is exactly upper less than .90; equality must fail.",
+        "rule": "exact"
+      }
+    ]
+  },
+  "evidence_contract": {
+    "receipt_contract": {
+      "hardware_fingerprint_required": true,
+      "hash_algorithm": "sha256",
+      "identity_fields": [
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "build_fingerprint"
+      ],
+      "scenario_set_hash_required": true,
+      "source_descriptors_required": true
+    },
+    "receipts": [],
+    "required_roles": [
+      "method_contract",
+      "kernel_execution",
+      "oracle_independence",
+      "generative_recovery",
+      "adversarial_boundaries",
+      "archive_persistence",
+      "cross_format_export",
+      "frontend_contract",
+      "packaged_windows_e2e",
+      "performance_scale"
+    ]
+  },
+  "identity": {
+    "capability_cell": {
+      "capability_id": "smartpls.htmt",
+      "capability_version": "ringle_et_al_htmt_plus_v1",
+      "cell_id": "qpls3.assessment.htmt",
+      "registry_schema_version": 2
+    },
+    "execution_kind": "hybrid",
+    "method_version": "ringle_et_al_htmt_plus_v1",
+    "potentially_long_running": true,
+    "qualification_id": "qpls3.assessment.htmt.qualification_v2",
+    "spec_frozen_at_utc": "2026-08-14T16:00:00Z"
+  },
+  "migration": {
+    "source_kind": "qualification_v1_manifest",
+    "source_manifest_path": "validation/methods/htmt_plus_v1.manifest.json",
+    "source_schema_version": 1,
+    "status": "compatibility_only",
+    "unresolved_items": [
+      "product.configurable_one_and_two_sided_htmt_inference_missing",
+      "product.percentile_studentized_and_true_bca_htmt_inference_missing",
+      "product.plsc_consistent_bootstrap_htmt_inference_missing",
+      "model.sem_model_v4_factor_composite_semantics_not_integrated",
+      "data.missing_value_policies_beyond_listwise_not_integrated",
+      "export.svg_pdf_png_semantic_readback_not_integrated",
+      "evidence.current_source_bound_candidate_build_missing",
+      "evidence.full_monte_carlo_qualification_not_run",
+      "evidence.maximum_axis_compound_stress_and_soak_not_run",
+      "evidence.packaged_windows_accessibility_matrix_not_run",
+      "evidence.independent_scientific_review_not_recorded"
+    ]
+  },
+  "operational_contract": {
+    "archive": {
+      "corruption_cases": [
+        "feature_identity",
+        "method_version",
+        "dataset_fingerprint",
+        "checksum",
+        "duplicate_entry",
+        "malformed_payload",
+        "legacy_reinterpretation",
+        "interrupted_save"
+      ],
+      "current_schema_version": 5,
+      "future_schema_policy": "verified_read_only",
+      "readable_schema_versions": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "writable_schema_versions": [
+        5
+      ]
+    },
+    "cancellation": {
+      "archive_unchanged": true,
+      "maximum_latency_seconds": 1.0,
+      "no_partial_committed_result": true,
+      "no_partial_visible_result": true,
+      "phases": [
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "validate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "estimate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "resample"
+        },
+        {
+          "applicability": "not_applicable",
+          "not_applicable_reason": "HTMT does not execute a competing-model comparison phase.",
+          "phase": "compare"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "export"
+        }
+      ],
+      "required_for_potentially_long_operations": true,
+      "same_settings_retry": true
+    },
+    "export": {
+      "canonical_projection_id": "canonical_result_document_v2_htmt_projection",
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf",
+        "png"
+      ],
+      "provenance_required": true,
+      "same_run_required": true,
+      "semantic_readback_formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf"
+      ],
+      "validation_witness_excluded": true
+    },
+    "performance": {
+      "baseline_policy": {
+        "maximum_memory_regression_percent": 20.0,
+        "maximum_runtime_regression_percent": 20.0,
+        "measured_runs": 5,
+        "statistic": "median",
+        "warmup_runs": 1
+      },
+      "budgets": [
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 15.0,
+          "maximum_peak_working_set_bytes": 536870912,
+          "maximum_result_bytes": 16777216,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 900.0,
+          "maximum_peak_working_set_bytes": 8589934592,
+          "maximum_result_bytes": 536870912,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 3600.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 4294967296,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "standard",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 12884901888,
+          "maximum_result_bytes": 4294967296,
+          "profile_id": "compound_stress"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 15.0,
+          "maximum_peak_working_set_bytes": 1073741824,
+          "maximum_result_bytes": 16777216,
+          "profile_id": "micro_exact"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 900.0,
+          "maximum_peak_working_set_bytes": 17179869184,
+          "maximum_result_bytes": 536870912,
+          "profile_id": "applied"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 3600.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 2147483648,
+          "profile_id": "large"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 4294967296,
+          "profile_id": "maximum_axis"
+        },
+        {
+          "hardware_class_id": "workstation",
+          "maximum_cancellation_latency_seconds": 1.0,
+          "maximum_elapsed_seconds": 7200.0,
+          "maximum_peak_working_set_bytes": 25769803776,
+          "maximum_result_bytes": 4294967296,
+          "profile_id": "compound_stress"
+        }
+      ],
+      "hardware_classes": [
+        {
+          "architecture": "x86_64",
+          "id": "standard",
+          "minimum_logical_cores": 6,
+          "minimum_memory_gib": 16,
+          "notes": "Product-finalization standard reference class.",
+          "os_family": "windows"
+        },
+        {
+          "architecture": "x86_64",
+          "id": "workstation",
+          "minimum_logical_cores": 12,
+          "minimum_memory_gib": 32,
+          "notes": "Product-finalization workstation reference class.",
+          "os_family": "windows"
+        }
+      ]
+    },
+    "windows": {
+      "accessible_tables_required": true,
+      "display_scale_percent": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "keyboard_only_required": true,
+      "offline_required": true,
+      "package_kinds": [
+        "installed",
+        "portable"
+      ],
+      "real_pointer_required": true,
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ]
+    }
+  },
+  "scenario_contract": {
+    "axes": [
+      {
+        "id": "model_topology",
+        "label": "PLS structural topology",
+        "values": [
+          {
+            "description": "Two reflective constructs with one directed structural path.",
+            "id": "two_construct_pair"
+          },
+          {
+            "description": "At least six constructs in a branching and mediating recursive model.",
+            "id": "multi_construct_recursive"
+          }
+        ]
+      },
+      {
+        "id": "measurement_model",
+        "label": "Measurement blocks",
+        "values": [
+          {
+            "description": "Every applicable block has the supported two-indicator minimum.",
+            "id": "reflective_two_item"
+          },
+          {
+            "description": "Reflective blocks contain two through eight indicators; negative-contract formative blocks are included separately.",
+            "id": "reflective_mixed_block_sizes"
+          }
+        ]
+      },
+      {
+        "id": "data_distribution",
+        "label": "Population distribution",
+        "values": [
+          {
+            "description": "Gaussian factors with positive loadings and known discriminant separation.",
+            "id": "gaussian_positive_loadings"
+          },
+          {
+            "description": "Sign-reversed indicators under skewed and heavy-tailed finite populations.",
+            "id": "mixed_sign_skewed_heavy_tail"
+          }
+        ]
+      },
+      {
+        "id": "missingness",
+        "label": "Missing-data condition",
+        "values": [
+          {
+            "description": "No missing observations.",
+            "id": "complete"
+          },
+          {
+            "description": "Five percent MCAR cells evaluated under the current model-wide listwise policy.",
+            "id": "listwise_mcar_five_percent"
+          }
+        ]
+      },
+      {
+        "id": "input_type",
+        "label": "Input representation",
+        "values": [
+          {
+            "description": "Supported row-level numeric observations.",
+            "id": "raw_rows"
+          },
+          {
+            "description": "Covariance or correlation input must produce an explicit unsupported-input diagnostic in the current bounded implementation.",
+            "id": "summary_matrix_rejection"
+          }
+        ]
+      },
+      {
+        "id": "workload",
+        "label": "Calculation workload",
+        "values": [
+          {
+            "description": "Original HTMT and HTMT+ point matrices only.",
+            "id": "point_assessment"
+          },
+          {
+            "description": "Full PLS re-estimation and HTMT recomputation for every indexed resample.",
+            "id": "complete_bootstrap_inference"
+          }
+        ]
+      },
+      {
+        "id": "workers",
+        "label": "Worker scheduling",
+        "values": [
+          {
+            "description": "Serial reference execution.",
+            "id": "one_worker"
+          },
+          {
+            "description": "Parallel execution on all workers allowed by the reference hardware class.",
+            "id": "reference_parallel_workers"
+          }
+        ]
+      }
+    ],
+    "complexity_profiles": [
+      {
+        "applicability": "required",
+        "description": "Hand-checkable two-construct fixture including tie and threshold cases.",
+        "id": "micro_exact",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 2,
+          "groups": 1,
+          "indicators": 4,
+          "resamples": 199,
+          "rows": 40
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Typical applied reflective PLS model with final-report bootstrap size.",
+        "id": "applied",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 6,
+          "groups": 1,
+          "indicators": 24,
+          "resamples": 5000,
+          "rows": 500
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Large research model used for repeatability and result-size checks.",
+        "id": "large",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 20,
+          "groups": 1,
+          "indicators": 80,
+          "resamples": 5000,
+          "rows": 5000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Separate maximum-row, indicator, construct, and resample axes.",
+        "id": "maximum_axis",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 100,
+          "groups": 1,
+          "indicators": 300,
+          "resamples": 10000,
+          "rows": 100000
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Combined high-dimensional complete bootstrap workload.",
+        "id": "compound_stress",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 50,
+          "groups": 1,
+          "indicators": 150,
+          "resamples": 10000,
+          "rows": 50000
+        }
+      }
+    ],
+    "mandatory_combinations": [
+      {
+        "coverage": "pairwise",
+        "id": "applied_pairwise_matrix",
+        "profile_id": "applied",
+        "purpose": "Cover every pair of values across all mandatory scenario axes.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings",
+            "mixed_sign_skewed_heavy_tail"
+          ],
+          "input_type": [
+            "raw_rows",
+            "summary_matrix_rejection"
+          ],
+          "measurement_model": [
+            "reflective_two_item",
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete",
+            "listwise_mcar_five_percent"
+          ],
+          "model_topology": [
+            "two_construct_pair",
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "one_worker",
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "point_assessment",
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "micro_exact_thresholds",
+        "profile_id": "micro_exact",
+        "purpose": "Check hand calculations, ties, exact .90 threshold direction, and typed applicability.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_two_item"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "two_construct_pair"
+          ],
+          "workers": [
+            "one_worker"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "large_worker_repeatability",
+        "profile_id": "large",
+        "purpose": "Require exact replicate ledgers and analytical payloads under serial and parallel scheduling.",
+        "selections": {
+          "data_distribution": [
+            "mixed_sign_skewed_heavy_tail"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "one_worker",
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_rows",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum rows axis while other dimensions are controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_indicators",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum indicators axis while other dimensions are controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": [
+          "indicators"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_constructs",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum constructs axis while other dimensions are controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": [
+          "constructs"
+        ]
+      },
+      {
+        "coverage": "targeted",
+        "id": "maximum_resamples",
+        "profile_id": "maximum_axis",
+        "purpose": "Exercise the declared maximum resamples axis while other dimensions are controlled.",
+        "selections": {
+          "data_distribution": [
+            "gaussian_positive_loadings"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "complete"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": [
+          "resamples"
+        ]
+      },
+      {
+        "coverage": "compound",
+        "id": "compound_resampling_memory_cancellation",
+        "profile_id": "compound_stress",
+        "purpose": "Combine high row, indicator, construct, and resample counts with cancellation, archive, and export checks.",
+        "selections": {
+          "data_distribution": [
+            "mixed_sign_skewed_heavy_tail"
+          ],
+          "input_type": [
+            "raw_rows"
+          ],
+          "measurement_model": [
+            "reflective_mixed_block_sizes"
+          ],
+          "missingness": [
+            "listwise_mcar_five_percent"
+          ],
+          "model_topology": [
+            "multi_construct_recursive"
+          ],
+          "workers": [
+            "reference_parallel_workers"
+          ],
+          "workload": [
+            "complete_bootstrap_inference"
+          ]
+        },
+        "stressed_dimensions": [
+          "rows",
+          "indicators",
+          "constructs",
+          "resamples"
+        ]
+      }
+    ],
+    "monte_carlo_policy": {
+      "confidence_level": 0.95,
+      "failed_fits_in_denominator": true,
+      "maximum_half_width": 0.01
+    }
+  },
+  "schema_version": 2,
+  "scientific_contract": {
+    "data_predicates": [
+      {
+        "diagnostic_code": "htmt.raw_rows_required",
+        "expression": "Current HTMT execution receives row-level numeric observations; covariance or correlation matrices are rejected before calculation.",
+        "id": "raw_numeric_rows_required",
+        "on_violation": "not_applicable"
+      },
+      {
+        "diagnostic_code": "htmt.insufficient_or_degenerate_data",
+        "expression": "At least three model-wide complete rows remain, every participating indicator has nonzero variance, and every computed correlation is finite within tolerance.",
+        "id": "finite_complete_case_support",
+        "on_violation": "error"
+      }
+    ],
+    "estimands": [
+      {
+        "definition": "Arithmetic mean of signed heterotrait correlations divided by the geometric mean of the two positive signed monotrait means.",
+        "id": "original_htmt_point",
+        "label": "Original signed HTMT",
+        "output_ids": [
+          "htmt_original_matrix"
+        ],
+        "unit": "correlation ratio"
+      },
+      {
+        "definition": "Arithmetic mean of absolute heterotrait correlations divided by the geometric mean of the two absolute monotrait means; values are not clamped at one.",
+        "id": "htmt_plus_point",
+        "label": "HTMT+",
+        "output_ids": [
+          "htmt_plus_matrix"
+        ],
+        "unit": "absolute-correlation ratio"
+      },
+      {
+        "definition": "Bias-corrected Type-7 interval endpoints from fixed indexed case resamples and the one-tailed alpha .05 decision that the 90 percent equivalent upper endpoint is strictly below .90.",
+        "id": "complete_bootstrap_inference",
+        "label": "Complete-bootstrap HTMT inference",
+        "output_ids": [
+          "htmt_original_bc_lower",
+          "htmt_original_bc_upper",
+          "htmt_plus_bc_lower",
+          "htmt_plus_bc_upper",
+          "htmt_original_decision_0_90",
+          "htmt_plus_decision_0_90"
+        ],
+        "unit": "correlation ratio and Boolean decision"
+      }
+    ],
+    "model_predicates": [
+      {
+        "diagnostic_code": "htmt.reflective_pair_required",
+        "expression": "Each inferred pair contains two distinct reflective constructs with at least two indicators each; formative or single-indicator participation is typed not applicable.",
+        "id": "supported_pls_measurement_pairs",
+        "on_violation": "not_applicable"
+      },
+      {
+        "diagnostic_code": "htmt.supported_pls_model_required",
+        "expression": "The containing model is an otherwise supported recursive PLS-SEM model and every indicator binding is unique and resolvable.",
+        "id": "supported_pls_graph",
+        "on_violation": "error"
+      }
+    ],
+    "oracle_exception": null,
+    "oracles": [
+      {
+        "citation": "Henseler, Ringle, and Sarstedt (2015), A New Criterion for Assessing Discriminant Validity in Variance-Based SEM, DOI 10.1007/s11747-014-0403-8.",
+        "covered_estimand_ids": [
+          "original_htmt_point",
+          "complete_bootstrap_inference"
+        ],
+        "id": "henseler_2015",
+        "implementation": null,
+        "independence_group": "primary_henseler_2015",
+        "kind": "primary_literature",
+        "locator": "docs/methods/PLS_HTMT_V1.md",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Ringle et al. (2023), A Perspective on Using Partial Least Squares Structural Equation Modelling in Data Articles, DOI 10.1016/j.dib.2023.109074.",
+        "covered_estimand_ids": [
+          "htmt_plus_point",
+          "complete_bootstrap_inference"
+        ],
+        "id": "ringle_2023",
+        "implementation": null,
+        "independence_group": "primary_ringle_2023",
+        "kind": "primary_literature",
+        "locator": "validation/results/htmt_published_ringle_2023.json",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Transparent Python standard-library HTMT and BC Type-7 reference maintained outside the Rust product engine.",
+        "covered_estimand_ids": [
+          "original_htmt_point",
+          "htmt_plus_point",
+          "complete_bootstrap_inference"
+        ],
+        "id": "transparent_standard_library_reference",
+        "implementation": {
+          "maintainer": "QuickPLS validation authors",
+          "name": "QuickPLS transparent Python HTMT reference",
+          "version": "1"
+        },
+        "independence_group": "transparent_python_standard_library",
+        "kind": "independent_implementation",
+        "locator": "validation/htmt_reference.py",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "Independent NumPy/SciPy vectorized HTMT and bias-corrected quantile implementation used only for development validation.",
+        "covered_estimand_ids": [
+          "original_htmt_point",
+          "htmt_plus_point",
+          "complete_bootstrap_inference"
+        ],
+        "id": "numpy_scipy_reference",
+        "implementation": {
+          "maintainer": "NumPy and SciPy maintainers",
+          "name": "NumPy and SciPy validation implementation",
+          "version": "numpy-1.26.4+scipy-1.15.2"
+        },
+        "independence_group": "numpy_scipy_implementation",
+        "kind": "independent_implementation",
+        "locator": "validation/htmt_scipy_reference.py",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "cSEM 0.6.1 calculateHTMT with absolute false, validation-only executable comparison.",
+        "covered_estimand_ids": [
+          "original_htmt_point"
+        ],
+        "id": "csem_original_htmt",
+        "implementation": {
+          "maintainer": "Independent cSEM maintainers",
+          "name": "cSEM",
+          "version": "0.6.1"
+        },
+        "independence_group": "csem_0_6_1",
+        "kind": "independent_implementation",
+        "locator": "validation/results/htmt_csem_comparison.json",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "seminr 2.5.0 mean-absolute-correlation HTMT comparison, validation-only.",
+        "covered_estimand_ids": [
+          "htmt_plus_point"
+        ],
+        "id": "seminr_htmt_plus",
+        "implementation": {
+          "maintainer": "Independent seminr maintainers",
+          "name": "seminr",
+          "version": "2.5.0"
+        },
+        "independence_group": "seminr_2_5_0",
+        "kind": "independent_implementation",
+        "locator": "validation/results/htmt_seminr_comparison.json",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "preprocessing": [
+      {
+        "applies_to": [
+          "raw_numeric_rows"
+        ],
+        "id": "model_wide_complete_cases",
+        "operation": "Retain the same model-wide finite complete cases used by the supported PLS estimator.",
+        "order": 0,
+        "parameters": {
+          "missing_to_zero": false,
+          "policy": "listwise_deletion"
+        }
+      },
+      {
+        "applies_to": [
+          "retained_numeric_rows"
+        ],
+        "id": "pearson_sample_correlations",
+        "operation": "Calculate Pearson correlations in deterministic recipe indicator order using sample-centered cross-products.",
+        "order": 1,
+        "parameters": {
+          "correlation": "pearson",
+          "nonfinite": "typed_error",
+          "order": "recipe_indicator_order"
+        }
+      },
+      {
+        "applies_to": [
+          "complete_bootstrap_inference"
+        ],
+        "id": "indexed_case_resampling",
+        "operation": "For complete bootstrap inference, recompute both HTMT definitions on every preplanned indexed case resample without retries or replacement draws.",
+        "order": 2,
+        "parameters": {
+          "minimum_usable_fraction": 0.9,
+          "replicate_index_digest": "sha256_u32_le_v1",
+          "retry_policy": "no_retry_fixed_preplanned_primary_draws_v1"
+        }
+      },
+      {
+        "applies_to": [
+          "usable_pairwise_bootstrap_values"
+        ],
+        "id": "bias_corrected_type7_summary",
+        "operation": "Apply midrank bias correction and Type-7 quantiles for the fixed one-tailed upper alpha .05 workflow represented by equivalent 90 percent two-sided endpoints.",
+        "order": 3,
+        "parameters": {
+          "alpha": 0.05,
+          "bca": false,
+          "critical_value": 0.9,
+          "decision": "upper_strictly_below_critical_value",
+          "interval": "bias_corrected_percentile_type7_v1",
+          "test_type": "one_tailed_upper"
+        }
+      }
+    ]
+  }
+}

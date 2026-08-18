@@ -15,6 +15,7 @@
     "single_class_outcome_rejected": true,
     "rank_deficiency_rejected": true,
     "complete_separation_rejected": true,
+    "quasi_separation_rejected": true,
     "nondefault_worker_count_rejected": true
   },
   "scope": {
@@ -64,6 +65,12 @@
       "stderr_tail": "Error: PLS estimation failed: rank-deficient regression for construct: outcome\n"
     },
     "separation": {
+      "passed": true,
+      "exit_code": 1,
+      "expected_text": "separation",
+      "stderr_tail": "Error: PLS estimation failed: numerical failure: logistic regression produced extreme fitted probabilities; possible separation or unstable scaling\n"
+    },
+    "quasi_separation": {
       "passed": true,
       "exit_code": 1,
       "expected_text": "separation",

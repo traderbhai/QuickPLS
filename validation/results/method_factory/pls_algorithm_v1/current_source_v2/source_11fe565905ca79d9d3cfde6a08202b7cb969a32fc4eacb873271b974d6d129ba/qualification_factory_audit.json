@@ -1,0 +1,727 @@
+{
+  "attached_receipt_count": 0,
+  "build_fingerprint": "validation-source-contract:11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba",
+  "candidate_receipt_descriptors": [
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/current_source_v2/source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba/candidate_receipts/method_contract.qualification.json",
+      "sha256": "60c139b8e7be5b357b6a185a375ad360a0a3ae75663a995b124e2e754b3a53cc",
+      "size_bytes": 12381
+    }
+  ],
+  "capability_id": "smartpls.pls_algorithm",
+  "cell_id": "qpls3.pls.algorithm",
+  "coverage_blockers": [
+    "coverage.sum_score_and_predefined_weight_parity_semantics_not_closed_beyond_bounded_unit_variance_execution",
+    "coverage.standard_mean_centered_unstandardized_result_breadth_not_qualified",
+    "coverage.full_supported_sem_model_shapes_through_sem_model_v4_compiler_not_qualified",
+    "coverage.complete_location_parameter_and_result_table_breadth_not_qualified"
+  ],
+  "current_build_execution_contract": {
+    "candidate_receipt_output_allowed": false,
+    "central_commands": [
+      [
+        "python",
+        "validation/pls_algorithm_v1_current_product_work.py",
+        "--source-set-sha256",
+        "11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba",
+        "--scenario-set-sha256",
+        "594371d9e699ab540ddb561a71d6010207b125c762a732c8a9d1324f7910b4fb",
+        "--write-new-snapshot"
+      ]
+    ],
+    "customer_cli_execution_allowed": false,
+    "execution_surface": "internal_labs_ignored_lib_test",
+    "generator_blocker": "The source-bound internal harness is implemented, but this source-contract factory does not run Cargo or product code. Its separate work envelope has no receipt, Registry-admission, or promotion authority.",
+    "generator_status": "implemented_not_executed_by_source_contract_factory",
+    "harness_package": "quickpls-desktop",
+    "harness_target": "quickpls_desktop_lib",
+    "harness_test": "pls_algorithm_current_product_qualification::current_product_pls_qualification_work_harness",
+    "policy": "Central serialized execution only after all product sources freeze. The orchestrator must build and directly invoke the exact ignored quickpls-desktop lib-test harness; a stale or substituted executable, customer CLI result, interactive test result, or historical artifact is rejected.",
+    "required_future_roles": [
+      "kernel_execution",
+      "oracle_independence",
+      "adversarial_boundaries",
+      "archive_persistence"
+    ],
+    "required_product_source_paths": [
+      "Cargo.lock",
+      "Cargo.toml",
+      "crates/qpls-core/Cargo.toml",
+      "crates/qpls-core/src/analysis_recipe_v4.rs",
+      "crates/qpls-core/src/canonical_result_v2.rs",
+      "crates/qpls-core/src/capability_registry_v2.rs",
+      "crates/qpls-core/src/compiled_pls_plan_v2.rs",
+      "crates/qpls-core/src/contract.rs",
+      "crates/qpls-core/src/lib.rs",
+      "crates/qpls-core/src/recipe_v4_compiler.rs",
+      "crates/qpls-core/src/sem_model_v4.rs",
+      "crates/qpls-core/src/validation.rs",
+      "crates/qpls-data/Cargo.toml",
+      "crates/qpls-data/src/lib.rs",
+      "crates/qpls-estimation/Cargo.toml",
+      "crates/qpls-estimation/src/lib.rs",
+      "crates/qpls-estimation/src/pls.rs",
+      "crates/qpls-project/Cargo.toml",
+      "crates/qpls-project/src/archive_integrity.rs",
+      "crates/qpls-project/src/canonical_result_document_v2.rs",
+      "crates/qpls-project/src/lib.rs",
+      "crates/qpls-project/src/pls_score_execution_v2.rs",
+      "crates/qpls-project/src/project_schema_v6.rs",
+      "crates/qpls-runner/Cargo.toml",
+      "crates/qpls-runner/src/lib.rs",
+      "crates/qpls-runner/src/recipe_v4_pls_execution.rs",
+      "src-tauri/Cargo.toml",
+      "src-tauri/build.rs",
+      "src-tauri/src/lib.rs",
+      "src-tauri/src/pls_algorithm_current_product_qualification.rs",
+      "src-tauri/src/project_schema6_result_append.rs",
+      "src-tauri/src/project_schema6_result_read.rs",
+      "src-tauri/src/recipe_v4_canonical_result.rs",
+      "validation/fixtures/simple_reflective.csv",
+      "validation/pls_algorithm_v1_current_product_work.py"
+    ],
+    "required_scenario_set_sha256": "594371d9e699ab540ddb561a71d6010207b125c762a732c8a9d1324f7910b4fb",
+    "required_source_set_sha256": "11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba"
+  },
+  "evidence_blockers": [
+    "evidence.qualification_role_current_product_build_receipt_missing",
+    "evidence.product_to_oracle_comparison_receipt_missing",
+    "evidence.standard_individual_initial_outer_weights_current_product_matrix_missing",
+    "evidence.unit_custom_mixed_fixed_only_score_execution_current_product_matrix_missing",
+    "evidence.qualification_sized_bias_recovery_and_failure_simulation_missing",
+    "evidence.product_adversarial_and_worker_matrix_missing",
+    "evidence.qualification_role_real_runner_schema6_roundtrip_and_tamper_receipt_missing",
+    "evidence.cross_format_semantic_readback_missing",
+    "evidence.frontend_and_packaged_windows_receipts_missing",
+    "evidence.performance_scale_soak_and_cancellation_receipts_missing",
+    "evidence.independent_scientific_review_not_recorded"
+  ],
+  "generated_at_utc": "2026-08-15T04:03:34.659801Z",
+  "internal_product_harness_contract": {
+    "candidate_receipt_output_allowed": false,
+    "customer_cli_invoked": false,
+    "customer_registry_admission_invoked": false,
+    "orchestrator": "validation/pls_algorithm_v1_current_product_work.py",
+    "package": "quickpls-desktop",
+    "product_execution_performed_by_factory": false,
+    "product_source_artifacts": [
+      {
+        "path": "Cargo.lock",
+        "sha256": "f53ed52625c3f8fd57765717dc3fcafa0d83e3ebc9508e7c28d0de04591ec7f9",
+        "size_bytes": 154637
+      },
+      {
+        "path": "Cargo.toml",
+        "sha256": "7b5cc1ab12cb81475cce1227b7ab1381e6278cc22f3b501c3b80858d9b1c749d",
+        "size_bytes": 1503
+      },
+      {
+        "path": "crates/qpls-core/Cargo.toml",
+        "sha256": "f3c060597827e18cb29690adab487f96042c0528fc1010f5077f605b2114968e",
+        "size_bytes": 453
+      },
+      {
+        "path": "crates/qpls-core/src/analysis_recipe_v4.rs",
+        "sha256": "a8d8b808d0bb4c91cf08c1c6762c036c25fb477857710babe88256618f343072",
+        "size_bytes": 21328
+      },
+      {
+        "path": "crates/qpls-core/src/canonical_result_v2.rs",
+        "sha256": "c34bdbcf39286cd16cddbb633760eee4e00e3a892bdc2feaed262ad58ff49f84",
+        "size_bytes": 56826
+      },
+      {
+        "path": "crates/qpls-core/src/capability_registry_v2.rs",
+        "sha256": "d9c6d765983a08717ed538aa44cd530bd199504a0b3099d14ca8e6aba07de79d",
+        "size_bytes": 15132
+      },
+      {
+        "path": "crates/qpls-core/src/compiled_pls_plan_v2.rs",
+        "sha256": "2a9753cf0910cbf2f490b484170569c65b36a66ba38b7ee607260fea4ba7bfed",
+        "size_bytes": 20991
+      },
+      {
+        "path": "crates/qpls-core/src/contract.rs",
+        "sha256": "5fd06a83325d7f1b4293e4c73b3306ba3cbab179810ec31bc18068c0dbe3361b",
+        "size_bytes": 130686
+      },
+      {
+        "path": "crates/qpls-core/src/lib.rs",
+        "sha256": "915370b5f64273c6b7e4649e4539eb30aca2805ad2197a79b22bb68e173b1145",
+        "size_bytes": 733
+      },
+      {
+        "path": "crates/qpls-core/src/recipe_v4_compiler.rs",
+        "sha256": "ad3f6821b7be0397f67669f715e41f594b593922417c2299ab59b5c02c08de77",
+        "size_bytes": 66342
+      },
+      {
+        "path": "crates/qpls-core/src/sem_model_v4.rs",
+        "sha256": "ec0f2ee926a4aee6811258861eac942cc9902263f4192283c3de52893fb6bb4f",
+        "size_bytes": 138362
+      },
+      {
+        "path": "crates/qpls-core/src/validation.rs",
+        "sha256": "7111ffd3f5d44cef43ea744b7ca2b24f7d126f9b887c4c208d23ea77494a7cd1",
+        "size_bytes": 223941
+      },
+      {
+        "path": "crates/qpls-data/Cargo.toml",
+        "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+        "size_bytes": 437
+      },
+      {
+        "path": "crates/qpls-data/src/lib.rs",
+        "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+        "size_bytes": 44865
+      },
+      {
+        "path": "crates/qpls-estimation/Cargo.toml",
+        "sha256": "1eec9429398b24f76a8a307c758fc938bca3f9caf26a5db00a22e50eb7807d8b",
+        "size_bytes": 503
+      },
+      {
+        "path": "crates/qpls-estimation/src/lib.rs",
+        "sha256": "a05ece4c1236d8717b8bb12777525d1085f4008fc133dbf7a06958f485a79d6b",
+        "size_bytes": 504
+      },
+      {
+        "path": "crates/qpls-estimation/src/pls.rs",
+        "sha256": "3649c14e06ac40dac0e5f049acb09a76b59c1d48ced4c58a0ad81bacb2f9aedd",
+        "size_bytes": 750750
+      },
+      {
+        "path": "crates/qpls-project/Cargo.toml",
+        "sha256": "f0c6a5ac6405c4efc439268f92e0da19c0fb44aaf7392fbb98473bb2da32f453",
+        "size_bytes": 762
+      },
+      {
+        "path": "crates/qpls-project/src/archive_integrity.rs",
+        "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+        "size_bytes": 31085
+      },
+      {
+        "path": "crates/qpls-project/src/canonical_result_document_v2.rs",
+        "sha256": "704bf7045e8099f79d47f90a28cc4d36a84651abf031a810dd89af45bd263b58",
+        "size_bytes": 30040
+      },
+      {
+        "path": "crates/qpls-project/src/lib.rs",
+        "sha256": "84d38928bf52b74b05fb494a6f351343e72648f3449cee058e4bc23b0f70158f",
+        "size_bytes": 793454
+      },
+      {
+        "path": "crates/qpls-project/src/pls_score_execution_v2.rs",
+        "sha256": "70a3476814e7f1de82e12c7651df3b70d88b9946a9ee2912b846d67b8b5006a0",
+        "size_bytes": 18511
+      },
+      {
+        "path": "crates/qpls-project/src/project_schema_v6.rs",
+        "sha256": "96304378dbb89ab64b5457208798e21f9448fca6bf7d06e51aecca53d64daa6c",
+        "size_bytes": 102069
+      },
+      {
+        "path": "crates/qpls-runner/Cargo.toml",
+        "sha256": "07246ac150eb04ae6cb479201c2292caff1d6c66142d9a476237790a9c2e5571",
+        "size_bytes": 472
+      },
+      {
+        "path": "crates/qpls-runner/src/lib.rs",
+        "sha256": "3bcbaadd9dce4c070dafb314309d2d8492f693137d5f04f442a4bf3c2247f423",
+        "size_bytes": 83992
+      },
+      {
+        "path": "crates/qpls-runner/src/recipe_v4_pls_execution.rs",
+        "sha256": "5d8b60e625c5b30adb51529c188d7af61d2da936682d26e8b39c395aa065e8db",
+        "size_bytes": 36939
+      },
+      {
+        "path": "src-tauri/Cargo.toml",
+        "sha256": "00f0b4f6fed310e716520d22891763f5cce2f358589f62498fecf492d1044181",
+        "size_bytes": 1123
+      },
+      {
+        "path": "src-tauri/build.rs",
+        "sha256": "487059eaf8a947b80f20a9aacac038a5047b2ad69d2401b827376c67d6fe847f",
+        "size_bytes": 39
+      },
+      {
+        "path": "src-tauri/src/lib.rs",
+        "sha256": "31e269f0a58ff760977d0650de0c367b7b592660f381d274fd724ea591db0e08",
+        "size_bytes": 255196
+      },
+      {
+        "path": "src-tauri/src/pls_algorithm_current_product_qualification.rs",
+        "sha256": "3594631bf697590c6399591e7e6c8defb00e8b0098573209fd141e3dea071018",
+        "size_bytes": 28174
+      },
+      {
+        "path": "src-tauri/src/project_schema6_result_append.rs",
+        "sha256": "5feb092e65a2fe709ddbe36f432abde5c0a8191bc48fff77db095ac61d74f9f0",
+        "size_bytes": 8717
+      },
+      {
+        "path": "src-tauri/src/project_schema6_result_read.rs",
+        "sha256": "4a99c1f466c9d570c71878105858ec1ec1fae0be5556f4bcd277da1d6ec15b4e",
+        "size_bytes": 28161
+      },
+      {
+        "path": "src-tauri/src/recipe_v4_canonical_result.rs",
+        "sha256": "6a842bce16994b92508a36c7475ea05dccc26870e8925a0c12782bca7ab91716",
+        "size_bytes": 48779
+      },
+      {
+        "path": "validation/fixtures/simple_reflective.csv",
+        "sha256": "99f61b1191dab4dfbe3760e9863032cb5a00c9337d7c0497485b840ae21d804e",
+        "size_bytes": 60
+      },
+      {
+        "path": "validation/pls_algorithm_v1_current_product_work.py",
+        "sha256": "0c41ec1ad9310fcd9a2677bbc5683d1642940d1c94516a3b398052b455b4006d",
+        "size_bytes": 25344
+      }
+    ],
+    "qualification_ready": false,
+    "schema_version": 1,
+    "self_executable_sha256_required": true,
+    "source_bound_build_required": true,
+    "surface": "internal_labs_ignored_lib_test",
+    "target": "quickpls_desktop_lib",
+    "test": "pls_algorithm_current_product_qualification::current_product_pls_qualification_work_harness"
+  },
+  "manifest_mutated": false,
+  "method_contract_checks": {
+    "archive_and_scale_contract_match_finalization_program": true,
+    "coverage_and_evidence_blockers_are_distinct": true,
+    "manifest_remains_absent_with_no_admitted_evidence": true,
+    "official_current_defaults_are_frozen": true,
+    "qualification_spec_has_zero_attached_receipts": true,
+    "qualification_spec_is_compatibility_only": true,
+    "qualification_spec_schema_semantics_and_registry_pass": true,
+    "registry_remains_partial_absent_labs": true,
+    "required_receipt_roles_are_exact": true,
+    "source_descriptors_are_complete": true
+  },
+  "method_version": "pls_pm_v1",
+  "note": "This source-hash-addressed audit is non-promotional. It supports one method-contract candidate and source-oracle work only; registry evidence state remains absent.",
+  "official_smartpls_snapshot": {
+    "checked_on": "2026-08-15",
+    "core_algorithm_url": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/",
+    "factor_composite_url": "https://smartpls.com/documentation/functionalities/composite-and-common-factor-and-mixed-models/"
+  },
+  "passed": true,
+  "promotion_allowed": false,
+  "qualification_id": "qpls3.pls.algorithm.qualification_v2",
+  "qualification_ready": false,
+  "qualification_spec_receipts_mutated": false,
+  "registry_mutated": false,
+  "remaining_blockers": [
+    "coverage.sum_score_and_predefined_weight_parity_semantics_not_closed_beyond_bounded_unit_variance_execution",
+    "coverage.standard_mean_centered_unstandardized_result_breadth_not_qualified",
+    "coverage.full_supported_sem_model_shapes_through_sem_model_v4_compiler_not_qualified",
+    "coverage.complete_location_parameter_and_result_table_breadth_not_qualified",
+    "evidence.qualification_role_current_product_build_receipt_missing",
+    "evidence.product_to_oracle_comparison_receipt_missing",
+    "evidence.standard_individual_initial_outer_weights_current_product_matrix_missing",
+    "evidence.unit_custom_mixed_fixed_only_score_execution_current_product_matrix_missing",
+    "evidence.qualification_sized_bias_recovery_and_failure_simulation_missing",
+    "evidence.product_adversarial_and_worker_matrix_missing",
+    "evidence.qualification_role_real_runner_schema6_roundtrip_and_tamper_receipt_missing",
+    "evidence.cross_format_semantic_readback_missing",
+    "evidence.frontend_and_packaged_windows_receipts_missing",
+    "evidence.performance_scale_soak_and_cancellation_receipts_missing",
+    "evidence.independent_scientific_review_not_recorded",
+    "qualification.only_method_contract_candidate_descriptor_exists",
+    "qualification.no_candidate_descriptor_is_attached_to_the_spec"
+  ],
+  "report_kind": "pls_algorithm_v1_current_source_qualification_factory_audit_v1",
+  "role_matrix": [
+    {
+      "candidate_receipt_emitted": true,
+      "reasons": [],
+      "role": "method_contract",
+      "status": "candidate_receipt_emitted"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for kernel_execution is absent."
+      ],
+      "role": "kernel_execution",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Two external implementations agree with the transparent oracle, but no source-bound current-product harness envelope is attached."
+      ],
+      "role": "oracle_independence",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for generative_recovery is absent."
+      ],
+      "role": "generative_recovery",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Source-oracle metamorphics and typed failures pass; product, worker, desktop/native, and archive adversarial execution is absent."
+      ],
+      "role": "adversarial_boundaries",
+      "status": "work_evidence_only"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for archive_persistence is absent."
+      ],
+      "role": "archive_persistence",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for cross_format_export is absent."
+      ],
+      "role": "cross_format_export",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for frontend_contract is absent."
+      ],
+      "role": "frontend_contract",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for packaged_windows_e2e is absent."
+      ],
+      "role": "packaged_windows_e2e",
+      "status": "blocked"
+    },
+    {
+      "candidate_receipt_emitted": false,
+      "reasons": [
+        "Qualification receipt for performance_scale is absent."
+      ],
+      "role": "performance_scale",
+      "status": "blocked"
+    }
+  ],
+  "scenario_set_sha256": "594371d9e699ab540ddb561a71d6010207b125c762a732c8a9d1324f7910b4fb",
+  "schema_version": 1,
+  "scientific_review_satisfied": false,
+  "source_artifacts": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "f53ed52625c3f8fd57765717dc3fcafa0d83e3ebc9508e7c28d0de04591ec7f9",
+      "size_bytes": 154637
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "7b5cc1ab12cb81475cce1227b7ab1381e6278cc22f3b501c3b80858d9b1c749d",
+      "size_bytes": 1503
+    },
+    {
+      "path": "crates/qpls-core/Cargo.toml",
+      "sha256": "f3c060597827e18cb29690adab487f96042c0528fc1010f5077f605b2114968e",
+      "size_bytes": 453
+    },
+    {
+      "path": "crates/qpls-core/src/analysis_recipe_v4.rs",
+      "sha256": "a8d8b808d0bb4c91cf08c1c6762c036c25fb477857710babe88256618f343072",
+      "size_bytes": 21328
+    },
+    {
+      "path": "crates/qpls-core/src/canonical_result_v2.rs",
+      "sha256": "c34bdbcf39286cd16cddbb633760eee4e00e3a892bdc2feaed262ad58ff49f84",
+      "size_bytes": 56826
+    },
+    {
+      "path": "crates/qpls-core/src/capability_registry_v2.rs",
+      "sha256": "d9c6d765983a08717ed538aa44cd530bd199504a0b3099d14ca8e6aba07de79d",
+      "size_bytes": 15132
+    },
+    {
+      "path": "crates/qpls-core/src/compiled_pls_plan_v2.rs",
+      "sha256": "2a9753cf0910cbf2f490b484170569c65b36a66ba38b7ee607260fea4ba7bfed",
+      "size_bytes": 20991
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "5fd06a83325d7f1b4293e4c73b3306ba3cbab179810ec31bc18068c0dbe3361b",
+      "size_bytes": 130686
+    },
+    {
+      "path": "crates/qpls-core/src/lib.rs",
+      "sha256": "915370b5f64273c6b7e4649e4539eb30aca2805ad2197a79b22bb68e173b1145",
+      "size_bytes": 733
+    },
+    {
+      "path": "crates/qpls-core/src/recipe_v4_compiler.rs",
+      "sha256": "ad3f6821b7be0397f67669f715e41f594b593922417c2299ab59b5c02c08de77",
+      "size_bytes": 66342
+    },
+    {
+      "path": "crates/qpls-core/src/sem_model_v4.rs",
+      "sha256": "ec0f2ee926a4aee6811258861eac942cc9902263f4192283c3de52893fb6bb4f",
+      "size_bytes": 138362
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "7111ffd3f5d44cef43ea744b7ca2b24f7d126f9b887c4c208d23ea77494a7cd1",
+      "size_bytes": 223941
+    },
+    {
+      "path": "crates/qpls-data/Cargo.toml",
+      "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+      "size_bytes": 437
+    },
+    {
+      "path": "crates/qpls-data/src/lib.rs",
+      "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+      "size_bytes": 44865
+    },
+    {
+      "path": "crates/qpls-estimation/Cargo.toml",
+      "sha256": "1eec9429398b24f76a8a307c758fc938bca3f9caf26a5db00a22e50eb7807d8b",
+      "size_bytes": 503
+    },
+    {
+      "path": "crates/qpls-estimation/src/lib.rs",
+      "sha256": "a05ece4c1236d8717b8bb12777525d1085f4008fc133dbf7a06958f485a79d6b",
+      "size_bytes": 504
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "3649c14e06ac40dac0e5f049acb09a76b59c1d48ced4c58a0ad81bacb2f9aedd",
+      "size_bytes": 750750
+    },
+    {
+      "path": "crates/qpls-project/Cargo.toml",
+      "sha256": "f0c6a5ac6405c4efc439268f92e0da19c0fb44aaf7392fbb98473bb2da32f453",
+      "size_bytes": 762
+    },
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size_bytes": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/canonical_result_document_v2.rs",
+      "sha256": "704bf7045e8099f79d47f90a28cc4d36a84651abf031a810dd89af45bd263b58",
+      "size_bytes": 30040
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "84d38928bf52b74b05fb494a6f351343e72648f3449cee058e4bc23b0f70158f",
+      "size_bytes": 793454
+    },
+    {
+      "path": "crates/qpls-project/src/pls_score_execution_v2.rs",
+      "sha256": "70a3476814e7f1de82e12c7651df3b70d88b9946a9ee2912b846d67b8b5006a0",
+      "size_bytes": 18511
+    },
+    {
+      "path": "crates/qpls-project/src/project_schema_v6.rs",
+      "sha256": "96304378dbb89ab64b5457208798e21f9448fca6bf7d06e51aecca53d64daa6c",
+      "size_bytes": 102069
+    },
+    {
+      "path": "crates/qpls-runner/Cargo.toml",
+      "sha256": "07246ac150eb04ae6cb479201c2292caff1d6c66142d9a476237790a9c2e5571",
+      "size_bytes": 472
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "3bcbaadd9dce4c070dafb314309d2d8492f693137d5f04f442a4bf3c2247f423",
+      "size_bytes": 83992
+    },
+    {
+      "path": "crates/qpls-runner/src/recipe_v4_pls_execution.rs",
+      "sha256": "5d8b60e625c5b30adb51529c188d7af61d2da936682d26e8b39c395aa065e8db",
+      "size_bytes": 36939
+    },
+    {
+      "path": "docs/methods/PLS_ALGORITHM_V1_QUALIFICATION_STATUS.md",
+      "sha256": "798b7750693fe59753f5cf1489125ef80b133ebeefab864208d305e4d2be56fb",
+      "size_bytes": 4472
+    },
+    {
+      "path": "docs/methods/PLS_PM_V1.md",
+      "sha256": "6382a084afd3f5c8d0e064f7656239b0a8cd5d33b39ee8376acdb8672b48f460",
+      "size_bytes": 4175
+    },
+    {
+      "path": "docs/methods/PLS_SCORE_EXECUTION_V2_VALIDATION_STRATEGY.md",
+      "sha256": "7bab2777d45a0dc67fd2d482b0fa7a22fe5e708deaae386d0115744094e4ca3f",
+      "size_bytes": 7437
+    },
+    {
+      "path": "src-tauri/Cargo.toml",
+      "sha256": "00f0b4f6fed310e716520d22891763f5cce2f358589f62498fecf492d1044181",
+      "size_bytes": 1123
+    },
+    {
+      "path": "src-tauri/build.rs",
+      "sha256": "487059eaf8a947b80f20a9aacac038a5047b2ad69d2401b827376c67d6fe847f",
+      "size_bytes": 39
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "sha256": "31e269f0a58ff760977d0650de0c367b7b592660f381d274fd724ea591db0e08",
+      "size_bytes": 255196
+    },
+    {
+      "path": "src-tauri/src/pls_algorithm_current_product_qualification.rs",
+      "sha256": "3594631bf697590c6399591e7e6c8defb00e8b0098573209fd141e3dea071018",
+      "size_bytes": 28174
+    },
+    {
+      "path": "src-tauri/src/project_schema6_result_append.rs",
+      "sha256": "5feb092e65a2fe709ddbe36f432abde5c0a8191bc48fff77db095ac61d74f9f0",
+      "size_bytes": 8717
+    },
+    {
+      "path": "src-tauri/src/project_schema6_result_read.rs",
+      "sha256": "4a99c1f466c9d570c71878105858ec1ec1fae0be5556f4bcd277da1d6ec15b4e",
+      "size_bytes": 28161
+    },
+    {
+      "path": "src-tauri/src/recipe_v4_canonical_result.rs",
+      "sha256": "6a842bce16994b92508a36c7475ea05dccc26870e8925a0c12782bca7ab91716",
+      "size_bytes": 48779
+    },
+    {
+      "path": "validation/Resolve-Rscript.ps1",
+      "sha256": "0248e989b85849f4af535b63878e40dcc559b685926dd71e7b3240c6762f8f5f",
+      "size_bytes": 2288
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.json",
+      "sha256": "d3e480178a619d0bec28e48ddfd9a2fb1848c083b78e1afe1c51f1b12e980fd9",
+      "size_bytes": 303615
+    },
+    {
+      "path": "validation/fixtures/simple_reflective.csv",
+      "sha256": "99f61b1191dab4dfbe3760e9863032cb5a00c9337d7c0497485b840ae21d804e",
+      "size_bytes": 60
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size_bytes": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size_bytes": 15836
+    },
+    {
+      "path": "validation/methods/pls_algorithm_v1.manifest.json",
+      "sha256": "6f9a4e058d35a113ae6220a9544aa2eeee7c55b3196bf451b999c3ce7df9cbc8",
+      "size_bytes": 11868
+    },
+    {
+      "path": "validation/pls_algorithm_v1_current_build_receipts.py",
+      "sha256": "142cde72cb7c5b4a4ca0edc64d8ef04d209dc80d6dace6b9bfa503b3806aca08",
+      "size_bytes": 1273
+    },
+    {
+      "path": "validation/pls_algorithm_v1_current_product_work.py",
+      "sha256": "0c41ec1ad9310fcd9a2677bbc5683d1642940d1c94516a3b398052b455b4006d",
+      "size_bytes": 25344
+    },
+    {
+      "path": "validation/pls_algorithm_v1_current_source_oracle.py",
+      "sha256": "40119011d3b2146b5aa0cf746855f8787fc6c35ed0e5e5ebc6bc52ffc2d401bb",
+      "size_bytes": 26714
+    },
+    {
+      "path": "validation/pls_algorithm_v1_qualification_factory.py",
+      "sha256": "da216367dc27667aec4d574d232f6d52936be743dff11b5f003771111bc3bc02",
+      "size_bytes": 43907
+    },
+    {
+      "path": "validation/python_plspm_reference.py",
+      "sha256": "a1881e3cd77a6e49bd15c024acc77fca155d30f3aabec35071b797b1963b703b",
+      "size_bytes": 1966
+    },
+    {
+      "path": "validation/qualification_spec_v2.py",
+      "sha256": "906a706bf67192c95c9617daebf776e937eeb41381905b682f1b229429bb2f9a",
+      "size_bytes": 67803
+    },
+    {
+      "path": "validation/qualification_v2/fixtures/pls_algorithm_v1.migrated.json",
+      "sha256": "3184dda504f70089be871d017516da20bbb336e14965057a4162df0579da1c67",
+      "size_bytes": 37881
+    },
+    {
+      "path": "validation/qualification_v2/pls_algorithm_v1.qualification.json",
+      "sha256": "2a2c7ab25074dfc56d1cb3bd78a56e775da3d36553d6d973fcf3dbc6314c0967",
+      "size_bytes": 28397
+    },
+    {
+      "path": "validation/qualification_v2/qualification_spec_v2.schema.json",
+      "sha256": "ae28059684d9dcad1792127860cfc498ea62fa09cb9d10757895f4a4e67c0918",
+      "size_bytes": 25911
+    },
+    {
+      "path": "validation/r_csem_reference.R",
+      "sha256": "4c31759068745ab7022450d1806cd31884d543ad548af98d357b4b5c418dbddd",
+      "size_bytes": 3237
+    },
+    {
+      "path": "validation/r_csem_threecommonfactors_reference.R",
+      "sha256": "d89bc14a6e3531c198f58672b3b79c3e61ab4d0e4ea6c8691806af904c2f9582",
+      "size_bytes": 2262
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_current_product_work.py",
+      "sha256": "e23b59bb376182c2fc63e70d7aca5ee83a9b296823b27bb3a06412d7fe142d4b",
+      "size_bytes": 12061
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_current_source_oracle.py",
+      "sha256": "08af20ef765d0699ac09aebbb3a91a971c2238c66d87e1e879589dda1300d41d",
+      "size_bytes": 3172
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_qualification_factory.py",
+      "sha256": "d16d04034ae197cf4424603f36743b1a941a817c3ab8d76a6e4dd6e4bf17895e",
+      "size_bytes": 9294
+    }
+  ],
+  "source_set_sha256": "11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba",
+  "spec_frozen_at_utc": "2026-08-15T01:00:00Z",
+  "supportable_evidence_tier": "source_contract_candidate_only",
+  "work_evidence": {
+    "independent_external_oracles": {
+      "path": "validation/results/method_factory/pls_algorithm_v1/current_source_v2/source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba/work/independent_external_oracles.json",
+      "sha256": "69bd87b1a595e327aa88a4df2fd10fa2a6c620949111037db1f97eb0e24c5199",
+      "size_bytes": 7679
+    },
+    "transparent_numpy_oracle": {
+      "path": "validation/results/method_factory/pls_algorithm_v1/current_source_v2/source_11fe565905ca79d9d3cfde6a08202b7cb969a32fc4eacb873271b974d6d129ba/work/transparent_numpy_oracle.json",
+      "sha256": "dc2d99b69681cd6857a6f886c57bfb81c48730fba4736aaafdb6cbe52e39672e",
+      "size_bytes": 1731
+    }
+  },
+  "work_evidence_checks": {
+    "deterministic_metamorphics_passed": true,
+    "external_comparisons_have_exact_key_membership": true,
+    "hand_microcase_passed": true,
+    "product_execution_is_delegated_without_receipt_authority": true,
+    "transparent_numpy_oracle_passed": true,
+    "two_external_computational_groups_passed": true,
+    "typed_boundaries_passed": true
+  }
+}

@@ -1,10 +1,17 @@
-import type { ResultTable } from "../domain/resultTables";
+import { methodResultTables, type ResultTable } from "../domain/resultTables";
+import { parseParameterIdentity } from "../domain/inference";
 import type {
   AnalysisRun,
   CbsemAnalysis,
   CtaPlsAnalysis,
   CvpatBenchmarkAssessment,
   HtmtAssessment,
+  HtmtBootstrapInference,
+  PlsModelFit,
+  PlsModelFitExactCriterionInference,
+  PlsModelFitExactInference,
+  PlsModelFitExactStatus,
+  PlsModelFitExactVariantInference,
   PlsPredictIndicatorTarget,
   PlsPredictTarget,
   PcaAnalysis,
@@ -21,13 +28,15 @@ import {
   LEGACY_PLS_PREDICT_REPEATED_METHOD_VERSION,
 } from "./nativeCalculationMode";
 import { NATIVE_NCA_ENGINE_SCOPE_WARNING, NATIVE_STANDALONE_ASSESSMENT_WARNING } from "./nativeNca";
-import { NATIVE_PCA_ENGINE_SCOPE_WARNING } from "./nativePca";
-import { NATIVE_OLS_ENGINE_SCOPE_WARNING } from "./nativeOls";
+import { NATIVE_PCA_ENGINE_SCOPE_WARNING, NATIVE_PCA_SCOPE_NOTE } from "./nativePca";
+import { NATIVE_OLS_ENGINE_SCOPE_WARNING, NATIVE_OLS_SCOPE_NOTE } from "./nativeOls";
 import {
   NATIVE_LEGACY_LOGISTIC_ENGINE_SCOPE_WARNING,
   NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING,
+  NATIVE_LOGISTIC_SCOPE_NOTE,
 } from "./nativeLogistic";
 import { isStandaloneNativeAnalysis } from "./nativeStandaloneAnalysis";
+import { parseCbsemCfaScoreLmBundleV1 } from "../domain/internalRecipeV4CbsemExecution";
 import { isNativeRegressionBootstrapValidationWitness } from "./nativeRegressionBootstrapWitness";
 import {
   NATIVE_GSCA_ALGORITHM_VERSION,
@@ -59,13 +68,25 @@ import {
   nativeStructuralPathRandomizationProjection,
   nativeStructuralPathRandomizationTable,
 } from "./nativeStructuralPathRandomization";
+import { nativePlscConsistentBootstrapProjection } from "./nativeConsistentBootstrap";
+import { nativePlscConsistentPermutationProjection } from "./nativeConsistentPermutation";
+import {
+  nativePlsSampleSizePowerExportTables,
+  nativePlsSampleSizePowerPresentation,
+  validateNativePlsSampleSizePowerResult,
+  type NativePlsSampleSizePowerPresentation,
+  type NativePlsSampleSizePowerRecipeV1,
+  type NativePlsSampleSizePowerRecipeV2,
+  type NativePlsSampleSizePowerResultV1,
+  type NativePlsSampleSizePowerResultV2,
+} from "./nativePlsSampleSizePower";
 
 export {
   nativeLegacyProcessResultProjection,
   nativeProcessResultProjection,
 } from "./nativeProcessResults";
 
-export type NativeResultGroupId = "graphical" | "groups" | "assessment" | "covariance_sem" | "gsca_component_model" | "importance_performance" | "necessary_conditions" | "components" | "process" | "regression" | "higher_order" | "final_results" | "mediation" | "moderation" | "quality_criteria" | "prediction" | "inference";
+export type NativeResultGroupId = "graphical" | "groups" | "assessment" | "covariance_sem" | "gsca_component_model" | "sample_size_power" | "importance_performance" | "necessary_conditions" | "components" | "process" | "regression" | "higher_order" | "final_results" | "mediation" | "moderation" | "quality_criteria" | "prediction" | "inference";
 
 export type NativeResultNavigationItem =
   | {
@@ -123,6 +144,14 @@ export interface NativeNcaPlot {
   crFdh: { slope: number; intercept: number } | null;
 }
 
+export interface NativeNcaCeFdhPeerRow {
+  peerIdentity: string;
+  conditionVariable: string;
+  conditionValue: number;
+  outcomeVariable: string;
+  outcomeValue: number;
+}
+
 export interface NativeNcaResultProjection {
   methodVersion: "nca_v2";
   x: string;
@@ -132,6 +161,7 @@ export interface NativeNcaResultProjection {
   permutationSamples: number;
   usablePermutations: number;
   scope: NativeNcaPlot["scope"];
+  ceFdhPeers: NativeNcaCeFdhPeerRow[];
   ceilingEffects: Array<{ ceiling: "ce_fdh" | "cr_fdh"; effectSize: number; permutationPValue: number; slope: number | null; intercept: number | null }>;
   bottlenecks: Array<{ ceiling: "ce_fdh" | "cr_fdh"; outcomePercent: number; requiredXPercent: number | null; status: "required" | "not_necessary" | "not_attainable" }>;
   warnings: string[];
@@ -274,22 +304,41 @@ const QUALITY_CRITERIA_IDS = [
   "fornell_larcker",
   "htmt_plus",
   "htmt_original",
+  "htmt_plus_bootstrap",
+  "htmt_original_bootstrap",
   "htmt",
   "structural_quality",
   "structural_vif",
   "formative_indicator_vif",
   "f_squared",
   "model_fit",
+  "model_fit_details",
   "blindfolding",
 ] as const;
 
 const INFERENCE_IDS = [
+  "model_fit_exact",
+  "model_fit_exact_failures",
+  "plsc_bootstrap_accounting",
+  "plsc_bootstrap_failures",
+  "plsc_bootstrap_jackknife_failures",
+  "plsc_permutation_accounting",
+  "plsc_permutation_groups",
+  "plsc_permutation_paths",
+  "plsc_permutation_outer_loadings",
+  "plsc_permutation_construct_criteria",
+  "plsc_permutation_failures",
   "control_bootstrap",
   "control_bca",
   "control_studentized",
   "control_randomization",
+  "bootstrap_accounting",
+  "bootstrap_failures",
   "bootstrap_percentile",
+  "bootstrap_one_sided_test_tail",
   "bootstrap_bca",
+  "bootstrap_bca_unavailable",
+  "plsc_bootstrap_bca_unavailable",
   "bootstrap_studentized",
   "permutation",
 ] as const;
@@ -321,6 +370,7 @@ const MGA_GROUP_IDS = [
   "micom_composition",
   "micom_means",
   "micom_variances",
+  "micom_permutation_accounting",
   "mga_group_paths",
   "mga_group_r_squared",
   "mga_group_loadings",
@@ -331,6 +381,7 @@ const MGA_GROUP_IDS = [
   "mga_permutation",
   "mga_permutation_loadings",
   "mga_permutation_weights",
+  "mga_permutation_accounting",
 ] as const;
 
 const CCA_ASSESSMENT_IDS = [
@@ -344,6 +395,8 @@ const CTA_PLS_ASSESSMENT_IDS = [
   "cta_pls_scope",
 ] as const;
 
+const ENDOGENEITY_ASSESSMENT_IDS = ["endogeneity_copula"] as const;
+
 const IPMA_RESULT_IDS = [
   "ipma_constructs",
   "ipma_indicators",
@@ -352,6 +405,7 @@ const IPMA_RESULT_IDS = [
 
 const NCA_RESULT_IDS = [
   "nca_ceiling_effects",
+  "nca_ce_fdh_peers",
   "nca_cr_line",
   "nca_bottlenecks",
   "nca_scope",
@@ -399,11 +453,28 @@ const LEGACY_LOGISTIC_RESULT_IDS = [
 
 const CBSEM_RESULT_IDS = [
   "cbsem_fit",
+  "cbsem_exact_bootstrap_intervals",
+  "cbsem_exact_bootstrap_hypothesis_tests",
+  "cbsem_exact_bootstrap_successful_refits",
+  "cbsem_exact_bootstrap_failures",
+  "cbsem_exact_bootstrap_settings",
+  "exact_case_bootstrap_studentized_summary",
+  "exact_case_bootstrap_studentized_point_standard_errors",
+  "exact_case_bootstrap_studentized_parameter_intervals",
+  "exact_case_bootstrap_studentized_refit_standard_errors",
+  "exact_case_bootstrap_bca_summary",
+  "exact_case_bootstrap_bca_parameter_intervals",
+  "exact_case_bootstrap_bca_successful_delete_one_refits",
+  "exact_case_bootstrap_bca_failures",
+  "cbsem_bootstrap_intervals",
+  "cbsem_bootstrap_failures",
+  "cbsem_bootstrap_settings",
   "cbsem_standardized_parameters",
   "cbsem_unstandardized_parameters",
   "cbsem_residual_correlations",
   "cbsem_residual_covariances",
   "cbsem_implied_covariances",
+  "modification_index_score_tests",
   "cbsem_modification_diagnostics",
   "cbsem_scope",
 ] as const;
@@ -419,20 +490,62 @@ const GSCA_RESULT_IDS = [
 
 const CBSEM_FIT_METHOD_VERSION = "cbsem_fit_v1";
 const CBSEM_MODIFICATION_METHOD_VERSION = "cbsem_modification_indices_v1";
+const CBSEM_SCORE_LM_METHOD_VERSION = "cbsem_cfa_score_lm_v1";
+const CBSEM_BOOTSTRAP_METHOD_VERSION_V2 = "cbsem_bootstrap_v2";
+const CBSEM_EXACT_BOOTSTRAP_METHOD_VERSION_V1 = "cbsem_exact_case_bootstrap_v1";
+const CBSEM_EXACT_BOOTSTRAP_TEST_TAIL_METHOD_VERSION_V1 =
+  "cbsem_exact_case_bootstrap_null_centered_test_tail_v1";
+const CBSEM_EXACT_BOOTSTRAP_TRUTH_NOTE =
+  "Full exact-ML case bootstrap; percentile Type-7; failed fits retained. Archive validation verified the recorded schedule descriptors and arithmetic but did not replay raw fits or independently authenticate the Rust resampling schedule.";
+const CBSEM_EXACT_BOOTSTRAP_STUDENTIZED_TRUTH_NOTE =
+  "Analytically studentized Labs inference. Archive reopening validates the persisted ledger and interval arithmetic only; it does not replay raw refits or expected-information calculations.";
+const CBSEM_EXACT_BOOTSTRAP_BCA_TRUTH_NOTE =
+  "BCa Type-7 Labs inference is complete-only across the delete-one schedule. Archive reopening validates persisted ledger identity, digests, and exposed interval arithmetic only; it does not replay raw base or delete-one ML fits.";
+export const CBSEM_RMSEA_INTERVAL_METHOD_VERSION_V1 =
+  "rmsea_noncentral_chi_square_inversion_90_n_minus_one_v1";
+export const CBSEM_RMSEA_INTERVAL_CONFIDENCE_LEVEL_V1 = 0.9;
+export const PLS_MODEL_FIT_METHOD_VERSION_V2 = "pls_model_fit_v2";
+export const PLS_MODEL_FIT_MATRIX_CONVENTION_V2 = "indicator_correlation_lower_triangle_including_diagonal";
+export const PLS_MODEL_FIT_GEODESIC_LOGARITHM_V2 = "natural_logarithm";
+export const PLS_MODEL_FIT_EXACT_INFERENCE_PROCEDURE_V2 = "adapted_bollen_stine_saturated_and_estimated";
 
 export const NATIVE_IPMA_SCOPE_NOTE =
   "Performance uses 0–100 observed-range min–max scaling of listwise-standardized composite scores. No theoretical-range correction is applied.";
 
-const CURRENT_MGA_METHOD_VERSION = "pls_mga_two_group_v2";
-const CURRENT_MGA_PERMUTATION_METHOD_VERSION = "pls_mga_permutation_v2";
-const CURRENT_MICOM_METHOD_VERSION = "micom_v2";
+const CURRENT_MGA_METHOD_VERSION = "pls_mga_two_group_v4";
+const CURRENT_MGA_PERMUTATION_METHOD_VERSION = "pls_mga_permutation_v4";
+const CURRENT_COMBINED_MICOM_METHOD_VERSION = "micom_v4";
+const HISTORICAL_MGA_METHOD_VERSION_V3 = "pls_mga_two_group_v3";
+const HISTORICAL_MGA_PERMUTATION_METHOD_VERSION_V3 = "pls_mga_permutation_v3";
+const CURRENT_MICOM_METHOD_VERSION = "micom_v3_1";
+const LEGACY_COMBINED_MICOM_METHOD_VERSION_V3 = "micom_v3";
+const CURRENT_MICOM_FAILURE_CODES = new Set([
+  "micom.configural_review_required",
+  "micom.configural_invariance_not_confirmed",
+  "micom.empty_group",
+  "micom.group_too_small",
+  "micom.extreme_group_imbalance",
+  "micom.degenerate_indicator",
+  "micom.observed_model_fit_failed",
+  "micom.score_contract_invalid",
+  "micom.degenerate_composite_score",
+  "micom.orientation_undefined",
+  "micom.insufficient_usable_permutations",
+]);
+const HISTORICAL_MGA_METHOD_VERSION_V2 = "pls_mga_two_group_v2";
+const HISTORICAL_MGA_PERMUTATION_METHOD_VERSION_V2 = "pls_mga_permutation_v2";
+const HISTORICAL_MICOM_METHOD_VERSION_V2 = "micom_v2";
+const HISTORICAL_MGA_V2_WARNING =
+  "Historical MICOM/permutation-MGA v2 result. Its deterministic permutation stream was not invariant to exchanging Group A and Group B, so retain it for archive review only and do not interpret it as a current v4 result.";
+const HISTORICAL_MGA_V3_WARNING =
+  "Historical combined MICOM/permutation-MGA v3 result. Its replacement-retry schedule is archive-readable only and must not be interpreted as fixed-plan v4 evidence.";
 
 const MAX_SPECIFIC_INDIRECT_EFFECTS = 5_000;
 const SPECIFIC_INDIRECT_EFFECTS_TRUNCATED_WARNING =
   "Showing the first 5,000 specific indirect paths. Additional paths were omitted to keep Results responsive.";
 
 export function completedResultRuns(runs: readonly AnalysisRun[]): AnalysisRun[] {
-  return runs.filter(isCompletedResultRun);
+  return runs.filter((run) => isCompletedResultRun(run) || nativePlsSampleSizePowerResultProjection(run) !== null);
 }
 
 /**
@@ -450,6 +563,280 @@ export function resolveSelectedCompletedRun(
 
 export function isCompletedResultRun(run: AnalysisRun | null | undefined): run is AnalysisRun & { result: NonNullable<AnalysisRun["result"]> } {
   return Boolean(run && run.status === "completed" && run.result);
+}
+
+export type NativePlsPosthocMinimumSampleSizeProjection = NonNullable<
+  NonNullable<AnalysisRun["result"]>["posthoc_minimum_sample_size"]
+>;
+
+const PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_V1_REQUIRED_KEYS = [
+  "alpha",
+  "analytical_sample_size",
+  "caution",
+  "driver_source",
+  "driver_target",
+  "inverse_square_root_constant",
+  "meets_technical_requirement",
+  "method_version",
+  "minimum_absolute_path_coefficient",
+  "power",
+  "status",
+  "technically_required_sample_size",
+  "test",
+] as const;
+
+const PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_V2_KEYS = [
+  ...PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_V1_REQUIRED_KEYS,
+  "driver_p_value_two_sided",
+  "eligible_path_count",
+  "selection_rule",
+  "significance_alpha",
+  "significance_source",
+  "significant_path_count",
+] as const;
+
+/** Recompute and fail closed on the stored post-hoc technical sample-size result. */
+export function nativePlsPosthocMinimumSampleSizeProjection(
+  run: AnalysisRun | null | undefined,
+): NativePlsPosthocMinimumSampleSizeProjection | null {
+  if (!isCompletedResultRun(run) || !run.result.posthoc_minimum_sample_size) return null;
+  const stored = run.result.posthoc_minimum_sample_size;
+  const keys = Object.keys(stored);
+  const requiredKeysPresent = PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_V1_REQUIRED_KEYS.every((key) => keys.includes(key));
+  const allowedKeys = new Set(PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_V2_KEYS);
+  if (!requiredKeysPresent || keys.some((key) => !allowedKeys.has(key as typeof PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_V2_KEYS[number]))
+    || stored.alpha !== 0.05
+    || stored.power !== 0.80
+    || stored.test !== "directional"
+    || stored.inverse_square_root_constant !== 2.486
+    || !hasText(stored.caution)
+    || !Number.isSafeInteger(stored.analytical_sample_size)
+    || stored.analytical_sample_size !== run.result.used_observations
+    || stored.analytical_sample_size < 3) return null;
+
+  if (stored.method_version === "inverse_square_root_posthoc_v1") {
+    return nativeLegacyPlsPosthocMinimumSampleSizeProjection(run, stored);
+  }
+  if (stored.method_version !== "inverse_square_root_posthoc_v2"
+    || keys.sort().join("\u0000") !== [...PLS_POSTHOC_MINIMUM_SAMPLE_SIZE_V2_KEYS].sort().join("\u0000")
+    || stored.selection_rule !== "smallest_absolute_statistically_significant_structural_path"
+    || stored.eligible_path_count !== run.result.paths.length) return null;
+
+  const candidates = validPosthocPaths(run);
+  if (!candidates) return null;
+  if (candidates.length === 0) {
+    return stored.status === "not_applicable_no_structural_path"
+      && stored.significance_source === null
+      && stored.significance_alpha === null
+      && stored.significant_path_count === null
+      && posthocDriverIsEmpty(stored)
+      ? stored : null;
+  }
+  if (!run.bootstrap) {
+    return stored.status === "inference_unavailable"
+      && stored.significance_source === null
+      && stored.significance_alpha === null
+      && stored.significant_path_count === null
+      && posthocDriverIsEmpty(stored)
+      ? stored : null;
+  }
+  if (stored.significance_source !== "pls_bootstrap_normal_reference_two_sided"
+    || stored.significance_alpha !== 0.05) return null;
+
+  const pathProbabilities = new Map<string, number>();
+  const linkedPathKeys = new Set<string>();
+  let inferenceIncomplete = false;
+  for (const parameter of run.bootstrap.percentile.parameters) {
+    const identity = parseParameterIdentity(parameter.parameter);
+    if (identity?.kind !== "path" || identity.parts.length !== 2) continue;
+    const key = `${identity.parts[0]}\u0000${identity.parts[1]}`;
+    const probability = parameter.p_value_two_sided;
+    const linkedPath = candidates.find((path) => `${path.source}\u0000${path.target}` === key);
+    if (!linkedPath
+      || linkedPathKeys.has(key)
+      || !isFiniteNumber(parameter.original)
+      || !numbersClose(parameter.original, linkedPath.coefficient)) return null;
+    linkedPathKeys.add(key);
+    if (probability === null || probability === undefined) {
+      inferenceIncomplete = true;
+      continue;
+    }
+    if (!isFiniteNumber(probability) || probability < 0 || probability > 1) return null;
+    pathProbabilities.set(key, probability);
+  }
+  if (linkedPathKeys.size !== candidates.length) return null;
+  if (inferenceIncomplete) {
+    return stored.status === "inference_incomplete"
+      && stored.significant_path_count === null
+      && posthocDriverIsEmpty(stored)
+      ? stored : null;
+  }
+  const significant = candidates.filter((path) => (
+    pathProbabilities.get(`${path.source}\u0000${path.target}`)! <= 0.05
+  )).sort(comparePosthocPaths);
+  if (significant.length === 0) {
+    return stored.status === "no_statistically_significant_path"
+      && stored.significant_path_count === 0
+      && posthocDriverIsEmpty(stored)
+      ? stored : null;
+  }
+  const driver = significant[0];
+  const driverProbability = pathProbabilities.get(`${driver.source}\u0000${driver.target}`)!;
+  return posthocDriverMatches(stored, driver, driverProbability, significant.length) ? stored : null;
+}
+
+function nativeLegacyPlsPosthocMinimumSampleSizeProjection(
+  run: AnalysisRun,
+  stored: NativePlsPosthocMinimumSampleSizeProjection,
+): NativePlsPosthocMinimumSampleSizeProjection | null {
+  if (!hasText(stored.driver_source) || !hasText(stored.driver_target)) return null;
+  const candidates = validPosthocPaths(run);
+  if (!candidates?.length) return null;
+  const driver = [...candidates].sort(comparePosthocPaths)[0];
+  const absolutePath = Math.abs(driver.coefficient);
+  if (stored.driver_source !== driver.source
+    || stored.driver_target !== driver.target
+    || !isFiniteNumber(stored.minimum_absolute_path_coefficient)
+    || !numbersClose(stored.minimum_absolute_path_coefficient, absolutePath)) return null;
+  const roundedRequired = absolutePath === 0 ? Infinity : Math.ceil((2.486 / absolutePath) ** 2);
+  const supportedInteger = Number.isSafeInteger(roundedRequired) && roundedRequired >= 1;
+  const expectedRequired = supportedInteger ? roundedRequired : null;
+  const expectedStatus = absolutePath === 0
+    ? "undefined_zero_path"
+    : supportedInteger ? "available" : "exceeds_supported_integer_range";
+  const expectedMeets = expectedRequired === null ? null : stored.analytical_sample_size >= expectedRequired;
+  return stored.status === expectedStatus
+    && stored.technically_required_sample_size === expectedRequired
+    && stored.meets_technical_requirement === expectedMeets ? stored : null;
+}
+
+function validPosthocPaths(run: AnalysisRun) {
+  const candidates = run.result!.paths.filter((path) => (
+    hasText(path.source) && hasText(path.target) && isFiniteNumber(path.coefficient)
+  ));
+  const identities = new Set(candidates.map((path) => `${path.source}\u0000${path.target}`));
+  return candidates.length === run.result!.paths.length && identities.size === candidates.length
+    ? candidates : null;
+}
+
+function comparePosthocPaths(
+  left: { source: string; target: string; coefficient: number },
+  right: { source: string; target: string; coefficient: number },
+) {
+  const byMagnitude = Math.abs(left.coefficient) - Math.abs(right.coefficient);
+  if (byMagnitude !== 0) return byMagnitude;
+  if (left.source !== right.source) return left.source < right.source ? -1 : 1;
+  if (left.target !== right.target) return left.target < right.target ? -1 : 1;
+  return 0;
+}
+
+function posthocDriverIsEmpty(stored: NativePlsPosthocMinimumSampleSizeProjection) {
+  return stored.driver_source === null
+    && stored.driver_target === null
+    && stored.driver_p_value_two_sided === null
+    && stored.minimum_absolute_path_coefficient === null
+    && stored.technically_required_sample_size === null
+    && stored.meets_technical_requirement === null;
+}
+
+function posthocDriverMatches(
+  stored: NativePlsPosthocMinimumSampleSizeProjection,
+  driver: { source: string; target: string; coefficient: number },
+  driverProbability: number,
+  significantPathCount: number,
+) {
+  const absolutePath = Math.abs(driver.coefficient);
+  const roundedRequired = absolutePath === 0 ? Infinity : Math.ceil((2.486 / absolutePath) ** 2);
+  const supportedInteger = Number.isSafeInteger(roundedRequired) && roundedRequired >= 1;
+  const expectedRequired = supportedInteger ? roundedRequired : null;
+  const expectedStatus = absolutePath === 0
+    ? "undefined_zero_path"
+    : supportedInteger ? "available" : "exceeds_supported_integer_range";
+  const expectedMeets = expectedRequired === null ? null : stored.analytical_sample_size >= expectedRequired;
+  return stored.status === expectedStatus
+    && stored.driver_source === driver.source
+    && stored.driver_target === driver.target
+    && isFiniteNumber(stored.driver_p_value_two_sided)
+    && numbersClose(stored.driver_p_value_two_sided, driverProbability)
+    && isFiniteNumber(stored.minimum_absolute_path_coefficient)
+    && numbersClose(stored.minimum_absolute_path_coefficient, absolutePath)
+    && stored.significant_path_count === significantPathCount
+    && stored.technically_required_sample_size === expectedRequired
+    && stored.meets_technical_requirement === expectedMeets;
+}
+
+function posthocSampleSizeStatusLabel(
+  status: NativePlsPosthocMinimumSampleSizeProjection["status"],
+) {
+  switch (status) {
+    case "not_applicable_no_structural_path": return "Not applicable: the model has no structural path";
+    case "inference_unavailable": return "Unavailable: run PLS bootstrapping to identify statistically significant paths";
+    case "inference_incomplete": return "Unavailable: bootstrap inference is incomplete for one or more structural paths";
+    case "no_statistically_significant_path": return "Unavailable: no structural path meets the 5% significance rule";
+    case "undefined_zero_path": return "Unavailable: the driving path coefficient is zero";
+    case "exceeds_supported_integer_range": return "Unavailable: the calculated requirement exceeds the supported integer range";
+    case "available": return "Available";
+  }
+}
+
+export interface NativePlsSampleSizePowerResultProjection {
+  recipe: NativePlsSampleSizePowerRecipeV1 | NativePlsSampleSizePowerRecipeV2;
+  result: NativePlsSampleSizePowerResultV1 | NativePlsSampleSizePowerResultV2;
+  presentation: NativePlsSampleSizePowerPresentation;
+}
+
+export function nativePlsSampleSizePowerResultProjection(
+  run: AnalysisRun | null | undefined,
+): NativePlsSampleSizePowerResultProjection | null {
+  if (!run
+    || run.status !== "completed"
+    || run.result
+    || run.assessment
+    || run.bootstrap
+    || run.permutation
+    || !run.plsSampleSizePower
+    || !run.plsSampleSizePowerRecipe
+    || run.provenance?.method !== "pls_sample_size_power"
+    || run.provenance.method_version !== run.plsSampleSizePower.method_version
+    || run.plsSampleSizePowerRecipe.method_version !== run.plsSampleSizePower.method_version
+    || run.provenance.settings.method !== "pls_sample_size_power"
+    || run.provenance.seed !== run.plsSampleSizePowerRecipe.master_seed
+    || run.provenance.settings.workers !== run.plsSampleSizePowerRecipe.workers
+    || run.provenance.settings.confidence_level !== run.plsSampleSizePowerRecipe.confidence_level) return null;
+  try {
+    validateNativePlsSampleSizePowerResult(run.plsSampleSizePowerRecipe, run.plsSampleSizePower);
+    return {
+      recipe: run.plsSampleSizePowerRecipe,
+      result: run.plsSampleSizePower,
+      presentation: nativePlsSampleSizePowerPresentation(run.plsSampleSizePowerRecipe, run.plsSampleSizePower),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function nativePlsSampleSizePowerResultTables(
+  projection: NativePlsSampleSizePowerResultProjection,
+): ResultTable[] {
+  const ids = {
+    "Power by sample size": "pls_power_by_sample_size",
+    "Bootstrap tail accounting": "pls_power_bootstrap_tail_accounting",
+    "Simulation failures": "pls_power_simulation_failures",
+    "Design assumptions": "pls_power_design_assumptions",
+    "Run provenance": "pls_power_run_provenance",
+  } as const;
+  const scopeWarning = [
+    ...projection.result.warnings,
+    ...projection.result.exclusions.map((exclusion) => `Excluded: ${exclusion}`),
+  ].join(" ");
+  return nativePlsSampleSizePowerExportTables(projection.recipe, projection.result).map((table) => ({
+    id: ids[table.name],
+    title: table.name,
+    status: projection.result.schema_version === 2 ? "validated" : "experimental",
+    warning: scopeWarning || null,
+    columns: table.columns,
+    rows: table.rows,
+  }));
 }
 
 export function nativeCtaPlsResultProjection(
@@ -710,6 +1097,13 @@ export function nativeNcaResultProjection(run: AnalysisRun | null | undefined): 
 
   const warnings = nca.warnings.map((warning) => warning.trim()).filter(Boolean);
   if (!warnings.includes(NATIVE_NCA_ENGINE_SCOPE_WARNING)) return null;
+  const ceFdhPeers: NativeNcaCeFdhPeerRow[] = peers.map((peer, index) => ({
+    peerIdentity: `CE-FDH peer ${index + 1}`,
+    conditionVariable: nca.x,
+    conditionValue: peer.x,
+    outcomeVariable: nca.y,
+    outcomeValue: peer.y,
+  }));
   const crFdh = ceilingEffects.find((row) => row.ceiling === "cr_fdh");
   const plot: NativeNcaPlot = {
     xLabel: nca.x,
@@ -721,7 +1115,7 @@ export function nativeNcaResultProjection(run: AnalysisRun | null | undefined): 
       minimumY: scope.minimum_y,
       maximumY: scope.maximum_y,
     },
-    ceFdhPeers: peers.map((peer) => ({ x: peer.x, y: peer.y })),
+    ceFdhPeers: ceFdhPeers.map((peer) => ({ x: peer.conditionValue, y: peer.outcomeValue })),
     crFdh: crFdh ? { slope: crFdh.slope as number, intercept: crFdh.intercept as number } : null,
   };
   return {
@@ -733,6 +1127,7 @@ export function nativeNcaResultProjection(run: AnalysisRun | null | undefined): 
     permutationSamples: nca.permutation_samples,
     usablePermutations: nca.usable_permutations,
     scope: plot.scope,
+    ceFdhPeers,
     ceilingEffects,
     bottlenecks,
     warnings,
@@ -748,6 +1143,42 @@ export function nativeNcaCeilingLabel(ceiling: "ce_fdh" | "cr_fdh" | "both"): st
   if (ceiling === "ce_fdh") return "CE-FDH";
   if (ceiling === "cr_fdh") return "CR-FDH";
   return "CE-FDH and CR-FDH";
+}
+
+export const NATIVE_NCA_CE_FDH_PEER_SOURCE_NOTE =
+  "Peer identities follow the immutable stored CE-FDH frontier order; the NCA v2 payload does not retain original source-row identifiers.";
+
+function ncaCeFdhPeerTableFromProjection(
+  projection: NativeNcaResultProjection,
+): ResultTable | null {
+  if (projection.ceiling === "cr_fdh") return null;
+  return {
+    id: "nca_ce_fdh_peers",
+    title: "CE-FDH frontier peers",
+    status: "validated",
+    warning: NATIVE_NCA_CE_FDH_PEER_SOURCE_NOTE,
+    columns: [
+      "Peer identity",
+      "Condition variable (X)",
+      "Condition value",
+      "Outcome variable (Y)",
+      "Outcome value",
+    ],
+    rows: projection.ceFdhPeers.map((peer) => [
+      peer.peerIdentity,
+      peer.conditionVariable,
+      formatNumber(peer.conditionValue),
+      peer.outcomeVariable,
+      formatNumber(peer.outcomeValue),
+    ]),
+  };
+}
+
+export function nativeNcaCeFdhPeerTable(
+  run: AnalysisRun | null | undefined,
+): ResultTable | null {
+  const projection = nativeNcaResultProjection(run);
+  return projection ? ncaCeFdhPeerTableFromProjection(projection) : null;
 }
 
 export function nativeGscaResultProjection(run: AnalysisRun | null | undefined): NativeGscaResultProjection | null {
@@ -1669,7 +2100,7 @@ function nativeHigherOrderProjection(
     declaration.componentIds.map(constructLabel).join(", "),
     "Reflective-reflective disjoint two-stage",
     "Stage 1 component scores; stage 2 generated score indicators",
-    "Point estimates only in the bounded native workflow",
+    "Point estimates only in the bounded native workflow; HOC bootstrapping and permutation inference remain unavailable",
   ]);
   return { constructIds, componentRows, structuralRows, scopeRows };
 }
@@ -1678,11 +2109,443 @@ function nativeHigherOrderProjection(
  * Builds the compact native results contract from a completed run. Tables are
  * included only when the engine payload contains at least one real output row.
  */
+export function nativePlsModelFitV2Projection(
+  run: AnalysisRun | null | undefined,
+): PlsModelFit | null {
+  const fit = run?.assessment?.model_fit;
+  const result = run?.result;
+  const technicalConstructIds = new Set(run?.modelSnapshot?.nodes
+    .filter((node) => node.data.semantic === "interaction" || node.data.semantic === "higher_order")
+    .map((node) => node.id) ?? []);
+  const analyticalOuterEstimates = result?.outer_estimates.filter((row) => !technicalConstructIds.has(row.construct)) ?? [];
+  if (!fit || !result
+    || fit.method_version !== PLS_MODEL_FIT_METHOD_VERSION_V2
+    || !Number.isSafeInteger(fit.analytical_sample_size)
+    || fit.analytical_sample_size !== result.used_observations
+    || !Array.isArray(fit.indicator_order)
+    || fit.indicator_order.length === 0
+    || fit.indicator_order.length !== analyticalOuterEstimates.length
+    || new Set(fit.indicator_order).size !== fit.indicator_order.length
+    || fit.indicator_order.some((indicator, index) => (
+      !hasText(indicator) || indicator !== analyticalOuterEstimates[index]?.indicator
+    ))
+    || fit.matrix_convention !== PLS_MODEL_FIT_MATRIX_CONVENTION_V2
+    || fit.geodesic_logarithm !== PLS_MODEL_FIT_GEODESIC_LOGARITHM_V2
+    || !fitMatrixV2Valid(fit.observed_correlation, fit.indicator_order.length)
+    || !fitMatrixV2Valid(fit.saturated_implied_correlation, fit.indicator_order.length)
+    || !fitMatrixV2Valid(fit.estimated_implied_correlation, fit.indicator_order.length)
+    || !fitMeasureV2Valid(fit.saturated, fit.observed_correlation, fit.saturated_implied_correlation)
+    || !fitMeasureV2Valid(fit.estimated, fit.observed_correlation, fit.estimated_implied_correlation)
+    || !fitCriterionV2Valid(fit.null_model_chi_square, true)
+    || !fitNfiV2Coherent(fit.saturated, fit.null_model_chi_square)
+    || !fitNfiV2Coherent(fit.estimated, fit.null_model_chi_square)
+    || fit.exact_fit_inference?.procedure !== PLS_MODEL_FIT_EXACT_INFERENCE_PROCEDURE_V2
+    || fit.exact_fit_inference.status !== "unavailable"
+    || fit.exact_fit_inference.reason_code !== "model_fit.adapted_bollen_stine_not_implemented") {
+    return null;
+  }
+  return fit;
+}
+
+const PLS_MODEL_FIT_EXACT_METHOD_VERSION_V1 = "pls_model_fit_exact_v1";
+const PLS_MODEL_FIT_EXACT_DIGEST = /^[a-f0-9]{64}$/;
+
+export function nativePlsModelFitExactProjection(
+  run: AnalysisRun | null | undefined,
+): PlsModelFitExactInference | null {
+  const point = nativePlsModelFitV2Projection(run);
+  const exact = run?.bootstrap?.model_fit_exact_inference;
+  const result = run?.result;
+  const marker = run?.provenance?.method_version
+    .split("+")
+    .includes(PLS_MODEL_FIT_EXACT_METHOD_VERSION_V1) ?? false;
+  if (!run || !result || !point || !exact || !marker
+    || exact.method_version !== PLS_MODEL_FIT_EXACT_METHOD_VERSION_V1
+    || exact.point_fit_method_version !== PLS_MODEL_FIT_METHOD_VERSION_V2
+    || exact.estimator_method_version !== result.method_version
+    || exact.resampling_method_version !== "indexed_resampling_v4"
+    || exact.procedure !== "adapted_bollen_stine_saturated_and_estimated_v1"
+    || exact.transformation !== "centered_standardized_x_times_s_inverse_half_times_sigma_half_v1"
+    || exact.matrix_power !== "symmetric_self_adjoint_positive_definite_eigendecomposition_v1"
+    || exact.quantile_method !== "hyndman_fan_type7_v1"
+    || exact.decision_rule !== "original_less_than_or_equal_to_upper_quantile_not_rejected_v1"
+    || exact.retry_policy !== "no_retry_no_replacement_fixed_indexed_draws_v1"
+    || exact.sample_digest_method !== "sha256_u64_le_v1"
+    || exact.usable_index_digest_method !== "sha256_u32_le_v1"
+    || exact.matrix_digest_method !== "sha256_f64_bits_row_major_v1"
+    || exact.minimum_usable_fraction !== 0.9
+    || !Number.isSafeInteger(exact.analytical_sample_size)
+    || exact.analytical_sample_size !== point.analytical_sample_size
+    || exact.analytical_sample_size !== result.used_observations
+    || !Number.isSafeInteger(exact.requested_replicates)
+    || exact.requested_replicates < 999
+    || exact.requested_replicates > 10_000
+    || exact.requested_replicates !== run.bootstrap?.plan.replicates
+    || exact.requested_replicates !== run.provenance?.settings.bootstrap_samples
+    || exact.master_seed !== run.bootstrap?.plan.master_seed
+    || exact.master_seed !== run.provenance?.settings.seed
+    || exact.indicator_order.length !== point.indicator_order?.length
+    || exact.indicator_order.some((indicator, index) => indicator !== point.indicator_order?.[index])
+    || !PLS_MODEL_FIT_EXACT_DIGEST.test(exact.observed_correlation_sha256)
+    || !fitExactVariantValid(exact.saturated, "saturated", point.saturated_implied_correlation!, point.saturated, exact)
+    || !fitExactVariantValid(exact.estimated, "estimated", point.estimated_implied_correlation!, point.estimated, exact)
+    || exact.status !== aggregateExactStatus([exact.saturated.status, exact.estimated.status])) {
+    return null;
+  }
+  return exact;
+}
+
+function fitExactVariantValid(
+  variant: PlsModelFitExactVariantInference,
+  expectedVariant: "saturated" | "estimated",
+  target: number[][],
+  point: PlsModelFit["saturated"],
+  bundle: PlsModelFitExactInference,
+): boolean {
+  const expectedOperation = `pls_model_fit_exact_${expectedVariant}_v1`;
+  if (variant.variant !== expectedVariant
+    || variant.operation !== expectedOperation
+    || variant.requested_replicates !== bundle.requested_replicates
+    || variant.ledger.length !== bundle.requested_replicates
+    || !PLS_MODEL_FIT_EXACT_DIGEST.test(variant.target_correlation_sha256)
+    || !PLS_MODEL_FIT_EXACT_DIGEST.test(variant.transformed_correlation_sha256)
+    || !fitMatrixV2Valid(variant.transformed_correlation, target.length)
+    || !isFiniteNumber(variant.transformation_max_abs_error)
+    || variant.transformation_max_abs_error < 0) return false;
+  let maxError = 0;
+  for (let row = 0; row < target.length; row += 1) {
+    for (let column = 0; column < target.length; column += 1) {
+      maxError = Math.max(maxError, Math.abs(variant.transformed_correlation[row][column] - target[row][column]));
+    }
+  }
+  if (maxError > 1e-9 || !numbersClose(maxError, variant.transformation_max_abs_error)) return false;
+  if (variant.ledger.some((entry, index) => {
+    if (entry.replicate_index !== index
+      || !PLS_MODEL_FIT_EXACT_DIGEST.test(entry.sample_indices_sha256)) return true;
+    const values = [entry.srmr, entry.d_uls, entry.d_g];
+    if (values.some((value) => value !== null && (!isFiniteNumber(value) || value < 0))) return true;
+    const usable = values.filter(isFiniteNumber).length;
+    const expectedStatus = usable === 3 ? "success" : usable > 0 ? "partial" : "failed";
+    const globalFailure = entry.failure_reason_code !== null || entry.failure_message !== null;
+    if (globalFailure) {
+      return usable !== 0
+        || entry.status !== "failed"
+        || entry.criterion_failures.length !== 0
+        || !hasText(entry.failure_reason_code)
+        || !hasText(entry.failure_message);
+    }
+    if (entry.status !== expectedStatus
+      || entry.failure_reason_code !== null
+      || entry.failure_message !== null
+      || entry.criterion_failures.length !== 3 - usable) return true;
+    const missing = new Set<"srmr" | "d_uls" | "d_g">();
+    if (entry.srmr === null) missing.add("srmr");
+    if (entry.d_uls === null) missing.add("d_uls");
+    if (entry.d_g === null) missing.add("d_g");
+    const failures = new Set(entry.criterion_failures.map((failure) => failure.criterion));
+    return failures.size !== entry.criterion_failures.length
+      || failures.size !== missing.size
+      || entry.criterion_failures.some((failure) => !missing.has(failure.criterion) || !hasText(failure.reason_code));
+  })) return false;
+  const dG = fitCriterionV2Number(point.d_g);
+  if (dG === null) return false;
+  const expected = [
+    ["srmr", point.srmr],
+    ["d_uls", point.d_uls],
+    ["d_g", dG],
+  ] as const;
+  if (variant.criteria.length !== expected.length
+    || variant.criteria.some((summary, index) => !fitExactCriterionValid(
+      summary,
+      expected[index][0],
+      expected[index][1],
+      variant,
+    ))) return false;
+  return variant.status === aggregateExactStatus(variant.criteria.map((criterion) => criterion.status));
+}
+
+function fitExactCriterionValid(
+  summary: PlsModelFitExactCriterionInference,
+  criterion: "srmr" | "d_uls" | "d_g",
+  original: number,
+  variant: PlsModelFitExactVariantInference,
+): boolean {
+  const values = variant.ledger.flatMap((entry) => {
+    const value = criterion === "srmr" ? entry.srmr : criterion === "d_uls" ? entry.d_uls : entry.d_g;
+    return isFiniteNumber(value) ? [value] : [];
+  }).sort((left, right) => left - right);
+  const requested = variant.requested_replicates;
+  const minimum = Math.max(2, Math.ceil(requested * 0.9));
+  const usable = values.length;
+  const exceedOrEqual = values.filter((value) => value >= original).length;
+  if (summary.criterion !== criterion
+    || !numbersClose(summary.original, original)
+    || summary.requested_replicates !== requested
+    || summary.minimum_usable_replicates !== minimum
+    || summary.usable_replicates !== usable
+    || summary.failed_replicates !== requested - usable
+    || !PLS_MODEL_FIT_EXACT_DIGEST.test(summary.usable_replicate_indices_sha256)
+    || summary.exceed_or_equal_count !== exceedOrEqual) return false;
+  if (usable < minimum) {
+    return summary.status === "unavailable"
+      && summary.replicate_min === null
+      && summary.replicate_max === null
+      && summary.upper_95 === null
+      && summary.upper_99 === null
+      && summary.not_rejected_95 === null
+      && summary.not_rejected_99 === null
+      && summary.empirical_upper_tail_probability === null
+      && summary.unavailable_reason_code === "model_fit_exact.insufficient_usable_replicates";
+  }
+  const upper95 = type7ExactQuantile(values, 0.95);
+  const upper99 = type7ExactQuantile(values, 0.99);
+  return summary.status === "available"
+    && numbersClose(summary.replicate_min, values[0])
+    && numbersClose(summary.replicate_max, values[usable - 1])
+    && numbersClose(summary.upper_95, upper95)
+    && numbersClose(summary.upper_99, upper99)
+    && summary.not_rejected_95 === (original <= upper95)
+    && summary.not_rejected_99 === (original <= upper99)
+    && numbersClose(summary.empirical_upper_tail_probability, exceedOrEqual / usable)
+    && summary.unavailable_reason_code === null;
+}
+
+function type7ExactQuantile(sorted: number[], probability: number): number {
+  const position = (sorted.length - 1) * probability;
+  const lower = Math.floor(position);
+  const upper = Math.ceil(position);
+  return lower === upper
+    ? sorted[lower]
+    : sorted[lower] + (position - lower) * (sorted[upper] - sorted[lower]);
+}
+
+function aggregateExactStatus(statuses: PlsModelFitExactStatus[]): PlsModelFitExactStatus {
+  if (statuses.every((status) => status === "available")) return "available";
+  if (statuses.some((status) => status !== "unavailable")) return "partial";
+  return "unavailable";
+}
+
+function fitMatrixV2Valid(matrix: unknown, dimension: number): matrix is number[][] {
+  if (!Array.isArray(matrix) || matrix.length !== dimension) return false;
+  for (let row = 0; row < dimension; row += 1) {
+    if (!Array.isArray(matrix[row]) || matrix[row].length !== dimension) return false;
+    for (let column = 0; column < dimension; column += 1) {
+      const value = matrix[row][column];
+      if (!isFiniteNumber(value)
+        || Math.abs(value) > 1 + 1e-10
+        || (row === column && !numbersClose(value, 1))
+        || !numbersClose(value, matrix[column]?.[row])) return false;
+    }
+  }
+  return true;
+}
+
+function fitCriterionV2Valid(
+  criterion: unknown,
+  nonnegative: boolean,
+): criterion is NonNullable<PlsModelFit["null_model_chi_square"]> {
+  if (!criterion || typeof criterion !== "object") return false;
+  if ("value" in criterion) {
+    return (criterion as { status?: unknown }).status === "available"
+      && isFiniteNumber((criterion as { value?: unknown }).value)
+      && (!nonnegative || (criterion as { value: number }).value >= 0);
+  }
+  return (criterion as { status?: unknown }).status === "unavailable"
+    && hasText((criterion as { reason_code?: unknown }).reason_code);
+}
+
+function fitCriterionV2Number(
+  criterion: PlsModelFit["null_model_chi_square"],
+): number | null {
+  return criterion?.status === "available" && isFiniteNumber(criterion.value)
+    ? criterion.value
+    : null;
+}
+
+function fitMeasureV2Valid(
+  measure: PlsModelFit["saturated"],
+  observed: number[][],
+  implied: number[][],
+): boolean {
+  if (!isFiniteNumber(measure.srmr) || measure.srmr < 0
+    || !isFiniteNumber(measure.d_uls) || measure.d_uls < 0
+    || !fitCriterionV2Valid(measure.d_g, true)
+    || !fitCriterionV2Valid(measure.chi_square, true)
+    || !fitCriterionV2Valid(measure.degrees_of_freedom, true)
+    || !fitCriterionV2Valid(measure.nfi, false)) return false;
+  const dimension = observed.length;
+  let expectedDuls = 0;
+  for (let row = 0; row < dimension; row += 1) {
+    for (let column = 0; column <= row; column += 1) {
+      expectedDuls += (observed[row][column] - implied[row][column]) ** 2;
+    }
+  }
+  const expectedSrmr = Math.sqrt(expectedDuls / (dimension * (dimension + 1) / 2));
+  const degreesOfFreedom = fitCriterionV2Number(measure.degrees_of_freedom);
+  return numbersClose(measure.d_uls, expectedDuls)
+    && numbersClose(measure.srmr, expectedSrmr)
+    && (degreesOfFreedom === null || Number.isSafeInteger(degreesOfFreedom));
+}
+
+function fitNfiV2Coherent(
+  measure: PlsModelFit["saturated"],
+  nullChiSquare: PlsModelFit["null_model_chi_square"],
+): boolean {
+  const model = fitCriterionV2Number(measure.chi_square);
+  const baseline = fitCriterionV2Number(nullChiSquare);
+  const nfi = fitCriterionV2Number(measure.nfi);
+  if (model !== null && baseline !== null && baseline > Number.EPSILON) {
+    return nfi !== null && numbersClose(nfi, 1 - model / baseline);
+  }
+  return nfi === null;
+}
+
+const PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION = "pls_bootstrap_null_centered_test_tail_v1";
+const PLS_BOOTSTRAP_TEST_TAIL_INFERENCE_KEYS = [
+  "method_version",
+  "selected_test_tail",
+  "parameters",
+] as const;
+const PLS_BOOTSTRAP_TEST_TAIL_PARAMETER_KEYS = [
+  "parameter",
+  "usable_replicates",
+  "two_sided_exceedances",
+  "greater_or_equal_exceedances",
+  "less_or_equal_exceedances",
+  "p_value_two_sided",
+  "p_value_greater",
+  "p_value_less",
+] as const;
+
+export interface NativePlsBootstrapTestTailProjection {
+  selectedTestTail: "one_sided_greater" | "one_sided_less";
+  rows: Array<{
+    parameter: string;
+    usableReplicates: number;
+    selectedExceedances: number;
+    selectedProbability: number;
+  }>;
+}
+
+function exactObjectKeys(value: object, keys: readonly string[]): boolean {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
+}
+
+function parsedPlsBootstrapTestTail(
+  run: AnalysisRun,
+): { valid: boolean; projection: NativePlsBootstrapTestTailProjection | null } {
+  const selected = run.provenance?.settings?.bootstrap_test_tail ?? "two_sided";
+  if (!["two_sided", "one_sided_greater", "one_sided_less"].includes(selected)) {
+    return { valid: false, projection: null };
+  }
+  const markerCount = run.provenance?.method_version
+    .split("+")
+    .filter((version) => version === PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION)
+    .length ?? 0;
+  const receipt = run.bootstrap?.test_tail_inference;
+  if (selected === "two_sided") {
+    return { valid: markerCount === 0 && receipt === undefined, projection: null };
+  }
+  if (!run.bootstrap
+    || run.provenance?.method !== "pls_pm"
+    || markerCount !== 1
+    || !receipt
+    || !exactObjectKeys(receipt, PLS_BOOTSTRAP_TEST_TAIL_INFERENCE_KEYS)
+    || receipt.method_version !== PLS_BOOTSTRAP_TEST_TAIL_METHOD_VERSION
+    || receipt.selected_test_tail !== selected
+    || !Array.isArray(receipt.parameters)
+    || receipt.parameters.length !== run.bootstrap.percentile.parameters.length
+    || !Number.isSafeInteger(run.bootstrap.usable_replicates)
+    || run.bootstrap.usable_replicates < 1
+    || run.bootstrap.usable_replicates > run.bootstrap.plan.replicates) {
+    return { valid: false, projection: null };
+  }
+  const identities = new Set<string>();
+  const rows: NativePlsBootstrapTestTailProjection["rows"] = [];
+  for (const [index, row] of receipt.parameters.entries()) {
+    const percentile = run.bootstrap.percentile.parameters[index];
+    if (!exactObjectKeys(row, PLS_BOOTSTRAP_TEST_TAIL_PARAMETER_KEYS)
+      || !hasText(row.parameter)
+      || row.parameter !== percentile?.parameter
+      || identities.has(row.parameter)
+      || row.usable_replicates !== run.bootstrap.usable_replicates
+      || percentile.usable_replicates !== row.usable_replicates) {
+      return { valid: false, projection: null };
+    }
+    identities.add(row.parameter);
+    const pairs = [
+      [row.two_sided_exceedances, row.p_value_two_sided],
+      [row.greater_or_equal_exceedances, row.p_value_greater],
+      [row.less_or_equal_exceedances, row.p_value_less],
+    ] as const;
+    if (pairs.some(([count, probability]) => (
+      !Number.isSafeInteger(count)
+      || count < 0
+      || count > row.usable_replicates
+      || !isFiniteNumber(probability)
+      || probability < 0
+      || probability > 1
+      || !Object.is(probability, (count + 1) / (row.usable_replicates + 1))
+    ))) return { valid: false, projection: null };
+    const greater = selected === "one_sided_greater";
+    rows.push({
+      parameter: row.parameter,
+      usableReplicates: row.usable_replicates,
+      selectedExceedances: greater
+        ? row.greater_or_equal_exceedances
+        : row.less_or_equal_exceedances,
+      selectedProbability: greater ? row.p_value_greater : row.p_value_less,
+    });
+  }
+  return { valid: true, projection: { selectedTestTail: selected, rows } };
+}
+
+/** Fail-closed bootstrap tail validator used by canonical hydration and rendering. */
+export function nativePlsBootstrapTestTailContractValid(
+  run: AnalysisRun | null | undefined,
+): boolean {
+  return Boolean(run && parsedPlsBootstrapTestTail(run).valid);
+}
+
+export function nativePlsBootstrapTestTailProjection(
+  run: AnalysisRun | null | undefined,
+): NativePlsBootstrapTestTailProjection | null {
+  if (!run) return null;
+  const parsed = parsedPlsBootstrapTestTail(run);
+  return parsed.valid ? parsed.projection : null;
+}
+
 export function nativeResultTables(run: AnalysisRun | null | undefined): ResultTable[] {
+  const power = nativePlsSampleSizePowerResultProjection(run);
+  if (power) return nativePlsSampleSizePowerResultTables(power);
+  if (run?.plsSampleSizePower || run?.provenance?.method === "pls_sample_size_power") return [];
   if (!isCompletedResultRun(run)) return [];
+  if (!nativePlsBootstrapTestTailContractValid(run)) return [];
 
   const tables: ResultTable[] = [];
   const result = run.result;
+  const consistentBootstrap = nativePlscConsistentBootstrapProjection(run);
+  if (run.provenance?.method === "plsc"
+    && (run.provenance.settings.bootstrap_samples > 0 || run.bootstrap)
+    && !consistentBootstrap) return [];
+  const consistentPermutation = nativePlscConsistentPermutationProjection(run);
+  if (run.provenance?.method === "plsc"
+    && (run.provenance.settings.permutation_samples > 0 || run.permutation)
+    && !consistentPermutation) return [];
+  const boundedHigherOrder = nativeHigherOrderProjection(run, constructDisplayLabelResolver(run));
+  const modelFitV2 = nativePlsModelFitV2Projection(run);
+  if (run.assessment?.model_fit?.method_version && !modelFitV2 && !boundedHigherOrder) return [];
+  const modelFitExact = nativePlsModelFitExactProjection(run);
+  const hasModelFitExactVersion = run.provenance?.method_version
+    .split("+")
+    .includes(PLS_MODEL_FIT_EXACT_METHOD_VERSION_V1) ?? false;
+  const hasModelFitExactPayload = Boolean(run.bootstrap?.model_fit_exact_inference);
+  if (hasModelFitExactVersion !== hasModelFitExactPayload
+    || (hasModelFitExactPayload && !modelFitExact)) return [];
+  const posthocMinimumSampleSize = nativePlsPosthocMinimumSampleSizeProjection(run);
+  if (result.posthoc_minimum_sample_size && !posthocMinimumSampleSize) return [];
   const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
   const inferenceRun = run.permutation && !structuralPathRandomization
     ? { ...run, permutation: undefined }
@@ -1717,15 +2580,39 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     addCbsemResultTables(tables, run);
     return tables;
   }
+  if (result.endogeneity) {
+    const endogeneity = methodResultTables(result).find((table) => table.id === "endogeneity_copula");
+    if (endogeneity) tables.push(endogeneity);
+  }
   const constructLabel = constructDisplayLabelResolver(run);
+  const hasHtmtBootstrapVersion = run.provenance?.method_version
+    .split("+")
+    .includes("htmt_bias_corrected_bootstrap_inference_v1") ?? false;
+  const hasHtmtBootstrapPayload = Boolean(run.bootstrap?.htmt_inference);
+  if (hasHtmtBootstrapVersion !== hasHtmtBootstrapPayload) return [];
   if (result.mga) {
     addMgaResultTables(tables, run, constructLabel);
+    return tables;
+  }
+  if (result.micom?.method_version === CURRENT_MICOM_METHOD_VERSION) {
+    if (run.provenance?.method !== "mga"
+      || !run.provenance.method_version.split("+").includes(CURRENT_MICOM_METHOD_VERSION)) return [];
+    const projection = currentStandaloneMicomProjection(result.micom);
+    if (!projection) return [];
+    addMicomResultTables(
+      tables,
+      projection,
+      projection.analysis.groups[0].group,
+      projection.analysis.groups[1].group,
+      constructLabel,
+    );
+    addMicomAccountingTable(tables, projection.analysis);
     return tables;
   }
   const moderationProductConstructIds = new Set((result.moderation?.estimates ?? [])
     .filter((row) => hasText(row.product_construct))
     .map((row) => row.product_construct));
-  const higherOrder = nativeHigherOrderProjection(run, constructLabel);
+  const higherOrder = boundedHigherOrder;
   const higherOrderConstructIds = new Set(run.modelSnapshot?.nodes
     .filter((node) => node.data.semantic === "higher_order")
     .map((node) => node.id) ?? []);
@@ -1782,6 +2669,51 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       .filter((row) => hasText(row.source) && hasText(row.target) && isFiniteNumber(row.coefficient))
       .map((row) => [constructPathLabel([row.source, row.target], constructLabel), formatNumber(row.coefficient)]),
   });
+
+  const technicalSampleSize = posthocMinimumSampleSize;
+  if (technicalSampleSize) {
+    const required = technicalSampleSize.technically_required_sample_size;
+    const status = technicalSampleSize.meets_technical_requirement;
+    const hasDriver = hasText(technicalSampleSize.driver_source)
+      && hasText(technicalSampleSize.driver_target)
+      && isFiniteNumber(technicalSampleSize.minimum_absolute_path_coefficient);
+    const resultRows = required === null
+      ? [
+          ["Result status", posthocSampleSizeStatusLabel(technicalSampleSize.status)],
+          ["Analytical sample size", String(technicalSampleSize.analytical_sample_size)],
+          ["Eligible structural paths", String(technicalSampleSize.eligible_path_count ?? result.paths.length)],
+          ["Formula assumptions", "5% significance, 80% power, directional inverse-square-root test"],
+          ["Inference requirement", technicalSampleSize.method_version === "inverse_square_root_posthoc_v2"
+            ? "Complete two-sided PLS bootstrap probabilities are required for significance-aware path selection"
+            : "Not recorded for this historical result"],
+        ]
+      : [
+          ["Technically required sample size", String(required)],
+          ["Analytical sample size", String(technicalSampleSize.analytical_sample_size)],
+          ["Technical requirement", status === null ? "Cannot be determined" : status ? "Met" : "Not met"],
+          ...(hasDriver ? [
+            ["Driving path", constructPathLabel([technicalSampleSize.driver_source!, technicalSampleSize.driver_target!], constructLabel)],
+            ["Absolute path coefficient", formatNumber(technicalSampleSize.minimum_absolute_path_coefficient!)],
+          ] : []),
+          ...(isFiniteNumber(technicalSampleSize.driver_p_value_two_sided) ? [
+            ["Bootstrap p value (two-sided)", formatNumber(technicalSampleSize.driver_p_value_two_sided)],
+          ] : []),
+          ["Significant structural paths", String(technicalSampleSize.significant_path_count ?? "Not recorded")],
+          ...(technicalSampleSize.method_version === "inverse_square_root_posthoc_v2" ? [
+            ["Driver selection", "Smallest absolute path with two-sided normal-reference bootstrap p ≤ 0.05"],
+          ] : []),
+          ["Formula assumptions", "5% significance, 80% power, directional inverse-square-root test"],
+          ["Method", "Inverse square root"],
+        ];
+    addTable(tables, {
+      id: "posthoc_minimum_sample_size",
+      title: "Post-hoc minimum sample size",
+      status: technicalSampleSize.method_version === "inverse_square_root_posthoc_v2" ? "validated" : "experimental",
+      warning: technicalSampleSize.caution,
+      columns: ["Result", "Value"],
+      rows: resultRows,
+    });
+  }
 
   addTable(tables, {
     id: "control_effects",
@@ -2023,7 +2955,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     });
     addTable(tables, {
       id: "cta_pls_scope",
-      title: "CTA-PLS scope and exclusions",
+      title: "CTA-PLS requirements and exclusions",
       status: "validated",
       warning: NATIVE_CTA_PLS_RESULT_WARNING,
       columns: ["Field", "Value"],
@@ -2079,7 +3011,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       });
       addTable(tables, {
         id: "ipma_scope",
-        title: "Calculation scope",
+        title: "Analysis details",
         warning: null,
         columns: ["Field", "Value"],
         rows: [
@@ -2148,6 +3080,21 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
         rows: numericMatrixRows(assessment.htmt.constructs, assessment.htmt.values, false, constructLabel, technicalConstructIds),
       });
     }
+    if (run.bootstrap?.htmt_inference) {
+      if (run.bootstrap.htmt_inference.method_version !== "htmt_bias_corrected_bootstrap_inference_v1"
+        || !run.provenance?.method_version.split("+").includes("htmt_bias_corrected_bootstrap_inference_v1")) return [];
+      const htmtInferenceTables = htmtBootstrapTables(
+        run.bootstrap.htmt_inference.htmt_plus,
+        run.bootstrap.htmt_inference.htmt_original,
+        assessment,
+        run.bootstrap.plan.replicates,
+        run.bootstrap.failed_replicates.map((failure) => failure.replicate_index),
+        constructLabel,
+        technicalConstructIds,
+      );
+      if (!htmtInferenceTables) return [];
+      for (const table of htmtInferenceTables) addTable(tables, table);
+    }
 
     const hasAdjustedR2 = assessment.structural_quality.some((row) => isFiniteNumber(row.adjusted_r_squared));
     addTable(tables, {
@@ -2198,17 +3145,85 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       ]),
     });
 
-    if (assessment.model_fit) {
+    if (assessment.model_fit && !higherOrder) {
+      const fitColumns = modelFitV2
+        ? ["Model", "SRMR", "d_ULS", "d_G", "Chi-square", "df", "NFI"]
+        : ["Model", "SRMR", "d_ULS"];
       addTable(tables, {
         id: "model_fit",
         title: "Model fit",
-        warning: null,
-        columns: ["Model", "SRMR", "d_ULS"],
+        warning: modelFitV2
+          ? modelFitExact
+            ? "SRMR and NFI are approximate fit measures. Exact-fit decisions for SRMR, d_ULS, and d_G are reported separately from the adapted Bollen-Stine run."
+            : "SRMR and NFI are approximate fit measures. Interpret d_ULS and d_G only with adapted Bollen-Stine inference; that inference is not available for this run."
+          : null,
+        columns: fitColumns,
         rows: [
-          fitRow("Saturated model", assessment.model_fit.saturated),
-          fitRow("Estimated model", assessment.model_fit.estimated),
+          fitRow("Saturated model", assessment.model_fit.saturated, Boolean(modelFitV2)),
+          fitRow("Estimated model", assessment.model_fit.estimated, Boolean(modelFitV2)),
         ].filter((row): row is string[] => Boolean(row)),
       });
+      if (modelFitV2) {
+        addTable(tables, {
+          id: "model_fit_details",
+          title: "Model fit details",
+          warning: null,
+          columns: ["Field", "Value"],
+          rows: [
+            ["Analyzed observations", String(modelFitV2.analytical_sample_size)],
+            ["Indicators", String(modelFitV2.indicator_order!.length)],
+            ["Matrix basis", "Observed and model-implied indicator correlations"],
+            ["Discrepancy cells", "Lower triangle, including the zero diagonal residuals"],
+            ["d_G logarithm", "Natural logarithm"],
+            ["Exact-fit procedure", "Adapted Bollen-Stine for saturated and estimated models"],
+            ["Exact-fit inference", modelFitExact ? "Available in this Experimental Labs run" : "Unavailable for this run"],
+            ...(modelFitExact ? [
+              ["Requested exact-fit replicates per model", String(modelFitExact.requested_replicates)],
+              ["Exact-fit retry policy", "No retry or replacement"],
+            ] : []),
+          ],
+        });
+        if (modelFitExact) {
+          addTable(tables, {
+            id: "model_fit_exact",
+            title: "Exact overall model fit",
+            status: "experimental",
+            warning: "Experimental adapted Bollen-Stine inference. The fixed saturated and estimated ledgers are separate from ordinary parameter bootstrapping.",
+            columns: ["Model", "Criterion", "Original", "HI95", "HI99", "5% decision", "1% decision", "Empirical upper-tail probability", "Usable", "Failed"],
+            rows: [modelFitExact.saturated, modelFitExact.estimated].flatMap((variant) =>
+              variant.criteria.map((criterion) => [
+                sentenceCase(variant.variant),
+                criterion.criterion === "srmr" ? "SRMR" : criterion.criterion === "d_uls" ? "d_ULS" : "d_G",
+                formatNumber(criterion.original),
+                formatOptionalNumber(criterion.upper_95, 6),
+                formatOptionalNumber(criterion.upper_99, 6),
+                exactFitDecisionLabel(criterion.not_rejected_95),
+                exactFitDecisionLabel(criterion.not_rejected_99),
+                formatOptionalNumber(criterion.empirical_upper_tail_probability),
+                String(criterion.usable_replicates),
+                String(criterion.failed_replicates),
+              ])),
+          });
+          const failureRows = [modelFitExact.saturated, modelFitExact.estimated].flatMap((variant) =>
+            variant.ledger.filter((entry) => entry.status !== "success").map((entry) => [
+              sentenceCase(variant.variant),
+              String(entry.replicate_index),
+              sentenceCase(entry.status),
+              entry.failure_reason_code
+                ?? entry.criterion_failures.map((failure) => `${failure.criterion}: ${failure.reason_code}`).join("; "),
+              entry.failure_message ?? "Criterion-level unavailability",
+              entry.sample_indices_sha256,
+            ]));
+          addTable(tables, {
+            id: "model_fit_exact_failures",
+            title: "Exact-fit replicate ledger exceptions",
+            status: "experimental",
+            warning: "Every partial or failed indexed draw is retained; no draw was retried or replaced.",
+            columns: ["Model", "Replicate", "Status", "Reason", "Details", "Sample-index digest"],
+            rows: failureRows,
+          });
+        }
+      }
     }
 
     if (assessment.blindfolding) {
@@ -2263,7 +3278,217 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     ? addControlInferenceTables(tables, inferenceRun, result.control_estimates ?? [], constructLabel)
     : new Set<string>();
 
+  if (consistentPermutation) {
+    const permutation = consistentPermutation.permutation;
+    const selectedTail = consistentPermutation.selectedTailInference;
+    const directionalByParameter = new Map(
+      (permutation.directional_inference?.parameters ?? []).map((parameter) => [parameter.parameter, parameter]),
+    );
+    const hasDirectional = directionalByParameter.size > 0;
+    addTable(tables, {
+      id: "plsc_permutation_accounting",
+      title: "PLSc consistent permutation accounting",
+      status: "experimental",
+      warning: consistentPermutation.failedPermutations > 0
+        ? `${consistentPermutation.failedPermutations} fixed group-label assignment(s) had a failed full-PLSc refit and were retained without retry or replacement.`
+        : "Every fixed assignment completed both full-PLSc group refits.",
+      columns: ["Field", "Value"],
+      rows: [
+        ["Requested label assignments", String(consistentPermutation.requestedPermutations)],
+        ["Usable full-PLSc assignments", String(consistentPermutation.usablePermutations)],
+        ["Failed full-PLSc assignments", String(consistentPermutation.failedPermutations)],
+        ["Minimum usable assignments", String(consistentPermutation.minimumUsablePermutations)],
+        ["Group column", permutation.group_column!],
+        ["Test", hasDirectional
+          ? "Two-tailed absolute and directed greater/less Group A minus Group B differences"
+          : "Two-tailed absolute Group A minus Group B difference"],
+        ["Significance level", formatNumber(permutation.significance_level!, 2)],
+        ["Retry policy", "No retry or replacement assignment"],
+      ],
+    });
+    addTable(tables, {
+      id: "plsc_permutation_groups",
+      title: "PLSc permutation groups",
+      status: "experimental",
+      warning: null,
+      columns: ["Role", "Group", "Complete cases", "Parameter digest"],
+      rows: [
+        ["Group A", permutation.group_a!.group, String(permutation.group_a!.observations), permutation.group_a!.parameter_values_sha256],
+        ["Group B", permutation.group_b!.group, String(permutation.group_b!.observations), permutation.group_b!.parameter_values_sha256],
+      ],
+    });
+    if (selectedTail) {
+      const selectedTailLabel = selectedTail.selected_test_tail === "group_a_greater"
+        ? "Group A greater than Group B"
+        : "Group A less than Group B";
+      addTable(tables, {
+        id: "plsc_permutation_selected_tail",
+        title: "PLSc selected one-sided permutation test",
+        status: "experimental",
+        warning: "The selected one-sided probabilities use the same fixed usable-assignment ledger as the displayed directional inference; the directed contrast is Group A minus Group B.",
+        columns: ["Field", "Value"],
+        rows: [
+          ["Method", selectedTail.method_version],
+          ["Orientation", "Group A minus Group B"],
+          ["Selected test", `${selectedTail.selected_test_tail} (${selectedTailLabel})`],
+          ["Usable-assignment denominator", String(consistentPermutation.usablePermutations)],
+        ],
+      });
+      addTable(tables, {
+        id: "plsc_permutation_selected_tail_parameters",
+        title: `PLSc selected one-sided results — ${selectedTailLabel}`,
+        status: "experimental",
+        warning: null,
+        columns: ["Parameter", "Selected exceedances", "Selected p", "Usable assignments"],
+        rows: selectedTail.parameters.map((parameter) => [
+          parameterLabel(parameter.parameter, constructLabel),
+          String(parameter.selected_exceedances),
+          formatOptionalPValue(parameter.selected_p_value),
+          String(parameter.permutations),
+        ]),
+      });
+    }
+    const parameterTable = (
+      id: string,
+      title: string,
+      families: readonly NonNullable<(typeof permutation.parameters)[number]["family"]>[],
+    ) => addTable(tables, {
+      id,
+      title,
+      status: "experimental",
+      warning: id === "plsc_permutation_construct_criteria"
+        ? "This internal result does not include MICOM; do not treat these parameter differences as a measurement-invariance decision."
+        : null,
+      columns: hasDirectional
+        ? ["Parameter", "Group A", "Group B", "Difference A − B", "p (two-tailed)", "Count ≥ observed", "p (greater)", "Count ≤ observed", "p (less)", "Usable assignments"]
+        : ["Parameter", "Group A", "Group B", "Difference A − B", "p (two-tailed)", "Usable assignments"],
+      rows: permutation.parameters
+        .filter((parameter) => parameter.family != null && families.includes(parameter.family))
+        .map((parameter) => {
+          const directional = directionalByParameter.get(parameter.parameter);
+          return [
+            parameterLabel(parameter.parameter, constructLabel),
+            formatOptionalNumber(parameter.estimate_a),
+            formatOptionalNumber(parameter.estimate_b),
+            formatNumber(parameter.original),
+            formatOptionalPValue(parameter.p_value_two_sided),
+            ...(directional ? [
+              String(directional.greater_or_equal),
+              formatOptionalPValue(directional.p_value_greater),
+              String(directional.less_or_equal),
+              formatOptionalPValue(directional.p_value_less),
+            ] : []),
+            String(parameter.permutations),
+          ];
+        }),
+    });
+    parameterTable("plsc_permutation_paths", "PLSc group path differences", ["path"]);
+    parameterTable("plsc_permutation_outer_loadings", "PLSc group loading differences", ["outer_loading"]);
+    parameterTable(
+      "plsc_permutation_construct_criteria",
+      "PLSc group construct-criterion differences",
+      ["rho_a", "construct_correlation", "r_squared"],
+    );
+    if (permutation.failed_permutations!.length > 0) {
+      addTable(tables, {
+        id: "plsc_permutation_failures",
+        title: "PLSc consistent-permutation failed assignments",
+        status: "experimental",
+        warning: null,
+        columns: ["Assignment", "Reason", "Message", "Label-assignment digest"],
+        rows: permutation.failed_permutations!.map((failure) => [
+          String(failure.permutation_index + 1),
+          failure.reason_code,
+          failure.message,
+          failure.label_assignment_sha256,
+        ]),
+      });
+    }
+  }
+
   if (run.bootstrap) {
+    const isConsistentBootstrap = consistentBootstrap !== null;
+    if (!isConsistentBootstrap) {
+      addTable(tables, {
+        id: "bootstrap_accounting",
+        title: "PLS bootstrap replicate accounting",
+        warning: run.bootstrap.failed_replicates.length > 0
+          ? `${run.bootstrap.failed_replicates.length} preplanned PLS refit(s) failed and were retained without retry or replacement.`
+          : null,
+        columns: ["Field", "Value"],
+        rows: [
+          ["Requested case resamples", String(run.bootstrap.plan.replicates)],
+          ["Attempted preplanned PLS refits", String(run.bootstrap.plan.replicates)],
+          ["Usable PLS refits", String(run.bootstrap.usable_replicates)],
+          ["Failed PLS refits", String(run.bootstrap.failed_replicates.length)],
+          ["Retry policy", "No retry or replacement draw"],
+        ],
+      });
+      if (run.bootstrap.failed_replicates.length > 0) {
+        addTable(tables, {
+          id: "bootstrap_failures",
+          title: "PLS bootstrap failed refits",
+          warning: null,
+          columns: ["Replicate", "Reason code", "Message"],
+          rows: run.bootstrap.failed_replicates.map((failure) => [
+            String(failure.replicate_index + 1),
+            failure.reason_code ?? "legacy_unclassified_failure",
+            failure.message,
+          ]),
+        });
+      }
+    }
+    if (consistentBootstrap) {
+      addTable(tables, {
+        id: "plsc_bootstrap_accounting",
+        title: "PLSc bootstrap replicate accounting",
+        warning: consistentBootstrap.failedReplicates > 0
+          ? `${consistentBootstrap.failedReplicates} full-PLSc refit(s) failed and were retained without retry or replacement.`
+          : null,
+        columns: ["Field", "Value"],
+        rows: [
+          ["Requested case resamples", String(consistentBootstrap.requestedReplicates)],
+          ["Attempted preplanned full-PLSc refits", String(consistentBootstrap.requestedReplicates)],
+          ["Usable full-PLSc refits", String(consistentBootstrap.usableReplicates)],
+          ["Failed full-PLSc refits", String(consistentBootstrap.failedReplicates)],
+          ["Minimum usable refits", String(consistentBootstrap.minimumUsableReplicates)],
+          ["Replayable successful-refit witnesses", String(consistentBootstrap.successfulReplicateWitnesses)],
+          ["Delete-one PLSc fits", String(consistentBootstrap.jackknifeCases)],
+          ["Replayable successful delete-one witnesses", String(consistentBootstrap.successfulJackknifeWitnesses)],
+          ["Failed delete-one fits", String(consistentBootstrap.failedJackknifeCases)],
+          ["BCa parameters available", String(consistentBootstrap.bcaAvailableParameters)],
+          ["BCa parameters unavailable", String(consistentBootstrap.bcaUnavailableParameters)],
+          ["Retry policy", "No retry or replacement draw"],
+        ],
+      });
+      if (run.bootstrap.failed_replicates.length > 0) {
+        addTable(tables, {
+          id: "plsc_bootstrap_failures",
+          title: "PLSc bootstrap failed refits",
+          warning: null,
+          columns: ["Replicate", "Reason", "Message", "Sample digest"],
+          rows: run.bootstrap.failed_replicates.map((failure) => [
+            String(failure.replicate_index + 1),
+            failure.reason_code ?? "",
+            failure.message,
+            failure.sample_indices_sha256 ?? "",
+          ]),
+        });
+      }
+      if ((run.bootstrap.failed_jackknife_cases?.length ?? 0) > 0) {
+        addTable(tables, {
+          id: "plsc_bootstrap_jackknife_failures",
+          title: "PLSc bootstrap failed delete-one fits",
+          warning: "BCa intervals are unavailable when any required delete-one PLSc fit fails.",
+          columns: ["Omitted complete case", "Reason", "Message"],
+          rows: run.bootstrap.failed_jackknife_cases!.map((failure) => [
+            String(failure.omitted_case + 1),
+            failure.reason_code,
+            failure.message,
+          ]),
+        });
+      }
+    }
     const percentileRows = run.bootstrap.percentile.parameters.filter((row) =>
       hasText(row.parameter)
       && !aggregateMediationParameters.has(row.parameter)
@@ -2275,9 +3500,9 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     const hasPValue = percentileRows.some((row) => isFiniteNumber(row.p_value_two_sided));
     addTable(tables, {
       id: "bootstrap_percentile",
-      title: "Bootstrapping",
+      title: isConsistentBootstrap ? "PLSc consistent bootstrapping" : "Bootstrapping",
       warning: run.bootstrap.failed_replicates.length
-        ? `${run.bootstrap.failed_replicates.length} bootstrap replicate(s) failed.`
+        ? `${run.bootstrap.failed_replicates.length} ${isConsistentBootstrap ? "full-PLSc " : ""}bootstrap replicate(s) failed.`
         : null,
       columns: ["Parameter", "Original", "Mean", "STDEV", ...(hasTStatistic ? ["t"] : []), ...(hasPValue ? ["p"] : []), "CI lower", "CI upper"],
       rows: percentileRows.map((row) => [
@@ -2291,6 +3516,28 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
         formatNumber(row.upper),
       ]),
     });
+
+    const testTail = nativePlsBootstrapTestTailProjection(run);
+    if (testTail) {
+      const greater = testTail.selectedTestTail === "one_sided_greater";
+      addTable(tables, {
+        id: "bootstrap_one_sided_test_tail",
+        title: greater ? "One-sided bootstrap test (greater)" : "One-sided bootstrap test (less)",
+        warning: "Null-centered bootstrap differences use inclusive tail counts and the plus-one probability (count + 1) / (usable + 1).",
+        columns: [
+          "Parameter",
+          greater ? "Count (null-centered Δ* ≥ original)" : "Count (null-centered Δ* ≤ original)",
+          "Usable bootstrap draws",
+          greater ? "p (greater, plus-one)" : "p (less, plus-one)",
+        ],
+        rows: testTail.rows.map((row) => [
+          parameterLabel(row.parameter, constructLabel),
+          String(row.selectedExceedances),
+          String(row.usableReplicates),
+          formatPValue(row.selectedProbability),
+        ]),
+      });
+    }
 
     if (run.bootstrap.bca) {
       const rows = run.bootstrap.bca.parameters.filter((row) =>
@@ -2315,6 +3562,31 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
           formatOptionalNumber(row.upper),
         ]),
       });
+      if (isConsistentBootstrap) {
+        addTable(tables, {
+          id: "plsc_bootstrap_bca_unavailable",
+          title: "Unavailable PLSc BCa intervals",
+          warning: null,
+          columns: ["Parameter", "Reason"],
+          rows: run.bootstrap.bca.parameters
+            .filter((row) => hasText(row.unavailable_reason))
+            .map((row) => [parameterLabel(row.parameter, constructLabel), row.unavailable_reason!]),
+        });
+      } else {
+        addTable(tables, {
+          id: "bootstrap_bca_unavailable",
+          title: "Unavailable PLS bootstrap BCa intervals",
+          warning: null,
+          columns: ["Parameter", "Status", "Reason"],
+          rows: run.bootstrap.bca.parameters
+            .filter((row) => hasText(row.unavailable_reason))
+            .map((row) => [
+              parameterLabel(row.parameter, constructLabel),
+              "Unavailable",
+              row.unavailable_reason!,
+            ]),
+        });
+      }
     }
 
     if (run.bootstrap.studentized) {
@@ -2356,13 +3628,24 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
 }
 
 export function buildNativeResultTree(run: AnalysisRun | null | undefined, tables = nativeResultTables(run)): NativeResultNavigationGroup[] {
+  const power = nativePlsSampleSizePowerResultProjection(run);
+  if (power) {
+    return [{
+      id: "sample_size_power",
+      title: "Prospective sample size and power",
+      items: tables.map((table) => ({ id: table.id, kind: "table", title: table.title, tableId: table.id })),
+    }];
+  }
   if (!isCompletedResultRun(run)) return [];
 
   const byId = new Map(tables.map((table) => [table.id, table]));
   const groups: NativeResultNavigationGroup[] = [];
-  const hasMga = Boolean(run.result.mga);
+  const hasGroupAnalysis = Boolean(
+    run.result.mga
+    || run.result.micom?.method_version === CURRENT_MICOM_METHOD_VERSION,
+  );
   const standalone = isStandaloneNativeAnalysis(run.provenance?.method);
-  if (!hasMga && !standalone) {
+  if (!hasGroupAnalysis && !standalone) {
     groups.push({
       id: "graphical",
       title: "Graphical results",
@@ -2402,6 +3685,7 @@ export function buildNativeResultTree(run: AnalysisRun | null | undefined, table
   addTableGroup(groups, "gsca_component_model", "GSCA component model", GSCA_RESULT_IDS, byId);
   addTableGroup(groups, "assessment", "Assessment", CCA_ASSESSMENT_IDS, byId);
   addTableGroup(groups, "assessment", "Assessment", CTA_PLS_ASSESSMENT_IDS, byId);
+  addTableGroup(groups, "assessment", "Endogeneity diagnostics", ENDOGENEITY_ASSESSMENT_IDS, byId);
   addTableGroup(groups, "higher_order", "Higher-order construct", HIGHER_ORDER_IDS, byId);
 
   const hasMediation = MEDIATION_IDS.some((id) => id !== "total_effects" && byId.has(id));
@@ -2421,6 +3705,16 @@ export function buildNativeResultTree(run: AnalysisRun | null | undefined, table
 }
 
 export function buildNativeResultNavigation(run: AnalysisRun | null | undefined): NativeResultNavigation {
+  const power = nativePlsSampleSizePowerResultProjection(run);
+  if (power) {
+    const tables = nativeResultTables(run);
+    return {
+      runId: run!.id,
+      defaultItemId: "pls_power_by_sample_size",
+      groups: buildNativeResultTree(run, tables),
+      tables,
+    };
+  }
   if (!isCompletedResultRun(run)) {
     return { runId: null, defaultItemId: null, groups: [], tables: [] };
   }
@@ -2430,6 +3724,7 @@ export function buildNativeResultNavigation(run: AnalysisRun | null | undefined)
   const predictionDefault = PREDICTION_IDS.find((id) => tables.some((table) => table.id === id));
   const ccaDefault = CCA_ASSESSMENT_IDS.find((id) => tables.some((table) => table.id === id));
   const ctaPlsDefault = CTA_PLS_ASSESSMENT_IDS.find((id) => tables.some((table) => table.id === id));
+  const endogeneityDefault = ENDOGENEITY_ASSESSMENT_IDS.find((id) => tables.some((table) => table.id === id));
   const ipmaDefault = IPMA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const ncaDefault = NCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const pcaDefault = PCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
@@ -2447,10 +3742,14 @@ export function buildNativeResultNavigation(run: AnalysisRun | null | undefined)
   const gscaDefault = GSCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const higherOrderDefault = HIGHER_ORDER_IDS.find((id) => tables.some((table) => table.id === id));
   const standalone = isStandaloneNativeAnalysis(run.provenance?.method);
-  const fallbackDefault = run.result.mga || standalone ? tables[0]?.id ?? null : "model_estimates";
+  const fallbackDefault = run.result.mga
+    || run.result.micom?.method_version === CURRENT_MICOM_METHOD_VERSION
+    || standalone
+    ? tables[0]?.id ?? null
+    : "model_estimates";
   return {
     runId: run.id,
-    defaultItemId: processDefault ?? regressionBootstrapDefault ?? groupDefault ?? ipmaDefault ?? ncaDefault ?? pcaDefault ?? logisticDefault ?? legacyLogisticDefault ?? olsDefault ?? cbsemDefault ?? gscaDefault ?? ctaPlsDefault ?? ccaDefault ?? predictionDefault ?? higherOrderDefault ?? fallbackDefault,
+    defaultItemId: processDefault ?? regressionBootstrapDefault ?? groupDefault ?? ipmaDefault ?? ncaDefault ?? pcaDefault ?? logisticDefault ?? legacyLogisticDefault ?? olsDefault ?? cbsemDefault ?? gscaDefault ?? endogeneityDefault ?? ctaPlsDefault ?? ccaDefault ?? predictionDefault ?? higherOrderDefault ?? fallbackDefault,
     groups: buildNativeResultTree(run, tables),
     tables,
   };
@@ -2921,7 +4220,7 @@ function addPredictionIndicatorTable(
     columns: [
       "Construct",
       "Indicator",
-      "Predictor scope",
+      "Predictor set",
       "Predictors",
       "Observations",
       "Q²_predict",
@@ -3011,7 +4310,7 @@ function addCvpatBenchmarkTable(tables: ResultTable[], assessments: readonly Cvp
     warning: null,
     columns: [
       "Benchmark",
-      "Target scope",
+      "Target set",
       "Loss",
       "Alternative",
       "Confidence",
@@ -3101,7 +4400,7 @@ function addLegacyPredictionTables(
   predict: NonNullable<NonNullable<AnalysisRun["result"]>["predict"]>,
   constructLabel: ConstructDisplayLabel,
 ) {
-  const legacyWarning = "Legacy v1 construct-score scope; this output is not current indicator-level PLSpredict or CVPAT.";
+  const legacyWarning = "Legacy v1 construct-score output; this is not current indicator-level PLSpredict or CVPAT.";
   addLegacyPredictTargetTable(tables, "plspredict_holdout", "Legacy construct-score holdout metrics (v1)", predict.targets, constructLabel, legacyWarning);
   addTable(tables, {
     id: "plspredict_split",
@@ -3251,14 +4550,527 @@ function readablePredictionText(value: string | null | undefined): string {
   return text.charAt(0).toLocaleUpperCase() + text.slice(1);
 }
 
+function isNativeCbsemBootstrapV2(
+  analysis: CbsemAnalysis,
+  run: AnalysisRun & { result: NonNullable<AnalysisRun["result"]> },
+): boolean {
+  const bootstrap = analysis.bootstrap_v2;
+  if (!bootstrap) return false;
+  const requested = bootstrap.requested_replicates;
+  const required = Math.max(1_000, Math.ceil(0.9 * requested));
+  const available = bootstrap.usable_replicates >= required;
+  const freeParameters = analysis.parameters.filter((parameter) => !parameter.fixed);
+  const parameterNames = freeParameters.map((parameter) => parameter.name);
+  const sha256 = /^[0-9a-f]{64}$/;
+  const successes = bootstrap.validation_witness.successful_replicates;
+  const failures = bootstrap.failures;
+  const indices = [...successes.map((row) => row.replicate_index), ...failures.map((row) => row.replicate_index)]
+    .sort((left, right) => left - right);
+  const fullIndexSet = indices.length === requested
+    && indices.every((value, index) => value === index);
+  const successfulRowsValid = successes.every((row) => (
+    Number.isInteger(row.replicate_index)
+    && row.replicate_index >= 0
+    && row.replicate_index < requested
+    && sha256.test(row.sample_indices_sha256)
+    && Number.isInteger(row.iterations)
+    && row.iterations > 0
+    && isFiniteNumber(row.objective)
+    && row.objective >= 0
+    && row.parameter_estimates.length === parameterNames.length
+    && row.parameter_estimates.every(isFiniteNumber)
+  ));
+  const failureRowsValid = failures.every((row) => (
+    Number.isInteger(row.replicate_index)
+    && row.replicate_index >= 0
+    && row.replicate_index < requested
+    && sha256.test(row.sample_indices_sha256)
+    && hasText(row.reason_code)
+    && hasText(row.message)
+  ));
+  const intervalsValid = bootstrap.intervals.every((row, index) => (
+    row.parameter === parameterNames[index]
+    && row.usable_replicates === bootstrap.usable_replicates
+    && [row.original, row.bootstrap_mean, row.bias, row.standard_error, row.percentile_lower, row.percentile_upper].every(isFiniteNumber)
+    && row.standard_error >= 0
+    && row.percentile_lower <= row.percentile_upper
+  ));
+  return bootstrap.method_version === CBSEM_BOOTSTRAP_METHOD_VERSION_V2
+    && bootstrap.algorithm === "indexed_raw_case_refit_ml_v2"
+    && bootstrap.interval_method === "percentile_type7_v1"
+    && bootstrap.retry_policy === "no_retry_fixed_preplanned_primary_draws_v1"
+    && isFiniteNumber(bootstrap.confidence_level)
+    && bootstrap.confidence_level === 0.95
+    && bootstrap.confidence_level === run.provenance!.settings.confidence_level
+    && Number.isInteger(requested)
+    && requested >= 500
+    && requested <= 10_000
+    && bootstrap.attempted_fits === requested
+    && bootstrap.usable_replicates === successes.length
+    && bootstrap.failed_replicates === failures.length
+    && bootstrap.usable_replicates + bootstrap.failed_replicates === requested
+    && bootstrap.minimum_usable_fraction === 0.9
+    && bootstrap.minimum_usable_replicates === required
+    && bootstrap.max_attempts_per_replicate === 1
+    && bootstrap.complete_case_sample_size === analysis.sample_size
+    && bootstrap.seed === run.provenance!.seed
+    && bootstrap.stream_token === "quickpls_cbsem_ml_case_bootstrap_v2"
+    && bootstrap.validation_witness.method_version === "cbsem_bootstrap_validation_witness_v2"
+    && bootstrap.validation_witness.dataset_fingerprint === run.provenance!.dataset_fingerprint
+    && sha256.test(bootstrap.validation_witness.recipe_sha256)
+    && sha256.test(bootstrap.validation_witness.base_result_sha256)
+    && JSON.stringify(bootstrap.validation_witness.parameter_names) === JSON.stringify(parameterNames)
+    && fullIndexSet
+    && successfulRowsValid
+    && failureRowsValid
+    && bootstrap.warnings.every(hasText)
+    && (available
+      ? bootstrap.inference.status === "available"
+        && bootstrap.intervals.length === parameterNames.length
+        && intervalsValid
+      : bootstrap.inference.status === "unavailable"
+        && bootstrap.inference.reason_code === "insufficient_usable_replicates"
+        && hasText(bootstrap.inference.message)
+        && bootstrap.intervals.length === 0);
+}
+
+function nativeCbsemType7(sorted: readonly number[], probability: number): number {
+  const position = probability * (sorted.length - 1);
+  const lower = Math.floor(position);
+  const upper = Math.ceil(position);
+  return lower === upper
+    ? sorted[lower]
+    : sorted[lower] + (position - lower) * (sorted[upper] - sorted[lower]);
+}
+
+function isNativeCbsemExactCaseBootstrapV1(
+  bootstrap: NonNullable<CbsemAnalysis["exact_case_bootstrap"]>,
+  analysis: CbsemAnalysis,
+  run: AnalysisRun & { result: NonNullable<AnalysisRun["result"]> },
+  requireHypothesisTests = false,
+): boolean {
+  const sha256 = /^[0-9a-f]{64}$/;
+  const requested = bootstrap.requested_replicates;
+  const minimum = Math.max(1_000, Math.ceil(0.9 * requested));
+  const parameterIds = bootstrap.parameter_ids;
+  if (!parameterIds.length || new Set(parameterIds).size !== parameterIds.length || parameterIds.some((id) => !hasText(id))) return false;
+  const successes = bootstrap.successful_refits;
+  const failures = bootstrap.failed_refits;
+  const indices = [...successes.map((row) => row.replicate_index), ...failures.map((row) => row.replicate_index)].sort((left, right) => left - right);
+  const successRowsValid = successes.every((row, index) => (
+    Number.isSafeInteger(row.replicate_index) && row.replicate_index >= 0 && row.replicate_index < requested
+    && (index === 0 || successes[index - 1].replicate_index < row.replicate_index)
+    && sha256.test(row.sampling_positions_sha256) && sha256.test(row.sample_indices_sha256)
+    && row.parameter_estimates.length === parameterIds.length
+    && row.parameter_estimates.every((value) => isFiniteNumber(value) && !Object.is(value, -0))
+    && Number.isSafeInteger(row.iterations) && row.iterations > 0
+    && isFiniteNumber(row.objective) && row.objective >= 0 && !Object.is(row.objective, -0)
+    && isFiniteNumber(row.gradient_norm) && row.gradient_norm >= 0 && !Object.is(row.gradient_norm, -0)
+  ));
+  const failureKinds = new Set([
+    "moment_matrix_not_positive_definite", "non_convergence", "inadmissible_solution", "numerical_failure",
+  ]);
+  const failureRowsValid = failures.every((row, index) => (
+    Number.isSafeInteger(row.replicate_index) && row.replicate_index >= 0 && row.replicate_index < requested
+    && (index === 0 || failures[index - 1].replicate_index < row.replicate_index)
+    && sha256.test(row.sampling_positions_sha256) && sha256.test(row.sample_indices_sha256)
+    && failureKinds.has(row.kind) && hasText(row.message)
+  ));
+  const available = successes.length >= minimum;
+  const intervalsValid = bootstrap.intervals.every((row, parameterIndex) => {
+    if (row.parameter_id !== parameterIds[parameterIndex] || row.usable_replicates !== successes.length) return false;
+    const values = successes.map((success) => success.parameter_estimates[parameterIndex]);
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const standardError = Math.sqrt(values.reduce((sum, value) => {
+      const difference = value - mean;
+      return sum + difference * difference;
+    }, 0) / (values.length - 1));
+    const sorted = [...values].sort((left, right) => left - right);
+    const observed = [row.bootstrap_mean, row.bias, row.standard_error, row.percentile_lower, row.percentile_upper];
+    const expected = [
+      mean,
+      mean - row.original,
+      standardError,
+      nativeCbsemType7(sorted, 0.025000000000000022),
+      nativeCbsemType7(sorted, 0.975),
+    ];
+    return !Object.is(row.original, -0) && observed.every((value, index) => isFiniteNumber(value) && !Object.is(value, -0) && Object.is(value, expected[index]));
+  });
+  const hypothesisTestsValid = isNativeCbsemExactCaseBootstrapHypothesisTestsV1(bootstrap);
+  return bootstrap.method_version === CBSEM_EXACT_BOOTSTRAP_METHOD_VERSION_V1
+    && bootstrap.estimator_method_version === "cbsem_ml_exact_parameter_table_v3"
+    && bootstrap.source_dataset_fingerprint === run.provenance!.dataset_fingerprint
+    && [bootstrap.outer_recipe_analytical_identity_sha256, bootstrap.base_point_result_sha256,
+      bootstrap.compiler_analytical_identity_sha256, bootstrap.plan_sha256,
+      bootstrap.model_scientific_sha256, bootstrap.complete_case_universe_sha256].every((value) => sha256.test(value))
+    && bootstrap.complete_case_sample_size === analysis.sample_size
+    && bootstrap.complete_case_universe_digest_method === "sha256_source_fingerprint_and_ordered_complete_case_u64_indices_v1"
+    && bootstrap.covariance_denominator === "maximum_likelihood_n"
+    && bootstrap.sample_indices_digest_method === "sha256_source_fingerprint_and_ordered_u64_indices_v1"
+    && bootstrap.sampling_positions_digest_method === "sha256_stream_seed_replicate_complete_case_n_and_ordered_sampling_positions_v1"
+    && bootstrap.interval_method === "percentile_type7_v1" && bootstrap.confidence_level === 0.95
+    && Number.isSafeInteger(requested) && requested >= 500 && requested <= 10_000
+    && bootstrap.attempted_refits === requested && bootstrap.usable_replicates === successes.length
+    && bootstrap.failed_replicates === failures.length && successes.length + failures.length === requested
+    && bootstrap.minimum_usable_fraction === 0.9 && bootstrap.minimum_usable_replicates === minimum
+    && bootstrap.seed === run.provenance!.seed && bootstrap.stream_token === "quickpls_cbsem_exact_cfa_ml_case_bootstrap_v1"
+    && bootstrap.retry_policy === "no_retry_fixed_preplanned_primary_draws_v1" && bootstrap.max_attempts_per_replicate === 1
+    && indices.length === requested && indices.every((value, index) => value === index)
+    && successRowsValid && failureRowsValid && hypothesisTestsValid
+    && (!requireHypothesisTests || bootstrap.hypothesis_tests != null)
+    && (available
+      ? bootstrap.inference.status === "available" && bootstrap.intervals.length === parameterIds.length && intervalsValid
+      : bootstrap.inference.status === "unavailable" && bootstrap.inference.reason_code === "insufficient_usable_refits"
+        && hasText(bootstrap.inference.message) && bootstrap.intervals.length === 0);
+}
+
+function isNativeCbsemExactCaseBootstrapHypothesisTestsV1(
+  bootstrap: NonNullable<CbsemAnalysis["exact_case_bootstrap"]>,
+): boolean {
+  const receipt = bootstrap.hypothesis_tests;
+  if (!receipt) return true; // Historical adapter-v9 results remain readable.
+  const usable = bootstrap.successful_refits.length;
+  const globallyAvailable = usable >= bootstrap.minimum_usable_replicates;
+  const selectedTail = receipt.selected_test_tail;
+  const tails = new Set(["two_sided", "one_sided_greater", "one_sided_less"]);
+  if (receipt.method_version !== CBSEM_EXACT_BOOTSTRAP_TEST_TAIL_METHOD_VERSION_V1
+    || receipt.null_hypothesis !== "compiled_free_parameter_equals_zero_v1"
+    || receipt.statistic !== "unstudentized_null_centered_parameter_estimate_v1"
+    || receipt.tie_policy !== "inclusive_ieee_comparison_v1"
+    || receipt.probability_method !== "plus_one_over_usable_plus_one_v1"
+    || receipt.decision_rule !== "selected_p_value_less_than_or_equal_alpha_v1"
+    || !tails.has(selectedTail)
+    || !Object.is(receipt.null_value, 0)
+    || receipt.significance_level !== 0.05
+    || receipt.usable_replicates !== usable
+    || receipt.parameters.length !== bootstrap.parameter_ids.length
+    || (globallyAvailable
+      ? receipt.inference.status !== "available"
+      : receipt.inference.status !== "unavailable"
+        || receipt.inference.reason_code !== "insufficient_usable_refits"
+        || !hasText(receipt.inference.message))) return false;
+
+  const unavailableReasons = new Set([
+    "insufficient_usable_replicates", "nonregular_variance_boundary",
+    "zero_null_outside_open_domain", "unsupported_parameter_family",
+  ]);
+  return receipt.parameters.every((parameter, parameterIndex) => {
+    if (parameter.parameter_id !== bootstrap.parameter_ids[parameterIndex]) return false;
+    const outcome = parameter.outcome;
+    if (outcome.status === "unavailable") {
+      return unavailableReasons.has(outcome.reason)
+        && (!globallyAvailable || outcome.reason !== "insufficient_usable_replicates");
+    }
+    if (!globallyAvailable) return false;
+    const interval = bootstrap.intervals[parameterIndex];
+    if (!interval || !Object.is(outcome.point_estimate, interval.original)
+      || !isFiniteNumber(outcome.point_estimate) || Object.is(outcome.point_estimate, -0)) return false;
+    const deltas = bootstrap.successful_refits.map((refit) => (
+      refit.parameter_estimates[parameterIndex] - outcome.point_estimate
+    ));
+    const expectedCounts = [
+      deltas.filter((delta) => Math.abs(delta) >= Math.abs(outcome.point_estimate)).length,
+      deltas.filter((delta) => delta >= outcome.point_estimate).length,
+      deltas.filter((delta) => delta <= outcome.point_estimate).length,
+    ];
+    const expectedProbabilities = expectedCounts.map((count) => (count + 1) / (usable + 1));
+    const observedCounts = [
+      outcome.two_sided_exceedances, outcome.greater_or_equal_exceedances,
+      outcome.less_or_equal_exceedances,
+    ];
+    const observedProbabilities = [outcome.p_value_two_sided, outcome.p_value_greater, outcome.p_value_less];
+    const selectedIndex = selectedTail === "two_sided" ? 0 : selectedTail === "one_sided_greater" ? 1 : 2;
+    return observedCounts.every((count, index) => Number.isSafeInteger(count) && count >= 0
+        && count <= usable && count === expectedCounts[index])
+      && observedProbabilities.every((probability, index) => isFiniteNumber(probability)
+        && !Object.is(probability, -0) && Object.is(probability, expectedProbabilities[index]))
+      && outcome.selected_exceedances === expectedCounts[selectedIndex]
+      && Object.is(outcome.selected_p_value, expectedProbabilities[selectedIndex])
+      && outcome.reject_null === (outcome.selected_p_value <= 0.05);
+  });
+}
+
+function isNativeCbsemExactCaseBootstrapStudentizedV1(
+  wrapper: NonNullable<CbsemAnalysis["exact_case_bootstrap_studentized"]>,
+  analysis: CbsemAnalysis,
+  run: AnalysisRun & { result: NonNullable<AnalysisRun["result"]> },
+): boolean {
+  if (!wrapper?.base || !wrapper.studentized
+    || Object.keys(wrapper).length !== 2
+    || !("base" in wrapper) || !("studentized" in wrapper)) return false;
+  const base = wrapper.base;
+  const sidecar = wrapper.studentized;
+  if (!isNativeCbsemExactCaseBootstrapV1(base, analysis, run, true)) return false;
+  const modeledVariables = new Set(analysis.residual_correlation.flatMap((cell) => [cell.row, cell.column]));
+  if (!Number.isSafeInteger(run.provenance!.settings.workers)
+    || run.provenance!.settings.workers < 1 || run.provenance!.settings.workers > 12
+    || analysis.sample_size > 180 || modeledVariables.size > 9
+    || base.parameter_ids.length > 18) return false;
+  if (sidecar.method_version !== "cbsem_exact_case_bootstrap_analytic_studentized_interval_v1"
+    || sidecar.standard_error_method_version !== "cbsem_exact_case_bootstrap_refit_standard_errors_v1"
+    || sidecar.expected_information_method !== "cbsem_ml_expected_information_delta_method_v1"
+    || sidecar.pivot_method !== "outer_estimate_minus_point_estimate_over_outer_analytic_standard_error_v1"
+    || sidecar.quantile_method !== "percentile_type7_v1"
+    || sidecar.interval_method !== "reversed_type7_studentized_pivot_v1"
+    || sidecar.archive_validation_scope !== "ledger_and_arithmetic_only_no_raw_refit_or_expected_information_replay_v1"
+    || sidecar.confidence_level !== base.confidence_level
+    || sidecar.minimum_usable_fraction !== base.minimum_usable_fraction
+    || sidecar.minimum_usable_replicates !== base.minimum_usable_replicates
+    || JSON.stringify(sidecar.parameter_ids) !== JSON.stringify(base.parameter_ids)) return false;
+
+  const standardErrorReasons = new Set([
+    "singular_information", "information_not_positive_definite",
+    "invalid_information_variance_or_standard_error", "derivative_unavailable",
+    "numerical_information_failure",
+  ]);
+  const pointReceipt = sidecar.point_standard_errors;
+  if (pointReceipt.method_version !== "cbsem_exact_case_bootstrap_refit_standard_errors_v1") return false;
+  let pointStandardErrors: number[] | null = null;
+  if (pointReceipt.outcome.status === "available") {
+    if (pointReceipt.outcome.information_method !== "cbsem_ml_expected_information_delta_method_v1"
+      || pointReceipt.outcome.parameters.length !== base.parameter_ids.length) return false;
+    pointStandardErrors = [];
+    for (const [index, parameter] of pointReceipt.outcome.parameters.entries()) {
+      if (parameter.parameter_id !== base.parameter_ids[index]
+        || !isFiniteNumber(parameter.standard_error) || parameter.standard_error <= 0
+        || Object.is(parameter.standard_error, -0)) return false;
+      pointStandardErrors.push(parameter.standard_error);
+    }
+  } else if (!standardErrorReasons.has(pointReceipt.outcome.reason)) return false;
+
+  if (!Array.isArray(sidecar.refit_standard_errors)
+    || sidecar.refit_standard_errors.length !== base.successful_refits.length) return false;
+  const usableRefits: Array<{ estimates: readonly number[]; standardErrors: readonly number[] }> = [];
+  for (const [index, receipt] of sidecar.refit_standard_errors.entries()) {
+    const baseRefit = base.successful_refits[index];
+    if (!Number.isSafeInteger(receipt.replicate_index)
+      || receipt.replicate_index !== baseRefit.replicate_index) return false;
+    if (receipt.outcome.status === "available") {
+      if (receipt.outcome.information_method !== "cbsem_ml_expected_information_delta_method_v1"
+        || receipt.outcome.standard_errors.length !== base.parameter_ids.length
+        || receipt.outcome.standard_errors.some((value) => (
+          !isFiniteNumber(value) || value <= 0 || Object.is(value, -0)
+        ))) return false;
+      usableRefits.push({
+        estimates: baseRefit.parameter_estimates,
+        standardErrors: receipt.outcome.standard_errors,
+      });
+    } else if (!standardErrorReasons.has(receipt.outcome.reason)) return false;
+  }
+  if (!Number.isSafeInteger(sidecar.studentized_usable_replicates)
+    || sidecar.studentized_usable_replicates !== usableRefits.length) return false;
+  const unavailableReason = pointStandardErrors === null
+    ? "point_standard_errors_unavailable"
+    : usableRefits.length < base.minimum_usable_replicates
+      ? "insufficient_studentized_usable_replicates"
+      : null;
+  if (unavailableReason === null) {
+    if (sidecar.inference.status !== "available") return false;
+  } else {
+    const expectedMessage = unavailableReason === "point_standard_errors_unavailable"
+      ? "Analytically studentized inference is unavailable because the point estimate has no whole-vector analytical standard-error receipt."
+      : `Analytically studentized inference is unavailable because ${usableRefits.length} whole-vector usable refits are below the required ${base.minimum_usable_replicates}.`;
+    if (sidecar.inference.status !== "unavailable"
+      || sidecar.inference.reason !== unavailableReason
+      || sidecar.inference.message !== expectedMessage) return false;
+  }
+  if (!Array.isArray(sidecar.intervals) || sidecar.intervals.length !== base.parameter_ids.length) return false;
+  const lowerProbability = (1 - base.confidence_level) / 2;
+  const upperProbability = 1 - lowerProbability;
+  return sidecar.intervals.every((interval, parameterIndex) => {
+    if (interval.parameter_id !== base.parameter_ids[parameterIndex]) return false;
+    const outcome = interval.outcome;
+    if (unavailableReason !== null) {
+      return outcome.status === "unavailable" && outcome.reason === unavailableReason;
+    }
+    if (outcome.status !== "available" || pointStandardErrors === null) return false;
+    const baseInterval = base.intervals[parameterIndex];
+    if (!baseInterval) return false;
+    const pivots = usableRefits.map((refit) => (
+      (refit.estimates[parameterIndex] - baseInterval.original) / refit.standardErrors[parameterIndex]
+    ));
+    if (pivots.some((pivot) => !isFiniteNumber(pivot))) return false;
+    pivots.sort((left, right) => left - right);
+    const lowerPivot = nativeCbsemType7(pivots, lowerProbability);
+    const upperPivot = nativeCbsemType7(pivots, upperProbability);
+    const expected = [
+      baseInterval.original,
+      pointStandardErrors[parameterIndex],
+      lowerPivot,
+      upperPivot,
+      baseInterval.original - upperPivot * pointStandardErrors[parameterIndex],
+      baseInterval.original - lowerPivot * pointStandardErrors[parameterIndex],
+    ];
+    const observed = [
+      outcome.point_estimate,
+      outcome.point_standard_error,
+      outcome.lower_pivot_quantile,
+      outcome.upper_pivot_quantile,
+      outcome.interval_lower,
+      outcome.interval_upper,
+    ];
+    return outcome.usable_replicates === usableRefits.length
+      && observed.every((value, index) => (
+        isFiniteNumber(value) && !Object.is(value, -0) && Object.is(value, expected[index])
+      ))
+      && outcome.interval_lower <= outcome.interval_upper;
+  });
+}
+
+function isNativeCbsemExactCaseBootstrapBcaV1(
+  wrapper: NonNullable<CbsemAnalysis["exact_case_bootstrap_bca"]>,
+  analysis: CbsemAnalysis,
+  run: AnalysisRun & { result: NonNullable<AnalysisRun["result"]> },
+): boolean {
+  if (!wrapper?.base || !wrapper.bca || Object.keys(wrapper).length !== 2
+    || !("base" in wrapper) || !("bca" in wrapper)) return false;
+  const base = wrapper.base;
+  const sidecar = wrapper.bca;
+  if (!isNativeCbsemExactCaseBootstrapV1(base, analysis, run, true)) return false;
+  const modeledVariables = new Set(analysis.residual_correlation.flatMap((cell) => [cell.row, cell.column]));
+  if (!Number.isSafeInteger(run.provenance!.settings.workers)
+    || run.provenance!.settings.workers < 1 || run.provenance!.settings.workers > 12
+    || analysis.sample_size > 180 || modeledVariables.size > 9 || base.parameter_ids.length > 18) return false;
+  if (sidecar.method_version !== "cbsem_exact_case_bootstrap_bca_interval_v1"
+    || sidecar.base_bootstrap_method_version !== base.method_version
+    || sidecar.outer_recipe_analytical_identity_sha256 !== base.outer_recipe_analytical_identity_sha256
+    || sidecar.base_point_result_sha256 !== base.base_point_result_sha256
+    || sidecar.compiler_analytical_identity_sha256 !== base.compiler_analytical_identity_sha256
+    || sidecar.plan_sha256 !== base.plan_sha256
+    || sidecar.model_scientific_sha256 !== base.model_scientific_sha256
+    || sidecar.delete_one_refit_method_version !== "cbsem_exact_case_bootstrap_delete_one_refit_v1"
+    || sidecar.bias_correction_method !== "midrank_less_plus_half_ties_no_clamp_v1"
+    || sidecar.acceleration_method !== "complete_delete_one_jackknife_neumaier_mean_squares_cubes_acceleration_v2"
+    || sidecar.adjusted_probability_method !== "efron_bca_statrs_inverse_normal_libm_erfc_cdf_adjustment_v2"
+    || sidecar.quantile_method !== "percentile_type7_v1"
+    || sidecar.retry_policy !== "no_retry_exactly_one_fit_per_omitted_case_v1"
+    || sidecar.confidence_level !== base.confidence_level
+    || sidecar.bootstrap_usable_replicates !== base.usable_replicates
+    || sidecar.minimum_bootstrap_usable_replicates !== base.minimum_usable_replicates
+    || sidecar.delete_one_case_count !== base.complete_case_sample_size
+    || JSON.stringify(sidecar.parameter_ids) !== JSON.stringify(base.parameter_ids)) return false;
+  const sha256 = /^[0-9a-f]{64}$/;
+  const failureKinds = new Set([
+    "moment_matrix_not_positive_definite", "non_convergence", "inadmissible_solution", "numerical_failure",
+  ]);
+  const successes = sidecar.successful_delete_one_refits;
+  const failures = sidecar.failed_delete_one_refits;
+  const successfulRowsValid = successes.every((row, index) => (
+    Number.isSafeInteger(row.omitted_complete_case_position)
+    && row.omitted_complete_case_position >= 0 && row.omitted_complete_case_position < sidecar.delete_one_case_count
+    && (index === 0 || successes[index - 1].omitted_complete_case_position < row.omitted_complete_case_position)
+    && Number.isSafeInteger(row.omitted_source_row_index) && row.omitted_source_row_index >= 0
+    && sha256.test(row.retained_sampling_positions_sha256) && sha256.test(row.retained_sample_indices_sha256)
+    && row.parameter_estimates.length === base.parameter_ids.length
+    && row.parameter_estimates.every((value) => isFiniteNumber(value) && !Object.is(value, -0))
+    && Number.isSafeInteger(row.iterations) && row.iterations > 0
+    && isFiniteNumber(row.objective) && row.objective >= 0 && !Object.is(row.objective, -0)
+    && isFiniteNumber(row.gradient_norm) && row.gradient_norm >= 0 && !Object.is(row.gradient_norm, -0)
+  ));
+  const failureRowsValid = failures.every((row, index) => (
+    Number.isSafeInteger(row.omitted_complete_case_position)
+    && row.omitted_complete_case_position >= 0 && row.omitted_complete_case_position < sidecar.delete_one_case_count
+    && (index === 0 || failures[index - 1].omitted_complete_case_position < row.omitted_complete_case_position)
+    && Number.isSafeInteger(row.omitted_source_row_index) && row.omitted_source_row_index >= 0
+    && sha256.test(row.retained_sampling_positions_sha256) && sha256.test(row.retained_sample_indices_sha256)
+    && failureKinds.has(row.kind) && hasText(row.message)
+  ));
+  const omissions = [...successes, ...failures]
+    .map((row) => ({ position: row.omitted_complete_case_position, sourceRow: row.omitted_source_row_index }))
+    .sort((left, right) => left.position - right.position);
+  if (!successfulRowsValid || !failureRowsValid || omissions.length !== sidecar.delete_one_case_count
+    || omissions.some((row, index) => row.position !== index)
+    || omissions.some((row, index) => index > 0 && omissions[index - 1].sourceRow >= row.sourceRow)) return false;
+  const globalReason = base.inference.status !== "available"
+    ? "base_inference_unavailable"
+    : failures.length > 0 || successes.length !== sidecar.delete_one_case_count
+      ? "incomplete_delete_one_ledger"
+      : null;
+  if (globalReason === null) {
+    if (sidecar.inference.status !== "available") return false;
+  } else {
+    const expectedMessage = globalReason === "base_inference_unavailable"
+      ? `BCa inference is unavailable because ${base.usable_replicates} successful bootstrap point refits are below the bound minimum ${base.minimum_usable_replicates}.`
+      : `BCa inference is unavailable because ${failures.length} of ${sidecar.delete_one_case_count} mandatory delete-one fits failed.`;
+    if (sidecar.inference.status !== "unavailable" || sidecar.inference.reason !== globalReason
+      || sidecar.inference.message !== expectedMessage) return false;
+  }
+  const reasons = new Set([
+    "base_inference_unavailable", "incomplete_delete_one_ledger",
+    "bias_correction_probability_at_boundary", "degenerate_jackknife_acceleration",
+    "nonfinite_jackknife_arithmetic", "singular_acceleration_adjustment",
+    "invalid_adjusted_probability", "adjusted_probability_order_invalid",
+    "nonfinite_or_reversed_interval",
+  ]);
+  return sidecar.intervals.length === base.parameter_ids.length
+    && sidecar.intervals.every((interval, parameterIndex) => {
+      if (interval.parameter_id !== base.parameter_ids[parameterIndex]) return false;
+      const outcome = interval.outcome;
+      if (outcome.status === "unavailable") {
+        return reasons.has(outcome.reason)
+          && (globalReason === null
+            ? outcome.reason !== "base_inference_unavailable" && outcome.reason !== "incomplete_delete_one_ledger"
+            : outcome.reason === globalReason);
+      }
+      if (globalReason !== null) return false;
+      const baseInterval = base.intervals[parameterIndex];
+      if (!baseInterval) return false;
+      const values = [
+        outcome.point_estimate, outcome.bias_correction, outcome.acceleration,
+        outcome.adjusted_lower_probability, outcome.adjusted_upper_probability,
+        outcome.interval_lower, outcome.interval_upper,
+      ];
+      const sorted = base.successful_refits
+        .map((refit) => refit.parameter_estimates[parameterIndex])
+        .sort((left, right) => left - right);
+      return values.every((value) => isFiniteNumber(value) && !Object.is(value, -0))
+        && Object.is(outcome.point_estimate, baseInterval.original)
+        && outcome.adjusted_lower_probability >= 0 && outcome.adjusted_upper_probability <= 1
+        && outcome.adjusted_lower_probability <= outcome.adjusted_upper_probability
+        && Object.is(outcome.interval_lower, nativeCbsemType7(sorted, outcome.adjusted_lower_probability))
+        && Object.is(outcome.interval_upper, nativeCbsemType7(sorted, outcome.adjusted_upper_probability))
+        && outcome.interval_lower <= outcome.interval_upper
+        && outcome.usable_replicates === base.usable_replicates;
+    });
+}
+
+function hasValidCbsemRmseaIntervalAttribution(analysis: CbsemAnalysis): boolean {
+  const attribution = analysis.fit.rmsea_interval_attribution;
+  if (attribution == null) return true;
+  if (
+    attribution.method_version !== CBSEM_RMSEA_INTERVAL_METHOD_VERSION_V1
+    || attribution.confidence_level !== CBSEM_RMSEA_INTERVAL_CONFIDENCE_LEVEL_V1
+    || !Number.isSafeInteger(analysis.fit.degrees_of_freedom)
+    || analysis.fit.degrees_of_freedom < 0
+  ) return false;
+  const values = [analysis.fit.rmsea, analysis.fit.rmsea_ci_lower, analysis.fit.rmsea_ci_upper];
+  if (analysis.fit.degrees_of_freedom === 0) return values.every((value) => value == null);
+  if (values.some((value) => !isFiniteNumber(value))) return false;
+  const point = values[0] === 0 ? 0 : values[0]!;
+  const lower = values[1] === 0 ? 0 : values[1]!;
+  const upper = values[2] === 0 ? 0 : values[2]!;
+  return lower >= 0 && point >= 0 && upper >= 0 && lower <= point && point <= upper;
+}
+
 export function nativeCbsemResultProjection(run: AnalysisRun | null | undefined): NativeCbsemResultProjection | null {
   if (!isCompletedResultRun(run) || run.provenance?.method !== "cbsem") return null;
   const analysis = run.result.cbsem;
   if (!analysis || (analysis.model_type !== "cfa" && analysis.model_type !== "sem")) return null;
   const methodVersion = analysis.model_type === "cfa" ? "cfa_ml_v1" : "cbsem_ml_v1";
   const assessmentVersion = run.assessment?.method_version;
+  const hasBootstrapV2 = Boolean(analysis.bootstrap_v2);
+  const exactBootstrap = analysis.exact_case_bootstrap;
+  const exactBootstrapStudentized = analysis.exact_case_bootstrap_studentized;
+  const exactBootstrapBca = analysis.exact_case_bootstrap_bca;
+  const hasExactBootstrap = Boolean(exactBootstrap || exactBootstrapStudentized || exactBootstrapBca);
+  try {
+    if (analysis.score_lm != null) parseCbsemCfaScoreLmBundleV1(analysis.score_lm, "native CB-SEM score_lm");
+  } catch {
+    return null;
+  }
+  const diagnosticMethodVersion = analysis.score_lm ? CBSEM_SCORE_LM_METHOD_VERSION : CBSEM_MODIFICATION_METHOD_VERSION;
   const expectedProvenance = assessmentVersion
-    ? `pls_pm_v1+${methodVersion}+${CBSEM_FIT_METHOD_VERSION}+${CBSEM_MODIFICATION_METHOD_VERSION}+pls_mediation_v1+${assessmentVersion}`
+    ? `pls_pm_v1+${methodVersion}+${CBSEM_FIT_METHOD_VERSION}+${diagnosticMethodVersion}${hasBootstrapV2 ? `+${CBSEM_BOOTSTRAP_METHOD_VERSION_V2}` : ""}${hasExactBootstrap ? `+${CBSEM_EXACT_BOOTSTRAP_METHOD_VERSION_V1}` : ""}+pls_mediation_v1+${assessmentVersion}`
     : null;
   const requiredFitValues = [
     analysis.fit.chi_square,
@@ -3285,8 +5097,21 @@ export function nativeCbsemResultProjection(run: AnalysisRun | null | undefined)
     || !isFiniteNumber(analysis.objective)
     || !isFiniteNumber(analysis.gradient_norm)
     || requiredFitValues.some((value) => !isFiniteNumber(value))
+    || !hasValidCbsemRmseaIntervalAttribution(analysis)
     || analysis.bootstrap
+    || [exactBootstrap, exactBootstrapStudentized, exactBootstrapBca].filter((value) => value != null).length > 1
+    || (hasBootstrapV2 && hasExactBootstrap)
+    || (hasExactBootstrap && analysis.model_type !== "cfa")
+    || (hasExactBootstrap && (!analysis.score_lm || !analysis.fit.rmsea_interval_attribution))
+    || (hasBootstrapV2 && !isNativeCbsemBootstrapV2(analysis, run))
+    || (exactBootstrap != null && !isNativeCbsemExactCaseBootstrapV1(exactBootstrap, analysis, run))
+    || (exactBootstrapStudentized != null
+      && !isNativeCbsemExactCaseBootstrapStudentizedV1(exactBootstrapStudentized, analysis, run))
+    || (exactBootstrapBca != null
+      && !isNativeCbsemExactCaseBootstrapBcaV1(exactBootstrapBca, analysis, run))
     || analysis.multigroup
+    || (analysis.score_lm != null && (analysis.model_type !== "cfa" || analysis.mean_structure))
+    || (analysis.score_lm != null && analysis.modification_indices.length !== 0)
     || !analysis.parameters.length
     || analysis.parameters.length !== analysis.standardized.length
     || !analysis.implied_covariance.length
@@ -3361,6 +5186,10 @@ function addCbsemResultTables(
   const projection = nativeCbsemResultProjection(run);
   if (!projection) return;
   const { analysis } = projection;
+  const studentizedBootstrap = analysis.exact_case_bootstrap_studentized;
+  const bcaBootstrap = analysis.exact_case_bootstrap_bca;
+  const exactBootstrap = analysis.exact_case_bootstrap ?? studentizedBootstrap?.base ?? bcaBootstrap?.base ?? null;
+  const rmseaIntervalAttribution = analysis.fit.rmsea_interval_attribution;
   const constructLabel = constructDisplayLabelResolver(run);
   const parameterLabel = (kind: string, lhs: string, rhs: string) => {
     if (kind === "loading") return `${rhs} ← ${constructLabel(lhs)}`;
@@ -3368,6 +5197,7 @@ function addCbsemResultTables(
     if (kind === "latent_covariance") return `${constructLabel(lhs)} ↔ ${constructLabel(rhs)}`;
     if (kind === "latent_variance") return `Variance: ${constructLabel(lhs)}`;
     if (kind === "residual_variance") return `Residual variance: ${lhs}`;
+    if (kind === "residual_covariance") return `${lhs} ↔ ${rhs}`;
     return `${lhs} / ${rhs}`;
   };
   addTable(tables, {
@@ -3382,6 +5212,10 @@ function addCbsemResultTables(
       ["CFI", formatOptionalNumber(analysis.fit.cfi, 6)],
       ["TLI", formatOptionalNumber(analysis.fit.tli, 6)],
       ["RMSEA", formatOptionalNumber(analysis.fit.rmsea, 6)],
+      ...(rmseaIntervalAttribution ? [
+        ["RMSEA interval method", "Noncentral chi-square inversion (N - 1 denominator)"],
+        ["RMSEA interval confidence", `${(rmseaIntervalAttribution.confidence_level * 100).toFixed(1)}%`],
+      ] : []),
       ["RMSEA lower bound", formatOptionalNumber(analysis.fit.rmsea_ci_lower, 6)],
       ["RMSEA upper bound", formatOptionalNumber(analysis.fit.rmsea_ci_upper, 6)],
       ["SRMR", formatNumber(analysis.fit.srmr)],
@@ -3391,6 +5225,388 @@ function addCbsemResultTables(
       ["Baseline degrees of freedom", String(analysis.fit.baseline_degrees_of_freedom)],
     ],
   });
+  const bootstrap = analysis.bootstrap_v2;
+  if (bootstrap) {
+    const inferenceAvailable = bootstrap.inference.status === "available";
+    const candidateWarning = "Experimental CB-SEM bootstrap output. Review Method Details and independently check it before final reporting.";
+    const inferenceWarning = bootstrap.inference.status === "unavailable"
+      ? `${candidateWarning} ${bootstrap.inference.message}`
+      : `${candidateWarning} Percentile Type-7 intervals from ${bootstrap.usable_replicates.toLocaleString()} usable full-ML case refits.`;
+    tables.push({
+      id: "cbsem_bootstrap_intervals",
+      title: "Bootstrap parameter intervals",
+      warning: inferenceWarning,
+      status: "experimental",
+      columns: ["Parameter", "Original", "Bootstrap mean", "Bias", "Bootstrap SE", "Percentile lower", "Percentile upper", "Usable fits"],
+      rows: bootstrap.intervals.map((row) => [
+        row.parameter,
+        formatNumber(row.original),
+        formatNumber(row.bootstrap_mean),
+        formatNumber(row.bias),
+        formatNumber(row.standard_error),
+        formatNumber(row.percentile_lower),
+        formatNumber(row.percentile_upper),
+        String(row.usable_replicates),
+      ]),
+    });
+    tables.push({
+      id: "cbsem_bootstrap_failures",
+      title: "Bootstrap replicate failure ledger",
+      warning: bootstrap.failures.length
+        ? `${candidateWarning} Every failed preplanned primary draw remains visible and counts against the usable-fit threshold.`
+        : candidateWarning,
+      status: "experimental",
+      columns: ["Replicate", "Reason code", "Message", "Sample-position digest"],
+      rows: bootstrap.failures.map((row) => [
+        String(row.replicate_index + 1),
+        row.reason_code,
+        row.message,
+        row.sample_indices_sha256,
+      ]),
+    });
+    tables.push({
+      id: "cbsem_bootstrap_settings",
+      title: "Bootstrap settings and threshold",
+      warning: `${candidateWarning} ${bootstrap.warnings.join(" ")}`,
+      status: "experimental",
+      columns: ["Field", "Value"],
+      rows: [
+        ["Inference", inferenceAvailable ? "Available" : "Unavailable - insufficient usable full-ML fits"],
+        ["Requested primary draws", String(bootstrap.requested_replicates)],
+        ["Attempted ML fits", String(bootstrap.attempted_fits)],
+        ["Usable ML fits", String(bootstrap.usable_replicates)],
+        ["Failed ML fits", String(bootstrap.failed_replicates)],
+        ["Minimum usable fits", String(bootstrap.minimum_usable_replicates)],
+        ["Confidence level", `${(bootstrap.confidence_level * 100).toFixed(1)}%`],
+        ["Interval method", "Percentile, Type-7 quantile"],
+        ["Failure policy", "No retry or replacement draw"],
+        ["Seed", String(bootstrap.seed)],
+        ["Parallel workers", String(run.provenance!.settings.workers)],
+        ["Method version", bootstrap.method_version],
+      ],
+    });
+  }
+  if (exactBootstrap) {
+    const pilotUnavailable = exactBootstrap.requested_replicates === 500
+      && exactBootstrap.inference.status === "unavailable";
+    const warning = `${CBSEM_EXACT_BOOTSTRAP_TRUTH_NOTE}${pilotUnavailable
+      ? " The 500-draw pilot is unavailable by design because the frozen minimum is 1,000 usable refits."
+      : ""}`;
+    tables.push({
+      id: "cbsem_exact_bootstrap_intervals",
+      title: "Exact case-bootstrap parameter intervals",
+      warning,
+      status: "experimental",
+      columns: ["Parameter ID", "Original", "Bootstrap mean", "Bias", "Sample-SD SE", "Type-7 lower", "Type-7 upper", "Usable refits"],
+      rows: exactBootstrap.intervals.map((row) => [
+        row.parameter_id, formatNumber(row.original), formatNumber(row.bootstrap_mean),
+        formatNumber(row.bias), formatNumber(row.standard_error), formatNumber(row.percentile_lower),
+        formatNumber(row.percentile_upper), String(row.usable_replicates),
+      ]),
+    });
+    const hypothesisTests = exactBootstrap.hypothesis_tests;
+    if (hypothesisTests) {
+      const selectedTest = hypothesisTests.selected_test_tail === "two_sided"
+        ? "Two-sided: parameter differs from zero"
+        : hypothesisTests.selected_test_tail === "one_sided_greater"
+          ? "One-sided: parameter is greater than zero"
+          : "One-sided: parameter is less than zero";
+      const testWarning = hypothesisTests.inference.status === "available"
+        ? "Null-centered unstudentized differences use inclusive tail counts and (count + 1) / (usable + 1). The selected test does not reinterpret the fixed two-sided 95% percentile interval."
+        : `${hypothesisTests.inference.message} No parameter-level probability or decision is reported.`;
+      tables.push({
+        id: "cbsem_exact_bootstrap_hypothesis_tests",
+        title: `Exact case-bootstrap zero-null tests — ${selectedTest}`,
+        warning: `${CBSEM_EXACT_BOOTSTRAP_TRUTH_NOTE} ${testWarning}`,
+        status: "experimental",
+        columns: [
+          "Parameter ID", "Status", "Point estimate", "Two-sided count", "p (two-sided)",
+          "Greater/equal count", "p (greater)", "Less/equal count", "p (less)",
+          "Selected count", "Selected p", "Decision at α = 0.05", "Unavailable reason", "Usable refits",
+        ],
+        rows: hypothesisTests.parameters.map((parameter) => {
+          const outcome = parameter.outcome;
+          return outcome.status === "available"
+            ? [
+                parameter.parameter_id, "Available", formatNumber(outcome.point_estimate),
+                String(outcome.two_sided_exceedances), formatPValue(outcome.p_value_two_sided),
+                String(outcome.greater_or_equal_exceedances), formatPValue(outcome.p_value_greater),
+                String(outcome.less_or_equal_exceedances), formatPValue(outcome.p_value_less),
+                String(outcome.selected_exceedances), formatPValue(outcome.selected_p_value),
+                outcome.reject_null ? "Reject zero null" : "Do not reject zero null", "",
+                String(hypothesisTests.usable_replicates),
+              ]
+            : [
+                parameter.parameter_id, "Unavailable", "", "", "", "", "", "", "", "", "", "",
+                sentenceCase(outcome.reason.replaceAll("_", " ")), String(hypothesisTests.usable_replicates),
+              ];
+        }),
+      });
+    }
+    tables.push({
+      id: "cbsem_exact_bootstrap_successful_refits",
+      title: "Successful exact-ML bootstrap refits",
+      warning,
+      status: "experimental",
+      columns: ["Replicate", "Schedule digest", "Source-row digest", "Parameter estimates", "Iterations", "Objective", "Gradient norm"],
+      rows: exactBootstrap.successful_refits.map((row) => [
+        String(row.replicate_index), row.sampling_positions_sha256, row.sample_indices_sha256,
+        JSON.stringify(row.parameter_estimates), String(row.iterations), formatNumber(row.objective),
+        formatNumber(row.gradient_norm),
+      ]),
+    });
+    tables.push({
+      id: "cbsem_exact_bootstrap_failures",
+      title: "Failed exact-ML bootstrap refits",
+      warning,
+      status: "experimental",
+      columns: ["Replicate", "Schedule digest", "Source-row digest", "Failure kind", "Message"],
+      rows: exactBootstrap.failed_refits.map((row) => [
+        String(row.replicate_index), row.sampling_positions_sha256, row.sample_indices_sha256,
+        sentenceCase(row.kind.replaceAll("_", " ")), row.message,
+      ]),
+    });
+    tables.push({
+      id: "cbsem_exact_bootstrap_settings",
+      title: "Exact case-bootstrap settings and validation scope",
+      warning,
+      status: "experimental",
+      columns: ["Field", "Value"],
+      rows: [
+        ["Inference", exactBootstrap.inference.status === "available" ? "Available" : "Unavailable — insufficient usable exact refits"],
+        ["Requested preplanned refits", String(exactBootstrap.requested_replicates)],
+        ["Attempted exact-ML refits", String(exactBootstrap.attempted_refits)],
+        ["Usable exact-ML refits", String(exactBootstrap.usable_replicates)],
+        ["Failed exact-ML refits", String(exactBootstrap.failed_replicates)],
+        ["Minimum usable refits", String(exactBootstrap.minimum_usable_replicates)],
+        ["Confidence level", `${(exactBootstrap.confidence_level * 100).toFixed(1)}%`],
+        ["Interval method", "Percentile Type-7 with sample-SD standard errors"],
+        ...(hypothesisTests ? [
+          ["Zero-null test", hypothesisTests.selected_test_tail === "two_sided"
+            ? "Two-sided"
+            : hypothesisTests.selected_test_tail === "one_sided_greater" ? "One-sided greater" : "One-sided less"],
+          ["Zero-null probability", "Inclusive null-centered count with plus-one correction"],
+          ["Zero-null inference", hypothesisTests.inference.status === "available" ? "Available" : "Unavailable — insufficient usable exact refits"],
+          ["Zero-null method version", hypothesisTests.method_version],
+        ] : []),
+        ["Failure handling", "Failed fits retained; no retry or replacement draw"],
+        ["Archive validation", "Schedule descriptors and arithmetic checked; raw fits and the Rust schedule were not replayed in this browser reader"],
+        ["Seed", String(exactBootstrap.seed)],
+        ["Stream", exactBootstrap.stream_token],
+        ["Method version", exactBootstrap.method_version],
+      ],
+    });
+  }
+  if (studentizedBootstrap) {
+    const sidecar = studentizedBootstrap.studentized;
+    const inferenceUnavailable = sidecar.inference.status === "unavailable" ? sidecar.inference : null;
+    const warning = `${CBSEM_EXACT_BOOTSTRAP_STUDENTIZED_TRUTH_NOTE}${inferenceUnavailable
+      ? ` ${inferenceUnavailable.message}`
+      : ` ${sidecar.studentized_usable_replicates.toLocaleString()} whole-vector refits supplied usable expected-information standard errors.`}`;
+    tables.push({
+      id: "exact_case_bootstrap_studentized_summary",
+      title: "Analytically studentized bootstrap summary",
+      warning,
+      status: "experimental",
+      columns: [
+        "method_version", "standard_error_method_version", "expected_information_method", "pivot_method",
+        "quantile_method", "interval_method", "archive_validation_scope", "confidence_level",
+        "minimum_usable_fraction", "minimum_usable_replicates", "studentized_usable_replicates",
+        "parameter_ids_json", "inference_status", "unavailable_reason_code", "unavailable_message",
+      ],
+      rows: [[
+        sidecar.method_version,
+        sidecar.standard_error_method_version,
+        sidecar.expected_information_method,
+        sidecar.pivot_method,
+        sidecar.quantile_method,
+        sidecar.interval_method,
+        sidecar.archive_validation_scope,
+        String(sidecar.confidence_level),
+        String(sidecar.minimum_usable_fraction),
+        String(sidecar.minimum_usable_replicates),
+        String(sidecar.studentized_usable_replicates),
+        JSON.stringify(sidecar.parameter_ids),
+        sidecar.inference.status,
+        inferenceUnavailable?.reason ?? "",
+        inferenceUnavailable?.message ?? "",
+      ]],
+    });
+    const pointReceipt = sidecar.point_standard_errors;
+    tables.push({
+      id: "exact_case_bootstrap_studentized_point_standard_errors",
+      title: "Point-estimate analytical standard errors",
+      warning,
+      status: "experimental",
+      columns: [
+        "method_version", "parameter_id", "status", "information_method", "standard_error", "unavailable_reason",
+      ],
+      rows: sidecar.parameter_ids.map((parameterId, index) => {
+        const outcome = pointReceipt.outcome;
+        const available = outcome.status === "available" ? outcome.parameters[index] : null;
+        return [
+          pointReceipt.method_version,
+          parameterId,
+          outcome.status,
+          outcome.status === "available" ? outcome.information_method : "",
+          available ? formatNumber(available.standard_error) : "",
+          outcome.status === "unavailable" ? outcome.reason : "",
+        ];
+      }),
+    });
+    tables.push({
+      id: "exact_case_bootstrap_studentized_parameter_intervals",
+      title: "Analytically studentized parameter intervals",
+      warning,
+      status: "experimental",
+      columns: [
+        "parameter_id", "status", "point_estimate", "point_standard_error", "lower_pivot_quantile",
+        "upper_pivot_quantile", "interval_lower", "interval_upper", "usable_replicates", "unavailable_reason",
+      ],
+      rows: sidecar.intervals.map((interval) => {
+        const outcome = interval.outcome;
+        return outcome.status === "available"
+          ? [
+              interval.parameter_id,
+              outcome.status,
+              formatNumber(outcome.point_estimate),
+              formatNumber(outcome.point_standard_error),
+              formatNumber(outcome.lower_pivot_quantile),
+              formatNumber(outcome.upper_pivot_quantile),
+              formatNumber(outcome.interval_lower),
+              formatNumber(outcome.interval_upper),
+              String(outcome.usable_replicates),
+              "",
+            ]
+          : [interval.parameter_id, outcome.status, "", "", "", "", "", "", "", outcome.reason];
+      }),
+    });
+    tables.push({
+      id: "exact_case_bootstrap_studentized_refit_standard_errors",
+      title: "Compact refit standard-error receipts",
+      warning,
+      status: "experimental",
+      columns: [
+        "replicate_index", "status", "information_method", "standard_errors_json", "unavailable_reason",
+      ],
+      rows: sidecar.refit_standard_errors.map((receipt) => {
+        const outcome = receipt.outcome;
+        return outcome.status === "available"
+          ? [
+              String(receipt.replicate_index),
+              outcome.status,
+              outcome.information_method,
+              JSON.stringify(outcome.standard_errors),
+              "",
+            ]
+          : [String(receipt.replicate_index), outcome.status, "", "", outcome.reason];
+      }),
+    });
+  }
+  if (bcaBootstrap) {
+    const sidecar = bcaBootstrap.bca;
+    const unavailable = sidecar.inference.status === "unavailable" ? sidecar.inference : null;
+    const warning = `${CBSEM_EXACT_BOOTSTRAP_BCA_TRUTH_NOTE}${unavailable ? ` ${unavailable.message}` : ""}`;
+    tables.push({
+      id: "exact_case_bootstrap_bca_summary",
+      title: "BCa bootstrap summary",
+      warning,
+      status: "experimental",
+      columns: [
+        "method_version", "base_bootstrap_method_version", "outer_recipe_analytical_identity_sha256",
+        "base_point_result_sha256", "compiler_analytical_identity_sha256", "plan_sha256",
+        "model_scientific_sha256", "delete_one_refit_method_version",
+        "delete_one_sampling_positions_digest_method", "delete_one_sample_indices_digest_method",
+        "bias_correction_method", "acceleration_method", "adjusted_probability_method", "quantile_method",
+        "retry_policy", "archive_validation_scope", "confidence_level", "bootstrap_usable_replicates",
+        "minimum_bootstrap_usable_replicates", "delete_one_case_count", "successful_delete_one_refits",
+        "failed_delete_one_refits", "parameter_ids_json", "inference_status", "unavailable_reason_code",
+        "unavailable_message",
+      ],
+      rows: [[
+        sidecar.method_version,
+        sidecar.base_bootstrap_method_version,
+        sidecar.outer_recipe_analytical_identity_sha256,
+        sidecar.base_point_result_sha256,
+        sidecar.compiler_analytical_identity_sha256,
+        sidecar.plan_sha256,
+        sidecar.model_scientific_sha256,
+        sidecar.delete_one_refit_method_version,
+        "sha256_complete_case_n_and_ordered_sampling_positions_v1",
+        "sha256_source_fingerprint_and_ordered_u64_indices_v1",
+        sidecar.bias_correction_method,
+        sidecar.acceleration_method,
+        sidecar.adjusted_probability_method,
+        sidecar.quantile_method,
+        sidecar.retry_policy,
+        "ledger_identity_digest_and_arithmetic_replay_only_no_raw_base_or_delete_one_ml_replay_v1",
+        String(sidecar.confidence_level),
+        String(sidecar.bootstrap_usable_replicates),
+        String(sidecar.minimum_bootstrap_usable_replicates),
+        String(sidecar.delete_one_case_count),
+        String(sidecar.successful_delete_one_refits.length),
+        String(sidecar.failed_delete_one_refits.length),
+        JSON.stringify(sidecar.parameter_ids),
+        sidecar.inference.status,
+        unavailable?.reason ?? "",
+        unavailable?.message ?? "",
+      ]],
+    });
+    tables.push({
+      id: "exact_case_bootstrap_bca_parameter_intervals",
+      title: "BCa Type-7 parameter intervals",
+      warning,
+      status: "experimental",
+      columns: [
+        "parameter_id", "status", "point_estimate", "bias_correction", "acceleration",
+        "adjusted_lower_probability", "adjusted_upper_probability", "interval_lower", "interval_upper",
+        "usable_replicates", "unavailable_reason",
+      ],
+      rows: sidecar.intervals.map((interval) => {
+        const outcome = interval.outcome;
+        return outcome.status === "available"
+          ? [
+              interval.parameter_id, outcome.status, formatNumber(outcome.point_estimate),
+              formatNumber(outcome.bias_correction), formatNumber(outcome.acceleration),
+              formatNumber(outcome.adjusted_lower_probability), formatNumber(outcome.adjusted_upper_probability),
+              formatNumber(outcome.interval_lower), formatNumber(outcome.interval_upper),
+              String(outcome.usable_replicates), "",
+            ]
+          : [interval.parameter_id, outcome.status, "", "", "", "", "", "", "", "", sentenceCase(outcome.reason.replaceAll("_", " "))];
+      }),
+    });
+    tables.push({
+      id: "exact_case_bootstrap_bca_successful_delete_one_refits",
+      title: "Successful BCa delete-one refits",
+      warning,
+      status: "experimental",
+      columns: [
+        "omitted_complete_case_position", "omitted_source_row_index", "retained_sampling_positions_sha256",
+        "retained_sample_indices_sha256", "parameter_estimates_json", "iterations", "objective", "gradient_norm",
+      ],
+      rows: sidecar.successful_delete_one_refits.map((row) => [
+        String(row.omitted_complete_case_position), String(row.omitted_source_row_index),
+        row.retained_sampling_positions_sha256, row.retained_sample_indices_sha256,
+        JSON.stringify(row.parameter_estimates), String(row.iterations), formatNumber(row.objective),
+        formatNumber(row.gradient_norm),
+      ]),
+    });
+    tables.push({
+      id: "exact_case_bootstrap_bca_failures",
+      title: "Failed BCa delete-one refits",
+      warning,
+      status: "experimental",
+      columns: [
+        "omitted_complete_case_position", "omitted_source_row_index", "retained_sampling_positions_sha256",
+        "retained_sample_indices_sha256", "kind", "message",
+      ],
+      rows: sidecar.failed_delete_one_refits.map((row) => [
+        String(row.omitted_complete_case_position), String(row.omitted_source_row_index),
+        row.retained_sampling_positions_sha256, row.retained_sample_indices_sha256,
+        sentenceCase(row.kind.replaceAll("_", " ")), row.message,
+      ]),
+    });
+  }
   addTable(tables, {
     id: "cbsem_standardized_parameters",
     title: "Standardized parameters",
@@ -3446,18 +5662,41 @@ function addCbsemResultTables(
     columns: ["Indicator", "Compared with", "Implied covariance"],
     rows: matrixRows(analysis.implied_covariance),
   });
-  addTable(tables, {
-    id: "cbsem_modification_diagnostics",
-    title: "Residual-based modification diagnostics",
-    warning: "Screening diagnostics only. They are not an instruction to modify the specified model.",
-    columns: ["Candidate", "Type", "Diagnostic index", "Expected parameter change"],
-    rows: analysis.modification_indices.map((row) => [
-      parameterLabel(row.kind, row.lhs, row.rhs),
-      sentenceCase(row.kind.replaceAll("_", " ")),
-      formatNumber(row.modification_index),
-      formatOptionalNumber(row.expected_parameter_change),
-    ]),
-  });
+  if (analysis.score_lm) addTable(tables, {
+      id: "modification_index_score_tests",
+      title: "Exact residual-covariance score/LM tests",
+      warning: "Genuine one-degree-of-freedom score/LM tests only for residual covariances explicitly declared and fixed to zero.",
+      columns: ["Candidate", "Type", "Status", "Score", "Efficient score", "Candidate information", "Efficient information", "Modification index", "Expected parameter change", "df", "p", "Unavailable reason"],
+      rows: analysis.score_lm.rows.map((row) => {
+        const available = row.outcome.status === "available" ? row.outcome : null;
+        return [
+          parameterLabel(row.kind, row.lhs, row.rhs),
+          "Residual covariance fixed to zero",
+          row.outcome.status === "available" ? "Available" : "Unavailable",
+          formatOptionalNumber(available?.score, 6),
+          formatOptionalNumber(available?.efficient_score, 6),
+          formatOptionalNumber(available?.candidate_information, 6),
+          formatOptionalNumber(available?.efficient_information, 6),
+          formatOptionalNumber(available?.modification_index, 6),
+          formatOptionalNumber(available?.expected_parameter_change, 6),
+          available ? "1" : "",
+          formatOptionalPValue(available?.p_value),
+          row.outcome.status === "unavailable" ? sentenceCase(row.outcome.reason.replaceAll("_", " ")) : "",
+        ];
+      }),
+    });
+  if (!analysis.score_lm) addTable(tables, {
+      id: "cbsem_modification_diagnostics",
+      title: "Residual-based modification diagnostics",
+      warning: "Screening diagnostics only. They are not an instruction to modify the specified model.",
+      columns: ["Candidate", "Type", "Diagnostic index", "Expected parameter change"],
+      rows: analysis.modification_indices.map((row) => [
+        parameterLabel(row.kind, row.lhs, row.rhs),
+        sentenceCase(row.kind.replaceAll("_", " ")),
+        formatNumber(row.modification_index),
+        formatOptionalNumber(row.expected_parameter_change),
+      ]),
+    });
   addTable(tables, {
     id: "cbsem_scope",
     title: "Calculation scope",
@@ -3476,8 +5715,16 @@ function addCbsemResultTables(
       ["Gradient norm", formatNumber(analysis.gradient_norm)],
       ["Estimator method version", projection.methodVersion],
       ["Fit method version", analysis.fit.method_version],
-      ["Modification-diagnostic version", CBSEM_MODIFICATION_METHOD_VERSION],
-      ["Unsupported in this workflow", "Bootstrap, multigroup/invariance, robust/ordinal/FIML estimators, interactions, higher-order constructs, and mean structures"],
+      ...(rmseaIntervalAttribution ? [["RMSEA interval method version", rmseaIntervalAttribution.method_version]] : []),
+      ...(!analysis.score_lm ? [["Modification-diagnostic version", CBSEM_MODIFICATION_METHOD_VERSION]] : []),
+      ...(analysis.score_lm ? [
+        ["Score/LM method version", CBSEM_SCORE_LM_METHOD_VERSION],
+        ["Score/LM scope", "Covariance-only CFA; explicitly declared zero residual covariances"],
+      ] : []),
+      ["CB-SEM bootstrap", exactBootstrap
+        ? `${exactBootstrap.requested_replicates.toLocaleString()} preplanned full exact-ML case-resampling draws${studentizedBootstrap ? " with analytic studentization" : bcaBootstrap ? " with complete-only BCa delete-one inference" : ""}`
+        : bootstrap ? `${bootstrap.requested_replicates.toLocaleString()} preplanned full-ML case-resampling draws` : "Not requested"],
+      ["Unsupported in this workflow", "Multigroup/invariance, robust/ordinal/FIML estimators, interactions, higher-order constructs, and mean structures"],
     ],
   });
 }
@@ -3564,7 +5811,7 @@ function addGscaResultTables(
   });
   addTable(tables, {
     id: "gsca_scope",
-    title: "Calculation scope",
+    title: "Analysis details",
     warning: analysis.warnings.join(" "),
     columns: ["Field", "Value"],
     rows: [
@@ -3578,7 +5825,7 @@ function addGscaResultTables(
       ["Measurement models", "Disjoint reflective and formative blocks"],
       ["Structural model", "Recursive single-group paths; every construct connected"],
       ["Inference", "Point estimates only; no bootstrap or permutation inference"],
-      ["Bounded native scope", NATIVE_GSCA_SCOPE_NOTE],
+      ["Supported setup", NATIVE_GSCA_SCOPE_NOTE],
     ],
   });
 }
@@ -3601,6 +5848,9 @@ function addNcaResultTables(
       formatPValue(row.permutationPValue),
     ]),
   });
+
+  const ceFdhPeers = ncaCeFdhPeerTableFromProjection(projection);
+  if (ceFdhPeers) tables.push(ceFdhPeers);
 
   addTable(tables, {
     id: "nca_cr_line",
@@ -3634,7 +5884,7 @@ function addNcaResultTables(
 
   addTable(tables, {
     id: "nca_scope",
-    title: "Calculation scope",
+    title: "Analysis details",
     warning: projection.warnings.join(" "),
     columns: ["Field", "Value"],
     rows: [
@@ -3700,6 +5950,7 @@ function addPcaResultTables(
       ["Input matrix", "Correlation matrix of standardized variables"],
       ["Missing data", "Listwise deletion"],
       ["Rotation", "None"],
+      ["Validated scope", NATIVE_PCA_SCOPE_NOTE],
       ["Method version", projection.methodVersion],
     ],
   });
@@ -3768,6 +6019,7 @@ function addOlsResultTables(
       ["Confidence intervals", "Two-sided 95%"],
       ["Variable data", "Unstandardized observed numeric values"],
       ["Missing data", "Listwise deletion"],
+      ["Validated scope", NATIVE_OLS_SCOPE_NOTE],
       ["Method version", projection.methodVersion],
     ],
   });
@@ -4011,6 +6263,7 @@ function addLogisticResultTables(
       ["Classification interpretation", classificationWarning],
       ["Variable data", "Unstandardized observed numeric values"],
       ["Missing data", "Listwise deletion"],
+      ["Validated scope", NATIVE_LOGISTIC_SCOPE_NOTE],
       ["Method version", projection.methodVersion],
     ],
   });
@@ -4024,7 +6277,7 @@ function addLegacyLogisticResultTables(
 ) {
   const projection = nativeLegacyLogisticResultProjection(run);
   if (!projection) return;
-  const legacyWarning = `Historical v1 output is retained as originally computed and is not reinterpreted as current v2 evidence. ${projection.warnings.join(" ")}`;
+  const legacyWarning = `Historical v1 output is retained as originally computed and is not reinterpreted as current v2 output. ${projection.warnings.join(" ")}`;
 
   addTable(tables, {
     id: "legacy_logistic_coefficients",
@@ -4073,7 +6326,7 @@ function addLegacyLogisticResultTables(
       ["Controls", projection.controls.length ? projection.controls.join(", ") : "None"],
       ["Recorded historical preprocessing", projection.recordedPreprocessing],
       ["Historical preprocessing handling", "Recorded for archive provenance only; non-operative for this preserved v1 result"],
-      ["Historical handling", "Readable and exportable under its original version; not promoted to v2 evidence"],
+      ["Historical handling", "Readable and exportable under its original version; new analyses use the current method"],
       ["Method version", projection.methodVersion],
     ],
   });
@@ -4094,18 +6347,37 @@ function addMgaResultTables(
 
   const roleForGroup = (group: string) => group === groupA.group ? "Group A" : "Group B";
   const isCurrentMga = mga.method_version === CURRENT_MGA_METHOD_VERSION;
-  const permutation = isCurrentMga
-    ? currentMgaPermutation(run.result.mga_permutation, mga.group_column)
+  const isHistoricalV3 = mga.method_version === HISTORICAL_MGA_METHOD_VERSION_V3;
+  const isHistoricalV2 = mga.method_version === HISTORICAL_MGA_METHOD_VERSION_V2;
+  const hasCompleteMeasurementContract = isCurrentMga || isHistoricalV3 || isHistoricalV2;
+  const expectedPermutationVersion = isCurrentMga
+    ? CURRENT_MGA_PERMUTATION_METHOD_VERSION
+    : isHistoricalV3
+      ? HISTORICAL_MGA_PERMUTATION_METHOD_VERSION_V3
+      : HISTORICAL_MGA_PERMUTATION_METHOD_VERSION_V2;
+  const expectedMicomVersion = isCurrentMga
+    ? CURRENT_COMBINED_MICOM_METHOD_VERSION
+    : isHistoricalV3
+      ? LEGACY_COMBINED_MICOM_METHOD_VERSION_V3
+      : HISTORICAL_MICOM_METHOD_VERSION_V2;
+  const permutation = hasCompleteMeasurementContract
+    ? currentMgaPermutation(run.result.mga_permutation, mga.group_column, expectedPermutationVersion)
     : null;
   const groupAOuter = validMgaOuterEstimates(groupA);
   const groupBOuter = validMgaOuterEstimates(groupB);
-  const measurementComparisons = isCurrentMga
+  const measurementComparisons = hasCompleteMeasurementContract
     ? validMgaMeasurementComparisons(mga, groupA, groupB, groupAOuter, groupBOuter)
     : [];
-  const micom = isCurrentMga
-    ? currentMicomProjection(run.result.micom, mga, groupA, groupB, groupAOuter, groupBOuter)
+  const micom = hasCompleteMeasurementContract
+    ? currentMicomProjection(run.result.micom, mga, groupA, groupB, groupAOuter, groupBOuter, expectedMicomVersion)
     : null;
+  if (isCurrentMga && (!permutation
+    || !micom
+    || permutation.permutation_plan_sha256 !== micom.analysis.permutation_plan_sha256
+    || JSON.stringify(permutation.permutation_ledger) !== JSON.stringify(micom.analysis.permutation_ledger))) return;
   const engineWarnings = [
+    ...(isHistoricalV3 ? [HISTORICAL_MGA_V3_WARNING] : []),
+    ...(isHistoricalV2 ? [HISTORICAL_MGA_V2_WARNING] : []),
     ...mga.warnings,
     ...(permutation?.warnings ?? []),
     ...(micom?.analysis.warnings ?? []),
@@ -4127,7 +6399,10 @@ function addMgaResultTables(
     ]),
   });
 
-  if (micom) addMicomResultTables(tables, micom, groupA.group, groupB.group, constructLabel);
+  if (micom) {
+    addMicomResultTables(tables, micom, groupA.group, groupB.group, constructLabel);
+    if (isCurrentMga) addMicomAccountingTable(tables, micom.analysis);
+  }
 
   addTable(tables, {
     id: "mga_group_paths",
@@ -4144,7 +6419,7 @@ function addMgaResultTables(
       ])),
   });
 
-  if (isCurrentMga) {
+  if (hasCompleteMeasurementContract) {
     addTable(tables, {
       id: "mga_group_loadings",
       title: "Group outer loadings",
@@ -4310,6 +6585,26 @@ function addMgaResultTables(
     permutation.usable_permutations,
     constructLabel,
   );
+  if (isCurrentMga) {
+    addTable(tables, {
+      id: "mga_permutation_accounting",
+      title: "Combined permutation plan and provenance",
+      warning: null,
+      columns: ["Field", "Value"],
+      rows: [
+        ["MGA method version", mga.method_version],
+        ["Permutation method version", permutation.method_version],
+        ["MICOM method version", micom?.analysis.method_version ?? "Unavailable"],
+        ["Requested partitions", String(permutation.permutation_samples)],
+        ["Attempted partitions", String(permutation.attempted_permutations)],
+        ["Usable MGA partitions", String(permutation.usable_permutations)],
+        ["Failed MGA partitions", String(permutation.failed_permutations)],
+        ["Retry policy", permutation.retry_policy ?? "Unavailable"],
+        ["Partition plan digest", permutation.permutation_plan_sha256 ?? "Unavailable"],
+        ["Seed", String(run.provenance?.settings.seed ?? run.seed)],
+      ],
+    });
+  }
 }
 
 type MgaAnalysis = NonNullable<NonNullable<AnalysisRun["result"]>["mga"]>;
@@ -4326,21 +6621,112 @@ interface CurrentMicomProjection {
   constructs: MicomConstruct[];
 }
 
+function currentStandaloneMicomProjection(
+  micom: NonNullable<AnalysisRun["result"]>["micom"],
+  expectedMethodVersion = CURRENT_MICOM_METHOD_VERSION,
+): CurrentMicomProjection | null {
+  if (!micom || micom.method_version !== expectedMethodVersion) return null;
+  const ledger = micom.permutation_ledger ?? [];
+  const step2Usable = micom.step2_usable_permutations;
+  const step2Failed = micom.step2_failed_permutations;
+  const step3Usable = micom.step3_usable_permutations;
+  const step3Failed = micom.step3_failed_permutations;
+  if (!hasText(micom.group_column)
+    || !Array.isArray(micom.warnings)
+    || micom.warnings.some((warning) => typeof warning !== "string")
+    || !isPositiveInteger(micom.permutation_samples)
+    || micom.permutation_samples < 5_000
+    || micom.permutation_samples > 10_000
+    || micom.attempted_permutations !== micom.permutation_samples
+    || micom.retry_policy !== "none"
+    || micom.step1_status !== "confirmed_by_researcher_review"
+    || micom.step1_computed !== false
+    || !isNonNegativeInteger(step2Usable)
+    || !isNonNegativeInteger(step2Failed)
+    || !isNonNegativeInteger(step3Usable)
+    || !isNonNegativeInteger(step3Failed)
+    || step2Usable + step2Failed !== micom.permutation_samples
+    || step3Usable + step3Failed !== micom.permutation_samples
+    || step2Usable < 19
+    || step3Usable < 19
+    || micom.usable_permutations !== Math.min(step2Usable, step3Usable)
+    || micom.failed_permutations !== micom.permutation_samples - micom.usable_permutations
+    || !/^sha256:[0-9a-f]{64}$/.test(micom.permutation_plan_sha256 ?? "")
+    || ledger.length !== micom.permutation_samples
+    || micom.groups.length !== 2
+    || !hasText(micom.groups[0]?.group)
+    || !hasText(micom.groups[1]?.group)
+    || micom.groups[0].group === micom.groups[1].group
+    || !isPositiveInteger(micom.groups[0].observations)
+    || !isPositiveInteger(micom.groups[1].observations)
+    || Math.min(micom.groups[0].observations, micom.groups[1].observations) < 10
+    || Math.max(micom.groups[0].observations, micom.groups[1].observations)
+      > Math.min(micom.groups[0].observations, micom.groups[1].observations) * 10
+    || !isProbability(micom.confidence_level)
+    || micom.confidence_level <= 0
+    || micom.confidence_level >= 1) return null;
+
+  let countedStep2 = 0;
+  let countedStep3 = 0;
+  for (let replicate = 0; replicate < ledger.length; replicate += 1) {
+    const entry = ledger[replicate];
+    const step2Ok = entry.step2_status === "usable";
+    const step3Ok = entry.step3_status === "usable";
+    if (entry.replicate !== replicate
+      || !/^[0-9a-f]{64}$/.test(entry.partition_sha256)
+      || entry.group_a_rows !== micom.groups[0].observations
+      || entry.group_b_rows !== micom.groups[1].observations
+      || (entry.step2_status !== "usable" && entry.step2_status !== "failed")
+      || (entry.step3_status !== "usable" && entry.step3_status !== "failed")
+      || (step2Ok
+        ? entry.step2_failure_code != null
+        : !hasText(entry.step2_failure_code) || !CURRENT_MICOM_FAILURE_CODES.has(entry.step2_failure_code))
+      || (step3Ok
+        ? entry.step3_failure_code != null
+        : !hasText(entry.step3_failure_code) || !CURRENT_MICOM_FAILURE_CODES.has(entry.step3_failure_code))) return null;
+    if (step2Ok) countedStep2 += 1;
+    if (step3Ok) countedStep3 += 1;
+  }
+  if (countedStep2 !== step2Usable || countedStep3 !== step3Usable) return null;
+
+  const commonConstructs = new Set(micom.constructs.map((row) => row.construct));
+  const constructs = uniqueValidRows(
+    micom.constructs,
+    (row) => row.construct,
+    (row) => validMicomConstruct(row, commonConstructs),
+  );
+  if (!constructs.length || constructs.length !== micom.constructs.length) return null;
+  return { analysis: micom, constructs };
+}
+
 function currentMgaPermutation(
   permutation: NonNullable<AnalysisRun["result"]>["mga_permutation"],
   groupColumn: string,
+  expectedMethodVersion: string,
 ): MgaPermutationAnalysis | null {
   if (!permutation
-    || permutation.method_version !== CURRENT_MGA_PERMUTATION_METHOD_VERSION
+    || permutation.method_version !== expectedMethodVersion
     || permutation.group_column !== groupColumn
     || !isPositiveInteger(permutation.permutation_samples)
     || permutation.permutation_samples < 5_000
     || permutation.permutation_samples > 10_000
-    || permutation.usable_permutations !== permutation.permutation_samples
     || !isNonNegativeInteger(permutation.attempted_permutations)
     || !isNonNegativeInteger(permutation.failed_permutations)
     || permutation.attempted_permutations < permutation.usable_permutations
     || permutation.attempted_permutations - permutation.usable_permutations !== permutation.failed_permutations) return null;
+  if (expectedMethodVersion === CURRENT_MGA_PERMUTATION_METHOD_VERSION) {
+    const ledger = permutation.permutation_ledger ?? [];
+    const usable = ledger.filter((entry) => entry.step2_status === "usable").length;
+    if (permutation.attempted_permutations !== permutation.permutation_samples
+      || permutation.retry_policy !== "none"
+      || !/^sha256:[0-9a-f]{64}$/.test(permutation.permutation_plan_sha256 ?? "")
+      || ledger.length !== permutation.permutation_samples
+      || usable !== permutation.usable_permutations
+      || permutation.failed_permutations !== permutation.permutation_samples - usable
+      || ledger.some((entry, replicate) => entry.replicate !== replicate
+        || !/^[0-9a-f]{64}$/.test(entry.partition_sha256)
+        || (entry.step2_status === "usable") !== (entry.step2_failure_code == null))) return null;
+  } else if (permutation.usable_permutations !== permutation.permutation_samples) return null;
   return permutation;
 }
 
@@ -4393,14 +6779,19 @@ function currentMicomProjection(
   groupB: MgaGroup,
   groupAOuter: MgaOuterEstimate[],
   groupBOuter: MgaOuterEstimate[],
+  expectedMethodVersion: string,
 ): CurrentMicomProjection | null {
+  const exactCombined = expectedMethodVersion === CURRENT_COMBINED_MICOM_METHOD_VERSION;
+  const exactProjection = exactCombined
+    ? currentStandaloneMicomProjection(micom, expectedMethodVersion)
+    : null;
   if (!micom
-    || micom.method_version !== CURRENT_MICOM_METHOD_VERSION
+    || micom.method_version !== expectedMethodVersion
     || micom.group_column !== mga.group_column
     || !isPositiveInteger(micom.permutation_samples)
     || micom.permutation_samples < 5_000
     || micom.permutation_samples > 10_000
-    || micom.usable_permutations !== micom.permutation_samples
+    || (exactCombined ? !exactProjection : micom.usable_permutations !== micom.permutation_samples)
     || !isNonNegativeInteger(micom.attempted_permutations)
     || !isNonNegativeInteger(micom.failed_permutations)
     || micom.attempted_permutations < micom.usable_permutations
@@ -4452,7 +6843,7 @@ function validMicomConstruct(row: MicomConstruct, commonConstructs: ReadonlySet<
     || !isFiniteNumber(row.variance_b)
     || row.variance_b <= 0
     || !isFiniteNumber(row.variance_difference)
-    || !numbersClose(row.variance_difference, Math.log(row.variance_a / row.variance_b))
+    || !numbersClose(row.variance_difference, Math.log(row.variance_a) - Math.log(row.variance_b))
     || !isFiniteNumber(row.variance_difference_lower)
     || !isFiniteNumber(row.variance_difference_upper)
     || row.variance_difference_lower > row.variance_difference_upper
@@ -4546,6 +6937,27 @@ function addMicomResultTables(
       formatPValue(row.variance_p_value as number),
       equalityLabel(row.equal_variances === true),
     ]),
+  });
+}
+
+function addMicomAccountingTable(tables: ResultTable[], analysis: MicomAnalysisPayload) {
+  addTable(tables, {
+    id: "micom_permutation_accounting",
+    title: "MICOM permutation accounting",
+    warning: analysis.warnings.map((warning) => warning.trim()).filter(Boolean).join(" ") || null,
+    columns: ["Field", "Value"],
+    rows: [
+      ["Step 1", "Confirmed by researcher review; not computed from the data"],
+      ["Requested permutations", String(analysis.permutation_samples)],
+      ["Attempted permutations", String(analysis.attempted_permutations)],
+      ["Retry policy", analysis.retry_policy ?? "Unavailable"],
+      ["Step 2 usable", String(analysis.step2_usable_permutations)],
+      ["Step 2 failed", String(analysis.step2_failed_permutations)],
+      ["Step 3 usable", String(analysis.step3_usable_permutations)],
+      ["Step 3 failed", String(analysis.step3_failed_permutations)],
+      ["Ledger rows", String(analysis.permutation_ledger?.length ?? 0)],
+      ["Permutation plan", analysis.permutation_plan_sha256 ?? "Unavailable"],
+    ],
   });
 }
 
@@ -4711,12 +7123,290 @@ function htmtTable(
       }
     }
   }
-  return { id, title, warning: null, columns: ["Construct", "Compared with", "Value"], rows };
+  return { id, title, status: "experimental", warning: null, columns: ["Construct", "Compared with", "Value"], rows };
 }
 
-function fitRow(label: string, fit: { srmr: number; d_uls: number }): string[] | null {
+function htmtBootstrapTables(
+  plus: HtmtBootstrapInference,
+  original: HtmtBootstrapInference,
+  assessment: NonNullable<AnalysisRun["assessment"]>,
+  requestedReplicates: number,
+  globallyFailedReplicateIndices: number[],
+  constructLabel: ConstructDisplayLabel,
+  excludedConstructs: ReadonlySet<string>,
+): TableDraft[] | null {
+  const pointPlus = assessment.htmt_plus;
+  const pointOriginal = assessment.htmt_original;
+  if (!pointPlus || !pointOriginal
+    || assessment.htmt_plus_method_version !== "ringle_et_al_htmt_plus_v1"
+    || assessment.htmt_original_method_version !== "henseler_et_al_htmt_v1"
+    || !validHtmtBootstrapArtifact(
+      plus,
+      pointPlus,
+      requestedReplicates,
+      "ringle_et_al_htmt_plus_bias_corrected_bootstrap_v1",
+      "ringle_et_al_htmt_plus_v1",
+      true,
+      globallyFailedReplicateIndices,
+    )
+    || !validHtmtBootstrapArtifact(
+      original,
+      pointOriginal,
+      requestedReplicates,
+      "henseler_et_al_htmt_bias_corrected_bootstrap_v1",
+      "henseler_et_al_htmt_v1",
+      false,
+      globallyFailedReplicateIndices,
+    )) return null;
+
+  const warning = "Experimental HTMT inference. The documented one-tailed alpha .05 decision is established only when the 90% bias-corrected percentile interval's upper bound is strictly below 0.90; justify any stricter context-specific criterion separately.";
+  return [
+    htmtBootstrapTable("htmt_plus_bootstrap", "HTMT+ bias-corrected bootstrap inference", plus, constructLabel, excludedConstructs, warning),
+    htmtBootstrapTable("htmt_original_bootstrap", "Original HTMT bias-corrected bootstrap inference", original, constructLabel, excludedConstructs, null),
+  ];
+}
+
+function validHtmtBootstrapArtifact(
+  artifact: HtmtBootstrapInference,
+  point: HtmtAssessment,
+  requestedReplicates: number,
+  methodVersion: string,
+  pointMethodVersion: string,
+  absoluteCorrelations: boolean,
+  globallyFailedReplicateIndices: number[],
+): boolean {
+  const dimension = point.constructs.length;
+  const minimumUsable = Math.max(2, Math.ceil(requestedReplicates * 0.9));
+  if (artifact.method_version !== methodVersion
+    || artifact.point_method_version !== pointMethodVersion
+    || artifact.correlation_type !== "pearson"
+    || artifact.absolute_correlations !== absoluteCorrelations
+    || point.correlation_type !== "pearson"
+    || point.absolute_correlations !== absoluteCorrelations
+    || artifact.interval_method !== "bias_corrected_percentile_type7_v1"
+    || artifact.test_type !== "one_tailed_upper"
+    || artifact.significance_level !== 0.05
+    || artifact.equivalent_two_sided_confidence_level !== 0.9
+    || artifact.critical_value !== 0.9
+    || artifact.decision_rule !== "bias_corrected_upper_bound_strictly_below_critical_value_v1"
+    || artifact.replicate_index_digest_method !== "sha256_u32_le_v1"
+    || artifact.retry_policy !== "no_retry_fixed_preplanned_primary_draws_v1"
+    || !isPositiveInteger(requestedReplicates)
+    || artifact.requested_replicates !== requestedReplicates
+    || artifact.minimum_usable_replicates !== minimumUsable
+    || artifact.constructs.length !== dimension
+    || artifact.constructs.some((construct, index) => construct !== point.constructs[index])
+    || artifact.cells.length !== dimension
+    || artifact.cells.some((row) => row.length !== dimension)
+    || point.cells.length !== dimension
+    || point.cells.some((row) => row.length !== dimension)) return false;
+
+  const globallyFailed = new Set(globallyFailedReplicateIndices);
+  if (globallyFailed.size !== globallyFailedReplicateIndices.length
+    || globallyFailedReplicateIndices.some((index) => !isNonNegativeInteger(index) || index >= requestedReplicates)) return false;
+
+  for (let row = 0; row < dimension; row += 1) {
+    for (let column = 0; column < dimension; column += 1) {
+      const cell = artifact.cells[row][column];
+      const mirror = artifact.cells[column][row];
+      if (JSON.stringify(cell) !== JSON.stringify(mirror)
+        || !validHtmtBootstrapCell(
+          cell,
+          point.cells[row][column],
+          row === column,
+          absoluteCorrelations,
+          requestedReplicates,
+          minimumUsable,
+          globallyFailed,
+        )) return false;
+    }
+  }
+  return true;
+}
+
+function validHtmtBootstrapCell(
+  cell: HtmtBootstrapInference["cells"][number][number],
+  point: HtmtAssessment["cells"][number][number],
+  diagonal: boolean,
+  absoluteCorrelations: boolean,
+  requestedReplicates: number,
+  minimumUsable: number,
+  globallyFailed: ReadonlySet<number>,
+): boolean {
+  const summariesAbsent = cell.bootstrap_mean == null
+    && cell.bias == null
+    && cell.standard_error == null
+    && cell.bias_correction == null
+    && cell.lower == null
+    && cell.upper == null
+    && cell.replicate_min == null
+    && cell.replicate_max == null
+    && cell.below_original === 0
+    && cell.tied_original === 0;
+  const noIndexLedger = cell.usable_replicate_indices_sha256 == null
+    && cell.pair_unavailable_replicates.length === 0;
+  if (diagonal) {
+    return cell.status === "not_applicable"
+      && cell.reason === "htmt.bootstrap.diagonal_not_inferred"
+      && cell.original === point.value
+      && cell.usable_replicates === 0
+      && cell.failed_replicates === 0
+      && cell.upper_bound_below_critical_value == null
+      && noIndexLedger
+      && summariesAbsent;
+  }
+  if (point.status !== "available") {
+    return cell.status === point.status
+      && cell.reason === point.reason
+      && cell.original === point.value
+      && cell.usable_replicates === 0
+      && cell.failed_replicates === 0
+      && cell.upper_bound_below_critical_value == null
+      && noIndexLedger
+      && summariesAbsent;
+  }
+  if (!isFiniteNumber(point.value)
+    || !numbersClose(cell.original, point.value)
+    || !isNonNegativeInteger(cell.usable_replicates)
+    || !isNonNegativeInteger(cell.failed_replicates)
+    || cell.usable_replicates > requestedReplicates
+    || cell.failed_replicates !== requestedReplicates - cell.usable_replicates) return false;
+  const pairUnavailable = new Set<number>();
+  for (const entry of cell.pair_unavailable_replicates) {
+    if (!isNonNegativeInteger(entry.replicate_index)
+      || entry.replicate_index >= requestedReplicates
+      || globallyFailed.has(entry.replicate_index)
+      || pairUnavailable.has(entry.replicate_index)
+      || !hasText(entry.reason_code)) return false;
+    pairUnavailable.add(entry.replicate_index);
+  }
+  if (cell.usable_replicates + globallyFailed.size + pairUnavailable.size !== requestedReplicates
+    || !/^[0-9a-f]{64}$/.test(cell.usable_replicate_indices_sha256 ?? "")) return false;
+  if (cell.status === "unavailable") {
+    const validReason = cell.reason === "htmt.bootstrap.insufficient_usable_replicates"
+      ? cell.usable_replicates < minimumUsable
+      : cell.reason === "htmt.bootstrap.bias_corrected_interval_unavailable"
+        && cell.usable_replicates >= minimumUsable;
+    return validReason
+      && cell.upper_bound_below_critical_value == null
+      && summariesAbsent;
+  }
+  if (cell.status !== "available" || cell.reason != null || cell.usable_replicates < minimumUsable) return false;
+  const summaries = [
+    cell.bootstrap_mean,
+    cell.bias,
+    cell.standard_error,
+    cell.bias_correction,
+    cell.lower,
+    cell.upper,
+    cell.replicate_min,
+    cell.replicate_max,
+  ];
+  if (!summaries.every(isFiniteNumber)
+    || !isNonNegativeInteger(cell.below_original)
+    || !isNonNegativeInteger(cell.tied_original)
+    || cell.below_original + cell.tied_original > cell.usable_replicates
+    || cell.standard_error! < 0
+    || cell.replicate_min! > cell.replicate_max!
+    || cell.bootstrap_mean! < cell.replicate_min!
+    || cell.bootstrap_mean! > cell.replicate_max!
+    || cell.lower! < cell.replicate_min!
+    || cell.upper! > cell.replicate_max!
+    || cell.lower! > cell.upper!
+    || cell.upper_bound_below_critical_value !== (cell.upper! < 0.9)
+    || !numbersClose(cell.bias, cell.bootstrap_mean! - point.value)) return false;
+  if (absoluteCorrelations && [
+    cell.original,
+    cell.bootstrap_mean,
+    cell.lower,
+    cell.upper,
+    cell.replicate_min,
+    cell.replicate_max,
+  ].some((value) => value! < 0)) return false;
+  return true;
+}
+
+function htmtBootstrapTable(
+  id: "htmt_plus_bootstrap" | "htmt_original_bootstrap",
+  title: string,
+  artifact: HtmtBootstrapInference,
+  constructLabel: ConstructDisplayLabel,
+  excludedConstructs: ReadonlySet<string>,
+  warning: string | null,
+): TableDraft {
+  const rows: string[][] = [];
+  for (let row = 1; row < artifact.constructs.length; row += 1) {
+    const rowName = artifact.constructs[row];
+    if (!hasText(rowName) || excludedConstructs.has(rowName)) continue;
+    for (let column = 0; column < row; column += 1) {
+      const columnName = artifact.constructs[column];
+      if (!hasText(columnName) || excludedConstructs.has(columnName)) continue;
+      const cell = artifact.cells[row][column];
+      rows.push([
+        constructLabel(rowName),
+        constructLabel(columnName),
+        sentenceCase(cell.status.replaceAll("_", " ")),
+        formatOptionalNumber(cell.original),
+        formatOptionalNumber(cell.bootstrap_mean),
+        formatOptionalNumber(cell.bias),
+        formatOptionalNumber(cell.standard_error),
+        formatOptionalNumber(cell.bias_correction),
+        formatOptionalNumber(cell.lower),
+        formatOptionalNumber(cell.upper),
+        cell.upper_bound_below_critical_value == null
+          ? "Unavailable"
+          : cell.upper_bound_below_critical_value
+            ? "Established: upper bound < 0.90"
+            : "Not established: upper bound ≥ 0.90",
+        String(cell.usable_replicates),
+        String(cell.failed_replicates),
+        String(cell.pair_unavailable_replicates.length),
+        cell.usable_replicate_indices_sha256 ?? "",
+        htmtBootstrapReason(cell.reason, artifact.minimum_usable_replicates),
+      ]);
+    }
+  }
+  return {
+    id,
+    title,
+    status: "experimental",
+    warning,
+    columns: ["Construct", "Compared with", "Status", "Original", "Bootstrap mean", "Bias", "STDEV", "Bias correction", "BC 90% lower", "BC 90% upper", "Decision at 0.90", "Usable", "Unavailable/failed", "Pair unavailable", "Usable-index digest", "Reason"],
+    rows,
+  };
+}
+
+function htmtBootstrapReason(reason: string | null, minimumUsable: number): string {
+  switch (reason) {
+    case null: return "";
+    case "htmt.bootstrap.insufficient_usable_replicates": return `Fewer than ${minimumUsable} planned replicates produced this comparison.`;
+    case "htmt.bootstrap.bias_corrected_interval_unavailable": return "The bias-corrected interval could not be calculated from the usable replicate distribution.";
+    case "htmt.formative_not_applicable": return "HTMT is not applicable to formative measurement blocks.";
+    case "htmt.single_indicator_not_applicable": return "HTMT requires at least two indicators in each reflective block.";
+    default: return "This construct comparison is unavailable for the stored point assessment.";
+  }
+}
+
+function fitRow(label: string, fit: PlsModelFit["saturated"], advanced = false): string[] | null {
   if (![fit.srmr, fit.d_uls].some(isFiniteNumber)) return null;
-  return [label, formatOptionalNumber(fit.srmr), formatOptionalNumber(fit.d_uls)];
+  const row = [label, formatOptionalNumber(fit.srmr), formatOptionalNumber(fit.d_uls)];
+  if (advanced) {
+    row.push(
+      fitCriterionDisplay(fit.d_g),
+      fitCriterionDisplay(fit.chi_square),
+      fitCriterionDisplay(fit.degrees_of_freedom),
+      fitCriterionDisplay(fit.nfi),
+    );
+  }
+  return row;
+}
+
+function fitCriterionDisplay(value: PlsModelFit["null_model_chi_square"]): string {
+  return value?.status === "available" ? formatNumber(value.value) : "Unavailable";
+}
+
+function exactFitDecisionLabel(value: boolean | null): string {
+  return value === null ? "Unavailable" : value ? "Not rejected" : "Rejected";
 }
 
 function parameterLabel(value: string, constructLabel: ConstructDisplayLabel): string {
@@ -4857,8 +7547,26 @@ function constructIdsInRun(run: AnalysisRun): ReadonlySet<string> {
 }
 
 function constructParameterPartIndexes(kind: string): readonly number[] {
-  if (["path", "direct_effect", "indirect_effect", "total_effect"].includes(kind)) return [0, 1];
-  if (["r_squared", "outer_loading", "outer_weight"].includes(kind)) return [0];
+  if ([
+    "path",
+    "direct_effect",
+    "indirect_effect",
+    "total_effect",
+    "plsc_construct_correlation",
+    "plsc_path",
+    "plsc_direct_effect",
+    "plsc_indirect_effect",
+    "plsc_total_effect",
+  ].includes(kind)) return [0, 1];
+  if ([
+    "r_squared",
+    "outer_loading",
+    "outer_weight",
+    "plsc_rho_a",
+    "plsc_outer_loading",
+    "plsc_outer_weight",
+    "plsc_r_squared",
+  ].includes(kind)) return [0];
   return [];
 }
 

@@ -45,7 +45,7 @@ export const DESKTOP_COMMANDS: DesktopCommandDefinition[] = [
   { id: "report.open", label: "Open Publication Report", menu: "report", description: "Open the report/export workspace.", requiresReasonWhenDisabled: false },
   { id: "report.export", label: "Export Report...", menu: "report", description: "Export report tables and diagram artifacts.", requiresReasonWhenDisabled: true },
   { id: "view.focus_diagram", label: "Focus Diagram", menu: "view", shortcut: "Ctrl+Shift+F", description: "Collapse side panes for focused modeling.", requiresReasonWhenDisabled: false },
-  { id: "tools.trust_center", label: "Trust Center", menu: "tools", description: "Review method scope, evidence, and known limitations.", requiresReasonWhenDisabled: false },
+  { id: "tools.trust_center", label: "Methods & References", menu: "tools", description: "Review method requirements, references, and known limitations.", requiresReasonWhenDisabled: false },
   { id: "tools.preferences", label: "Preferences...", menu: "tools", description: "Open QuickPLS desktop preferences.", requiresReasonWhenDisabled: false },
   { id: "window.home", label: "Home", menu: "window", description: "Switch to the Home workspace.", requiresReasonWhenDisabled: false },
   { id: "window.data", label: "Data", menu: "window", description: "Switch to the Data workbench.", requiresReasonWhenDisabled: false },

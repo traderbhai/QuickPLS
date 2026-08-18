@@ -1,27 +1,86 @@
+mod capability_registry_command;
+#[cfg(test)]
+mod pls_algorithm_current_product_qualification;
+mod pls_model_comparison_jobs;
+mod project_archive_v6_model_mutation;
+mod project_archive_v6_read;
+mod project_archive_v6_save_copy;
+mod project_schema6_result_append;
+mod project_schema6_result_read;
+mod project_upgrade_assistant;
+mod recipe_v4_canonical_result;
+mod recipe_v4_cbsem_canonical_result;
+mod recipe_v4_cbsem_execution;
+mod recipe_v4_jobs;
 mod sample_projects;
+mod sem_model_v4_scientific_digest;
+mod standard_sem_model_v4_authority;
+#[cfg(test)]
+mod wave1_diagram_cbsem_roundtrip;
 
 use arrow::array::{Array, BooleanArray, Float64Array, Int64Array, StringArray};
+use capability_registry_command::capability_registry_v2;
 use chrono::{SecondsFormat, Utc};
+use pls_model_comparison_jobs::{
+    DesktopPlsModelComparisonJobsV1, cancel_internal_labs_pls_model_comparison_job,
+    dismiss_internal_labs_pls_model_comparison_job, internal_labs_pls_model_comparison_job_result,
+    internal_labs_pls_model_comparison_job_status, start_internal_labs_pls_model_comparison_job,
+};
+use project_archive_v6_model_mutation::mutate_internal_project_archive_v6_model;
+use project_archive_v6_read::inspect_internal_project_archive_v6_zip;
+use project_archive_v6_save_copy::save_internal_project_archive_v6_copy;
+use project_schema6_result_append::append_internal_project_schema6_canonical_result_v2;
+use project_schema6_result_read::read_internal_project_schema6_canonical_results_v2;
+use project_upgrade_assistant::{
+    DesktopProjectUpgradePlans, cancel_internal_project_upgrade_v6,
+    execute_internal_project_upgrade_v6, inspect_internal_project_upgrade_v6,
+    plan_internal_project_upgrade_v6,
+};
 use qpls_core::{
-    ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe, AnalysisResult,
-    AnalysisSettings, Construct, JobSnapshot, JobState, METHOD_CAPABILITIES, MeasurementMode,
-    MethodCapability, MethodConfig, ModelSpec, RunStatus, Severity, StructuralPath,
-    ValidationIssue, sha256_hex, validate_recipe,
+    ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe, AnalysisRecipeV4,
+    AnalysisResult, AnalysisSettings, ApplyDatasetTransformationOptionsV2,
+    CapabilityCellReferenceV2, Construct, DatasetTransformationErrorV2,
+    DatasetTransformationIssueV2, DatasetTransformationPreviewV2, DatasetTransformationSpecV2,
+    JobSnapshot, JobState, METHOD_CAPABILITIES, MeasurementMode, MethodCapability, MethodConfig,
+    ModelSpec, PlsPosthocTechnicalMinimumSampleSizeConfigV2, RecipeV4CompilationError,
+    RecipeV4CompilerTarget, RunStatus, SemModelV4, Severity, StructuralPath, ValidationIssue,
+    apply_dataset_transformation_v2, compile_analysis_recipe_v4,
+    preview_dataset_transformation_v2 as preview_dataset_transformation_kernel_v2, sha256_hex,
+    validate_recipe,
 };
 use qpls_data::{
     ColumnMetadata, DataKind, Dataset, ImportOptions, RecodeColumnSpec, import_delimited_bytes,
     import_path, preview, preview_page, recode_column, update_column_metadata,
 };
 use qpls_project::{
-    Project, RecoverySource, discard_autosave, load_project_with_autosave, save_autosave,
-    save_project,
+    Project, ProjectDataLineageV1 as DatasetLineageLayout,
+    ProjectDatasetVersionOperationV1 as DatasetVersionOperation,
+    ProjectDatasetVersionRecordV1 as DatasetVersionRecord, RecoverySource, discard_autosave,
+    load_project_with_autosave, save_autosave, save_project, validate_data_lineage_resident_v1,
+    validate_project_data_lineage_resident_v1, write_project_data_lineage_v1,
 };
-use qpls_runner::{RunnerError, run_pls_analysis};
+use qpls_runner::{
+    RecipeV4PlsExecutionError, RecipeV4PlsExecutionResultV1, RunnerError,
+    run_compiled_pls_recipe_v4, run_pls_analysis,
+};
+use recipe_v4_cbsem_execution::run_internal_labs_recipe_v4_cbsem_execution;
+use recipe_v4_jobs::{
+    DesktopRecipeV4Jobs, cancel_internal_labs_recipe_v4_cbsem_job,
+    cancel_internal_labs_recipe_v4_pls_job, dismiss_internal_labs_recipe_v4_cbsem_job,
+    dismiss_internal_labs_recipe_v4_pls_job, internal_labs_recipe_v4_cbsem_job_result,
+    internal_labs_recipe_v4_cbsem_job_status, internal_labs_recipe_v4_pls_job_result,
+    internal_labs_recipe_v4_pls_job_status, start_internal_labs_recipe_v4_cbsem_job,
+    start_internal_labs_recipe_v4_pls_job,
+};
 use regex::{Captures, Regex};
 use sample_projects::{BundledSampleProject, build_bundled_sample_project};
+use sem_model_v4_scientific_digest::internal_sem_model_v4_scientific_sha256;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
+use standard_sem_model_v4_authority::{
+    compare_and_swap_standard_sem_model_v4_authority, resolve_standard_sem_model_v4_authority,
+};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap, VecDeque},
     fs,
@@ -196,7 +255,6 @@ const MAX_DIAGNOSTIC_ARCHIVE_BYTES: usize = 520 * 1024;
 const DIAGNOSTIC_SYSTEM_ENTRY: &str = "metadata/system.json";
 const DIAGNOSTIC_EVENTS_ENTRY: &str = "logs/events.jsonl";
 const DIAGNOSTIC_MANIFEST_ENTRY: &str = "manifest.json";
-const DATA_LINEAGE_LAYOUT_KEY: &str = "data_lineage";
 const WORKSPACE_EXPLORER_LAYOUT_KEY: &str = "workspace_explorer";
 const WORKSPACE_EXPLORER_SCHEMA_VERSION: u32 = 1;
 const SAMPLE_RUN_DISPLAY_NAME: &str = "PLS-SEM Bootstrapping run";
@@ -319,42 +377,6 @@ struct DatasetGroupProfile {
     unsupported_count: usize,
     truncated: bool,
     groups: Vec<DatasetGroupProfileValue>,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-enum DatasetVersionOperation {
-    Import,
-    Metadata,
-    Recode,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-struct DatasetVersionRecord {
-    dataset_id: String,
-    parent_dataset_id: Option<String>,
-    operation: DatasetVersionOperation,
-    created_at: Option<String>,
-    summary: String,
-    source_column: Option<String>,
-    target_column: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-struct DatasetLineageLayout {
-    schema_version: u32,
-    records: Vec<DatasetVersionRecord>,
-}
-
-impl Default for DatasetLineageLayout {
-    fn default() -> Self {
-        Self {
-            schema_version: 1,
-            records: vec![],
-        }
-    }
 }
 
 #[derive(Debug, Serialize)]
@@ -1573,6 +1595,785 @@ fn save_diagnostic_bundle(
     Ok(result)
 }
 
+const INTERNAL_RECIPE_V4_PLS_COMMAND_SCHEMA_VERSION: u32 = 1;
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum InternalRecipeV4ExecutionSurfaceV1 {
+    Standard,
+    Labs,
+    InternalLabs,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum InternalRecipeV4ResidentDataV1 {
+    ProjectResident,
+    Inline,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct InternalRecipeV4PlsExecutionRequestV1 {
+    surface: InternalRecipeV4ExecutionSurfaceV1,
+    experimental_labs_enabled: bool,
+    resident_data: InternalRecipeV4ResidentDataV1,
+    dataset_id: String,
+    dataset_fingerprint: String,
+    recipe: AnalysisRecipeV4,
+    model: SemModelV4,
+    compiler_target: RecipeV4CompilerTarget,
+    capability_cell: CapabilityCellReferenceV2,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    posthoc_technical_minimum_sample_size: Option<PlsPosthocTechnicalMinimumSampleSizeConfigV2>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum InternalRecipeV4ExecutionStageV1 {
+    Access,
+    Capability,
+    DataResolution,
+    Compilation,
+    Projection,
+    Estimation,
+    Integrity,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct InternalRecipeV4ExecutionFailureV1 {
+    schema_version: u32,
+    stage: InternalRecipeV4ExecutionStageV1,
+    subject: String,
+    code: String,
+    message: String,
+    corrective_action: String,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    issues: Vec<InternalRecipeV4ExecutionIssueV1>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct InternalRecipeV4ExecutionIssueV1 {
+    code: String,
+    subject: String,
+    message: String,
+}
+
+fn internal_recipe_v4_failure(
+    stage: InternalRecipeV4ExecutionStageV1,
+    subject: impl Into<String>,
+    code: impl Into<String>,
+    message: impl Into<String>,
+    corrective_action: impl Into<String>,
+) -> InternalRecipeV4ExecutionFailureV1 {
+    InternalRecipeV4ExecutionFailureV1 {
+        schema_version: INTERNAL_RECIPE_V4_PLS_COMMAND_SCHEMA_VERSION,
+        stage,
+        subject: subject.into(),
+        code: code.into(),
+        message: message.into(),
+        corrective_action: corrective_action.into(),
+        issues: Vec::new(),
+    }
+}
+
+fn validate_internal_recipe_v4_pls_access(
+    request: &InternalRecipeV4PlsExecutionRequestV1,
+) -> Result<(), InternalRecipeV4ExecutionFailureV1> {
+    if request.surface != InternalRecipeV4ExecutionSurfaceV1::InternalLabs
+        || !request.experimental_labs_enabled
+    {
+        return Err(internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::Access,
+            "experimentalLabsEnabled",
+            "recipe_v4.internal_labs_required",
+            "Recipe-v4 execution is available only through the internal Experimental Labs boundary.",
+            "Enable Experimental Labs and call the internal recipe-v4 service; do not expose this path in Standard Calculate.",
+        ));
+    }
+    if request.resident_data != InternalRecipeV4ResidentDataV1::ProjectResident {
+        return Err(internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::DataResolution,
+            "residentData",
+            "recipe_v4.project_resident_data_required",
+            "Recipe-v4 execution requires a dataset resident in the active project.",
+            "Import or derive the dataset in the active project, then retry with its current identity.",
+        ));
+    }
+    if request.compiler_target != RecipeV4CompilerTarget::PlsPlanV2 {
+        return Err(internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::Capability,
+            "compilerTarget",
+            "recipe_v4.pls_target_required",
+            "This internal command executes only the bounded core PLS compiler target.",
+            "Use compilerTarget pls_plan_v2. CB-SEM recipe-v4 execution is not active.",
+        ));
+    }
+    let expected_capability_cell = request
+        .compiler_target
+        .capability_cell_for_method(request.recipe.settings.method);
+    if request.capability_cell != expected_capability_cell {
+        return Err(internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::Capability,
+            "capabilityCell",
+            "recipe_v4.capability_cell_mismatch",
+            "The capability-cell identity does not match the selected compiler target and analytical method.",
+            "Use the exact primary capability-cell reference for the requested Recipe-v4 method.",
+        ));
+    }
+    Ok(())
+}
+
+fn resolve_internal_recipe_v4_dataset(
+    project: &Project,
+    request: &InternalRecipeV4PlsExecutionRequestV1,
+) -> Result<Dataset, InternalRecipeV4ExecutionFailureV1> {
+    let dataset = project
+        .datasets
+        .iter()
+        .find(|dataset| dataset.id.to_string() == request.dataset_id)
+        .ok_or_else(|| {
+            internal_recipe_v4_failure(
+                InternalRecipeV4ExecutionStageV1::DataResolution,
+                "datasetId",
+                "recipe_v4.dataset_not_resident",
+                format!(
+                    "Dataset {} is not resident in the active project.",
+                    request.dataset_id
+                ),
+                "Select a resident project dataset and rebuild the recipe-v4 request from its current identity.",
+            )
+        })?;
+    if dataset.fingerprint.0 != request.dataset_fingerprint {
+        return Err(internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::DataResolution,
+            "datasetFingerprint",
+            "recipe_v4.dataset_fingerprint_mismatch",
+            "The requested dataset fingerprint does not match the resident dataset.",
+            "Refresh the dataset binding and recompile the recipe before execution.",
+        ));
+    }
+    Ok(dataset.clone())
+}
+
+fn map_recipe_v4_compilation_failure(
+    error: RecipeV4CompilationError,
+) -> InternalRecipeV4ExecutionFailureV1 {
+    if let RecipeV4CompilationError::WeightCapability(issue) = &error {
+        return internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::Compilation,
+            issue.subject.clone(),
+            issue.code.as_str(),
+            issue.to_string(),
+            issue.corrective_action.clone(),
+        );
+    }
+    let subject = match &error {
+        RecipeV4CompilationError::CapabilityCellMismatch => "capabilityCell",
+        RecipeV4CompilationError::UnresolvedModelReference
+        | RecipeV4CompilationError::EmbeddedModelMismatch
+        | RecipeV4CompilationError::ModelIdMismatch { .. }
+        | RecipeV4CompilationError::ModelScientificDigestMismatch
+        | RecipeV4CompilationError::InvalidSemModel(_)
+        | RecipeV4CompilationError::ModelEstimandMismatch(_)
+        | RecipeV4CompilationError::PlsCompiler(_)
+        | RecipeV4CompilationError::CbsemCompiler(_) => "model",
+        _ => "recipe",
+    };
+    internal_recipe_v4_failure(
+        InternalRecipeV4ExecutionStageV1::Compilation,
+        subject,
+        "recipe_v4.compilation_failed",
+        error.to_string(),
+        "Correct the identified recipe, model, data binding, or option and compile a new immutable execution artifact.",
+    )
+}
+
+fn map_recipe_v4_execution_failure(
+    error: RecipeV4PlsExecutionError,
+) -> InternalRecipeV4ExecutionFailureV1 {
+    match error {
+        RecipeV4PlsExecutionError::Compilation(error) => {
+            let mut failure = map_recipe_v4_compilation_failure(error);
+            failure.stage = InternalRecipeV4ExecutionStageV1::Integrity;
+            failure.code = "recipe_v4.compiled_artifact_revalidation_failed".into();
+            failure.corrective_action =
+                "Discard the stale artifact and compile again from the exact recipe and resolved model."
+                    .into();
+            failure
+        }
+        RecipeV4PlsExecutionError::CompilerTarget(_) => internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::Capability,
+            "compilerTarget",
+            "recipe_v4.pls_target_required",
+            error.to_string(),
+            "Compile and execute only the pls_plan_v2 target through this internal command.",
+        ),
+        RecipeV4PlsExecutionError::PosthocOptionIdentityMismatch
+        | RecipeV4PlsExecutionError::PosthocCapabilityUnavailable
+        | RecipeV4PlsExecutionError::PosthocCapabilityRegistry(_) => internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::Capability,
+            "posthocTechnicalMinimumSampleSize",
+            "recipe_v4.posthoc_option_unavailable",
+            error.to_string(),
+            "Use the exact Experimental Labs post-hoc technical minimum sample-size v2 option, or omit the option from this run.",
+        ),
+        RecipeV4PlsExecutionError::RawDataRequired
+        | RecipeV4PlsExecutionError::DatasetFingerprintMismatch
+        | RecipeV4PlsExecutionError::DatasetIdMismatch { .. } => internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::DataResolution,
+            "dataset",
+            "recipe_v4.dataset_binding_failed",
+            error.to_string(),
+            "Refresh the resident raw-data binding and compile again before execution.",
+        ),
+        RecipeV4PlsExecutionError::UnknownComposite(_)
+        | RecipeV4PlsExecutionError::UnknownPathParameter(_)
+        | RecipeV4PlsExecutionError::UnknownInitialWeightIdentity(_, _)
+        | RecipeV4PlsExecutionError::InitialWeightTranslationMismatch
+        | RecipeV4PlsExecutionError::InvalidModelIdentity
+        | RecipeV4PlsExecutionError::Projection(_) => internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::Projection,
+            "model",
+            "recipe_v4.projection_failed",
+            error.to_string(),
+            "Correct the bounded composite model and compile a new execution artifact.",
+        ),
+        RecipeV4PlsExecutionError::Cancelled => internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::Estimation,
+            "execution",
+            "recipe_v4.execution_cancelled",
+            error.to_string(),
+            "Run the internal analysis again when ready.",
+        ),
+        RecipeV4PlsExecutionError::Estimation(_)
+        | RecipeV4PlsExecutionError::EstimatorVersionMismatch { .. }
+        | RecipeV4PlsExecutionError::FixedScoreScaleReceiptMismatch
+        | RecipeV4PlsExecutionError::PointEstimateAttributionMismatch
+        | RecipeV4PlsExecutionError::AlgorithmConvergenceReceiptMismatch
+        | RecipeV4PlsExecutionError::NonlinearEffectsIdentityMismatch => {
+            internal_recipe_v4_failure(
+                InternalRecipeV4ExecutionStageV1::Estimation,
+                "estimator",
+                "recipe_v4.estimation_failed",
+                error.to_string(),
+                "Review the typed model and data diagnostics, correct the setup, and execute again.",
+            )
+        }
+    }
+}
+
+fn execute_internal_recipe_v4_pls(
+    dataset: &Dataset,
+    request: &InternalRecipeV4PlsExecutionRequestV1,
+) -> Result<RecipeV4PlsExecutionResultV1, InternalRecipeV4ExecutionFailureV1> {
+    execute_internal_recipe_v4_pls_with_control(dataset, request, || false, |_| {})
+}
+
+fn execute_internal_recipe_v4_pls_with_control(
+    dataset: &Dataset,
+    request: &InternalRecipeV4PlsExecutionRequestV1,
+    should_cancel: impl Fn() -> bool + Sync,
+    progress: impl Fn(qpls_runner::RunnerProgress) + Sync,
+) -> Result<RecipeV4PlsExecutionResultV1, InternalRecipeV4ExecutionFailureV1> {
+    validate_internal_recipe_v4_pls_access(request)?;
+    if dataset.id.to_string() != request.dataset_id
+        || dataset.fingerprint.0 != request.dataset_fingerprint
+    {
+        return Err(internal_recipe_v4_failure(
+            InternalRecipeV4ExecutionStageV1::DataResolution,
+            "dataset",
+            "recipe_v4.resident_dataset_identity_changed",
+            "The resident dataset identity changed before recipe-v4 execution began.",
+            "Refresh the dataset binding and compile a new immutable execution artifact.",
+        ));
+    }
+    let artifact = compile_analysis_recipe_v4(
+        &request.recipe,
+        Some(&request.model),
+        request.compiler_target,
+        request.capability_cell.clone(),
+    )
+    .map_err(map_recipe_v4_compilation_failure)?;
+    run_compiled_pls_recipe_v4(
+        dataset,
+        &request.recipe,
+        &request.model,
+        &artifact,
+        request.posthoc_technical_minimum_sample_size.as_ref(),
+        should_cancel,
+        progress,
+    )
+    .map_err(map_recipe_v4_execution_failure)
+}
+
+/// Internal/Labs-only synchronous bridge. It deliberately returns an
+/// ephemeral deterministic result and never appends recipe-v4/schema-v6 data
+/// to the active schema-v5 project archive.
+#[tauri::command]
+fn run_internal_labs_recipe_v4_pls_execution(
+    request: InternalRecipeV4PlsExecutionRequestV1,
+    state: State<'_, DesktopProject>,
+) -> Result<RecipeV4PlsExecutionResultV1, InternalRecipeV4ExecutionFailureV1> {
+    validate_internal_recipe_v4_pls_access(&request)?;
+    let dataset = {
+        let project = state.0.lock().map_err(|_| {
+            internal_recipe_v4_failure(
+                InternalRecipeV4ExecutionStageV1::DataResolution,
+                "project",
+                "recipe_v4.project_state_unavailable",
+                "The active project data is temporarily unavailable.",
+                "Retry after the active project finishes its current operation.",
+            )
+        })?;
+        resolve_internal_recipe_v4_dataset(&project, &request)?
+    };
+    execute_internal_recipe_v4_pls(&dataset, &request)
+}
+
+#[cfg(test)]
+mod internal_recipe_v4_pls_command_tests {
+    use super::*;
+    use qpls_core::{
+        AnalysisRecipeModelBindingV4, LegacyBasicModelInterpretationV4, ObservedRoleV4,
+        ObservedScaleV4, SamplingWeightNormalizationV4, SemDataBindingV4, SemParameterV4,
+        SemVariableV4, SemWeightBindingV4, WeightCapabilityCodeV1, WeightCapabilityIssueV1,
+        WeightCapabilityTargetV1, confirm_legacy_recipe_estimand_v4,
+        migrate_analysis_recipe_to_v4_pending, resolve_weight_declaration_v1,
+    };
+    use std::collections::BTreeMap;
+
+    pub(crate) fn fixture() -> (Project, InternalRecipeV4PlsExecutionRequestV1) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../validation/fixtures/simple_reflective.csv"),
+            "simple_reflective.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let legacy: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../validation/fixtures/simple_reflective.recipe.json"
+        ))
+        .unwrap();
+        let mut source = legacy.migrated_v3().unwrap();
+        source.dataset_fingerprint = dataset.fingerprint.0.clone();
+        source.settings.workers = 1;
+        source.method_config = Some(MethodConfig::PlsAlgorithm);
+        let pending = migrate_analysis_recipe_to_v4_pending(&source).unwrap();
+        let (mut recipe, mut model) = confirm_legacy_recipe_estimand_v4(
+            &pending,
+            &source.model,
+            &[],
+            LegacyBasicModelInterpretationV4::PlsComposite,
+        )
+        .unwrap();
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut model.data_binding else {
+            unreachable!()
+        };
+        *dataset_id = dataset.id.to_string();
+        recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+            model: model.clone(),
+            scientific_sha256: model.scientific_sha256().unwrap(),
+        };
+        let request = InternalRecipeV4PlsExecutionRequestV1 {
+            surface: InternalRecipeV4ExecutionSurfaceV1::InternalLabs,
+            experimental_labs_enabled: true,
+            resident_data: InternalRecipeV4ResidentDataV1::ProjectResident,
+            dataset_id: dataset.id.to_string(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            recipe,
+            model,
+            compiler_target: RecipeV4CompilerTarget::PlsPlanV2,
+            capability_cell: RecipeV4CompilerTarget::PlsPlanV2.capability_cell(),
+            posthoc_technical_minimum_sample_size: Some(
+                qpls_core::PlsPosthocTechnicalMinimumSampleSizeConfigV2::point_estimate_v2(),
+            ),
+        };
+        let mut project = Project::new("Recipe-v4 internal command fixture");
+        project.datasets.push(dataset);
+        (project, request)
+    }
+
+    pub(crate) fn fixed_custom_fixture() -> (Project, InternalRecipeV4PlsExecutionRequestV1) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../validation/fixtures/simple_reflective.csv"),
+            "simple_reflective.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let legacy: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../validation/fixtures/simple_reflective.recipe.json"
+        ))
+        .unwrap();
+        let mut source = legacy.migrated_v3().unwrap();
+        source.model.constructs[0].mode = qpls_core::MeasurementMode::Formative;
+        source.dataset_fingerprint = dataset.fingerprint.0.clone();
+        source.settings.workers = 1;
+        source.method_config = Some(MethodConfig::PlsAlgorithm);
+        let pending = migrate_analysis_recipe_to_v4_pending(&source).unwrap();
+        let (mut recipe, mut model) = confirm_legacy_recipe_estimand_v4(
+            &pending,
+            &source.model,
+            &[],
+            LegacyBasicModelInterpretationV4::PlsComposite,
+        )
+        .unwrap();
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut model.data_binding else {
+            unreachable!()
+        };
+        *dataset_id = dataset.id.to_string();
+        let qpls_core::SemVariableV4::Composite { weighting, .. } = model
+            .variables
+            .iter_mut()
+            .find(|variable| variable.id() == "construct:x")
+            .unwrap()
+        else {
+            unreachable!()
+        };
+        *weighting = qpls_core::CompositeWeightingV4::Custom {
+            weights: std::collections::BTreeMap::from([
+                ("observed:x1".into(), 2.0),
+                ("observed:x2".into(), -1.0),
+            ]),
+            normalization: qpls_core::CompositeWeightNormalizationV4::UnitVariance,
+        };
+        recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+            model: model.clone(),
+            scientific_sha256: model.scientific_sha256().unwrap(),
+        };
+        let request = InternalRecipeV4PlsExecutionRequestV1 {
+            surface: InternalRecipeV4ExecutionSurfaceV1::InternalLabs,
+            experimental_labs_enabled: true,
+            resident_data: InternalRecipeV4ResidentDataV1::ProjectResident,
+            dataset_id: dataset.id.to_string(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            recipe,
+            model,
+            compiler_target: RecipeV4CompilerTarget::PlsPlanV2,
+            capability_cell: RecipeV4CompilerTarget::PlsPlanV2.capability_cell(),
+            posthoc_technical_minimum_sample_size: None,
+        };
+        let mut project = Project::new("Recipe-v4 fixed custom internal command fixture");
+        project.datasets.push(dataset);
+        (project, request)
+    }
+
+    pub(crate) fn nonlinear_fixture() -> (Project, InternalRecipeV4PlsExecutionRequestV1) {
+        let (project, mut request) = fixture();
+        request.recipe.settings.method = AnalysisMethod::NonlinearEffects;
+        request.recipe.method_config = Some(MethodConfig::NonlinearEffects);
+        request.capability_cell = request
+            .compiler_target
+            .capability_cell_for_method(AnalysisMethod::NonlinearEffects);
+        request.posthoc_technical_minimum_sample_size = None;
+        (project, request)
+    }
+
+    #[test]
+    fn internal_labs_command_contract_executes_resident_data_without_persisting() {
+        let (project, request) = fixture();
+        let datasets_before = project.datasets.len();
+        let recipes_before = project.recipes.len();
+        let results_before = project.results.len();
+        let dataset = resolve_internal_recipe_v4_dataset(&project, &request).unwrap();
+
+        let result = execute_internal_recipe_v4_pls(&dataset, &request).unwrap();
+
+        assert!(result.estimation().converged);
+        assert_eq!(result.estimation().paths.len(), 1);
+        assert_eq!(
+            result.provenance().compilation_receipt().capability_cell(),
+            &RecipeV4CompilerTarget::PlsPlanV2.capability_cell()
+        );
+        assert_eq!(
+            result.provenance().posthoc_technical_minimum_sample_size(),
+            request.posthoc_technical_minimum_sample_size.as_ref()
+        );
+        assert!(result.estimation().posthoc_minimum_sample_size.is_some());
+
+        let mut unopted = request.clone();
+        unopted.posthoc_technical_minimum_sample_size = None;
+        let unopted_result = execute_internal_recipe_v4_pls(&dataset, &unopted).unwrap();
+        assert!(
+            unopted_result
+                .provenance()
+                .posthoc_technical_minimum_sample_size()
+                .is_none()
+        );
+        assert!(
+            unopted_result
+                .estimation()
+                .posthoc_minimum_sample_size
+                .is_none()
+        );
+        assert_eq!(project.datasets.len(), datasets_before);
+        assert_eq!(project.recipes.len(), recipes_before);
+        assert_eq!(project.results.len(), results_before);
+    }
+
+    #[test]
+    fn internal_labs_executes_the_exact_nonlinear_primary_cell_only() {
+        let (project, request) = nonlinear_fixture();
+        let dataset = resolve_internal_recipe_v4_dataset(&project, &request).unwrap();
+        let result = execute_internal_recipe_v4_pls(&dataset, &request).unwrap();
+        assert_eq!(
+            result.provenance().adapter_version(),
+            qpls_runner::RECIPE_V4_PLS_NONLINEAR_EXECUTION_ADAPTER_VERSION_V7
+        );
+        assert_eq!(
+            result.provenance().estimator_method_version(),
+            qpls_estimation::NONLINEAR_EFFECTS_METHOD_VERSION
+        );
+        assert!(result.estimation().nonlinear_effects.is_some());
+
+        let mut standard = request.clone();
+        standard.surface = InternalRecipeV4ExecutionSurfaceV1::Standard;
+        standard.experimental_labs_enabled = false;
+        assert_eq!(
+            validate_internal_recipe_v4_pls_access(&standard)
+                .unwrap_err()
+                .stage,
+            InternalRecipeV4ExecutionStageV1::Access
+        );
+
+        let mut base_cell = request;
+        base_cell.capability_cell = RecipeV4CompilerTarget::PlsPlanV2.capability_cell();
+        let failure = validate_internal_recipe_v4_pls_access(&base_cell).unwrap_err();
+        assert_eq!(failure.stage, InternalRecipeV4ExecutionStageV1::Capability);
+        assert_eq!(failure.subject, "capabilityCell");
+    }
+
+    #[test]
+    fn internal_labs_access_capability_and_resident_identity_fail_with_corrections() {
+        let (project, request) = fixture();
+
+        let mut standard_request = request.clone();
+        standard_request.surface = InternalRecipeV4ExecutionSurfaceV1::Standard;
+        standard_request.experimental_labs_enabled = false;
+        let access = validate_internal_recipe_v4_pls_access(&standard_request).unwrap_err();
+        assert_eq!(access.stage, InternalRecipeV4ExecutionStageV1::Access);
+        assert_eq!(access.subject, "experimentalLabsEnabled");
+        assert!(!access.corrective_action.is_empty());
+        let access_wire = serde_json::to_value(&access).unwrap();
+        assert_eq!(access_wire["schemaVersion"], 1);
+        assert_eq!(access_wire["stage"], "access");
+        assert_eq!(access_wire["correctiveAction"], access.corrective_action);
+
+        let mut labs_only_request = request.clone();
+        labs_only_request.surface = InternalRecipeV4ExecutionSurfaceV1::Labs;
+        assert_eq!(
+            validate_internal_recipe_v4_pls_access(&labs_only_request)
+                .unwrap_err()
+                .stage,
+            InternalRecipeV4ExecutionStageV1::Access
+        );
+
+        let mut inline_request = request.clone();
+        inline_request.resident_data = InternalRecipeV4ResidentDataV1::Inline;
+        assert_eq!(
+            validate_internal_recipe_v4_pls_access(&inline_request)
+                .unwrap_err()
+                .stage,
+            InternalRecipeV4ExecutionStageV1::DataResolution
+        );
+
+        let mut wrong_target = request.clone();
+        wrong_target.compiler_target = RecipeV4CompilerTarget::CbsemPlanV2;
+        wrong_target.capability_cell = RecipeV4CompilerTarget::CbsemPlanV2.capability_cell();
+        let capability = validate_internal_recipe_v4_pls_access(&wrong_target).unwrap_err();
+        assert_eq!(
+            capability.stage,
+            InternalRecipeV4ExecutionStageV1::Capability
+        );
+        assert_eq!(capability.subject, "compilerTarget");
+        assert!(!capability.corrective_action.is_empty());
+
+        let mut stale = request.clone();
+        stale.dataset_fingerprint = "stale-fingerprint".into();
+        let data = resolve_internal_recipe_v4_dataset(&project, &stale).unwrap_err();
+        assert_eq!(data.stage, InternalRecipeV4ExecutionStageV1::DataResolution);
+        assert_eq!(data.subject, "datasetFingerprint");
+        assert!(!data.corrective_action.is_empty());
+    }
+
+    #[test]
+    fn ignored_parameter_options_fail_at_the_typed_compilation_stage() {
+        let (project, mut request) = fixture();
+        let SemParameterV4::Free { start, .. } = &mut request.model.parameters[0] else {
+            unreachable!()
+        };
+        *start = Some(0.25);
+        request.recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+            model: request.model.clone(),
+            scientific_sha256: request.model.scientific_sha256().unwrap(),
+        };
+        let dataset = resolve_internal_recipe_v4_dataset(&project, &request).unwrap();
+
+        let failure = execute_internal_recipe_v4_pls(&dataset, &request).unwrap_err();
+
+        assert_eq!(failure.stage, InternalRecipeV4ExecutionStageV1::Compilation);
+        assert_eq!(failure.subject, "model");
+        assert_eq!(failure.code, "recipe_v4.compilation_failed");
+        assert!(!failure.corrective_action.is_empty());
+    }
+
+    fn resolved_weight_issue(
+        binding: SemWeightBindingV4,
+        target: WeightCapabilityTargetV1,
+    ) -> WeightCapabilityIssueV1 {
+        let (_, request) = fixture();
+        let mut model = request.model;
+        model.variables.push(SemVariableV4::Observed {
+            id: "observed:survey_weight".into(),
+            label: "Survey weight".into(),
+            source_column: "survey_weight".into(),
+            scale: ObservedScaleV4::Continuous,
+            role: ObservedRoleV4::Control,
+            categories: Vec::new(),
+            value_labels: BTreeMap::new(),
+            missing_markers: Vec::new(),
+            transformation_lineage: Vec::new(),
+        });
+        let SemDataBindingV4::Raw { weight, .. } = &mut model.data_binding else {
+            unreachable!()
+        };
+        *weight = Some(binding);
+        let declaration = resolve_weight_declaration_v1(&model).unwrap().unwrap();
+        WeightCapabilityIssueV1::unsupported(target, declaration)
+    }
+
+    #[test]
+    fn native_compilation_mapping_preserves_typed_pls_and_cbsem_weight_diagnostics() {
+        let bindings = [
+            (
+                SemWeightBindingV4::Case {
+                    variable: "observed:survey_weight".into(),
+                },
+                WeightCapabilityCodeV1::CaseWeightUnsupported,
+            ),
+            (
+                SemWeightBindingV4::Frequency {
+                    variable: "observed:survey_weight".into(),
+                },
+                WeightCapabilityCodeV1::FrequencyWeightUnsupported,
+            ),
+            (
+                SemWeightBindingV4::Sampling {
+                    variable: "observed:survey_weight".into(),
+                    normalization: SamplingWeightNormalizationV4::MeanOne,
+                },
+                WeightCapabilityCodeV1::SamplingWeightUnsupported,
+            ),
+        ];
+        for target in [
+            WeightCapabilityTargetV1::PlsPlanV2,
+            WeightCapabilityTargetV1::CbsemMlV1,
+        ] {
+            for (binding, expected_code) in &bindings {
+                let issue = resolved_weight_issue(binding.clone(), target);
+                let expected_message = issue.to_string();
+                let expected_action = issue.corrective_action.clone();
+                let failure = map_recipe_v4_compilation_failure(
+                    RecipeV4CompilationError::WeightCapability(issue),
+                );
+
+                assert_eq!(failure.stage, InternalRecipeV4ExecutionStageV1::Compilation);
+                assert_eq!(failure.code, expected_code.as_str());
+                assert_eq!(failure.subject, "observed:survey_weight");
+                assert_eq!(failure.message, expected_message);
+                assert_eq!(failure.corrective_action, expected_action);
+                assert!(failure.issues.is_empty());
+            }
+        }
+    }
+
+    #[test]
+    fn native_compilation_mapping_preserves_exact_legacy_weight_ambiguity() {
+        for target in [
+            WeightCapabilityTargetV1::PlsPlanV2,
+            WeightCapabilityTargetV1::CbsemMlV1,
+        ] {
+            let issue = WeightCapabilityIssueV1::legacy_case_weight_binding_ambiguous(
+                target,
+                " case_weight ",
+                None,
+            )
+            .unwrap();
+            let expected_message = issue.to_string();
+            let expected_action = issue.corrective_action.clone();
+            let failure = map_recipe_v4_compilation_failure(
+                RecipeV4CompilationError::WeightCapability(issue),
+            );
+
+            assert_eq!(failure.stage, InternalRecipeV4ExecutionStageV1::Compilation);
+            assert_eq!(failure.code, "legacy_case_weight_binding_ambiguous");
+            assert_eq!(failure.subject, " case_weight ");
+            assert_eq!(failure.message, expected_message);
+            assert_eq!(failure.corrective_action, expected_action);
+            assert!(failure.issues.is_empty());
+        }
+    }
+
+    #[test]
+    fn initialization_translation_failures_map_to_the_fail_closed_projection_issue() {
+        for error in [
+            RecipeV4PlsExecutionError::UnknownInitialWeightIdentity(
+                "construct:x".into(),
+                "observed:missing".into(),
+            ),
+            RecipeV4PlsExecutionError::InitialWeightTranslationMismatch,
+        ] {
+            let failure = map_recipe_v4_execution_failure(error);
+
+            assert_eq!(failure.stage, InternalRecipeV4ExecutionStageV1::Projection);
+            assert_eq!(failure.subject, "model");
+            assert_eq!(failure.code, "recipe_v4.projection_failed");
+            assert!(!failure.corrective_action.is_empty());
+        }
+    }
+
+    #[test]
+    fn request_wire_is_camel_case_strict_and_keeps_scientific_payloads_typed() {
+        let (_, request) = fixture();
+        let mut value = serde_json::to_value(&request).unwrap();
+        assert_eq!(value["surface"], "internal_labs");
+        assert_eq!(value["residentData"], "project_resident");
+        assert_eq!(value["compilerTarget"], "pls_plan_v2");
+        assert_eq!(
+            value["posthocTechnicalMinimumSampleSize"]["base_analysis"],
+            "pls_algorithm"
+        );
+        assert_eq!(
+            value["posthocTechnicalMinimumSampleSize"]["inference"],
+            "point_estimate_only"
+        );
+        assert_eq!(value["recipe"]["schema_version"], 4);
+        assert_eq!(value["model"]["schema_version"], 4);
+        value["standardAvailable"] = serde_json::json!(true);
+        assert!(serde_json::from_value::<InternalRecipeV4PlsExecutionRequestV1>(value).is_err());
+    }
+
+    #[test]
+    fn posthoc_option_tampering_fails_closed_at_the_capability_stage() {
+        let (project, mut request) = fixture();
+        request
+            .posthoc_technical_minimum_sample_size
+            .as_mut()
+            .unwrap()
+            .method_version = "inverse_square_root_posthoc_v1".into();
+        let dataset = resolve_internal_recipe_v4_dataset(&project, &request).unwrap();
+
+        let failure = execute_internal_recipe_v4_pls(&dataset, &request).unwrap_err();
+        assert_eq!(failure.stage, InternalRecipeV4ExecutionStageV1::Capability);
+        assert_eq!(failure.subject, "posthocTechnicalMinimumSampleSize");
+        assert_eq!(failure.code, "recipe_v4.posthoc_option_unavailable");
+        assert!(!failure.corrective_action.is_empty());
+    }
+}
+
 #[tauri::command]
 fn validate_analysis_recipe(recipe: AnalysisRecipe) -> Vec<ValidationIssue> {
     validate_recipe(&recipe)
@@ -1869,7 +2670,7 @@ fn new_project(name: String, state: State<'_, DesktopProject>) -> Result<Project
         .lock()
         .map_err(|_| "project state is unavailable".to_owned())?;
     *active = Project::new(name);
-    Ok(snapshot(&active, None, None))
+    snapshot(&active, None, None)
 }
 
 #[tauri::command]
@@ -2077,6 +2878,10 @@ fn validate_mga_dataset_contract(dataset: &Dataset, recipe: &AnalysisRecipe) -> 
     if recipe.settings.method != AnalysisMethod::Mga {
         return Ok(());
     }
+    let micom_only = matches!(
+        recipe.method_config.as_ref(),
+        Some(MethodConfig::Micom { .. })
+    );
     let group_methods = recipe
         .metadata
         .get("group_methods")
@@ -2088,24 +2893,28 @@ fn validate_mga_dataset_contract(dataset: &Dataset, recipe: &AnalysisRecipe) -> 
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();
-    if group_methods.len() != 2
-        || !group_methods
+    let exact_micom = group_methods.len() == 1 && group_methods[0].eq_ignore_ascii_case("micom");
+    let legacy_combined = group_methods.len() == 2
+        && group_methods
             .iter()
             .any(|method| method.eq_ignore_ascii_case("mga_permutation"))
-        || !group_methods
+        && group_methods
             .iter()
-            .any(|method| method.eq_ignore_ascii_case("micom"))
-    {
-        return Err("Native two-group analysis requires both permutation MGA and MICOM v2".into());
+            .any(|method| method.eq_ignore_ascii_case("micom"));
+    if (micom_only && !exact_micom) || (!micom_only && !legacy_combined) {
+        return Err(if micom_only {
+            "method_config.kind=micom requires MICOM only"
+        } else {
+            "Historical combined group analysis requires both permutation MGA and MICOM"
+        }
+        .into());
     }
     if !recipe
         .metadata
         .get("micom_configural_confirmed")
         .is_some_and(|value| value.eq_ignore_ascii_case("true"))
     {
-        return Err(
-            "MICOM requires explicit confirmation of configural invariance prerequisites".into(),
-        );
+        return Err("micom.configural_invariance_not_confirmed: MICOM Step 1 requires explicit researcher confirmation".into());
     }
     if !recipe
         .metadata
@@ -2113,7 +2922,7 @@ fn validate_mga_dataset_contract(dataset: &Dataset, recipe: &AnalysisRecipe) -> 
         .and_then(|value| value.trim().parse::<usize>().ok())
         .is_some_and(|samples| (5_000..=10_000).contains(&samples))
     {
-        return Err("MICOM and permutation MGA require 5000 to 10000 permutations".into());
+        return Err("The selected two-group workflow requires 5000 to 10000 permutations".into());
     }
     let group_column = recipe
         .metadata
@@ -2144,6 +2953,7 @@ fn validate_mga_dataset_contract(dataset: &Dataset, recipe: &AnalysisRecipe) -> 
         .collect::<Vec<_>>();
     let profile =
         build_dataset_group_profile_for_dataset(dataset, group_column, &analysis_columns)?;
+    let mut selected_counts = Vec::with_capacity(2);
     for (role, selected) in [("Group A", group_a), ("Group B", group_b)] {
         let group = profile
             .groups
@@ -2155,15 +2965,29 @@ fn validate_mga_dataset_contract(dataset: &Dataset, recipe: &AnalysisRecipe) -> 
                         "{role} value '{selected}' is not available in the bounded group profile"
                     )
                 } else {
-                    format!("{role} value '{selected}' is not observed in {group_column}")
+                    format!(
+                        "micom.empty_group: {role} value '{selected}' is not observed in {group_column}"
+                    )
                 }
             })?;
         if group.complete_cases < 10 {
             return Err(format!(
-                "{role} value '{selected}' has {} complete model cases; at least 10 are required",
+                "micom.group_too_small: {role} value '{selected}' has {} complete model cases; at least 10 are required",
                 group.complete_cases
             ));
         }
+        selected_counts.push(group.complete_cases);
+    }
+    if micom_only
+        && selected_counts[0].max(selected_counts[1])
+            > selected_counts[0]
+                .min(selected_counts[1])
+                .saturating_mul(10)
+    {
+        return Err(format!(
+            "micom.extreme_group_imbalance: selected group sizes {} and {} exceed the bounded 10:1 ratio",
+            selected_counts[0], selected_counts[1]
+        ));
     }
     Ok(())
 }
@@ -2194,6 +3018,7 @@ fn append_dataset(project: &mut Project, dataset: Dataset) -> Result<DatasetSnap
         summary: format!("Imported {}", dataset.name),
         source_column: None,
         target_column: None,
+        transformation: None,
     };
     Ok(commit_dataset_version(project, dataset, record)?.dataset)
 }
@@ -2204,7 +3029,7 @@ fn open_demo_project(
     state: State<'_, DesktopProject>,
 ) -> Result<ProjectSnapshot, String> {
     let project = build_sample_project(sample_id.as_deref().unwrap_or("corporate_reputation"))?;
-    let response = snapshot(&project, None, None);
+    let response = snapshot(&project, None, None)?;
     *state
         .0
         .lock()
@@ -2269,6 +3094,7 @@ fn version_column_metadata(
         summary: format!("Updated metadata for {column_name}"),
         source_column: Some(column_name.to_owned()),
         target_column: None,
+        transformation: None,
     };
     Ok(commit_dataset_version(project, version, record)?.dataset)
 }
@@ -2306,8 +3132,120 @@ fn version_recode_column(
         summary: format!("Recoded {} into {}", spec.source_column, spec.target_column),
         source_column: Some(spec.source_column),
         target_column: Some(spec.target_column),
+        transformation: None,
     };
     commit_dataset_version(project, version, record)
+}
+
+fn dataset_transformation_command_error(
+    code: &str,
+    field: &str,
+    message: impl Into<String>,
+) -> DatasetTransformationErrorV2 {
+    DatasetTransformationErrorV2 {
+        issues: vec![DatasetTransformationIssueV2 {
+            code: code.to_owned(),
+            field: field.to_owned(),
+            message: message.into(),
+            row_index: None,
+        }],
+    }
+}
+
+#[tauri::command]
+fn preview_dataset_transformation(
+    dataset_id: String,
+    spec: DatasetTransformationSpecV2,
+    state: State<'_, DesktopProject>,
+) -> Result<DatasetTransformationPreviewV2, DatasetTransformationErrorV2> {
+    let project = state.0.lock().map_err(|_| {
+        dataset_transformation_command_error(
+            "project.state_unavailable",
+            "project",
+            "The project data is temporarily unavailable.",
+        )
+    })?;
+    let dataset = project
+        .datasets
+        .iter()
+        .find(|dataset| dataset.id.to_string() == dataset_id)
+        .ok_or_else(|| {
+            dataset_transformation_command_error(
+                "dataset.unknown",
+                "dataset_id",
+                format!("Dataset {dataset_id} is not available in this project."),
+            )
+        })?;
+    Ok(preview_dataset_transformation_kernel_v2(dataset, &spec))
+}
+
+#[tauri::command]
+fn apply_dataset_transformation(
+    dataset_id: String,
+    spec: DatasetTransformationSpecV2,
+    output_dataset_name: String,
+    state: State<'_, DesktopProject>,
+) -> Result<DatasetVersionMutation, DatasetTransformationErrorV2> {
+    let mut project = state.0.lock().map_err(|_| {
+        dataset_transformation_command_error(
+            "project.state_unavailable",
+            "project",
+            "The project data is temporarily unavailable.",
+        )
+    })?;
+    version_dataset_transformation(&mut project, &dataset_id, spec, output_dataset_name)
+}
+
+fn version_dataset_transformation(
+    project: &mut Project,
+    dataset_id: &str,
+    spec: DatasetTransformationSpecV2,
+    output_dataset_name: String,
+) -> Result<DatasetVersionMutation, DatasetTransformationErrorV2> {
+    require_writable_project(&project, "derive a variable").map_err(|message| {
+        dataset_transformation_command_error("project.read_only", "project", message)
+    })?;
+    let source = project
+        .datasets
+        .iter()
+        .find(|dataset| dataset.id.to_string() == dataset_id)
+        .ok_or_else(|| {
+            dataset_transformation_command_error(
+                "dataset.unknown",
+                "dataset_id",
+                format!("Dataset {dataset_id} is not available in this project."),
+            )
+        })?;
+    let options = ApplyDatasetTransformationOptionsV2 {
+        output_dataset_id: Uuid::new_v4().to_string(),
+        output_dataset_name,
+        created_at: Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true),
+    };
+    let mutation = apply_dataset_transformation_v2(source, &spec, &options)?;
+    let input_columns = spec.input_columns();
+    let output_columns = spec.target_columns();
+    let summary = if input_columns.is_empty() {
+        format!("Added {}", output_columns.join(", "))
+    } else {
+        format!(
+            "Derived {} from {}",
+            output_columns.join(", "),
+            input_columns.join(", ")
+        )
+    };
+    let record = DatasetVersionRecord {
+        dataset_id: mutation.dataset.id.to_string(),
+        parent_dataset_id: Some(source.id.to_string()),
+        operation: DatasetVersionOperation::Transform,
+        created_at: Some(mutation.lineage.created_at.clone()),
+        summary,
+        source_column: input_columns.first().cloned(),
+        target_column: output_columns.first().cloned(),
+        transformation: Some(mutation.lineage),
+    };
+    commit_dataset_version(project, mutation.dataset, record).map_err(|message| {
+        dataset_transformation_command_error("project.commit_failed", "project", message)
+    })
 }
 
 #[tauri::command]
@@ -2344,7 +3282,7 @@ fn commit_dataset_version(
     dataset: Dataset,
     record: DatasetVersionRecord,
 ) -> Result<DatasetVersionMutation, String> {
-    let mut lineage = read_dataset_lineage(project)?;
+    let mut lineage = read_dataset_lineage(project)?.unwrap_or_default();
     if lineage
         .records
         .iter()
@@ -2356,7 +3294,10 @@ fn commit_dataset_version(
         ));
     }
     lineage.records.push(record.clone());
-    let lineage_value = serde_json::to_value(lineage).map_err(|error| error.to_string())?;
+    let mut candidate_datasets = project.datasets.clone();
+    candidate_datasets.push(dataset.clone());
+    validate_data_lineage_resident_v1(&candidate_datasets, Some(&lineage))
+        .map_err(|error| error.to_string())?;
     let workspace = workspace_with_active_dataset(project, &record.dataset_id)?;
     let response = DatasetVersionMutation {
         dataset: dataset_snapshot(&dataset),
@@ -2364,22 +3305,15 @@ fn commit_dataset_version(
     };
 
     project.datasets.push(dataset);
-    project
-        .layouts
-        .insert(DATA_LINEAGE_LAYOUT_KEY.to_owned(), lineage_value);
+    write_project_data_lineage_v1(&mut project.layouts, &lineage)
+        .map_err(|error| error.to_string())?;
     project.layouts.insert("workspace".to_owned(), workspace);
     Ok(response)
 }
 
-fn read_dataset_lineage(project: &Project) -> Result<DatasetLineageLayout, String> {
-    project
-        .layouts
-        .get(DATA_LINEAGE_LAYOUT_KEY)
-        .cloned()
-        .map(serde_json::from_value)
-        .transpose()
+fn read_dataset_lineage(project: &Project) -> Result<Option<DatasetLineageLayout>, String> {
+    validate_project_data_lineage_resident_v1(&project.datasets, &project.layouts)
         .map_err(|error| format!("dataset lineage is invalid: {error}"))
-        .map(Option::unwrap_or_default)
 }
 
 fn workspace_with_active_dataset(project: &Project, dataset_id: &str) -> Result<Value, String> {
@@ -2414,7 +3348,7 @@ fn require_writable_project(project: &Project, operation: &str) -> Result<(), St
 fn open_project(path: String, state: State<'_, DesktopProject>) -> Result<ProjectSnapshot, String> {
     let (project, recovery_source) =
         load_project_with_autosave(Path::new(&path)).map_err(|error| error.to_string())?;
-    let response = snapshot(&project, Some(path), recovery_source);
+    let response = snapshot(&project, Some(path), recovery_source)?;
     *state
         .0
         .lock()
@@ -2444,7 +3378,7 @@ fn save_active_project(
     let save_warning = discard_autosave(Path::new(&path)).err().map(|error| {
         format!("the project was saved, but its stale autosave could not be removed: {error}")
     });
-    let mut response = snapshot(&project, Some(path), None);
+    let mut response = snapshot(&project, Some(path), None)?;
     response.save_warning = save_warning;
     Ok(response)
 }
@@ -2546,7 +3480,7 @@ fn mutate_project_explorer(
     let candidate = guarded_project_after_explorer_mutation(&project, &jobs, request)?;
     drop(jobs);
     *project = candidate;
-    Ok(snapshot(&project, path, None))
+    snapshot(&project, path, None)
 }
 
 fn guarded_project_after_explorer_mutation(
@@ -3033,11 +3967,31 @@ fn validate_executable_recipe(recipe: &AnalysisRecipe) -> Result<(), String> {
     Ok(())
 }
 
+fn analysis_worker_demand(recipe: &AnalysisRecipe) -> usize {
+    let typed_parallel_plan = recipe.settings.method == AnalysisMethod::PlsSampleSizePower
+        || matches!(
+            recipe.method_config.as_ref(),
+            Some(qpls_core::MethodConfig::Cbsem {
+                bootstrap_v2: Some(_),
+                ..
+            })
+        );
+    if recipe.settings.bootstrap_samples > 0
+        || recipe.settings.permutation_samples > 0
+        || typed_parallel_plan
+    {
+        recipe.settings.workers
+    } else {
+        1
+    }
+}
+
 #[tauri::command]
 fn start_analysis_job(
     recipe: AnalysisRecipe,
     project_state: State<'_, DesktopProject>,
     job_state: State<'_, DesktopJobs>,
+    recipe_v4_job_state: State<'_, DesktopRecipeV4Jobs>,
 ) -> Result<JobSnapshot, String> {
     validate_executable_recipe(&recipe)?;
     let (dataset, project_id) = {
@@ -3084,6 +4038,7 @@ fn start_analysis_job(
         .lock()
         .map_err(|_| "job state is unavailable".to_owned())?;
     prune_terminal_jobs(&mut jobs_guard, 255);
+    let (recipe_v4_active_count, recipe_v4_worker_demand) = recipe_v4_job_state.active_summary()?;
     let active_count = jobs_guard
         .values()
         .filter(|job| {
@@ -3092,16 +4047,12 @@ fn start_analysis_job(
                 JobState::Queued | JobState::Running | JobState::Cancelling | JobState::Committing
             )
         })
-        .count();
+        .count()
+        + recipe_v4_active_count;
     if active_count >= 4 {
         return Err("four analyses are already active; wait for one to finish".into());
     }
-    let worker_demand =
-        if recipe.settings.bootstrap_samples > 0 || recipe.settings.permutation_samples > 0 {
-            recipe.settings.workers
-        } else {
-            1
-        };
+    let worker_demand = analysis_worker_demand(&recipe);
     let cpu_budget = std::thread::available_parallelism()
         .map(usize::from)
         .unwrap_or(1);
@@ -3114,7 +4065,8 @@ fn start_analysis_job(
             )
         })
         .map(|job| job.worker_demand)
-        .sum::<usize>();
+        .sum::<usize>()
+        + recipe_v4_worker_demand;
     if worker_demand > cpu_budget || allocated_workers + worker_demand > cpu_budget {
         return Err(format!(
             "analysis requests {worker_demand} workers but only {} of {cpu_budget} are available",
@@ -3219,8 +4171,9 @@ fn start_pls_job(
     recipe: AnalysisRecipe,
     project_state: State<'_, DesktopProject>,
     job_state: State<'_, DesktopJobs>,
+    recipe_v4_job_state: State<'_, DesktopRecipeV4Jobs>,
 ) -> Result<JobSnapshot, String> {
-    start_analysis_job(recipe, project_state, job_state)
+    start_analysis_job(recipe, project_state, job_state, recipe_v4_job_state)
 }
 
 #[tauri::command]
@@ -3385,11 +4338,21 @@ fn set_job_progress(
     if let Ok(mut jobs) = jobs.lock()
         && let Some(job) = jobs.get_mut(&job_id)
     {
-        job.snapshot.state = state;
-        job.snapshot.phase = phase.into();
+        let cancellation_is_pending = job.snapshot.state == JobState::Cancelling
+            && matches!(
+                state,
+                JobState::Queued | JobState::Running | JobState::Committing
+            );
+        if cancellation_is_pending {
+            job.snapshot.phase = "cancelling".into();
+            job.snapshot.message = Some("Cancellation requested".into());
+        } else {
+            job.snapshot.state = state;
+            job.snapshot.phase = phase.into();
+            job.snapshot.message = message;
+        }
         job.snapshot.completed_units = completed_units;
         job.snapshot.total_units = total_units;
-        job.snapshot.message = message;
     }
 }
 
@@ -3417,9 +4380,12 @@ fn snapshot(
     project: &Project,
     path: Option<String>,
     recovery_source: Option<RecoverySource>,
-) -> ProjectSnapshot {
+) -> Result<ProjectSnapshot, String> {
     let explorer = normalized_workspace_explorer(project);
-    ProjectSnapshot {
+    let dataset_versions = read_dataset_lineage(project)?
+        .map(|lineage| lineage.records)
+        .unwrap_or_default();
+    Ok(ProjectSnapshot {
         name: project.manifest.name.clone(),
         path,
         read_only: project.read_only,
@@ -3449,9 +4415,7 @@ fn snapshot(
             .to_owned()
         }),
         datasets: project.datasets.iter().map(dataset_snapshot).collect(),
-        dataset_versions: read_dataset_lineage(project)
-            .map(|lineage| lineage.records)
-            .unwrap_or_default(),
+        dataset_versions,
         workspace: project.layouts.get("workspace").cloned(),
         models: project.models.clone(),
         recipes: project.recipes.clone(),
@@ -3459,7 +4423,7 @@ fn snapshot(
         active_model_id: resolve_active_model_id(project),
         model_presentations: explorer.model_presentations,
         saved_reports: explorer.saved_reports,
-    }
+    })
 }
 
 /// Resolves an active canonical model only from identifiers that can be tied
@@ -3637,9 +4601,9 @@ fn build_demo_project() -> Result<Project, String> {
     project.recipes.push(recipe);
     project.results.push(result);
     project.layouts.insert("workspace".into(), workspace);
-    project.layouts.insert(
-        DATA_LINEAGE_LAYOUT_KEY.into(),
-        serde_json::to_value(DatasetLineageLayout {
+    write_project_data_lineage_v1(
+        &mut project.layouts,
+        &DatasetLineageLayout {
             schema_version: 1,
             records: vec![DatasetVersionRecord {
                 dataset_id,
@@ -3649,10 +4613,11 @@ fn build_demo_project() -> Result<Project, String> {
                 summary: "Bundled corporate reputation sample".into(),
                 source_column: None,
                 target_column: None,
+                transformation: None,
             }],
-        })
-        .map_err(|error| error.to_string())?,
-    );
+        },
+    )
+    .map_err(|error| error.to_string())?;
     Ok(project)
 }
 
@@ -3978,6 +4943,53 @@ mod desktop_job_tests {
     }
 
     #[test]
+    fn worker_demand_charges_typed_power_and_cbsem_bootstrap_plans() {
+        let (_, _, _, recipe, _) = fixture(false);
+        let mut point = recipe.clone();
+        point.settings.workers = 8;
+        assert_eq!(analysis_worker_demand(&point), 1);
+
+        let mut generic = recipe.clone();
+        generic.settings.workers = 3;
+        generic.settings.bootstrap_samples = 999;
+        assert_eq!(analysis_worker_demand(&generic), 3);
+
+        let mut power = recipe.clone();
+        power.settings.method = AnalysisMethod::PlsSampleSizePower;
+        power.settings.workers = 5;
+        power.settings.bootstrap_samples = 0;
+        power.settings.permutation_samples = 0;
+        assert_eq!(analysis_worker_demand(&power), 5);
+
+        let mut cbsem = recipe;
+        cbsem.settings.method = AnalysisMethod::Cbsem;
+        cbsem.settings.workers = 4;
+        cbsem.settings.bootstrap_samples = 0;
+        cbsem.settings.permutation_samples = 0;
+        cbsem.method_config = Some(qpls_core::MethodConfig::Cbsem {
+            model_type: qpls_core::CbsemModelType::Sem,
+            estimator: qpls_core::CbsemEstimator::Ml,
+            input: qpls_core::CbsemInput::Raw,
+            mean_structure: false,
+            bootstrap_samples: 1_000,
+            bootstrap_v2: Some(qpls_core::CbsemBootstrapConfigV2 {
+                algorithm: qpls_core::CbsemBootstrapAlgorithm::CaseResamplingFullMl,
+                interval: qpls_core::CbsemBootstrapInterval::PercentileType7,
+                test_tail: qpls_core::CbsemBootstrapTestTail::TwoSided,
+            }),
+            group_column: None,
+            invariance_steps: Vec::new(),
+        });
+        assert_eq!(analysis_worker_demand(&cbsem), 4);
+        if let Some(qpls_core::MethodConfig::Cbsem { bootstrap_v2, .. }) =
+            cbsem.method_config.as_mut()
+        {
+            *bootstrap_v2 = None;
+        }
+        assert_eq!(analysis_worker_demand(&cbsem), 1);
+    }
+
+    #[test]
     fn cancellation_wins_before_commit_and_does_not_persist() {
         let (project, jobs, job_id, recipe, result) = fixture(true);
         let project_id = project.manifest.project_id;
@@ -3989,6 +5001,42 @@ mod desktop_job_tests {
             jobs.lock().unwrap()[&job_id].snapshot.state,
             JobState::Cancelled
         );
+    }
+
+    #[test]
+    fn progress_cannot_regress_a_cancelling_job_back_to_active_state() {
+        let mut snapshot = JobSnapshot::queued(10);
+        snapshot.state = JobState::Cancelling;
+        snapshot.phase = "cancelling".into();
+        snapshot.message = Some("Cancellation requested".into());
+        let job_id = snapshot.id;
+        let jobs = Mutex::new(HashMap::from([(
+            job_id,
+            DesktopJob {
+                snapshot,
+                cancellation: Arc::new(AtomicBool::new(true)),
+                result: None,
+                worker_demand: 1,
+            },
+        )]));
+
+        for state in [JobState::Running, JobState::Committing] {
+            set_job_progress(&jobs, job_id, state, "estimation", 4, 10, None);
+            let jobs = jobs.lock().unwrap();
+            let snapshot = &jobs[&job_id].snapshot;
+            assert_eq!(snapshot.state, JobState::Cancelling);
+            assert_eq!(snapshot.phase, "cancelling");
+            assert_eq!(snapshot.message.as_deref(), Some("Cancellation requested"));
+            assert_eq!(snapshot.completed_units, 4);
+            assert_eq!(snapshot.total_units, 10);
+        }
+
+        set_job_progress(&jobs, job_id, JobState::Cancelled, "cancelled", 4, 10, None);
+        let jobs = jobs.lock().unwrap();
+        let snapshot = &jobs[&job_id].snapshot;
+        assert_eq!(snapshot.state, JobState::Cancelled);
+        assert_eq!(snapshot.phase, "cancelled");
+        assert_eq!(snapshot.message, None);
     }
 
     #[test]
@@ -4035,6 +5083,10 @@ mod desktop_job_tests {
             }
             qpls_core::AnalysisPayload::Legacy { .. } => {
                 panic!("runner returned an unexpected legacy payload")
+            }
+            qpls_core::AnalysisPayload::PlsSampleSizePowerV1 { .. }
+            | qpls_core::AnalysisPayload::PlsSampleSizePowerV2 { .. } => {
+                panic!("fixture returned an unexpected prospective power payload")
             }
         }
         let project = Mutex::new(project);
@@ -4138,7 +5190,7 @@ mod desktop_job_tests {
         assert_eq!(workspace["analysisSettings"]["permutationSamples"], 0);
         assert!(workspace["runs"][0]["bootstrap"].is_object());
         assert!(workspace["runs"][0]["permutation"].is_null());
-        let lineage = read_dataset_lineage(&project).unwrap();
+        let lineage = read_dataset_lineage(&project).unwrap().unwrap();
         assert_eq!(lineage.schema_version, 1);
         assert_eq!(lineage.records.len(), 1);
         assert_eq!(lineage.records[0].dataset_id, dataset_id);
@@ -4206,7 +5258,7 @@ mod desktop_job_tests {
         let canonical_model_id = project.models[0].id.to_string();
         let canonical_recipe_id = project.recipes[0].id.to_string();
         let canonical_result_id = project.results[0].id.to_string();
-        let response = snapshot(&project, Some("study.qpls".into()), None);
+        let response = snapshot(&project, Some("study.qpls".into()), None).unwrap();
 
         assert_eq!(response.models, project.models);
         assert_eq!(response.recipes, project.recipes);
@@ -4294,7 +5346,7 @@ mod desktop_job_tests {
             serde_json::json!({ "nodes": [], "edges": [] }),
         );
 
-        let response = snapshot(&project, None, None);
+        let response = snapshot(&project, None, None).unwrap();
         assert!(response.models.is_empty());
         assert!(response.recipes.is_empty());
         assert!(response.results.is_empty());
@@ -4309,6 +5361,19 @@ mod desktop_job_tests {
     }
 
     #[test]
+    fn malformed_reserved_data_lineage_never_becomes_an_empty_snapshot() {
+        let mut project = Project::new("Malformed lineage");
+        project.layouts.insert(
+            qpls_project::PROJECT_DATA_LINEAGE_LAYOUT_KEY_V1.into(),
+            serde_json::json!({"schemaVersion": 1, "records": [], "unknown": true}),
+        );
+
+        let error = snapshot(&project, None, None).unwrap_err();
+        assert!(error.contains("dataset lineage is invalid"));
+        assert!(error.contains("malformed"));
+    }
+
+    #[test]
     fn recipe_embedded_model_remains_addressable_when_legacy_model_catalog_is_empty() {
         let mut project = build_demo_project().unwrap();
         let expected_model_id = project.recipes[0].model.id.to_string();
@@ -4319,7 +5384,7 @@ mod desktop_job_tests {
             serde_json::json!({ "selectedRunId": selected_run_id }),
         );
 
-        let response = snapshot(&project, None, None);
+        let response = snapshot(&project, None, None).unwrap();
 
         assert!(response.models.is_empty());
         assert_eq!(response.recipes.len(), 1);
@@ -4361,13 +5426,17 @@ mod desktop_job_tests {
 
         assert!(project.models.is_empty());
         assert_eq!(resolve_active_model_id(&project), None);
-        assert_eq!(snapshot(&project, None, None).active_model_id, None);
+        assert_eq!(
+            snapshot(&project, None, None).unwrap().active_model_id,
+            None
+        );
 
         let directory = tempfile::tempdir().unwrap();
         let archive = directory.path().join("standalone-nca.qpls");
         save_project(&archive, &project).unwrap();
         let reopened = qpls_project::load_project(&archive).unwrap();
-        let reopened_snapshot = snapshot(&reopened, Some(archive.to_string_lossy().into()), None);
+        let reopened_snapshot =
+            snapshot(&reopened, Some(archive.to_string_lossy().into()), None).unwrap();
 
         assert!(reopened_snapshot.models.is_empty());
         assert_eq!(reopened_snapshot.recipes.len(), 1);
@@ -4457,7 +5526,7 @@ mod desktop_job_tests {
         let model_id = project.models[0].id.to_string();
         let result_id = project.results[0].id;
 
-        let legacy = snapshot(&project, Some("study.qpls".into()), None);
+        let legacy = snapshot(&project, Some("study.qpls".into()), None).unwrap();
         assert!(legacy.model_presentations.is_empty());
         assert_eq!(legacy.saved_reports.len(), 1);
         assert_eq!(legacy.saved_reports[0].result_id, result_id);
@@ -4481,7 +5550,7 @@ mod desktop_job_tests {
             }),
         );
 
-        let normalized = snapshot(&project, None, None);
+        let normalized = snapshot(&project, None, None).unwrap();
         assert_eq!(
             normalized.model_presentations.keys().collect::<Vec<_>>(),
             vec![&model_id]
@@ -4495,7 +5564,7 @@ mod desktop_job_tests {
         );
 
         write_workspace_explorer(&mut project, WorkspaceExplorerLayout::default()).unwrap();
-        let explicitly_empty = snapshot(&project, None, None);
+        let explicitly_empty = snapshot(&project, None, None).unwrap();
         assert!(explicitly_empty.saved_reports.is_empty());
 
         project.layouts.insert(
@@ -4509,7 +5578,7 @@ mod desktop_job_tests {
                 }]
             }),
         );
-        let unsupported = snapshot(&project, None, None);
+        let unsupported = snapshot(&project, None, None).unwrap();
         assert!(unsupported.saved_reports.is_empty());
     }
 
@@ -4757,7 +5826,7 @@ mod desktop_job_tests {
         let archive = directory.path().join("workspace-explorer.qpls");
         save_project(&archive, &candidate).unwrap();
         let reopened = qpls_project::load_project(&archive).unwrap();
-        let response = snapshot(&reopened, Some(archive.to_string_lossy().into()), None);
+        let response = snapshot(&reopened, Some(archive.to_string_lossy().into()), None).unwrap();
         let wire = serde_json::to_value(response).unwrap();
         assert!(wire["modelPresentations"][model_id.to_string()].is_object());
         assert_eq!(
@@ -4870,7 +5939,7 @@ mod desktop_job_tests {
     }
 
     #[test]
-    fn native_mga_preflight_requires_micom_confirmation_and_accepts_profiled_groups() {
+    fn native_micom_v31_preflight_requires_review_and_accepts_profiled_groups() {
         let dataset = import_delimited_bytes(
             include_bytes!("../../validation/results/mga_reference.csv"),
             "mga_reference.csv",
@@ -4878,31 +5947,43 @@ mod desktop_job_tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut historical: AnalysisRecipe = serde_json::from_slice(include_bytes!(
             "../../validation/results/mga_reference.recipe.json"
         ))
         .unwrap();
-        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
-        assert!(
-            validate_mga_dataset_contract(&dataset, &recipe)
-                .unwrap_err()
-                .contains("requires both permutation MGA and MICOM v2")
-        );
-        recipe
+        historical.dataset_fingerprint = dataset.fingerprint.0.clone();
+        historical
             .metadata
             .insert("group_methods".into(), "micom,mga_permutation".into());
-        recipe
+        historical
             .metadata
             .insert("group_permutation_samples".into(), "5000".into());
-        assert!(
-            validate_mga_dataset_contract(&dataset, &recipe)
-                .unwrap_err()
-                .contains("configural invariance")
-        );
-        recipe
+        historical
             .metadata
             .insert("micom_configural_confirmed".into(), "true".into());
-        validate_mga_dataset_contract(&dataset, &recipe).unwrap();
+        let mut recipe = historical.migrated_v3().unwrap();
+        recipe.method_config = Some(MethodConfig::Micom {
+            group_column: "group".into(),
+            group_a: "A".into(),
+            group_b: "B".into(),
+            permutation_samples: 5_000,
+            configural_invariance_confirmed: false,
+        });
+        let projected = recipe.with_effective_metadata().unwrap();
+        assert!(
+            validate_mga_dataset_contract(&dataset, &projected)
+                .unwrap_err()
+                .contains("micom.configural_invariance_not_confirmed")
+        );
+        recipe.method_config = Some(MethodConfig::Micom {
+            group_column: "group".into(),
+            group_a: "A".into(),
+            group_b: "B".into(),
+            permutation_samples: 5_000,
+            configural_invariance_confirmed: true,
+        });
+        validate_mga_dataset_contract(&dataset, &recipe.with_effective_metadata().unwrap())
+            .unwrap();
     }
 
     #[test]
@@ -4936,7 +6017,7 @@ mod desktop_job_tests {
         assert_ne!(revised.fingerprint, source_fingerprint.0);
         assert_eq!(project.datasets[1].schema.columns[0], metadata);
         assert_eq!(project.datasets[1].batch, source_batch);
-        let lineage = read_dataset_lineage(&project).unwrap();
+        let lineage = read_dataset_lineage(&project).unwrap().unwrap();
         assert_eq!(lineage.records.len(), 2);
         assert_eq!(lineage.records[0].dataset_id, source_id.to_string());
         assert_eq!(
@@ -4956,7 +6037,14 @@ mod desktop_job_tests {
         let no_op = version_column_metadata(&mut project, &revised.id, "x", metadata).unwrap();
         assert_eq!(no_op.id, revised.id);
         assert_eq!(project.datasets.len(), 2);
-        assert_eq!(read_dataset_lineage(&project).unwrap().records.len(), 2);
+        assert_eq!(
+            read_dataset_lineage(&project)
+                .unwrap()
+                .unwrap()
+                .records
+                .len(),
+            2
+        );
 
         project.layouts.insert(
             "workspace".to_owned(),
@@ -5062,7 +6150,7 @@ mod desktop_job_tests {
         let mut reopened = qpls_project::load_project(&archive).unwrap();
         assert_eq!(reopened.datasets.len(), 2);
         assert_eq!(
-            read_dataset_lineage(&reopened).unwrap().records,
+            read_dataset_lineage(&reopened).unwrap().unwrap().records,
             vec![mutation.version]
         );
         assert_eq!(
@@ -5095,6 +6183,290 @@ mod desktop_job_tests {
         .unwrap_err();
         assert!(blocked.contains("read-only"));
         assert_eq!(reopened.datasets.len(), dataset_count);
+    }
+
+    #[test]
+    fn generic_dataset_transform_versions_data_and_persists_exact_lineage() {
+        let source = import_delimited_bytes(
+            b"score,group\n1,A\n3,B\n5,A\n",
+            "transform-source.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let source_id = source.id.to_string();
+        let source_fingerprint = source.fingerprint.clone();
+        let source_batch = source.batch.clone();
+        let mut project = Project::new("Transformation version fixture");
+        project.datasets.push(source);
+        let spec = DatasetTransformationSpecV2::ReverseScale {
+            source_column: "score".into(),
+            target_column: "score_reversed".into(),
+            scale_min: 1.0,
+            scale_max: 5.0,
+            target_label: Some("Reversed score".into()),
+        };
+
+        let mutation = version_dataset_transformation(
+            &mut project,
+            &source_id,
+            spec.clone(),
+            "transform-source - derived".into(),
+        )
+        .unwrap();
+
+        assert_eq!(project.datasets.len(), 2);
+        assert_eq!(project.datasets[0].fingerprint, source_fingerprint);
+        assert_eq!(project.datasets[0].batch, source_batch);
+        assert_eq!(
+            mutation.version.operation,
+            DatasetVersionOperation::Transform
+        );
+        assert_eq!(
+            mutation.version.parent_dataset_id.as_deref(),
+            Some(source_id.as_str())
+        );
+        assert_eq!(
+            mutation.version.target_column.as_deref(),
+            Some("score_reversed")
+        );
+        let lineage = mutation.version.transformation.as_ref().unwrap();
+        assert_eq!(lineage.spec, spec);
+        assert_eq!(lineage.source_dataset_id, source_id);
+        assert_eq!(lineage.output_dataset_id, mutation.dataset.id);
+        assert_eq!(
+            lineage.output_dataset_fingerprint,
+            mutation.dataset.fingerprint
+        );
+        assert_eq!(lineage.output_columns, vec!["score_reversed"]);
+        assert_eq!(lineage.output_missing_count, 0);
+
+        let rows = dataset_rows_page(&project, &mutation.dataset.id, 0, 3).unwrap();
+        assert_eq!(rows.rows[0]["score_reversed"].as_deref(), Some("5"));
+        assert_eq!(rows.rows[1]["score_reversed"].as_deref(), Some("3"));
+        assert_eq!(rows.rows[2]["score_reversed"].as_deref(), Some("1"));
+
+        let directory = tempfile::tempdir().unwrap();
+        let archive = directory.path().join("transformation-versions.qpls");
+        qpls_project::save_project(&archive, &project).unwrap();
+        let reopened = qpls_project::load_project(&archive).unwrap();
+        assert_eq!(
+            read_dataset_lineage(&reopened).unwrap().unwrap().records,
+            vec![mutation.version]
+        );
+        assert_eq!(
+            reopened.layouts["workspace"]["activeDatasetId"],
+            mutation.dataset.id
+        );
+    }
+
+    #[test]
+    fn standardize_dataset_transform_versions_once_and_reopens_exact_lineage() {
+        let source = import_delimited_bytes(
+            b"score\n1\n3\n5\n",
+            "standardize-source.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let source_id = source.id.to_string();
+        let source_fingerprint = source.fingerprint.clone();
+        let source_batch = source.batch.clone();
+        let mut project = Project::new("Standardization version fixture");
+        project.datasets.push(source);
+        let spec = DatasetTransformationSpecV2::Standardize {
+            source_column: "score".into(),
+            target_column: "z_score".into(),
+            denominator: qpls_core::StandardDeviationDenominatorV2::SampleNMinusOne,
+            target_label: Some("Standardized score".into()),
+        };
+
+        let mutation = version_dataset_transformation(
+            &mut project,
+            &source_id,
+            spec.clone(),
+            "standardize-source - derived".into(),
+        )
+        .unwrap();
+
+        assert_eq!(project.datasets.len(), 2);
+        assert_eq!(project.datasets[0].fingerprint, source_fingerprint);
+        assert_eq!(project.datasets[0].batch, source_batch);
+        assert_eq!(
+            mutation.version.operation,
+            DatasetVersionOperation::Transform
+        );
+        assert_eq!(
+            mutation.version.parent_dataset_id.as_deref(),
+            Some(source_id.as_str())
+        );
+        assert_eq!(mutation.version.target_column.as_deref(), Some("z_score"));
+        let lineage = mutation.version.transformation.as_ref().unwrap();
+        assert_eq!(lineage.spec, spec);
+        assert_eq!(lineage.input_columns, vec!["score"]);
+        assert_eq!(lineage.output_columns, vec!["z_score"]);
+        assert_eq!(lineage.spec_sha256.len(), 64);
+        assert_eq!(lineage.output_dataset_id, mutation.dataset.id);
+
+        let rows = dataset_rows_page(&project, &mutation.dataset.id, 0, 3).unwrap();
+        assert_eq!(rows.rows[0]["z_score"].as_deref(), Some("-1"));
+        assert_eq!(rows.rows[1]["z_score"].as_deref(), Some("0"));
+        assert_eq!(rows.rows[2]["z_score"].as_deref(), Some("1"));
+
+        let directory = tempfile::tempdir().unwrap();
+        let archive = directory.path().join("standardize-version.qpls");
+        qpls_project::save_project(&archive, &project).unwrap();
+        let reopened = qpls_project::load_project(&archive).unwrap();
+        assert_eq!(
+            read_dataset_lineage(&reopened).unwrap().unwrap().records,
+            vec![mutation.version]
+        );
+        assert_eq!(
+            reopened.layouts["workspace"]["activeDatasetId"],
+            mutation.dataset.id
+        );
+    }
+
+    #[test]
+    fn add_column_transform_versions_once_and_reopens_zero_input_lineage() {
+        let source = import_delimited_bytes(
+            b"score,group\n1,A\n3,B\n5,A\n",
+            "add-column-source.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let source_id = source.id.to_string();
+        let source_fingerprint = source.fingerprint.clone();
+        let source_batch = source.batch.clone();
+        let mut project = Project::new("Add-column version fixture");
+        project.datasets.push(source);
+        let spec = DatasetTransformationSpecV2::AddColumn {
+            target_column: "cohort".into(),
+            value: qpls_core::DatasetCellV2::Text("pilot".into()),
+            target_type: qpls_data::ColumnType::Text,
+            target_scale: qpls_data::ScaleType::Nominal,
+            target_label: Some("Cohort".into()),
+            value_labels: std::collections::BTreeMap::new(),
+        };
+
+        let mutation = version_dataset_transformation(
+            &mut project,
+            &source_id,
+            spec.clone(),
+            "add-column-source - derived".into(),
+        )
+        .unwrap();
+
+        assert_eq!(project.datasets.len(), 2);
+        assert_eq!(project.datasets[0].fingerprint, source_fingerprint);
+        assert_eq!(project.datasets[0].batch, source_batch);
+        assert_eq!(mutation.version.summary, "Added cohort");
+        assert_eq!(mutation.version.source_column, None);
+        assert_eq!(mutation.version.target_column.as_deref(), Some("cohort"));
+        let lineage = mutation.version.transformation.as_ref().unwrap();
+        assert_eq!(lineage.spec, spec);
+        assert!(lineage.input_columns.is_empty());
+        assert_eq!(lineage.output_columns, vec!["cohort"]);
+
+        let rows = dataset_rows_page(&project, &mutation.dataset.id, 0, 3).unwrap();
+        assert!(
+            rows.rows
+                .iter()
+                .all(|row| row["cohort"].as_deref() == Some("pilot"))
+        );
+
+        let directory = tempfile::tempdir().unwrap();
+        let archive = directory.path().join("add-column-version.qpls");
+        qpls_project::save_project(&archive, &project).unwrap();
+        let reopened = qpls_project::load_project(&archive).unwrap();
+        assert_eq!(
+            read_dataset_lineage(&reopened).unwrap().unwrap().records,
+            vec![mutation.version]
+        );
+        assert_eq!(
+            reopened.layouts["workspace"]["activeDatasetId"],
+            mutation.dataset.id
+        );
+    }
+
+    #[test]
+    fn multi_missing_marker_transform_commits_one_child_and_reopens_exact_lineage() {
+        let source = import_delimited_bytes(
+            b"score,group\n1,A\n-99,MISSING_CODE\n3,B\n",
+            "missing-marker-source.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let source_id = source.id.to_string();
+        let source_fingerprint = source.fingerprint.clone();
+        let source_batch = source.batch.clone();
+        let mut project = Project::new("Missing-marker version fixture");
+        project.datasets.push(source);
+        let spec = DatasetTransformationSpecV2::MissingMarkers {
+            columns: vec![
+                qpls_core::DatasetMissingMarkerColumnV2 {
+                    source_column: "score".into(),
+                    target_column: "score_clean".into(),
+                    markers: vec![qpls_core::NonMissingDatasetCellV2::Number(-99.0)],
+                    target_type: qpls_data::ColumnType::Numeric,
+                    target_scale: qpls_data::ScaleType::Continuous,
+                    target_label: Some("Clean score".into()),
+                    value_labels: std::collections::BTreeMap::new(),
+                },
+                qpls_core::DatasetMissingMarkerColumnV2 {
+                    source_column: "group".into(),
+                    target_column: "group_clean".into(),
+                    markers: vec![qpls_core::NonMissingDatasetCellV2::Text(
+                        "MISSING_CODE".into(),
+                    )],
+                    target_type: qpls_data::ColumnType::Text,
+                    target_scale: qpls_data::ScaleType::Nominal,
+                    target_label: Some("Clean group".into()),
+                    value_labels: std::collections::BTreeMap::new(),
+                },
+            ],
+        };
+
+        let mutation = version_dataset_transformation(
+            &mut project,
+            &source_id,
+            spec.clone(),
+            "missing-marker-source - derived".into(),
+        )
+        .unwrap();
+
+        assert_eq!(project.datasets.len(), 2);
+        assert_eq!(project.datasets[0].fingerprint, source_fingerprint);
+        assert_eq!(project.datasets[0].batch, source_batch);
+        let lineage = mutation.version.transformation.as_ref().unwrap();
+        assert_eq!(lineage.spec, spec);
+        assert_eq!(lineage.input_columns, vec!["score", "group"]);
+        assert_eq!(lineage.output_columns, vec!["score_clean", "group_clean"]);
+        assert_eq!(lineage.output_missing_count, 2);
+        let records = read_dataset_lineage(&project).unwrap().unwrap();
+        assert_eq!(records.records.len(), 1);
+
+        let rows = dataset_rows_page(&project, &mutation.dataset.id, 0, 3).unwrap();
+        assert_eq!(rows.rows[0]["score_clean"].as_deref(), Some("1"));
+        assert_eq!(rows.rows[1]["score_clean"], None);
+        assert_eq!(rows.rows[1]["group_clean"], None);
+        assert_eq!(rows.rows[2]["group_clean"].as_deref(), Some("B"));
+
+        let directory = tempfile::tempdir().unwrap();
+        let archive = directory.path().join("multi-missing-marker-version.qpls");
+        qpls_project::save_project(&archive, &project).unwrap();
+        let reopened = qpls_project::load_project(&archive).unwrap();
+        assert_eq!(
+            read_dataset_lineage(&reopened).unwrap().unwrap().records,
+            vec![mutation.version]
+        );
+        assert_eq!(reopened.datasets.len(), 2);
+        assert_eq!(
+            reopened.layouts["workspace"]["activeDatasetId"],
+            mutation.dataset.id
+        );
     }
 
     #[test]
@@ -5207,8 +6579,25 @@ mod desktop_job_tests {
             "../../validation/results/pls_quickpls_path_mode_a.json"
         ))
         .unwrap();
+        let mut desktop_payload = serde_json::to_value(&desktop_result.payload).unwrap();
+        assert_eq!(
+            desktop_payload["estimation"]["algorithm_convergence_receipt"]["contract_version"],
+            "pls_algorithm_convergence_receipt_v1"
+        );
+        assert_eq!(
+            desktop_payload["estimation"]["point_estimate_attribution"]["contract_version"],
+            "pls_point_estimate_attribution_v1"
+        );
+        desktop_payload["estimation"]
+            .as_object_mut()
+            .unwrap()
+            .remove("algorithm_convergence_receipt");
+        desktop_payload["estimation"]
+            .as_object_mut()
+            .unwrap()
+            .remove("point_estimate_attribution");
         assert_json_close(
-            &serde_json::to_value(&desktop_result.payload).unwrap(),
+            &desktop_payload,
             &serde_json::to_value(&cli_result.payload).unwrap(),
             1e-12,
         );
@@ -5833,6 +7222,11 @@ fn desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export() {
     assert!(fs::metadata(&xlsx_path).unwrap().len() > 0);
 }
 
+#[tauri::command]
+fn exit_desktop_application(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let _webview2_offline_proxy = start_webview2_offline_rejection_proxy().unwrap_or_else(|error| {
@@ -5847,7 +7241,40 @@ pub fn run() {
         )))))
         .manage(DesktopJobs(Arc::new(Mutex::new(HashMap::new()))))
         .manage(DesktopDiagnostics::new())
+        .manage(DesktopProjectUpgradePlans::default())
+        .manage(DesktopRecipeV4Jobs::default())
+        .manage(DesktopPlsModelComparisonJobsV1::default())
         .invoke_handler(tauri::generate_handler![
+            capability_registry_v2,
+            start_internal_labs_pls_model_comparison_job,
+            internal_labs_pls_model_comparison_job_status,
+            cancel_internal_labs_pls_model_comparison_job,
+            dismiss_internal_labs_pls_model_comparison_job,
+            internal_labs_pls_model_comparison_job_result,
+            run_internal_labs_recipe_v4_cbsem_execution,
+            start_internal_labs_recipe_v4_cbsem_job,
+            internal_labs_recipe_v4_cbsem_job_status,
+            cancel_internal_labs_recipe_v4_cbsem_job,
+            dismiss_internal_labs_recipe_v4_cbsem_job,
+            internal_labs_recipe_v4_cbsem_job_result,
+            internal_sem_model_v4_scientific_sha256,
+            compare_and_swap_standard_sem_model_v4_authority,
+            resolve_standard_sem_model_v4_authority,
+            run_internal_labs_recipe_v4_pls_execution,
+            start_internal_labs_recipe_v4_pls_job,
+            internal_labs_recipe_v4_pls_job_status,
+            cancel_internal_labs_recipe_v4_pls_job,
+            dismiss_internal_labs_recipe_v4_pls_job,
+            internal_labs_recipe_v4_pls_job_result,
+            mutate_internal_project_archive_v6_model,
+            inspect_internal_project_archive_v6_zip,
+            save_internal_project_archive_v6_copy,
+            append_internal_project_schema6_canonical_result_v2,
+            read_internal_project_schema6_canonical_results_v2,
+            inspect_internal_project_upgrade_v6,
+            plan_internal_project_upgrade_v6,
+            execute_internal_project_upgrade_v6,
+            cancel_internal_project_upgrade_v6,
             validate_analysis_recipe,
             method_capabilities,
             new_project,
@@ -5858,6 +7285,8 @@ pub fn run() {
             open_demo_project,
             set_column_metadata,
             recode_dataset_column,
+            preview_dataset_transformation,
+            apply_dataset_transformation,
             activate_dataset,
             export_xlsx_tables,
             export_text_file,
@@ -5866,6 +7295,7 @@ pub fn run() {
             preview_diagnostic_bundle,
             cancel_diagnostic_bundle_preview,
             save_diagnostic_bundle,
+            exit_desktop_application,
             open_project,
             save_active_project,
             autosave_active_project,

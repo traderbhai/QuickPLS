@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase0_interruption_v1",
+  "status": "interrupted_before_report",
+  "reason": "The root orchestration command was terminated by its 120-second outer tool timeout after three append-only case receipts had completed.",
+  "completed_case_receipts": [
+    "cases/compact_b500_w1.json",
+    "cases/n_axis_n40_f3_b1000_w1.json",
+    "cases/factor_axis_n180_f1_b1000_w1.json"
+  ],
+  "authoritative_rerun": "../phase0-20260816-b/phase0-report.json"
+}

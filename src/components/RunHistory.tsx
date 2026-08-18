@@ -6,6 +6,7 @@ import { findBcaParameter, findBootstrapParameter, findStudentizedParameter, for
 import { analysisReadiness } from "../domain/analysisReadiness";
 import { buildResultInterpretation, copyableInterpretationText, findingsByGroup, findingsForTab, rowSpecificInterpretation, type InterpretationFinding, type ResultInterpretation, type SemDiagramEdgeLike, type SemDiagramNodeLike } from "../domain/resultInterpretation";
 import { spreadsheetSafeCsvCell } from "../domain/spreadsheetSafety";
+import { canonicalComparisonDisplayRowsV2 } from "../native/nativeCanonicalRunComparisonV2";
 import {
   NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
   nativeStructuralPathRandomizationProjection,
@@ -14,6 +15,10 @@ import {
 import { isNativeDesktop } from "../services/projectService";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { EmptyState, MethodConfidencePanel, MetricCard, PageHeader, Panel, ReportabilityChecklist, StatusBadge, WorkspacePage, type ReportabilityItem } from "./Ui";
+import {
+  useCanonicalRunComparisonV2,
+  type CanonicalRunComparisonUiStateV2,
+} from "./canonicalRunComparisonUiV2";
 
 const resultTabs: Array<{ id: ResultWorkspaceTab; label: string }> = [
   { id: "overview", label: "Overview" },
@@ -27,6 +32,8 @@ const resultTabs: Array<{ id: ResultWorkspaceTab; label: string }> = [
   { id: "interpretation", label: "Interpretation" },
   { id: "comparison", label: "Comparison" },
 ];
+
+export const NATIVE_GROUP_EMPTY_STATE_DETAIL = "Configure MICOM v3.1, FIMIX-PLS, PLS-POS, or IPMA in Setup and rerun the model to populate this tab.";
 
 function resultTabHint(tab: ResultWorkspaceTab) {
   switch (tab) {
@@ -79,7 +86,7 @@ export function RunHistory() {
   const selectedInterpretation = selectedRun?.result ? buildResultInterpretation({ run: selectedRun, nodes, edges }) : null;
   const selectedComparisonRuns = resultState.comparisonRunIds
     .map((id) => runs.find((run) => run.id === id))
-    .filter((run): run is AnalysisRun => Boolean(run?.result));
+    .filter((run): run is AnalysisRun => Boolean(run?.status === "completed" && run.result));
   const selectedEdge = edges.find((edge) => edge.id === selectedEdgeId);
   const activePath = selectedEdge ? { source: selectedEdge.source, target: selectedEdge.target } : null;
   const focusPath = (source: string, target: string) => {
@@ -193,7 +200,7 @@ export function RunHistory() {
           <button type="button" disabled={!selectedRun?.result} onClick={exportCurrentTable}>Download current CSV</button>
         </ResultMenu>
         <ResultMenu label="Interpretation" name="interpretation" open={openResultsMenu} onOpen={setOpenResultsMenu}>
-          <button type="button" onClick={() => setResultState({ includeExperimental: !resultState.includeExperimental })}>{resultState.includeExperimental ? "Hide experimental outputs" : "Validated scope only"}</button>
+          <button type="button" onClick={() => setResultState({ includeExperimental: !resultState.includeExperimental })}>{resultState.includeExperimental ? "Hide Experimental outputs" : "Supported results only"}</button>
           <button type="button" onClick={() => setResultState({ selectedTab: "interpretation" })}>Open interpretation checklist</button>
           <button type="button" disabled={!selectedRun?.result} onClick={() => selectedRun?.result && navigator.clipboard?.writeText(copyableInterpretationText(buildResultInterpretation({ run: selectedRun, nodes, edges }).findings))}>Copy interpretation</button>
         </ResultMenu>
@@ -213,7 +220,7 @@ export function RunHistory() {
         <span>{selectedRun.result?.used_observations ?? "N/A"} observations</span>
         <span>seed {selectedRun.seed}</span>
         <span>fingerprint {selectedRun.fingerprint.slice(0, 10)}</span>
-        <StatusBadge status={selectedStructuralPathRandomization ? "warning" : "validated"}>{selectedStructuralPathRandomization ? "Candidate scope" : "Validated scope"}</StatusBadge>
+        <StatusBadge status="validated">Supported setup</StatusBadge>
         <span className={significantWarningCount ? "run-warning-chip warning" : "run-warning-chip"}>{significantWarningCount ? `${significantWarningCount} warning(s)` : "No extra warnings"}</span>
         <button className="secondary-button" type="button" onClick={() => setView("reports")}>Prepare report</button>
         <details className="run-confidence-details">
@@ -243,7 +250,7 @@ export function RunHistory() {
           <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{scopeCopyForRun(run)}</span>
             {run.result ? <RunResultSections run={run} tab={resultState.selectedTab} focusPath={focusPath} activePath={activePath} comparisonRuns={selectedComparisonRuns} allRuns={runs} nodes={nodes} edges={edges} /> : <SectionEmpty title="No result payload" detail="This saved run does not contain a completed result payload." />}
           </div>
-          <div className="run-status"><StatusBadge status={nativeStructuralPathRandomizationProjection(run) ? "warning" : "validated"}>{nativeStructuralPathRandomizationProjection(run) ? "Candidate scope" : "Scope checked"}</StatusBadge></div>
+          <div className="run-status"><StatusBadge status="validated">Supported setup</StatusBadge></div>
         </article>) : null}</div>
       </main>
       {selectedRun && selectedInterpretation ? <ResultsV228DetailPane run={selectedRun} tab={resultState.selectedTab} interpretation={selectedInterpretation} bestR2={bestR2} warningCount={significantWarningCount} onOpenTab={(tab) => setResultState({ selectedTab: tab })} onPrepareReport={() => setView("reports")} /> : null}
@@ -273,8 +280,8 @@ function ResultsV2LensPanel({ run, tab, interpretation, bestR2, warningCount }: 
       <strong>{summary.question}</strong>
       <p>{summary.detail}</p>
     </div>
-    <div className="results-v2-lens-metrics" aria-label="Current tab evidence summary">
-      <article><span>Evidence</span><strong>{summary.evidence}</strong><small>{summary.evidenceDetail}</small></article>
+    <div className="results-v2-lens-metrics" aria-label="Current tab summary">
+      <article><span>Available results</span><strong>{summary.evidence}</strong><small>{summary.evidenceDetail}</small></article>
       <article className={must ? "issue" : review ? "warning" : "validated"}><span>Findings</span><strong>{must ? `${must} must address` : review ? `${review} review` : "Clear"}</strong><small>{tabFindings.length} value-specific item(s)</small></article>
       <article><span>Report path</span><strong>{summary.reportAction}</strong><small>{result ? "Uses selected run values" : "Run required"}</small></article>
     </div>
@@ -292,8 +299,8 @@ function ResultsV228DetailPane({ run, tab, interpretation, bestR2, warningCount,
   return <aside className="results-v228-detail-pane" aria-label="Result interpretation and method confidence">
     <section className="results-v228-pane-section">
       <div className="results-v228-pane-title">
-        <span>Method confidence</span>
-        <StatusBadge status={nativeStructuralPathRandomizationProjection(run) ? "warning" : "validated"}>{nativeStructuralPathRandomizationProjection(run) ? "Candidate scope" : "Scope checked"}</StatusBadge>
+        <span>Method details</span>
+        <StatusBadge status="validated">Supported setup</StatusBadge>
       </div>
       <dl className="results-v228-confidence-grid">
         <div><dt>Method</dt><dd>{run.method}</dd></div>
@@ -376,7 +383,7 @@ function resultsTabSummary(tab: ResultWorkspaceTab, run: AnalysisRun, interpreta
     case "inference":
       return { question: "Can I make p-value or confidence-interval claims?", detail: "Inference is available only when bootstrap or current structural path randomization passed its scientific contract. Estimate-only runs should not be reported as significance evidence.", evidence: run.bootstrap ? `${run.bootstrap.usable_replicates} bootstrap` : structuralPathRandomization ? `${structuralPathRandomization.permutations} path permutations` : "Not run", evidenceDetail: run.bootstrap || structuralPathRandomization ? "Current inference payload available" : "Enable in Setup and rerun", reportAction: run.bootstrap || structuralPathRandomization ? "Report inference" : "Rerun with inference" };
     case "prediction":
-      return { question: "Did the model demonstrate predictive usefulness?", detail: "Prediction output is separate from explanatory fit; compare holdout or blindfolding evidence against the intended research objective.", evidence: result.predict ? "PLSpredict available" : assessment?.blindfolding ? "Q² available" : "Not run", evidenceDetail: result.predict?.targets.length ? `${result.predict.targets.length} target(s)` : "Configure prediction first", reportAction: result.predict || assessment?.blindfolding ? "Report prediction" : "Configure prediction" };
+      return { question: "Did the model demonstrate predictive usefulness?", detail: "Prediction output is separate from explanatory fit; compare holdout or cross-validated prediction results against the intended research objective.", evidence: result.predict ? "PLSpredict available" : assessment?.blindfolding ? "Historical Q² result available" : "Not run", evidenceDetail: result.predict?.targets.length ? `${result.predict.targets.length} target(s)` : "Configure prediction first", reportAction: result.predict || assessment?.blindfolding ? "Report prediction" : "Configure prediction" };
     case "groups":
       return { question: "Are group or segmentation results present and defensible?", detail: "Group workflows require method-specific prerequisites such as MICOM, group sizes, or segment recovery diagnostics.", evidence: result.mga || result.micom || result.mga_permutation || result.fimix || result.segmentation || result.ipma ? "Payload present" : "No payload", evidenceDetail: "Use Setup for group workflows", reportAction: "Report groups" };
     case "diagnostics":
@@ -384,7 +391,7 @@ function resultsTabSummary(tab: ResultWorkspaceTab, run: AnalysisRun, interpreta
     case "interpretation":
       return { question: "What should be addressed before reporting?", detail: "This checklist prioritizes exact value-driven issues, recommended checks, optional checks, and reusable report wording.", evidence: `${interpretation.findings.length} findings`, evidenceDetail: `${interpretation.reportParagraphs.length} report paragraph(s)`, reportAction: "Copy guidance" };
     case "comparison":
-      return { question: "How do two compatible runs differ?", detail: "Compare path, R², and measurement deltas only for compatible completed runs; cross-family comparison remains out of scope here.", evidence: "Two-run scope", evidenceDetail: "Select comparable runs", reportAction: "Export deltas" };
+      return { question: "How do two compatible runs differ?", detail: "QuickPLS checks the complete typed result documents before showing any side-by-side values. Path coefficient deltas and R² deltas are shown only when their exact tables and analysis details match.", evidence: "Exact two-run check", evidenceDetail: "Select two completed runs", reportAction: "Review differences" };
     default:
       return base;
   }
@@ -423,7 +430,7 @@ function SummaryResults({ run, focusPath, activePath, interpretation }: { run: A
       <MetricTile label="Iterations" value={String(result.iterations)} detail={result.converged ? "converged" : "not converged"} tone={result.converged ? "ok" : "warn"} />
       <MetricTile label="Observations" value={String(result.used_observations)} detail={result.omitted_observations ? `${result.omitted_observations} omitted` : "complete cases used"} />
       {Object.entries(result.r_squared).map(([construct, value]) => <MetricTile key={construct} label={`R² ${construct}`} value={value.toFixed(4)} detail={interpretR2(value)} tone={value >= 0.75 ? "ok" : value >= 0.25 ? "neutral" : "warn"} />)}
-      <MetricTile label="Warnings" value={String(warningCount)} detail={warningCount ? "review diagnostics" : "none beyond scope status"} tone={warningCount ? "warn" : "ok"} />
+      <MetricTile label="Warnings" value={String(warningCount)} detail={warningCount ? "review diagnostics" : "no additional warnings"} tone={warningCount ? "warn" : "ok"} />
     </div>
     <SectionTable title="Path coefficients" note="Click a path row to focus the related edge in the SEM diagram." columns={["Path", "Coefficient", "Direction"]} rows={result.paths.map((path) => [pathLabel(path.source, path.target), path.coefficient.toFixed(6), coefficientDirection(path.coefficient)])} activeRowIndexes={activeIndexes(result.paths, activePath)} onRowClick={(_, index) => focusPath(result.paths[index].source, result.paths[index].target)} guidance={interpretationRegistry.paths} />
     <EffectsTable result={result} activePath={activePath} />
@@ -532,7 +539,7 @@ function reportabilityItems(run: AnalysisRun, interpretation: ResultInterpretati
       id: "warnings",
       label: "Warnings and provenance",
       status: warnings.length ? "review" : "ready",
-      evidence: warnings.length ? `${warnings.length} warning(s) beyond scope status.` : `Seed ${run.seed}, fingerprint ${run.fingerprint}.`,
+      evidence: warnings.length ? `${warnings.length} method or data warning(s).` : `Seed ${run.seed}, fingerprint ${run.fingerprint}.`,
       action: warnings.length ? "Review Diagnostics before reporting." : undefined,
     },
   ];
@@ -553,7 +560,7 @@ function ReportabilityAssistantPanel({ run, interpretation, items, onOpenTab }: 
   const lanes = [
     { id: "issue", label: "Must address", statuses: ["issue"] },
     { id: "review", label: "Review before reporting", statuses: ["review"] },
-    { id: "ready", label: "Ready evidence", statuses: ["ready"] },
+    { id: "ready", label: "Ready to report", statuses: ["ready"] },
     { id: "unavailable", label: "Unavailable / not applicable", statuses: ["unavailable", "not applicable"] },
   ];
   const reportSnippets = interpretation.reportParagraphs.slice(0, 5);
@@ -645,7 +652,7 @@ function reportabilityWhyItMatters(id: string) {
 }
 
 function reportSentenceForReportability(item: ReportabilityItem, run: AnalysisRun) {
-  if (item.status === "ready") return `${item.label} was available for ${run.name}; report the relevant values with the run scope and provenance.`;
+  if (item.status === "ready") return `${item.label} was available for ${run.name}; report the relevant values with Run Details and provenance.`;
   if (item.status === "review" || item.status === "issue") return `${item.label} requires review because ${item.evidence}`;
   if (item.status === "unavailable") return `${item.label} was unavailable for this run; do not report it as completed.`;
   return `${item.label} was not applicable to the selected run.`;
@@ -727,7 +734,7 @@ function PredictionResults({ result, assessment, interpretation }: { result: Pls
 function GroupResults({ result, interpretation }: { result: PlsResult; interpretation: ResultInterpretation }) {
   if (!result.mga && !result.micom && !result.mga_permutation && !result.fimix && !result.segmentation && !result.ipma) return <div className="result-sections" tabIndex={0} role="region" aria-label="Groups and segmentation results">
     <FindingCards findings={findingsForTab(interpretation, "groups")} title="Groups findings" />
-    <SectionEmpty title="No group or segmentation payloads" detail="Configure MICOM/MGA, FIMIX-PLS, PLS-POS, or IPMA in Setup and rerun the model to populate this tab." />
+    <SectionEmpty title="No group or segmentation payloads" detail={NATIVE_GROUP_EMPTY_STATE_DETAIL} />
   </div>;
   return <div className="result-sections" tabIndex={0} role="region" aria-label="Groups and segmentation results"><FindingCards findings={findingsForTab(interpretation, "groups")} title="Groups findings" /><MethodPayloadSections result={result} /></div>;
 }
@@ -739,8 +746,8 @@ function DiagnosticsResults({ run, interpretation }: { run: AnalysisRun; interpr
   return <div className="result-sections" tabIndex={0} role="region" aria-label="Diagnostics results">
     <FindingCards findings={findingsForTab(interpretation, "diagnostics")} title="Method-specific findings" />
     <SectionTable title="Run provenance" columns={["Field", "Value"]} rows={[["Method", run.method], ["Created", new Date(run.createdAt).toLocaleString()], ["Seed", String(run.seed)], ["Fingerprint", run.fingerprint], ["Converged", result.converged ? "yes" : "no"], ["Iterations", String(result.iterations)], ["Used observations", String(result.used_observations)], ["Omitted observations", String(result.omitted_observations)]]} />
-    <SectionTable title="Warnings and scope status" columns={["Message"]} rows={[...(structuralPathRandomization ? [NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING] : []), ...run.warnings, ...result.warnings, ...(assessment?.warnings ?? [])].map((warning) => [scopeCopy(warning)])} />
-    {assessment?.model_fit ? <SectionTable title="Correlation-residual fit" note="PLS-SEM approximate fit diagnostics should be interpreted within the documented QuickPLS scope." columns={["Model", "SRMR", "d_ULS"]} rows={[["Saturated", assessment.model_fit.saturated.srmr.toFixed(4), assessment.model_fit.saturated.d_uls.toFixed(6)], ["Estimated", assessment.model_fit.estimated.srmr.toFixed(4), assessment.model_fit.estimated.d_uls.toFixed(6)]]} /> : null}
+    <SectionTable title="Warnings and analysis details" columns={["Message"]} rows={[...(structuralPathRandomization ? [NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING] : []), ...run.warnings, ...result.warnings, ...(assessment?.warnings ?? [])].map((warning) => [scopeCopy(warning)])} />
+    {assessment?.model_fit ? <SectionTable title="Correlation-residual fit" note="Interpret PLS-SEM approximate-fit diagnostics with the model, data, and settings recorded in Run Details." columns={["Model", "SRMR", "d_ULS"]} rows={[["Saturated", assessment.model_fit.saturated.srmr.toFixed(4), assessment.model_fit.saturated.d_uls.toFixed(6)], ["Estimated", assessment.model_fit.estimated.srmr.toFixed(4), assessment.model_fit.estimated.d_uls.toFixed(6)]]} /> : null}
     {result.plsc || result.wpls || result.cca || result.cta_pls || result.endogeneity || result.nonlinear_effects || result.moderated_mediation || result.cbsem || result.gsca || result.regression || result.nca || result.pca ? <MethodPayloadSections result={result} /> : null}
   </div>;
 }
@@ -771,31 +778,95 @@ function InterpretationResults({ run, interpretation }: { run: AnalysisRun; inte
 function ComparisonResults({ selectedRuns, allRuns }: { selectedRuns: AnalysisRun[]; allRuns: AnalysisRun[] }) {
   const resultState = useWorkspace((state) => state.resultWorkspaceState);
   const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
-  const completedRuns = allRuns.filter((run) => run.result);
-  const chosen = selectedRuns.length >= 2 ? selectedRuns.slice(0, 2) : completedRuns.slice(0, 2);
+  const completedRuns = allRuns.filter((run) => run.status === "completed" && run.result);
+  const chosen = selectedRuns.filter((run, index, values) => values.findIndex((candidate) => candidate.id === run.id) === index).slice(0, 2);
   const [a, b] = chosen;
-  if (!a || !b || !a.result || !b.result) return <SectionEmpty title="Select comparison runs" detail="Choose two completed compatible PLS-family runs to compare path coefficients, R², diagnostics, and export-ready differences." />;
-  const compatible = a.method === b.method;
-  const fingerprintMatch = a.fingerprint === b.fingerprint;
+  const comparisonState = useCanonicalRunComparisonV2(a, b);
   const selectedIds = new Set(chosen.map((run) => run.id));
-  return <div className="result-sections comparison-workspace" tabIndex={0} role="region" aria-label="Bounded two-run comparison">
-    <div className="comparison-selector">
-      {completedRuns.map((run) => <label key={run.id}><input type="checkbox" checked={selectedIds.has(run.id)} onChange={() => {
-        const next = selectedIds.has(run.id) ? resultState.comparisonRunIds.filter((id) => id !== run.id) : [...resultState.comparisonRunIds, run.id].slice(-2);
-        setResultState({ comparisonRunIds: next });
-      }} />{run.name}</label>)}
+  const selectionFull = selectedIds.size >= 2;
+
+  useEffect(() => {
+    if (resultState.comparisonRunIds.length === 0 && completedRuns.length >= 2) {
+      setResultState({ comparisonRunIds: completedRuns.slice(0, 2).map((run) => run.id) });
+    }
+  }, [completedRuns, resultState.comparisonRunIds.length, setResultState]);
+
+  return <div className="result-sections comparison-workspace" tabIndex={0} role="region" aria-label="Two-run comparison">
+    <div className="comparison-selector" role="group" aria-label="Select exactly two completed runs">
+      <p>Select exactly two completed runs. QuickPLS checks the data, model, analysis components, settings, result tables, rows, and value types before showing differences.</p>
+      {completedRuns.map((run) => {
+        const checked = selectedIds.has(run.id);
+        const disabled = !checked && selectionFull;
+        return <label key={run.id}><input
+          type="checkbox"
+          checked={checked}
+          disabled={disabled}
+          title={disabled ? "Clear one selected run before choosing another" : undefined}
+          onChange={() => {
+            const next = checked
+              ? resultState.comparisonRunIds.filter((id) => id !== run.id)
+              : [...resultState.comparisonRunIds, run.id];
+            setResultState({ comparisonRunIds: next.slice(0, 2) });
+          }}
+        />{run.name}</label>;
+      })}
     </div>
-    {!compatible ? <ResultGuidance title="Comparison blocked" items={["The selected runs use different method families. This milestone supports bounded comparison for compatible PLS-family runs first."]} /> : null}
-    {!fingerprintMatch ? <ResultGuidance title="Model fingerprint differs" items={["Recipe or data fingerprint differs. Deltas are still shown for review, but do not treat them as same-model sensitivity evidence."]} /> : null}
-    <SectionTable title="Run metadata comparison" columns={["Field", a.name, b.name]} rows={[["Method", a.method, b.method], ["Created", new Date(a.createdAt).toLocaleString(), new Date(b.createdAt).toLocaleString()], ["Seed", String(a.seed), String(b.seed)], ["Fingerprint", a.fingerprint, b.fingerprint], ["Warnings", String(a.warnings.length + (a.result?.warnings.length ?? 0)), String(b.warnings.length + (b.result?.warnings.length ?? 0))]]} />
-    <SectionTable title="Path coefficient deltas" note="Delta is second selected run minus first selected run." columns={["Path", a.name, b.name, "Delta"]} rows={comparisonPathRows(a.result, b.result)} guidance={interpretationRegistry.paths} />
-    <SectionTable title="R² deltas" columns={["Construct", a.name, b.name, "Delta"]} rows={comparisonR2Rows(a.result, b.result)} guidance={interpretationRegistry.structuralQuality} />
-    {a.assessment && b.assessment ? <SectionTable title="Measurement metric deltas" columns={["Construct", "Metric", a.name, b.name, "Delta"]} rows={comparisonMeasurementRows(a.assessment, b.assessment)} guidance={interpretationRegistry.reliability} /> : <SectionEmpty title="No comparable measurement assessment" detail="Both runs need assessment payloads before reliability/validity deltas can be displayed." />}
+    <CanonicalComparisonOutcomeV2 state={comparisonState} firstName={a?.name} secondName={b?.name} />
+  </div>;
+}
+
+export function CanonicalComparisonOutcomeV2({
+  state,
+  firstName,
+  secondName,
+}: {
+  state: CanonicalRunComparisonUiStateV2;
+  firstName?: string;
+  secondName?: string;
+}) {
+  if (state.status === "missing") {
+    return <SectionEmpty title="Select comparison runs" detail="Choose exactly two completed runs. Results remain hidden until the exact compatibility check succeeds." />;
+  }
+  if (state.status === "loading") {
+    return <div className="method-note wide comparison-loading" role="status" aria-live="polite">
+      <strong>Checking comparison</strong>
+      <p>QuickPLS is checking the selected runs before preparing any side-by-side values.</p>
+    </div>;
+  }
+  if (state.status === "blocked") {
+    return <section className="comparison-blocked" role="alert" aria-labelledby="comparison-blocked-title">
+      <h3 id="comparison-blocked-title">Comparison blocked</h3>
+      <ul>{state.issues.map((issue) => <li key={issue.id}><strong>{issue.title}</strong><span>{issue.message}</span></li>)}</ul>
+    </section>;
+  }
+  if (state.status === "unavailable") {
+    return <section className="comparison-blocked" role="alert" aria-labelledby="comparison-unavailable-title">
+      <h3 id="comparison-unavailable-title">Comparison unavailable</h3>
+      <ul>{state.messages.map((message, index) => <li key={`${index}-${message}`}>{message}</li>)}</ul>
+    </section>;
+  }
+
+  const rows = canonicalComparisonDisplayRowsV2(state.comparison);
+  return <div className="canonical-comparison-results" aria-live="polite">
+    <div className="method-note wide comparison-ready" role="status">
+      <strong>Exact comparison ready</strong>
+      <p>{state.comparison.summary.row_count} typed result row(s) were checked across {state.comparison.summary.table_count} table(s). {state.comparison.summary.changed_cell_count} value(s) differ.</p>
+    </div>
+    {state.comparison.tables.map((table) => <SectionTable
+      key={table.id}
+      title={`${table.title} side by side`}
+      note="Change is the second selected run minus the first for numeric values; other typed values are marked changed or unchanged."
+      columns={["Result", "Field", firstName ?? "First run", secondName ?? "Second run", "Change"]}
+      rows={rows
+        .filter((row) => row.tableId === table.source_table_id)
+        .map((row) => [row.rowLabel, row.field, row.first, row.second, row.change])}
+    />)}
   </div>;
 }
 
 function BootstrapSection({ run }: { run: AnalysisRun }) {
   const bootstrap = run.bootstrap!;
+  const isConsistentBootstrap = bootstrap.method_version === "plsc_bootstrap_v1";
   const estimateRows = bootstrap.percentile.parameters.map((parameter) => [
     formatParameterIdentity(parameter.parameter),
     parameter.original.toFixed(6),
@@ -830,10 +901,10 @@ function BootstrapSection({ run }: { run: AnalysisRun }) {
     ];
   });
   return <div className="bootstrap-summary" aria-label="bootstrap parameter table">
-    <div className="bootstrap-meta"><strong>Bootstrap replicates</strong><span>{bootstrap.usable_replicates} usable</span><span>{bootstrap.failed_replicates.length} failed</span><span>{Math.round(bootstrap.percentile.confidence_level * 100)}% percentile CI</span>{bootstrap.bca && <span>{bootstrap.bca.jackknife_case_count} jackknife cases | BCa CI</span>}{bootstrap.studentized && <span>{bootstrap.studentized.inner_replicates} inner replicates | {bootstrap.studentized.failure ? "bootstrap-t failed" : "bootstrap-t CI"}</span>}</div>
+    <div className="bootstrap-meta"><strong>{isConsistentBootstrap ? "PLSc consistent bootstrap replicates" : "Bootstrap replicates"}</strong><span>{bootstrap.usable_replicates} usable</span><span>{bootstrap.failed_replicates.length} failed</span><span>{Math.round(bootstrap.percentile.confidence_level * 100)}% percentile CI</span>{bootstrap.bca && <span>{bootstrap.bca.jackknife_case_count} jackknife cases | BCa CI</span>}{bootstrap.studentized && <span>{bootstrap.studentized.inner_replicates} inner replicates | {bootstrap.studentized.failure ? "bootstrap-t failed" : "bootstrap-t CI"}</span>}</div>
     {bootstrap.studentized?.failure && <div className="inference-failure" role="alert"><strong>Bootstrap-t unavailable</strong><span>{bootstrap.studentized.failure.message}</span></div>}
     <div className="bootstrap-section-grid">
-      <SectionTable title="Bootstrap estimates" note="Point estimate, bootstrap mean, bias, standard error, t statistic, and p value stay together." columns={["Parameter", "Original", "Mean", "Bias", "SE", "t", "p"]} rows={estimateRows} guidance={interpretationRegistry.inference} />
+      <SectionTable title={isConsistentBootstrap ? "PLSc consistent-bootstrap estimates" : "Bootstrap estimates"} note={isConsistentBootstrap ? "Every accepted case sample fully re-estimated PLSc; ordinary PLS bootstrap estimates were not reused." : "Point estimate, bootstrap mean, bias, standard error, t statistic, and p value stay together."} columns={["Parameter", "Original", "Mean", "Bias", "SE", "t", "p"]} rows={estimateRows} guidance={interpretationRegistry.inference} />
       <SectionTable title="Percentile confidence intervals" note="Status describes whether the interval excludes zero; use the full interval in reporting." columns={["Parameter", "Lower", "Upper", "Zero status"]} rows={percentileRows} guidance={interpretationRegistry.inference} />
       <SectionTable title="BCa confidence intervals" note={bootstrap.bca ? "Bias-corrected and accelerated intervals are shown where available." : "BCa intervals are not available for this run."} columns={["Parameter", "Lower", "Upper", "Zero status"]} rows={bcaRows} guidance={interpretationRegistry.inference} />
       <SectionTable title="Bootstrap-t confidence intervals" note={bootstrap.studentized ? "Studentized/bootstrap-t intervals are shown where available." : "Bootstrap-t intervals are not available for this run."} columns={["Parameter", "Lower", "Upper", "Zero status"]} rows={studentizedRows} guidance={interpretationRegistry.inference} />
@@ -843,7 +914,7 @@ function BootstrapSection({ run }: { run: AnalysisRun }) {
 
 function PermutationSection({ projection }: { projection: NativeStructuralPathRandomizationProjection }) {
   return <div className="bootstrap-summary">
-    <div className="bootstrap-meta"><strong>Candidate Freedman-Lane structural path randomization</strong><span>{projection.permutations} permutations</span><span>fixed original PLS construct scores; raw unadjusted pathwise two-sided plus-one p values</span></div>
+    <div className="bootstrap-meta"><strong>Freedman-Lane structural path randomization</strong><span>{projection.permutations} permutations</span><span>fixed original PLS construct scores; raw unadjusted pathwise two-sided plus-one p values</span></div>
     <SectionTable title="Structural path randomization" note={NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING} columns={["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"]} rows={projection.parameters.map((parameter) => [pathLabel(parameter.source, parameter.target), parameter.original.toFixed(6), String(parameter.exceedances), String(parameter.permutations), String(parameter.pValueTwoSided)])} />
   </div>;
 }
@@ -905,7 +976,7 @@ type InterpretationTone = "good" | "caution" | "issue" | "informational" | "not_
 interface InterpretationDescriptor {
   metricId: string;
   label: string;
-  scopeStatus: "Validated for documented QuickPLS scope" | "Experimental / watermarked" | "Unsupported" | "Not available for this run";
+  scopeStatus: "Supported setup" | "Experimental" | "Not available" | "Not available for this run";
   tone: InterpretationTone;
   interpretation: string;
   thresholds: string;
@@ -917,17 +988,17 @@ const interpretationRegistry: Record<string, InterpretationDescriptor> = {
   paths: {
     metricId: "pls.paths",
     label: "Path coefficients",
-    scopeStatus: "Validated for documented QuickPLS scope",
+    scopeStatus: "Supported setup",
     tone: "informational",
     interpretation: "Use sign, magnitude, confidence intervals, and theory together. A path coefficient alone does not establish substantive importance.",
     thresholds: "No universal cutoff is applied. Bootstrap or permutation evidence is needed before inferential claims.",
     why: "Paths express structural relationships among latent scores in the selected model and should be interpreted within the saved recipe and sample.",
-    report: "Report coefficient, inference method, confidence interval or p value when available, sample size, and model scope status.",
+    report: "Report the coefficient, inference method, confidence interval or p value when available, sample size, and relevant model requirements.",
   },
   loadings: {
     metricId: "pls.measurement.loadings",
     label: "Outer loadings and weights",
-    scopeStatus: "Validated for documented QuickPLS scope",
+    scopeStatus: "Supported setup",
     tone: "informational",
     interpretation: "Reflective indicators are reviewed mainly through loadings; formative indicators require weights plus collinearity and content-validity review.",
     thresholds: "A loading near 0.708 is a common reliability guide; values between 0.40 and 0.708 require theory and reliability context.",
@@ -937,7 +1008,7 @@ const interpretationRegistry: Record<string, InterpretationDescriptor> = {
   reliability: {
     metricId: "pls.validity.reliability",
     label: "Reliability and convergent validity",
-    scopeStatus: "Validated for documented QuickPLS scope",
+    scopeStatus: "Supported setup",
     tone: "informational",
     interpretation: "Review alpha, rho_A, rho_C, and AVE together instead of treating any one metric as decisive.",
     thresholds: "Common guides are reliability >= 0.70 and AVE >= 0.50, with stricter interpretation depending on research context.",
@@ -947,7 +1018,7 @@ const interpretationRegistry: Record<string, InterpretationDescriptor> = {
   discriminant: {
     metricId: "pls.validity.discriminant",
     label: "Discriminant validity",
-    scopeStatus: "Validated for documented QuickPLS scope",
+    scopeStatus: "Supported setup",
     tone: "caution",
     interpretation: "High HTMT or Fornell-Larcker conflicts require construct-definition review before claiming distinct constructs.",
     thresholds: "HTMT guides often use 0.85 or 0.90 depending on construct similarity; values above 1 require direct review.",
@@ -957,7 +1028,7 @@ const interpretationRegistry: Record<string, InterpretationDescriptor> = {
   structuralQuality: {
     metricId: "pls.structural.quality",
     label: "Structural quality",
-    scopeStatus: "Validated for documented QuickPLS scope",
+    scopeStatus: "Supported setup",
     tone: "informational",
     interpretation: "R², f², VIF, and Q² answer different questions and should be read as a diagnostic set.",
     thresholds: "R² guides are context-dependent; f² guide values are 0.02, 0.15, and 0.35; VIF above 3.3 or 5 should be reviewed.",
@@ -967,7 +1038,7 @@ const interpretationRegistry: Record<string, InterpretationDescriptor> = {
   inference: {
     metricId: "pls.inference",
     label: "Inference",
-    scopeStatus: "Validated for documented QuickPLS scope",
+    scopeStatus: "Supported setup",
     tone: "informational",
     interpretation: "Use confidence intervals and p values only for runs where the matching inference procedure was executed.",
     thresholds: "Common alpha levels such as 0.05 are reporting conventions, not automatic evidence of practical importance.",
@@ -977,7 +1048,7 @@ const interpretationRegistry: Record<string, InterpretationDescriptor> = {
   prediction: {
     metricId: "pls.prediction",
     label: "Prediction",
-    scopeStatus: "Validated for documented QuickPLS scope",
+    scopeStatus: "Supported setup",
     tone: "informational",
     interpretation: "Prediction output should be read against benchmark performance and leakage-safe validation settings.",
     thresholds: "Q² predict above zero and lower PLS error than benchmark are directional guides, not universal success criteria.",
@@ -987,7 +1058,7 @@ const interpretationRegistry: Record<string, InterpretationDescriptor> = {
   groups: {
     metricId: "pls.groups",
     label: "Groups and segmentation",
-    scopeStatus: "Validated for documented QuickPLS scope",
+    scopeStatus: "Supported setup",
     tone: "caution",
     interpretation: "Group and segmentation outputs require design justification and method-specific prerequisites such as MICOM where applicable.",
     thresholds: "Permutation p values, invariance steps, segment sizes, and information criteria are method-specific guides.",
@@ -997,18 +1068,18 @@ const interpretationRegistry: Record<string, InterpretationDescriptor> = {
   extended: {
     metricId: "extended.methods",
     label: "Extended method payloads",
-    scopeStatus: "Validated for documented QuickPLS scope",
+    scopeStatus: "Supported setup",
     tone: "informational",
-    interpretation: "Extended outputs are shown only within their documented QuickPLS scope; unsupported variants stay warning-marked.",
+    interpretation: "Extended outputs are shown only when the run meets the listed method requirements; incompatible variants remain unavailable.",
     thresholds: "Use the method-specific documentation rather than transferring PLS-SEM thresholds across method families.",
     why: "Regression, NCA, PCA, GSCA, and CB-SEM answer different methodological questions.",
-    report: "Report the method version, supported scope, estimator/settings, key estimates, and warnings.",
+    report: "Report the method version, relevant requirements, estimator and settings, key estimates, and warnings.",
   },
 };
 
 function InterpretationPanel({ descriptor }: { descriptor: InterpretationDescriptor }) {
   return <details className={`interpretation-panel ${descriptor.tone}`} open>
-    <summary><CheckCircle2 size={14} />{descriptor.label}<StatusBadge status={descriptor.scopeStatus.startsWith("Validated") ? "validated" : descriptor.scopeStatus.startsWith("Experimental") ? "warning" : "info"}>{descriptor.scopeStatus}</StatusBadge></summary>
+    <summary><CheckCircle2 size={14} />{descriptor.label}<StatusBadge status={descriptor.scopeStatus.startsWith("Supported") ? "validated" : descriptor.scopeStatus.startsWith("Experimental") ? "warning" : "info"}>{descriptor.scopeStatus}</StatusBadge></summary>
     <div className="interpretation-grid">
       <article><strong>Interpretation</strong><p>{descriptor.interpretation}</p></article>
       <article><strong>Threshold guidance</strong><p>{descriptor.thresholds}</p></article>
@@ -1440,43 +1511,8 @@ function reportWording(run: AnalysisRun) {
     { section: "Measurement model", text: `Outer loading magnitudes ranged from ${loadingRange}. Reliability and validity were reviewed using the documented QuickPLS assessment outputs.` },
     { section: "Structural model", text: `Path coefficients ranged from ${pathRange}${bestR2 ? `, and the strongest R² was ${bestR2[1].toFixed(4)} for ${bestR2[0]}` : ""}.` },
     { section: "Inference caveat", text: structuralPathRandomization ? NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING : run.bootstrap ? "Inference should be reported with the selected bootstrap procedure, confidence level, seed, and any failed or unavailable intervals." : "This run does not include bootstrap or current structural path randomization inference; avoid p-value or confidence-interval claims from this run." },
-    { section: "Scope status", text: scopeCopyForRun(run) },
+    { section: "Analysis details", text: scopeCopyForRun(run) },
   ];
-}
-
-function comparisonPathRows(a: PlsResult, b: PlsResult) {
-  const bByPath = new Map(b.paths.map((path) => [pathLabel(path.source, path.target), path.coefficient]));
-  return a.paths.map((path) => {
-    const key = pathLabel(path.source, path.target);
-    const bValue = bByPath.get(key);
-    return [key, path.coefficient.toFixed(6), bValue == null ? "N/A" : bValue.toFixed(6), bValue == null ? "not comparable" : (bValue - path.coefficient).toFixed(6)];
-  });
-}
-
-function comparisonR2Rows(a: PlsResult, b: PlsResult) {
-  const constructs = Array.from(new Set([...Object.keys(a.r_squared), ...Object.keys(b.r_squared)])).sort();
-  return constructs.map((construct) => {
-    const left = a.r_squared[construct];
-    const right = b.r_squared[construct];
-    return [construct, left == null ? "N/A" : left.toFixed(4), right == null ? "N/A" : right.toFixed(4), left == null || right == null ? "not comparable" : (right - left).toFixed(4)];
-  });
-}
-
-function comparisonMeasurementRows(a: AssessmentResult, b: AssessmentResult) {
-  const bByConstruct = new Map(b.construct_quality.map((row) => [row.construct, row]));
-  return a.construct_quality.flatMap((row) => {
-    const right = bByConstruct.get(row.construct);
-    return [
-      metricDelta(row.construct, "Cronbach alpha", row.cronbach_alpha, right?.cronbach_alpha),
-      metricDelta(row.construct, "rho_A", row.rho_a, right?.rho_a),
-      metricDelta(row.construct, "rho_C", row.rho_c, right?.rho_c),
-      metricDelta(row.construct, "AVE", row.ave, right?.ave),
-    ];
-  });
-}
-
-function metricDelta(construct: string, metric: string, left: number | null | undefined, right: number | null | undefined) {
-  return [construct, metric, formatOptional(left, 4), formatOptional(right, 4), left == null || right == null ? "not comparable" : (right - left).toFixed(4)];
 }
 
 function rangeText(values: number[]) {
@@ -1592,8 +1628,8 @@ function severityText(severity: InterpretationFinding["severity"]) {
 }
 
 function scopeCopy(warning: string | undefined) {
-  if (!warning) return "Validated for documented QuickPLS scope.";
-  return warning.replace(/QuickPLS v\d+\.\d+\.\d+ supported scope/g, "documented QuickPLS supported scope");
+  if (!warning) return "Supported setup. Review Method Details for requirements and known limitations.";
+  return warning.replace(/QuickPLS v\d+\.\d+\.\d+ supported scope/g, "requirements documented in Method Details"); // customer-copy-lint: allow-internal
 }
 
 function scopeCopyForRun(run: AnalysisRun): string {

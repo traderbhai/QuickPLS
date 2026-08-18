@@ -52,7 +52,7 @@ export function completedCtaPlsRun(): AnalysisRun {
       recipe_id: "00000000-0000-4000-8000-000000000001",
       dataset_fingerprint: "sha256:cta",
       method: "cta_pls",
-      method_version: `pls_pm_v1+${NATIVE_CTA_PLS_METHOD_VERSION}+pls_mediation_v1+assessment_v7`,
+      method_version: `pls_pm_v1+${NATIVE_CTA_PLS_METHOD_VERSION}+pls_mediation_v1+pls_assessment_v8`,
       engine_version: "quickpls-engine-test",
       seed: 20_260_813,
       settings: {

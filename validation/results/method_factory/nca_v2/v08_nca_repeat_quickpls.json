@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "id": "e84ebc48-e7a3-43e8-9533-60ac19e24d72",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000081359",
+    "dataset_fingerprint": "v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb",
+    "method": "nca",
+    "method_version": "nca_v2",
+    "engine_version": "2.46.0",
+    "seed": 20260719,
+    "settings": {
+      "method": "nca",
+      "weighting_scheme": "path",
+      "tolerance": 1e-9,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260719,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "unstandardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-08-18T02:24:19.979010700Z",
+    "completed_at": "2026-08-18T02:24:20.012972700Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "NCA v2 supports one observed numeric condition/outcome pair with CE-FDH and CR-FDH ceilings, seeded one-sided permutation evidence, and observed-range bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and additional ceiling variants are not available."
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "PLS assessment and PLS resampling engines are not applicable to standalone raw-data analyses."
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cbsem": null,
+      "cca": null,
+      "construct_scores": {},
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [],
+      "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
+      "iterations": 0,
+      "method_version": "nca_v2",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
+      "nca": {
+        "bottlenecks": [
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 10.0,
+            "required_x_percent": 6.037777913056469,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 20.0,
+            "required_x_percent": 16.412388110519398,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 30.0,
+            "required_x_percent": 18.7700359950169,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 40.0,
+            "required_x_percent": 31.971652360987843,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 50.0,
+            "required_x_percent": 35.06293744359242,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 60.0,
+            "required_x_percent": 55.83868561455197,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 70.0,
+            "required_x_percent": 60.4001850396821,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 80.0,
+            "required_x_percent": 60.4001850396821,
+            "status": "required"
+          },
+          {
+            "ceiling": "ce_fdh",
+            "outcome_percent": 90.0,
+            "required_x_percent": 81.53072911567477,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 10.0,
+            "required_x_percent": null,
+            "status": "not_necessary"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 20.0,
+            "required_x_percent": 9.36009954275501,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 30.0,
+            "required_x_percent": 19.317154400973738,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 40.0,
+            "required_x_percent": 29.274209259192478,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 50.0,
+            "required_x_percent": 39.2312641174112,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 60.0,
+            "required_x_percent": 49.18831897562993,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 70.0,
+            "required_x_percent": 59.14537383384867,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 80.0,
+            "required_x_percent": 69.1024286920674,
+            "status": "required"
+          },
+          {
+            "ceiling": "cr_fdh",
+            "outcome_percent": 90.0,
+            "required_x_percent": 79.05948355028613,
+            "status": "required"
+          }
+        ],
+        "ce_fdh_peers": [
+          {
+            "x": -2.406666045337,
+            "y": -1.789939926775
+          },
+          {
+            "x": -2.130644759678,
+            "y": -1.391342731169
+          },
+          {
+            "x": -1.809897091059,
+            "y": -1.167239738056
+          },
+          {
+            "x": -1.656362120245,
+            "y": -0.941735936497
+          },
+          {
+            "x": -1.583821837773,
+            "y": -0.793172696935
+          },
+          {
+            "x": -1.548580580483,
+            "y": -0.342974034622
+          },
+          {
+            "x": -1.253793827659,
+            "y": -0.333967696951
+          },
+          {
+            "x": -1.1002350848,
+            "y": -0.20773481589
+          },
+          {
+            "x": -0.945059355525,
+            "y": 0.032374480467
+          },
+          {
+            "x": -0.803739072612,
+            "y": 0.897431361312
+          },
+          {
+            "x": 0.146038942289,
+            "y": 0.983954518867
+          },
+          {
+            "x": 0.354571113228,
+            "y": 2.026289079411
+          },
+          {
+            "x": 1.320568873748,
+            "y": 2.551864302329
+          },
+          {
+            "x": 1.872370378747,
+            "y": 3.044594391579
+          }
+        ],
+        "ceiling": "both",
+        "ceilings": [
+          {
+            "ceiling": "ce_fdh",
+            "effect_size": 0.4178162110276246,
+            "intercept": null,
+            "permutation_p_value": 0.01,
+            "slope": null
+          },
+          {
+            "ceiling": "cr_fdh",
+            "effect_size": 0.3979060185498654,
+            "intercept": 1.13200641859282,
+            "permutation_p_value": 0.01,
+            "slope": 1.1502296412714625
+          }
+        ],
+        "method_version": "nca_v2",
+        "observations": 140,
+        "permutation_samples": 99,
+        "scope": {
+          "maximum_x": 2.164904648943,
+          "maximum_y": 3.044594391579,
+          "minimum_x": -2.406666045337,
+          "minimum_y": -2.19117964324
+        },
+        "usable_permutations": 99,
+        "warnings": [
+          "NCA v2 supports one observed numeric condition/outcome pair with CE-FDH and CR-FDH ceilings, seeded one-sided permutation evidence, and observed-range bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and additional ceiling variants are not available."
+        ],
+        "x": "x",
+        "y": "y"
+      },
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [],
+      "paths": [],
+      "pca": null,
+      "plsc": null,
+      "predict": null,
+      "r_squared": {},
+      "regression": null,
+      "segmentation": null,
+      "transforms": [],
+      "used_observations": 140,
+      "warnings": [
+        "NCA v2 supports one observed numeric condition/outcome pair with CE-FDH and CR-FDH ceilings, seeded one-sided permutation evidence, and observed-range bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and additional ceiling variants are not available."
+      ],
+      "wpls": null
+    },
+    "assessment": {
+      "method_version": "assessment_not_applicable_v1",
+      "warnings": [
+        "PLS assessment is not applicable to standalone raw-data analyses."
+      ]
+    }
+  }
+}

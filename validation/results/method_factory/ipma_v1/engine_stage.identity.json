@@ -1,0 +1,167 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "fresh_boundary_gate": {
+      "passed": true
+    },
+    "fresh_independent_and_simulation_gate": {
+      "passed": true
+    },
+    "method_contract_is_current": {
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "qpls-cli"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.22s\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "--version"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "qpls 2.46.0\n"
+    },
+    {
+      "command": [
+        "C:\\Python313\\python.exe",
+        "validation/ipma_release_reference.py"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.10s\n",
+      "stdout_tail": "{\n  \"passed\": true,\n  \"construct_rows\": [\n    \"x\",\n    \"z\",\n    \"m\"\n  ],\n  \"indicator_rows\": [\n    \"x1\",\n    \"z1\",\n    \"m1\"\n  ],\n  \"max_construct_delta\": 8.204548151979907e-14,\n  \"max_indicator_delta\": 8.204548151979907e-14,\n  \"performance_scale\": \"min_max_0_100_from_standardized_scores_v1\",\n  \"provenance_method_version\": \"pls_pm_v1+ipma_v1+pls_mediation_v1+pls_assessment_v8\"\n}\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-estimation",
+        "bounded_ipma",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.80s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_estimation-964bbb5bd1846697.exe)\n",
+      "stdout_tail": "\nrunning 2 tests\ntest pls::tests::bounded_ipma_uses_only_endogenous_targets_and_fixed_standardized_path_scope ... ok\ntest pls::tests::bounded_ipma_scientific_matrix_covers_effects_reordering_missingness_and_invalid_ranges ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 161 filtered out; finished in 0.01s\n\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-core",
+        "bounded_ipma",
+        "--",
+        "--nocapture"
+      ],
+      "passed": true,
+      "returncode": 0,
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.72s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_core-4c9e2694292d11bc.exe)\n",
+      "stdout_tail": "\nrunning 2 tests\ntest validation::tests::bounded_ipma_locks_preprocessing_weighting_and_resampling_scope ... ok\ntest validation::tests::bounded_ipma_requires_an_endogenous_target ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 172 filtered out; finished in 0.00s\n\n"
+    }
+  ],
+  "feature_id": "qpls3.assessment.ipma",
+  "generated_at_utc": "2026-08-17T22:38:41.026705Z",
+  "method_version": "ipma_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+      "size": 227427
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+      "size": 100140
+    },
+    {
+      "path": "docs/methods/IPMA_V1.md",
+      "sha256": "be7ccdc1440d98454e3c0ed921d2b0ee244c4c2d456d16215df9495200c1c6b2",
+      "size": 3302
+    },
+    {
+      "path": "validation/established_method_factory_common.py",
+      "sha256": "cbc4eb8e5d7ab329d3a5c1eaae910c43cdac39f6c11fbd26eb774cc65e95c090",
+      "size": 20368
+    },
+    {
+      "path": "validation/ipma_reference.py",
+      "sha256": "6784986abde3da6571838c048eb3916c9944f5ded6c85b3bfa030312c3f99415",
+      "size": 13946
+    },
+    {
+      "path": "validation/ipma_release_boundary_gate.py",
+      "sha256": "999f66d1031b64762d803a6174f0aec2dd423f03898a0f39fbbe8fea8b7c0d3b",
+      "size": 157
+    },
+    {
+      "path": "validation/ipma_release_reference.py",
+      "sha256": "ee32a1b1f3a6f9b4fbb40b8abc76ef2912f922e2a4719fce804b007985afa132",
+      "size": 1303
+    },
+    {
+      "path": "validation/ipma_release_simulation.py",
+      "sha256": "6f460ad6f3f441be86cbd30d83c31717394d9f4992e20dba3c7ded4d62b6efbb",
+      "size": 159
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/ipma_v1.manifest.json",
+      "sha256": "e547af5a60b270f6c34e0c61a3cefb9e12064c4a5ae45500ac3c2c25b60fa627",
+      "size": 14129
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/results/method_factory/ipma_v1/independent_reference.json",
+      "sha256": "875f108fe5e622196e2e897c0c49869d5d28e65c42f0013c323f26131a8d6947",
+      "size": 5864
+    },
+    {
+      "path": "validation/test_established_method_factory.py",
+      "sha256": "a16157170cc23ffb0fe8a112a2b28b25b9f6f1518a443c6265c9fe993d70ee52",
+      "size": 2917
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

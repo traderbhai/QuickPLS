@@ -53,7 +53,7 @@ async function runViewport(viewport, index) {
         await page.locator("button:has-text('Setup Calculation')").first().click();
       } else if (dialog === "method_scope") {
         await page.locator(".np-menu button:has-text('Tools')").click();
-        await page.locator("button:has-text('Method Scope')").first().click();
+        await page.locator("button:has-text('Method Details')").first().click();
       } else if (dialog === "export_options") {
         await page.locator(".np-menu button:has-text('Report')").click();
         await page.locator("button:has-text('Export Options')").first().click();

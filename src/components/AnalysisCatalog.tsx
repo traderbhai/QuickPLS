@@ -1,8 +1,9 @@
 ﻿import { AlertTriangle, CheckCircle2, Clock3, LockKeyhole, Play, SlidersHorizontal } from "lucide-react";
 import { methods } from "../data/sample";
 import { analysisReadiness } from "../domain/analysisReadiness";
+import { analysisCatalogCapabilityEntriesV2 } from "../domain/analysisCatalogCapabilityV2";
 import { evaluateMethodApplicability, methodCategoryLabels, type ApplicabilityStatus, type MethodApplicability } from "../domain/methodApplicability";
-import { effectiveMethodStatus, isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
+import { methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
 import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
 import type { AnalysisMethodId, MethodDefinition, MethodPresetId } from "../types";
@@ -10,22 +11,20 @@ import { ReadinessPanel } from "./ReadinessPanel";
 import { Card, MethodScopeDrawer, PageHeader, Panel, StatusBadge, TabStrip, WorkspacePage } from "./Ui";
 
 const presets: Array<{ id: MethodPresetId; label: string; description: string }> = [
-  { id: "standard_pls", label: "Standard PLS-SEM", description: "Core PLS path model with validated defaults." },
+  { id: "standard_pls", label: "Standard PLS-SEM", description: "Core PLS path model with documented defaults." },
   { id: "pls_bootstrap", label: "PLS + Bootstrap", description: "Inference-ready PLS setup with bootstrap samples." },
-  { id: "plspredict", label: "PLSpredict", description: "Qualified prediction defaults; optional segmentation diagnostics remain bounded previews." },
-  { id: "micom_mga", label: "MICOM + MGA", description: "Two-group invariance and permutation MGA setup." },
+  { id: "plspredict", label: "PLSpredict", description: "Prediction defaults; optional segmentation diagnostics remain Experimental previews." },
   { id: "cbsem_cfa", label: "CB-SEM CFA", description: "Reflective raw-data CFA/SEM ML setup." },
   { id: "ols_regression", label: "OLS Regression", description: "Numeric OLS with HC3 robust standard errors." },
   { id: "nca", label: "NCA", description: "CE-FDH/CR-FDH necessity analysis." },
 ];
 
-function MethodStatusPill({ method }: { method: MethodDefinition }) {
+function MethodStatusPill({ method, experimental }: { method: MethodDefinition; experimental: boolean }) {
   const settings = useWorkspace((state) => state.analysisSettings);
-  const selectable = isSelectableAnalysisMethod(method);
-  const effectiveStatus = selectable ? effectiveMethodStatus(method, settings) : "unsupported";
+  const effectiveStatus = experimental ? "experimental" : "validated";
   return <span className={`status-text ${effectiveStatus}`} title={methodStatusDescription(method, settings)}>
-    {effectiveStatus === "validated" ? <CheckCircle2 size={15} /> : effectiveStatus === "experimental" ? <Clock3 size={15} /> : <LockKeyhole size={15} />}
-    {selectable ? methodStatusLabel(effectiveStatus) : "Configured elsewhere"}
+    {experimental ? <Clock3 size={15} /> : <CheckCircle2 size={15} />}
+    {methodStatusLabel(effectiveStatus)}
   </span>;
 }
 
@@ -42,17 +41,54 @@ export function AnalysisCatalog() {
   const edges = useWorkspace((state) => state.edges);
   const nodes = useWorkspace((state) => state.nodes);
   const setView = useWorkspace((state) => state.setView);
+  const catalogEntries = analysisCatalogCapabilityEntriesV2(methods, settings, {
+    experimentalLabsEnabled: uiPreferences.experimentalLabsEnabled,
+  });
+  const visibleCatalogEntries = catalogEntries.filter((entry) => entry.availability.selectable);
+  const visibleMethodIds = new Set(visibleCatalogEntries.map((entry) => entry.method.id));
+  const selectedRegistryEntry = visibleCatalogEntries.find((entry) => entry.method.id === settings.method);
+
+  if (visibleCatalogEntries.length === 0) {
+    return <WorkspacePage className="setup-v2-workspace" data-capability-registry-empty="true">
+      <PageHeader title="Calculation Setup" description="No analysis currently meets all Standard requirements." />
+      <Panel title="No Standard analyses are available yet" description="Requirements">
+        <p>QuickPLS will show an analysis here only after its complete workflow and scientific evidence are ready.</p>
+        <button type="button" className="secondary-button" onClick={() => setView("settings")}>Open Settings</button>
+      </Panel>
+    </WorkspacePage>;
+  }
+
+  if (!selectedRegistryEntry) {
+    return <WorkspacePage className="setup-v2-workspace" data-capability-selection-required="true">
+      <PageHeader title="Calculation Setup" description="The previous analysis selection is not available in the current product mode." />
+      <Panel title="Choose an available analysis" description="Experimental Labs">
+        <div className="method-guidance-grid">
+          {visibleCatalogEntries.map((entry) => <button
+            key={entry.method.id}
+            type="button"
+            className="method-guidance-card experimental"
+            onClick={() => setSettings({ method: entry.method.id as AnalysisMethodId })}
+          >
+            <strong>{entry.method.name}</strong>
+            <span>{entry.method.family}</span>
+            <small>Experimental</small>
+          </button>)}
+        </div>
+      </Panel>
+    </WorkspacePage>;
+  }
   const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
-  const applicability = evaluateMethodApplicability({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
+  const applicability = evaluateMethodApplicability({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() })
+    .filter((entry) => visibleMethodIds.has(entry.method.id));
   const selectedMethod = methods.find((method) => method.id === settings.method) ?? methods[0] as MethodDefinition;
   const selectedApplicability = applicability.find((item) => item.method.id === settings.method);
-  const selectedStatus = effectiveMethodStatus(selectedMethod, settings);
-  const basicFieldsReady = readiness.canRun && selectedStatus !== "unsupported";
+  const selectedStatus = selectedRegistryEntry.availability.tier === "standard" ? "validated" : "experimental";
+  const basicFieldsReady = readiness.canRun;
   const methodCards = [
     { title: "Dataset", detail: dataset.columns.length ? `${dataset.columns.length} variables loaded` : "Import a dataset first", tone: dataset.columns.length ? "validated" : "warning" },
     { title: "Model", detail: nodes.every((node) => node.data.indicators.length > 0) ? `${nodes.length} constructs with indicators` : "Some constructs need indicators", tone: nodes.every((node) => node.data.indicators.length > 0) ? "validated" : "warning" },
-    { title: "Unsupported shape", detail: selectedStatus === "unsupported" ? methodStatusDescription(selectedMethod, settings) : "No unsupported shape detected for the selected method settings", tone: selectedStatus === "unsupported" ? "warning" : "validated" },
-    { title: "Scope status", detail: selectedStatus === "validated" ? "Validated for documented QuickPLS scope" : selectedStatus === "experimental" ? "Experimental / watermarked outside validated scope" : methodStatusDescription(selectedMethod, settings), tone: selectedStatus === "validated" ? "validated" : "warning" },
+    { title: "Model compatibility", detail: selectedApplicability?.reason ?? "Review the model and data requirements below.", tone: readiness.canRun ? "validated" : "warning" },
+    { title: "Availability", detail: selectedStatus === "validated" ? "Supported setup" : "Experimental; review Method Details before use", tone: selectedStatus === "validated" ? "validated" : "warning" },
   ] as const;
 
   const groupWorkflowActive = settings.method === "mga" || settings.method === "predict" || settings.method === "ipma";
@@ -82,7 +118,7 @@ export function AnalysisCatalog() {
   const selectedDecisionView = selectedFirstFailed?.actionView ?? (basicFieldsReady ? "run" : "analyses");
 
   return <WorkspacePage className="setup-v2-workspace setup-v212-workspace setup-v2110-workspace setup-v215-workspace setup-v217-workspace setup-v226-workspace" data-method-applicability-polish="v2.11.0" data-workflow-method-guidance-triage="v2.15.0" data-v217-mockup-screen="setup" data-v226-method-setup-center="true">
-    <PageHeader title="Calculation Setup" description="Choose the analysis that fits this dataset, SEM model, and validated QuickPLS scope." actions={<StatusBadge status={selectedStatus === "validated" ? "validated" : selectedStatus === "experimental" ? "experimental" : "unsupported"}>{selectedStatus === "validated" ? "Validated scope" : selectedStatus}</StatusBadge>} />
+    <PageHeader title="Calculation Setup" description="Choose the analysis that fits this dataset, SEM model, and the listed requirements." actions={<StatusBadge status={selectedStatus === "validated" ? "validated" : selectedStatus === "experimental" ? "experimental" : "unsupported"}>{methodStatusLabel(selectedStatus)}</StatusBadge>} />
 
     <section className="setup-v2-hero setup-v217-method-summary qpls2-panel" aria-label="Selected calculation command">
       <div>
@@ -93,7 +129,7 @@ export function AnalysisCatalog() {
           <span>{methodCategoryLabels[selectedApplicability?.category ?? "core_model_estimation"]}</span>
           <span>{selectedExpectedOutputs.slice(0, 4).join(", ")}</span>
         </div>
-        <button className="secondary-button" onClick={() => setUiPreferences({ methodScopeDrawerOpen: true })}>Why trust this method?</button>
+        <button className="secondary-button" onClick={() => setUiPreferences({ methodScopeDrawerOpen: true })}>Method details</button>
       </div>
       <div className="setup-v2-hero-actions">
         <TabStrip label="Method setup mode" value={setup.mode} onChange={(mode) => setSetup({ mode })} tabs={[{ id: "basic", label: "Basic" }, { id: "expert", label: "Expert" }]} />
@@ -114,14 +150,14 @@ export function AnalysisCatalog() {
     <section className="setup-v2110-applicability-summary qpls2-panel" aria-label="Method availability for this project">
       <div>
         <span className="qpls2-eyebrow">Method availability</span>
-        <strong>QuickPLS is filtering methods by the current data, SEM diagram, selected settings, and validated scope.</strong>
-        <p>Use recommended methods first. Methods that need setup stay visible with exact missing fields; unsupported shapes stay under Show all with reasons instead of disappearing.</p>
+        <strong>QuickPLS is filtering methods by the current data, SEM diagram, settings, and method requirements.</strong>
+        <p>Use recommended methods first. Methods that need setup stay visible with exact missing fields; incompatible shapes stay under Show all with reasons instead of disappearing.</p>
       </div>
       <dl>
         <div><dt>Recommended</dt><dd>{applicabilityCounts.recommended}</dd></div>
         <div><dt>Available</dt><dd>{applicabilityCounts.available}</dd></div>
         <div><dt>Needs setup</dt><dd>{applicabilityCounts.needsSetup}</dd></div>
-        <div><dt>Blocked or scoped</dt><dd>{applicabilityCounts.blocked}</dd></div>
+        <div><dt>Not available</dt><dd>{applicabilityCounts.blocked}</dd></div>
       </dl>
     </section>
 
@@ -149,7 +185,7 @@ export function AnalysisCatalog() {
 
     <MethodScopeDrawer method={selectedMethod} open={uiPreferences.methodScopeDrawerOpen} onToggle={() => setUiPreferences({ methodScopeDrawerOpen: !uiPreferences.methodScopeDrawerOpen })} />
     <Panel
-      title="Data, model, method, and scope checks"
+      title="Data, model, and method requirements"
       description="Readiness"
       className="setup-v2-readiness"
       actions={<StatusBadge status={readiness.canRun ? "validated" : "experimental"}>{readiness.summary}</StatusBadge>}
@@ -174,7 +210,7 @@ export function AnalysisCatalog() {
           <div className="setup-v2-collapsed-sections">
             <MethodSection title="Advanced diagnostics" description="Prediction, groups, invariance, endogeneity, nonlinear effects, and composite diagnostics." items={advancedDiagnostics} selectedId={settings.method} onSelect={(method) => setSettings({ method })} collapsed />
             <MethodSection title="Standalone analyses" description="Analyses that use selected variables and do not always require the SEM diagram." items={standalone} selectedId={settings.method} onSelect={(method) => setSettings({ method })} collapsed />
-            <MethodSection title="Not applicable or scoped out" description="Methods stay visible with exact reasons instead of being offered as runnable choices." items={notApplicable} selectedId={settings.method} onSelect={(method) => setSettings({ method })} collapsed />
+            <MethodSection title="Not applicable or unavailable" description="Methods stay visible with exact reasons instead of being offered as runnable choices." items={notApplicable} selectedId={settings.method} onSelect={(method) => setSettings({ method })} collapsed />
           </div>
         </div>
       </Panel>
@@ -183,7 +219,7 @@ export function AnalysisCatalog() {
         title="Requirements and fields"
         description="Selected method"
         className="setup-v2-sidecar"
-        actions={<StatusBadge status={selectedStatus === "validated" ? "validated" : selectedStatus === "experimental" ? "experimental" : "unsupported"}>{selectedStatus === "validated" ? "Validated scope" : selectedStatus}</StatusBadge>}
+        actions={<StatusBadge status={selectedStatus === "validated" ? "validated" : selectedStatus === "experimental" ? "experimental" : "unsupported"}>{methodStatusLabel(selectedStatus)}</StatusBadge>}
       >
         <div className="setup-v2-sidecar-body">
           <div className={`setup-v2-selected-card ${selectedApplicability?.status ?? "available"}`}>
@@ -225,7 +261,7 @@ export function AnalysisCatalog() {
             </div>)}
             <div className="setup-v226-addon muted">
               <div>
-                <strong>Candidate Freedman-Lane structural path randomization</strong>
+                <strong>Freedman-Lane structural path randomization</strong>
                 <span>Expert single-model inference with fixed original PLS construct scores and unadjusted pathwise two-sided plus-one p values; not a group comparison.</span>
               </div>
               <span className="applicability-pill needs_setup">Expert</span>
@@ -249,8 +285,8 @@ export function AnalysisCatalog() {
 
             {setup.mode === "expert" && <details className="settings-section advanced-settings" open>
               <summary><SlidersHorizontal size={14} /> Expert resampling and reproducibility</summary>
-              {settings.method === "mga" && <label>Group workflows<select value={settings.groupMethods ?? "micom,mga_permutation"} onChange={(event) => setSettings({ groupMethods: event.target.value })}><option value="micom,mga_permutation">MICOM + permutation MGA</option><option value="micom">MICOM only</option><option value="mga_permutation">Permutation MGA only</option></select></label>}
-              {settings.method === "mga" && <NumberField label="Group permutation samples" value={settings.groupPermutationSamples ?? 999} min={1} max={10000} step={100} onChange={(value) => setSettings({ groupPermutationSamples: value })} />}
+              {settings.method === "mga" && <label>Group workflow<select value={settings.groupMethods === "micom" ? "micom" : ""} onChange={() => setSettings({ groupMethods: "micom" })}><option value="">Choose the current workflow</option><option value="micom">MICOM v3.1</option></select></label>}
+              {settings.method === "mga" && <NumberField label="Group permutation samples" value={settings.groupPermutationSamples ?? 5_000} min={5_000} max={10_000} step={100} onChange={(value) => setSettings({ groupPermutationSamples: value })} />}
               {settings.method === "predict" && <PredictSettings />}
               <NumberField label="Bootstrap replicates" value={settings.bootstrapSamples} min={0} max={10000} step={100} onChange={(value) => setSettings(value === 0 ? { bootstrapSamples: 0, studentizedInnerSamples: 0 } : { bootstrapSamples: value })} />
               <NumberField label="Studentized inner replicates" value={settings.studentizedInnerSamples} min={0} max={999} step={2} onChange={(value) => setSettings({ studentizedInnerSamples: value })} />
@@ -276,10 +312,9 @@ export function AnalysisCatalog() {
     {setup.mode === "expert" ? <section className="group-setup-card setup-v2-expert-workflows" aria-label="Group and prediction workflow setup">
       <div>
         <strong>Group and prediction workflows</strong>
-        <p>MICOM, permutation MGA, IPMA, and the bounded preview-only PLS-POS/FIMIX-style diagnostics are configured here, then reviewed from the Groups tab in Results.</p>
+        <p>IPMA and Experimental PLS-POS-style or FIMIX-style diagnostics are configured here, then reviewed from the appropriate Results tabs.</p>
       </div>
       <div className="group-setup-actions">
-        <button className={setup.selectedPreset === "micom_mga" ? "secondary-button active" : "secondary-button"} onClick={() => applyPreset("micom_mga")}>MICOM + MGA setup</button>
         <button className={settings.method === "predict" ? "secondary-button active" : "secondary-button"} onClick={() => setSettings({ method: "predict", groupMethods: "pls_pos" })}>Segmentation preview setup</button>
         <button className={settings.method === "ipma" ? "secondary-button active" : "secondary-button"} onClick={() => setSettings({ method: "ipma" })}>IPMA setup</button>
       </div>
@@ -294,7 +329,7 @@ export function AnalysisCatalog() {
       <dl>
         <div><dt>Bootstrap</dt><dd>{settings.bootstrapSamples > 0 ? `${settings.bootstrapSamples} replicates` : "off"}</dd></div>
         <div><dt>Permutation</dt><dd>{settings.permutationSamples > 0 ? `${settings.permutationSamples} samples` : "off"}</dd></div>
-        <div><dt>Scope</dt><dd>{selectedStatus === "validated" ? "Validated documented scope" : methodStatusDescription(selectedMethod, settings)}</dd></div>
+        <div><dt>Requirements</dt><dd>{selectedStatus === "validated" ? "Supported setup" : methodStatusDescription(selectedMethod, settings)}</dd></div>
       </dl>
       <div className="setup-launch-actions">
         <button className="qpls2-primary-action setup-v212-run-button" disabled={!basicFieldsReady} title={basicFieldsReady ? `Run ${selectedMethod.name}` : readiness.blockers[0]?.detail ?? readiness.summary} onClick={() => window.dispatchEvent(new CustomEvent("quickpls:run-analysis"))}><Play size={17} fill="currentColor" />Run selected method</button>
@@ -306,17 +341,16 @@ export function AnalysisCatalog() {
       <div className="calculation-preview-grid">
         <Card title="Algorithm" description={`${selectedMethod.name}; ${methodStatusDescription(selectedMethod, settings)}`} tone={selectedStatus === "validated" ? "validated" : "warning"} />
         <Card title="Produced outputs" description={selectedExpectedOutputs.concat(settings.bootstrapSamples > 0 ? ["bootstrap inference"] : []).join(", ")} tone="validated" />
-        <Card title="Unavailable outputs" description={settings.bootstrapSamples > 0 ? "Permutation and experimental variants appear only when configured." : "p values and confidence intervals require bootstrap or permutation settings."} tone={settings.bootstrapSamples > 0 ? "validated" : "warning"} />
+        <Card title="Unavailable outputs" description={settings.bootstrapSamples > 0 ? "Permutation and other variants appear only when configured." : "p values and confidence intervals require bootstrap or permutation settings."} tone={settings.bootstrapSamples > 0 ? "validated" : "warning"} />
         <Card title="After run" description="Completed runs open in Results with reportability checklist, interpretation notes, export tables, and publication diagram overlays." />
       </div>
     </Panel>
 
     <details className="show-all-methods setup-v2-all-methods">
-      <summary>Show all methods, including unavailable or unsupported choices</summary>
-      <div className="method-table"><div className="method-table-head"><span>Method</span><span>Family</span><span>Status</span></div>{methods.map((method) => {
-      const selectable = isSelectableAnalysisMethod(method);
-      return <button type="button" className={`method-row ${settings.method === method.id ? "selected" : ""}`} key={method.id} disabled={!selectable} title={methodStatusDescription(method, settings)} onClick={() => { if (selectable) setSettings({ method: method.id }); }}>
-        <strong>{method.name}</strong><span>{method.family}</span><MethodStatusPill method={method} />
+      <summary>Show all methods, including choices that are not available for this project</summary>
+      <div className="method-table"><div className="method-table-head"><span>Method</span><span>Family</span><span>Status</span></div>{visibleCatalogEntries.map(({ method, availability }) => {
+      return <button type="button" className={`method-row ${settings.method === method.id ? "selected" : ""}`} key={method.id} title={methodStatusDescription(method, settings)} onClick={() => setSettings({ method: method.id as AnalysisMethodId })}>
+        <strong>{method.name}</strong><span>{method.family}</span><MethodStatusPill method={method} experimental={availability.tier === "experimental"} />
       </button>;
     })}</div>
     </details>
@@ -329,7 +363,7 @@ function applicabilityStatusLabel(status: ApplicabilityStatus) {
   if (status === "needs_setup") return "Needs setup";
   if (status === "not_applicable") return "Not applicable now";
   if (status === "experimental") return "Experimental";
-  return "Unsupported";
+  return "Not available";
 }
 
 function MethodSection({ title, description, items, selectedId, onSelect, empty, collapsed = false }: { title: string; description: string; items: MethodApplicability[]; selectedId: AnalysisMethodId; onSelect: (method: AnalysisMethodId) => void; empty?: string; collapsed?: boolean }) {
@@ -413,5 +447,5 @@ function CbsemSettings({ columns }: { columns: string[] }) {
 function PredictSettings() {
   const settings = useWorkspace((state) => state.analysisSettings);
   const setSettings = useWorkspace((state) => state.setAnalysisSettings);
-  return <><label>Segmentation diagnostic (preview)<select value={settings.groupMethods?.includes("fimix") ? "fimix" : "pls_pos"} onChange={(event) => setSettings({ groupMethods: event.target.value })}><option value="pls_pos">PLS-POS-style bounded preview</option><option value="fimix">FIMIX-style bounded preview (not full EM)</option></select></label><NumberField label="Segment count" value={settings.segmentCount ?? 2} min={2} max={5} step={1} onChange={(value) => setSettings({ segmentCount: value })} /><NumberField label="Segment starts" value={settings.segmentStarts ?? 10} min={1} max={50} step={1} onChange={(value) => setSettings({ segmentStarts: value })} /></>;
+  return <><label>Experimental segmentation diagnostic<select value={settings.groupMethods?.includes("fimix") ? "fimix" : "pls_pos"} onChange={(event) => setSettings({ groupMethods: event.target.value })}><option value="pls_pos">PLS-POS-style Experimental diagnostic</option><option value="fimix">FIMIX-style Experimental diagnostic (not full EM)</option></select></label><NumberField label="Segment count" value={settings.segmentCount ?? 2} min={2} max={5} step={1} onChange={(value) => setSettings({ segmentCount: value })} /><NumberField label="Segment starts" value={settings.segmentStarts ?? 10} min={1} max={50} step={1} onChange={(value) => setSettings({ segmentStarts: value })} /></>;
 }

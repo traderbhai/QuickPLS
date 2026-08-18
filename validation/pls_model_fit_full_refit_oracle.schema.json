@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.invalid/schemas/pls_model_fit_full_refit_oracle.schema.json",
+  "title": "QuickPLS validation-only PLS model-fit full-refit oracle work report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "passed",
+    "qualification_ready",
+    "promotion_requested",
+    "reference",
+    "fixtures",
+    "frozen_product_comparison",
+    "independent_point_fit",
+    "deterministic_exact_fit",
+    "metamorphic_witness",
+    "fixed_failure_ledger_witness",
+    "typed_failure_witness",
+    "blockers",
+    "note"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "pls_model_fit_full_refit_oracle_work_report_v1" },
+    "passed": { "type": "boolean" },
+    "qualification_ready": { "const": false },
+    "promotion_requested": { "const": false },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "oracle_version",
+        "implementation",
+        "runtime_policy",
+        "python",
+        "numpy",
+        "scipy",
+        "source",
+        "source_sha256",
+        "independence_statement",
+        "bounded_scope"
+      ],
+      "properties": {
+        "oracle_version": { "const": "pls_model_fit_full_refit_oracle_v1" },
+        "implementation": {
+          "const": "transparent_numpy_scipy_recursive_pls_pm_full_refit"
+        },
+        "runtime_policy": { "const": "development_validation_only" },
+        "python": { "type": "string", "minLength": 1 },
+        "numpy": { "type": "string", "minLength": 1 },
+        "scipy": { "type": "string", "minLength": 1 },
+        "source": { "const": "validation/pls_model_fit_full_refit_oracle.py" },
+        "source_sha256": { "$ref": "#/$defs/sha256" },
+        "independence_statement": { "type": "string", "minLength": 80 },
+        "bounded_scope": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "fixtures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recipe",
+        "recipe_sha256",
+        "data",
+        "data_sha256",
+        "frozen_product",
+        "frozen_product_sha256"
+      ],
+      "properties": {
+        "recipe": { "type": "string", "minLength": 1 },
+        "recipe_sha256": { "$ref": "#/$defs/sha256" },
+        "data": { "type": "string", "minLength": 1 },
+        "data_sha256": { "$ref": "#/$defs/sha256" },
+        "frozen_product": { "type": "string", "minLength": 1 },
+        "frozen_product_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "frozen_product_comparison": {
+      "type": "object",
+      "required": [
+        "passed",
+        "tolerance",
+        "maximum_absolute_difference",
+        "comparisons",
+        "role"
+      ],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "tolerance": { "type": "number", "exclusiveMinimum": 0 },
+        "maximum_absolute_difference": { "type": "number", "minimum": 0 },
+        "comparisons": { "type": "array", "minItems": 1 },
+        "role": { "const": "behavioral_comparator_only_not_numerical_oracle" }
+      }
+    },
+    "independent_point_fit": { "type": "object" },
+    "deterministic_exact_fit": {
+      "type": "object",
+      "required": [
+        "requested_replicates",
+        "seed",
+        "index_plan_version",
+        "sample_digest_version",
+        "separate_variant_distributions",
+        "identical_rerun_ledger",
+        "saturated",
+        "estimated"
+      ],
+      "properties": {
+        "requested_replicates": { "type": "integer", "minimum": 2 },
+        "seed": { "type": "integer", "minimum": 0 },
+        "index_plan_version": {
+          "const": "numpy_pcg64_seedsequence_indexed_cases_v1"
+        },
+        "sample_digest_version": {
+          "const": "sha256_little_endian_u64_indices_v1"
+        },
+        "separate_variant_distributions": { "const": true },
+        "identical_rerun_ledger": { "const": true },
+        "saturated": { "$ref": "#/$defs/variant" },
+        "estimated": { "$ref": "#/$defs/variant" }
+      }
+    },
+    "metamorphic_witness": {
+      "type": "object",
+      "required": [
+        "row_point_maximum_scalar_difference",
+        "row_mapped_plan_exact_summary_maximum_difference",
+        "column_point_maximum_scalar_difference",
+        "column_exact_summary_maximum_difference",
+        "tolerance"
+      ],
+      "properties": {
+        "row_point_maximum_scalar_difference": { "type": "number", "minimum": 0 },
+        "row_mapped_plan_exact_summary_maximum_difference": {
+          "type": "number",
+          "minimum": 0
+        },
+        "column_point_maximum_scalar_difference": { "type": "number", "minimum": 0 },
+        "column_exact_summary_maximum_difference": { "type": "number", "minimum": 0 },
+        "tolerance": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "fixed_failure_ledger_witness": {
+      "type": "object",
+      "required": [
+        "requested_replicates",
+        "expected_failures_per_variant",
+        "actual_failures",
+        "saturated",
+        "estimated"
+      ],
+      "properties": {
+        "requested_replicates": { "const": 10 },
+        "expected_failures_per_variant": { "const": 1 },
+        "actual_failures": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["saturated", "estimated"],
+          "properties": {
+            "saturated": { "const": 1 },
+            "estimated": { "const": 1 }
+          }
+        },
+        "saturated": { "$ref": "#/$defs/variant" },
+        "estimated": { "$ref": "#/$defs/variant" }
+      }
+    },
+    "typed_failure_witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["non_positive_definite_target", "singular_observed_matrix"],
+      "properties": {
+        "non_positive_definite_target": { "$ref": "#/$defs/typedFailure" },
+        "singular_observed_matrix": { "$ref": "#/$defs/typedFailure" }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "note": { "type": "string", "minLength": 80 }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "typedFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "required": [
+        "variant",
+        "status",
+        "target_correlation",
+        "recovered_transformed_correlation",
+        "maximum_target_recovery_error",
+        "criteria",
+        "failed_replicates",
+        "sample_index_digests"
+      ],
+      "properties": {
+        "variant": { "enum": ["saturated", "estimated"] },
+        "status": { "enum": ["available", "partial", "unavailable"] },
+        "target_correlation": { "type": "array", "minItems": 1 },
+        "recovered_transformed_correlation": { "type": "array", "minItems": 1 },
+        "maximum_target_recovery_error": { "type": "number", "minimum": 0 },
+        "criteria": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "object" }
+        },
+        "failed_replicates": { "type": "integer", "minimum": 0 },
+        "sample_index_digests": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/sha256" }
+        },
+        "ledger": { "type": "array", "minItems": 2 }
+      }
+    }
+  }
+}

@@ -1,0 +1,298 @@
+{
+  "blockers": [
+    "no_frozen_current_product_result_is_compared_by_this_validation_only_oracle",
+    "no_second_maintained_external_sem_implementation_is_available_locally",
+    "small_seeded_recovery_matrix_is_not_a_monte_carlo_qualification_campaign",
+    "archive_export_frontend_packaged_windows_performance_and_scientific_review_roles_are_open"
+  ],
+  "checks": {
+    "analytic_gradient_against_central_difference": {
+      "passed": true,
+      "rows": [
+        {
+          "maximum_analytic_numeric_delta": 5.291126998346884e-10,
+          "passed": true,
+          "population": "balanced"
+        },
+        {
+          "maximum_analytic_numeric_delta": 7.645843957959642e-10,
+          "passed": true,
+          "population": "mixed_scale"
+        }
+      ]
+    },
+    "exact_population_parameter_recovery": {
+      "passed": true,
+      "rows": [
+        {
+          "converged": true,
+          "gradient_infinity_norm": 3.3522733591918562e-09,
+          "iterations": 14,
+          "maximum_hand_parameter_delta": 2.7755575615628914e-16,
+          "maximum_optimizer_parameter_delta": 2.708877011592392e-09,
+          "objective": 8.881784197001252e-16,
+          "optimizer_success": true,
+          "population": "balanced"
+        },
+        {
+          "converged": true,
+          "gradient_infinity_norm": 2.2066787940343946e-08,
+          "iterations": 12,
+          "maximum_hand_parameter_delta": 1.1102230246251565e-16,
+          "maximum_optimizer_parameter_delta": 3.38291529233814e-08,
+          "objective": 8.881784197001252e-16,
+          "optimizer_success": true,
+          "population": "mixed_scale"
+        }
+      ]
+    },
+    "raw_covariance_scaled_correlation_equivalence": {
+      "passed": true,
+      "rows": [
+        {
+          "all_converged": true,
+          "maximum_canonical_moment_delta": 2.220446049250313e-16,
+          "maximum_objective_delta": 8.881784197001252e-16,
+          "maximum_parameter_delta": 1.1657341758564144e-15,
+          "passed": true,
+          "scenario_id": "balanced_n96_seed2026081501"
+        },
+        {
+          "all_converged": true,
+          "maximum_canonical_moment_delta": 2.220446049250313e-16,
+          "maximum_objective_delta": 8.881784197001252e-16,
+          "maximum_parameter_delta": 1.7763568394002505e-15,
+          "passed": true,
+          "scenario_id": "balanced_n192_seed2026081502"
+        },
+        {
+          "all_converged": true,
+          "maximum_canonical_moment_delta": 4.440892098500626e-16,
+          "maximum_objective_delta": 4.440892098500626e-16,
+          "maximum_parameter_delta": 1.9984014443252818e-15,
+          "passed": true,
+          "scenario_id": "balanced_n384_seed2026081503"
+        },
+        {
+          "all_converged": true,
+          "maximum_canonical_moment_delta": 2.220446049250313e-16,
+          "maximum_objective_delta": 8.881784197001252e-16,
+          "maximum_parameter_delta": 1.9984014443252818e-15,
+          "passed": true,
+          "scenario_id": "mixed_scale_n96_seed2026081501"
+        },
+        {
+          "all_converged": true,
+          "maximum_canonical_moment_delta": 1.7763568394002505e-15,
+          "maximum_objective_delta": 1.3322676295501878e-15,
+          "maximum_parameter_delta": 2.6645352591003757e-15,
+          "passed": true,
+          "scenario_id": "mixed_scale_n192_seed2026081502"
+        },
+        {
+          "all_converged": true,
+          "maximum_canonical_moment_delta": 4.440892098500626e-16,
+          "maximum_objective_delta": 8.881784197001252e-16,
+          "maximum_parameter_delta": 3.9968028886505635e-15,
+          "passed": true,
+          "scenario_id": "mixed_scale_n384_seed2026081503"
+        }
+      ]
+    },
+    "small_seeded_parameter_recovery": {
+      "passed": true,
+      "qualification_sized": false,
+      "rows": [
+        {
+          "converged": true,
+          "maximum_scaled_parameter_error": 0.39504108769400914,
+          "scenario_id": "balanced_n96_seed2026081501"
+        },
+        {
+          "converged": true,
+          "maximum_scaled_parameter_error": 0.3782360812362436,
+          "scenario_id": "balanced_n192_seed2026081502"
+        },
+        {
+          "converged": true,
+          "maximum_scaled_parameter_error": 0.4842792447824324,
+          "scenario_id": "balanced_n384_seed2026081503"
+        },
+        {
+          "converged": true,
+          "maximum_scaled_parameter_error": 0.3093949350714448,
+          "scenario_id": "mixed_scale_n96_seed2026081501"
+        },
+        {
+          "converged": true,
+          "maximum_scaled_parameter_error": 0.3664825105391676,
+          "scenario_id": "mixed_scale_n192_seed2026081502"
+        },
+        {
+          "converged": true,
+          "maximum_scaled_parameter_error": 0.4951139255464776,
+          "scenario_id": "mixed_scale_n384_seed2026081503"
+        }
+      ]
+    },
+    "stable_parameter_id_mapping": {
+      "expected_cardinality": 7,
+      "passed": true
+    },
+    "typed_adversarial_failures": {
+      "passed": true,
+      "rows": [
+        {
+          "expected_code": "MatrixNotPositiveDefinite",
+          "observed_code": "MatrixNotPositiveDefinite",
+          "passed": true,
+          "scenario_id": "non_positive_definite"
+        },
+        {
+          "expected_code": "MatrixShape",
+          "observed_code": "MatrixShape",
+          "passed": true,
+          "scenario_id": "wrong_shape"
+        },
+        {
+          "expected_code": "SampleSizeMismatch",
+          "observed_code": "SampleSizeMismatch",
+          "passed": true,
+          "scenario_id": "sample_size_mismatch"
+        },
+        {
+          "expected_code": "SampleDenominatorInvalid",
+          "observed_code": "SampleDenominatorInvalid",
+          "passed": true,
+          "scenario_id": "sample_denominator_invalid"
+        },
+        {
+          "expected_code": "CorrelationScaleMetadataRequired",
+          "observed_code": "CorrelationScaleMetadataRequired",
+          "passed": true,
+          "scenario_id": "correlation_scale_missing"
+        }
+      ]
+    }
+  },
+  "oracle_version": "cbsem_matrix_input_numpy_scipy_oracle_v1",
+  "passed_work_checks": true,
+  "primary_method_reference": {
+    "citation": "Bollen, K. A. (1989), Structural Equations with Latent Variables, Wiley",
+    "doi": "10.1002/9781118619179",
+    "ml_discrepancy": "log|Sigma| + trace(S Sigma^-1) - log|S| - p"
+  },
+  "promotion_requested": false,
+  "qualification_role_satisfied": false,
+  "receipt_eligible": false,
+  "reference": {
+    "implementation": "transparent_numpy_scipy_marker_cfa",
+    "maintainer": "QuickPLS validation-only independent oracle",
+    "numpy_version": "1.26.4",
+    "product_code_imported": false,
+    "product_executable_invoked": false,
+    "runtime_policy": "development_validation_only",
+    "scipy_version": "1.15.2",
+    "source": "validation/cbsem_matrix_input_v2_oracle.py",
+    "source_sha256": "03f749afbeaa47201214016acea52e75326d0be81537117b5696582fa84f6e9e"
+  },
+  "report_kind": "cbsem_matrix_input_v2_oracle_work_report",
+  "scenario_contract": {
+    "adversarial": [
+      {
+        "expected_code": "MatrixNotPositiveDefinite",
+        "id": "non_positive_definite"
+      },
+      {
+        "expected_code": "MatrixShape",
+        "id": "wrong_shape"
+      },
+      {
+        "expected_code": "SampleSizeMismatch",
+        "id": "sample_size_mismatch"
+      },
+      {
+        "expected_code": "SampleDenominatorInvalid",
+        "id": "sample_denominator_invalid"
+      },
+      {
+        "expected_code": "CorrelationScaleMetadataRequired",
+        "id": "correlation_scale_missing"
+      }
+    ],
+    "fixed_parameterization": {
+      "construct": "construct:f",
+      "marker": "x1",
+      "minimum_sample_size": 10,
+      "observed_order": [
+        "x1",
+        "x2",
+        "x3"
+      ],
+      "raw_covariance_denominator": "maximum_likelihood_n"
+    },
+    "generative": [
+      {
+        "id": "balanced_n96_seed2026081501",
+        "population": "balanced",
+        "sample_size": 96,
+        "seed": 2026081501
+      },
+      {
+        "id": "balanced_n192_seed2026081502",
+        "population": "balanced",
+        "sample_size": 192,
+        "seed": 2026081502
+      },
+      {
+        "id": "balanced_n384_seed2026081503",
+        "population": "balanced",
+        "sample_size": 384,
+        "seed": 2026081503
+      },
+      {
+        "id": "mixed_scale_n96_seed2026081501",
+        "population": "mixed_scale",
+        "sample_size": 96,
+        "seed": 2026081501
+      },
+      {
+        "id": "mixed_scale_n192_seed2026081502",
+        "population": "mixed_scale",
+        "sample_size": 192,
+        "seed": 2026081502
+      },
+      {
+        "id": "mixed_scale_n384_seed2026081503",
+        "population": "mixed_scale",
+        "sample_size": 384,
+        "seed": 2026081503
+      }
+    ],
+    "version": "cbsem_matrix_input_small_scenarios_v1"
+  },
+  "scenario_set_sha256": "68590788bf21ee0e3d7bd1efd84a050a09160cb1d552b33af0ba15ff2f4ea86d",
+  "schema_version": 1,
+  "second_external_reference": {
+    "available": false,
+    "executed": false,
+    "installation_attempted": false,
+    "reason": "Rscript_not_installed"
+  },
+  "stable_parameter_ids": {
+    "construct:f=~x1": "parameter_66_7831",
+    "construct:f=~x2": "parameter_66_7832",
+    "construct:f=~x3": "parameter_66_7833",
+    "construct:f~~construct:f": "variance_66",
+    "x1~~x1": "residual_variance_7831",
+    "x2~~x2": "residual_variance_7832",
+    "x3~~x3": "residual_variance_7833"
+  },
+  "tolerances": {
+    "analytic_numeric_gradient_absolute": 2e-06,
+    "canonical_moment_absolute": 2e-12,
+    "objective_absolute": 2e-10,
+    "optimizer_gradient_infinity_norm": 1e-07,
+    "representation_parameter_absolute": 2e-07
+  }
+}

@@ -1,5 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 import { methods } from "../data/sample";
+import { buildNativePlsSampleSizePowerRecipe, NATIVE_PLS_SAMPLE_SIZE_POWER_INFERENCE } from "../native/nativePlsSampleSizePower";
 import type { AnalysisMethodId, AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, MethodDefinition, WorkspaceView } from "../types";
 import { validateModel } from "./modelValidation";
 
@@ -46,6 +47,7 @@ export const methodCategoryLabels: Record<MethodCategory, string> = {
 
 const categories: Record<AnalysisMethodId, MethodCategory> = {
   pls_pm: "core_model_estimation",
+  pls_sample_size_power: "workflow_analysis",
   plsc: "core_model_estimation",
   wpls: "core_model_estimation",
   cbsem: "core_model_estimation",
@@ -66,6 +68,7 @@ const categories: Record<AnalysisMethodId, MethodCategory> = {
 };
 
 const outputMap: Record<AnalysisMethodId, string[]> = {
+  pls_sample_size_power: ["power by sample size", "Wilson confidence intervals", "conservative grid decision", "failure accounting"],
   pls_pm: ["paths", "loadings / weights", "R²", "effects", "quality diagnostics"],
   bootstrap: ["bootstrap standard errors", "p values", "confidence intervals"],
   permutation: ["structural path coefficients", "exceedance counts", "raw two-sided plus-one p values"],
@@ -76,7 +79,7 @@ const outputMap: Record<AnalysisMethodId, string[]> = {
   endogeneity: ["Gaussian-copula diagnostic coefficients", "diagnostic warnings"],
   nonlinear_effects: ["quadratic effect diagnostics", "delta R²"],
   moderated_mediation: ["conditional indirect effects", "index of moderated mediation"],
-  predict: ["PLSpredict", "CVPAT", "bounded preview-only segmentation diagnostics where configured"],
+  predict: ["PLSpredict", "CVPAT", "Experimental score-space segmentation diagnostics where configured"],
   mga: ["MICOM", "permutation MGA", "group path differences"],
   ipma: ["importance-performance tables", "target construct diagnostics"],
   cbsem: ["ML CFA/SEM estimates", "fit indices", "standardized solution"],
@@ -133,7 +136,7 @@ export function modelGuidance(input: MethodApplicabilityInput): Array<{ title: s
   const shape = modelShape(input.nodes, input.edges);
   const cards: Array<{ title: string; detail: string; tone: "validated" | "warning" | "neutral"; actionLabel: string; actionView: WorkspaceView }> = [];
   if (!input.nodes.length) return [{ title: "No constructs yet", detail: "Create constructs or use Data prefix grouping before selecting SEM methods.", tone: "warning", actionLabel: "Add construct", actionView: "models" }];
-  if (shape.hasFormative) cards.push({ title: "Formative construct detected", detail: "PLS/WPLS/GSCA are candidates; CB-SEM and PLSc are blocked for this scope.", tone: "warning", actionLabel: "Review Setup", actionView: "analyses" });
+  if (shape.hasFormative) cards.push({ title: "Formative construct detected", detail: "Consider PLS, WPLS, or GSCA. This model cannot run with CB-SEM or PLSc.", tone: "warning", actionLabel: "Review Setup", actionView: "analyses" });
   if (shape.isMediated) cards.push({ title: "Mediation-shaped model", detail: "Review indirect effects and enable bootstrap before reporting mediation inference.", tone: "validated", actionLabel: "Setup bootstrap", actionView: "analyses" });
   if (shape.endogenousConstructs.length) cards.push({ title: "Endogenous constructs present", detail: "PLS, PLSc, IPMA, and PLSpredict can be considered depending on your research objective.", tone: "validated", actionLabel: "Review methods", actionView: "analyses" });
   if (!cards.length) cards.push({ title: "Model can be estimated", detail: "Add structural paths or choose standalone analyses if your research question does not use an SEM diagram.", tone: "neutral", actionLabel: "Open Setup", actionView: "analyses" });
@@ -166,18 +169,26 @@ function evaluateOne(method: MethodDefinition & { id: AnalysisMethodId }, input:
       reason = failed(checks) ? firstFailure(checks).detail : "Use as an inference add-on after the base estimator is ready.";
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Complete setup" : "Enable bootstrap";
       break;
-    case "permutation":
-      checks = [base.runtime, raw, ...sem, numericIndicators, structuralPathCheck(shape)];
-      status = failed(checks) ? "needs_setup" : "experimental";
+    case "pls_sample_size_power":
+      checks = [base.runtime, prospectivePowerProvenanceCheck(input.dataset), prospectivePowerModelCheck(input), prospectivePowerPlanCheck(input)];
+      status = failed(checks) ? "needs_setup" : "available";
       reason = failed(checks)
         ? firstFailure(checks).detail
-        : "Candidate fixed-score Freedman-Lane inference is available for the current structural paths; p values are raw and unadjusted for multiplicity.";
+        : "Supported prospective Monte Carlo power v2 is configured for exactly one two-construct reflective Gaussian path, an explicit sample-size grid, and null-centered two-sided case-bootstrap plus-one inference. Observed values and observed sample size are not used, and this is not retrospective observed power.";
+      nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review power setup" : "Setup prospective power";
+      break;
+    case "permutation":
+      checks = [base.runtime, raw, ...sem, numericIndicators, structuralPathCheck(shape)];
+      status = failed(checks) ? "needs_setup" : "available";
+      reason = failed(checks)
+        ? firstFailure(checks).detail
+        : "Supported fixed-score Freedman-Lane inference is available for the current structural paths; p values are raw and unadjusted for multiplicity.";
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Complete setup" : "Setup path randomization";
       break;
     case "plsc":
       checks = [base.runtime, raw, ...sem, numericIndicators, reflective];
       status = failed(checks) ? (reflective.status === "failed" ? "not_applicable" : "needs_setup") : "available";
-      reason = failed(checks) ? firstFailure(checks).detail : "Available for reflective-only PLS models in the documented PLSc scope.";
+      reason = failed(checks) ? firstFailure(checks).detail : "Available for reflective-only PLS models that meet the PLSc requirements.";
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review model" : "Select PLSc";
       break;
     case "wpls":
@@ -193,17 +204,22 @@ function evaluateOne(method: MethodDefinition & { id: AnalysisMethodId }, input:
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review indicators" : "Select CTA-PLS";
       break;
     case "cca":
-    case "endogeneity":
     case "nonlinear_effects":
       checks = [base.runtime, raw, ...sem, numericIndicators, structuralPathCheck(shape)];
       status = failed(checks) ? "needs_setup" : "available";
-      reason = failed(checks) ? firstFailure(checks).detail : method.id === "endogeneity" ? "Diagnostic only; available for supported numeric structural predictors and does not prove causality." : "Available as a diagnostic for the current PLS-compatible structural model.";
+      reason = failed(checks) ? firstFailure(checks).detail : "Available as a diagnostic for the current PLS-compatible structural model.";
+      nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review model" : "Select diagnostic";
+      break;
+    case "endogeneity":
+      checks = [base.runtime, raw, ...sem, numericIndicators, structuralPathCheck(shape), boundedEndogeneityShapeCheck(shape)];
+      status = failed(checks) ? "needs_setup" : "available";
+      reason = failed(checks) ? firstFailure(checks).detail : "Diagnostic only; available for ordinary PLS structural paths and does not prove causality.";
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review model" : "Select diagnostic";
       break;
     case "predict":
       checks = [base.runtime, raw, ...sem, numericIndicators, endogenousCheck(shape)];
       status = failed(checks) ? "needs_setup" : "recommended";
-      reason = failed(checks) ? firstFailure(checks).detail : "Recommended for prediction. Optional segmentation diagnostics remain bounded previews and are not full PLS-POS/FIMIX equivalents.";
+      reason = failed(checks) ? firstFailure(checks).detail : "Recommended for prediction. Optional Experimental segmentation diagnostics are deterministic score-space summaries, not full PLS-POS or FIMIX implementations.";
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review Setup" : "Setup prediction";
       break;
     case "ipma":
@@ -215,19 +231,19 @@ function evaluateOne(method: MethodDefinition & { id: AnalysisMethodId }, input:
     case "mga":
       checks = [base.runtime, raw, ...sem, numericIndicators, groupColumnCheck(input, selectedMeta(input.settings.groupColumn))];
       status = failed(checks) ? "needs_setup" : "recommended";
-      reason = failed(checks) ? firstFailure(checks).detail : "Recommended because a two-group column is selected for MICOM/MGA workflows.";
-      nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Select group column" : "Setup MICOM/MGA";
+      reason = failed(checks) ? firstFailure(checks).detail : "Recommended because a two-group column is selected for MICOM v3.1.";
+      nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Select group column" : "Setup MICOM v3.1";
       break;
     case "cbsem":
       checks = [base.runtime, raw, ...sem, numericIndicators, reflective, unsupportedSemShapeCheck(shape)];
       status = failed(checks) ? (reflective.status === "failed" || unsupportedSemShapeCheck(shape).status === "failed" ? "not_applicable" : "needs_setup") : "available";
-      reason = failed(checks) ? firstFailure(checks).detail : "Available for reflective raw-data single-group CFA/SEM ML scope.";
+      reason = failed(checks) ? firstFailure(checks).detail : "Available for reflective raw-data, single-group CFA or recursive SEM with ML estimation.";
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review model" : "Select CB-SEM/CFA";
       break;
     case "gsca":
       checks = [base.runtime, raw, ...sem, numericIndicators, unsupportedSegmentationShapeCheck(shape)];
       status = failed(checks) ? "needs_setup" : "available";
-      reason = failed(checks) ? firstFailure(checks).detail : "Available for bounded reflective/formative component-model shapes.";
+      reason = failed(checks) ? firstFailure(checks).detail : "Available for recursive reflective or formative component models.";
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review model" : "Select GSCA";
       break;
     case "pca":
@@ -239,7 +255,7 @@ function evaluateOne(method: MethodDefinition & { id: AnalysisMethodId }, input:
     case "regression":
       checks = [base.runtime, raw, regressionCheck(input)];
       status = failed(checks) ? "needs_setup" : "available";
-      reason = failed(checks) ? firstFailure(checks).detail : `${input.settings.regressionType === "logistic" ? "Logistic" : input.settings.regressionType === "process" ? "Bounded PROCESS-style" : "OLS"} regression setup is complete for selected variables.`;
+      reason = failed(checks) ? firstFailure(checks).detail : `${input.settings.regressionType === "logistic" ? "Logistic" : input.settings.regressionType === "process" ? "Graph-defined PROCESS" : "OLS"} regression setup is complete for selected variables.`;
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Choose regression variables" : "Select regression";
       break;
     case "nca":
@@ -251,8 +267,8 @@ function evaluateOne(method: MethodDefinition & { id: AnalysisMethodId }, input:
     case "moderated_mediation":
       checks = [base.runtime, raw, ...sem, numericIndicators, moderatedMediationShapeCheck(shape)];
       status = failed(checks) ? "needs_setup" : "experimental";
-      reason = failed(checks) ? firstFailure(checks).detail : "Bounded moderated mediation remains excluded from general validated scope unless explicitly configured.";
-      nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review model" : "Review experimental scope";
+      reason = failed(checks) ? firstFailure(checks).detail : "Moderated mediation is Experimental and must be configured explicitly.";
+      nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review model" : "Review Experimental requirements";
       break;
   }
 
@@ -275,6 +291,90 @@ function rawDataCheck(dataset: Dataset): RequirementCheck {
   return pass("raw-data", "Raw dataset", `${dataset.name} is available as raw fingerprinted data.`);
 }
 
+function prospectivePowerProvenanceCheck(dataset: Dataset): RequirementCheck {
+  return dataset.fingerprint?.trim()
+    ? pass("power-provenance", "Project provenance", "The active dataset fingerprint anchors the prospective recipe; observed values and observed sample size are not used.")
+    : fail("power-provenance", "Project provenance", "Save or import an active project dataset so the prospective recipe has a reproducible project fingerprint. Its observed values will not be used.", "Import or save project data", "data");
+}
+
+function prospectivePowerModelCheck(input: MethodApplicabilityInput): RequirementCheck {
+  const predictor = input.settings.plsPowerPredictorConstruct?.trim() ?? "";
+  const outcome = input.settings.plsPowerOutcomeConstruct?.trim() ?? "";
+  const ordinaryPaths = input.edges.filter((edge) => {
+    const role = (edge.data as { role?: string } | undefined)?.role;
+    return role !== "control" && role !== "covariance" && !edge.id.startsWith("measurement::");
+  });
+  const eligible = input.nodes.filter((node) => (
+    !node.data.semantic
+    && node.data.mode === "reflective"
+    && node.data.indicators.length >= 3
+    && node.data.indicators.length <= 10
+  ));
+  const targetPaths = ordinaryPaths.filter((edge) => edge.source === predictor && edge.target === outcome);
+  const problems = [
+    input.nodes.length !== 2 || ordinaryPaths.length !== 1 ? "Power v2 requires exactly two constructs and one directed path" : null,
+    input.edges.some((edge) => {
+      const role = (edge.data as { role?: string } | undefined)?.role;
+      return role === "control" || role === "covariance";
+    }) ? "Power v2 excludes control and covariance paths" : null,
+    eligible.length !== 2 ? "Both constructs must be ordinary reflective blocks with 3 to 10 indicators" : null,
+    !predictor ? "Choose the predictor construct" : null,
+    !outcome ? "Choose the outcome construct" : null,
+    predictor && outcome && predictor === outcome ? "Predictor and outcome constructs must differ" : null,
+    predictor && !eligible.some((node) => node.id === predictor) ? "The selected predictor is not an eligible reflective construct" : null,
+    outcome && !eligible.some((node) => node.id === outcome) ? "The selected outcome is not an eligible reflective construct" : null,
+    predictor && outcome && targetPaths.length !== 1 ? "The selected predictor and outcome must match the model's single directed path" : null,
+  ].filter((problem): problem is string => Boolean(problem));
+  return problems.length
+    ? fail("power-model", "Prospective model", `${problems.join("; ")}.`, "Review two-construct model", "models")
+    : pass("power-model", "Prospective model", "Exactly two ordinary reflective constructs and the selected predictor-to-outcome path are configured.");
+}
+
+function prospectivePowerPlanCheck(input: MethodApplicabilityInput): RequirementCheck {
+  try {
+    const build = buildNativePlsSampleSizePowerRecipe({
+      scenarioIdentity: input.settings.plsPowerScenarioIdentity ?? "",
+      predictorConstruct: input.settings.plsPowerPredictorConstruct ?? "",
+      outcomeConstruct: input.settings.plsPowerOutcomeConstruct ?? "",
+      predictorIndicatorLoadings: input.settings.plsPowerPredictorLoadings ?? "",
+      outcomeIndicatorLoadings: input.settings.plsPowerOutcomeLoadings ?? "",
+      populationPath: String(input.settings.plsPowerPopulationPath ?? ""),
+      exogenousDistribution: "standard_normal",
+      structuralDisturbanceDistribution: "standard_normal",
+      indicatorErrorDistribution: "standard_normal",
+      missingData: "none",
+      weightingScheme: input.settings.weightingScheme === "path" ? "path" : "",
+      preprocessing: input.settings.preprocessing === "standardized" ? "standardized" : "",
+      tolerance: String(input.settings.tolerance ?? ""),
+      maxIterations: String(input.settings.maxIterations ?? ""),
+      inference: NATIVE_PLS_SAMPLE_SIZE_POWER_INFERENCE,
+      sampleSizeGrid: input.settings.plsPowerSampleSizeGrid ?? "",
+      alpha: String(input.settings.plsPowerAlpha ?? ""),
+      targetPower: String(input.settings.plsPowerTargetPower ?? ""),
+      confidenceLevel: String(input.settings.confidenceLevel),
+      monteCarloReplicates: String(input.settings.plsPowerMonteCarloReplicates ?? ""),
+      bootstrapReplicates: String(input.settings.plsPowerBootstrapReplicates ?? ""),
+      masterSeed: String(input.settings.seed),
+      workers: String(input.settings.workers),
+    });
+    const predictor = input.nodes.find((node) => node.id === build.recipe.design.predictor_construct);
+    const outcome = input.nodes.find((node) => node.id === build.recipe.design.outcome_construct);
+    if (
+      predictor?.data.indicators.length !== build.recipe.design.predictor_indicator_loadings.length
+      || outcome?.data.indicators.length !== build.recipe.design.outcome_indicator_loadings.length
+    ) {
+      return fail("power-plan", "Simulation plan", "Loading assumptions must map one-to-one to the selected reflective construct indicator blocks.", "Review loading assumptions", "analyses");
+    }
+    return pass(
+      "power-plan",
+      "Simulation plan",
+      `${build.workload.gridPoints} explicit grid points plan ${build.workload.plannedDatasets.toLocaleString("en-US")} independent datasets and ${build.workload.estimatedPlsFits.toLocaleString("en-US")} PLS fits. Failed replicates count as non-rejections; the conservative decision uses the Wilson lower bound without interpolation or extrapolation.`,
+    );
+  } catch (error) {
+    return fail("power-plan", "Simulation plan", error instanceof Error ? error.message : String(error), "Review power assumptions", "analyses");
+  }
+}
+
 function semChecks(input: MethodApplicabilityInput, shape: ReturnType<typeof modelShape>): RequirementCheck[] {
   const issues = validateModel(input.nodes, input.edges);
   return [
@@ -294,7 +394,7 @@ function numericIndicatorsCheck(dataset: Dataset, nodes: Array<Node<ConstructDat
 
 function reflectiveOnlyCheck(nodes: Array<Node<ConstructData>>): RequirementCheck {
   const formative = nodes.filter((node) => node.data.mode === "formative").map((node) => node.data.label);
-  return formative.length ? fail("reflective-only", "Reflective constructs only", `This documented scope requires reflective constructs; formative construct(s): ${formative.join(", ")}.`, "Use reflective constructs only", "models") : pass("reflective-only", "Reflective constructs only", "All constructs are reflective.");
+  return formative.length ? fail("reflective-only", "Reflective constructs only", `This method requires reflective constructs; formative construct(s): ${formative.join(", ")}.`, "Use reflective constructs only", "models") : pass("reflective-only", "Reflective constructs only", "All constructs are reflective.");
 }
 
 function structuralPathCheck(shape: ReturnType<typeof modelShape>) {
@@ -320,10 +420,10 @@ function weightColumnCheck(input: MethodApplicabilityInput, meta?: ColumnMetadat
 
 function groupColumnCheck(input: MethodApplicabilityInput, meta?: ColumnMetadata): RequirementCheck {
   const column = input.settings.groupColumn;
-  if (!column) return fail("group-column", "Group column", "Select an observed group column for MICOM/MGA.", "Select group column", "analyses");
+  if (!column) return fail("group-column", "Group column", "Select an observed group column for MICOM v3.1.", "Select group column", "analyses");
   if (!input.dataset.columns.includes(column)) return fail("group-column", "Group column", `${column} is not in the current dataset.`, "Select group column", "analyses");
   const groups = distinctValues(input.dataset, column);
-  if (groups.length !== 2) return fail("group-column", "Group column", `Documented MICOM/MGA scope expects exactly two groups; ${column} has ${groups.length}.`, "Select group column", "analyses");
+  if (groups.length !== 2) return fail("group-column", "Group column", `MICOM v3.1 requires exactly two groups; ${column} has ${groups.length}.`, "Select group column", "analyses");
   if (meta?.scale_type === "continuous") return warn("group-column", "Group column", `${column} has two observed groups but is marked continuous; confirm it is a categorical grouping variable.`);
   return pass("group-column", "Group column", `${column} has two observed groups.`);
 }
@@ -332,7 +432,7 @@ function pcaVariableCheck(input: MethodApplicabilityInput): RequirementCheck {
   const selected = splitList(input.settings.pcaVariables);
   if (!selected.length) return fail("pca-variables", "PCA variables", "Select at least two numeric variables for standalone PCA.", "Select PCA variables", "analyses");
   const invalid = selected.filter((column) => !isNumericColumn(input.dataset, column, metadataFor(input.dataset, column)));
-  if (invalid.length) return fail("pca-variables", "PCA variables", `PCA variables must be numeric in this scope: ${invalid.join(", ")}.`, "Review Data metadata", "data");
+  if (invalid.length) return fail("pca-variables", "PCA variables", `PCA requires numeric variables; change or remove: ${invalid.join(", ")}.`, "Review Data metadata", "data");
   return selected.length >= 2 ? pass("pca-variables", "PCA variables", `${selected.length} numeric variable(s) selected.`) : fail("pca-variables", "PCA variables", "Select at least two numeric variables for standalone PCA.", "Select PCA variables", "analyses");
 }
 
@@ -343,12 +443,12 @@ function regressionCheck(input: MethodApplicabilityInput): RequirementCheck {
   if (!predictors.length) return fail("regression-predictors", "Regression predictors", "Choose at least one predictor variable for regression.", "Choose predictors", "analyses");
   const columns = [outcome, ...predictors, ...splitList(input.settings.regressionControls)];
   const nonNumeric = columns.filter((column) => !isNumericColumn(input.dataset, column, metadataFor(input.dataset, column)));
-  if (nonNumeric.length) return fail("regression-numeric", "Numeric regression variables", `Regression variables must be numeric in this scope: ${nonNumeric.join(", ")}.`, "Review Data metadata", "data");
+  if (nonNumeric.length) return fail("regression-numeric", "Numeric regression variables", `Regression requires numeric variables; change or remove: ${nonNumeric.join(", ")}.`, "Review Data metadata", "data");
   if (input.settings.regressionType === "logistic" && !isBinaryColumn(input.dataset, outcome, metadataFor(input.dataset, outcome))) {
     return fail("logistic-binary", "Binary outcome", "Logistic regression requires a binary 0/1 or two-level outcome.", "Choose binary outcome", "analyses");
   }
   if (input.settings.regressionType === "process" && !input.settings.processGraph) {
-    return fail("process-scope", "PROCESS scope", "New PROCESS work requires an explicit graph-defined v2 relationship; historical generated v1 templates are archive-only.", "Author PROCESS graph", "analyses");
+    return fail("process-scope", "PROCESS requirements", "New PROCESS work requires an explicit graph-defined v2 relationship; historical generated v1 templates are archive-only.", "Author PROCESS graph", "analyses");
   }
   return pass("regression-variables", "Regression variables", "Required regression variables are selected and numeric-compatible.");
 }
@@ -360,13 +460,19 @@ function numericPairCheck(input: MethodApplicabilityInput, x?: string | null, y?
 }
 
 function unsupportedSemShapeCheck(shape: ReturnType<typeof modelShape>): RequirementCheck {
-  if (shape.hasFormative) return fail("unsupported-cbsem-shape", "CB-SEM supported shape", "CB-SEM/CFA v1.8 scope supports reflective constructs only; formative constructs are blocked.", "Review Model", "models");
-  if (shape.hasGeneratedConstructs) return fail("unsupported-cbsem-shape", "CB-SEM supported shape", "CB-SEM/CFA v1.8 scope blocks generated interactions and higher-order constructs.", "Review Model", "models");
+  if (shape.hasFormative) return fail("unsupported-cbsem-shape", "CB-SEM supported shape", "CB-SEM/CFA v1.8 supports reflective constructs only; change or remove formative constructs.", "Review Model", "models");
+  if (shape.hasGeneratedConstructs) return fail("unsupported-cbsem-shape", "CB-SEM supported shape", "CB-SEM/CFA v1.8 does not accept generated interactions or higher-order constructs.", "Review Model", "models");
   return pass("unsupported-cbsem-shape", "CB-SEM supported shape", "No formative, generated interaction, or higher-order constructs detected.");
 }
 
 function unsupportedSegmentationShapeCheck(shape: ReturnType<typeof modelShape>): RequirementCheck {
-  return shape.hasGeneratedConstructs ? fail("unsupported-generated-shape", "Supported bounded shape", "This bounded segmentation/component scope blocks generated interactions and higher-order constructs.", "Review Model", "models") : pass("unsupported-generated-shape", "Supported bounded shape", "No generated construct shape blocks this method.");
+  return shape.hasGeneratedConstructs ? fail("unsupported-generated-shape", "Supported model shape", "This segmentation or component method does not accept generated interactions or higher-order constructs.", "Review Model", "models") : pass("unsupported-generated-shape", "Supported model shape", "No generated constructs block this method.");
+}
+
+function boundedEndogeneityShapeCheck(shape: ReturnType<typeof modelShape>): RequirementCheck {
+  if (shape.hasControls) return fail("endogeneity-bounded-shape", "Gaussian-copula supported shape", "The Gaussian-copula diagnostic does not include control-path, interaction, or higher-order extensions.", "Review Model", "models");
+  if (shape.hasGeneratedConstructs) return fail("endogeneity-bounded-shape", "Gaussian-copula supported shape", "The Gaussian-copula diagnostic does not include generated interactions or higher-order constructs.", "Review Model", "models");
+  return pass("endogeneity-bounded-shape", "Gaussian-copula supported shape", "The model uses ordinary PLS constructs and structural paths only.");
 }
 
 function moderatedMediationShapeCheck(shape: ReturnType<typeof modelShape>): RequirementCheck {
@@ -374,7 +480,8 @@ function moderatedMediationShapeCheck(shape: ReturnType<typeof modelShape>): Req
 }
 
 function modelShape(nodes: Array<Node<ConstructData>>, edges: Edge[]) {
-  const structuralEdges = edges.filter((edge) => edge.data?.role !== "covariance" && !edge.id.startsWith("measurement::"));
+  const relationshipEdges = edges.filter((edge) => edge.data?.role !== "covariance" && !edge.id.startsWith("measurement::"));
+  const structuralEdges = relationshipEdges.filter((edge) => edge.data?.role !== "control");
   const incoming = new Map<string, number>();
   const outgoing = new Map<string, number>();
   structuralEdges.forEach((edge) => {
@@ -390,6 +497,7 @@ function modelShape(nodes: Array<Node<ConstructData>>, edges: Edge[]) {
     mediators,
     isMediated: mediators.length > 0,
     hasFormative: nodes.some((node) => node.data.mode === "formative"),
+    hasControls: relationshipEdges.some((edge) => edge.data?.role === "control"),
     hasGeneratedConstructs: nodes.some((node) => node.data.semantic === "interaction" || node.data.semantic === "higher_order"),
   };
 }

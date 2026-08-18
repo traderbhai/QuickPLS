@@ -8,9 +8,9 @@ export const NATIVE_LOGISTIC_PROFILE_PAGE_SIZE = 500;
 export const NATIVE_LOGISTIC_SCOPE_NOTE =
   "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.";
 export const NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING =
-  "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported.";
+  "Logistic regression v2 requires a binary numeric outcome and numeric complete-case predictors; multinomial, ordinal, weighted, clustered, automatic categorical encoding, and Firth-corrected models are not available.";
 export const NATIVE_LEGACY_LOGISTIC_ENGINE_SCOPE_WARNING =
-  "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported.";
+  "Historical logistic regression v1 requires a binary numeric outcome and numeric complete-case predictors; multinomial, ordinal, weighted, clustered, and Firth-corrected models are not available.";
 
 export interface NativeLogisticProfile {
   datasetId: string;

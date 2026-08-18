@@ -1,0 +1,30 @@
+{
+  "archive": "validation/results/v247-native-mediation-1786955655448-29040.qpls",
+  "archive_sha256": "d2e1cb8443cd83c3c214ededc203fb8af770da734e46db15a23046e66bc3f9ed",
+  "archive_size": 50147,
+  "checks": {
+    "checksums_exact": true,
+    "completed_results": true,
+    "current_cli_accepts_archive": true,
+    "method_payload": true,
+    "passed": true,
+    "unique_safe_members": true
+  },
+  "kind": "quickpls_phase3_persistence_gate",
+  "method": "mediation_v1",
+  "passed": true,
+  "rejected_newer_candidates": [],
+  "schema_version": 1,
+  "validation": {
+    "command": [
+      "D:\\QuickPLS\\target\\debug\\qpls.exe",
+      "validate",
+      "validation/results/v247-native-mediation-1786955655448-29040.qpls",
+      "--json"
+    ],
+    "duration_seconds": 0.276,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "{\n  \"issues\": [],\n  \"recovered\": true,\n  \"valid\": true\n}\n"
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "base_r_self_test": {
+      "available": false,
+      "execution": null,
+      "note": "Base-R is an additional independent source; NumPy is the required executed oracle.",
+      "passed": true
+    },
+    "duration_seconds": 22.229,
+    "independence": {
+      "forbidden_product_imports": [],
+      "imported_modules": [
+        "__future__",
+        "argparse",
+        "dataclasses",
+        "hashlib",
+        "json",
+        "math",
+        "numpy",
+        "pathlib",
+        "statistics",
+        "typing"
+      ],
+      "passed": true,
+      "subprocess_imported": false
+    },
+    "passed": true,
+    "production_count_reference": {
+      "decision": {
+        "sample_size": 120,
+        "status": "reached"
+      },
+      "outcome_count": 200,
+      "outcome_digest": "2d5a96375a162d157eed7cfea849437abafdc1b362e32bbb1b68d81bcd2926f5",
+      "passed": true,
+      "row_counts_exact": true,
+      "rows": [
+        {
+          "achieved_power": 0.77,
+          "attempted_replicates": 100,
+          "confidence_lower": 0.6784561697712622,
+          "confidence_upper": 0.8415673411969654,
+          "failed_replicates": 0,
+          "qualifies": false,
+          "rejections": 77,
+          "requested_replicates": 100,
+          "sample_size": 60,
+          "successful_replicates": 100
+        },
+        {
+          "achieved_power": 0.92,
+          "attempted_replicates": 100,
+          "confidence_lower": 0.8500189229905127,
+          "confidence_upper": 0.9589065385156194,
+          "failed_replicates": 0,
+          "qualifies": true,
+          "rejections": 92,
+          "requested_replicates": 100,
+          "sample_size": 120,
+          "successful_replicates": 100
+        }
+      ]
+    },
+    "python_self_test": {
+      "checks": 8,
+      "feature_id": "qpls3.pls.sample_size_power",
+      "method_version": "pls_sample_size_power_v1",
+      "passed": true,
+      "quick_reference_rows": [
+        {
+          "achieved_power": 0.55,
+          "attempted_replicates": 20,
+          "confidence_lower": 0.3420853424503424,
+          "confidence_upper": 0.7418021417443758,
+          "failed_replicates": 0,
+          "qualifies": false,
+          "rejections": 11,
+          "requested_replicates": 20,
+          "sample_size": 60,
+          "successful_replicates": 20
+        },
+        {
+          "achieved_power": 0.7,
+          "attempted_replicates": 20,
+          "confidence_lower": 0.4810271816464765,
+          "confidence_upper": 0.8545227551323956,
+          "failed_replicates": 0,
+          "qualifies": false,
+          "rejections": 14,
+          "requested_replicates": 20,
+          "sample_size": 120,
+          "successful_replicates": 20
+        }
+      ],
+      "report_kind": "pls_sample_size_power_independent_python_self_test_v1"
+    }
+  },
+  "execution": [
+    {
+      "command": [
+        "C:\\Python313\\python.exe",
+        "validation/pls_sample_size_power_reference.py",
+        "production-count direct import"
+      ],
+      "duration_seconds": 22.229,
+      "returncode": 0
+    },
+    null
+  ],
+  "feature_id": "qpls3.pls.sample_size_power",
+  "generated_at_utc": "2026-08-14T02:09:06.235373Z",
+  "method_version": "pls_sample_size_power_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "independent_reference",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_sample_size_power_v1.manifest.json",
+      "sha256": "59cd37e4523e233deb32521c94ad23ca24cabcffeff183933dfc961ff823a9cd",
+      "size": 18815
+    },
+    {
+      "path": "validation/pls_sample_size_power_method_promotion_audit.py",
+      "sha256": "0a9cbbe5ca0e8949220efb1aacd3e98e7252c93ec3c8dd655748b17fb6e77519",
+      "size": 21527
+    },
+    {
+      "path": "validation/pls_sample_size_power_reference.R",
+      "sha256": "dd14ab796277018ec4c6ff3440c3de048a72b2a69a7bbf7dc70852d4cfb00732",
+      "size": 16513
+    },
+    {
+      "path": "validation/pls_sample_size_power_reference.py",
+      "sha256": "d9d2af7172b88535dfdfe9b536e145f40a8835d4c8dcd4fc4446bf333b2c3d5a",
+      "size": 25408
+    },
+    {
+      "path": "validation/pls_sample_size_power_simulation.py",
+      "sha256": "67c7bd402a730b059682e932f19921048b3f9256af9d1fb8fd22de337904f341",
+      "size": 39018
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "a123eaf4355a92d0c790a61a9e2692ac60e5b308d439b47f8e7e693c917db727",
+      "size": 21242
+    },
+    {
+      "path": "validation/test_pls_sample_size_power_v1.py",
+      "sha256": "b416cd197a0205eda1ee63c47b6e4d92e15464fa85a1ce329d978301d27bf55c",
+      "size": 11741
+    }
+  ]
+}

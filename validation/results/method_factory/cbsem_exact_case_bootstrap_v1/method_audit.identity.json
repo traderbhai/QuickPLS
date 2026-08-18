@@ -1,0 +1,178 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "commercial_zero_egress_passed": false,
+    "method_functional_offline": true,
+    "passed": true,
+    "platform_background_egress_recorded_truthfully": true,
+    "release_claim_requires_separate_packaged_identity": true,
+    "role_counts": {
+      "boundary_report": 1,
+      "export_report": 1,
+      "frontend_report": 1,
+      "independent_reference": 1,
+      "method_spec": 1,
+      "packaged_acceptance": 1,
+      "persistence_report": 1,
+      "simulation_report": 1
+    },
+    "verified_artifacts": [
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/method_spec.identity.json",
+        "roles": [
+          "method_spec"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/independent_reference.identity.json",
+        "roles": [
+          "independent_reference"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/simulation_report.identity.json",
+        "roles": [
+          "simulation_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/boundary_report.identity.json",
+        "roles": [
+          "boundary_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/persistence_report.identity.json",
+        "roles": [
+          "persistence_report"
+        ],
+        "stage": "archive_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/frontend_report.identity.json",
+        "roles": [
+          "frontend_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/export_report.identity.json",
+        "roles": [
+          "export_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/packaged_acceptance.identity.json",
+        "roles": [
+          "packaged_acceptance"
+        ],
+        "stage": "release_qualified"
+      }
+    ]
+  },
+  "feature_id": "qpls3.cbsem.bootstrap",
+  "generated_at_utc": "2026-08-18T13:03:46.249074Z",
+  "method_version": "cbsem_exact_case_bootstrap_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/cbsem_exact_case_bootstrap_v1_factory.py",
+      "sha256": "eb26ee192b9b7f3b207da9eae1f9982765b337fc5ba4dbc3a576fa785d99744f",
+      "size": 22804
+    },
+    {
+      "path": "validation/cbsem_exact_case_bootstrap_v1_method_promotion_audit.py",
+      "sha256": "4ba7107c117e40f26e61b86f9e3e81615a824ec2e16b5cf0c19b10605d5033b0",
+      "size": 1039
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cbsem_exact_case_bootstrap_v1.manifest.json",
+      "sha256": "a42ef87fb7857a33df1ea575f8d6ca242d0da7a1a0c278e6523ead59c12af37f",
+      "size": 17699
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/boundary_report.identity.json",
+      "sha256": "07d7742efdefb76ba8728a4e1f2272afada54d777f09dabf5fbb1b912a150e77",
+      "size": 5448
+    },
+    {
+      "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/export_report.identity.json",
+      "sha256": "1b484bed9fe281b14ce16573e50e1a5dd770ee02d8010b231b594c1cf1d0df97",
+      "size": 2905
+    },
+    {
+      "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/frontend_report.identity.json",
+      "sha256": "e0a78ac777ed08135e5a10af762ac5e21096a3f7cda1909a20867f54b4c2b20a",
+      "size": 3657
+    },
+    {
+      "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/independent_reference.identity.json",
+      "sha256": "1c4ebe2406c45e4c20987aa9d5ac4e147290a9df64f1cf0d1b326cc7621f788a",
+      "size": 3268
+    },
+    {
+      "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/method_spec.identity.json",
+      "sha256": "03bdb890792d717740eb30b02849de2cdc17edc75446e6a6295130422a2bf308",
+      "size": 3637
+    },
+    {
+      "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/packaged_acceptance.identity.json",
+      "sha256": "3da2c2ee026678b7395bbad53e04ad7f28801f9641137cbda4f6e189770ace5a",
+      "size": 108838
+    },
+    {
+      "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/persistence_report.identity.json",
+      "sha256": "a7e5d4dae7270e58748b6201d34755dfd1b1a23d65886073eee119a1c33b460d",
+      "size": 4615
+    },
+    {
+      "path": "validation/results/method_factory/cbsem_exact_case_bootstrap_v1/simulation_report.identity.json",
+      "sha256": "0de9ab3b44c422bf1af8e14ce5fe1bfd198165342e3167f98720de434f315471",
+      "size": 3266
+    },
+    {
+      "path": "validation/test_cbsem_exact_case_bootstrap_v1_factory.py",
+      "sha256": "3eb5e05f5eede2ab6fb1fca5d1f49e51c678a645037b87a80a590f0e73370658",
+      "size": 6733
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

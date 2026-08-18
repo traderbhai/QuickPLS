@@ -1,0 +1,521 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "cleanup": {
+      "completed_at_utc": "2026-08-18T13:37:14.022539+00:00",
+      "ols_export": {
+        "path": "validation/results/v247-native-ols-20260818-185148319-41048-0399187a.xlsx",
+        "role": "ols",
+        "sha256": "f3b508cc732b106a690612184224778bbc36e53ee3c97760720bb3ed488f7cd7",
+        "size": 13731
+      },
+      "passed": true,
+      "started_at_utc": "2026-08-18T13:21:47.872442+00:00"
+    },
+    "packaged": {
+      "functional_offline": true,
+      "passed": true,
+      "run_id": "d85851e8-c5bb-4d62-b2cc-1c4a50b443ae",
+      "same_run_reopened": true,
+      "screenshot_count": 6,
+      "strict_zero_process_egress_claimed": false,
+      "xlsx_sheets": [
+        "Coefficients",
+        "Model fit",
+        "Calculation scope",
+        "Fitted values and residuals",
+        "Run provenance"
+      ]
+    },
+    "passed": true,
+    "prior_factory": "native_qualified",
+    "source_freshness": {
+      "build_finished_at_utc": "2026-08-18T12:54:22.306208Z",
+      "desktop_receipt_exact": true,
+      "passed": true,
+      "release_cli_newer_sources": []
+    },
+    "visual": {
+      "passed": true,
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ]
+    }
+  },
+  "feature_id": "qpls3.standalone.ols",
+  "generated_at_utc": "2026-08-18T14:16:06.758500Z",
+  "method_version": "regression_ols_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "packaged_acceptance",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "2782f92e86ae7420af0c27210b1602ebf6c5fc1c1002c2f4ad1ed56cdc38dcb7",
+      "size": 154646
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "7b5cc1ab12cb81475cce1227b7ab1381e6278cc22f3b501c3b80858d9b1c749d",
+      "size": 1503
+    },
+    {
+      "path": "crates/qpls-assessment/Cargo.toml",
+      "sha256": "22a0cc3da4ada9be1f385495ef7af8354fbdf87baa8a5bac6f3dda891eecb01d",
+      "size": 456
+    },
+    {
+      "path": "crates/qpls-assessment/src/lib.rs",
+      "sha256": "910a3c42edde1db2dcff8b283a9d7acb388b4eb6b30f88c55201624610c2e341",
+      "size": 187841
+    },
+    {
+      "path": "crates/qpls-cli/Cargo.toml",
+      "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+      "size": 678
+    },
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
+    },
+    {
+      "path": "crates/qpls-core/Cargo.toml",
+      "sha256": "f3c060597827e18cb29690adab487f96042c0528fc1010f5077f605b2114968e",
+      "size": 453
+    },
+    {
+      "path": "crates/qpls-core/src/analysis_recipe_v4.rs",
+      "sha256": "a8d8b808d0bb4c91cf08c1c6762c036c25fb477857710babe88256618f343072",
+      "size": 21328
+    },
+    {
+      "path": "crates/qpls-core/src/canonical_result_v2.rs",
+      "sha256": "c34bdbcf39286cd16cddbb633760eee4e00e3a892bdc2feaed262ad58ff49f84",
+      "size": 56826
+    },
+    {
+      "path": "crates/qpls-core/src/capability_registry_v2.rs",
+      "sha256": "86ce2f425896a1b3faa19436bcdf5633a99c9bd245ff5cdd87ec426f069ded35",
+      "size": 19248
+    },
+    {
+      "path": "crates/qpls-core/src/compiled_cbsem_plan_v2.rs",
+      "sha256": "c4572e4448994ebcb28efb8e4e4ba1a5457aa5cd117a1295cd5e558c216b8731",
+      "size": 85511
+    },
+    {
+      "path": "crates/qpls-core/src/compiled_cbsem_product_indicator_v1.rs",
+      "sha256": "34cae04ee493a9198cc8f07d5a5397fe99e9ec2df904bd484a255c21a4a653c5",
+      "size": 57323
+    },
+    {
+      "path": "crates/qpls-core/src/compiled_pls_plan_v2.rs",
+      "sha256": "e5f9b1521100f5afafae3b9d728291ce3fe52c945d4ca24404e77845bf92904d",
+      "size": 25316
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "51c235a9173d3f9c84e5bfe4c0ce6280268ee26b882e2a41dd01be889a7cdfb5",
+      "size": 144508
+    },
+    {
+      "path": "crates/qpls-core/src/dataset_transformation_v2.rs",
+      "sha256": "8a2bfafa9624aae5b6b1a59250cfefd49cb5701e50342a7f3345446934bb85f1",
+      "size": 119293
+    },
+    {
+      "path": "crates/qpls-core/src/generated/established_method_contracts_v1.rs",
+      "sha256": "8c072771933a47073cd35a3016c7e14de9016037295efdc1ed95a5af354b043c",
+      "size": 7034
+    },
+    {
+      "path": "crates/qpls-core/src/lib.rs",
+      "sha256": "f62d2b1dc99c996bb1cd85e109d08b0dc98c3c847cca7a470366548ff90f13fb",
+      "size": 1108
+    },
+    {
+      "path": "crates/qpls-core/src/methods.rs",
+      "sha256": "474b1f559b920f2a09d90aa45b2e70f5677fac3fb2b2462efcd24b08ea2a56eb",
+      "size": 4404
+    },
+    {
+      "path": "crates/qpls-core/src/recipe_v4_compiler.rs",
+      "sha256": "8032ba591af80539a9e00f328c69dd2c385b394af6480a782a67a4fd3d41f6dd",
+      "size": 126441
+    },
+    {
+      "path": "crates/qpls-core/src/roadmap.rs",
+      "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
+      "size": 12376
+    },
+    {
+      "path": "crates/qpls-core/src/sem_model_v4.rs",
+      "sha256": "b28e0ecdc285f9c256e16739a91aae67f2bfac3faeddf5d1ddf5c935eb34712f",
+      "size": 149643
+    },
+    {
+      "path": "crates/qpls-core/src/statistics.rs",
+      "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
+      "size": 8527
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+      "size": 227427
+    },
+    {
+      "path": "crates/qpls-core/src/weight_semantics_v1.rs",
+      "sha256": "f5fcd290ff6498a99a7fdef16de785d0260856997cddfae6a82d9d292db8df7c",
+      "size": 34172
+    },
+    {
+      "path": "crates/qpls-data/Cargo.toml",
+      "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+      "size": 437
+    },
+    {
+      "path": "crates/qpls-data/src/lib.rs",
+      "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+      "size": 44865
+    },
+    {
+      "path": "crates/qpls-estimation/Cargo.toml",
+      "sha256": "83e71bb5bd14eb64f83f82fe5472f9ab5467d0cb6913fe5e06ee01609393e848",
+      "size": 503
+    },
+    {
+      "path": "crates/qpls-estimation/src/cbsem_bootstrap_contract.rs",
+      "sha256": "a603bb2fbf2dc6da62fd7d80b10df72fd6f34375b4ad91103a6d847d706c48e9",
+      "size": 39817
+    },
+    {
+      "path": "crates/qpls-estimation/src/cbsem_exact_nested_lrt.rs",
+      "sha256": "c7915c1e752a36f8921998f724f3e5326bceff3f26914dd940d6653c3de1b458",
+      "size": 67546
+    },
+    {
+      "path": "crates/qpls-estimation/src/cbsem_exact_parameter_table.rs",
+      "sha256": "154ba1fe5c2b6cabfde9f3341dd56938baacd09f1d7a3aee3e02b8ec6dbba35a",
+      "size": 168802
+    },
+    {
+      "path": "crates/qpls-estimation/src/cbsem_exact_two_group_invariance.rs",
+      "sha256": "0669b95dc809fca986892ec448389d9b60fb545631c43743b8802ddc237ccb52",
+      "size": 79989
+    },
+    {
+      "path": "crates/qpls-estimation/src/cbsem_matrix_input.rs",
+      "sha256": "9639a9fbd2f54adba434859a50b2e9147e148f8e4549993219ad0e9d624048d3",
+      "size": 203709
+    },
+    {
+      "path": "crates/qpls-estimation/src/cbsem_product_indicator_moderation.rs",
+      "sha256": "6baa20fa2bd695ea8d13f8ee9bf16829c31686af30c59a7406100202e7cb8ff9",
+      "size": 67567
+    },
+    {
+      "path": "crates/qpls-estimation/src/continuous_raw_mean_replacement_v1.rs",
+      "sha256": "f27f000f766c27981cf9005008a875030dc87dd2bf8d98925604a5275a9ce8fd",
+      "size": 55129
+    },
+    {
+      "path": "crates/qpls-estimation/src/lib.rs",
+      "sha256": "7dc9eae0e5b5bb436ac52e9d9cf3df24d25ccfa47db23bfd8d7d1d8fafd2bfea",
+      "size": 779
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls_model_comparison.rs",
+      "sha256": "880a9d25c3c19ce175706f8325e42fdc00b0c2b28896ddcd7ff2ca37b4b930f6",
+      "size": 77127
+    },
+    {
+      "path": "crates/qpls-project/Cargo.toml",
+      "sha256": "d51f1e2ae30b436bac003892103f05f9cef80ae7956b3a3cbfc3c22e16506fa6",
+      "size": 870
+    },
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/canonical_result_document_v2.rs",
+      "sha256": "704bf7045e8099f79d47f90a28cc4d36a84651abf031a810dd89af45bd263b58",
+      "size": 30040
+    },
+    {
+      "path": "crates/qpls-project/src/data_lineage_v1.rs",
+      "sha256": "db0ed93df87c78483ae5114f0c275ecbcba016ed1cd7d35715efc34708982afa",
+      "size": 41942
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
+    },
+    {
+      "path": "crates/qpls-project/src/missing_data_execution_v1.rs",
+      "sha256": "ed0a05fc9115d2bdddb7ff756913c8298ec51e7ab0a5dad3a5f5d402b48a1f55",
+      "size": 53452
+    },
+    {
+      "path": "crates/qpls-project/src/pls_score_execution_v2.rs",
+      "sha256": "e1269405136cee66ea948c07b1d11b2f894e7549c4e6010c7605bc4e0ad7d7b8",
+      "size": 40956
+    },
+    {
+      "path": "crates/qpls-project/src/project_archive_v6_save_copy.rs",
+      "sha256": "cafcce46dda628197601a1b73ca0f0beff3a7e98aa19040492c2e8cc6e223884",
+      "size": 61426
+    },
+    {
+      "path": "crates/qpls-project/src/project_archive_v6_upgrade_zip.rs",
+      "sha256": "5d8fb6eb26fbc69012c01f95aafcee7cc099b0c61f5b1a493bbff4ff0049c7cb",
+      "size": 64961
+    },
+    {
+      "path": "crates/qpls-project/src/project_archive_v6_zip.rs",
+      "sha256": "b9384d40081300b97af203e95f0d06b92c08dd1ab01dd408344cf93f4b596619",
+      "size": 32771
+    },
+    {
+      "path": "crates/qpls-project/src/project_schema_v6.rs",
+      "sha256": "a936ced328e6e2948b30c948ed88eeb2c10f4e92ca4c313b483bc480fee4a22a",
+      "size": 380560
+    },
+    {
+      "path": "crates/qpls-resampling/Cargo.toml",
+      "sha256": "ecc5726052949d6a39868f22bfdca6fccaa435ee2788eccd778182ab8a972b2d",
+      "size": 656
+    },
+    {
+      "path": "crates/qpls-resampling/src/cbsem_bootstrap.rs",
+      "sha256": "56bdc1933b608f89ef6157f2cb989ac73a1d1708af26a922a1c01b18a685eb3e",
+      "size": 31308
+    },
+    {
+      "path": "crates/qpls-resampling/src/cbsem_exact_bootstrap.rs",
+      "sha256": "fbc89dd825eeb6826f2cd228f100fd2cce53176fde310be91c9b24ce21ac14e3",
+      "size": 158310
+    },
+    {
+      "path": "crates/qpls-resampling/src/consistent_bootstrap.rs",
+      "sha256": "fc0091c9078588a1743d37f20381c36200669832b9d40d1c10583a302b74792b",
+      "size": 56561
+    },
+    {
+      "path": "crates/qpls-resampling/src/consistent_permutation.rs",
+      "sha256": "d26d80f33604ceb109f903a64e05ab015da2f10f5adf7f1157583ca1c2da8c77",
+      "size": 73167
+    },
+    {
+      "path": "crates/qpls-resampling/src/lib.rs",
+      "sha256": "5aec61b8090183912bce7da7f9855344a882e691aea2336baf8c72c4272cc8ec",
+      "size": 244850
+    },
+    {
+      "path": "crates/qpls-resampling/src/pls_model_fit_exact.rs",
+      "sha256": "05a3444522aa7b9c4aa15804c4796f30e611ce71cc9e0f3169bb24e4501ade31",
+      "size": 63796
+    },
+    {
+      "path": "crates/qpls-resampling/src/power.rs",
+      "sha256": "100197d9105a82aa28da85b4b34e6c76c9c078eb5189ed8f28a9d8b5adb2e56a",
+      "size": 75512
+    },
+    {
+      "path": "crates/qpls-runner/Cargo.toml",
+      "sha256": "07246ac150eb04ae6cb479201c2292caff1d6c66142d9a476237790a9c2e5571",
+      "size": 472
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+      "size": 100140
+    },
+    {
+      "path": "crates/qpls-runner/src/pls_model_comparison_execution.rs",
+      "sha256": "1be7b61356bb8cb3bee8e1c6434868c06aa91610a4367e82be0182863950594a",
+      "size": 58981
+    },
+    {
+      "path": "crates/qpls-runner/src/recipe_v4_cbsem_execution.rs",
+      "sha256": "aa7d30c1e73c8900a987efd4ff24efe4dc5b3aabb36f560386afacf7958c3dd2",
+      "size": 107058
+    },
+    {
+      "path": "crates/qpls-runner/src/recipe_v4_cbsem_product_indicator_execution.rs",
+      "sha256": "fc7a7dae8d050885a7a4f5474f76fd875cd025f035110917b68985cae22ba596",
+      "size": 25359
+    },
+    {
+      "path": "crates/qpls-runner/src/recipe_v4_pls_execution.rs",
+      "sha256": "1fb7816b2aea38908e09d48a7827e5728a7b0384c47a5738604d60a96aac4d6a",
+      "size": 62181
+    },
+    {
+      "path": "target/release/qpls.exe",
+      "sha256": "7e1ee9c72d79b6102362f81313a54aeed987cb458f921397cb6fd3a09598d53a",
+      "size": 32387072
+    },
+    {
+      "path": "target/release/quickpls-desktop.exe",
+      "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476",
+      "size": 49983488
+    },
+    {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
+    {
+      "path": "validation/development_slices.json",
+      "sha256": "5722f3b6b6d5c6cc19089a097bd1eaae294e55f4830bdae2423fc2861dd1ec10",
+      "size": 374221
+    },
+    {
+      "path": "validation/diagnostic_bundle_source_manifest.py",
+      "sha256": "abdbccab42e3da4324dc67b40c19f2c6162ae1abcff1663bc43a94af56499e63",
+      "size": 28083
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/ols_v1.manifest.json",
+      "sha256": "2d2169c5d1bd25610e0afea667c8356cf758d56077d442e77740e1e938f4cb96",
+      "size": 14630
+    },
+    {
+      "path": "validation/ols_v1_packaged_acceptance.py",
+      "sha256": "24d93b7ee3ed7c5461a27026b4988fa41f6cd1f24f61731946a4d2a0708d82fd",
+      "size": 21309
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
+    },
+    {
+      "path": "validation/results/diagnostic_bundle_build_receipt.json",
+      "sha256": "210aa30fd8d7a268b444a0254108e61118584656f6517face86500caeb4b1ea3",
+      "size": 265122
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/120-tauri-native-ols-fixture-data-1536x794.png",
+      "sha256": "2d41d156b2dec5a07d84258792ea5aae831bfdb1358caa15d100e657b0dabb8f",
+      "size": 293247
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/121-tauri-native-ols-dialog-1536x794.png",
+      "sha256": "10eb1c967c2b8a2773fb50a99cb79706b01d6ba7fdc9f0f45f2ee381c5ab00bd",
+      "size": 290105
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/122-tauri-native-ols-running-1536x794.png",
+      "sha256": "cae9092be2c442c2ad51de4599c8ebe0a69e8fe334f90bdce4623171c061ba1c",
+      "size": 230429
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/123-tauri-native-ols-results-1536x794.png",
+      "sha256": "6e4667af551239b94664a3ea381760b60d32cb9e563554c7afb3ce6e5a1ee32c",
+      "size": 73677
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/124-tauri-native-ols-export-1536x794.png",
+      "sha256": "55ddb86c2162ba00866dc7f703d65207516508a9304d355e612f63905352281a",
+      "size": 98974
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/125-tauri-native-ols-reopened-1536x794.png",
+      "sha256": "cd2fea88759d07b385972454149ea65b726833d20dde03dbfa96a60a0958fae5",
+      "size": 80585
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1024x700.png",
+      "sha256": "ba5e8a908838e41f595af46820cc5078e16f06cd6c0ed5b1b08f9aee25f6ba8c",
+      "size": 121085
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1280x720.png",
+      "sha256": "2f64b9f15d782ddd817067dd039c391a687166ffa135cb3b6cea779f2a0f4ad7",
+      "size": 140040
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1440x900.png",
+      "sha256": "cf3d7ab24b08ec32e8bdbb81b6db65dfe4920b56e8e47d130579791847d0d06f",
+      "size": 173506
+    },
+    {
+      "path": "validation/results/v247-native-ols-1787059752331-12996.qpls",
+      "sha256": "ec38a3bc77e270f6fcad95107d26a6a357ba072dbbb1b012c02a6f3bb3931871",
+      "size": 19420
+    },
+    {
+      "path": "validation/results/v247-native-ols-20260818-185148319-41048-0399187a.xlsx",
+      "sha256": "f3b508cc732b106a690612184224778bbc36e53ee3c97760720bb3ed488f7cd7",
+      "size": 13731
+    },
+    {
+      "path": "validation/results/v247_cumulative_native_acceptance_receipt.json",
+      "sha256": "3e5ae10d091a02b969978702e03e6232d754e62b444815d20d2aeb36ac17cbdd",
+      "size": 7728
+    },
+    {
+      "path": "validation/results/v247_native_desktop_visual_acceptance.json",
+      "sha256": "6ff1b3d9140f4a48f5ccc182889c6d3583daf94e970b827cec7ced97ba40bef1",
+      "size": 468953
+    },
+    {
+      "path": "validation/results/v247_tauri_native_acceptance.json",
+      "sha256": "3b43522cef76c2592b2d1eb694c2d4bdee7cebddae193271581e18062e487f8e",
+      "size": 666842
+    },
+    {
+      "path": "validation/results/v247_tauri_native_acceptance_ols.json",
+      "sha256": "2e98d5fe8c338ab40d332ee144ebf17f3037050b8f394845b0f808c8cd6380a2",
+      "size": 23213
+    },
+    {
+      "path": "validation/run_v247_ols_native_acceptance.ps1",
+      "sha256": "46df73d93add5d59968e3304c1680c2063fe6b2b70aca6080a9d9e5f4b1d7b10",
+      "size": 2358
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_ols_v1_packaged_acceptance.py",
+      "sha256": "d2bc76f60941f211cefc2eaeecdbefdcf4c1be69b3da41e6958f654645d6a1a4",
+      "size": 15778
+    },
+    {
+      "path": "validation/v247_native_desktop_visual_acceptance.mjs",
+      "sha256": "aea66dcb58de6bb79c36b9d3ad9a3351e1c145053e3c094dfbfec310bd26bc05",
+      "size": 287960
+    },
+    {
+      "path": "validation/v247_tauri_native_acceptance.mjs",
+      "sha256": "952061138db0e6e3beb4f858f7e8c359b9763561980920e67a918d729eaf1c34",
+      "size": 981471
+    }
+  ]
+}

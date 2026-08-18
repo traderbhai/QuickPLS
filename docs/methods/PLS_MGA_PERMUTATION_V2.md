@@ -1,6 +1,6 @@
 # PLS MGA Permutation v2
 
-Status: validated for the bounded scope below. The independent reference, strict persistence, native Results/export, and packaged save/reopen gates pass. Historical `pls_mga_permutation_v1` archives remain readable under their original, narrower contract.
+Status: implemented but Phase 4 promotion-blocked. Signed A-minus-B path/loading/weight estimates reverse exactly when the selected Group A/B order is exchanged, but attempted/failed fit counts and two-tailed p values do not remain invariant. The frozen boundary therefore fails and permutation MGA v2 is not currently engine-, native-, or release-qualified by the QuickPLS 3 factory. Historical `pls_mga_permutation_v1` archives remain readable under their original, narrower contract.
 
 Permutation MGA v2 is the inferential companion to QuickPLS two-group MGA v2. It re-estimates both group models after every deterministic label permutation and reports A-minus-B differences for structural paths, outer loadings, and outer weights. The workflow runs together with `micom_v2`; it does not use measurement-parameter tests as a substitute for measurement-invariance assessment.
 

@@ -186,7 +186,7 @@ def main() -> int:
                 "observed sample range of listwise-standardized scores on a 0-100 scale",
                 "Theoretical-range performance and cIPMA are unsupported",
                 "CCA is validated for the documented QuickPLS v1.2.3 descriptive composite residual scope; bootstrap-based CCA decisions remain unsupported",
-                "NCA v2 is limited to the documented numeric X/Y CE-FDH and CR-FDH scope with observed-range bottlenecks",
+                "NCA v2 supports one observed numeric condition/outcome pair with CE-FDH and CR-FDH ceilings",
                 "FIMIX-PLS v1 is validated for the documented QuickPLS v1.2.2 bounded deterministic 2-3 class score-space segmentation scope; full unrestricted EM/FIMIX parity is not claimed",
                 "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope; moderated mediation and the full Hayes model catalogue remain experimental",
             ]),

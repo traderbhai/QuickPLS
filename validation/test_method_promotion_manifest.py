@@ -30,7 +30,7 @@ from method_promotion_manifest import (  # noqa: E402
 
 
 STRUCTURAL_MANIFEST = MANIFEST_DIR / "structural_path_randomization_v1.manifest.json"
-PLANNED_MANIFEST = MANIFEST_DIR / "pls_sample_size_power_v1.manifest.json"
+PLANNED_MANIFEST = MANIFEST_DIR / "history" / "pls_sample_size_power_v1.manifest.json"
 
 LEGACY_RELEASE_MIGRATIONS = {
     "qpls3.inference.structural_path_randomization": {
@@ -102,11 +102,13 @@ class MethodPromotionManifestTests(unittest.TestCase):
         self,
         temporary_directory: str,
         *,
-        report_generated_at: str = "2026-08-13T01:00:00Z",
+        report_generated_at: str | None = None,
         readme_forgery: bool = False,
     ) -> tuple[Path, Path, dict[str, Any]]:
         root = Path(temporary_directory)
         document = deepcopy(self.planned_document)
+        if report_generated_at is None:
+            report_generated_at = document["governance"]["contract_frozen_at_utc"]
         document["qualification"]["declared_state"] = "engine_only"
         manifest_relative = document["governance"]["manifest_path"]
         report_relative = "validation/results/planned_engine_attestation.json"
@@ -206,7 +208,7 @@ class MethodPromotionManifestTests(unittest.TestCase):
                 )
         self.assertEqual(
             states["qpls3.pls.sample_size_power"],
-            ("absent", "absent"),
+            ("release_qualified", "release_qualified"),
         )
 
     def test_legacy_release_reports_cannot_bypass_factory_source_binding(self) -> None:

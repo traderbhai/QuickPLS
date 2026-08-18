@@ -32,7 +32,7 @@
     "specification_alone_treated_as_non_evidence": true
   },
   "feature_id": "qpls3.inference.bootstrap",
-  "generated_at_utc": "2026-08-13T19:00:00.847796Z",
+  "generated_at_utc": "2026-08-18T02:24:14.014900Z",
   "method_version": "indexed_resampling_v4",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -46,13 +46,13 @@
     },
     {
       "path": "docs/methods/RESAMPLING_ENGINE_V4.md",
-      "sha256": "a205372b37fdb9af73c051ec78fb1bb5f9d743508df7db3b1acd1c588c2718e1",
-      "size": 4119
+      "sha256": "fa92327a156849079d255238e11676a85382b2f0c98abbc54915991352c2ee08",
+      "size": 5264
     },
     {
       "path": "docs/methods/STUDENTIZED_BOOTSTRAP_V1.md",
-      "sha256": "11be2af53160baaa85ab27b1bd43cc5081da41b395ac59245705ec68bcfb3b81",
-      "size": 10609
+      "sha256": "d117bf562af8f22210fe6d8198e3d6c1060ed97435cdba52ff8295fcc4c509d8",
+      "size": 10800
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -66,8 +66,8 @@
     },
     {
       "path": "validation/methods/pls_bootstrap_v4.manifest.json",
-      "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
-      "size": 15803
+      "sha256": "f43015dbd38e34448b9b1cdb5cfc67f1f42fc0e4a606bcd2409679b36a8174ee",
+      "size": 19827
     },
     {
       "path": "validation/pls_bootstrap_v4_factory_common.py",
@@ -81,8 +81,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pls_bootstrap_v4_factory_evidence.py",

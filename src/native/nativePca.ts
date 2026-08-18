@@ -9,7 +9,7 @@ export const NATIVE_PCA_SCOPE_NOTE =
   "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling.";
 
 export const NATIVE_PCA_ENGINE_SCOPE_WARNING =
-  "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked.";
+  "Standalone PCA v1 supports the model, data, and settings listed in Method Details; incompatible setups remain blocked.";
 
 export function nativePcaNumericColumns(dataset: Readonly<Dataset>): string[] {
   return nativeNcaNumericColumns(dataset);

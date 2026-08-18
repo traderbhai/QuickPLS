@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { NativeProjectSignatureInput } from "./nativeProjectLifecycle";
-import { hasUnsavedNativeProjectChanges, nativeProjectSignature, nativeSavedProjectSignature } from "./nativeProjectLifecycle";
+import {
+  hasUnsavedNativeProjectChanges,
+  nativeSchema6BoundWorkspaceReplacementBlocker,
+  nativeLegacyProjectOperationBlocker,
+  nativeProjectSignature,
+  nativeSavedProjectSignature,
+} from "./nativeProjectLifecycle";
 
 const importVersion = {
   datasetId: "dataset-1",
@@ -103,6 +109,38 @@ const base: NativeProjectSignatureInput = {
 };
 
 describe("native project lifecycle", () => {
+  it("blocks even clean workspace replacement while a schema-6 Standard source remains bound", () => {
+    expect(nativeSchema6BoundWorkspaceReplacementBlocker(false, false)).toBeNull();
+    expect(nativeSchema6BoundWorkspaceReplacementBlocker(true, false)).toContain("Close Standard project");
+    expect(nativeSchema6BoundWorkspaceReplacementBlocker(true, true)).toContain("Save a validated new copy");
+  });
+
+  it("fails legacy lifecycle work closed when strict Standard authority is active", () => {
+    const operations: string[] = [];
+    const gate = {
+      standardSemModelV4OperationBlocker: (operation: "schema5_save" | "schema5_autosave" | "calculation" | "legacy_graph_serialization") => {
+        operations.push(operation);
+        return `blocked:${operation}`;
+      },
+    };
+
+    expect(nativeLegacyProjectOperationBlocker(gate, "schema5_save")).toBe("blocked:schema5_save");
+    expect(operations).toEqual(["schema5_save", "legacy_graph_serialization"]);
+  });
+
+  it("preserves legacy lifecycle behavior when no strict Standard authority is active", () => {
+    const operations: string[] = [];
+    const gate = {
+      standardSemModelV4OperationBlocker: (operation: "schema5_save" | "schema5_autosave" | "calculation" | "legacy_graph_serialization") => {
+        operations.push(operation);
+        return null;
+      },
+    };
+
+    expect(nativeLegacyProjectOperationBlocker(gate, "calculation")).toBeNull();
+    expect(operations).toEqual(["calculation", "legacy_graph_serialization"]);
+  });
+
   it("does not mark transient React Flow selection or drag state as a project change", () => {
     const selected = {
       ...base,
@@ -183,6 +221,55 @@ describe("native project lifecycle", () => {
     expect(nativeProjectSignature(lineageChanged)).not.toBe(clean);
   });
 
+  it("binds the complete reconstructable transformation receipt into dirty state", () => {
+    const outputId = "00000000-0000-4000-8000-000000000002";
+    const sourceId = "00000000-0000-4000-8000-000000000001";
+    const receipt = {
+      schema_version: 2 as const,
+      engine: "qpls.dataset_transform.v2" as const,
+      operation_id: "dataset_transform:0123456789abcdef01234567",
+      source_dataset_id: sourceId,
+      source_dataset_fingerprint: "v2:" + "a".repeat(64),
+      output_dataset_id: outputId,
+      output_dataset_fingerprint: "v2:" + "b".repeat(64),
+      created_at: "2026-08-15T00:00:00.000Z",
+      spec_sha256: "c".repeat(64),
+      spec: {
+        kind: "reverse_scale" as const,
+        source_column: "x1",
+        target_column: "x1_reversed",
+        scale_min: 1,
+        scale_max: 7,
+      },
+      input_columns: ["x1"],
+      output_columns: ["x1_reversed"],
+      source_row_count: 100,
+      output_missing_count: 2,
+    };
+    const state: NativeProjectSignatureInput = {
+      ...base,
+      datasetVersions: [{
+        datasetId: outputId,
+        parentDatasetId: sourceId,
+        operation: "transform",
+        createdAt: receipt.created_at,
+        summary: "Derived x1_reversed",
+        sourceColumn: "x1",
+        targetColumn: "x1_reversed",
+        transformation: receipt,
+      }],
+    };
+    const changed: NativeProjectSignatureInput = {
+      ...state,
+      datasetVersions: [{
+        ...state.datasetVersions[0],
+        transformation: { ...receipt, output_missing_count: 3 },
+      }],
+    };
+
+    expect(nativeProjectSignature(changed)).not.toBe(nativeProjectSignature(state));
+  });
+
   it("detects model catalog, inactive presentation, and saved-report changes but ignores explorer selection", () => {
     const clean = nativeProjectSignature(base);
     const catalogChanged: NativeProjectSignatureInput = {
@@ -199,6 +286,13 @@ describe("native project lifecycle", () => {
       ...base,
       savedReports: [{ resultId: "run-1", name: "Reviewer report", savedAt: "2026-08-11T01:00:00Z" }],
     };
+    const semAuthoringChanged: NativeProjectSignatureInput = {
+      ...base,
+      nodes: base.nodes.map((node, index) => index === 0 ? {
+        ...node,
+        data: { ...node.data, semModelV4: { version: 1, construct: { kind: "composite" } } },
+      } : node),
+    };
     const selectionOnly = {
       ...base,
       explorerSelection: { kind: "reports", resultId: "ignored" },
@@ -207,6 +301,7 @@ describe("native project lifecycle", () => {
     expect(nativeProjectSignature(catalogChanged)).not.toBe(clean);
     expect(nativeProjectSignature(presentationChanged)).not.toBe(clean);
     expect(nativeProjectSignature(reportChanged)).not.toBe(clean);
+    expect(nativeProjectSignature(semAuthoringChanged)).not.toBe(clean);
     expect(nativeProjectSignature(selectionOnly)).toBe(clean);
   });
 
@@ -251,6 +346,26 @@ describe("native project lifecycle", () => {
     expect(hasUnsavedNativeProjectChanges(true, null, current)).toBe(false);
     expect(hasUnsavedNativeProjectChanges(true, current, current)).toBe(false);
     expect(hasUnsavedNativeProjectChanges(true, "different", current)).toBe(true);
+  });
+
+  it("uses strict authority anchors and pending native work instead of the projected graph signature", () => {
+    const unchangedProjection = nativeProjectSignature(base);
+
+    expect(hasUnsavedNativeProjectChanges(true, unchangedProjection, unchangedProjection, {
+      active: true,
+      dirty: true,
+      operationPending: false,
+    })).toBe(true);
+    expect(hasUnsavedNativeProjectChanges(true, "stale-legacy-projection", unchangedProjection, {
+      active: true,
+      dirty: false,
+      operationPending: false,
+    })).toBe(false);
+    expect(hasUnsavedNativeProjectChanges(false, null, unchangedProjection, {
+      active: false,
+      dirty: false,
+      operationPending: true,
+    })).toBe(true);
   });
 
   it("accepts backend-revealed lineage as part of the saved baseline without hiding later workspace edits", () => {

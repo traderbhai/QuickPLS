@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { AnalysisUiSettings, Dataset } from "../types";
 import {
   nativeEligibleGroupColumns,
+  nativeGroupSelectionAssessment,
   nativeGroupOptionLabel,
   nativeMgaProfileAssessment,
   residentDatasetGroupProfile,
@@ -52,7 +53,7 @@ const dataset: Dataset = {
   }],
 };
 
-describe("native two-group MGA contract", () => {
+describe("native combined MICOM and two-group permutation MGA setup contract", () => {
   it("never offers an assigned model indicator as a group variable", () => {
     expect(nativeEligibleGroupColumns(dataset, ["x1", "x2", "y1", "y2"]))
       .toEqual(["segment"]);
@@ -96,6 +97,40 @@ describe("native two-group MGA contract", () => {
     ]);
     expect(nativeMgaProfileAssessment(profile, settings({ groupPermutationSamples: 4_999 })).blockers.join(" "))
       .toContain("5,000 to 10,000 permutations");
+  });
+
+  it("keeps Step 1 researcher-confirmed and rejects incomplete group-method selections", () => {
+    const profile = residentDatasetGroupProfile(dataset, "segment", ["x1", "x2", "y1", "y2"]);
+    const unconfirmed = nativeMgaProfileAssessment(profile, settings({ micomConfiguralConfirmed: false }));
+    expect(unconfirmed.canRun).toBe(false);
+    expect(unconfirmed.blockers.join(" ")).toContain("explicit researcher review");
+
+    const incomplete = nativeMgaProfileAssessment(profile, settings({ groupMethods: "micom" }));
+    expect(incomplete.canRun).toBe(false);
+    expect(incomplete.blockers.join(" ")).toContain("requires both MICOM and structural-path permutation MGA");
+
+    const selectionOnly = nativeGroupSelectionAssessment(profile, settings({
+      groupMethods: "micom",
+      micomConfiguralConfirmed: false,
+      groupPermutationSamples: 1,
+    }));
+    expect(selectionOnly).toMatchObject({ canRun: true, blockers: [] });
+  });
+
+  it("returns the typed extreme-imbalance blocker before calculation", () => {
+    const profile = residentDatasetGroupProfile(dataset, "segment", ["x1", "x2", "y1", "y2"]);
+    const imbalanced = {
+      ...profile!,
+      rowCount: 111,
+      missingCount: 0,
+      groups: [
+        { value: "A", label: null, observations: 101, completeCases: 101 },
+        { value: "B", label: null, observations: 10, completeCases: 10 },
+      ],
+    };
+    const assessment = nativeMgaProfileAssessment(imbalanced, settings());
+    expect(assessment.canRun).toBe(false);
+    expect(assessment.blockers.join(" ")).toContain("micom.extreme_group_imbalance");
   });
 
   it("keeps raw group identities visible when value labels are present", () => {

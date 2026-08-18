@@ -1,0 +1,229 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "baseline_identity": {
+      "output": "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/boundary_baseline.quickpls.json",
+      "output_sha256": "c8661fc228c5b1fd2cea208e2868d481ad5fc02c3196f8779907c65e5c2b0ec6",
+      "passed": true
+    },
+    "categories": {
+      "data_pathology": {
+        "execution": {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/boundary_constant_predictor.recipe.json",
+            "--data",
+            "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/boundary_constant_predictor.csv",
+            "--output",
+            "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/boundary_constant_predictor.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.044,
+          "returncode": 1,
+          "stderr_tail": "Error: PLS estimation failed: constant indicator: x1\n",
+          "stdout_tail": ""
+        },
+        "no_completed_output": true,
+        "passed": true,
+        "typed_diagnostic": true
+      },
+      "determinism": {
+        "passed": true,
+        "repeat": {
+          "categorical_equal": true,
+          "keys_match": true,
+          "max_abs_errors": {
+            "copula_coefficient": 0.0,
+            "p_value_two_sided": 0.0,
+            "path_coefficient": 0.0,
+            "predictor_skewness": 0.0,
+            "standard_error": 0.0,
+            "t_statistic": 0.0
+          },
+          "metadata_equal": true,
+          "passed": true
+        },
+        "worker_invariance": {
+          "categorical_equal": true,
+          "keys_match": true,
+          "max_abs_errors": {
+            "copula_coefficient": 0.0,
+            "p_value_two_sided": 0.0,
+            "path_coefficient": 0.0,
+            "predictor_skewness": 0.0,
+            "standard_error": 0.0,
+            "t_statistic": 0.0
+          },
+          "metadata_equal": true,
+          "passed": true
+        }
+      },
+      "metamorphic": {
+        "passed": true,
+        "predecessor_declaration_reorder": {
+          "categorical_equal": true,
+          "keys_match": true,
+          "max_abs_errors": {
+            "copula_coefficient": 9.43689570931383e-16,
+            "p_value_two_sided": 0.0,
+            "path_coefficient": 1.6653345369377348e-16,
+            "predictor_skewness": 0.0,
+            "standard_error": 8.215650382226158e-15,
+            "t_statistic": 5.9396931817445875e-15
+          },
+          "metadata_equal": true,
+          "passed": true
+        },
+        "row_reorder": {
+          "categorical_equal": true,
+          "keys_match": true,
+          "max_abs_errors": {
+            "copula_coefficient": 6.389333506717776e-14,
+            "p_value_two_sided": 2.930988785010413e-14,
+            "path_coefficient": 0.0,
+            "predictor_skewness": 1.7763568394002505e-15,
+            "standard_error": 1.1335377081422848e-13,
+            "t_statistic": 2.930988785010413e-14
+          },
+          "metadata_equal": true,
+          "passed": true
+        }
+      },
+      "tamper": {
+        "archive_test_is_method_scoped": true,
+        "execution": {
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "qpls-project",
+            "tests::runner_generated_endogeneity_appends_round_trips_and_rejects_contract_tampering",
+            "--",
+            "--exact"
+          ],
+          "duration_seconds": 46.12,
+          "returncode": 0,
+          "stderr_tail": "   Compiling qpls-project v2.46.0 (D:\\QuickPLS\\crates\\qpls-project)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 44.94s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_endogeneity_appends_round_trips_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.24s\n\n"
+        },
+        "passed": true
+      },
+      "unsupported_scope": {
+        "executions": [
+          {
+            "command": [
+              "D:\\QuickPLS\\target\\debug\\qpls.exe",
+              "run",
+              "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/boundary_pca_weighting.recipe.json",
+              "--data",
+              "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/boundary_pca_weighting.csv",
+              "--output",
+              "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/boundary_pca_weighting.quickpls.json",
+              "--allow-experimental"
+            ],
+            "duration_seconds": 0.047,
+            "returncode": 1,
+            "stderr_tail": "Error: PLS estimation failed: unsupported estimation method: Gaussian-copula endogeneity diagnostics currently require path or factor weighting\n",
+            "stdout_tail": ""
+          },
+          {
+            "command": [
+              "D:\\QuickPLS\\target\\debug\\qpls.exe",
+              "run",
+              "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/boundary_resampling.recipe.json",
+              "--data",
+              "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/boundary_resampling.csv",
+              "--output",
+              "validation/results/method_factory/gaussian_copula_endogeneity_v1/work/boundary_resampling.quickpls.json",
+              "--allow-experimental"
+            ],
+            "duration_seconds": 0.047,
+            "returncode": 1,
+            "stderr_tail": "Error: endogeneity.resampling_unsupported: Gaussian-copula endogeneity diagnostics do not support bootstrap, studentized bootstrap, or permutation inference\n",
+            "stdout_tail": ""
+          }
+        ],
+        "passed": true,
+        "pca_weighting_blocked": true,
+        "resampling_blocked": true
+      }
+    },
+    "passed": true,
+    "tolerance": 1e-09
+  },
+  "feature_id": "qpls3.pls.gaussian_copula_endogeneity",
+  "generated_at_utc": "2026-08-14T06:52:48.118287Z",
+  "method_version": "gaussian_copula_endogeneity_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "d847875d0c78a734725de9794aa19cc64d97c6ff732b2b6cdb646dce0398406c",
+      "size": 260752
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "47703e0a2308ac42e7ff0a76752a73115ca3a2a93431d3e215a6f280ccefc694",
+      "size": 114179
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "6aa5116fa297c13a7ddde8ddbce285fee7e60b9f166f95b1f3791f3858f14100",
+      "size": 653641
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "53f89d6d381d7c33b1e5f029d978e030a46a28d7d4bd47a2e17dc5b83bcbb387",
+      "size": 719445
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "0a3f76ad19f897ff2db63be729a92087d8d1cad6b926e4c6908294cdb62e97e0",
+      "size": 54934
+    },
+    {
+      "path": "validation/endogeneity_boundary_gate.py",
+      "sha256": "de457faca31299277e35e824b30e1a69fecf6eac3f47012623bfca04f64b45e8",
+      "size": 7418
+    },
+    {
+      "path": "validation/endogeneity_factory_common.py",
+      "sha256": "9ca62fb82ec04b4056d5c138a99e28c1dd5bf00a2c2c12ffa53b49b26bcd85e9",
+      "size": 14111
+    },
+    {
+      "path": "validation/endogeneity_simulation.py",
+      "sha256": "88e38d9b6ac0d2b7aabc89472ab6497179e2c11e51203c0640f3b1def50a7a68",
+      "size": 8378
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/gaussian_copula_endogeneity_v1.manifest.json",
+      "sha256": "50e1445c9c8d7131eea334405e5454424982371154ac5d2774e83a5b6fc57320",
+      "size": 14698
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_endogeneity_factory.py",
+      "sha256": "1b2dbb224abd159e0f9179071f67a52dde6b23f227195b75d67cdcd24a203c92",
+      "size": 4689
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "22b4354974ed09f05c5609fe6b2dac65dc7706a6524e2a27b2b9cb0d5a997ab6",
+      "size": 21334
+    }
+  ]
+}

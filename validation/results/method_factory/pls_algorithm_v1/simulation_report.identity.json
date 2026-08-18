@@ -44,7 +44,7 @@
         "observations": 360,
         "omitted_observations": 0,
         "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_path_reflective.quickpls.json",
-        "output_sha256": "d24300f9373161b0a9524ade8ca8052c7b77cdde7203dc6d3c4934e0c9831204",
+        "output_sha256": "4ee820835fddc4eddef319ae3e08545b612bda2b4e4f9818a21b31b9b227ade1",
         "passed": true,
         "quickpls_iterations": 10,
         "reference_iterations": 10,
@@ -77,7 +77,7 @@
         "observations": 420,
         "omitted_observations": 0,
         "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_factor_reflective.quickpls.json",
-        "output_sha256": "0e5679b0be00cad34cae0f682240e0f20962583a39c078ed91a400d765ba8ed6",
+        "output_sha256": "68c194394bcd7a6365c9e4f0ce7b46af4bc0aef466907d4270f7da446ada9363",
         "passed": true,
         "quickpls_iterations": 6,
         "reference_iterations": 6,
@@ -110,7 +110,7 @@
         "observations": 380,
         "omitted_observations": 0,
         "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_pca_reflective.quickpls.json",
-        "output_sha256": "2e8acc56d834f05e833d1fc7eeaee7060b4a18ae4d73c3026ca319b6b07c7cf4",
+        "output_sha256": "9a1a5e978a11f6b26f9af8e63fd8dc8125fb1e8467071051785aa5c4630e4cc6",
         "passed": true,
         "quickpls_iterations": 10,
         "reference_iterations": 1,
@@ -143,7 +143,7 @@
         "observations": 520,
         "omitted_observations": 0,
         "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_mixed_mode_b.quickpls.json",
-        "output_sha256": "c43ab5a820e6ec4e1f9fabed3790240d0a71bb3e75860129a47467cbf320fa4c",
+        "output_sha256": "2e89b9572fa0344e3cb1f67eedef3f46e8ed9bae1201fcd173a94247aea1ebf5",
         "passed": true,
         "quickpls_iterations": 7,
         "reference_iterations": 7,
@@ -176,7 +176,7 @@
         "observations": 300,
         "omitted_observations": 0,
         "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_single_item_blocks.quickpls.json",
-        "output_sha256": "e3229247ebf545eeb19ddcb27408f46882b1fb9151e4d4019c78522e7bba2836",
+        "output_sha256": "47dee2698394caadf5817f5bb4dc1a51fa097c3d5d871dfdcbbf6b60cd12cb86",
         "passed": true,
         "quickpls_iterations": 1,
         "reference_iterations": 1,
@@ -209,7 +209,7 @@
         "observations": 460,
         "omitted_observations": 13,
         "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_listwise_missing.quickpls.json",
-        "output_sha256": "ee55de3c95f924255d2ec3f92bda441eee39fc6a9f5b2d4d36b9e7480517484e",
+        "output_sha256": "79a7c8f75a2ef33f89eb074361cf87f9c84fe8bbb991beaed95b625822ab83f1",
         "passed": true,
         "quickpls_iterations": 9,
         "reference_iterations": 9,
@@ -242,7 +242,7 @@
         "observations": 640,
         "omitted_observations": 0,
         "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_nongaussian_factor.quickpls.json",
-        "output_sha256": "8382f7f8bde17785c1a589d995a8f3f184a5113693680b582987b120c2353860",
+        "output_sha256": "6cbd44c01dbca11f9777cba72dcb7b47f09120b4ce12ae1092523dfd221946e1",
         "passed": true,
         "quickpls_iterations": 8,
         "reference_iterations": 8,
@@ -252,7 +252,7 @@
     ]
   },
   "feature_id": "qpls3.pls.algorithm",
-  "generated_at_utc": "2026-08-13T19:17:57.897074Z",
+  "generated_at_utc": "2026-08-17T22:14:59.295958Z",
   "method_version": "pls_pm_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -261,23 +261,23 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-cli/src/main.rs",
-      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
-      "size": 216983
+      "sha256": "8aed0e592c91c42acbaf4b39072affe96fb27a58de547a310559d7b3df9d81eb",
+      "size": 430654
     },
     {
       "path": "crates/qpls-core/src/contract.rs",
-      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
-      "size": 107095
+      "sha256": "51c235a9173d3f9c84e5bfe4c0ce6280268ee26b882e2a41dd01be889a7cdfb5",
+      "size": 144508
     },
     {
       "path": "crates/qpls-estimation/src/pls.rs",
-      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-      "size": 639198
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
     },
     {
       "path": "crates/qpls-runner/src/lib.rs",
-      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
-      "size": 49349
+      "sha256": "c2594f156f7302c4295023b421379c387e9e8d885b8aa63acdfda1d8c158ae1d",
+      "size": 100140
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -291,13 +291,13 @@
     },
     {
       "path": "validation/methods/pls_algorithm_v1.manifest.json",
-      "sha256": "ec18270309bd1dce2b5064e2f727893d03a44eaa04376efcd99a6dee57dc1ead",
-      "size": 15592
+      "sha256": "983eac3d5605fe49a414fe203f719d02618a610ecdb07a74cc380cd9193fa04c",
+      "size": 15718
     },
     {
       "path": "validation/pls_algorithm_v1_factory_common.py",
-      "sha256": "2047408b08f5a7d0f0955ffc5902d063820551d0a37c6c3e595c9441591df3d7",
-      "size": 12465
+      "sha256": "cc3030d40c551240ddc535a4715fe78183738ec068b8146a70ed08decc5576c2",
+      "size": 12700
     },
     {
       "path": "validation/pls_core_simulation.py",
@@ -306,13 +306,13 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_pls_algorithm_v1_factory_evidence.py",
-      "sha256": "3296d72e15da0d8bf6c7c87d7e1a74c7db3cdb40d49d807374953cdf1c98499f",
-      "size": 12583
+      "sha256": "648186a17c4c7e153e8b35f0b198b852c7b4a4b171f145a15b3646b699e31c13",
+      "size": 13781
     }
   ]
 }

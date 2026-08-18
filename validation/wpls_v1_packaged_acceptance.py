@@ -10,6 +10,12 @@ from typing import Any
 
 from diagnostic_bundle_source_manifest import SourceManifestFailure, validate_build_receipt
 from method_promotion_manifest import _verify_artifact, validate_manifest
+from packaged_windows_acceptance_v2 import (
+    CONTRACT as PACKAGED_ACCEPTANCE_CONTRACT,
+    EXPECTED_CHECK_COUNT,
+    receipt_binds_packaged_acceptance_contract,
+    validate_required_report_checks,
+)
 from wpls_v1_factory_common import (
     MANIFEST_PATH, ROOT, manifest, repository_path, run_command, sha256_file,
     strict_load_json, write_identity_report,
@@ -23,7 +29,7 @@ CUMULATIVE_RECEIPT = ROOT / "validation/results/v247_cumulative_native_acceptanc
 BUILD_RECEIPT = ROOT / "validation/results/diagnostic_bundle_build_receipt.json"
 DESKTOP = ROOT / "target/release/quickpls-desktop.exe"
 RELEASE_CLI = ROOT / "target/release/qpls.exe"
-EXPECTED_CUMULATIVE_CHECKS = 177
+EXPECTED_CUMULATIVE_CHECKS = EXPECTED_CHECK_COUNT
 REQUIRED_VIEWPORTS = {
     "1024x700": {"width": 1024, "height": 700},
     "1280x720": {"width": 1280, "height": 720},
@@ -32,10 +38,12 @@ REQUIRED_VIEWPORTS = {
 REQUIRED_XLSX_SHEETS = {"WPLS case-weight diagnostics", "Run provenance"}
 GATE_SOURCES = {
     SOURCE,
+    "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
     "validation/diagnostic_bundle_source_manifest.py",
     "validation/method_promotion_manifest.py",
     "validation/methods/method_promotion_manifest.schema.json",
     "validation/methods/wpls_v1.manifest.json",
+    "validation/packaged_windows_acceptance_v2.py",
     "validation/wpls_v1_factory_audit.py",
     "validation/wpls_v1_factory_common.py",
     "validation/run_v247_cumulative_native_acceptance.ps1",
@@ -118,14 +126,14 @@ def verify_cumulative_receipt(started: datetime) -> dict[str, Any]:
         export = matches[0] if len(matches) == 1 else {}
         export_path = ROOT / export.get("path", "")
         checks = {
-            "receipt_identity": receipt.get("kind") == "quickpls_v247_cumulative_native_acceptance_receipt" and receipt.get("schema_version") == 1,
+            "receipt_identity": receipt.get("kind") == "quickpls_v247_cumulative_native_acceptance_receipt" and receipt_binds_packaged_acceptance_contract(receipt),
             "receipt_passed": receipt.get("passed") is True,
             "fresh_for_invocation": _parse_utc(receipt["supervisor_started_at_utc"]) >= started - timedelta(seconds=2) and _parse_utc(receipt["completed_at_utc"]) >= started,
             "report_path_exact": receipt.get("report") == repository_path(RAW_REPORT),
             "report_hash_and_size_exact": receipt.get("report_sha256") == report["sha256"] and receipt.get("report_size") == report["size"],
-            "exact_check_count": receipt.get("checks") == EXPECTED_CUMULATIVE_CHECKS and receipt.get("unique_checks") == EXPECTED_CUMULATIVE_CHECKS,
+            "exact_check_contract": receipt_binds_packaged_acceptance_contract(receipt),
             "clean_report": receipt.get("failures") == 0 and receipt.get("console_errors") == 0,
-            "final_scope_exact": receipt.get("final_scope") == "regression_bootstrap",
+            "final_scope_exact": receipt.get("final_scope") == PACKAGED_ACCEPTANCE_CONTRACT["final_scope"],
             "graceful_cleanup_verified": receipt.get("graceful_process_cleanup_verified") is True,
             "one_wpls_export": len(matches) == 1,
             "wpls_export_exact": export_path.is_file() and export.get("size") == export_path.stat().st_size and export.get("sha256") == sha256_file(export_path),
@@ -156,7 +164,7 @@ def verify_native_report(started: datetime, cumulative: dict[str, Any]) -> dict[
         "fresh_after_invocation_start": _parse_utc(report["generatedAt"]) >= started,
         "raw_report_passed": report.get("passed") is True,
         "current_cumulative_chain": focused.get("scope") == "regression_bootstrap" and _parse_utc(focused["completedAt"]) >= started,
-        "exact_cumulative_check_count": len(all_checks) == EXPECTED_CUMULATIVE_CHECKS,
+        "exact_cumulative_check_contract": validate_required_report_checks(PACKAGED_ACCEPTANCE_CONTRACT, all_checks)["passed"],
         "tauri_runtime": all_checks.get("runtime", {}).get("tauriRuntime") is True,
         "invalid_weight_blocked": invalid.get("attempted") is True and invalid.get("caseWeightColumn") == "" and invalid.get("startEnabled") is False and invalid.get("missingWeightBlocker") is True,
         "invalid_weight_created_no_state": invalid.get("runStateUnchanged") is True and invalid.get("resultCreated") is False and all(before.get(key) == 0 and after.get(key) == 0 for key in ("recipeCount", "resultCount", "runCount")),

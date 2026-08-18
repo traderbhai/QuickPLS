@@ -8,17 +8,44 @@ $desktopExecutable = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "t
 $cliExecutable = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "target\release\qpls.exe"))
 $harnessPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\v247_tauri_native_acceptance.mjs"))
 $closeHelperPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\close_tauri_test_window.mjs"))
+$cumulativeAssemblerPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\assemble_v247_cumulative_native_acceptance.py"))
 $cumulativeReportPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\results\v247_tauri_native_acceptance.json"))
+$fullReportPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\results\v247_tauri_native_acceptance_full.json"))
 $cumulativeReceiptPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\results\v247_cumulative_native_acceptance_receipt.json"))
+$acceptanceContractPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\capabilities\packaged_windows_acceptance_v2.manifest.json"))
 $resultsDirectory = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\results"))
 $cdpEndpoint = "http://127.0.0.1:9222"
-$expectedFinalCheckCount = 177
 $supervisorStartedUtc = [DateTime]::UtcNow
 
-foreach ($requiredFile in @($desktopExecutable, $cliExecutable, $harnessPath, $closeHelperPath)) {
+foreach ($requiredFile in @($desktopExecutable, $cliExecutable, $harnessPath, $closeHelperPath, $cumulativeAssemblerPath, $acceptanceContractPath)) {
     if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
         throw "Required cumulative native acceptance input is missing: $requiredFile"
     }
+}
+
+try {
+    $acceptanceContract = Get-Content -LiteralPath $acceptanceContractPath -Raw -Encoding UTF8 | ConvertFrom-Json
+} catch {
+    throw "Packaged Windows acceptance contract is not valid JSON: $acceptanceContractPath ($($_.Exception.Message))"
+}
+if ($acceptanceContract.schema_version -ne 2 -or [string]($acceptanceContract.contract_id) -ne "quickpls.packaged_windows_acceptance.v2") {
+    throw "Packaged Windows acceptance contract identity is invalid: $acceptanceContractPath"
+}
+$expectedFinalCheckNames = @($acceptanceContract.ordered_check_sets | ForEach-Object { @($_.required_check_ids) })
+$expectedFinalCheckCount = $expectedFinalCheckNames.Count
+$phase2ReleaseCheckNames = @($acceptanceContract.phase2_release_required_check_ids)
+if ($expectedFinalCheckCount -eq 0 -or $phase2ReleaseCheckNames.Count -eq 0) {
+    throw "Packaged Windows acceptance contract contains no required check IDs."
+}
+$contractCheckSet = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::Ordinal)
+foreach ($checkName in $expectedFinalCheckNames) {
+    if ([string]::IsNullOrWhiteSpace([string]$checkName) -or -not $contractCheckSet.Add([string]$checkName)) {
+        throw "Packaged Windows acceptance contract contains an empty or duplicate required check ID: '$checkName'."
+    }
+}
+$unknownPhase2Checks = @($phase2ReleaseCheckNames | Where-Object { -not $contractCheckSet.Contains([string]$_) })
+if ($unknownPhase2Checks.Count -ne 0) {
+    throw "Packaged Windows acceptance contract contains Phase-2 checks outside the full contract: $($unknownPhase2Checks -join ', ')."
 }
 
 $nodeExecutable = (Get-Command node.exe -ErrorAction Stop).Source
@@ -390,7 +417,8 @@ function Invoke-FocusedWrapper {
         [string]$Scope,
         [string]$ScriptPath,
         [string[]]$Arguments,
-        [string[]]$ExportPaths
+        [string[]]$ExportPaths,
+        [pscustomobject]$FullReportBaseline
     )
     Assert-CleanLaunchBoundary -Stage "Focused $Name acceptance"
     $stageStartedUtc = [DateTime]::UtcNow
@@ -465,14 +493,14 @@ function Invoke-FocusedWrapper {
     Assert-ExportArtifacts -Paths $ExportPaths
     $scopedReportPath = Join-Path $resultsDirectory "v247_tauri_native_acceptance_$Scope.json"
     $scopedPublished = Wait-AcceptanceReportPublished -Path $scopedReportPath -NotBeforeUtc $stageStartedUtc
-    $cumulativePublished = Wait-AcceptanceReportPublished -Path $cumulativeReportPath -NotBeforeUtc $stageStartedUtc
-    if (-not $scopedPublished -or -not $cumulativePublished) {
-        throw "Focused $Name wrapper exited 0 without publishing fresh reports (scoped=$scopedPublished, cumulative=$cumulativePublished). stdout=$stdout stderr=$stderr"
+    if (-not $scopedPublished) {
+        throw "Focused $Name wrapper exited 0 without publishing a fresh scoped report. stdout=$stdout stderr=$stderr"
     }
     $scoped = Assert-AcceptanceReport -Path $scopedReportPath -NotBeforeUtc $stageStartedUtc -ExpectedScope $Scope -ExpectedCheckCount $null
-    $cumulative = Assert-AcceptanceReport -Path $cumulativeReportPath -NotBeforeUtc $stageStartedUtc -ExpectedScope $Scope -ExpectedCheckCount $null
-    if ($scoped.Size -ne $cumulative.Size -or $scoped.Sha256 -ne $cumulative.Sha256) {
-        throw "Focused $Name scoped and cumulative reports are not byte-identical."
+    $preservedFull = Assert-AcceptanceReport -Path $cumulativeReportPath -NotBeforeUtc $supervisorStartedUtc `
+        -ExpectedScope $null -ExpectedCheckCount $null
+    if ($preservedFull.Size -ne $FullReportBaseline.Size -or $preservedFull.Sha256 -ne $FullReportBaseline.Sha256) {
+        throw "Focused $Name acceptance changed the preserved full acceptance report."
     }
     Remove-Item -LiteralPath $stdoutPath, $stderrPath -Force -ErrorAction SilentlyContinue
     Assert-CleanLaunchBoundary -Stage "After focused $Name acceptance"
@@ -480,6 +508,7 @@ function Invoke-FocusedWrapper {
 
 New-Item -ItemType Directory -Path $resultsDirectory -Force | Out-Null
 Remove-Item -LiteralPath $cumulativeReceiptPath -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $fullReportPath -Force -ErrorAction SilentlyContinue
 $runStamp = "$(Get-Date -Format 'yyyyMMdd-HHmmssfff')-$PID-$([Guid]::NewGuid().ToString('N').Substring(0, 8))"
 $exports = [ordered]@{
     generic = Join-Path $resultsDirectory "v247-native-full-$runStamp.xlsx"
@@ -512,14 +541,22 @@ foreach ($exportPath in $exports.Values) {
 }
 
 Invoke-FreshFullAcceptance -ExportPaths $exports
+$fullReportBaseline = Assert-AcceptanceReport -Path $cumulativeReportPath -NotBeforeUtc $supervisorStartedUtc `
+    -ExpectedScope $null -ExpectedCheckCount $null
+$primaryCheckNames = @($acceptanceContract.ordered_check_sets | Where-Object { [string]$_.scope -eq "full" } | ForEach-Object { @($_.required_check_ids) })
+$missingPrimaryChecks = @($primaryCheckNames | Where-Object { $fullReportBaseline.CheckNames -notcontains $_ })
+if ($missingPrimaryChecks.Count -ne 0) {
+    throw "Fresh full acceptance omitted required primary checks: $($missingPrimaryChecks -join ', ')."
+}
+Copy-Item -LiteralPath $cumulativeReportPath -Destination $fullReportPath
 
 $focusedStages = @(
     [pscustomobject]@{ Name = "prediction"; Scope = "prediction"; Script = "run_v247_prediction_native_acceptance.ps1"; Arguments = @("-ExportPath", $exports.prediction); Exports = @($exports.prediction) },
     [pscustomobject]@{ Name = "hoc"; Scope = "hoc"; Script = "run_v247_hoc_native_acceptance.ps1"; Arguments = @("-ExportPath", $exports.hoc); Exports = @($exports.hoc) },
-    [pscustomobject]@{ Name = "pca"; Scope = "pca"; Script = "run_v247_pca_native_acceptance.ps1"; Arguments = @("-ExportPath", $exports.pca); Exports = @($exports.pca) },
+    [pscustomobject]@{ Name = "pca"; Scope = "pca"; Script = "run_v247_pca_native_acceptance.ps1"; Arguments = @("-ExportPath", $exports.pca, "-PreserveMainReport"); Exports = @($exports.pca) },
     [pscustomobject]@{ Name = "ols"; Scope = "ols"; Script = "run_v247_ols_native_acceptance.ps1"; Arguments = @("-ExportPath", $exports.ols); Exports = @($exports.ols) },
     [pscustomobject]@{ Name = "cbsem"; Scope = "cbsem"; Script = "run_v247_cbsem_native_acceptance.ps1"; Arguments = @("-ExportPath", $exports.cbsem); Exports = @($exports.cbsem) },
-    [pscustomobject]@{ Name = "gsca"; Scope = "gsca"; Script = "run_v247_gsca_native_acceptance.ps1"; Arguments = @("-ExportPath", $exports.gsca); Exports = @($exports.gsca) },
+    [pscustomobject]@{ Name = "gsca"; Scope = "gsca"; Script = "run_v247_gsca_native_acceptance.ps1"; Arguments = @("-ExportPath", $exports.gsca, "-ReceiptPath", (Join-Path $resultsDirectory "v247_gsca_scoped_native_acceptance_receipt_$runStamp.json")); Exports = @($exports.gsca) },
     [pscustomobject]@{ Name = "logistic"; Scope = "logistic"; Script = "run_v247_logistic_native_acceptance.ps1"; Arguments = @("-ExportPath", $exports.logistic); Exports = @($exports.logistic) },
     [pscustomobject]@{ Name = "regression_bootstrap"; Scope = "regression_bootstrap"; Script = "run_v247_regression_bootstrap_native_acceptance.ps1"; Arguments = @("-OlsExportPath", $exports.regression_bootstrap_ols, "-LogisticExportPath", $exports.regression_bootstrap_logistic); Exports = @($exports.regression_bootstrap_ols, $exports.regression_bootstrap_logistic) }
 )
@@ -529,11 +566,26 @@ foreach ($stage in $focusedStages) {
     if (-not (Test-Path -LiteralPath $wrapperPath -PathType Leaf)) {
         throw "Focused native acceptance wrapper is missing: $wrapperPath"
     }
-    Invoke-FocusedWrapper -Name $stage.Name -Scope $stage.Scope -ScriptPath $wrapperPath -Arguments $stage.Arguments -ExportPaths $stage.Exports
+    Invoke-FocusedWrapper -Name $stage.Name -Scope $stage.Scope -ScriptPath $wrapperPath -Arguments $stage.Arguments `
+        -ExportPaths $stage.Exports -FullReportBaseline $fullReportBaseline
 }
 
+$assemblyNotBeforeUtc = $supervisorStartedUtc.ToString("o")
+$assemblyOutput = & $pythonExecutable $cumulativeAssemblerPath --not-before-utc $assemblyNotBeforeUtc 2>&1
+if ($LASTEXITCODE -ne 0) {
+    throw "Cumulative acceptance assembly failed: $($assemblyOutput -join [Environment]::NewLine)"
+}
 $final = Assert-AcceptanceReport -Path $cumulativeReportPath -NotBeforeUtc $supervisorStartedUtc `
-    -ExpectedScope "regression_bootstrap" -ExpectedCheckCount $expectedFinalCheckCount
+    -ExpectedScope ([string]$acceptanceContract.final_scope) -ExpectedCheckCount $expectedFinalCheckCount
+$missingRequiredChecks = @($expectedFinalCheckNames | Where-Object { $final.CheckNames -notcontains $_ })
+$unexpectedChecks = @($final.CheckNames | Where-Object { $expectedFinalCheckNames -notcontains $_ })
+if ($missingRequiredChecks.Count -ne 0 -or $unexpectedChecks.Count -ne 0) {
+    throw "Final cumulative acceptance check IDs differ from the manifest (missing=$($missingRequiredChecks -join ','), unexpected=$($unexpectedChecks -join ','))."
+}
+$missingPhase2ReleaseChecks = @($phase2ReleaseCheckNames | Where-Object { $final.CheckNames -notcontains $_ })
+if ($missingPhase2ReleaseChecks.Count -ne 0) {
+    throw "Final cumulative acceptance omitted frozen Phase-2 release checks: $($missingPhase2ReleaseChecks -join ', ')."
+}
 Assert-ExportArtifacts -Paths @($exports.Values)
 Assert-CleanLaunchBoundary -Stage "Completed cumulative native acceptance"
 
@@ -547,7 +599,7 @@ $exportDescriptors = @($exports.GetEnumerator() | ForEach-Object {
     }
 })
 $receipt = [pscustomobject]@{
-    schema_version = 1
+    schema_version = 2
     kind = "quickpls_v247_cumulative_native_acceptance_receipt"
     passed = $true
     supervisor_started_at_utc = $supervisorStartedUtc.ToString("o")
@@ -559,8 +611,25 @@ $receipt = [pscustomobject]@{
     console_errors = 0
     report_sha256 = $final.Sha256
     report_size = $final.Size
-    final_scope = "regression_bootstrap"
+    final_scope = [string]$acceptanceContract.final_scope
     graceful_process_cleanup_verified = $true
+    acceptance_contract = [pscustomobject]@{
+        path = "validation/capabilities/packaged_windows_acceptance_v2.manifest.json"
+        contract_id = [string]$acceptanceContract.contract_id
+        contract_version = [string]$acceptanceContract.contract_version
+        required_check_count = $expectedFinalCheckCount
+        sha256 = (Get-FileHash -LiteralPath $acceptanceContractPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+    assembler = [pscustomobject]@{
+        path = "validation/assemble_v247_cumulative_native_acceptance.py"
+        size = [int64](Get-Item -LiteralPath $cumulativeAssemblerPath).Length
+        sha256 = (Get-FileHash -LiteralPath $cumulativeAssemblerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+    full_report = [pscustomobject]@{
+        path = "validation/results/v247_tauri_native_acceptance_full.json"
+        size = [int64](Get-Item -LiteralPath $fullReportPath).Length
+        sha256 = (Get-FileHash -LiteralPath $fullReportPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
     exports = $exportDescriptors
 }
 $receipt | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $cumulativeReceiptPath -Encoding UTF8

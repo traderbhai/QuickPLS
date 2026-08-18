@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "method_version": "gsca_als_v2",
+  "reference": "independent_scipy_slsqp_global_gsca_criterion_v1",
+  "fixture": "validation/results/v08_extended_methods_fixture.csv",
+  "recipe": "validation/results/method_factory/gsca_als_v2/gsca_als_v2_current.recipe.json",
+  "observations": 140,
+  "optimizer_iterations": 101,
+  "optimizer_message": "Optimization terminated successfully",
+  "tolerance": 2e-06,
+  "deltas": {
+    "weights": 5.858990389517871e-07,
+    "loadings": 1.2613354027912749e-08,
+    "path": 2.0134764411317008e-08,
+    "r_squared": 3.2842806252375567e-10,
+    "objective": 4.440892098500626e-15,
+    "fit": 1.1102230246251565e-16,
+    "measurement_fit": 6.56851240066203e-11,
+    "structural_fit": 1.6421264348309705e-10,
+    "adjusted_fit": 2.220446049250313e-16,
+    "gfi": 1.515019998343803e-08,
+    "srmr": 1.0359619384558982e-08,
+    "covariance_discrepancy": 2.9922726163533753e-07,
+    "covariance_sample_total": 3.552713678800501e-15,
+    "standardized_residual_sum": 1.4961363525856086e-07
+  },
+  "contract_checks": {
+    "method": true,
+    "provenance": true,
+    "outer_version": true,
+    "nested_version": true,
+    "algorithm": true,
+    "assessment_not_applicable": true,
+    "no_fabricated_intervals": true,
+    "no_pls_effects": true,
+    "converged": true,
+    "observations": true,
+    "free_parameters": true
+  },
+  "passed": true
+}

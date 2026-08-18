@@ -2,9 +2,9 @@
   "catalogue_snapshot_date": "2026-08-12",
   "checks": {
     "archive": {
-      "path": "validation/results/v247-native-logistic-1786604241673-47796.qpls",
-      "sha256": "190e07bac6afb3fbae09ea1cc9d580053c6bb7043b28a6c3a523fd92da6603b9",
-      "size": 20162
+      "path": "validation/results/v247-native-logistic-1787024180854-17216.qpls",
+      "sha256": "068cfc906f4a5ce23f5b8a30a1c5dcd714d2c9d9fc7e464c84aee24edb436843",
+      "size": 20270
     },
     "archive_identity_token_present": true,
     "archive_origin": "historical packaged workflow; revalidated and reopened by the exact current release CLI",
@@ -12,45 +12,45 @@
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "validate",
-        "C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-ahcmangj\\tampered.qpls",
+        "C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-23egv61b\\tampered.qpls",
         "--json"
       ],
       "returncode": 1,
-      "stderr_tail": "Error: invalid project C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-ahcmangj\\tampered.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
+      "stderr_tail": "Error: invalid project C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-23egv61b\\tampered.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
       "stdout_tail": ""
     },
     "current_cli": {
       "path": "target/release/qpls.exe",
-      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
-      "size": 20690432
+      "sha256": "f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254",
+      "size": 32373248
     },
     "current_cli_inspect": {
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "inspect",
-        "validation/results/v247-native-logistic-1786604241673-47796.qpls",
+        "D:\\QuickPLS\\validation\\results\\v247-native-logistic-1787024180854-17216.qpls",
         "--json"
       ],
       "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 11,\n      \"fingerprint\": \"v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb\",\n      \"id\": \"7a58708e-ca47-402f-bf55-b97d1a79c17b\",\n      \"kind\": \"raw\",\n      \"name\": \"v08_extended_methods_fixture.csv\",\n      \"rows\": 140,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"Native Logistic Acceptance\",\n  \"projectId\": \"ee415cb4-aeec-4b61-b68d-a09825b3d80c\",\n  \"readOnly\": false,\n  \"recipes\": 1,\n  \"recovered\": false,\n  \"results\": 1,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
+      "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 11,\n      \"fingerprint\": \"v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb\",\n      \"id\": \"72fcb350-32b8-4caa-aa08-e3b3c89e55ce\",\n      \"kind\": \"raw\",\n      \"name\": \"v08_extended_methods_fixture.csv\",\n      \"rows\": 140,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"Native Logistic Acceptance\",\n  \"projectId\": \"f2a2308b-78ce-400d-bc2f-2ecbd8c595dd\",\n  \"readOnly\": false,\n  \"recipes\": 1,\n  \"recovered\": true,\n  \"results\": 1,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
     },
     "current_cli_validate": {
       "command": [
         "D:\\QuickPLS\\target\\release\\qpls.exe",
         "validate",
-        "validation/results/v247-native-logistic-1786604241673-47796.qpls",
+        "D:\\QuickPLS\\validation\\results\\v247-native-logistic-1787024180854-17216.qpls",
         "--json"
       ],
       "returncode": 0,
       "stderr_tail": "",
-      "stdout_tail": "{\n  \"issues\": [],\n  \"recovered\": false,\n  \"valid\": true\n}\n"
+      "stdout_tail": "{\n  \"issues\": [],\n  \"recovered\": true,\n  \"valid\": true\n}\n"
     },
     "current_desktop_write_not_claimed": true,
     "passed": true
   },
   "feature_id": "qpls3.standalone.logistic",
-  "generated_at_utc": "2026-08-13T19:54:23.202259Z",
+  "generated_at_utc": "2026-08-18T03:55:48.408606Z",
   "method_version": "regression_logistic_v2",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -59,13 +59,13 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-project/src/lib.rs",
-      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-      "size": 660277
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
     },
     {
       "path": "validation/legacy_release_factory_migration.py",
-      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
-      "size": 23709
+      "sha256": "b9c5207f9d8aff6c2cd8b243acb017634d26b00355a1f537b3cfa4ad69fa92e7",
+      "size": 24794
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -74,8 +74,8 @@
     },
     {
       "path": "validation/methods/logistic_regression_v2.manifest.json",
-      "sha256": "d37e0fa1b6e67a91ec3b885163114e07c7da08de88d54385f960a77abcc73c7f",
-      "size": 13621
+      "sha256": "4e7731cb782808e278e535e28d59cbcb811b44cbbd7917a8fdea3df7c50e4407",
+      "size": 13537
     },
     {
       "path": "validation/methods/method_promotion_manifest.schema.json",
@@ -94,8 +94,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     }
   ]
 }

@@ -1,6 +1,6 @@
 # Nested Studentized Bootstrap Specification v1
 
-Status: implemented experimental inference. `nested_studentized_v1` is not validated or publication-ready.
+Status: release-qualified as the optional high-cost interval family inside the bounded indexed-resampling v4 PLS-PM workflow. It is not a separate claim for unsupported model shapes or resampling conventions.
 
 ## Scope and Configuration
 
@@ -49,11 +49,11 @@ Raw inner samples, fitted models, scores, estimates, and pivot vectors are trans
 
 ## Computational Warning
 
-Nested studentization performs up to `B*M` additional full PLS fits. The minimum supported plan (`B=999`, `M=99`) adds 98,901 inner fits; at `B=999`, the default inner plan adds 198,801. Desktop and CLI must show and persist an experimental high-cost warning with these counts before execution. Progress reports outer and inner phases, memory remains bounded through ordered streaming aggregation, and no UI should imply that the default is inexpensive. Maximum settings are allowed only after benchmark qualification.
+Nested studentization performs up to `B*M` additional full PLS fits. The minimum supported plan (`B=999`, `M=99`) adds 98,901 inner fits; at `B=999`, the default inner plan adds 198,801. Desktop and CLI must show and persist a high-cost warning with these counts before execution. Progress reports outer and inner phases, memory remains bounded through ordered streaming aggregation, and no UI should imply that the default is inexpensive. Maximum settings remain conditional on the documented benchmark bounds.
 
 ## Validation and Promotion Gates
 
-Implementation remains experimental until all of the following pass:
+The source-bound qualification must continue to prove all of the following:
 
 - Hand fixtures verify inner sample standard errors, pivots, Type 7 quantiles, reversed-tail interval bounds, tolerance boundaries, and every reason code.
 - Supplied-index fixtures agree with two independent implementations, including a development-only comparison with R `boot::boot.ci(type="stud")` where estimands/settings are equivalent. GPL validation tools are not distributed.
@@ -64,7 +64,7 @@ Implementation remains experimental until all of the following pass:
 - Sensitivity runs compare inner counts 99, 199, and 999 and outer counts at least 999 and 9,999; the default is retained only if interval behavior is stable within preregistered Monte Carlo uncertainty.
 - A documented 8-core Windows benchmark records runtime, peak memory, cancellation latency, worker scaling, unavailable rates, and exact numerical drift for minimum, default, and maximum plans. Cancellation latency must remain at most one second at the 95th percentile, there must be no out-of-memory failure under the published hardware profile, and worker-count numerical drift must be zero.
 
-No validation or accuracy claim follows from this specification alone.
+No validation or accuracy claim follows from this specification alone; the linked method manifest and its verified immutable receipts govern the release claim.
 
 ## Method References
 

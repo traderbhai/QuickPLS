@@ -1,0 +1,60 @@
+{
+  "checks": {
+    "dataset_identity_tamper_rejected": true,
+    "metamorphic_and_determinism_covered_by_engine_gate": true,
+    "no_scope_result_written": true,
+    "no_tampered_result_written": true,
+    "prebuilt_cli_only": true,
+    "unsupported_scope_rejected": true
+  },
+  "executions": [
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "validate",
+        "validation/results/method_factory/higher_order_v1/work/boundary_invalid.recipe.json",
+        "--json"
+      ],
+      "duration_seconds": 0.076,
+      "returncode": 1,
+      "stderr_tail": "Error: recipe validation failed\n",
+      "stdout_tail": "[\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"x\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"z\"\n  },\n  {\n    \"code\": \"higher_order.indicators.generated\",\n    \"severity\": \"warning\",\n    \"message\": \"Higher-order construct indicators are generated from lower-order components for supported HOC methods\",\n    \"subject\": \"hoc\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"y\"\n  },\n  {\n    \"code\": \"higher_order.components\",\n    \"severity\": \"error\",\n    \"message\": \"Higher-order constructs require at least two lower-order components\",\n    \"subject\": \"hoc\"\n  },\n  {\n    \"code\": \"method.higher_order.experimental\",\n    \"severity\": \"warning\",\n    \"message\": \"Higher-order construct semantics are validated only inside the documented QuickPLS v1.0.0 supported scope\",\n    \"subject\": \"hoc\"\n  }\n]\n"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "validation/results/method_factory/higher_order_v1/work/boundary_invalid.recipe.json",
+        "--data",
+        "validation/results/method_factory/higher_order_v1/work/higher_order_two_stage_base.csv",
+        "--output",
+        "validation/results/method_factory/higher_order_v1/work/boundary_scope_invalid.quickpls.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.087,
+      "returncode": 1,
+      "stderr_tail": "Error: higher_order.components: Higher-order constructs require at least two lower-order components\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "validation/results/method_factory/higher_order_v1/work/boundary_identity_tampered.recipe.json",
+        "--data",
+        "validation/results/method_factory/higher_order_v1/work/higher_order_two_stage_base.csv",
+        "--output",
+        "validation/results/method_factory/higher_order_v1/work/boundary_identity_tampered.quickpls.json",
+        "--allow-experimental"
+      ],
+      "duration_seconds": 0.086,
+      "returncode": 1,
+      "stderr_tail": "Error: recipe dataset fingerprint does not match the imported dataset\n",
+      "stdout_tail": ""
+    }
+  ],
+  "kind": "quickpls_phase3_boundary_gate",
+  "method": "higher_order_v1",
+  "passed": true,
+  "schema_version": 1
+}

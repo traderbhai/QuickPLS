@@ -13,6 +13,13 @@ import pls_algorithm_v1_packaged_acceptance as packaged
 
 
 class PlsAlgorithmV1PackagedAdapterTests(unittest.TestCase):
+    def test_current_cumulative_contract_count_is_manifest_derived(self):
+        expected = sum(
+            len(check_set["required_check_ids"])
+            for check_set in packaged.PACKAGED_ACCEPTANCE_CONTRACT["ordered_check_sets"]
+        )
+        self.assertEqual(packaged.EXPECTED_CUMULATIVE_CHECKS, expected)
+
     def _write(self, root: Path, relative: str, content: bytes, mtime_ns: int) -> Path:
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,7 +52,11 @@ class PlsAlgorithmV1PackagedAdapterTests(unittest.TestCase):
             200,
         )
         workbook_sha = hashlib.sha256(workbook.read_bytes()).hexdigest()
-        checks = {f"check_{index:03d}": {} for index in range(176)}
+        checks = {
+            check_id: {}
+            for check_set in packaged.PACKAGED_ACCEPTANCE_CONTRACT["ordered_check_sets"]
+            for check_id in check_set["required_check_ids"]
+        }
         checks["mediationExport"] = {
             "nativeXlsx": {
                 "helper": {
@@ -77,7 +88,7 @@ class PlsAlgorithmV1PackagedAdapterTests(unittest.TestCase):
             json.dumps(report_document, sort_keys=True), encoding="utf-8"
         )
         receipt_document = {
-            "schema_version": 1,
+            "schema_version": 2,
             "kind": "quickpls_v247_cumulative_native_acceptance_receipt",
             "passed": True,
             "supervisor_started_at_utc": (not_before - timedelta(seconds=1))
@@ -87,14 +98,21 @@ class PlsAlgorithmV1PackagedAdapterTests(unittest.TestCase):
             .isoformat()
             .replace("+00:00", "Z"),
             "report": "validation/results/v247_tauri_native_acceptance.json",
-            "checks": 177,
-            "unique_checks": 177,
+            "checks": packaged.EXPECTED_CUMULATIVE_CHECKS,
+            "unique_checks": packaged.EXPECTED_CUMULATIVE_CHECKS,
             "failures": 0,
             "console_errors": 0,
             "report_sha256": hashlib.sha256(report.read_bytes()).hexdigest(),
             "report_size": report.stat().st_size,
             "final_scope": "regression_bootstrap",
             "graceful_process_cleanup_verified": True,
+            "acceptance_contract": {
+                "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+                "contract_id": packaged.PACKAGED_ACCEPTANCE_CONTRACT["contract_id"],
+                "contract_version": packaged.PACKAGED_ACCEPTANCE_CONTRACT["contract_version"],
+                "required_check_count": packaged.EXPECTED_CUMULATIVE_CHECKS,
+                "sha256": packaged.CONTRACT_FILE_SHA256,
+            },
             "exports": [
                 {
                     "role": "generic",
@@ -276,16 +294,18 @@ class PlsAlgorithmV1PackagedAdapterTests(unittest.TestCase):
                 "exact_report_bytes",
             ),
             "receipt_check_count_drift": (
-                lambda receipt: receipt.__setitem__("checks", 176),
+                lambda receipt: receipt.__setitem__(
+                    "checks", packaged.EXPECTED_CUMULATIVE_CHECKS - 1
+                ),
                 None,
                 False,
-                "exact_177_checks",
+                "exact_required_checks",
             ),
             "actual_report_check_count_drift": (
                 None,
-                lambda report: report["checks"].pop("check_000"),
+                lambda report: report["checks"].pop("ncaReferenceFixture"),
                 True,
-                "exact_177_checks",
+                "exact_required_checks",
             ),
             "final_scope_drift": (
                 lambda receipt: receipt.__setitem__("final_scope", "pca"),

@@ -13,7 +13,7 @@ VALIDATION = Path(__file__).resolve().parent
 if str(VALIDATION) not in sys.path:
     sys.path.insert(0, str(VALIDATION))
 
-from plsc_v2_packaged_acceptance import EXPECTED_CUMULATIVE_CHECKS, ROOT, verify_native_report
+from plsc_v2_packaged_acceptance import PACKAGED_ACCEPTANCE_CONTRACT, ROOT, verify_native_report
 
 
 STARTED = datetime(2026, 8, 13, 12, 0, tzinfo=timezone.utc)
@@ -24,6 +24,11 @@ EXPORT = "validation/results/test-plsc.xlsx"
 def valid_report() -> dict:
     zero = {"recipeCount": 0, "resultCount": 0, "runCount": 0, "recipeIds": [], "resultIds": [], "runIds": []}
     checks = {
+        check_id: {"passed": True}
+        for check_set in PACKAGED_ACCEPTANCE_CONTRACT["ordered_check_sets"]
+        for check_id in check_set["required_check_ids"]
+    }
+    checks.update({
         "runtime": {"tauriRuntime": True},
         "plscInvalidSetup": {"attempted": True, "startEnabled": False, "blockers": ["Consistent PLS requires at least two indicators per construct"], "underspecifiedReflectiveBlocker": True, "archiveBefore": copy.deepcopy(zero), "archiveAfter": copy.deepcopy(zero), "runStateUnchanged": True, "resultCreated": False},
         "plscDialog": {"selectedMethod": "Consistent PLS", "startEnabled": True, "blockers": []},
@@ -31,9 +36,7 @@ def valid_report() -> dict:
         "plscResult": {"runId": RUN_ID, "runLabel": "Consistent PLS run", "reliabilityRows": 2, "correlationRows": 1, "recordedSeedLabel": 0},
         "plscExport": {"selectedRunId": RUN_ID, "expectedRunId": RUN_ID, "xlsxEnabled": True, "nativeXlsx": {"attempted": True, "targetPath": str((ROOT / EXPORT).resolve()), "file": {"isFile": True, "size": 123}, "workbookSheets": ["PLSc correction reliability", "PLSc construct correlations", "Run provenance"], "methodSheetsPresentExactlyOnce": True, "helper": {"completion": {"passed": True, "workbook": {"sha256": "a" * 64, "size": 123, "requiredSharedStrings": ["rho_A"]}}}}},
         "plscSaveReopen": {"sameRunRestored": True, "expectedRunId": RUN_ID, "selectedRunId": RUN_ID, "reliabilityRows": 2, "correlationRows": 1, "immutableLabelsRestored": True},
-    }
-    for index in range(EXPECTED_CUMULATIVE_CHECKS - len(checks)):
-        checks[f"other_{index:03d}"] = {"passed": True}
+    })
     return {"generatedAt": "2026-08-13T12:01:00Z", "passed": True, "focusedRun": {"scope": "regression_bootstrap", "completedAt": "2026-08-13T12:02:00Z"}, "checks": checks, "failures": [], "consoleErrors": []}
 
 

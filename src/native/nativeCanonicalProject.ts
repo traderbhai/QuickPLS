@@ -24,6 +24,12 @@ import {
 } from "./nativeCalculationMode";
 import { isStandaloneNativeAnalysis } from "./nativeStandaloneAnalysis";
 import { isNativeRegressionBootstrapValidationWitness } from "./nativeRegressionBootstrapWitness";
+import { nativePlsSampleSizePowerRecipeFromCanonical } from "./nativePlsSampleSizePower";
+import {
+  isNativePlscConsistentPermutationIdentityPresent,
+  nativePlscConsistentPermutationProjection,
+  nativePlscConsistentPermutationRecipeMatches,
+} from "./nativeConsistentPermutation";
 import {
   NATIVE_PROCESS_BOOTSTRAP_METHOD_VERSION,
   NATIVE_PROCESS_METHOD_VERSION,
@@ -36,6 +42,7 @@ import {
   nativeStructuralPathRandomizationProjection,
   nativeStructuralPathRandomizationRecipeMatches,
 } from "./nativeStructuralPathRandomization";
+import { nativePlsBootstrapTestTailContractValid } from "./nativeResults";
 
 export interface NativeCanonicalProjectState {
   activeModelId: string | null;
@@ -61,8 +68,9 @@ interface NativeWorkspacePresentation {
 
 /**
  * Reconciles the validated project records with the opaque workspace layout.
- * Canonical models/results always supply scientific content. Workspace data is
- * used only for presentation (positions, routing, and legacy-only archives).
+ * Canonical v3 models/results supply the currently executable scientific content.
+ * Workspace data supplies presentation plus dormant, versioned SemModelV4
+ * authoring intent, which is restored but never executed by this reconciler.
  */
 export function reconcileNativeCanonicalProject(
   project: Pick<NativeProjectSnapshot, "models" | "recipes" | "results" | "activeModelId" | "modelPresentations" | "savedReports" | "workspace">,
@@ -189,6 +197,7 @@ export function nativeModelSnapshotFromCanonical(
   const baseNodes: Array<Node<ConstructData>> = model.constructs.map((construct) => {
     const interaction = interactions.get(construct.id);
     const higher = higherOrder.get(construct.id);
+    const authoredSemantics = workspaceNodes.get(construct.id)?.data?.semModelV4;
     return {
       id: construct.id,
       type: "construct",
@@ -198,6 +207,7 @@ export function nativeModelSnapshotFromCanonical(
         shortName: construct.short_name,
         mode: construct.mode,
         indicators: [...construct.indicators],
+        ...(authoredSemantics ? { semModelV4: authoredSemantics } : {}),
         ...(interaction ? {
           semantic: "interaction" as const,
           interaction: {
@@ -226,6 +236,7 @@ export function nativeModelSnapshotFromCanonical(
       edge.source === path.source
       && edge.target === path.target
       && !edge.id.startsWith("measurement::")
+      && (edge.data as { role?: unknown } | undefined)?.role !== "covariance"
     ));
     const data: Record<string, unknown> | undefined = control
       ? { role: "control", controlLabel: control.label }
@@ -240,6 +251,23 @@ export function nativeModelSnapshotFromCanonical(
     };
   });
 
+  const constructIds = new Set(model.constructs.map((construct) => construct.id));
+  const covariancePairs = new Set<string>();
+  const covarianceEdges = workspaceEdges.filter((edge) => {
+    if ((edge.data as { role?: unknown } | undefined)?.role !== "covariance"
+      || edge.source === edge.target
+      || !constructIds.has(edge.source)
+      || !constructIds.has(edge.target)) return false;
+    const pair = [edge.source, edge.target].sort().join("\0");
+    if (covariancePairs.has(pair)) return false;
+    covariancePairs.add(pair);
+    return true;
+  }).map((edge) => ({
+    ...edge,
+    data: { ...((edge.data && typeof edge.data === "object" && !Array.isArray(edge.data) ? edge.data : {})), role: "covariance" as const },
+  }));
+
+  const allEdges = [...edges, ...covarianceEdges];
   const laidOut = layoutModel(baseNodes, edges);
   const nodes = laidOut.map((node) => {
     const position = validPosition(workspaceNodes.get(node.id)?.position);
@@ -247,8 +275,8 @@ export function nativeModelSnapshotFromCanonical(
   });
   return {
     nodes,
-    edges,
-    diagramLayout: defaultDiagramLayout(nodes, edges, presentation.diagramLayout),
+    edges: allEdges,
+    diagramLayout: defaultDiagramLayout(nodes, allEdges, presentation.diagramLayout),
   };
 }
 
@@ -273,6 +301,57 @@ export function nativeRunFromCanonicalResult(
   workspaceRun?: AnalysisRun | NativeWorkspaceRunPresentation,
 ): AnalysisRun | null {
   if (envelope.status !== "completed" || envelope.payload.kind === "legacy") return null;
+  if (
+    envelope.payload.kind === "pls_sample_size_power_v1"
+    || envelope.payload.kind === "pls_sample_size_power_v2"
+  ) {
+    const isV2 = envelope.payload.kind === "pls_sample_size_power_v2";
+    const expectedVersion = isV2 ? "pls_sample_size_power_v2" : "pls_sample_size_power_v1";
+    const expectedInference = isV2
+      ? "case_bootstrap_null_centered_two_sided_plus_one"
+      : "case_bootstrap_normal_reference_two_sided";
+    if (
+      recipe.schema_version !== 3
+      || recipe.settings.method !== "pls_sample_size_power"
+      || recipe.method_config?.kind !== "pls_sample_size_power"
+      || envelope.provenance.method !== "pls_sample_size_power"
+      || recipe.method_config.inference !== expectedInference
+      || envelope.provenance.method_version !== expectedVersion
+      || envelope.provenance.recipe_id !== recipe.id
+      || envelope.provenance.dataset_fingerprint !== recipe.dataset_fingerprint
+      || envelope.payload.analysis.method_version !== expectedVersion
+      || envelope.payload.analysis.capability_id !== "qpls3.pls.sample_size_power"
+    ) return null;
+    const method = "PLS-SEM Sample Size and Power Analysis";
+    return {
+      id: envelope.id,
+      modelId: recipe.model.id,
+      name: `${method} run`,
+      method,
+      createdAt: envelope.provenance.completed_at,
+      seed: envelope.provenance.seed,
+      status: "completed",
+      warnings: envelope.diagnostics
+        .filter((diagnostic) => diagnostic.level === "warning")
+        .map((diagnostic) => diagnostic.message),
+      logs: workspaceRun?.logs ?? [{
+        id: `run-${envelope.id}-completed`,
+        timestamp: envelope.provenance.completed_at,
+        phase: "Completed",
+        message: `${method} completed successfully.`,
+        tone: "success",
+      }],
+      fingerprint: envelope.provenance.dataset_fingerprint.slice(0, 12),
+      modelSnapshot: nativeModelSnapshotFromCanonical(recipe.model, {
+        nodes: workspaceRun?.modelSnapshot?.nodes,
+        edges: workspaceRun?.modelSnapshot?.edges,
+        diagramLayout: workspaceRun?.modelSnapshot?.diagramLayout,
+      }),
+      plsSampleSizePower: envelope.payload.analysis,
+      plsSampleSizePowerRecipe: nativePlsSampleSizePowerRecipeFromCanonical(recipe.method_config, recipe.settings),
+      provenance: envelope.provenance,
+    };
+  }
   const canonicalRegression = envelope.payload.estimation.regression;
   const processV2 = envelope.provenance.method_version === NATIVE_PROCESS_METHOD_VERSION
     || envelope.provenance.method_version
@@ -389,6 +468,16 @@ export function nativeRunFromCanonicalResult(
   const permutation = envelope.payload.kind === "pls_pm_v3"
     ? envelope.payload.permutation ?? undefined
     : undefined;
+  const recipeBootstrapTestTail = recipe.settings.bootstrap_test_tail ?? "two_sided";
+  const resultBootstrapTestTail = envelope.provenance.settings.bootstrap_test_tail ?? "two_sided";
+  if (recipeBootstrapTestTail !== resultBootstrapTestTail
+    || (recipeBootstrapTestTail !== "two_sided" && (
+      recipe.schema_version !== 3
+      || recipe.settings.method !== "pls_pm"
+      || recipe.settings.bootstrap_samples < 1
+      || recipe.method_config?.kind !== "pls_bootstrap"
+      || !bootstrap
+    ))) return null;
   const method = canonicalMethodLabel(envelope, recipe, Boolean(bootstrap), Boolean(permutation));
   const warnings = envelope.diagnostics
     .filter((diagnostic) => diagnostic.level === "warning")
@@ -418,9 +507,19 @@ export function nativeRunFromCanonicalResult(
     permutation,
     provenance: envelope.provenance,
   };
-  if (isStructuralPathRandomizationIdentityPresent(recipe, envelope)) {
+  if (!nativePlsBootstrapTestTailContractValid(run)) return null;
+  const hasPlscConsistentPermutationIdentity = isNativePlscConsistentPermutationIdentityPresent(
+    recipe,
+    envelope,
+  );
+  if (!hasPlscConsistentPermutationIdentity
+    && isStructuralPathRandomizationIdentityPresent(recipe, envelope)) {
     const projection = nativeStructuralPathRandomizationProjection(run);
     if (!projection || !nativeStructuralPathRandomizationRecipeMatches(recipe, envelope, projection)) return null;
+  }
+  if (hasPlscConsistentPermutationIdentity) {
+    const projection = nativePlscConsistentPermutationProjection(run);
+    if (!projection || !nativePlscConsistentPermutationRecipeMatches(recipe, envelope, projection)) return null;
   }
   if (processV2 && !nativeProcessResultProjection(run)) return null;
   return run;
@@ -460,6 +559,8 @@ function canonicalMethodLabel(
 ) {
   if (recipe.settings.method === "predict") {
     const version = envelope.payload.kind === "legacy"
+      || envelope.payload.kind === "pls_sample_size_power_v1"
+      || envelope.payload.kind === "pls_sample_size_power_v2"
       ? null
       : envelope.payload.estimation.predict?.method_version ?? null;
     if (version === CURRENT_PLS_PREDICT_METHOD_VERSION) return NATIVE_PREDICTION_METHOD_LABEL;
@@ -480,6 +581,15 @@ function canonicalMethodLabel(
     if (hasBootstrap || recipe.settings.bootstrap_samples > 0) return "PLS-SEM Bootstrapping";
     if (hasPermutation || recipe.settings.permutation_samples > 0) return "Structural Path Randomization";
     return "PLS-SEM Algorithm";
+  }
+  if (recipe.settings.method === "plsc" && hasBootstrap
+    && envelope.provenance.method_version.split("+").includes("plsc_bootstrap_v1")) {
+    return "PLSc Consistent Bootstrapping";
+  }
+  if (recipe.settings.method === "plsc" && hasPermutation
+    && envelope.provenance.method_version.split("+").includes("plsc_permutation_v1")
+    && envelope.provenance.method_version.split("+").includes("indexed_group_label_permutation_v1")) {
+    return "PLSc Consistent Permutation";
   }
   const descriptor = NATIVE_ANALYSIS_RECIPE_DESCRIPTORS.find((candidate) => (
     candidate.engineMethod === recipe.settings.method

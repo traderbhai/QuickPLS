@@ -56,7 +56,7 @@
     ]
   },
   "feature_id": "qpls3.standalone.logistic",
-  "generated_at_utc": "2026-08-13T19:55:21.295289Z",
+  "generated_at_utc": "2026-08-18T14:16:15.746073Z",
   "method_version": "regression_logistic_v2",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -64,14 +64,19 @@
   "schema_version": 1,
   "source_artifacts": [
     {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
+    {
       "path": "validation/legacy_release_adapter_common.py",
-      "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
-      "size": 51955
+      "sha256": "01f86f08668ad4ff9aad4cccda10298cc6579af4da748cc998d2aabdf0ec8681",
+      "size": 54379
     },
     {
       "path": "validation/logistic_method_promotion_audit.py",
-      "sha256": "6754ca1bfd4c008112a1bd88c9015bc04b7e1477e3fb4623a1f41cfe8fc5cf50",
-      "size": 17077
+      "sha256": "319a14095df104bf2403dc224d353449434aa5f82a807b5db85f431f21a94200",
+      "size": 17110
     },
     {
       "path": "validation/logistic_regression_v2_factory_audit.py",
@@ -85,8 +90,8 @@
     },
     {
       "path": "validation/methods/logistic_regression_v2.manifest.json",
-      "sha256": "d37e0fa1b6e67a91ec3b885163114e07c7da08de88d54385f960a77abcc73c7f",
-      "size": 13621
+      "sha256": "4e7731cb782808e278e535e28d59cbcb811b44cbbd7917a8fdea3df7c50e4407",
+      "size": 13537
     },
     {
       "path": "validation/methods/method_promotion_manifest.schema.json",
@@ -94,29 +99,34 @@
       "size": 15836
     },
     {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
+    },
+    {
       "path": "validation/results/method_factory/logistic_regression_v2/engine_stage.identity.json",
-      "sha256": "fec9acc4f83d2806f607cf09e1172bcd81fb478b7207350932df3d7f385443db",
-      "size": 4246
+      "sha256": "a5a738abeee7c30b82c0310a3b44e5b315144694fa02141025f638e8ddc70422",
+      "size": 6505
     },
     {
       "path": "validation/results/method_factory/logistic_regression_v2/native_stage.identity.json",
-      "sha256": "b36ac63be8e81c9ec6031aaeb1d32568761082904ff021b496b9861ef681ad94",
-      "size": 4785
+      "sha256": "5eca4b84bdb4abdc6b48db4ba9bfa6c2afc444b3d798fda64f2b32ec56679e82",
+      "size": 4801
     },
     {
       "path": "validation/results/method_factory/logistic_regression_v2/packaged_acceptance.identity.json",
-      "sha256": "7541bd97f764835649c7a88a9de5d721f37d5fdd8de87c324d3eb399aad23b7e",
-      "size": 46225
+      "sha256": "e0413f48ac07dc88ef9cce2fabae8cf716c59366e8de11bffae92cd2ebbb428e",
+      "size": 66837
     },
     {
       "path": "validation/results/method_factory/logistic_regression_v2/persistence_report.identity.json",
-      "sha256": "10520b039809fe34d9bdb94c3c4e73a988c6e40ec9ab51707560ffba8f845bad",
-      "size": 4616
+      "sha256": "6b675719e07215392976ce3a3013b54a67688471cb08330478574e7ca554d53c",
+      "size": 4646
     },
     {
       "path": "validation/test_legacy_release_adapters.py",
-      "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
-      "size": 13396
+      "sha256": "dbc695bede07f67595a76601614103ac21b9d6fc3512ddd7b26369a3dbc67c51",
+      "size": 15812
     },
     {
       "path": "validation/test_logistic_method_promotion_audit.py",
@@ -125,8 +135,8 @@
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     }
   ]
 }

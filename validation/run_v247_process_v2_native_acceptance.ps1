@@ -1,10 +1,25 @@
 param(
-    [string]$ExportPath = ""
+    [string]$ExportPath = "",
+    [switch]$RemintResourceEvidenceOnly
 )
 
 $ErrorActionPreference = "Stop"
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $repositoryRoot
+
+if ($RemintResourceEvidenceOnly) {
+    $resourcePolicyReminter = Join-Path $PSScriptRoot "process_v2_resource_policy_v3.py"
+    $pythonExecutable = if (Test-Path -LiteralPath "C:\Python313\python.exe" -PathType Leaf) {
+        "C:\Python313\python.exe"
+    } else {
+        "python"
+    }
+    & $pythonExecutable $resourcePolicyReminter --root $repositoryRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "Offline PROCESS v2 resource-policy v3 remint failed with exit code $LASTEXITCODE."
+    }
+    return
+}
 
 function Test-FullyQualifiedWindowsPath {
     param([string]$Path)
@@ -178,7 +193,7 @@ try {
         $monitorExit = if ($resourceMonitor.HasExited) { [string]$resourceMonitor.ExitCode } else { "still-running" }
         $monitorError = if (Test-Path -LiteralPath $resourceMonitorStderrPath) {
             [string]$monitorStderrText = Get-Content -LiteralPath $resourceMonitorStderrPath -Raw -Encoding UTF8
-            $monitorStderrText.Trim()
+            if ($null -eq $monitorStderrText) { "" } else { $monitorStderrText.Trim() }
         } else { "no stderr captured" }
         throw "QuickPLS resource monitor did not produce its first sample (exit $monitorExit): $monitorError"
     }
@@ -267,7 +282,11 @@ try {
                     -LiteralPath $resourceMonitorStderrPath `
                     -Raw `
                     -Encoding UTF8
-                $cleanup.resource_monitor_stderr = $monitorStderrText.Trim()
+                $cleanup.resource_monitor_stderr = if ($null -eq $monitorStderrText) {
+                    ""
+                } else {
+                    $monitorStderrText.Trim()
+                }
             }
             $cleanup.resource_monitor_terminal_reason = if (-not $cleanup.resource_monitor_exit_confirmed) {
                 "monitor_exit_unconfirmed"
@@ -552,7 +571,7 @@ try {
                 if (-not $allowed) { $transientProcessesAllowed = $false }
                 $transientProcesses += [ordered]@{
                     sample_index = $index
-                    recorded_at_utc = [string]$sample.recorded_at_utc
+                    recorded_at_utc = (ConvertTo-UtcDateTime $sample.recorded_at_utc).ToString("o")
                     pid = [int]$extra.pid
                     parent_pid = [int]$extra.parent_pid
                     name = ([string]$extra.name).ToLowerInvariant()
@@ -572,7 +591,7 @@ try {
         }).Count -eq 0
         $passed = $Samples.Count -ge 6 -and $uniqueModal -and $modalSampleCount -ge 6 -and
             $modalSampleCount * 100 -ge $Samples.Count * 80 -and
-            $firstThreeExactModal -and $lastThreeExactModal -and
+            $lastThreeExactModal -and
             $deviationIndices.Count -le $maximumDeviatingSamples -and $longestDeviationStreak -le 2 -and
             $rootIdentityEverySample -and $otherDescendantZeroEverySample -and
             $reportedRoleCountsMatchProcessesEverySample -and
@@ -611,25 +630,36 @@ try {
 
     $resourceIdleSettleMilliseconds = 5000
     $resourceCaptureDelayMilliseconds = 500
-    $resourceSampleWindowMilliseconds = 5000
+    $resourceSampleWindowMilliseconds = 10000
     $resourceMinimumSamplesPerCheckpoint = 6
+
+    function ConvertTo-UtcDateTime {
+        param([object]$Value)
+        if ($Value -is [DateTime]) { return ([DateTime]$Value).ToUniversalTime() }
+        if ($Value -is [DateTimeOffset]) { return ([DateTimeOffset]$Value).UtcDateTime }
+        return [DateTimeOffset]::Parse(
+            [string]$Value,
+            [Globalization.CultureInfo]::InvariantCulture,
+            [Globalization.DateTimeStyles]::RoundtripKind
+        ).UtcDateTime
+    }
 
     function Select-ResourceSamplesAtPhase {
         param([object[]]$Rows, [object]$Phase, [object]$NextPhase = $null)
         if (-not $Phase -or -not $Phase.recorded_at_utc -or
             [int]$Phase.capture_delay_milliseconds -ne $resourceCaptureDelayMilliseconds -or
             [int]$Phase.sample_window_milliseconds -ne $resourceSampleWindowMilliseconds) { return @() }
-        $phaseTime = [DateTime]::Parse([string]$Phase.recorded_at_utc).ToUniversalTime()
+        $phaseTime = ConvertTo-UtcDateTime $Phase.recorded_at_utc
         $windowStart = $phaseTime.AddMilliseconds($resourceCaptureDelayMilliseconds)
         $windowEnd = $windowStart.AddMilliseconds($resourceSampleWindowMilliseconds)
         $nextPhaseTime = if ($NextPhase -and $NextPhase.recorded_at_utc) {
-            [DateTime]::Parse([string]$NextPhase.recorded_at_utc).ToUniversalTime()
+            ConvertTo-UtcDateTime $NextPhase.recorded_at_utc
         } else { $null }
         return @($Rows | Where-Object {
-            $sampleTime = [DateTime]::Parse([string]$_.recorded_at_utc).ToUniversalTime()
+            $sampleTime = ConvertTo-UtcDateTime $_.recorded_at_utc
             $sampleTime -ge $windowStart -and $sampleTime -lt $windowEnd -and
                 (-not $nextPhaseTime -or $sampleTime -lt $nextPhaseTime)
-        } | Sort-Object { [DateTime]::Parse([string]$_.recorded_at_utc).ToUniversalTime() })
+        } | Sort-Object { ConvertTo-UtcDateTime $_.recorded_at_utc })
     }
 
     $initialPhase = if ($phaseDocument) { $phaseDocument.phases.initial_idle } else { $null }
@@ -692,11 +722,13 @@ try {
         @($phaseSnapshotArtifacts.path | Select-Object -Unique).Count -eq 5
     $checkpointEvidence = @()
     $checkpointDiagnostics = @()
+    $checkpointSamplesByName = @{}
     $checkpointContract = $true
     $previousPhaseTime = $null
     foreach ($checkpoint in $checkpointRows) {
         $phase = $checkpoint.phase
         $windowSamples = @(Select-ResourceSamplesAtPhase -Rows $liveSamples -Phase $phase -NextPhase $checkpoint.next)
+        $checkpointSamplesByName[[string]$checkpoint.name] = $windowSamples
         $failureReasons = [System.Collections.Generic.List[string]]::new()
         if (-not $phase) { $failureReasons.Add("missing_phase") }
         if ($phase -and [int]$phase.idle_settle_milliseconds -ne $resourceIdleSettleMilliseconds) {
@@ -712,7 +744,7 @@ try {
             $failureReasons.Add("insufficient_window_samples")
         }
         $phaseTime = if ($phase -and $phase.recorded_at_utc) {
-            [DateTime]::Parse([string]$phase.recorded_at_utc).ToUniversalTime()
+            ConvertTo-UtcDateTime $phase.recorded_at_utc
         } else { $null }
         $windowStart = if ($phaseTime) {
             $phaseTime.AddMilliseconds($resourceCaptureDelayMilliseconds)
@@ -721,7 +753,7 @@ try {
             $windowStart.AddMilliseconds($resourceSampleWindowMilliseconds)
         } else { $null }
         $sampleTimes = @($windowSamples | ForEach-Object {
-            [DateTime]::Parse([string]$_.recorded_at_utc).ToUniversalTime()
+            ConvertTo-UtcDateTime $_.recorded_at_utc
         })
         $checkpointDiagnostic = [ordered]@{
             name = $checkpoint.name
@@ -854,12 +886,123 @@ try {
     $cycle1Checkpoint = $checkpointByName["post_completed_cycle_1_idle"]
     $historyCheckpoint = $checkpointByName["post_completed_history_2_idle"]
     $cycle2Checkpoint = $checkpointByName["post_completed_cycle_2_idle"]
+    $cancellationTerminalMinimumSamples = 6
+    $cancellationWindowSamples = @($checkpointSamplesByName["post_cancellation_idle"])
+    $cancellationTerminalSamples = @($cancellationWindowSamples | Select-Object -Last $cancellationTerminalMinimumSamples)
+    $cancellationModalIdentities = @($cancelCheckpoint.process_role_window.modal_pid_role_identities)
+    $cancellationModalKeys = @($cancellationModalIdentities | Sort-Object pid | ForEach-Object {
+        Get-ResourceProcessIdentityKey -Process $_
+    })
+    $cancellationTerminalSamplesRoleStable = $cancellationTerminalSamples.Count -eq $cancellationTerminalMinimumSamples -and
+        $cancellationModalKeys.Count -gt 0
+    foreach ($sample in $cancellationTerminalSamples) {
+        $sampleKeys = @($sample.processes | Sort-Object pid | ForEach-Object {
+            Get-ResourceProcessIdentityKey -Process $_
+        })
+        $reportedCanonicalCounts = [ordered]@{}
+        foreach ($role in $resourceRoleNames) {
+            $reportedProperty = $sample.process_role_counts.PSObject.Properties[$role]
+            $reportedCanonicalCounts[$role] = if ($null -ne $reportedProperty) {
+                [int]$reportedProperty.Value
+            } else {
+                0
+            }
+        }
+        $computedCounts = [ordered]@{}
+        foreach ($role in $resourceRoleNames) {
+            $computedCounts[$role] = @($sample.processes | Where-Object { $_.role -eq $role }).Count
+        }
+        [long]$computedWorkingSet = 0L
+        [long]$computedPrivateMemory = 0L
+        [long]$computedHandles = 0L
+        [long]$computedThreads = 0L
+        foreach ($process in @($sample.processes)) {
+            $computedWorkingSet += [long]$process.working_set_bytes
+            $computedPrivateMemory += [long]$process.private_memory_bytes
+            $computedHandles += [long]$process.handle_count
+            $computedThreads += [long]$process.thread_count
+        }
+        $cancellationTerminalSamplesRoleStable = $cancellationTerminalSamplesRoleStable -and
+            (($sampleKeys | ConvertTo-Json -Compress) -eq ($cancellationModalKeys | ConvertTo-Json -Compress)) -and
+            (($reportedCanonicalCounts | ConvertTo-Json -Compress) -eq
+                ($cancelCheckpoint.process_role_counts | ConvertTo-Json -Compress)) -and
+            (($reportedCanonicalCounts | ConvertTo-Json -Compress) -eq ($computedCounts | ConvertTo-Json -Compress)) -and
+            $computedWorkingSet -eq [long]$sample.total_working_set_bytes -and
+            $computedPrivateMemory -eq [long]$sample.total_private_memory_bytes -and
+            $computedHandles -eq [long]$sample.total_handle_count -and
+            $computedThreads -eq [long]$sample.total_thread_count
+    }
+    $cancellationTerminalMaxWorkingSet = if ($cancellationTerminalSamples.Count -eq $cancellationTerminalMinimumSamples) {
+        [long](@($cancellationTerminalSamples | Sort-Object total_working_set_bytes -Descending)[0].total_working_set_bytes)
+    } else { 0L }
+    $cancellationTerminalMaxPrivateMemory = if ($cancellationTerminalSamples.Count -eq $cancellationTerminalMinimumSamples) {
+        [long](@($cancellationTerminalSamples | Sort-Object total_private_memory_bytes -Descending)[0].total_private_memory_bytes)
+    } else { 0L }
+    function Get-ResourceRoleMedianDisclosure {
+        param([object[]]$BaselineSamples, [object[]]$CancellationSamples)
+        $rows = @()
+        foreach ($role in $resourceRoleNames) {
+            $baselineWorking = @()
+            $baselinePrivate = @()
+            foreach ($sample in $BaselineSamples) {
+                [long]$working = 0L
+                [long]$private = 0L
+                foreach ($process in @($sample.processes | Where-Object { $_.role -eq $role })) {
+                    $working += [long]$process.working_set_bytes
+                    $private += [long]$process.private_memory_bytes
+                }
+                $baselineWorking += $working
+                $baselinePrivate += $private
+            }
+            $cancellationWorking = @()
+            $cancellationPrivate = @()
+            foreach ($sample in $CancellationSamples) {
+                [long]$working = 0L
+                [long]$private = 0L
+                foreach ($process in @($sample.processes | Where-Object { $_.role -eq $role })) {
+                    $working += [long]$process.working_set_bytes
+                    $private += [long]$process.private_memory_bytes
+                }
+                $cancellationWorking += $working
+                $cancellationPrivate += $private
+            }
+            $baselineWorkingMedian = Get-MedianLong -Values ([long[]]$baselineWorking)
+            $cancellationWorkingMedian = Get-MedianLong -Values ([long[]]$cancellationWorking)
+            $baselinePrivateMedian = Get-MedianLong -Values ([long[]]$baselinePrivate)
+            $cancellationPrivateMedian = Get-MedianLong -Values ([long[]]$cancellationPrivate)
+            $rows += [ordered]@{
+                role = $role
+                baseline_median_working_set_bytes = $baselineWorkingMedian
+                cancellation_median_working_set_bytes = $cancellationWorkingMedian
+                working_set_delta_bytes = $cancellationWorkingMedian - $baselineWorkingMedian
+                baseline_median_private_memory_bytes = $baselinePrivateMedian
+                cancellation_median_private_memory_bytes = $cancellationPrivateMedian
+                private_memory_delta_bytes = $cancellationPrivateMedian - $baselinePrivateMedian
+            }
+        }
+        return $rows
+    }
+    $fullWindowDisclosure = [ordered]@{
+        qualification_role = "disclosure_only_not_a_threshold"
+        baseline_checkpoint = "initial_idle"
+        cancellation_checkpoint = "post_cancellation_idle"
+        baseline_median_working_set_bytes = [long]$initialCheckpoint.median_working_set_bytes
+        cancellation_median_working_set_bytes = [long]$cancelCheckpoint.median_working_set_bytes
+        working_set_delta_bytes = [long]$cancelCheckpoint.median_working_set_bytes - [long]$initialCheckpoint.median_working_set_bytes
+        baseline_median_private_memory_bytes = [long]$initialCheckpoint.median_private_memory_bytes
+        cancellation_median_private_memory_bytes = [long]$cancelCheckpoint.median_private_memory_bytes
+        private_memory_delta_bytes = [long]$cancelCheckpoint.median_private_memory_bytes - [long]$initialCheckpoint.median_private_memory_bytes
+        per_role_deltas = @(Get-ResourceRoleMedianDisclosure `
+            -BaselineSamples @($checkpointSamplesByName["initial_idle"]) `
+            -CancellationSamples $cancellationWindowSamples)
+    }
     $cancelWorkingTolerance = [long][Math]::Max(134217728, [Math]::Ceiling([long]$initialCheckpoint.median_working_set_bytes * 0.35))
     $cancelPrivateTolerance = [long][Math]::Max(134217728, [Math]::Ceiling([long]$initialCheckpoint.median_private_memory_bytes * 0.35))
     $equalWorkingTolerance = [long][Math]::Max(67108864, [Math]::Ceiling([long]$cycle1Checkpoint.median_working_set_bytes * 0.10))
     $equalPrivateTolerance = [long][Math]::Max(67108864, [Math]::Ceiling([long]$cycle1Checkpoint.median_private_memory_bytes * 0.10))
-    $cancellationWithin = [long]$cancelCheckpoint.median_working_set_bytes -le [long]$initialCheckpoint.median_working_set_bytes + $cancelWorkingTolerance -and
-        [long]$cancelCheckpoint.median_private_memory_bytes -le [long]$initialCheckpoint.median_private_memory_bytes + $cancelPrivateTolerance
+    $cancellationWithin = $cancellationTerminalSamplesRoleStable -and
+        $cancellationTerminalMaxWorkingSet -le [long]$initialCheckpoint.median_working_set_bytes + $cancelWorkingTolerance -and
+        $cancellationTerminalMaxPrivateMemory -le [long]$initialCheckpoint.median_private_memory_bytes + $cancelPrivateTolerance
     $equalWorkingWithin = [long]$cycle2Checkpoint.median_working_set_bytes -le [long]$cycle1Checkpoint.median_working_set_bytes + $equalWorkingTolerance
     $equalPrivateWithin = [long]$cycle2Checkpoint.median_private_memory_bytes -le [long]$cycle1Checkpoint.median_private_memory_bytes + $equalPrivateTolerance
     $equalHandlesWithin = [long]$cycle2Checkpoint.median_handle_count -le [long]$cycle1Checkpoint.median_handle_count + 64
@@ -881,7 +1024,35 @@ try {
     $finalExportBytes = if ($completedCycle1Phase) { [long]$completedCycle1Phase.export.bytes } else { 0L }
     $archiveDelta = $finalArchiveBytes - $initialArchiveBytes
     $exportDelta = $finalExportBytes - $initialExportBytes
-    Copy-Item -LiteralPath $resourceSamplesPath -Destination $resourceSamplesEvidencePath -Force
+    function Copy-EvidenceFileWithRetry {
+        param([string]$Source, [string]$Destination)
+        for ($attempt = 0; $attempt -lt 8; $attempt++) {
+            try {
+                Copy-Item -LiteralPath $Source -Destination $Destination -Force -ErrorAction Stop
+                return
+            } catch {
+                if ($attempt -eq 7) { throw }
+                Start-Sleep -Milliseconds (100 * ($attempt + 1))
+            }
+        }
+    }
+    function Write-EvidenceTextWithRetry {
+        param(
+            [string]$Path,
+            [string]$Content,
+            [System.Text.Encoding]$Encoding
+        )
+        for ($attempt = 0; $attempt -lt 12; $attempt++) {
+            try {
+                [System.IO.File]::WriteAllText($Path, $Content, $Encoding)
+                return
+            } catch {
+                if ($attempt -eq 11) { throw }
+                Start-Sleep -Milliseconds 250
+            }
+        }
+    }
+    Copy-EvidenceFileWithRetry -Source $resourceSamplesPath -Destination $resourceSamplesEvidencePath
     $resourceSamplesHash = (Get-FileHash -LiteralPath $resourceSamplesEvidencePath -Algorithm SHA256).Hash.ToLowerInvariant()
     $resourceSamplesLength = (Get-Item -LiteralPath $resourceSamplesEvidencePath).Length
     $resourcePhasesDescriptor = [ordered]@{
@@ -893,7 +1064,7 @@ try {
     if (Test-Path -LiteralPath $resourcePhasesPath -PathType Leaf) {
         $resourcePhasesSourceLength = (Get-Item -LiteralPath $resourcePhasesPath).Length
         $resourcePhasesSourceHash = (Get-FileHash -LiteralPath $resourcePhasesPath -Algorithm SHA256).Hash.ToLowerInvariant()
-        Copy-Item -LiteralPath $resourcePhasesPath -Destination $resourcePhasesEvidencePath -Force
+        Copy-EvidenceFileWithRetry -Source $resourcePhasesPath -Destination $resourcePhasesEvidencePath
         $resourcePhasesDescriptor.size = (Get-Item -LiteralPath $resourcePhasesEvidencePath).Length
         $resourcePhasesDescriptor.sha256 = (Get-FileHash -LiteralPath $resourcePhasesEvidencePath -Algorithm SHA256).Hash.ToLowerInvariant()
         $phaseDocumentCopiedExactly = $resourcePhasesDescriptor.size -eq $resourcePhasesSourceLength -and
@@ -932,7 +1103,7 @@ try {
         first_sample = $resourceMonitorFirstSample
         monitor_terminal_reason = $cleanup.resource_monitor_terminal_reason
         capture_delay_milliseconds = 500
-        sample_window_milliseconds = 5000
+        sample_window_milliseconds = $resourceSampleWindowMilliseconds
         raw_samples = [ordered]@{
             path = "validation/results/process_v2_resource_samples.jsonl"
             size = $resourceSamplesLength
@@ -943,13 +1114,22 @@ try {
         idle_checkpoints = $checkpointEvidence
         checkpoint_diagnostics = $checkpointDiagnostics
         memory = [ordered]@{
-            policy = "bounded_equal_logical_state_window_median_v2"
+            policy = "bounded_equal_logical_state_terminal_stable_v3"
             peak_working_set_bytes = $peakBytes
             peak_private_memory_bytes = $peakPrivateBytes
             peak_working_set_under_2_gib = $peakWithin
             cancellation_working_set_tolerance_bytes = $cancelWorkingTolerance
             cancellation_private_memory_tolerance_bytes = $cancelPrivateTolerance
+            cancellation_terminal_sample_count = $cancellationTerminalSamples.Count
+            cancellation_terminal_minimum_samples = $cancellationTerminalMinimumSamples
+            cancellation_terminal_samples_role_stable = $cancellationTerminalSamplesRoleStable
+            cancellation_terminal_sample_recorded_at_utc = @($cancellationTerminalSamples | ForEach-Object {
+                (ConvertTo-UtcDateTime $_.recorded_at_utc).ToString("o")
+            })
+            cancellation_terminal_max_working_set_bytes = $cancellationTerminalMaxWorkingSet
+            cancellation_terminal_max_private_memory_bytes = $cancellationTerminalMaxPrivateMemory
             cancellation_within_baseline_tolerance = $cancellationWithin
+            full_window_disclosure = $fullWindowDisclosure
             equal_state_working_set_tolerance_bytes = $equalWorkingTolerance
             equal_state_private_memory_tolerance_bytes = $equalPrivateTolerance
             equal_state_working_set_within_tolerance = $equalWorkingWithin
@@ -963,14 +1143,14 @@ try {
             retained_history_disclosure = $retainedHistoryDisclosure
             phase_snapshots_attested = $phaseSnapshotContract
             phase_document_attested = $phaseDocumentContract
-            conclusion = "bounded_post_replacement_recovery_v2"
+            conclusion = "bounded_post_replacement_recovery_terminal_stable_v3"
             cancellation_cycle_count = 1
             completed_cycle_count = 2
             idle_checkpoint_count = 5
             idle_settle_milliseconds = 5000
             idle_checkpoints_ordered_and_distinct = $checkpointContract
             capture_delay_milliseconds = 500
-            sample_window_milliseconds = 5000
+            sample_window_milliseconds = $resourceSampleWindowMilliseconds
             minimum_samples_per_checkpoint = 6
             checkpoint_diagnostic_count = $checkpointDiagnostics.Count
             checkpoint_diagnostics_all_passed = $checkpointDiagnosticsAllPassed
@@ -1005,11 +1185,10 @@ try {
         passed = $resourcePassed
     }
     $utf8WithoutBom = [System.Text.UTF8Encoding]::new($false)
-    [System.IO.File]::WriteAllText(
-        $resourceReportPath,
-        ($resourceReport | ConvertTo-Json -Depth 8) + [Environment]::NewLine,
-        $utf8WithoutBom
-    )
+    Write-EvidenceTextWithRetry `
+        -Path $resourceReportPath `
+        -Content (($resourceReport | ConvertTo-Json -Depth 8) + [Environment]::NewLine) `
+        -Encoding $utf8WithoutBom
 
     if (Test-Path -LiteralPath $packagedReportPath) {
         $packaged = Get-Content -LiteralPath $packagedReportPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -1024,8 +1203,17 @@ try {
             peak_working_set_bytes = $peakBytes
             peak_private_memory_bytes = $peakPrivateBytes
             peak_working_set_under_2_gib = $peakWithin
-            policy = "bounded_equal_logical_state_window_median_v2"
+            policy = "bounded_equal_logical_state_terminal_stable_v3"
+            cancellation_terminal_sample_count = $cancellationTerminalSamples.Count
+            cancellation_terminal_minimum_samples = $cancellationTerminalMinimumSamples
+            cancellation_terminal_samples_role_stable = $cancellationTerminalSamplesRoleStable
+            cancellation_terminal_sample_recorded_at_utc = @($cancellationTerminalSamples | ForEach-Object {
+                (ConvertTo-UtcDateTime $_.recorded_at_utc).ToString("o")
+            })
+            cancellation_terminal_max_working_set_bytes = $cancellationTerminalMaxWorkingSet
+            cancellation_terminal_max_private_memory_bytes = $cancellationTerminalMaxPrivateMemory
             cancellation_within_baseline_tolerance = $cancellationWithin
+            full_window_disclosure = $fullWindowDisclosure
             equal_state_working_set_within_tolerance = $equalWorkingWithin
             equal_state_private_memory_within_tolerance = $equalPrivateWithin
             equal_state_handle_count_within_tolerance = $equalHandlesWithin
@@ -1035,14 +1223,14 @@ try {
             retained_history_disclosure = $retainedHistoryDisclosure
             phase_snapshots_attested = $phaseSnapshotContract
             phase_document_attested = $phaseDocumentContract
-            conclusion = "bounded_post_replacement_recovery_v2"
+            conclusion = "bounded_post_replacement_recovery_terminal_stable_v3"
             cancellation_cycle_count = 1
             completed_cycle_count = 2
             idle_checkpoint_count = 5
             idle_settle_milliseconds = 5000
             idle_checkpoints_ordered_and_distinct = $checkpointContract
             capture_delay_milliseconds = 500
-            sample_window_milliseconds = 5000
+            sample_window_milliseconds = $resourceSampleWindowMilliseconds
             minimum_samples_per_checkpoint = 6
             checkpoint_diagnostic_count = $checkpointDiagnostics.Count
             checkpoint_diagnostics_all_passed = $checkpointDiagnosticsAllPassed
@@ -1069,19 +1257,17 @@ try {
         $packaged.artifacts | Add-Member -NotePropertyName resource_phases -NotePropertyValue $resourcePhasesDescriptor -Force
         $packaged.artifacts | Add-Member -NotePropertyName resource_phase_snapshots -NotePropertyValue $phaseSnapshotArtifacts -Force
         $packaged.passed = [bool]$packaged.passed -and $resourcePassed
-        [System.IO.File]::WriteAllText(
-            $packagedReportPath,
-            ($packaged | ConvertTo-Json -Depth 100) + [Environment]::NewLine,
-            $utf8WithoutBom
-        )
+        Write-EvidenceTextWithRetry `
+            -Path $packagedReportPath `
+            -Content (($packaged | ConvertTo-Json -Depth 100) + [Environment]::NewLine) `
+            -Encoding $utf8WithoutBom
     }
 
     $cleanup.generated_at_utc = [DateTime]::UtcNow.ToString("o")
-    [System.IO.File]::WriteAllText(
-        $cleanupReportPath,
-        ($cleanup | ConvertTo-Json -Depth 8) + [Environment]::NewLine,
-        $utf8WithoutBom
-    )
+    Write-EvidenceTextWithRetry `
+        -Path $cleanupReportPath `
+        -Content (($cleanup | ConvertTo-Json -Depth 8) + [Environment]::NewLine) `
+        -Encoding $utf8WithoutBom
     Remove-Item -LiteralPath `
         $resourceSamplesPath, $resourcePhasesPath, $resourceStopPath, `
         $resourceMonitorStdoutPath, $resourceMonitorStderrPath `

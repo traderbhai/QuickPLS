@@ -1,0 +1,68 @@
+{
+  "acceptance_summary": {
+    "optimizer_dimension_status": "unavailable_product_cap_blocked",
+    "reasons": [
+      "known_fixture_analytic_se_unavailable",
+      "known_fixture_point_refit_failure",
+      "point_success_count_differs_from_requested_replicates",
+      "predeclared_dependency_not_accepted",
+      "probe_warmup_measured_scientific_digest_drift_or_incomplete_run_set",
+      "studentized_usable_count_differs_from_requested_replicates"
+    ],
+    "runtime_safety_factor": 2.0,
+    "status": "one_or_more_predeclared_cases_not_accepted"
+  },
+  "binary_path": "target/release/examples/cbsem_exact_case_bootstrap_studentized_benchmark.exe",
+  "binary_sha256": "72e1f9466beb81b27fde0e22566e4ef16fbc3c5973e459c3c874b3567e2135c5",
+  "cap_decision": {
+    "reason": "Phase-1 cannot establish an applied product cap until optimizer dimension D is exposed by an authoritative exact-plan API.",
+    "status": "blocked_missing_optimizer_dimension"
+  },
+  "case_receipts": [
+    {
+      "acceptance_reasons": [
+        "known_fixture_analytic_se_unavailable",
+        "known_fixture_point_refit_failure",
+        "point_success_count_differs_from_requested_replicates",
+        "probe_warmup_measured_scientific_digest_drift_or_incomplete_run_set",
+        "studentized_usable_count_differs_from_requested_replicates"
+      ],
+      "case_id": "applied_n180_v9_p18_b5000_w12",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase1/phase1-20260816-a/cases/applied_n180_v9_p18_b5000_w12.json",
+      "sha256": "9e0134108df2ca9b93dc7fa4ab4658060e96c11c0364cfa77d93a66930a7e3c7",
+      "status": "rejected"
+    },
+    {
+      "acceptance_reasons": [
+        "predeclared_dependency_not_accepted"
+      ],
+      "case_id": "applied_n180_v9_p18_b10000_w12",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase1/phase1-20260816-a/cases/applied_n180_v9_p18_b10000_w12.json",
+      "sha256": "838a533c721d73f3b6131c222ebd0a6b71093d334be3d6449f65a4ab70782c67",
+      "status": "blocked_by_dependency"
+    },
+    {
+      "acceptance_reasons": [],
+      "case_id": "cancellation_n180_v9_p18_b10000_w12",
+      "path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase1/phase1-20260816-a/cases/cancellation_n180_v9_p18_b10000_w12.json",
+      "sha256": "5a1ca2159ed36fdbefd3a4f0585aa523180ac72b75ee228eadba31e2b76fdc1f",
+      "status": "accepted"
+    }
+  ],
+  "hardware": {
+    "architecture": "AMD64",
+    "logical_cores": 12,
+    "os": "Windows",
+    "os_release": "11",
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD"
+  },
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase1_report_v1",
+  "manifest_path": "validation/cbsem_exact_case_bootstrap_studentized_phase1_manifest_v1.json",
+  "manifest_sha256": "75913af943717a6dd784cb4a3f49a2412dcbc1038517ba63440df88a895066ca",
+  "phase0_report_path": "validation/results/cbsem_exact_case_bootstrap_studentized_phase0/phase0-20260816-b/phase0-report.json",
+  "phase0_report_sha256": "37c489462887485b102252c7074b3be8a7fa9d302535bb011b558d6e0de5479e",
+  "physical_memory_bytes": 16442789888,
+  "run_id": "phase1-20260816-a",
+  "schema_version": 1,
+  "status": "phase1_applied_evidence_failed_product_cap_blocked"
+}

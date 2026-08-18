@@ -1,6 +1,6 @@
 # MICOM v2
 
-Status: validated for the bounded scope below. The independent numerical comparison, persistence checks, native workflow acceptance, real XLSX export, and packaged-desktop save/reopen gates pass. `micom_v1` remains withdrawn and must never be presented as current evidence.
+Status: implemented but Phase 4 promotion-blocked. The independent 5,000-permutation base comparison passes, but exchanging the selected Group A/B order changes attempted/failed permutation counts and materially changes permutation p values. That violates the frozen metamorphic boundary, so MICOM v2 is not currently engine-, native-, or release-qualified by the QuickPLS 3 factory. `micom_v1` remains withdrawn and must never be presented as current evidence.
 
 MICOM v2 is QuickPLS's independently implemented, two-group measurement invariance of composites procedure. It follows the three-step hierarchy introduced by Henseler, Ringle, and Sarstedt (2016), *International Marketing Review*, 33(3), 405–431, [doi:10.1108/IMR-09-2014-0304](https://doi.org/10.1108/IMR-09-2014-0304). The open paper describes the hierarchy and equations used here: [Testing measurement invariance of composites using partial least squares](https://ris.utwente.nl/ws/files/287320134/2016_IMR_Henseler_Ringle_Sarstedt.pdf).
 
@@ -75,4 +75,4 @@ python validation/micom_v2_reference.py --run-quickpls --permutations 5000
 python validation/micom_method_promotion_audit.py
 ```
 
-The reference-only mode is intentionally non-promotable. Promotion also requires the product, persistence, export, and packaged-desktop gates described at the top of this document.
+The reference-only mode is intentionally non-promotable. Before any release promotion, the deterministic permutation plan and failed-fit accounting must become invariant to selected A/B order and the full 5,000-permutation boundary gate must pass. Packaged-desktop and independent method-audit gates remain additional requirements; source-only evidence cannot satisfy them.

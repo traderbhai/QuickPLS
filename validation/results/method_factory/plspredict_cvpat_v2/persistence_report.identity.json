@@ -1,0 +1,114 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "compiled_test_policy_is_source_only": {
+      "passed": true
+    },
+    "feature_method_dataset_checksum_and_malformed_tampering_rejected": {
+      "passed": true
+    },
+    "legacy_results_remain_distinct": {
+      "passed": true
+    },
+    "runner_result_commit_save_reopen": {
+      "passed": true
+    }
+  },
+  "execution": [
+    {
+      "build_policy": "prebuilt_test_executable_only_no_cargo_invocation",
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\deps\\qpls_project-1c5316a49d695ac2.exe",
+        "runner_generated_prediction_round_trips_and_rejects_contract_tampering",
+        "--nocapture"
+      ],
+      "crate_sources_not_newer_than_binary": true,
+      "exact_test_observed": true,
+      "expected_test": "runner_generated_prediction_round_trips_and_rejects_contract_tampering",
+      "passed": true,
+      "prebuilt_test_binary": {
+        "path": "target/debug/deps/qpls_project-1c5316a49d695ac2.exe",
+        "sha256": "30815dc3a41bdb6aed1d415d74439ade8a375f0b6801d35c9ead3a9ba4d997a9",
+        "size": 145276928
+      },
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_prediction_round_trips_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 3.01s\n\n"
+    },
+    {
+      "build_policy": "prebuilt_test_executable_only_no_cargo_invocation",
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\deps\\qpls_project-1c5316a49d695ac2.exe",
+        "legacy_prediction_v1_reopens_with_warning_but_cannot_be_appended_as_new_evidence",
+        "--nocapture"
+      ],
+      "crate_sources_not_newer_than_binary": true,
+      "exact_test_observed": true,
+      "expected_test": "legacy_prediction_v1_reopens_with_warning_but_cannot_be_appended_as_new_evidence",
+      "passed": true,
+      "prebuilt_test_binary": {
+        "path": "target/debug/deps/qpls_project-1c5316a49d695ac2.exe",
+        "sha256": "30815dc3a41bdb6aed1d415d74439ade8a375f0b6801d35c9ead3a9ba4d997a9",
+        "size": 145276928
+      },
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "\nrunning 1 test\ntest tests::legacy_prediction_v1_reopens_with_warning_but_cannot_be_appended_as_new_evidence ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 1.96s\n\n"
+    }
+  ],
+  "feature_id": "qpls3.prediction.plspredict_cvpat",
+  "generated_at_utc": "2026-08-18T04:33:04.225161Z",
+  "method_version": "plspredict_indicator_v2",
+  "passed": true,
+  "qualification_limit": "source_tier_identity_refresh_only_no_packaged_execution",
+  "report_kind": "quickpls_phase4_source_only_identity_report",
+  "role": "persistence_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/plspredict_cvpat_v2.manifest.json",
+      "sha256": "05966449a2a01b650e1c3cb15d3abbff266a2dee94b8fc4d7d70dc5aa981db6c",
+      "size": 16826
+    },
+    {
+      "path": "validation/phase4_high_value_factory.py",
+      "sha256": "59e72b44dd7463cd5b08838a3d47c354e749d22f56c74fad854eff6a74e50a65",
+      "size": 41438
+    },
+    {
+      "path": "validation/plspredict_release_persistence_gate.py",
+      "sha256": "17a391f192632355a3c2e81dc28236d6e35323f37dab4760f0067a42fe9d288f",
+      "size": 183
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase4_high_value_factory.py",
+      "sha256": "5b16248fe0affb297b4c5a2a301b0882ac03bd68fdc400e5e3f81d6eff0af12e",
+      "size": 3366
+    }
+  ]
+}

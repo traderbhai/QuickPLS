@@ -152,15 +152,31 @@ impl ValidatedExecutionRecipe {
         source.settings.permutation_samples = 0;
         if matches!(
             source.method_config,
-            Some(MethodConfig::PlsBootstrap | MethodConfig::PlsPermutation)
+            Some(
+                MethodConfig::PlsBootstrap
+                    | MethodConfig::PlsPermutation
+                    | MethodConfig::PlsPosthocTechnicalMinimumSampleSize(_)
+            )
         ) {
             source.method_config = Some(MethodConfig::PlsAlgorithm);
         }
+        if matches!(
+            source.method_config,
+            Some(MethodConfig::PlscPermutation { .. })
+        ) {
+            source.method_config = Some(MethodConfig::Plsc);
+        }
         if let Some(MethodConfig::Cbsem {
-            bootstrap_samples, ..
+            bootstrap_samples,
+            bootstrap_v2,
+            ..
         }) = source.method_config.as_mut()
         {
             *bootstrap_samples = 0;
+            *bootstrap_v2 = None;
+            // CB-SEM point estimation remains single-worker. A larger worker
+            // count belongs to the dedicated outer full-refit scheduler only.
+            source.settings.workers = 1;
         }
         if let Some(MethodConfig::Regression { bootstrap, .. }) = source.method_config.as_mut() {
             *bootstrap = None;
@@ -201,13 +217,42 @@ fn validate_v3_method_config(
 ) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
     let resampling_conflict = match config {
-        crate::MethodConfig::PlsAlgorithm => {
+        crate::MethodConfig::PlsAlgorithm
+        | crate::MethodConfig::PlsAlgorithmConfiguredV2(_) => {
             recipe.settings.bootstrap_samples > 0
                 || recipe.settings.studentized_inner_samples > 0
                 || recipe.settings.permutation_samples > 0
         }
         crate::MethodConfig::PlsBootstrap => recipe.settings.bootstrap_samples == 0,
         crate::MethodConfig::PlsPermutation => {
+            recipe.settings.permutation_samples == 0
+                || recipe.settings.bootstrap_samples > 0
+                || recipe.settings.studentized_inner_samples > 0
+        }
+        crate::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(config) => match (
+            config.base_analysis,
+            config.inference,
+        ) {
+            (
+                crate::PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsAlgorithm,
+                crate::PlsPosthocTechnicalMinimumSampleSizeInferenceV2::PointEstimateOnly,
+            ) => {
+                recipe.settings.bootstrap_samples > 0
+                    || recipe.settings.studentized_inner_samples > 0
+                    || recipe.settings.permutation_samples > 0
+            }
+            (
+                crate::PlsPosthocTechnicalMinimumSampleSizeBaseAnalysisV2::PlsBootstrap,
+                crate::PlsPosthocTechnicalMinimumSampleSizeInferenceV2::CaseBootstrapNormalReferenceTwoSided,
+            ) => {
+                recipe.settings.bootstrap_samples == 0
+                    || recipe.settings.studentized_inner_samples > 0
+                    || recipe.settings.permutation_samples > 0
+            }
+            _ => true,
+        },
+        crate::MethodConfig::Plsc => recipe.settings.permutation_samples > 0,
+        crate::MethodConfig::PlscPermutation { .. } => {
             recipe.settings.permutation_samples == 0
                 || recipe.settings.bootstrap_samples > 0
                 || recipe.settings.studentized_inner_samples > 0
@@ -224,6 +269,139 @@ fn validate_v3_method_config(
             ),
             Some(config.kind().into()),
         ));
+    }
+
+    if let crate::MethodConfig::PlsAlgorithmConfiguredV2(config) = config {
+        issues.extend(validate_pls_algorithm_config_v2(recipe, config));
+    }
+
+    if let crate::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(config) = config {
+        if !config.is_exact_v2() || !config.has_coherent_base_and_inference() {
+            issues.push(issue(
+                "pls_posthoc.option_identity",
+                Severity::Error,
+                "The post-hoc technical minimum sample-size opt-in must use the exact versioned capability cell and method identity",
+                Some(config.capability_cell.cell_id.clone()),
+            ));
+        } else {
+            match crate::CapabilityRegistryV2::embedded() {
+                Ok(registry) => {
+                    let cell = registry.option_cells().find(|cell| {
+                        cell.capability_id == config.capability_cell.capability_id
+                            && cell.cell_id == config.capability_cell.cell_id
+                            && cell.capability_version == config.capability_cell.capability_version
+                    });
+                    if cell.is_none_or(|cell| {
+                        !cell.standard_available() && !cell.labs_available()
+                    }) {
+                        issues.push(issue(
+                            "pls_posthoc.capability_unavailable",
+                            Severity::Error,
+                            "The exact post-hoc technical minimum sample-size option cell is not executable in Capability Registry V2",
+                            Some(config.capability_cell.cell_id.clone()),
+                        ));
+                    }
+                }
+                Err(error) => issues.push(issue(
+                    "pls_posthoc.capability_registry_invalid",
+                    Severity::Error,
+                    format!(
+                        "Capability Registry V2 cannot authorize the post-hoc technical minimum sample-size opt-in: {error}"
+                    ),
+                    None,
+                )),
+            }
+        }
+    }
+
+    if let crate::MethodConfig::PlsSampleSizePower(config) = config {
+        issues.extend(validate_pls_sample_size_power_config(recipe, config));
+    }
+
+    if let crate::MethodConfig::Cbsem {
+        estimator,
+        input,
+        mean_structure,
+        bootstrap_samples,
+        bootstrap_v2,
+        group_column,
+        invariance_steps,
+        ..
+    } = config
+    {
+        if recipe.settings.bootstrap_samples > 0
+            || recipe.settings.studentized_inner_samples > 0
+            || recipe.settings.permutation_samples > 0
+        {
+            issues.push(issue(
+                "cbsem.bootstrap_v2_outer_settings",
+                Severity::Error,
+                "CB-SEM bootstrap v2 keeps its replicate count in method_config.cbsem.bootstrap_samples; generic PLS resampling settings must be zero",
+                None,
+            ));
+        }
+        match bootstrap_v2 {
+            Some(bootstrap) => {
+                if *estimator != crate::CbsemEstimator::Ml
+                    || *input != crate::CbsemInput::Raw
+                    || *mean_structure
+                    || group_column.is_some()
+                    || !invariance_steps.is_empty()
+                {
+                    issues.push(issue(
+                        "cbsem.bootstrap_v2_scope",
+                        Severity::Error,
+                        "CB-SEM bootstrap v2 requires raw-data single-group ML without a mean structure or invariance steps",
+                        None,
+                    ));
+                }
+                if !(500..=10_000).contains(bootstrap_samples) {
+                    issues.push(issue(
+                        "cbsem.bootstrap_v2_samples",
+                        Severity::Error,
+                        "CB-SEM bootstrap v2 requires 500 to 10000 full-ML case-resampling replicates",
+                        Some(bootstrap_samples.to_string()),
+                    ));
+                }
+                if bootstrap.algorithm
+                    != crate::CbsemBootstrapAlgorithm::CaseResamplingFullMl
+                    || !matches!(
+                        bootstrap.interval,
+                        crate::CbsemBootstrapInterval::PercentileType7
+                            | crate::CbsemBootstrapInterval::AnalyticStudentizedType7
+                            | crate::CbsemBootstrapInterval::BcaType7
+                    )
+                {
+                    issues.push(issue(
+                        "cbsem.bootstrap_v2_contract",
+                        Severity::Error,
+                        "CB-SEM bootstrap v2 requires full-ML raw-case resampling with percentile Type-7, analytic studentized Type-7, or BCa Type-7 intervals",
+                        None,
+                    ));
+                }
+                if recipe.settings.confidence_level.to_bits() != 0.95_f64.to_bits() {
+                    issues.push(issue(
+                        "cbsem.bootstrap_v2_confidence",
+                        Severity::Error,
+                        "CB-SEM bootstrap v2 freezes two-sided Type-7 intervals at 95% confidence",
+                        Some(recipe.settings.confidence_level.to_string()),
+                    ));
+                }
+            }
+            None if *bootstrap_samples > 0 => issues.push(issue(
+                "cbsem.bootstrap_v2_selector_required",
+                Severity::Error,
+                "Positive CB-SEM bootstrap_samples require the explicit bootstrap_v2 selector; the legacy analytical preview is archive-readable only",
+                Some(bootstrap_samples.to_string()),
+            )),
+            None if recipe.settings.workers != 1 => issues.push(issue(
+                "cbsem.workers_fixed",
+                Severity::Error,
+                "Point-only CB-SEM/CFA executes with one deterministic worker",
+                Some(recipe.settings.workers.to_string()),
+            )),
+            None => {}
+        }
     }
 
     if let crate::MethodConfig::Regression {
@@ -355,6 +533,321 @@ fn validate_v3_method_config(
                 None,
             ));
         }
+    }
+    issues
+}
+
+fn validate_pls_algorithm_config_v2(
+    recipe: &AnalysisRecipe,
+    config: &crate::PlsAlgorithmConfigV2,
+) -> Vec<ValidationIssue> {
+    let mut issues = Vec::new();
+    if !config.has_exact_contract_version() {
+        issues.push(issue(
+            "pls_algorithm_configured_v2.contract_version",
+            Severity::Error,
+            "Configured PLS initialization must use the exact pls_initial_outer_weights_v2 contract",
+            Some(config.initialization_contract_version.clone()),
+        ));
+    }
+    if recipe.settings.max_iterations != crate::PLS_ALGORITHM_FIXED_MAX_ITERATIONS
+        || recipe.settings.tolerance.to_bits()
+            != crate::PLS_ALGORITHM_FIXED_STOP_CRITERION.to_bits()
+    {
+        issues.push(issue(
+            "pls_algorithm_configured_v2.fixed_defaults",
+            Severity::Error,
+            "Configured PLS initialization requires exactly 3000 maximum iterations and a 1e-7 stop criterion",
+            Some(config.initialization_contract_version.clone()),
+        ));
+    }
+    if recipe.settings.weighting_scheme == WeightingScheme::Pca {
+        issues.push(issue(
+            "pls_algorithm_configured_v2.weighting_scheme",
+            Severity::Error,
+            "Configured initial outer weights require path or factor weighting; PCA block weights are not initialized by the PLS outer-weight iteration",
+            Some("pca".into()),
+        ));
+    }
+    let crate::PlsInitialOuterWeightsV2::Individual { weights } = &config.initial_outer_weights
+    else {
+        return issues;
+    };
+
+    let expected = recipe
+        .model
+        .constructs
+        .iter()
+        .flat_map(|construct| {
+            construct
+                .indicators
+                .iter()
+                .map(|indicator| (construct.id.clone(), indicator.clone()))
+        })
+        .collect::<HashSet<_>>();
+    let mut actual = HashSet::new();
+    let mut nonzero_by_construct = HashSet::new();
+    let mut previous: Option<(&str, &str)> = None;
+    for weight in weights {
+        let key = (weight.construct_id.clone(), weight.indicator_id.clone());
+        let ordered_key = (weight.construct_id.as_str(), weight.indicator_id.as_str());
+        if previous.is_some_and(|previous| previous >= ordered_key) {
+            issues.push(issue(
+                "pls_algorithm_configured_v2.initial_weights_order",
+                Severity::Error,
+                "Individual initial weights must be unique and strictly sorted by construct_id then indicator_id",
+                Some(format!("{}:{}", weight.construct_id, weight.indicator_id)),
+            ));
+        }
+        previous = Some(ordered_key);
+        if !weight.value.is_finite() {
+            issues.push(issue(
+                "pls_algorithm_configured_v2.initial_weight_nonfinite",
+                Severity::Error,
+                "Every individual initial outer weight must be finite",
+                Some(format!("{}:{}", weight.construct_id, weight.indicator_id)),
+            ));
+        } else if weight.value != 0.0 {
+            nonzero_by_construct.insert(weight.construct_id.as_str());
+        }
+        if !actual.insert(key.clone()) || !expected.contains(&key) {
+            issues.push(issue(
+                "pls_algorithm_configured_v2.initial_weights_coverage",
+                Severity::Error,
+                "Individual initial weights must identify each model indicator exactly once",
+                Some(format!("{}:{}", weight.construct_id, weight.indicator_id)),
+            ));
+        }
+    }
+    if actual != expected {
+        issues.push(issue(
+            "pls_algorithm_configured_v2.initial_weights_coverage",
+            Severity::Error,
+            "Individual initial weights must cover every model indicator exactly once and no others",
+            None,
+        ));
+    }
+    for construct in &recipe.model.constructs {
+        if !construct.indicators.is_empty() && !nonzero_by_construct.contains(construct.id.as_str())
+        {
+            issues.push(issue(
+                "pls_algorithm_configured_v2.initial_weights_zero_block",
+                Severity::Error,
+                "Each construct must have at least one nonzero individual initial outer weight",
+                Some(construct.id.clone()),
+            ));
+        }
+    }
+    issues
+}
+
+fn validate_pls_sample_size_power_config(
+    recipe: &AnalysisRecipe,
+    config: &crate::PlsSampleSizePowerConfig,
+) -> Vec<ValidationIssue> {
+    let mut issues = Vec::new();
+    let identity_valid = |value: &str| {
+        !value.is_empty()
+            && value.len() <= 80
+            && value
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-' | b'.'))
+    };
+    for (field, value) in [
+        ("scenario_identity", config.scenario_identity.as_str()),
+        ("predictor_construct", config.predictor_construct.as_str()),
+        ("outcome_construct", config.outcome_construct.as_str()),
+    ] {
+        if !identity_valid(value) {
+            issues.push(issue(
+                "pls_power.identity",
+                Severity::Error,
+                format!(
+                    "PLS power {field} must contain 1 to 80 ASCII letters, digits, dots, underscores, or hyphens"
+                ),
+                Some(field.into()),
+            ));
+        }
+    }
+    if config.predictor_construct == config.outcome_construct {
+        issues.push(issue(
+            "pls_power.target_distinct",
+            Severity::Error,
+            "PLS power predictor and outcome constructs must differ",
+            None,
+        ));
+    }
+    let constructs = recipe
+        .model
+        .constructs
+        .iter()
+        .map(|construct| (construct.id.as_str(), construct))
+        .collect::<HashMap<_, _>>();
+    let target_path_exists = recipe.model.paths.iter().any(|path| {
+        path.source == config.predictor_construct && path.target == config.outcome_construct
+    });
+    if constructs.len() != 2
+        || recipe.model.paths.len() != 1
+        || !target_path_exists
+        || !recipe.model.controls.is_empty()
+        || !recipe.model.interactions.is_empty()
+        || !recipe.model.higher_order_constructs.is_empty()
+    {
+        issues.push(issue(
+            "pls_power.bounded_model",
+            Severity::Error,
+            "PLS power v2 requires exactly two constructs and the single declared predictor-to-outcome path, without controls, interactions, or higher-order constructs",
+            None,
+        ));
+    }
+    for (construct_id, loadings) in [
+        (
+            config.predictor_construct.as_str(),
+            config.predictor_indicator_loadings.as_slice(),
+        ),
+        (
+            config.outcome_construct.as_str(),
+            config.outcome_indicator_loadings.as_slice(),
+        ),
+    ] {
+        let construct = constructs.get(construct_id).copied();
+        if construct.is_none_or(|construct| {
+            construct.mode != MeasurementMode::Reflective
+                || construct.indicators.len() != loadings.len()
+        }) {
+            issues.push(issue(
+                "pls_power.reflective_measurement",
+                Severity::Error,
+                "Each PLS power v2 construct must be reflective and its declared loadings must map one-to-one to model indicators",
+                Some(construct_id.into()),
+            ));
+        }
+        if !(3..=10).contains(&loadings.len())
+            || loadings
+                .iter()
+                .any(|loading| !loading.is_finite() || !(0.50..=0.95).contains(loading))
+        {
+            issues.push(issue(
+                "pls_power.loadings",
+                Severity::Error,
+                "PLS power v2 requires 3 to 10 finite loadings from 0.50 through 0.95 for each construct",
+                Some(construct_id.into()),
+            ));
+        }
+    }
+    if !config.population_path.is_finite() || config.population_path.abs() > 0.80 {
+        issues.push(issue(
+            "pls_power.population_path",
+            Severity::Error,
+            "PLS power v2 population path must be finite and between -0.80 and 0.80",
+            None,
+        ));
+    }
+    if recipe.settings.weighting_scheme != WeightingScheme::Path
+        || recipe.settings.preprocessing != Preprocessing::Standardized
+        || recipe.settings.case_weight_column.is_some()
+    {
+        issues.push(issue(
+            "pls_power.estimator_scope",
+            Severity::Error,
+            "PLS power v2 requires path weighting, standardized preprocessing, and no case weights",
+            None,
+        ));
+    }
+    if recipe.settings.bootstrap_samples > 0
+        || recipe.settings.studentized_inner_samples > 0
+        || recipe.settings.permutation_samples > 0
+    {
+        issues.push(issue(
+            "pls_power.outer_resampling_settings",
+            Severity::Error,
+            "PLS power inference counts belong to the typed power config; generic outer-resampling settings must be zero",
+            None,
+        ));
+    }
+    if !recipe.settings.tolerance.is_finite()
+        || !(1e-10..=1e-3).contains(&recipe.settings.tolerance)
+        || !(100..=10_000).contains(&recipe.settings.max_iterations)
+    {
+        issues.push(issue(
+            "pls_power.estimator_bounds",
+            Severity::Error,
+            "PLS power estimator tolerance must be 1e-10 through 1e-3 and maximum iterations 100 through 10000",
+            None,
+        ));
+    }
+    if !(2..=16).contains(&config.sample_size_grid.len())
+        || config
+            .sample_size_grid
+            .iter()
+            .any(|value| !(30..=5_000).contains(value))
+        || config
+            .sample_size_grid
+            .windows(2)
+            .any(|pair| pair[1] <= pair[0])
+    {
+        issues.push(issue(
+            "pls_power.sample_size_grid",
+            Severity::Error,
+            "PLS power v2 requires 2 to 16 strictly increasing sample sizes from 30 through 5000",
+            None,
+        ));
+    }
+    if !config.alpha.is_finite()
+        || !(0.001..=0.10).contains(&config.alpha)
+        || !config.target_power.is_finite()
+        || !(0.50..=0.99).contains(&config.target_power)
+        || !config.interval_confidence_level.is_finite()
+        || !(0.80..=0.999).contains(&config.interval_confidence_level)
+    {
+        issues.push(issue(
+            "pls_power.probability_bounds",
+            Severity::Error,
+            "PLS power alpha, target power, and interval confidence level are outside the bounded v2 ranges",
+            None,
+        ));
+    }
+    if !(100..=10_000).contains(&config.monte_carlo_replicates)
+        || !(99..=1_999).contains(&config.bootstrap_replicates)
+        || config.bootstrap_replicates.is_multiple_of(2)
+    {
+        issues.push(issue(
+            "pls_power.replicate_bounds",
+            Severity::Error,
+            "PLS power v2 requires 100 to 10000 Monte Carlo replicates and an odd 99 to 1999 bootstrap replicates",
+            None,
+        ));
+    }
+    let workload = (config.sample_size_grid.len() as u64)
+        .checked_mul(config.monte_carlo_replicates as u64)
+        .and_then(|datasets| datasets.checked_mul(1 + config.bootstrap_replicates as u64));
+    let case_workload = config
+        .sample_size_grid
+        .iter()
+        .try_fold(0_u64, |total, sample_size| {
+            total.checked_add(
+                (*sample_size as u64)
+                    .checked_mul(config.monte_carlo_replicates as u64)?
+                    .checked_mul(1 + config.bootstrap_replicates as u64)?,
+            )
+        });
+    if workload.is_none_or(|fits| fits > 250_000)
+        || case_workload.is_none_or(|case_fits| case_fits > 100_000_000)
+    {
+        issues.push(issue(
+            "pls_power.desktop_workload_bound",
+            Severity::Error,
+            "PLS power v2 permits at most 250000 PLS fits and 100000000 fitted rows per prospective run",
+            workload.map(|fits| fits.to_string()),
+        ));
+    }
+    if (recipe.settings.confidence_level - config.interval_confidence_level).abs() > 1e-12 {
+        issues.push(issue(
+            "pls_power.confidence_identity",
+            Severity::Error,
+            "Generic and typed interval confidence levels must be exactly equal",
+            None,
+        ));
     }
     issues
 }
@@ -852,6 +1345,14 @@ pub fn ipma_predecessor_constructs(recipe: &AnalysisRecipe, target: &str) -> Vec
 
 pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
+    if recipe.settings.missing_data == crate::MissingDataPolicy::MeanReplacement {
+        issues.push(issue(
+            "missing_data.recipe_v4_required",
+            Severity::Error,
+            "Mean replacement is executable only through the bounded Recipe-v4 continuous-raw adapter",
+            Some("mean_replacement".into()),
+        ));
+    }
     if !matches!(recipe.schema_version, 1..=ANALYSIS_RECIPE_SCHEMA_VERSION) {
         issues.push(issue(
             "schema.unsupported",
@@ -999,6 +1500,52 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         )),
         MethodStatus::Validated => {}
     }
+    match recipe.metadata.get("pls_model_fit_exact_inference") {
+        None => {}
+        Some(value) if value != "true" => issues.push(issue(
+            "model_fit_exact.selector_invalid",
+            Severity::Error,
+            "The adapted Bollen-Stine model-fit selector must be omitted or exactly 'true'",
+            Some(value.clone()),
+        )),
+        Some(_) => {
+            if !matches!(
+                recipe.settings.method,
+                crate::AnalysisMethod::PlsPm | crate::AnalysisMethod::Plsc
+            ) {
+                issues.push(issue(
+                    "model_fit_exact.method_unsupported",
+                    Severity::Error,
+                    "Adapted Bollen-Stine model-fit inference requires PLS-PM or PLSc",
+                    Some(recipe.settings.method.to_string()),
+                ));
+            }
+            if !(999..=10_000).contains(&recipe.settings.bootstrap_samples) {
+                issues.push(issue(
+                    "model_fit_exact.bootstrap_samples",
+                    Severity::Error,
+                    "Adapted Bollen-Stine model-fit inference requires 999 to 10000 fixed bootstrap draws",
+                    Some(recipe.settings.bootstrap_samples.to_string()),
+                ));
+            }
+            if !recipe.model.interactions.is_empty() {
+                issues.push(issue(
+                    "model_fit_exact.interactions_unsupported",
+                    Severity::Error,
+                    "The bounded adapted Bollen-Stine v1 workflow does not yet support generated interaction constructs",
+                    None,
+                ));
+            }
+            if !recipe.model.higher_order_constructs.is_empty() {
+                issues.push(issue(
+                    "model_fit_exact.higher_order_unsupported",
+                    Severity::Error,
+                    "The bounded adapted Bollen-Stine v1 workflow does not yet support generated higher-order indicators",
+                    None,
+                ));
+            }
+        }
+    }
     if recipe.settings.method == crate::AnalysisMethod::Plsc {
         if recipe.settings.weighting_scheme == crate::WeightingScheme::Pca {
             issues.push(issue(
@@ -1051,15 +1598,113 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             ));
         }
         if recipe.settings.bootstrap_samples > 0
-            || recipe.settings.studentized_inner_samples > 0
-            || recipe.settings.permutation_samples > 0
+            && !(1_000..=10_000).contains(&recipe.settings.bootstrap_samples)
         {
             issues.push(issue(
-                "plsc.resampling_unsupported",
+                "plsc.consistent_bootstrap_samples",
                 Severity::Error,
-                "PLSc bootstrap, studentized bootstrap, and permutation inference are outside the documented validated scope",
-                None,
+                "PLSc consistent bootstrapping requires 1000 to 10000 full-reestimation case-bootstrap replicates",
+                Some(recipe.settings.bootstrap_samples.to_string()),
             ));
+        }
+        if recipe.settings.studentized_inner_samples > 0 {
+            issues.push(issue(
+                "plsc.consistent_bootstrap_studentized_unsupported",
+                Severity::Error,
+                "PLSc consistent bootstrapping does not yet support studentized/bootstrap-t intervals; use percentile and conditional BCa inference",
+                Some(recipe.settings.studentized_inner_samples.to_string()),
+            ));
+        }
+        if recipe.settings.permutation_samples > 0 {
+            if recipe.settings.bootstrap_samples > 0
+                || recipe.settings.studentized_inner_samples > 0
+            {
+                issues.push(issue(
+                    "plsc.consistent_permutation_inference_conflict",
+                    Severity::Error,
+                    "PLSc consistent permutation cannot be combined with bootstrap or studentized inference",
+                    Some(recipe.settings.permutation_samples.to_string()),
+                ));
+            }
+            if recipe.settings.confidence_level.to_bits() != 0.95_f64.to_bits() {
+                issues.push(issue(
+                    "plsc.consistent_permutation_significance_fixed",
+                    Severity::Error,
+                    "The bounded consistent-permutation v1 workflow freezes a 0.05 significance level (95% confidence); test direction is selected by the typed PLSc permutation configuration",
+                    Some(recipe.settings.confidence_level.to_string()),
+                ));
+            }
+            if recipe.settings.preprocessing != crate::Preprocessing::Standardized
+                || recipe.settings.missing_data != crate::MissingDataPolicy::ListwiseDeletion
+                || recipe.settings.case_weight_column.is_some()
+                || !recipe.model.controls.is_empty()
+            {
+                issues.push(issue(
+                    "plsc.consistent_permutation_scope",
+                    Severity::Error,
+                    "The bounded consistent-permutation v1 workflow requires standardized listwise PLSc without case weights or controls",
+                    None,
+                ));
+            }
+            if recipe
+                .metadata
+                .contains_key("pls_model_fit_exact_inference")
+            {
+                issues.push(issue(
+                    "plsc.consistent_permutation_exact_fit_conflict",
+                    Severity::Error,
+                    "Consistent permutation cannot be combined with adapted exact model-fit bootstrap inference",
+                    None,
+                ));
+            }
+            let (group_column, group_a, group_b) = match recipe.method_config.as_ref() {
+                Some(crate::MethodConfig::PlscPermutation {
+                    group_column,
+                    group_a,
+                    group_b,
+                    ..
+                }) => (
+                    (!group_column.trim().is_empty()).then(|| group_column.trim()),
+                    (!group_a.trim().is_empty()).then(|| group_a.trim()),
+                    (!group_b.trim().is_empty()).then(|| group_b.trim()),
+                ),
+                _ => {
+                    issues.push(issue(
+                        "plsc.consistent_permutation_method_config_required",
+                        Severity::Error,
+                        "PLSc consistent permutation requires method_config.kind=plsc_permutation with explicit group identities",
+                        recipe.method_config.as_ref().map(|config| config.kind().into()),
+                    ));
+                    (None, None, None)
+                }
+            };
+            if group_column.is_none()
+                || group_a.is_none()
+                || group_b.is_none()
+                || group_a == group_b
+            {
+                issues.push(issue(
+                    "plsc.consistent_permutation_groups_required",
+                    Severity::Error,
+                    "Consistent permutation requires distinct method_config.group_a and method_config.group_b values plus method_config.group_column",
+                    None,
+                ));
+            }
+            if group_column.is_some_and(|column| {
+                recipe
+                    .model
+                    .constructs
+                    .iter()
+                    .flat_map(|construct| construct.indicators.iter())
+                    .any(|indicator| indicator == column)
+            }) {
+                issues.push(issue(
+                    "plsc.consistent_permutation_group_column_is_indicator",
+                    Severity::Error,
+                    "The consistent-permutation group column cannot also be a model indicator",
+                    group_column.map(str::to_owned),
+                ));
+            }
         }
     }
     if recipe.settings.method == crate::AnalysisMethod::Wpls {
@@ -1240,6 +1885,18 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             ));
         }
     }
+    if recipe.settings.method == crate::AnalysisMethod::Endogeneity
+        && (recipe.settings.bootstrap_samples > 0
+            || recipe.settings.studentized_inner_samples > 0
+            || recipe.settings.permutation_samples > 0)
+    {
+        issues.push(issue(
+            "endogeneity.resampling_unsupported",
+            Severity::Error,
+            "Gaussian-copula endogeneity diagnostics do not support bootstrap, studentized bootstrap, or permutation inference",
+            None,
+        ));
+    }
     if recipe.settings.method == crate::AnalysisMethod::ModeratedMediation {
         if recipe.settings.weighting_scheme == crate::WeightingScheme::Pca {
             issues.push(issue(
@@ -1381,11 +2038,15 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         }
     }
     if recipe.settings.method == crate::AnalysisMethod::Mga {
+        let micom_only = matches!(
+            recipe.method_config.as_ref(),
+            Some(crate::MethodConfig::Micom { .. })
+        );
         if recipe.settings.weighting_scheme != crate::WeightingScheme::Path {
             issues.push(issue(
                 "mga.path_weighting_required",
                 Severity::Error,
-                "The validated MICOM and permutation-MGA v2 scope requires path weighting",
+                "The current two-group composite workflow requires path weighting",
                 None,
             ));
         }
@@ -1393,7 +2054,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             issues.push(issue(
                 "mga.standardized_required",
                 Severity::Error,
-                "The validated MICOM and permutation-MGA v2 scope requires standardized preprocessing",
+                "The current two-group composite workflow requires standardized preprocessing",
                 None,
             ));
         }
@@ -1401,7 +2062,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             issues.push(issue(
                 "mga.listwise_required",
                 Severity::Error,
-                "The validated MICOM and permutation-MGA v2 scope requires listwise deletion",
+                "The current two-group composite workflow requires listwise deletion",
                 None,
             ));
         }
@@ -1429,7 +2090,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                 None,
             ));
         }
-        if recipe.model.paths.is_empty() {
+        if recipe.model.paths.is_empty() && !micom_only {
             issues.push(issue(
                 "mga.path_required",
                 Severity::Error,
@@ -1522,15 +2183,21 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                 .map(|method| method.to_ascii_lowercase())
                 .collect::<Vec<_>>();
             let unique = normalized.iter().collect::<std::collections::HashSet<_>>();
-            if normalized.len() != 2
-                || unique.len() != 2
-                || !normalized.iter().any(|method| method == "mga_permutation")
-                || !normalized.iter().any(|method| method == "micom")
-            {
+            let exact_micom =
+                normalized.len() == 1 && unique.len() == 1 && normalized[0] == "micom";
+            let legacy_combined = normalized.len() == 2
+                && unique.len() == 2
+                && normalized.iter().any(|method| method == "mga_permutation")
+                && normalized.iter().any(|method| method == "micom");
+            if (micom_only && !exact_micom) || (!micom_only && !legacy_combined) {
                 issues.push(issue(
                     "mga.group_methods_required",
                     Severity::Error,
-                    "The current native group workflow requires exactly MICOM and two-group permutation MGA",
+                    if micom_only {
+                        "The exact MICOM configuration must request MICOM only"
+                    } else {
+                        "Historical combined MGA configuration requires MICOM and two-group permutation MGA"
+                    },
                     Some(methods.join(",")),
                 ));
             }
@@ -1555,7 +2222,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                 _ => issues.push(issue(
                     "mga.permutation_samples",
                     Severity::Error,
-                    "MICOM and permutation MGA require metadata.group_permutation_samples between 5000 and 10000",
+                    "The selected two-group workflow requires method_config.permutation_samples between 5000 and 10000",
                     None,
                 )),
             }
@@ -1575,7 +2242,11 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             issues.push(issue(
                 "mga.group_methods_required",
                 Severity::Error,
-                "The current native group workflow requires exactly MICOM and two-group permutation MGA",
+                if micom_only {
+                    "The exact MICOM configuration must request MICOM only"
+                } else {
+                    "Historical combined MGA configuration requires MICOM and two-group permutation MGA"
+                },
                 None,
             ));
         }
@@ -1660,6 +2331,13 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         }
     }
     if recipe.settings.method == crate::AnalysisMethod::Cbsem {
+        let cbsem_bootstrap_v2_requested = matches!(
+            recipe.method_config.as_ref(),
+            Some(crate::MethodConfig::Cbsem {
+                bootstrap_v2: Some(_),
+                ..
+            })
+        );
         let model_type = recipe
             .metadata
             .get("cbsem_model_type")
@@ -1719,7 +2397,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                 None,
             ));
         }
-        if recipe.settings.workers != 1 {
+        if recipe.settings.workers != 1 && !cbsem_bootstrap_v2_requested {
             issues.push(issue(
                 "cbsem.workers_fixed",
                 Severity::Error,
@@ -1784,11 +2462,12 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                 None,
             ));
         }
-        if recipe
-            .metadata
-            .get("cbsem_bootstrap_samples")
-            .and_then(|value| value.parse::<u32>().ok())
-            .is_some_and(|samples| samples > 0)
+        if !cbsem_bootstrap_v2_requested
+            && recipe
+                .metadata
+                .get("cbsem_bootstrap_samples")
+                .and_then(|value| value.parse::<u32>().ok())
+                .is_some_and(|samples| samples > 0)
         {
             issues.push(issue(
                 "cbsem.bootstrap_unsupported",
@@ -2887,6 +3566,22 @@ mod tests {
         }
     }
 
+    #[test]
+    fn schema3_mean_replacement_remains_fail_closed() {
+        let mut recipe = valid_recipe();
+        recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        recipe.method_config = Some(crate::MethodConfig::PlsAlgorithm);
+        recipe.settings.missing_data = crate::MissingDataPolicy::MeanReplacement;
+        let issues = validate_recipe(&recipe);
+        assert!(issues.iter().any(|item| {
+            item.code == "missing_data.recipe_v4_required" && item.severity == Severity::Error
+        }));
+        assert!(matches!(
+            ValidatedExecutionRecipe::for_dataset(&recipe, "abc"),
+            Err(ExecutionRecipeError::Invalid { .. })
+        ));
+    }
+
     fn valid_v3_regression_recipe(
         model: crate::RegressionModelConfig,
         predictors: &[&str],
@@ -2908,6 +3603,35 @@ mod tests {
             model,
             bootstrap: None,
         });
+        recipe
+    }
+
+    fn configured_pls_recipe() -> AnalysisRecipe {
+        let mut recipe = valid_recipe();
+        recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        recipe.method_config = Some(crate::MethodConfig::PlsAlgorithmConfiguredV2(
+            crate::PlsAlgorithmConfigV2 {
+                initialization_contract_version:
+                    crate::PLS_INITIAL_OUTER_WEIGHTS_CONTRACT_VERSION_V2.into(),
+                initial_outer_weights: crate::PlsInitialOuterWeightsV2::Individual {
+                    weights: [
+                        ("x", "x1", 1.0),
+                        ("x", "x2", 0.0),
+                        ("y", "y1", -1.0),
+                        ("y", "y2", 0.0),
+                    ]
+                    .into_iter()
+                    .map(
+                        |(construct_id, indicator_id, value)| crate::PlsInitialOuterWeightV2 {
+                            construct_id: construct_id.into(),
+                            indicator_id: indicator_id.into(),
+                            value,
+                        },
+                    )
+                    .collect(),
+                },
+            },
+        ));
         recipe
     }
 
@@ -2957,6 +3681,98 @@ mod tests {
     }
 
     #[test]
+    fn configured_pls_initialization_v2_requires_exact_defaults_and_indicator_coverage() {
+        let recipe = configured_pls_recipe();
+        assert!(
+            validate_recipe(&recipe).is_empty(),
+            "{:?}",
+            validate_recipe(&recipe)
+        );
+
+        let mut drifted = recipe.clone();
+        drifted.settings.tolerance = f64::from_bits(1e-7_f64.to_bits() + 1);
+        assert!(validate_recipe(&drifted).iter().any(|issue| {
+            issue.code == "pls_algorithm_configured_v2.fixed_defaults"
+                && issue.severity == Severity::Error
+        }));
+
+        let mut pca = recipe.clone();
+        pca.settings.weighting_scheme = WeightingScheme::Pca;
+        assert!(validate_recipe(&pca).iter().any(|issue| {
+            issue.code == "pls_algorithm_configured_v2.weighting_scheme"
+                && issue.severity == Severity::Error
+        }));
+
+        for preprocessing in [
+            crate::Preprocessing::MeanCentered,
+            crate::Preprocessing::Unstandardized,
+        ] {
+            for weighting_scheme in [WeightingScheme::Path, WeightingScheme::Factor] {
+                let mut configured = recipe.clone();
+                configured.settings.preprocessing = preprocessing.clone();
+                configured.settings.weighting_scheme = weighting_scheme;
+                assert!(
+                    validate_recipe(&configured).is_empty(),
+                    "{:?}",
+                    validate_recipe(&configured)
+                );
+            }
+        }
+
+        let mut invalid = recipe.clone();
+        let Some(crate::MethodConfig::PlsAlgorithmConfiguredV2(config)) =
+            invalid.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        let crate::PlsInitialOuterWeightsV2::Individual { weights } =
+            &mut config.initial_outer_weights
+        else {
+            unreachable!()
+        };
+        weights.swap(0, 1);
+        weights.pop();
+        weights[1].value = f64::NAN;
+        assert!(validate_recipe(&invalid).iter().any(|issue| {
+            matches!(
+                issue.code,
+                "pls_algorithm_configured_v2.initial_weights_order"
+                    | "pls_algorithm_configured_v2.initial_weight_nonfinite"
+                    | "pls_algorithm_configured_v2.initial_weights_coverage"
+            ) && issue.severity == Severity::Error
+        }));
+    }
+
+    #[test]
+    fn configured_pls_initialization_v2_rejects_zero_blocks_and_resampling() {
+        let mut recipe = configured_pls_recipe();
+        recipe.settings.bootstrap_samples = 999;
+        let Some(crate::MethodConfig::PlsAlgorithmConfiguredV2(config)) =
+            recipe.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        let crate::PlsInitialOuterWeightsV2::Individual { weights } =
+            &mut config.initial_outer_weights
+        else {
+            unreachable!()
+        };
+        for weight in weights
+            .iter_mut()
+            .filter(|weight| weight.construct_id == "x")
+        {
+            weight.value = 0.0;
+        }
+        let issues = validate_recipe(&recipe);
+        assert!(issues.iter().any(|issue| {
+            issue.code == "pls_algorithm_configured_v2.initial_weights_zero_block"
+        }));
+        assert!(issues.iter().any(|issue| {
+            issue.code == "method_config.resampling_mismatch" && issue.severity == Severity::Error
+        }));
+    }
+
+    #[test]
     fn validated_execution_recipe_derives_an_immutable_no_resampling_base() {
         let mut recipe = valid_recipe();
         recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
@@ -2980,6 +3796,64 @@ mod tests {
             base.source().method_config,
             Some(crate::MethodConfig::PlsAlgorithm)
         );
+    }
+
+    #[test]
+    fn posthoc_technical_sample_size_requires_the_exact_typed_option_and_matching_inference() {
+        let mut point_recipe = valid_recipe();
+        point_recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        point_recipe.method_config =
+            Some(crate::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(
+                crate::PlsPosthocTechnicalMinimumSampleSizeConfigV2::point_estimate_v2(),
+            ));
+        assert!(
+            validate_recipe(&point_recipe)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error)
+        );
+
+        let mut recipe = valid_recipe();
+        recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        recipe.settings.bootstrap_samples = 999;
+        recipe.method_config = Some(crate::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(
+            crate::PlsPosthocTechnicalMinimumSampleSizeConfigV2::bootstrap_v2(),
+        ));
+        let execution = ValidatedExecutionRecipe::for_dataset(&recipe, "abc").unwrap();
+        let base = execution.without_outer_resampling().unwrap();
+        assert_eq!(
+            base.source().method_config,
+            Some(crate::MethodConfig::PlsAlgorithm)
+        );
+        assert_eq!(base.source().settings.bootstrap_samples, 0);
+
+        let mut drifted = recipe.clone();
+        let Some(crate::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(config)) =
+            drifted.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        config.method_version = "inverse_square_root_posthoc_v1".into();
+        assert!(validate_recipe(&drifted).iter().any(|issue| {
+            issue.code == "pls_posthoc.option_identity" && issue.severity == Severity::Error
+        }));
+
+        let mut mismatched_inference = recipe.clone();
+        let Some(crate::MethodConfig::PlsPosthocTechnicalMinimumSampleSize(config)) =
+            mismatched_inference.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        config.inference =
+            crate::PlsPosthocTechnicalMinimumSampleSizeInferenceV2::PointEstimateOnly;
+        assert!(validate_recipe(&mismatched_inference).iter().any(|issue| {
+            issue.code == "method_config.resampling_mismatch" && issue.severity == Severity::Error
+        }));
+
+        let mut claimed_bootstrap = recipe;
+        claimed_bootstrap.settings.bootstrap_samples = 0;
+        assert!(validate_recipe(&claimed_bootstrap).iter().any(|issue| {
+            issue.code == "method_config.resampling_mismatch" && issue.severity == Severity::Error
+        }));
     }
 
     #[test]
@@ -3117,6 +3991,40 @@ mod tests {
                 .any(|item| item.code == "cca.listwise_required"),
             "the only currently representable missing-data policy is listwise deletion"
         );
+    }
+
+    #[test]
+    fn gaussian_copula_endogeneity_rejects_all_outer_resampling_settings() {
+        let mut base = valid_recipe();
+        base.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        base.settings.method = crate::AnalysisMethod::Endogeneity;
+        base.method_config = Some(crate::MethodConfig::Endogeneity);
+        assert!(
+            validate_recipe(&base)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error),
+            "bounded point-only endogeneity recipe should remain valid: {:#?}",
+            validate_recipe(&base)
+        );
+
+        for (bootstrap, studentized, permutation) in [(10, 0, 0), (999, 99, 0), (0, 0, 99)] {
+            let mut recipe = base.clone();
+            recipe.settings.bootstrap_samples = bootstrap;
+            recipe.settings.studentized_inner_samples = studentized;
+            recipe.settings.permutation_samples = permutation;
+            let issues = validate_recipe(&recipe);
+            assert!(
+                issues.iter().any(|issue| {
+                    issue.code == "endogeneity.resampling_unsupported"
+                        && issue.severity == Severity::Error
+                }),
+                "endogeneity resampling request was not blocked: {issues:?}"
+            );
+            assert!(matches!(
+                ValidatedExecutionRecipe::for_dataset(&recipe, "abc"),
+                Err(ExecutionRecipeError::Invalid { .. })
+            ));
+        }
     }
 
     #[test]
@@ -3276,30 +4184,150 @@ mod tests {
     }
 
     #[test]
-    fn plsc_and_wpls_validated_scopes_reject_all_resampling_settings() {
+    fn plsc_consistent_resampling_is_bounded_while_wpls_rejects_resampling() {
         let mut wpls = valid_recipe();
         wpls.settings.method = crate::AnalysisMethod::Wpls;
         wpls.settings.case_weight_column = Some("case_wt".into());
         assert!(validate_recipe(&wpls).is_empty());
 
-        for method in [crate::AnalysisMethod::Plsc, crate::AnalysisMethod::Wpls] {
-            for (bootstrap, studentized, permutation) in [(99, 0, 0), (999, 99, 0), (0, 0, 99)] {
-                let mut recipe = valid_recipe();
-                recipe.settings.method = method;
-                recipe.settings.case_weight_column =
-                    (method == crate::AnalysisMethod::Wpls).then(|| "case_wt".into());
-                recipe.settings.bootstrap_samples = bootstrap;
-                recipe.settings.studentized_inner_samples = studentized;
-                recipe.settings.permutation_samples = permutation;
-                let expected_code = if method == crate::AnalysisMethod::Plsc {
-                    "plsc.resampling_unsupported"
-                } else {
-                    "wpls.resampling_unsupported"
-                };
-                assert!(validate_recipe(&recipe).iter().any(|item| {
-                    item.code == expected_code && item.severity == Severity::Error
-                }));
-            }
+        let mut plsc = valid_recipe();
+        plsc.settings.method = crate::AnalysisMethod::Plsc;
+        plsc.settings.bootstrap_samples = 1_000;
+        assert!(validate_recipe(&plsc).is_empty());
+
+        for (bootstrap, studentized, permutation, expected_code) in [
+            (999, 0, 0, "plsc.consistent_bootstrap_samples"),
+            (
+                1_000,
+                99,
+                0,
+                "plsc.consistent_bootstrap_studentized_unsupported",
+            ),
+            (
+                1_000,
+                0,
+                99,
+                "plsc.consistent_permutation_inference_conflict",
+            ),
+        ] {
+            let mut recipe = plsc.clone();
+            recipe.settings.bootstrap_samples = bootstrap;
+            recipe.settings.studentized_inner_samples = studentized;
+            recipe.settings.permutation_samples = permutation;
+            assert!(
+                validate_recipe(&recipe)
+                    .iter()
+                    .any(|item| { item.code == expected_code && item.severity == Severity::Error })
+            );
+        }
+
+        let mut consistent_permutation = valid_recipe();
+        consistent_permutation.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        consistent_permutation.settings.method = crate::AnalysisMethod::Plsc;
+        consistent_permutation.settings.permutation_samples = 99;
+        consistent_permutation.method_config = Some(crate::MethodConfig::PlscPermutation {
+            group_column: "group".into(),
+            group_a: "A".into(),
+            group_b: "B".into(),
+            test_tail: crate::PlscPermutationTestTail::TwoSided,
+        });
+        assert!(validate_recipe(&consistent_permutation).is_empty());
+        assert!(consistent_permutation.metadata.is_empty());
+        let execution = ValidatedExecutionRecipe::for_dataset(&consistent_permutation, "abc")
+            .expect("typed PLSc permutation recipe is executable");
+        assert_eq!(execution.effective().metadata["mga_group_column"], "group");
+        assert_eq!(execution.effective().metadata["mga_group_a"], "A");
+        assert_eq!(execution.effective().metadata["mga_group_b"], "B");
+        let point_execution = execution
+            .without_outer_resampling()
+            .expect("outer permutation derives a point-only PLSc capability");
+        assert!(matches!(
+            point_execution.source().method_config.as_ref(),
+            Some(crate::MethodConfig::Plsc)
+        ));
+        assert_eq!(point_execution.source().settings.permutation_samples, 0);
+
+        let mut directional = consistent_permutation.clone();
+        let Some(crate::MethodConfig::PlscPermutation { test_tail, .. }) =
+            directional.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        *test_tail = crate::PlscPermutationTestTail::GroupAGreater;
+        assert!(validate_recipe(&directional).is_empty());
+
+        let mut missing_groups = consistent_permutation.clone();
+        let Some(crate::MethodConfig::PlscPermutation { group_b, .. }) =
+            missing_groups.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        group_b.clear();
+        assert!(validate_recipe(&missing_groups).iter().any(|item| {
+            item.code == "plsc.consistent_permutation_groups_required"
+                && item.severity == Severity::Error
+        }));
+
+        let mut same_groups = consistent_permutation.clone();
+        let Some(crate::MethodConfig::PlscPermutation {
+            group_a, group_b, ..
+        }) = same_groups.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        *group_b = group_a.clone();
+        assert!(validate_recipe(&same_groups).iter().any(|item| {
+            item.code == "plsc.consistent_permutation_groups_required"
+                && item.severity == Severity::Error
+        }));
+
+        let mut indicator_group = consistent_permutation.clone();
+        let Some(crate::MethodConfig::PlscPermutation { group_column, .. }) =
+            indicator_group.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        *group_column = "x1".into();
+        assert!(validate_recipe(&indicator_group).iter().any(|item| {
+            item.code == "plsc.consistent_permutation_group_column_is_indicator"
+                && item.severity == Severity::Error
+        }));
+
+        let mut untyped_groups = consistent_permutation.clone();
+        untyped_groups.method_config = Some(crate::MethodConfig::Plsc);
+        untyped_groups
+            .metadata
+            .insert("mga_group_column".into(), "group".into());
+        untyped_groups
+            .metadata
+            .insert("mga_group_a".into(), "A".into());
+        untyped_groups
+            .metadata
+            .insert("mga_group_b".into(), "B".into());
+        let untyped_issues = validate_recipe(&untyped_groups);
+        assert!(untyped_issues.iter().any(|item| {
+            item.code == "plsc.consistent_permutation_method_config_required"
+                && item.severity == Severity::Error
+        }));
+        assert!(untyped_issues.iter().any(|item| {
+            item.code == "method_config.legacy_metadata_conflict"
+                && item.severity == Severity::Error
+        }));
+
+        let mut weighted = consistent_permutation.clone();
+        weighted.settings.case_weight_column = Some("weight".into());
+        assert!(validate_recipe(&weighted).iter().any(|item| {
+            item.code == "plsc.consistent_permutation_scope" && item.severity == Severity::Error
+        }));
+
+        for (bootstrap, studentized, permutation) in [(99, 0, 0), (999, 99, 0), (0, 0, 99)] {
+            let mut recipe = wpls.clone();
+            recipe.settings.bootstrap_samples = bootstrap;
+            recipe.settings.studentized_inner_samples = studentized;
+            recipe.settings.permutation_samples = permutation;
+            assert!(validate_recipe(&recipe).iter().any(|item| {
+                item.code == "wpls.resampling_unsupported" && item.severity == Severity::Error
+            }));
         }
     }
 
@@ -3363,7 +4391,7 @@ mod tests {
     }
 
     #[test]
-    fn micom_v2_requires_configural_confirmation_and_stable_permutation_count() {
+    fn micom_v3_requires_configural_confirmation_and_stable_permutation_count() {
         let mut recipe = valid_recipe();
         recipe.settings.method = crate::AnalysisMethod::Mga;
         recipe
@@ -4145,6 +5173,176 @@ mod tests {
         let point = execution.without_outer_resampling().unwrap();
         assert_eq!(point.source().settings.bootstrap_samples, 0);
         assert_eq!(point.source().settings.workers, 1);
+    }
+
+    fn cbsem_bootstrap_v2_recipe() -> AnalysisRecipe {
+        let mut recipe = valid_recipe();
+        recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        recipe.settings.method = crate::AnalysisMethod::Cbsem;
+        recipe.settings.weighting_scheme = WeightingScheme::Path;
+        recipe.settings.preprocessing = Preprocessing::Standardized;
+        recipe.settings.missing_data = crate::MissingDataPolicy::ListwiseDeletion;
+        recipe.settings.workers = 4;
+        recipe.settings.bootstrap_samples = 0;
+        recipe.settings.confidence_level = 0.95;
+        recipe.method_config = Some(crate::MethodConfig::Cbsem {
+            model_type: crate::CbsemModelType::Sem,
+            estimator: crate::CbsemEstimator::Ml,
+            input: crate::CbsemInput::Raw,
+            mean_structure: false,
+            bootstrap_samples: 1_000,
+            bootstrap_v2: Some(crate::CbsemBootstrapConfigV2 {
+                algorithm: crate::CbsemBootstrapAlgorithm::CaseResamplingFullMl,
+                interval: crate::CbsemBootstrapInterval::PercentileType7,
+                test_tail: crate::CbsemBootstrapTestTail::TwoSided,
+            }),
+            group_column: None,
+            invariance_steps: Vec::new(),
+        });
+        recipe
+    }
+
+    #[test]
+    fn cbsem_bootstrap_v2_is_explicit_scope_bounded_and_derives_point_ml() {
+        let recipe = cbsem_bootstrap_v2_recipe();
+        assert!(
+            validate_recipe(&recipe)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error),
+            "valid v2 recipe rejected: {:#?}",
+            validate_recipe(&recipe)
+        );
+        let execution = ValidatedExecutionRecipe::for_dataset(&recipe, "abc").unwrap();
+        let point = execution.without_outer_resampling().unwrap();
+        assert_eq!(point.source().settings.workers, 1);
+        assert!(matches!(
+            point.source().method_config.as_ref(),
+            Some(crate::MethodConfig::Cbsem {
+                bootstrap_samples: 0,
+                bootstrap_v2: None,
+                ..
+            })
+        ));
+
+        let mut studentized = recipe.clone();
+        if let Some(crate::MethodConfig::Cbsem {
+            bootstrap_v2: Some(config),
+            ..
+        }) = studentized.method_config.as_mut()
+        {
+            config.interval = crate::CbsemBootstrapInterval::AnalyticStudentizedType7;
+        }
+        assert!(
+            validate_recipe(&studentized)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error),
+            "valid analytic-studentized selector rejected: {:#?}",
+            validate_recipe(&studentized)
+        );
+
+        let mut bca = recipe.clone();
+        if let Some(crate::MethodConfig::Cbsem {
+            bootstrap_v2: Some(config),
+            ..
+        }) = bca.method_config.as_mut()
+        {
+            config.interval = crate::CbsemBootstrapInterval::BcaType7;
+        }
+        assert!(
+            validate_recipe(&bca)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error),
+            "valid BCa selector rejected: {:#?}",
+            validate_recipe(&bca)
+        );
+
+        let mut pilot = recipe.clone();
+        if let Some(crate::MethodConfig::Cbsem {
+            bootstrap_samples, ..
+        }) = pilot.method_config.as_mut()
+        {
+            *bootstrap_samples = 500;
+        }
+        assert!(
+            validate_recipe(&pilot)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error),
+            "500-replicate pilot rejected: {:#?}",
+            validate_recipe(&pilot)
+        );
+
+        let mut below_pilot = pilot.clone();
+        if let Some(crate::MethodConfig::Cbsem {
+            bootstrap_samples, ..
+        }) = below_pilot.method_config.as_mut()
+        {
+            *bootstrap_samples = 499;
+        }
+        assert!(validate_recipe(&below_pilot).iter().any(|issue| {
+            issue.code == "cbsem.bootstrap_v2_samples" && issue.severity == Severity::Error
+        }));
+
+        let mut zero = recipe.clone();
+        if let Some(crate::MethodConfig::Cbsem {
+            bootstrap_samples, ..
+        }) = zero.method_config.as_mut()
+        {
+            *bootstrap_samples = 0;
+        }
+        assert!(validate_recipe(&zero).iter().any(|issue| {
+            issue.code == "cbsem.bootstrap_v2_samples" && issue.severity == Severity::Error
+        }));
+
+        let mut legacy_selector = recipe.clone();
+        if let Some(crate::MethodConfig::Cbsem { bootstrap_v2, .. }) =
+            legacy_selector.method_config.as_mut()
+        {
+            *bootstrap_v2 = None;
+        }
+        assert!(validate_recipe(&legacy_selector).iter().any(|issue| {
+            issue.code == "cbsem.bootstrap_v2_selector_required"
+                && issue.severity == Severity::Error
+        }));
+
+        let mut outer = recipe.clone();
+        outer.settings.bootstrap_samples = 1_000;
+        assert!(validate_recipe(&outer).iter().any(|issue| {
+            issue.code == "cbsem.bootstrap_v2_outer_settings" && issue.severity == Severity::Error
+        }));
+
+        let mut confidence = recipe.clone();
+        confidence.settings.confidence_level = 0.90;
+        assert!(validate_recipe(&confidence).iter().any(|issue| {
+            issue.code == "cbsem.bootstrap_v2_confidence" && issue.severity == Severity::Error
+        }));
+
+        for mutation in ["estimator", "input", "mean", "group", "invariance"] {
+            let mut drift = recipe.clone();
+            if let Some(crate::MethodConfig::Cbsem {
+                estimator,
+                input,
+                mean_structure,
+                group_column,
+                invariance_steps,
+                ..
+            }) = drift.method_config.as_mut()
+            {
+                match mutation {
+                    "estimator" => *estimator = crate::CbsemEstimator::RobustMl,
+                    "input" => *input = crate::CbsemInput::Covariance,
+                    "mean" => *mean_structure = true,
+                    "group" => *group_column = Some("group".into()),
+                    "invariance" => invariance_steps.push(crate::CbsemInvarianceStep::Configural),
+                    _ => unreachable!(),
+                }
+            }
+            assert!(
+                validate_recipe(&drift).iter().any(|issue| {
+                    issue.code == "cbsem.bootstrap_v2_scope" && issue.severity == Severity::Error
+                }),
+                "scope mutation {mutation} was accepted"
+            );
+        }
     }
 
     #[test]

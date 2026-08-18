@@ -25,6 +25,7 @@ describe("native Data scientific grid", () => {
       mutationsLocked={false}
       onNewModel={vi.fn()}
       onAnalyze={vi.fn()}
+      onDerive={vi.fn()}
       onContextMenuRequest={() => false}
     />);
 
@@ -54,6 +55,7 @@ describe("native Data scientific grid", () => {
       mutationsLocked={false}
       onNewModel={vi.fn()}
       onAnalyze={vi.fn()}
+      onDerive={vi.fn()}
       onContextMenuRequest={() => false}
     />);
 
@@ -75,6 +77,7 @@ describe("native Data scientific grid", () => {
       mutationsLocked={false}
       onNewModel={vi.fn()}
       onAnalyze={vi.fn()}
+      onDerive={vi.fn()}
       onContextMenuRequest={() => false}
     />);
 
@@ -98,10 +101,32 @@ describe("native Data scientific grid", () => {
       mutationsLocked={false}
       onNewModel={vi.fn()}
       onAnalyze={vi.fn()}
+      onDerive={vi.fn()}
       onContextMenuRequest={() => false}
     />);
 
     expect(markup).toContain("This project is read-only. Save a writable copy before starting new work.");
-    expect(markup.match(/<button[^>]*disabled=""[^>]*>/g)).toHaveLength(2);
+    expect(markup.match(/<button[^>]*disabled=""[^>]*>/g)).toHaveLength(3);
+  });
+
+  it("offers the non-destructive derive workflow from every data view", () => {
+    vi.stubGlobal("window", { __TAURI_INTERNALS__: {} });
+    const dataset = useWorkspace.getState().dataset;
+    const markup = renderToStaticMarkup(<NativeDataSurface
+      selectedColumn={dataset.columns[0]}
+      setSelectedColumn={vi.fn()}
+      groupColumn={null}
+      propertiesOpen={false}
+      hasEditableModel
+      projectWritable
+      mutationsLocked={false}
+      onNewModel={vi.fn()}
+      onAnalyze={vi.fn()}
+      onDerive={vi.fn()}
+      onContextMenuRequest={() => false}
+    />);
+
+    expect(markup).toContain("Derive variable…");
+    expect(markup).toContain("Create a non-destructive derived variable");
   });
 });

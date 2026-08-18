@@ -8,6 +8,20 @@ import pca_v1_packaged_acceptance as packaged
 
 
 class PcaV1PackagedAdapterTests(unittest.TestCase):
+    def test_wrapper_parses_under_windows_powershell_51(self):
+        wrapper_path = packaged.ROOT / "validation" / "run_v247_pca_native_acceptance.ps1"
+        command = (
+            "$tokens=$null; $errors=$null; "
+            f"[System.Management.Automation.Language.Parser]::ParseFile('{wrapper_path}', [ref]$tokens, [ref]$errors) | Out-Null; "
+            "if ($errors.Count -ne 0) { exit 1 }"
+        )
+        completed = __import__("subprocess").run(
+            ["powershell.exe", "-NoProfile", "-Command", command],
+            cwd=packaged.ROOT,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0)
+
     def _write(self, root: Path, relative: str, content: bytes, mtime_ns: int) -> Path:
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -78,14 +92,49 @@ class PcaV1PackagedAdapterTests(unittest.TestCase):
             self.assertFalse(result["passed"])
             self.assertIn("receipt drift", result["error"])
 
-    def test_wrapper_retries_removal_of_prior_shared_reports(self):
+    def test_wrapper_retries_removal_and_preserves_main_only_when_requested(self):
         wrapper = (packaged.ROOT / "validation" / "run_v247_pca_native_acceptance.ps1").read_text(
             encoding="utf-8"
         )
         self.assertIn("function Remove-FileWithRetry", wrapper)
         self.assertIn("catch [System.IO.IOException]", wrapper)
         self.assertIn("[DateTime]::UtcNow.AddSeconds(5)", wrapper)
-        self.assertIn("foreach ($priorReport in @($mainReportPath, $scopedReportPath))", wrapper)
+        self.assertIn("[switch]$PreserveMainReport", wrapper)
+        self.assertIn("$priorReports = @($scopedReportPath)", wrapper)
+        self.assertIn("if (-not $PreserveMainReport)", wrapper)
+        self.assertIn("$priorReports += $mainReportPath", wrapper)
+        self.assertIn("foreach ($priorReport in $priorReports)", wrapper)
+
+    def test_adapter_preserves_the_shared_cumulative_report(self):
+        adapter = (packaged.ROOT / "validation" / "pca_v1_packaged_acceptance.py").read_text(
+            encoding="utf-8"
+        )
+        invocation = adapter.rindex('"validation/run_v247_pca_native_acceptance.ps1"')
+        self.assertIn('"-PreserveMainReport"', adapter[invocation : invocation + 400])
+
+    def test_factory_snapshot_retries_transient_windows_mapping_and_rehashes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "fresh.json"
+            destination = root / "factory.json"
+            source.write_bytes(b'{"passed":true}')
+            real_copy = packaged.shutil.copy2
+            calls = 0
+
+            def transient_copy(left, right):
+                nonlocal calls
+                calls += 1
+                if calls == 1:
+                    raise OSError(1224, "user-mapped section open")
+                return real_copy(left, right)
+
+            with (
+                patch.object(packaged.shutil, "copy2", side_effect=transient_copy),
+                patch.object(packaged.time, "sleep"),
+            ):
+                packaged.copy2_with_retry(source, destination, attempts=2)
+            self.assertEqual(2, calls)
+            self.assertEqual(source.read_bytes(), destination.read_bytes())
 
 
 if __name__ == "__main__":

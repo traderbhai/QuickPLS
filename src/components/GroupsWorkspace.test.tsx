@@ -34,7 +34,7 @@ function completedRun(result: PlsResult): AnalysisRun {
 describe("GroupsWorkspace segmentation claim boundaries", () => {
   beforeEach(() => useWorkspace.getState().resetProject());
 
-  it("labels FIMIX-style output as a non-EM bounded preview", () => {
+  it("labels FIMIX-style output as an Experimental non-EM diagnostic", () => {
     const run = completedRun({
       ...baseResult,
       fimix: {
@@ -62,12 +62,12 @@ describe("GroupsWorkspace segmentation claim boundaries", () => {
     expect(hasGroupPayload(run.result)).toBe(true);
     const html = renderToStaticMarkup(<FimixPanel result={run.result!} />);
     expect(html).toContain("FIMIX-style diagnostic");
-    expect(html).toContain("bounded preview");
+    expect(html).toContain("Experimental");
     expect(html).toContain("not posterior probabilities or full finite-mixture EM/FIMIX-PLS equivalence");
     expect(html).not.toContain("FIMIX-PLS</strong><span class=\"status-text validated\"");
   });
 
-  it("labels PLS-POS-style output as an unqualified bounded preview", () => {
+  it("labels PLS-POS-style output as an Experimental diagnostic", () => {
     const run = completedRun({
       ...baseResult,
       segmentation: {
@@ -98,8 +98,8 @@ describe("GroupsWorkspace segmentation claim boundaries", () => {
     expect(hasGroupPayload(run.result)).toBe(true);
     const html = renderToStaticMarkup(<PosPanel result={run.result!} />);
     expect(html).toContain("PLS-POS-style diagnostic");
-    expect(html).toContain("bounded preview");
-    expect(html).toContain("does not claim unrestricted published PLS-POS equivalence");
+    expect(html).toContain("Experimental");
+    expect(html).toContain("does not implement unrestricted published PLS-POS");
     expect(html).not.toContain("PLS-POS</strong><span class=\"status-text validated\"");
   });
 });

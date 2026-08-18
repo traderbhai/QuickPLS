@@ -31,7 +31,7 @@
     {
       "name": "topbar_uses_effective_status",
       "passed": true,
-      "detail": "Top bar method badge uses setting-aware method status."
+      "detail": "Top bar method badge uses the setting-aware capability-registry availability."
     },
     {
       "name": "result_tables_fail_closed_by_exact_method_identity",

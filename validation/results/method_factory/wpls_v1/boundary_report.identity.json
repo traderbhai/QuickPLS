@@ -3,12 +3,17 @@
   "checks": {
     "baseline": {
       "output": "validation/results/method_factory/wpls_v1/work/factory_boundary_baseline.quickpls.json",
-      "output_sha256": "24a6e61c61dd070fe9bafb46a13dfb48d73d5df0839cfc40a5f2149af26e4521"
+      "output_sha256": "145a78158dd5e337908f5adcf8f628333a6d9b4bc766c3cb9acdc235759c4f28"
     },
     "categories": {
       "data_pathology": {
-        "invalid_weights": {
+        "invalid_retained_weights": {
           "negative": {
+            "diagnostic": "error: pls estimation failed: numerical failure: case weights must be positive and finite\n",
+            "no_partial_result": true,
+            "passed": true
+          },
+          "nonfinite": {
             "diagnostic": "error: pls estimation failed: numerical failure: case weights must be positive and finite\n",
             "no_partial_result": true,
             "passed": true
@@ -19,13 +24,29 @@
             "passed": true
           }
         },
+        "missing_weight_listwise": {
+          "exact_weight_metadata_match": true,
+          "explicit_row_drop_equivalence": {
+            "max_abs_errors": {
+              "construct_scores": 0.0,
+              "effects": 0.0,
+              "outer": 0.0,
+              "paths": 0.0,
+              "r_squared": 0.0
+            },
+            "passed": true
+          },
+          "omitted_observations": 1,
+          "passed": true,
+          "used_observations": 159
+        },
         "passed": true
       },
       "determinism": {
         "analytic_payloads_exactly_equal": true,
-        "first_output_sha256": "24a6e61c61dd070fe9bafb46a13dfb48d73d5df0839cfc40a5f2149af26e4521",
+        "first_output_sha256": "145a78158dd5e337908f5adcf8f628333a6d9b4bc766c3cb9acdc235759c4f28",
         "passed": true,
-        "second_output_sha256": "84574335b42b980ac20237c0e0bcfd129f724515e8b505c04310f61806d5b50a",
+        "second_output_sha256": "df11327f23ee4440da427e2d997e72e16440af104db76d1e88fa8c3865608e85",
         "weight_metadata_exactly_equal": true
       },
       "metamorphic": {
@@ -64,7 +85,7 @@
       },
       "tamper": {
         "archive": "validation/results/method_factory/wpls_v1/work/wpls_v1_tampered_weight_metadata.qpls",
-        "archive_sha256": "788bc655f489f402e80fc646706606456acbef88040afa20cb071595248b7175",
+        "archive_sha256": "5c46cebc2371d406028021b77d4dc0a5358ad5d575182b14da7197ad73e9dfe0",
         "creation": {
           "execution": {
             "command": [
@@ -75,9 +96,10 @@
               "validation/results/method_factory/wpls_v1/work/persistence_wpls.csv",
               "--output",
               "validation/results/method_factory/wpls_v1/work/factory_persistence_wpls.quickpls.json",
-              "--allow-experimental"
+              "--allow-experimental",
+              "--allow-internal-qualification"
             ],
-            "duration_seconds": 0.052,
+            "duration_seconds": 0.086,
             "returncode": 0,
             "stderr_tail": "",
             "stdout_tail": "wrote analysis result validation/results/method_factory/wpls_v1/work/factory_persistence_wpls.quickpls.json\n"
@@ -92,7 +114,7 @@
                 "--name",
                 "factory_persistence_wpls"
               ],
-              "duration_seconds": 0.063,
+              "duration_seconds": 0.136,
               "returncode": 0,
               "stderr_tail": "",
               "stdout_tail": "created validation/results/method_factory/wpls_v1/work/factory_persistence_wpls.fingerprint.qpls\n"
@@ -104,21 +126,21 @@
                 "validation/results/method_factory/wpls_v1/work/factory_persistence_wpls.fingerprint.qpls",
                 "--json"
               ],
-              "duration_seconds": 0.071,
+              "duration_seconds": 0.084,
               "returncode": 0,
               "stderr_tail": "",
-              "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 5,\n      \"fingerprint\": \"v2:8956aab2ff7840193390642bad21d67af055ca191fc69cae0babd94ee29b8eb1\",\n      \"id\": \"251b7e46-10f6-4d68-982b-aac427d26908\",\n      \"kind\": \"raw\",\n      \"name\": \"persistence_wpls.csv\",\n      \"rows\": 8,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"factory_persistence_wpls\",\n  \"projectId\": \"5bfa7e8a-00a2-41f5-a2e7-a343915997cd\",\n  \"readOnly\": false,\n  \"recipes\": 0,\n  \"recovered\": false,\n  \"results\": 0,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
+              "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 5,\n      \"fingerprint\": \"v2:8956aab2ff7840193390642bad21d67af055ca191fc69cae0babd94ee29b8eb1\",\n      \"id\": \"3e262ba2-90aa-4ec0-997f-e024b9006d2b\",\n      \"kind\": \"raw\",\n      \"name\": \"persistence_wpls.csv\",\n      \"rows\": 8,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"factory_persistence_wpls\",\n  \"projectId\": \"cc1b77e6-4764-4c5a-850e-678224daa156\",\n  \"readOnly\": false,\n  \"recipes\": 0,\n  \"recovered\": false,\n  \"results\": 0,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
             },
             "project": "validation/results/method_factory/wpls_v1/work/factory_persistence_wpls.fingerprint.qpls",
-            "project_sha256": "f13809a4fcc0491a72afb357a32d6003e157f6eeacdcf71f6b6f589ffe54a4a8"
+            "project_sha256": "efd39926e4a9e05ce8370de369e9fd7a242feb4f655c32851409c2bad3e12392"
           },
           "passed": true,
           "raw_result": "validation/results/method_factory/wpls_v1/work/factory_persistence_wpls.quickpls.json",
-          "raw_result_sha256": "ce5f6dbaaa60516a57fd82a8490587b963b0e99ba2fef0525f8af78b99bf2b28",
+          "raw_result_sha256": "534892afb139520164ed6b0b2f598f812f86c3741d55d2cb909c563c19ac0545",
           "recipe": "validation/results/method_factory/wpls_v1/work/factory_persistence_wpls.recipe.json",
           "recipe_sha256": "f9fb5a60eadd965acd61c24cec56f35dfda6b400b49dae993edf523c867e72f4"
         },
-        "diagnostic": "error: invalid project validation/results/method_factory/wpls_v1/work/wpls_v1_tampered_weight_metadata.qpls\n\ncaused by:\n    project recovery failed: primary failed (project archive is invalid: result 2a5db3a4-b72a-4624-8235-b3fad842ce54 uses unsupported pls payload versions); autosave is absent; backup is absent\n",
+        "diagnostic": "error: invalid project validation/results/method_factory/wpls_v1/work/wpls_v1_tampered_weight_metadata.qpls\n\ncaused by:\n    project recovery failed: primary failed (project archive is invalid: result c71a2a57-77f0-418a-941d-4acd1e21e8b5 uses unsupported pls payload versions); autosave is absent; backup is absent\n",
         "execution": {
           "command": [
             "D:\\QuickPLS\\target\\debug\\qpls.exe",
@@ -126,9 +148,9 @@
             "validation/results/method_factory/wpls_v1/work/wpls_v1_tampered_weight_metadata.qpls",
             "--json"
           ],
-          "duration_seconds": 0.049,
+          "duration_seconds": 0.065,
           "returncode": 1,
-          "stderr_tail": "Error: invalid project validation/results/method_factory/wpls_v1/work/wpls_v1_tampered_weight_metadata.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result 2a5db3a4-b72a-4624-8235-b3fad842ce54 uses unsupported PLS payload versions); autosave is absent; backup is absent\n",
+          "stderr_tail": "Error: invalid project validation/results/method_factory/wpls_v1/work/wpls_v1_tampered_weight_metadata.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result c71a2a57-77f0-418a-941d-4acd1e21e8b5 uses unsupported PLS payload versions); autosave is absent; backup is absent\n",
           "stdout_tail": ""
         },
         "passed": true
@@ -159,7 +181,7 @@
     "tolerance": 1e-06
   },
   "feature_id": "qpls3.pls.weighted",
-  "generated_at_utc": "2026-08-13T19:01:26.434936Z",
+  "generated_at_utc": "2026-08-18T03:47:45.917956Z",
   "method_version": "wpls_case_weighted_v1",
   "passed": true,
   "report_kind": "quickpls_method_factory_identity_report",
@@ -167,19 +189,24 @@
   "schema_version": 1,
   "source_artifacts": [
     {
+      "path": "crates/qpls-assessment/src/lib.rs",
+      "sha256": "910a3c42edde1db2dcff8b283a9d7acb388b4eb6b30f88c55201624610c2e341",
+      "size": 187841
+    },
+    {
       "path": "crates/qpls-core/src/validation.rs",
-      "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
-      "size": 177352
+      "sha256": "d1a465665a8181c48b50fe822c4c8055ec19b69845ad510f72b7673c103ec306",
+      "size": 227427
     },
     {
       "path": "crates/qpls-estimation/src/pls.rs",
-      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
-      "size": 639198
+      "sha256": "dc8c24e15255a38db77421c0d27bca6fbf202da3b0082499de6474b537d94df9",
+      "size": 808499
     },
     {
       "path": "crates/qpls-project/src/lib.rs",
-      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
-      "size": 660277
+      "sha256": "4f4ec8150416919db4932c78384814e00288e3a3265d4dbeb8aa2f59215c525e",
+      "size": 854728
     },
     {
       "path": "validation/method_promotion_manifest.py",
@@ -193,28 +220,28 @@
     },
     {
       "path": "validation/methods/wpls_v1.manifest.json",
-      "sha256": "3daca54776596694059dab1bb9ee9f732d910b69e481feea817f780ba6ef4d42",
-      "size": 15256
+      "sha256": "6c8a6b2fa9c212941161f4783ea9b0006284ae41d3eb9a33c70b40f16c757266",
+      "size": 17100
     },
     {
       "path": "validation/test_method_promotion_manifest.py",
-      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
-      "size": 21222
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
     },
     {
       "path": "validation/test_wpls_v1_factory_evidence.py",
-      "sha256": "5080160efdf8190400f7a946cb7c25ea297182faf7577b4a386420dab3be6884",
-      "size": 4238
+      "sha256": "1efb7101f150d398b0fcbe97af81c8a0359bc1c1d074e2f6f4188b163daf25ff",
+      "size": 4306
     },
     {
       "path": "validation/wpls_v1_boundary_gate.py",
-      "sha256": "d9f0dadde3fb65850ab9da8d7873dc409848087a47ccbaa6069658b0d5f3ee7e",
-      "size": 8876
+      "sha256": "d848dedbe2a8428a2442ffe16861c3f813745bdc57cd5738ac100828100fd2c1",
+      "size": 10589
     },
     {
       "path": "validation/wpls_v1_factory_common.py",
-      "sha256": "c4e3afed2f83563f3667b1ac2d03d8a9e9d6aab35253a1fb339218581f2390ad",
-      "size": 14019
+      "sha256": "fe2894e8f858fd0c563bebadd615ca5ffd2942c1d6173ccd0f926ea4682a9ea1",
+      "size": 14106
     },
     {
       "path": "validation/wpls_v1_persistence_gate.py",

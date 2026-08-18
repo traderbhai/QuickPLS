@@ -1,0 +1,567 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "boundary_gate": {
+      "checks": {
+        "dataset_identity_tamper_rejected": true,
+        "metamorphic_and_determinism_covered_by_engine_gate": true,
+        "no_scope_result_written": true,
+        "no_tampered_result_written": true,
+        "prebuilt_cli_only": true,
+        "unsupported_scope_rejected": true
+      },
+      "executions": [
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "validate",
+            "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/work/boundary_invalid.recipe.json",
+            "--json"
+          ],
+          "duration_seconds": 0.114,
+          "returncode": 1,
+          "stderr_tail": "Error: recipe validation failed\n",
+          "stdout_tail": "[\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"x\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"m\"\n  },\n  {\n    \"code\": \"construct.indicators\",\n    \"severity\": \"error\",\n    \"message\": \"Construct requires at least one indicator\",\n    \"subject\": \"xm\"\n  },\n  {\n    \"code\": \"construct.single_item\",\n    \"severity\": \"warning\",\n    \"message\": \"Single-item reflective construct requires explicit justification\",\n    \"subject\": \"y\"\n  }\n]\n"
+        },
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/work/boundary_invalid.recipe.json",
+            "--data",
+            "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/work/moderation_simulation_null_00.csv",
+            "--output",
+            "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/work/boundary_scope_invalid.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.061,
+          "returncode": 1,
+          "stderr_tail": "Error: construct.indicators: Construct requires at least one indicator\n",
+          "stdout_tail": ""
+        },
+        {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/work/boundary_identity_tampered.recipe.json",
+            "--data",
+            "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/work/moderation_simulation_null_00.csv",
+            "--output",
+            "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/work/boundary_identity_tampered.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.094,
+          "returncode": 1,
+          "stderr_tail": "Error: recipe dataset fingerprint does not match the imported dataset\n",
+          "stdout_tail": ""
+        }
+      ],
+      "kind": "quickpls_phase3_boundary_gate",
+      "method": "moderation_v1",
+      "passed": true,
+      "path": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/boundary_gate.json",
+      "schema_version": 1
+    },
+    "engine_gate": {
+      "checks": {
+        "checks": {
+          "max_reference_delta": 9.43689570931383e-14,
+          "null_abs_under_threshold_count": 20,
+          "null_mean_abs_interaction": 0.04311346698784708,
+          "null_p90_abs_interaction": 0.06893987033444182,
+          "null_replicates": 20,
+          "signal_all_positive": true,
+          "signal_mean_interaction": 0.7619047180302201,
+          "signal_min_interaction": 0.7072658056632029,
+          "signal_replicates": 20
+        },
+        "claim_limited_to": "one two-stage product-score interaction with probes at -1, 0, and +1",
+        "null_replicates": [
+          {
+            "abs_reference_delta": 3.9343528435153985e-15,
+            "interaction_beta": 0.0,
+            "m_path": 0.32501534352667016,
+            "quickpls_interaction": -0.028316689506179434,
+            "reference_interaction": -0.02831668950618337,
+            "replicate": 0,
+            "x_path": 0.6433540241072503
+          },
+          {
+            "abs_reference_delta": 9.43689570931383e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.40801325902375407,
+            "quickpls_interaction": -0.06178950562825527,
+            "reference_interaction": -0.0617895056281609,
+            "replicate": 1,
+            "x_path": 0.4795621682014455
+          },
+          {
+            "abs_reference_delta": 3.770594947383188e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.4627744206709169,
+            "quickpls_interaction": -0.06845311743452542,
+            "reference_interaction": -0.06845311743448772,
+            "replicate": 2,
+            "x_path": 0.5611411264030618
+          },
+          {
+            "abs_reference_delta": 6.245004513516506e-16,
+            "interaction_beta": 0.0,
+            "m_path": 0.3456587909162725,
+            "quickpls_interaction": 0.02780001880060142,
+            "reference_interaction": 0.027800018800602046,
+            "replicate": 3,
+            "x_path": 0.66535283469994
+          },
+          {
+            "abs_reference_delta": 4.5602410736478305e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.43305306271886185,
+            "quickpls_interaction": 0.03641321134558469,
+            "reference_interaction": 0.03641321134563029,
+            "replicate": 4,
+            "x_path": 0.5473122754451252
+          },
+          {
+            "abs_reference_delta": 7.066569551739121e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.41598901511433384,
+            "quickpls_interaction": -0.10583717343869617,
+            "reference_interaction": -0.1058371734386255,
+            "replicate": 5,
+            "x_path": 0.5955344194160633
+          },
+          {
+            "abs_reference_delta": 5.655198531684391e-15,
+            "interaction_beta": 0.0,
+            "m_path": 0.3890341949280291,
+            "quickpls_interaction": -0.022410332347191315,
+            "reference_interaction": -0.02241033234719697,
+            "replicate": 6,
+            "x_path": 0.5639516476897108
+          },
+          {
+            "abs_reference_delta": 1.677130656574377e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.36859232049554036,
+            "quickpls_interaction": 0.045394823082641825,
+            "reference_interaction": 0.04539482308262505,
+            "replicate": 7,
+            "x_path": 0.6632086856429944
+          },
+          {
+            "abs_reference_delta": 3.6311231799146526e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.44282264237498686,
+            "quickpls_interaction": -0.042016056971097414,
+            "reference_interaction": -0.0420160569710611,
+            "replicate": 8,
+            "x_path": 0.5286951384981587
+          },
+          {
+            "abs_reference_delta": 4.476453929758151e-15,
+            "interaction_beta": 0.0,
+            "m_path": 0.392317602617267,
+            "quickpls_interaction": 0.0015134092656347463,
+            "reference_interaction": 0.0015134092656302698,
+            "replicate": 9,
+            "x_path": 0.5571100601526747
+          },
+          {
+            "abs_reference_delta": 6.00006155870858e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.47798133240890883,
+            "quickpls_interaction": 0.0569822443681219,
+            "reference_interaction": 0.0569822443681819,
+            "replicate": 10,
+            "x_path": 0.5595116868955607
+          },
+          {
+            "abs_reference_delta": 3.447936380851502e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.451464746473143,
+            "quickpls_interaction": -0.04345714027770047,
+            "reference_interaction": -0.04345714027773495,
+            "replicate": 11,
+            "x_path": 0.5967349612286793
+          },
+          {
+            "abs_reference_delta": 1.3253287356462806e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.31674041756564764,
+            "quickpls_interaction": -0.025372213402774325,
+            "reference_interaction": -0.02537221340278758,
+            "replicate": 12,
+            "x_path": 0.6408809030344821
+          },
+          {
+            "abs_reference_delta": 4.251460294923959e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.3070416607483696,
+            "quickpls_interaction": 0.05828667673187033,
+            "reference_interaction": 0.058286676731827816,
+            "replicate": 13,
+            "x_path": 0.6005142187266447
+          },
+          {
+            "abs_reference_delta": 3.801646497603173e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.4281994528982401,
+            "quickpls_interaction": -0.013536853089636883,
+            "reference_interaction": -0.0135368530896749,
+            "replicate": 14,
+            "x_path": 0.5641068741872661
+          },
+          {
+            "abs_reference_delta": 3.584632590758474e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.39216772741151856,
+            "quickpls_interaction": -0.07332064643368932,
+            "reference_interaction": -0.07332064643365348,
+            "replicate": 15,
+            "x_path": 0.5676629320729257
+          },
+          {
+            "abs_reference_delta": 7.001343949042393e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.39692483572162185,
+            "quickpls_interaction": -0.05429725164140344,
+            "reference_interaction": -0.054297251641473455,
+            "replicate": 16,
+            "x_path": 0.5876632575592319
+          },
+          {
+            "abs_reference_delta": 8.647943472439579e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.4634032705011097,
+            "quickpls_interaction": -0.03516254034467551,
+            "reference_interaction": -0.03516254034458903,
+            "replicate": 17,
+            "x_path": 0.5507151548330542
+          },
+          {
+            "abs_reference_delta": 1.9359513991901167e-14,
+            "interaction_beta": 0.0,
+            "m_path": 0.3937167934949358,
+            "quickpls_interaction": -0.05592206609874656,
+            "reference_interaction": -0.0559220660987272,
+            "replicate": 18,
+            "x_path": 0.6028521022171466
+          },
+          {
+            "abs_reference_delta": 2.6168303635110135e-15,
+            "interaction_beta": 0.0,
+            "m_path": 0.35354409614922777,
+            "quickpls_interaction": -0.0059873695479151475,
+            "reference_interaction": -0.005987369547912531,
+            "replicate": 19,
+            "x_path": 0.6631945306710813
+          }
+        ],
+        "passed": true,
+        "report": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/work/moderation_simulation_report.json",
+        "report_sha256": "d479e05d4636519c5341eed612ac8f611a37cf68b029b6c5ce36c55730491216",
+        "signal_replicates": [
+          {
+            "abs_reference_delta": 5.551115123125783e-16,
+            "interaction_beta": 0.65,
+            "m_path": 0.1721725709548727,
+            "quickpls_interaction": 0.8186332671241949,
+            "reference_interaction": 0.8186332671241944,
+            "replicate": 0,
+            "x_path": 0.30868749549208263
+          },
+          {
+            "abs_reference_delta": 9.547918011776346e-15,
+            "interaction_beta": 0.65,
+            "m_path": 0.20139005521550046,
+            "quickpls_interaction": 0.7728211581946606,
+            "reference_interaction": 0.772821158194651,
+            "replicate": 1,
+            "x_path": 0.3512762634642007
+          },
+          {
+            "abs_reference_delta": 2.986499936241671e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.2773514935058987,
+            "quickpls_interaction": 0.7072658056632029,
+            "reference_interaction": 0.707265805663173,
+            "replicate": 2,
+            "x_path": 0.33895383032342896
+          },
+          {
+            "abs_reference_delta": 1.0769163338864018e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.34631015048242286,
+            "quickpls_interaction": 0.722879581747912,
+            "reference_interaction": 0.7228795817479228,
+            "replicate": 3,
+            "x_path": 0.22948285826328862
+          },
+          {
+            "abs_reference_delta": 1.554312234475219e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.27494072956937887,
+            "quickpls_interaction": 0.8224386751371748,
+            "reference_interaction": 0.8224386751371904,
+            "replicate": 4,
+            "x_path": 0.3291582435083457
+          },
+          {
+            "abs_reference_delta": 1.9984014443252818e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.24781753266485368,
+            "quickpls_interaction": 0.7860403573789931,
+            "reference_interaction": 0.7860403573790131,
+            "replicate": 5,
+            "x_path": 0.3018421156729749
+          },
+          {
+            "abs_reference_delta": 1.3433698597964394e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.26046729154036485,
+            "quickpls_interaction": 0.8812628083361215,
+            "reference_interaction": 0.8812628083361349,
+            "replicate": 6,
+            "x_path": 0.29107916321323757
+          },
+          {
+            "abs_reference_delta": 1.5543122344752192e-15,
+            "interaction_beta": 0.65,
+            "m_path": 0.3350045923727596,
+            "quickpls_interaction": 0.7392659567114985,
+            "reference_interaction": 0.7392659567115001,
+            "replicate": 7,
+            "x_path": 0.29516904555129303
+          },
+          {
+            "abs_reference_delta": 4.9182879990894435e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.17663878855619447,
+            "quickpls_interaction": 0.7665091359702421,
+            "reference_interaction": 0.7665091359702912,
+            "replicate": 8,
+            "x_path": 0.37984748724275436
+          },
+          {
+            "abs_reference_delta": 1.7763568394002505e-15,
+            "interaction_beta": 0.65,
+            "m_path": 0.12170468880777138,
+            "quickpls_interaction": 0.7742097333000957,
+            "reference_interaction": 0.7742097333000975,
+            "replicate": 9,
+            "x_path": 0.28910217933824656
+          },
+          {
+            "abs_reference_delta": 9.880984919163893e-15,
+            "interaction_beta": 0.65,
+            "m_path": 0.3199717294419561,
+            "quickpls_interaction": 0.7662538538443324,
+            "reference_interaction": 0.7662538538443423,
+            "replicate": 10,
+            "x_path": 0.31319874102038087
+          },
+          {
+            "abs_reference_delta": 2.2093438190040615e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.3524076960310689,
+            "quickpls_interaction": 0.7342924174002968,
+            "reference_interaction": 0.7342924174002747,
+            "replicate": 11,
+            "x_path": 0.3628095441173761
+          },
+          {
+            "abs_reference_delta": 3.430589146091734e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.25416511574352674,
+            "quickpls_interaction": 0.7575860512105358,
+            "reference_interaction": 0.7575860512105015,
+            "replicate": 12,
+            "x_path": 0.3266155191537452
+          },
+          {
+            "abs_reference_delta": 6.772360450213455e-15,
+            "interaction_beta": 0.65,
+            "m_path": 0.26278464605406976,
+            "quickpls_interaction": 0.7458059123279467,
+            "reference_interaction": 0.7458059123279399,
+            "replicate": 13,
+            "x_path": 0.27850718909201
+          },
+          {
+            "abs_reference_delta": 1.7208456881689926e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.32286777469443506,
+            "quickpls_interaction": 0.761896064803786,
+            "reference_interaction": 0.7618960648038032,
+            "replicate": 14,
+            "x_path": 0.37870874763292733
+          },
+          {
+            "abs_reference_delta": 2.8199664825478976e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.2750823733086857,
+            "quickpls_interaction": 0.7556684373313833,
+            "reference_interaction": 0.7556684373313551,
+            "replicate": 15,
+            "x_path": 0.3236779310299471
+          },
+          {
+            "abs_reference_delta": 7.327471962526033e-15,
+            "interaction_beta": 0.65,
+            "m_path": 0.18304947289528947,
+            "quickpls_interaction": 0.7210548134022965,
+            "reference_interaction": 0.7210548134022892,
+            "replicate": 16,
+            "x_path": 0.4167994868367637
+          },
+          {
+            "abs_reference_delta": 2.9976021664879227e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.26347508730094205,
+            "quickpls_interaction": 0.7149467939777547,
+            "reference_interaction": 0.7149467939777248,
+            "replicate": 17,
+            "x_path": 0.36357701733798337
+          },
+          {
+            "abs_reference_delta": 1.432187701766452e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.3297586641161805,
+            "quickpls_interaction": 0.7480313338145753,
+            "reference_interaction": 0.748031333814561,
+            "replicate": 18,
+            "x_path": 0.4126384078484831
+          },
+          {
+            "abs_reference_delta": 2.7644553313166398e-14,
+            "interaction_beta": 0.65,
+            "m_path": 0.3923058807408612,
+            "quickpls_interaction": 0.7412322029273972,
+            "reference_interaction": 0.7412322029273696,
+            "replicate": 19,
+            "x_path": 0.3825842044819698
+          }
+        ]
+      },
+      "completed_at_utc": "2026-08-18T00:33:51.994911Z",
+      "kind": "quickpls_phase3_current_engine_gate",
+      "method": "moderation_v1",
+      "passed": true,
+      "path": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/engine_gate.json",
+      "prebuilt_cli": {
+        "path": "target/debug/qpls.exe",
+        "sha256": "ad982f935cced0de90627d25d941c38d74adf6b19882364b037ca3b9fb01c8b0",
+        "size": 66081792
+      },
+      "recipe_policy": "historical fixtures copied to explicit schema v3; source fixtures preserved",
+      "schema_version": 1,
+      "started_at_utc": "2026-08-18T00:33:25.190353Z"
+    },
+    "passed": true
+  },
+  "feature_id": "qpls3.pls.moderation",
+  "generated_at_utc": "2026-08-18T00:33:52.398384Z",
+  "method_version": "pls_two_stage_moderation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_TWO_STAGE_MODERATION_V1.md",
+      "sha256": "1c5abd66cef37fc01e392278cfe17e6b81b48e2fe6346f9ecc74a9c0b05a503c",
+      "size": 6099
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/moderation_v1.manifest.json",
+      "sha256": "130474213ff5e5d481b8fd26db9038852c8e221e6d85c5444c942d373688b88a",
+      "size": 14197
+    },
+    {
+      "path": "validation/moderation_boundary_gate.py",
+      "sha256": "3e86e8c14a00417f325295f2b678e03c5d975a21a86858dc5dadf3a0749e1f11",
+      "size": 200
+    },
+    {
+      "path": "validation/moderation_coverage_qualification.py",
+      "sha256": "8178521cf1dd5eeb56d6771738f8ab2e1d68d64f83131949df231920f106989a",
+      "size": 9317
+    },
+    {
+      "path": "validation/moderation_inference.py",
+      "sha256": "9d3fa98cfc3f3b076921dbf8cd128f8fb68436a2180777828f0133d25989a56d",
+      "size": 6841
+    },
+    {
+      "path": "validation/moderation_inference_qualification.py",
+      "sha256": "83603fbc99444194fb1f1892a576b1bd17df4002d5bfc62d757d39be8df01c75",
+      "size": 7440
+    },
+    {
+      "path": "validation/moderation_published_empirical.py",
+      "sha256": "60fd4b5db848e29223fa985660b77ed97bc6895d59075ab0b4addd6dd74eb706",
+      "size": 5033
+    },
+    {
+      "path": "validation/moderation_published_formula.py",
+      "sha256": "61309ca20b59c2ea559419401bd7df9883600f91ac1187e731e5cad9663ec8a5",
+      "size": 4140
+    },
+    {
+      "path": "validation/moderation_r_reference.R",
+      "sha256": "a8fea5f2840848eea1cbcdf3432ada9e04cfbf1e7885df2fd0cd3c84abe9a744",
+      "size": 1409
+    },
+    {
+      "path": "validation/moderation_r_reference.py",
+      "sha256": "5bbee93b3a59c873212a05cf3d569517af5c3c444efabe3a5dd5b885280b69f8",
+      "size": 4655
+    },
+    {
+      "path": "validation/moderation_reference.py",
+      "sha256": "c54426920adc241c7b4e7058749743004905bccea54bfd03312df7279732757b",
+      "size": 13797
+    },
+    {
+      "path": "validation/moderation_simulation.py",
+      "sha256": "2f85e8f5f4216d4f4ce9c16d1cc84b34fedede3c253a4df1b1f20ffe8086c1f6",
+      "size": 7220
+    },
+    {
+      "path": "validation/phase3_workflow_factory.py",
+      "sha256": "ef5c8d32c4ea502f29666d912ae8103f7eb0e325a838df46dd5647ac07d2c11b",
+      "size": 30813
+    },
+    {
+      "path": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/boundary_gate.json",
+      "sha256": "5a45e4ffec5f3812ca4c1800ee755f2b85fdb6b45aa6f9b1dc56160a7a4e7dc0",
+      "size": 3130
+    },
+    {
+      "path": "validation/results/method_factory/moderation_v1/evidence_truth_reconciliation_v2/engine_gate.json",
+      "sha256": "9f4d1062a0262ebc248c44754f80bd552feecd425b24a4040581268223070c75",
+      "size": 14210
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase3_workflow_factory.py",
+      "sha256": "148ba50d641d3ba1b42287e782a00854931f7495c3c938e687f2e72d08546956",
+      "size": 3303
+    }
+  ]
+}

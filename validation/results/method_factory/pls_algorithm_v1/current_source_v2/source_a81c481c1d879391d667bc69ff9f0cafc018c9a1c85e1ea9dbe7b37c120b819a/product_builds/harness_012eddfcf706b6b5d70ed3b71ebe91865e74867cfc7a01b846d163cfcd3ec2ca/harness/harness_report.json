@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "report_kind": "pls_algorithm_v1_current_product_harness_v1",
+  "work_evidence_only": true,
+  "qualification_ready": false,
+  "promotion_authority": false,
+  "customer_cli_invoked": false,
+  "customer_registry_admission_invoked": false,
+  "candidate_receipt_descriptors": [],
+  "compiled_identity": {
+    "source_set_sha256": "a81c481c1d879391d667bc69ff9f0cafc018c9a1c85e1ea9dbe7b37c120b819a",
+    "scenario_set_sha256": "594371d9e699ab540ddb561a71d6010207b125c762a732c8a9d1324f7910b4fb",
+    "executable": {
+      "path": "D:\\QuickPLS\\target\\debug\\deps\\quickpls_desktop_lib-57dee36d1d17e086.exe",
+      "size_bytes": 89017344,
+      "sha256": "012eddfcf706b6b5d70ed3b71ebe91865e74867cfc7a01b846d163cfcd3ec2ca"
+    }
+  },
+  "capability_cell": {
+    "registry_schema_version": 2,
+    "capability_id": "smartpls.pls_algorithm",
+    "cell_id": "qpls3.pls.algorithm",
+    "capability_version": "pls_pm_v1"
+  },
+  "variants": [
+    {
+      "variant": "path_mode_a",
+      "weighting_scheme": "path",
+      "measurement_mode": "mode_a",
+      "recipe_v4_compiled": true,
+      "real_runner_executed": true,
+      "product_canonical_builder_executed": true,
+      "schema6_append_reopened": true,
+      "method_version": "pls_pm_v1",
+      "compilation_receipt_sha256": "4a177cf98cc05587f9a01e4a7d17c4446d47fb409c9dab627b87a0744b24fbe5",
+      "request": {
+        "path": "requests/path_mode_a.request.json",
+        "size_bytes": 6798,
+        "sha256": "c4fd0431cb14eca84f9d7cdb84e84fa9288d214810c1a47c7a69dd904123c058"
+      },
+      "compiled_artifact": {
+        "path": "compiled/path_mode_a.compiled.json",
+        "size_bytes": 2540,
+        "sha256": "913c4171ca34bff07c41e32ebda46af3514f22efe103af4f651554974f421fde"
+      },
+      "execution": {
+        "path": "executions/path_mode_a.execution.json",
+        "size_bytes": 4845,
+        "sha256": "9093eb12eeb01c78eb8068b7e83f9ab0defd28e16ebfa7890b796b657f005f50"
+      },
+      "canonical_document": {
+        "path": "canonical/path_mode_a.canonical.json",
+        "size_bytes": 13314,
+        "sha256": "bec211c2c73172fc10ddf64dff072bb1e59af5ef766b21e3ebe085c6c5423ffc"
+      },
+      "append_receipt": {
+        "schema_version": 6,
+        "project_id": "dff1290e-9f13-4601-b70b-9574c3bc45b5",
+        "archive_path": "\\\\?\\D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\source_a81c481c1d879391d667bc69ff9f0cafc018c9a1c85e1ea9dbe7b37c120b819a\\product_builds\\pls-current-product-2qk2lfas\\harness\\current-product.schema6.json",
+        "source_document_sha256": "eae849750410fa0e9ef65a789f0b6e1c5363e24e8a980abb2ea869cc3d17b82e",
+        "updated_document_sha256": "597f3f9eb4b1b793baaf655be22d64c54065494ef6d6a54d45173d6e55e131a6",
+        "canonical_document_id": "result_00000000-0000-0000-0000-000000003000",
+        "run_id": "00000000-0000-0000-0000-000000003000",
+        "canonical_result_document_count": 1,
+        "source_verified_at_commit": true,
+        "post_write_validated": true,
+        "rollback_copy_removed": true
+      }
+    },
+    {
+      "variant": "path_mode_b",
+      "weighting_scheme": "path",
+      "measurement_mode": "mode_b",
+      "recipe_v4_compiled": true,
+      "real_runner_executed": true,
+      "product_canonical_builder_executed": true,
+      "schema6_append_reopened": true,
+      "method_version": "pls_pm_v1",
+      "compilation_receipt_sha256": "7a617244c37a511b809b29eeb532c40c0c1e15f9e9a12ba718ec5dacac4e0fdf",
+      "request": {
+        "path": "requests/path_mode_b.request.json",
+        "size_bytes": 6794,
+        "sha256": "d3fb9e9ae4fccecb4b820af0d5e9e301e199d1c33b3f08b6c186fa8a69d5afe2"
+      },
+      "compiled_artifact": {
+        "path": "compiled/path_mode_b.compiled.json",
+        "size_bytes": 2540,
+        "sha256": "c8d6d98a63dca3a4408a71141d8f0c8d58c1e3f0f18ef358419ff6ff30a2a616"
+      },
+      "execution": {
+        "path": "executions/path_mode_b.execution.json",
+        "size_bytes": 4846,
+        "sha256": "029a5f1e6d253c1c0fdc8da7ab9b2f2ac7e184528ad782b79526fe7c131a88a4"
+      },
+      "canonical_document": {
+        "path": "canonical/path_mode_b.canonical.json",
+        "size_bytes": 13315,
+        "sha256": "dfb929f7c533ecbcaac57e22786461051c5df78cd6cd9010fc5ab52514286738"
+      },
+      "append_receipt": {
+        "schema_version": 6,
+        "project_id": "dff1290e-9f13-4601-b70b-9574c3bc45b5",
+        "archive_path": "\\\\?\\D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\source_a81c481c1d879391d667bc69ff9f0cafc018c9a1c85e1ea9dbe7b37c120b819a\\product_builds\\pls-current-product-2qk2lfas\\harness\\current-product.schema6.json",
+        "source_document_sha256": "597f3f9eb4b1b793baaf655be22d64c54065494ef6d6a54d45173d6e55e131a6",
+        "updated_document_sha256": "550487214f2dca2d5297f64eb1d035c67198e6070c5e36592ce29dd4c47cf058",
+        "canonical_document_id": "result_00000000-0000-0000-0000-000000003001",
+        "run_id": "00000000-0000-0000-0000-000000003001",
+        "canonical_result_document_count": 2,
+        "source_verified_at_commit": true,
+        "post_write_validated": true,
+        "rollback_copy_removed": true
+      }
+    },
+    {
+      "variant": "factor_mode_a",
+      "weighting_scheme": "factor",
+      "measurement_mode": "mode_a",
+      "recipe_v4_compiled": true,
+      "real_runner_executed": true,
+      "product_canonical_builder_executed": true,
+      "schema6_append_reopened": true,
+      "method_version": "pls_pm_v1",
+      "compilation_receipt_sha256": "dd7cf64f9280429a637b4050868423f13c7ca958b3b72999f8e8d91f12900d48",
+      "request": {
+        "path": "requests/factor_mode_a.request.json",
+        "size_bytes": 6802,
+        "sha256": "427cf731b796237eaf0d5de8e9e5ab4bd16eb70467456712a6d0f4299f51343e"
+      },
+      "compiled_artifact": {
+        "path": "compiled/factor_mode_a.compiled.json",
+        "size_bytes": 2540,
+        "sha256": "a7a9560275a3d636c96019bcd3d63af02c1312db4a590b440eaf0d4c92c84bb4"
+      },
+      "execution": {
+        "path": "executions/factor_mode_a.execution.json",
+        "size_bytes": 4845,
+        "sha256": "f6d8e66d5d35ef3fed7f0618b4c1433f6b8efc6ada08f0f8a6f680fc360b7e52"
+      },
+      "canonical_document": {
+        "path": "canonical/factor_mode_a.canonical.json",
+        "size_bytes": 13314,
+        "sha256": "2e1f93828c2f9ce24ab88afc0b1f3ab0751f99cfec04af073a581b31d154cce2"
+      },
+      "append_receipt": {
+        "schema_version": 6,
+        "project_id": "dff1290e-9f13-4601-b70b-9574c3bc45b5",
+        "archive_path": "\\\\?\\D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\source_a81c481c1d879391d667bc69ff9f0cafc018c9a1c85e1ea9dbe7b37c120b819a\\product_builds\\pls-current-product-2qk2lfas\\harness\\current-product.schema6.json",
+        "source_document_sha256": "550487214f2dca2d5297f64eb1d035c67198e6070c5e36592ce29dd4c47cf058",
+        "updated_document_sha256": "bb466f1c432c32cd7f11eb20691dd97ac4e692dc2850b15d5dc84e8006873fa4",
+        "canonical_document_id": "result_00000000-0000-0000-0000-000000003002",
+        "run_id": "00000000-0000-0000-0000-000000003002",
+        "canonical_result_document_count": 3,
+        "source_verified_at_commit": true,
+        "post_write_validated": true,
+        "rollback_copy_removed": true
+      }
+    },
+    {
+      "variant": "pca_mode_a",
+      "weighting_scheme": "pca",
+      "measurement_mode": "mode_a",
+      "recipe_v4_compiled": true,
+      "real_runner_executed": true,
+      "product_canonical_builder_executed": true,
+      "schema6_append_reopened": true,
+      "method_version": "pls_pm_v1",
+      "compilation_receipt_sha256": "c963dea7e31c602c50b5a4410ccc747b3dd9e616666ac5dc1182f407682b55dc",
+      "request": {
+        "path": "requests/pca_mode_a.request.json",
+        "size_bytes": 6796,
+        "sha256": "c7524ce81feca6119288bc8f3f852b3f9c9d8195c181eb156668041c6bc618b1"
+      },
+      "compiled_artifact": {
+        "path": "compiled/pca_mode_a.compiled.json",
+        "size_bytes": 2540,
+        "sha256": "dde65542194f5651ecc16b6664993d49b698a3bacafcbbaacb9d824cf7eda70d"
+      },
+      "execution": {
+        "path": "executions/pca_mode_a.execution.json",
+        "size_bytes": 4844,
+        "sha256": "70182f3a7d87091e3118d1bd44e2d8a1c4e2dac4bb467b865cc222e999dea175"
+      },
+      "canonical_document": {
+        "path": "canonical/pca_mode_a.canonical.json",
+        "size_bytes": 13311,
+        "sha256": "2add5c08f0a905624f18f7ae8971186409eb5ad3674807de5bfae34d3b05c243"
+      },
+      "append_receipt": {
+        "schema_version": 6,
+        "project_id": "dff1290e-9f13-4601-b70b-9574c3bc45b5",
+        "archive_path": "\\\\?\\D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\source_a81c481c1d879391d667bc69ff9f0cafc018c9a1c85e1ea9dbe7b37c120b819a\\product_builds\\pls-current-product-2qk2lfas\\harness\\current-product.schema6.json",
+        "source_document_sha256": "bb466f1c432c32cd7f11eb20691dd97ac4e692dc2850b15d5dc84e8006873fa4",
+        "updated_document_sha256": "44a8a48e535c06dfffc23a207f9d9bbc59d1c4142cb079a0d4ec243900991985",
+        "canonical_document_id": "result_00000000-0000-0000-0000-000000003003",
+        "run_id": "00000000-0000-0000-0000-000000003003",
+        "canonical_result_document_count": 4,
+        "source_verified_at_commit": true,
+        "post_write_validated": true,
+        "rollback_copy_removed": true
+      }
+    }
+  ],
+  "archive": {
+    "schema_version": 6,
+    "canonical_result_document_count": 4,
+    "resident_dataset_verified": true,
+    "models_and_recipes_verified": true,
+    "atomic_append_verified": true,
+    "final_reopen_verified": true,
+    "source_archive_preserved_as_absent_fixture": true,
+    "initial_write": {
+      "schema_version": 6,
+      "project_id": "dff1290e-9f13-4601-b70b-9574c3bc45b5",
+      "destination_archive_path": "\\\\?\\D:\\QuickPLS\\validation\\results\\method_factory\\pls_algorithm_v1\\current_source_v2\\source_a81c481c1d879391d667bc69ff9f0cafc018c9a1c85e1ea9dbe7b37c120b819a\\product_builds\\pls-current-product-2qk2lfas\\harness\\current-product.schema6.json",
+      "document_sha256": "eae849750410fa0e9ef65a789f0b6e1c5363e24e8a980abb2ea869cc3d17b82e",
+      "byte_length": 19649,
+      "post_write_validated": true
+    },
+    "document": {
+      "path": "current-product.schema6.json",
+      "size_bytes": 52950,
+      "sha256": "44a8a48e535c06dfffc23a207f9d9bbc59d1c4142cb079a0d4ec243900991985"
+    }
+  }
+}

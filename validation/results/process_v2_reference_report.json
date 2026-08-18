@@ -2,7 +2,7 @@
   "schema_version": 1,
   "target": "process_v2_independent_reference",
   "feature_id": "qpls3.standalone.process",
-  "generated_at_utc": "2026-08-13T15:32:30.807388Z",
+  "generated_at_utc": "2026-08-18T08:54:24.037434Z",
   "method_version": "regression_process_v2",
   "bootstrap_method_version": "regression_process_bootstrap_v1",
   "catalogue_snapshot_date": "2026-08-12",
@@ -97,7 +97,7 @@
       "controls_maximum": 1,
       "equation_non_intercept_terms_maximum": 50
     },
-    "recipe_status": "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope"
+    "recipe_status": "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope"
   },
   "point_reference": {
     "maximum_absolute_difference": 5.0324189260209096e-12,
@@ -6103,8 +6103,8 @@
     },
     "tested_cli": {
       "path": "target/release/qpls.exe",
-      "size": 20690432,
-      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e"
+      "size": 32373248,
+      "sha256": "f192f3ecbd52876e09e390f60d3fbfbc010906b5490e721c2d46cfac60008254"
     },
     "recipe": "validation/results/process_v2_reference.recipe.json",
     "quickpls_result": "validation/results/process_v2_quickpls.json",

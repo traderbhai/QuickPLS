@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate promotion of MICOM v2 without reviving the withdrawn micom_v1 claim."""
+"""Gate promotion of swap-coupled MICOM v3 without relabeling v1/v2 archives."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "validation" / "results"
-REFERENCE = RESULTS / "micom_v2_reference_report.json"
+REFERENCE = RESULTS / "micom_mga_v3_reference_report.json"
 OUTPUT = RESULTS / "micom_method_promotion_audit.json"
 
 
@@ -47,8 +47,11 @@ def main() -> int:
         )
     )
     v1_doc = text("docs/methods/MICOM_V1.md")
-    v2_doc = text("docs/methods/MICOM_V2.md")
+    v3_doc = text("docs/methods/MICOM_V3.md")
     reference_comparison = reference.get("quickpls_comparison") or {}
+    comparison_passed = bool(reference_comparison) and all(
+        item.get("passed") is True for item in reference_comparison.values()
+    )
     checks = [
         check(
             "independent_reference_passes",
@@ -56,25 +59,27 @@ def main() -> int:
             and reference.get("reference_passed") is True
             and reference.get("promotion_sample_size") is True
             and reference.get("permutation_samples", 0) >= 5_000
-            and reference_comparison.get("passed") is True,
+            and reference.get("promotion_ready") is True
+            and comparison_passed,
             "The independent NumPy reference must agree with a current QuickPLS result at 5,000 or more usable permutations.",
         ),
         check(
             "current_method_version_and_three_step_payload",
-            'pub const MICOM_METHOD_VERSION: &str = "micom_v2";' in estimator
+            'pub const MICOM_METHOD_VERSION: &str = "micom_v3";' in estimator
             and "pub struct MicomAnalysis" in estimator
             and "compositional_correlation_lower" in estimator
             and "mean_difference_lower" in estimator
             and "variance_difference_upper" in estimator
             and "partial_invariance" in estimator
             and "full_invariance" in estimator,
-            "The estimator must emit the versioned MICOM v2 hierarchy, statistics, bounds, and decisions.",
+            "The estimator must emit the versioned MICOM v3 hierarchy, statistics, bounds, and decisions.",
         ),
         check(
             "pooled_score_and_group_refit_contract",
             "fn pooled_composite_scores(" in estimator
             and "fn micom_location_dispersion(" in estimator
             and "fn align_group_result_to_pooled(" in estimator
+            and "fn canonical_two_group_rows_and_labels(" in estimator
             and "&pooled_fit" in estimator
             and 'group_method_requested(recipe, "micom")' in estimator,
             "Step 2 applies group weights to pooled indicators; Step 3 uses pooled scores; every group fit is orientation-aligned.",
@@ -88,10 +93,11 @@ def main() -> int:
             "Core validation requires explicit Step-1 confirmation, both coupled methods, and 5,000–10,000 permutations.",
         ),
         check(
-            "new_results_persist_as_v2_only",
+            "new_results_persist_as_v3_only_and_v2_is_archive_only",
             "MICOM_METHOD_VERSION_V1" in project
             and "MICOM_METHOD_VERSION" in project
-            and "validate_micom_v2" in project
+            and "MICOM_METHOD_VERSION_V2" in project
+            and "validate_micom_contract" in project
             and "historical" in project.lower()
             and "MICOM_METHOD_VERSION" in runner,
             "Persistence accepts historical archives but validates current payloads and prevents new micom_v1 provenance.",
@@ -105,12 +111,12 @@ def main() -> int:
             "The native MGA workflow requests the coupled methods, requires the configural review, and no longer carries the withdrawn disclosure.",
         ),
         check(
-            "v2_contract_is_documented",
-            "Status: validated for the bounded scope below" in v2_doc
-            and "cor(X a_A, X a_B)" in v2_doc
-            and "log(var(C_pooled,A) / var(C_pooled,B))" in v2_doc
-            and "reference-only mode is intentionally non-promotable" in v2_doc,
-            "MICOM v2 documentation states equations, hierarchy, bounded scope, and independent evidence requirements.",
+            "v3_contract_is_documented",
+            "Status: implemented and source-tested" in v3_doc
+            and "canonical unordered row pool" in v3_doc
+            and "log(var_A) - log(var_B)" in v3_doc
+            and "reference-only low-permutation mode" in v3_doc,
+            "MICOM v3 documentation states hierarchy, swap coupling, bounded scope, and independent evidence requirements.",
         ),
         check(
             "micom_v1_withdrawal_is_preserved",
@@ -122,17 +128,17 @@ def main() -> int:
     ]
     passed = all(item["passed"] for item in checks)
     payload = {
-        "schema_version": 3,
-        "target": "micom_v2_method_promotion",
+        "schema_version": 4,
+        "target": "micom_v3_method_promotion",
         "method_id": "micom",
-        "method_version": "micom_v2",
+        "method_version": "micom_v3",
         "promotion_status": "qualified" if passed else "blocked",
-        "execution_enabled": 'pub const MICOM_METHOD_VERSION: &str = "micom_v2";' in estimator,
+        "execution_enabled": 'pub const MICOM_METHOD_VERSION: &str = "micom_v3";' in estimator,
         "passed": passed,
         "reference": str(REFERENCE.relative_to(ROOT)),
         "checks": checks,
         "note": (
-            "A passing audit qualifies only the bounded MICOM v2 contract. It never restores the withdrawn micom_v1 claim, "
+            "A passing audit qualifies only the bounded swap-coupled MICOM v3 contract. It never restores or relabels v1/v2, "
             "and packaged-desktop release evidence remains a separate gate."
         ),
     }

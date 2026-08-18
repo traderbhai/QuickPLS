@@ -20,16 +20,21 @@ QUICKPLS = RESULTS / "endogeneity_reference_quickpls.json"
 OUTPUT = RESULTS / "endogeneity_reference_report.json"
 CLI_EXE = ROOT / "target" / "debug" / "qpls.exe"
 TOLERANCE = 1e-6
+_CLI_READY = False
 
 
 def ensure_cli():
-    if not CLI_EXE.exists():
+    global _CLI_READY
+    if not _CLI_READY:
         subprocess.run(
             ["cargo", "build", "-p", "qpls-cli"],
             cwd=ROOT,
             check=True,
             stdout=subprocess.DEVNULL,
         )
+        _CLI_READY = True
+    if not CLI_EXE.exists():
+        raise FileNotFoundError(f"current QuickPLS CLI was not built: {CLI_EXE}")
     return CLI_EXE
 
 
@@ -94,7 +99,7 @@ def dataset_fingerprint():
 
 def recipe_payload(fingerprint):
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "id": "00000000-0000-0000-0000-000000000005",
         "created_at": "2026-07-19T00:00:00Z",
         "dataset_fingerprint": fingerprint,
@@ -110,6 +115,9 @@ def recipe_payload(fingerprint):
                 {"source": "x", "target": "y"},
                 {"source": "z", "target": "y"},
             ],
+            "controls": [],
+            "higher_order_constructs": [],
+            "interactions": [],
         },
         "settings": {
             "method": "endogeneity",
@@ -117,11 +125,20 @@ def recipe_payload(fingerprint):
             "tolerance": 1e-7,
             "max_iterations": 3000,
             "bootstrap_samples": 0,
+            "studentized_inner_samples": 0,
+            "permutation_samples": 0,
             "seed": 20260719,
+            "workers": 1,
+            "confidence_level": 0.95,
             "preprocessing": "standardized",
             "missing_data": "listwise_deletion",
+            "case_weight_column": None,
         },
-        "metadata": {"fixture": "independent_gaussian_copula_reference"},
+        "method_config": {"kind": "endogeneity"},
+        "metadata": {
+            "fixture": "independent_gaussian_copula_reference",
+            "status": "validated_v1_2_3_endogeneity_bounded_scope",
+        },
     }
 
 
@@ -244,7 +261,13 @@ def main():
         "t_delta": max_delta(actual_t, expected_t),
         "skewness_delta": max_delta(actual_skewness, expected_skewness),
         "p_values_in_range": all(0.0 <= value <= 1.0 for value in actual_p_values),
-        "has_experimental_warning": any("experimental" in warning.lower() for warning in analysis["warnings"]),
+        "has_diagnostic_scope_warning": any(
+            "diagnostic, not proof of causality" in warning.lower()
+            for warning in analysis["warnings"]
+        ),
+        "provenance_method": quickpls["provenance"]["method"] == "endogeneity",
+        "provenance_method_version": quickpls["provenance"]["method_version"]
+        == "pls_pm_v1+gaussian_copula_endogeneity_v1+pls_mediation_v1+pls_assessment_v7",
     }
     passed = (
         checks["method_version"]
@@ -254,7 +277,9 @@ def main():
         and checks["t_delta"] <= TOLERANCE
         and checks["skewness_delta"] <= TOLERANCE
         and checks["p_values_in_range"]
-        and checks["has_experimental_warning"]
+        and checks["has_diagnostic_scope_warning"]
+        and checks["provenance_method"]
+        and checks["provenance_method_version"]
     )
     report = {
         "schema_version": 1,
@@ -264,7 +289,8 @@ def main():
         "checks": checks,
         "estimates": analysis["estimates"],
     }
-    OUTPUT.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    with OUTPUT.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(report, indent=2, sort_keys=True) + "\n")
     print(f"wrote {OUTPUT} | passed={passed} | max_delta={max(checks['coefficient_delta'], checks['standard_error_delta'], checks['t_delta'], checks['skewness_delta']):.3g}")
     if not passed:
         raise SystemExit(1)

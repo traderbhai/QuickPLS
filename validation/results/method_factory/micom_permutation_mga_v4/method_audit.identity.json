@@ -1,0 +1,46 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "all_prior_qualification_stages_written": {
+      "passed": true
+    },
+    "qualified_identity_is_v4_only": {
+      "passed": true
+    }
+  },
+  "execution": [],
+  "feature_id": "qpls3.groups.micom_permutation_mga",
+  "generated_at_utc": "2026-08-18T13:59:53.307919Z",
+  "method_version": "pls_mga_permutation_v4",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/micom_permutation_mga_v4.manifest.json",
+      "sha256": "b6e1f6d7762e5d2ed707f7cb1abf3ea3648a7204e8a22c6d0baa3adbc94ff28d",
+      "size": 11973
+    },
+    {
+      "path": "validation/micom_mga_v4_release_audit.py",
+      "sha256": "b5eb4c331f76f83f750906daaceb6d17bf0a107e8bddb3d336cb5051c470c794",
+      "size": 8238
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

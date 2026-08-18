@@ -1,0 +1,108 @@
+{
+  "matrix_schema_version": 1,
+  "matrix_id": "quickpls.wave0.option_level_parity_acceptance.v1",
+  "matrix_version": "1.0.0",
+  "frozen_on": "2026-08-14",
+  "registry_binding": {
+    "path": "validation/capabilities/capability_registry_v2.json",
+    "registry_schema_version": 2,
+    "registry_id": "quickpls.capability_registry.v2",
+    "expected_catalogue_rows": 45,
+    "expected_active_rows": 43,
+    "expected_exclusions": 2
+  },
+  "official_source_policy": {
+    "required_scheme": "https",
+    "allowed_host": "smartpls.com",
+    "catalogue_reference_source": "registry.catalogue_snapshot.official_catalogue_url",
+    "primary_reference_source": "registry.capabilities[].official_url",
+    "additional_reference_policy": "Official SmartPLS documentation only; each captured acceptance item must identify its exact official source URL."
+  },
+  "dimension_contract": {
+    "required_dimensions": [
+      "settings",
+      "defaults",
+      "model_shapes",
+      "data_inputs",
+      "preprocessing",
+      "outputs",
+      "charts",
+      "failure_conditions",
+      "workflows"
+    ],
+    "uncaptured_default": {
+      "capture_state": "open",
+      "reason": "option_level_official_inventory_not_captured"
+    },
+    "open_trace_cell_scope": "all_registry_cells_for_row",
+    "open_official_reference_scope": "registry_official_url",
+    "captured_item_rule": "Captured dimensions require one or more acceptance items, and every item must trace to one or more exact row cells, official SmartPLS URLs, and testable acceptance criteria."
+  },
+  "cell_contract": {
+    "identity_source": "registry_option_cells_with_qualification_links_fallback",
+    "state_source_precedence": [
+      "registry_option_cells",
+      "explicit_open_default"
+    ],
+    "option_cell_states_are_authoritative": true,
+    "identity_fields": [
+      "registry_schema_version",
+      "capability_id",
+      "cell_id",
+      "capability_version"
+    ],
+    "uncaptured_defaults": {
+      "parity_obligation": {
+        "capture_state": "open"
+      },
+      "coverage": {
+        "capture_state": "open"
+      },
+      "evidence": {
+        "capture_state": "open"
+      },
+      "surface": {
+        "capture_state": "open"
+      }
+    },
+    "finalization_active_parity_states": {
+      "parity_role": "active_parity",
+      "coverage_state": "full",
+      "evidence_state": "release_qualified",
+      "surface": "standard"
+    },
+    "independence_rule": "Coverage, evidence, surface, and parity obligation are captured independently for each exact cell. Registry option_cells are authoritative when present; row-level states are never inherited. No evidence state, including release_qualified, may infer or promote coverage."
+  },
+  "row_generation_contract": {
+    "active_row_source": "registry.capabilities[official_lifecycle=active]",
+    "exclusion_source": "registry.capabilities[official_lifecycle=legacy and coverage_state=intentionally_excluded]",
+    "active_row_trace_rule": "Every generated active row must resolve all required dimensions to one or more exact registry cells and at least one official SmartPLS reference.",
+    "duplicate_catalogue_rows": "Preserve official catalogue rows independently even when they share a QuickPLS cell."
+  },
+  "override_fragments": [
+    "validation/parity/fragments/pls_power_posthoc_v1.json",
+    "validation/parity/fragments/pls_core_resampling_official_v1.json",
+    "validation/parity/fragments/cbsem_cfa_official_v1.json",
+    "validation/parity/fragments/pls_assessment_prediction_official_v1.json",
+    "validation/parity/fragments/pls_advanced_groups_official_v1.json",
+    "validation/parity/fragments/other_analytical_families_official_v1.json"
+  ],
+  "overrides": {
+    "cell_assessments": [],
+    "dimension_assessments": []
+  },
+  "exclusions": [
+    {
+      "capability_id": "smartpls.blindfolding",
+      "decision": "intentionally_excluded",
+      "official_reference_scope": "registry_official_url",
+      "cell_identity_source": "registry_qualification_links"
+    },
+    {
+      "capability_id": "smartpls.gof",
+      "decision": "intentionally_excluded",
+      "official_reference_scope": "registry_official_url",
+      "cell_identity_source": "registry_qualification_links"
+    }
+  ]
+}

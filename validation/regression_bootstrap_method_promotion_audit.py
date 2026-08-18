@@ -57,6 +57,7 @@ FAILURE_BOUNDARY_TEST_NAMES = frozenset(
         "regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates",
         "regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable",
         "regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca",
+        "regression_bootstrap_failure_boundary_maps_typed_ols_failures",
     }
 )
 ARCHIVE_BOUNDARY_TEST_NAMES = frozenset(
@@ -560,6 +561,18 @@ def _visual_source_paths(root: Path) -> list[str]:
     return [*VISUAL_SOURCE_PATHS, *dist_files]
 
 
+def _canonical_native_catalogue_count() -> int | None:
+    try:
+        source = (ROOT / "src/native/nativeAnalysisCatalog.ts").read_text(encoding="utf-8")
+    except OSError:
+        return None
+    match = re.search(r"const CATALOG_DRAFTS[^=]*= \[([\s\S]*?)\n\] as const;", source)
+    if match is None:
+        return None
+    kinds = re.findall(r'^[ \t]{4}kind:\s*"([a-z_]+)",\r?$', match.group(1), re.MULTILINE)
+    return len(kinds) if kinds and len(kinds) == len(set(kinds)) else None
+
+
 def _visual_attestation(root: Path, path: Path) -> dict[str, Any]:
     document = _load_optional(path)
     rows = json_value(document, "checks.regressionBootstrap", [])
@@ -575,6 +588,7 @@ def _visual_attestation(root: Path, path: Path) -> dict[str, Any]:
         {"value": "off", "label": "Off"},
         {"value": "enabled", "label": "Case-resampling bootstrap"},
     ]
+    expected_catalog_count = _canonical_native_catalogue_count()
 
     def row_passes(row: Any) -> bool:
         if not isinstance(row, dict):
@@ -608,7 +622,8 @@ def _visual_attestation(root: Path, path: Path) -> dict[str, Any]:
             and row.get("visibleModelNodes") == 0
             and row.get("analyzeCommandCount") == 1
             and row.get("dialogOpened") is True
-            and row.get("catalogCount") == 15
+            and expected_catalog_count is not None
+            and row.get("catalogCount") == expected_catalog_count
             and row.get("selectedMethod") == "Regression"
             and json_value(row, "linkage.linkage", False) is True
             and row.get("category") == "Standalone analysis"

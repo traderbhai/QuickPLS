@@ -21,10 +21,10 @@ export interface ResultTable {
   rows: string[][];
 }
 
-const SCOPE_WARNING = "Validated for the documented QuickPLS supported scope. Unsupported shapes remain blocked or explicitly marked.";
+const SCOPE_WARNING = "Supported for the documented model and data requirements. Incompatible shapes are blocked or explicitly marked.";
 const EXPERIMENTAL_WARNING = "Experimental output. Use only with explicit method-status warnings and watermarked exports.";
-const PLS_POS_PREVIEW_WARNING = "Bounded deterministic PLS-POS-style score-space diagnostic preview. It is not QuickPLS 3 release-qualified and does not claim unrestricted published PLS-POS equivalence.";
-const FIMIX_PREVIEW_WARNING = "Bounded deterministic FIMIX-style score-space diagnostic preview. Membership scores are inverse-distance scores, not finite-mixture posterior probabilities; its pseudo-likelihood criteria are not full FIMIX-PLS equivalents.";
+const PLS_POS_PREVIEW_WARNING = "Experimental deterministic PLS-POS-style score-space diagnostic preview. It does not implement unrestricted published PLS-POS.";
+const FIMIX_PREVIEW_WARNING = "Experimental deterministic FIMIX-style score-space diagnostic. Membership scores are inverse-distance scores, not finite-mixture posterior probabilities; its pseudo-likelihood criteria are not full FIMIX-PLS equivalents.";
 
 export function methodResultTables(result: PlsResult): ResultTable[] {
   const tables: ResultTable[] = [];
@@ -343,7 +343,7 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     const segmentationStatus = "experimental" as const;
     tables.push({
       id: "segmentation_summary",
-      title: "PLS-POS bounded segmentation summary",
+      title: "Experimental PLS-POS-style segmentation summary",
       status: segmentationStatus,
       warning: previewWarnings(PLS_POS_PREVIEW_WARNING, result.segmentation.warnings),
       columns: ["Algorithm", "Requested", "Selected", "Observations", "Objective", "Pooled objective", "Improvement", "Min share", "Imbalance", "Max path separation", "Assignment"],
@@ -363,7 +363,7 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     });
     tables.push({
       id: "segmentation_segments",
-      title: "PLS-POS bounded segment paths",
+      title: "Experimental PLS-POS-style segment paths",
       status: segmentationStatus,
       warning: previewWarnings(PLS_POS_PREVIEW_WARNING, result.segmentation.warnings),
       columns: ["Segment", "Observations", "Share", "Source", "Target", "Path coefficient", "R2"],
@@ -380,7 +380,7 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     if (result.segmentation.memberships?.length) {
       tables.push({
         id: "segmentation_memberships",
-        title: "PLS-POS bounded segment memberships",
+        title: "Experimental PLS-POS-style segment memberships",
         status: segmentationStatus,
         warning: previewWarnings(PLS_POS_PREVIEW_WARNING, result.segmentation.warnings),
         columns: ["Observation", "Segment"],
@@ -678,7 +678,7 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
 export function runExportTables(run: AnalysisRun): ResultTable[] {
   if (run.status !== "completed" || !run.result) return [];
   const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
-  const runStatus = structuralPathRandomization ? "experimental" : resultScopeStatus(run.result);
+  const runStatus = structuralPathRandomization ? "validated" : resultScopeStatus(run.result);
   const processProjection = nativeProcessResultProjection(run);
   const legacyProcessProjection = nativeLegacyProcessResultProjection(run);
   const scientificTables = processProjection
@@ -707,7 +707,7 @@ export function runExportTables(run: AnalysisRun): ResultTable[] {
       ["Requested path permutations", String(structuralPathRandomization.permutations)],
       ["Randomization estimand", "Structural path coefficients conditional on fixed original PLS construct scores"],
       ["Pathwise probability", "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment"],
-      ["Qualification status", "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"],
+      ["Availability", "Supported within the documented fixed-score scope"],
     );
   }
   return [
@@ -716,7 +716,7 @@ export function runExportTables(run: AnalysisRun): ResultTable[] {
       title: "Run provenance",
       status: runStatus,
       warning: legacyProcessProjection
-        ? "Historical read-only regression_process_v1 archive; no current execution, parity, or validation claim is made."
+        ? "Historical read-only regression_process_v1 archive; values are displayed under their original version and are not reinterpreted as current output."
         : structuralPathRandomization
           ? NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING
           : runStatus === "validated" ? null : EXPERIMENTAL_WARNING,
@@ -777,13 +777,15 @@ function regressionScopeStatus(
   }
   if (regression.regression_type === "process") {
     const process = regression.process;
+    if (resultMethodVersion === "regression_process_v2"
+      && regression.method_version === "regression_process_v2"
+      && process?.method_version === "regression_process_v2"
+      && process.model === "graph"
+      && process.graph_v2 != null) return "validated";
     if (resultMethodVersion === "regression_process_v1"
       && regression.method_version === "regression_process_v1"
       && process?.method_version === "regression_process_v1"
       && process.graph_v2 == null) return "experimental";
-    // PROCESS v2 remains an implemented release candidate until its current
-    // native/package promotion evidence passes. Exact identities are still
-    // projected fail-closed by the dedicated native PROCESS projector.
   }
   return "experimental";
 }

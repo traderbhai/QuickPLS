@@ -15,10 +15,30 @@ import { create } from "zustand";
 import { initialEdges, initialNodes, sampleDataset } from "./data/sample";
 import { defaultDiagramLayout, layoutSmartplsModel } from "./domain/diagramGraph";
 import { layoutModel } from "./domain/modelLayout";
+import {
+  parseStandardSemModelV4AuthorityRecordV1,
+  reduceStandardSemModelV4AuthorityV1,
+  type StandardSemModelV4AuthorityRecordV1,
+  type StandardSemModelV4EditorIntentV1,
+} from "./domain/standardSemModelV4Authority";
+import {
+  parseStandardSemModelV4DiagramLayoutV1,
+  projectStandardSemModelV4DiagramV1,
+  type StandardSemModelV4DiagramLayoutV1,
+} from "./domain/standardSemModelV4DiagramProjection";
+import {
+  convertNativeCovarianceToPresentationV4,
+  convertNativeCovarianceToScientificV4,
+  nativeCovariancePairExistsV4,
+  newNativeScientificCovarianceEdgeV4,
+  withNativeConstructEstimandV4,
+} from "./domain/semModelV4Authoring";
 import { buildNativeRecipeModel } from "./native/nativeAnalysisRecipe";
 import { currentNativeModelPresentation, nativeModelSnapshotFromCanonical } from "./native/nativeCanonicalProject";
 import { nativeHigherOrderCreationBlocker, nativeHigherOrderDraftProblems, type NativeHigherOrderDraft } from "./native/nativeHigherOrder";
-import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeProcessGraphRelationshipConfig, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
+import { compareAndSwapStandardSemModelV4Authority } from "./services/standardSemModelV4AuthorityService";
+import type { StandardSemModelV4AuthorityCasDiagnosticV1, StandardSemModelV4AuthorityCasOutcomeV1 } from "./domain/standardSemModelV4AuthorityCas";
+import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeProcessGraphRelationshipConfig, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, SemModelV4AuthoringEndpoint, SemModelV4ConstructAuthoring, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
 
 type AlignTarget = "left" | "centerX" | "right" | "top" | "centerY" | "bottom";
 type DistributeAxis = "horizontal" | "vertical";
@@ -44,13 +64,75 @@ export type AddHigherOrderConstructResult =
   | { status: "created"; constructId: string }
   | { status: "blocked"; reason: AddHigherOrderConstructBlockReason; detail: string };
 
-interface HistorySnapshot {
+interface LegacyHistorySnapshot {
+  kind: "legacy_graph";
   nodes: Array<Node<ConstructData>>;
   edges: Edge[];
   diagramLayout: DiagramLayoutState;
 }
 
-interface WorkspaceState {
+interface StandardSemModelV4HistorySnapshot {
+  kind: "standard_sem_model_v4";
+  modelId: string;
+  authority: StandardSemModelV4AuthorityRecordV1;
+  persistence: Pick<StandardSemModelV4PersistenceV1, "readiness" | "scientificSha256">;
+  diagramLayout: DiagramLayoutState;
+}
+
+type HistorySnapshot = LegacyHistorySnapshot | StandardSemModelV4HistorySnapshot;
+
+export type StandardSemModelV4BlockedOperation =
+  | "schema5_save"
+  | "schema5_autosave"
+  | "calculation"
+  | "legacy_graph_serialization";
+
+export type StandardSemModelV4AuthorityCommitResult =
+  | { status: "committed"; authority: StandardSemModelV4AuthorityRecordV1 }
+  | { status: "blocked"; diagnostic: StandardSemModelV4AuthorityCasDiagnosticV1 }
+  | { status: "stale" }
+  | { status: "rejected"; error: unknown };
+
+export interface StandardSemModelV4PersistenceV1 {
+  readiness: "ready" | "authoring_only";
+  scientificSha256: string | null;
+  anchorModelDocumentSha256: string;
+  anchorLayout: StandardSemModelV4DiagramLayoutV1;
+}
+
+export interface StandardSemModelV4ActivationV1 {
+  authority: StandardSemModelV4AuthorityRecordV1;
+  layout?: StandardSemModelV4DiagramLayoutV1;
+  readiness: "ready" | "authoring_only";
+  scientificSha256: string | null;
+}
+
+export interface StandardSemModelV4RevisionAppendCasV1 {
+  sourceModelId: string;
+  expectedSourceModelDocumentSha256: string;
+  expectedSourceEpoch: number;
+}
+
+export interface StandardSemModelV4SaveAuthorityV1 {
+  authority: StandardSemModelV4AuthorityRecordV1;
+  layout: StandardSemModelV4DiagramLayoutV1;
+  readiness: "ready" | "authoring_only";
+  scientificSha256: string | null;
+  dirty: boolean;
+}
+
+export interface StandardSemModelV4DatasetDescriptorV1 {
+  id: string;
+  name: string;
+  columns: string[];
+  columnMetadata: ColumnMetadata[];
+  rowCount: number;
+  fingerprint: string;
+  kind: "raw" | "covariance" | "correlation";
+  sampleSize: number | null;
+}
+
+export interface WorkspaceState {
   view: WorkspaceView;
   workflowDestinationContext: WorkflowDestinationContext | null;
   workflowCommandContext: WorkflowCommandContext | null;
@@ -87,6 +169,13 @@ interface WorkspaceState {
   projectModels: NativeCanonicalModelSpec[];
   activeModelId: string | null;
   modelPresentations: Record<string, NativeModelPresentation>;
+  standardSemModelV4Authorities: Record<string, StandardSemModelV4AuthorityRecordV1>;
+  standardSemModelV4ScientificEditLocks: Record<string, true>;
+  standardSemModelV4Layouts: Record<string, StandardSemModelV4DiagramLayoutV1>;
+  standardSemModelV4Epochs: Record<string, number>;
+  standardSemModelV4Persistence: Record<string, StandardSemModelV4PersistenceV1>;
+  standardSemModelV4DatasetDescriptors: Record<string, StandardSemModelV4DatasetDescriptorV1>;
+  datasetDescriptorOnly: boolean;
   savedReports: NativeSavedReport[];
   explorerSelection: NativeExplorerSelection;
   runs: AnalysisRun[];
@@ -142,7 +231,10 @@ interface WorkspaceState {
   addTwoStageInteraction: (predictor: string, moderator: string, outcome: string) => AddTwoStageInteractionResult;
   addHigherOrderConstruct: (draft: NativeHigherOrderDraft) => AddHigherOrderConstructResult;
   updateConstruct: (id: string, patch: Partial<ConstructData>) => void;
+  setConstructEstimandV4: (id: string, specification: SemModelV4ConstructAuthoring) => void;
   updateEdge: (id: string, patch: Partial<Edge>) => void;
+  convertCovarianceToScientificV4: (id: string, endpoints?: { left: SemModelV4AuthoringEndpoint | null; right: SemModelV4AuthoringEndpoint | null }) => void;
+  convertCovarianceToPresentationV4: (id: string) => void;
   setEdgeLabelOffset: (id: string, offset: { x: number; y: number }) => void;
   nudgeEdgeLabel: (id: string, delta: { x: number; y: number }) => void;
   resetEdgeLabel: (id: string) => void;
@@ -177,6 +269,30 @@ interface WorkspaceState {
     savedReports: NativeSavedReport[];
     explorerSelection?: NativeExplorerSelection;
   }) => void;
+  installStandardSemModelV4Authority: (
+    authority: StandardSemModelV4AuthorityRecordV1,
+    layout?: StandardSemModelV4DiagramLayoutV1,
+  ) => boolean;
+  activateStandardSemModelV4Authorities: (
+    installations: StandardSemModelV4ActivationV1[],
+    activeModelId: string,
+    projectName: string,
+    datasetDescriptors?: StandardSemModelV4DatasetDescriptorV1[],
+    scientificEditLockedModelIds?: readonly string[],
+  ) => boolean;
+  appendStandardSemModelV4Revision: (
+    cas: StandardSemModelV4RevisionAppendCasV1,
+    installation: StandardSemModelV4ActivationV1,
+  ) => boolean;
+  captureStandardSemModelV4SaveAuthorities: (
+    modelIds: readonly string[],
+  ) => Record<string, StandardSemModelV4SaveAuthorityV1> | null;
+  reanchorStandardSemModelV4Authorities: (
+    captured: Readonly<Record<string, StandardSemModelV4SaveAuthorityV1>>,
+  ) => boolean;
+  clearStandardSemModelV4Workspace: (modelIds: readonly string[]) => boolean;
+  commitStandardSemModelV4Intent: (intent: StandardSemModelV4EditorIntentV1) => Promise<StandardSemModelV4AuthorityCommitResult>;
+  standardSemModelV4OperationBlocker: (operation: StandardSemModelV4BlockedOperation) => string | null;
   switchProjectModel: (modelId: string) => boolean;
   addRun: (run: AnalysisRun) => void;
   setAnalysisSettings: (patch: Partial<AnalysisUiSettings>) => void;
@@ -187,9 +303,9 @@ interface WorkspaceState {
   loadProject: (project: { nodes: Array<Node<ConstructData>>; edges: Edge[]; dataset: Dataset; datasets?: Dataset[]; datasetVersions?: DatasetVersionRecord[]; projectModels?: NativeCanonicalModelSpec[]; activeModelId?: string | null; modelPresentations?: Record<string, NativeModelPresentation>; savedReports?: NativeSavedReport[]; explorerSelection?: NativeExplorerSelection; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState> }) => void;
 }
 
-const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap", "permutation", "plsc", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation", "predict", "mga", "ipma", "cbsem", "pca", "gsca", "regression", "nca"]);
+const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap", "permutation", "pls_sample_size_power", "plsc", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation", "predict", "mga", "ipma", "cbsem", "pca", "gsca", "regression", "nca"]);
 
-const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, groupAValue: null, groupBValue: null, ipmaTargets: null, groupMethods: "micom,mga_permutation", groupPermutationSamples: 5_000, micomConfiguralConfirmed: false, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, pcaVarianceThreshold: 0.80, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, regressionBootstrap: false, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, processGraph: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999 };
+const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, groupAValue: null, groupBValue: null, ipmaTargets: null, groupMethods: "micom", groupPermutationSamples: 5_000, micomConfiguralConfirmed: false, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, pcaVarianceThreshold: 0.80, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, regressionBootstrap: false, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, processGraph: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999, plsPowerScenarioIdentity: "prospective_two_construct_path", plsPowerPredictorConstruct: null, plsPowerOutcomeConstruct: null, plsPowerPredictorLoadings: null, plsPowerOutcomeLoadings: null, plsPowerPopulationPath: 0.30, plsPowerSampleSizeGrid: "50,100,150", plsPowerAlpha: 0.05, plsPowerTargetPower: 0.80, plsPowerMonteCarloReplicates: 250, plsPowerBootstrapReplicates: 199 };
 const defaultDiagramOverlaySettings: DiagramOverlaySettings = { selectedRunId: null, mode: "model", precision: 3, showLoadings: true, showPathCoefficients: true, showPValues: false, showTValues: false, showRSquared: true, showWarnings: true, showWatermark: true };
 const defaultPublicationDiagramSettings: PublicationDiagramSettings = { mode: "smartpls_result", precision: 3, overlayMode: "paths_r2", aspectRatio: "wide", palette: "grayscale", layoutSource: "current_canvas", showLoadings: true, showPathCoefficients: true, showRSquared: true, showValidationWatermark: true, showUnsupportedWarning: true, showRunProvenance: true };
 const defaultUiPreferences: UiPreferences = {
@@ -197,6 +313,7 @@ const defaultUiPreferences: UiPreferences = {
   tableDensity: "compact",
   defaultPrecision: 4,
   showAdvancedHelp: true,
+  experimentalLabsEnabled: false,
   recentPanels: ["models", "runs", "reports"],
   methodScopeDrawerOpen: false,
   showThresholdColors: true,
@@ -213,6 +330,7 @@ function normalizedUiPreferences(candidate: Partial<UiPreferences> = {}): UiPref
     density: candidate.density === "comfortable" ? "comfortable" : "compact",
     tableDensity: candidate.tableDensity === "comfortable" ? "comfortable" : "compact",
     defaultPrecision: Math.min(6, Math.max(2, Number.isFinite(precision) ? Math.trunc(precision) : defaultUiPreferences.defaultPrecision)),
+    experimentalLabsEnabled: candidate.experimentalLabsEnabled === true,
   };
 }
 
@@ -366,6 +484,19 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
   const ncaY = typeof settings.ncaY === "string" && settings.ncaY.trim() ? settings.ncaY.trim() : null;
   const ncaCeiling = settings.ncaCeiling === "ce_fdh" || settings.ncaCeiling === "cr_fdh" ? settings.ncaCeiling : defaultAnalysisSettings.ncaCeiling!;
   const ncaPermutationSamples = Number.isFinite(settings.ncaPermutationSamples) ? Math.trunc(settings.ncaPermutationSamples!) : defaultAnalysisSettings.ncaPermutationSamples!;
+  const plsPowerScenarioIdentity = typeof settings.plsPowerScenarioIdentity === "string" && settings.plsPowerScenarioIdentity.trim() ? settings.plsPowerScenarioIdentity.trim() : defaultAnalysisSettings.plsPowerScenarioIdentity!;
+  const plsPowerPredictorConstruct = typeof settings.plsPowerPredictorConstruct === "string" && settings.plsPowerPredictorConstruct.trim() ? settings.plsPowerPredictorConstruct.trim() : null;
+  const plsPowerOutcomeConstruct = typeof settings.plsPowerOutcomeConstruct === "string" && settings.plsPowerOutcomeConstruct.trim() ? settings.plsPowerOutcomeConstruct.trim() : null;
+  const plsPowerPredictorLoadings = typeof settings.plsPowerPredictorLoadings === "string" && settings.plsPowerPredictorLoadings.trim() ? settings.plsPowerPredictorLoadings.trim() : null;
+  const plsPowerOutcomeLoadings = typeof settings.plsPowerOutcomeLoadings === "string" && settings.plsPowerOutcomeLoadings.trim() ? settings.plsPowerOutcomeLoadings.trim() : null;
+  const plsPowerPopulationPath = Number.isFinite(settings.plsPowerPopulationPath) ? settings.plsPowerPopulationPath! : defaultAnalysisSettings.plsPowerPopulationPath!;
+  const plsPowerSampleSizeGrid = typeof settings.plsPowerSampleSizeGrid === "string" && settings.plsPowerSampleSizeGrid.trim() ? settings.plsPowerSampleSizeGrid.trim() : defaultAnalysisSettings.plsPowerSampleSizeGrid!;
+  const plsPowerAlpha = Number.isFinite(settings.plsPowerAlpha) ? settings.plsPowerAlpha! : defaultAnalysisSettings.plsPowerAlpha!;
+  const plsPowerTargetPower = Number.isFinite(settings.plsPowerTargetPower) ? settings.plsPowerTargetPower! : defaultAnalysisSettings.plsPowerTargetPower!;
+  const plsPowerMonteCarloReplicates = Number.isFinite(settings.plsPowerMonteCarloReplicates) ? Math.trunc(settings.plsPowerMonteCarloReplicates!) : defaultAnalysisSettings.plsPowerMonteCarloReplicates!;
+  const powerBootstrapReplicates = Number.isFinite(settings.plsPowerBootstrapReplicates) ? Math.trunc(settings.plsPowerBootstrapReplicates!) : defaultAnalysisSettings.plsPowerBootstrapReplicates!;
+  const clampedPowerBootstrapReplicates = Math.min(1_999, Math.max(99, powerBootstrapReplicates));
+  const plsPowerBootstrapReplicates = clampedPowerBootstrapReplicates % 2 === 0 ? Math.max(99, clampedPowerBootstrapReplicates - 1) : clampedPowerBootstrapReplicates;
   const method = typeof settings.method === "string" && supportedAnalysisMethods.has(settings.method as AnalysisMethodId) ? settings.method as AnalysisMethodId : defaultAnalysisSettings.method;
   const clampedStudentized = Math.min(999, Math.max(99, studentizedInnerSamples));
   const normalizedStudentized = studentizedInnerSamples === 0 ? 0 : clampedStudentized % 2 === 0 ? Math.min(999, clampedStudentized + 1) : clampedStudentized;
@@ -418,13 +549,130 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
     ncaY,
     ncaCeiling,
     ncaPermutationSamples: Math.min(10000, Math.max(1, ncaPermutationSamples)),
+    plsPowerScenarioIdentity,
+    plsPowerPredictorConstruct,
+    plsPowerOutcomeConstruct,
+    plsPowerPredictorLoadings,
+    plsPowerOutcomeLoadings,
+    plsPowerPopulationPath: Math.min(0.80, Math.max(-0.80, plsPowerPopulationPath)),
+    plsPowerSampleSizeGrid,
+    plsPowerAlpha: Math.min(0.10, Math.max(0.001, plsPowerAlpha)),
+    plsPowerTargetPower: Math.min(0.99, Math.max(0.50, plsPowerTargetPower)),
+    plsPowerMonteCarloReplicates: Math.min(10_000, Math.max(100, plsPowerMonteCarloReplicates)),
+    plsPowerBootstrapReplicates,
   };
 };
 
+let standardSemModelV4Epoch = 0;
+const standardSemModelV4Queues = new Map<string, Promise<void>>();
+
+const nextStandardSemModelV4Epoch = () => {
+  standardSemModelV4Epoch += 1;
+  return standardSemModelV4Epoch;
+};
+
+const activeStandardSemModelV4Authority = (state: WorkspaceState) => state.activeModelId
+  ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
+  : null;
+
+const standardSemModelV4Layout = (
+  modelId: string,
+  diagramLayout: DiagramLayoutState,
+) => parseStandardSemModelV4DiagramLayoutV1({
+  schema_version: 1,
+  model_id: modelId,
+  diagram_layout: diagramLayout,
+});
+
+const sameStandardSemModelV4Layout = (
+  left: StandardSemModelV4DiagramLayoutV1,
+  right: StandardSemModelV4DiagramLayoutV1,
+) => JSON.stringify(left) === JSON.stringify(right);
+
+const currentStandardSemModelV4Layout = (
+  state: WorkspaceState,
+  modelId: string,
+) => state.activeModelId === modelId
+  ? standardSemModelV4Layout(modelId, state.diagramLayout)
+  : state.standardSemModelV4Layouts[modelId];
+
+const validStandardSemModelV4Readiness = (
+  readiness: "ready" | "authoring_only",
+  scientificSha256: string | null,
+) => readiness === "ready"
+  ? typeof scientificSha256 === "string" && /^[0-9a-f]{64}$/.test(scientificSha256)
+  : scientificSha256 === null;
+
+const datasetFromStandardSemModelV4Descriptor = (
+  descriptor: StandardSemModelV4DatasetDescriptorV1,
+): Dataset => ({
+  id: descriptor.id,
+  name: descriptor.name,
+  columns: [...descriptor.columns],
+  columnMetadata: descriptor.columnMetadata.map((column) => ({ ...column })),
+  rows: [],
+  // Descriptor-only schema-6 activation has no resident row or missing-cell values.
+  missing: Number.NaN,
+  rowCount: descriptor.rowCount,
+  fingerprint: descriptor.fingerprint,
+  kind: descriptor.kind,
+  sampleSize: descriptor.sampleSize,
+});
+
+const historySnapshot = (state: WorkspaceState): HistorySnapshot => {
+  const authority = activeStandardSemModelV4Authority(state);
+  return authority && state.activeModelId
+    ? {
+        kind: "standard_sem_model_v4",
+        modelId: state.activeModelId,
+        authority,
+        persistence: {
+          readiness: state.standardSemModelV4Persistence[state.activeModelId]?.readiness ?? "authoring_only",
+          scientificSha256: state.standardSemModelV4Persistence[state.activeModelId]?.scientificSha256 ?? null,
+        },
+        diagramLayout: state.diagramLayout,
+      }
+    : {
+        kind: "legacy_graph",
+        nodes: state.nodes,
+        edges: state.edges,
+        diagramLayout: state.diagramLayout,
+      };
+};
+
 const historyPatch = (state: WorkspaceState) => ({
-  past: [...state.past.slice(-49), { nodes: state.nodes, edges: state.edges, diagramLayout: state.diagramLayout }],
+  past: [...state.past.slice(-49), historySnapshot(state)],
   future: [],
 });
+
+const queueStandardSemModelV4Commit = <T>(
+  modelId: string,
+  epoch: number,
+  operation: () => Promise<T>,
+): Promise<T> => {
+  const queueKey = `${modelId}\0${epoch}`;
+  const previous = standardSemModelV4Queues.get(queueKey) ?? Promise.resolve();
+  const current = previous.then(operation);
+  const barrier = current.then(() => undefined, () => undefined);
+  standardSemModelV4Queues.set(queueKey, barrier);
+  void barrier.then(() => {
+    if (standardSemModelV4Queues.get(queueKey) === barrier) standardSemModelV4Queues.delete(queueKey);
+  });
+  return current;
+};
+
+const standardSemModelV4OperationMessage = (
+  modelId: string,
+  operation: StandardSemModelV4BlockedOperation,
+) => {
+  const labels: Record<StandardSemModelV4BlockedOperation, string> = {
+    schema5_save: "Schema-5 save",
+    schema5_autosave: "Schema-5 autosave",
+    calculation: "calculation",
+    legacy_graph_serialization: "legacy graph serialization",
+  };
+  return `${labels[operation]} is blocked for strict Standard SemModelV4 model '${modelId}'. Use the schema-6 authority workflow.`;
+};
 
 const interactionNodes = (nodes: Array<Node<ConstructData>>) => nodes.filter((node) =>
   node.data.semantic === "interaction" && node.data.interaction,
@@ -607,7 +855,7 @@ const sampleModelPresentation = currentNativeModelPresentation(
   syncedDiagramLayout(initialNodes, initialEdges),
 );
 
-export const useWorkspace = create<WorkspaceState>()((set) => ({
+export const useWorkspace = create<WorkspaceState>()((set, get) => ({
   view: "welcome",
   workflowDestinationContext: null,
   workflowCommandContext: null,
@@ -644,6 +892,13 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   projectModels: [sampleProjectModel],
   activeModelId: sampleProjectModelId,
   modelPresentations: { [sampleProjectModelId]: sampleModelPresentation },
+  standardSemModelV4Authorities: {},
+  standardSemModelV4ScientificEditLocks: {},
+  standardSemModelV4Layouts: {},
+  standardSemModelV4Epochs: {},
+  standardSemModelV4Persistence: {},
+  standardSemModelV4DatasetDescriptors: {},
+  datasetDescriptorOnly: false,
   savedReports: [],
   explorerSelection: { kind: "model", modelId: sampleProjectModelId },
   runs: [],
@@ -684,7 +939,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       standard_pls: { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0 },
       pls_bootstrap: { method: "bootstrap", bootstrapSamples: 5000, studentizedInnerSamples: 0, permutationSamples: 0 },
       plspredict: { method: "predict", groupMethods: "pls_pos", segmentCount: 2, segmentStarts: 10 },
-      micom_mga: { method: "mga", groupMethods: "micom,mga_permutation", groupPermutationSamples: 5_000, micomConfiguralConfirmed: false },
+      micom_mga: { method: "mga", groupMethods: "micom", groupPermutationSamples: 5_000, micomConfiguralConfirmed: false },
       cbsem_cfa: { method: "cbsem", cbsemModelType: "cfa", cbsemStandardization: "std_all", cbsemMeanStructure: false },
       ols_regression: { method: "regression", regressionType: "ols", robustSe: "hc3" },
       nca: { method: "nca", ncaCeiling: "both", ncaPermutationSamples: 999 },
@@ -745,12 +1000,50 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   undo: () => set((state) => {
     const previous = state.past.at(-1);
     if (!previous) return state;
+    const current = historySnapshot(state);
+    if (previous.kind === "standard_sem_model_v4") {
+      if (state.activeModelId !== previous.modelId) return state;
+      const layout = standardSemModelV4Layout(previous.modelId, previous.diagramLayout);
+      const projected = projectStandardSemModelV4DiagramV1(previous.authority, layout);
+      return {
+        nodes: projected.nodes,
+        edges: projected.edges,
+        diagramLayout: projected.diagramLayout,
+        standardSemModelV4Authorities: {
+          ...state.standardSemModelV4Authorities,
+          [previous.modelId]: previous.authority,
+        },
+        standardSemModelV4Layouts: {
+          ...state.standardSemModelV4Layouts,
+          [previous.modelId]: layout,
+        },
+        standardSemModelV4Epochs: {
+          ...state.standardSemModelV4Epochs,
+          [previous.modelId]: nextStandardSemModelV4Epoch(),
+        },
+        standardSemModelV4Persistence: {
+          ...state.standardSemModelV4Persistence,
+          [previous.modelId]: {
+            ...(state.standardSemModelV4Persistence[previous.modelId] ?? {
+              anchorModelDocumentSha256: previous.authority.model_document_sha256,
+              anchorLayout: layout,
+            }),
+            ...previous.persistence,
+          },
+        },
+        past: state.past.slice(0, -1),
+        future: [current, ...state.future].slice(0, 50),
+        selectedNodeId: null,
+        selectedEdgeId: null,
+        selectedResultRunId: null,
+      };
+    }
     return {
       nodes: previous.nodes,
       edges: previous.edges,
       diagramLayout: previous.diagramLayout,
       past: state.past.slice(0, -1),
-      future: [{ nodes: state.nodes, edges: state.edges, diagramLayout: state.diagramLayout }, ...state.future].slice(0, 50),
+      future: [current, ...state.future].slice(0, 50),
       selectedNodeId: null,
       selectedEdgeId: null,
       selectedResultRunId: null,
@@ -759,11 +1052,49 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   redo: () => set((state) => {
     const next = state.future[0];
     if (!next) return state;
+    const current = historySnapshot(state);
+    if (next.kind === "standard_sem_model_v4") {
+      if (state.activeModelId !== next.modelId) return state;
+      const layout = standardSemModelV4Layout(next.modelId, next.diagramLayout);
+      const projected = projectStandardSemModelV4DiagramV1(next.authority, layout);
+      return {
+        nodes: projected.nodes,
+        edges: projected.edges,
+        diagramLayout: projected.diagramLayout,
+        standardSemModelV4Authorities: {
+          ...state.standardSemModelV4Authorities,
+          [next.modelId]: next.authority,
+        },
+        standardSemModelV4Layouts: {
+          ...state.standardSemModelV4Layouts,
+          [next.modelId]: layout,
+        },
+        standardSemModelV4Epochs: {
+          ...state.standardSemModelV4Epochs,
+          [next.modelId]: nextStandardSemModelV4Epoch(),
+        },
+        standardSemModelV4Persistence: {
+          ...state.standardSemModelV4Persistence,
+          [next.modelId]: {
+            ...(state.standardSemModelV4Persistence[next.modelId] ?? {
+              anchorModelDocumentSha256: next.authority.model_document_sha256,
+              anchorLayout: layout,
+            }),
+            ...next.persistence,
+          },
+        },
+        past: [...state.past, current].slice(-50),
+        future: state.future.slice(1),
+        selectedNodeId: null,
+        selectedEdgeId: null,
+        selectedResultRunId: null,
+      };
+    }
     return {
       nodes: next.nodes,
       edges: next.edges,
       diagramLayout: next.diagramLayout,
-      past: [...state.past, { nodes: state.nodes, edges: state.edges, diagramLayout: state.diagramLayout }].slice(-50),
+      past: [...state.past, current].slice(-50),
       future: state.future.slice(1),
       selectedNodeId: null,
       selectedEdgeId: null,
@@ -771,6 +1102,27 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   onNodesChange: (changes) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) {
+      const presentationChanges = changes.filter((change) =>
+        change.type === "position" || change.type === "select" || change.type === "dimensions",
+      );
+      if (presentationChanges.length === 0) return state;
+      const nodes = applyNodeChanges(presentationChanges, state.nodes);
+      return {
+        nodes,
+        diagramLayout: syncedDiagramLayout(nodes, state.edges, {
+          ...state.diagramLayout,
+          constructLayouts: {
+            ...state.diagramLayout.constructLayouts,
+            ...Object.fromEntries(nodes.map((node) => [node.id, {
+              ...(state.diagramLayout.constructLayouts[node.id] ?? {}),
+              x: node.position.x,
+              y: node.position.y,
+            }])),
+          },
+        }),
+      };
+    }
     const removedNodeIds = new Set(changes.filter((change) => change.type === "remove").map((change) => change.id));
     const cascadeIds = new Set([
       ...cascadingInteractionNodeIds(state.nodes, removedNodeIds, []),
@@ -794,6 +1146,12 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   onEdgesChange: (changes) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) {
+      const presentationChanges = changes.filter((change) => change.type === "select");
+      return presentationChanges.length === 0
+        ? state
+        : { edges: applyEdgeChanges(presentationChanges, state.edges) };
+    }
     const removedIds = new Set(changes.filter((change) => change.type === "remove").map((change) => change.id));
     const removedEdges = state.edges.filter((edge) => removedIds.has(edge.id));
     const cascadeIds = cascadingInteractionNodeIds(state.nodes, new Set(), removedEdges);
@@ -807,6 +1165,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   onConnect: (connection) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     if (!connection.source || !connection.target || connection.source === connection.target) return state;
     if (touchesGeneratedInteraction(state.nodes, connection.source, connection.target)) return state;
     if (state.edges.some((edge) => edge.source === connection.source && edge.target === connection.target)) return state;
@@ -825,6 +1184,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   reconnectPath: (edge, connection) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     if (!connection.source || !connection.target || connection.source === connection.target) return state;
     if (requiredInteractionEdge(state.nodes, edge) || touchesGeneratedInteraction(state.nodes, connection.source, connection.target)) return state;
     if (state.edges.some((candidate) => candidate.id !== edge.id && candidate.source === connection.source && candidate.target === connection.target)) return state;
@@ -836,6 +1196,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   addPath: (source, target) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     if (source === target || touchesGeneratedInteraction(state.nodes, source, target) || state.edges.some((edge) => edge.source === source && edge.target === target)) return state;
     const id = `path-${source}-${target}-${Date.now()}`;
     return {
@@ -853,21 +1214,26 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   addCovariance: (source, target) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     if (source === target) return state;
     if (touchesGeneratedInteraction(state.nodes, source, target)) return state;
     const [left, right] = [source, target].sort();
-    if (state.edges.some((edge) => edge.data?.role === "covariance" && [edge.source, edge.target].sort().join("\u0000") === `${left}\u0000${right}`)) return state;
+    if (nativeCovariancePairExistsV4(state.edges, left, right)) return state;
     const id = `covariance-${left}-${right}-${Date.now()}`;
     return {
       ...historyPatch(state),
       selectedNodeId: null,
       selectedEdgeId: id,
-      edges: [...state.edges, { id, source: left, target: right, type: "default", label: "Covariance", data: { role: "covariance" } }],
+      edges: [...state.edges, newNativeScientificCovarianceEdgeV4(id, left, right)],
     };
   }),
   addTwoStageInteraction: (predictor, moderator, outcome) => {
     let result: AddTwoStageInteractionResult = { status: "blocked", reason: "construct_missing" };
     set((state) => {
+    if (activeStandardSemModelV4Authority(state)) {
+      result = { status: "blocked", reason: "unsupported_construct" };
+      return state;
+    }
     if (new Set([predictor, moderator, outcome]).size !== 3) {
       result = { status: "blocked", reason: "constructs_not_distinct" };
       return state;
@@ -961,6 +1327,14 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   addHigherOrderConstruct: (draft) => {
     let result: AddHigherOrderConstructResult = { status: "blocked", reason: "invalid_draft", detail: "The higher-order construct could not be created." };
     set((state) => {
+      if (activeStandardSemModelV4Authority(state)) {
+        result = {
+          status: "blocked",
+          reason: "scope_unavailable",
+          detail: "Strict Standard models must be edited through a versioned SemModelV4 authority intent.",
+        };
+        return state;
+      }
       const scopeBlocker = nativeHigherOrderCreationBlocker(state.nodes, state.edges);
       if (scopeBlocker) {
         result = { status: "blocked", reason: "scope_unavailable", detail: scopeBlocker };
@@ -1006,7 +1380,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     });
     return result;
   },
-  updateConstruct: (id, patch) => set((state) => ({
+  updateConstruct: (id, patch) => set((state) => activeStandardSemModelV4Authority(state) ? state : ({
     ...historyPatch(state),
     nodes: state.nodes.map((node) => {
       if (node.id !== id) return node;
@@ -1018,18 +1392,61 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
         : { ...node, data };
     }),
   })),
-  updateEdge: (id, patch) => set((state) => ({
-    ...historyPatch(state),
-    edges: state.edges.map((edge) => {
-      if (edge.id !== id) return edge;
-      if (!requiredInteractionEdge(state.nodes, edge)) return { ...edge, ...patch };
-      const currentRole = edge.data?.role;
-      const data = { ...(edge.data ?? {}), ...(patch.data ?? {}) };
-      if (currentRole) data.role = currentRole;
-      else delete data.role;
-      return { ...edge, ...patch, source: edge.source, target: edge.target, data };
-    }),
-  })),
+  setConstructEstimandV4: (id, specification) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
+    const node = state.nodes.find((candidate) => candidate.id === id);
+    if (!node || node.data.semantic === "interaction" || node.data.semantic === "higher_order") return state;
+    return {
+      ...historyPatch(state),
+      nodes: state.nodes.map((candidate) => candidate.id === id ? withNativeConstructEstimandV4(candidate, specification) : candidate),
+    };
+  }),
+  updateEdge: (id, patch) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
+    const selected = state.edges.find((edge) => edge.id === id);
+    if (!selected) return state;
+    const candidateData = patch.data === undefined ? selected.data : patch.data;
+    const candidateRole = candidateData && typeof candidateData === "object" && !Array.isArray(candidateData)
+      ? (candidateData as { role?: unknown }).role
+      : undefined;
+    const candidateSource = patch.source ?? selected.source;
+    const candidateTarget = patch.target ?? selected.target;
+    if (candidateRole === "covariance" && nativeCovariancePairExistsV4(state.edges, candidateSource, candidateTarget, id)) return state;
+    return {
+      ...historyPatch(state),
+      edges: state.edges.map((edge) => {
+        if (edge.id !== id) return edge;
+        if (!requiredInteractionEdge(state.nodes, edge)) return { ...edge, ...patch };
+        const currentRole = edge.data?.role;
+        const data = { ...(edge.data ?? {}), ...(patch.data ?? {}) };
+        if (currentRole) data.role = currentRole;
+        else delete data.role;
+        return { ...edge, ...patch, source: edge.source, target: edge.target, data };
+      }),
+    };
+  }),
+  convertCovarianceToScientificV4: (id, endpoints = { left: null, right: null }) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
+    const edge = state.edges.find((candidate) => candidate.id === id);
+    if (!edge || edge.data?.role !== "covariance") return state;
+    return {
+      ...historyPatch(state),
+      edges: state.edges.map((candidate) => candidate.id === id
+        ? convertNativeCovarianceToScientificV4(candidate, endpoints)
+        : candidate),
+    };
+  }),
+  convertCovarianceToPresentationV4: (id) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
+    const edge = state.edges.find((candidate) => candidate.id === id);
+    if (!edge || edge.data?.role !== "covariance") return state;
+    return {
+      ...historyPatch(state),
+      edges: state.edges.map((candidate) => candidate.id === id
+        ? convertNativeCovarianceToPresentationV4(candidate)
+        : candidate),
+    };
+  }),
   setEdgeLabelOffset: (id, offset) => set((state) => ({
     diagramLayout: {
       ...state.diagramLayout,
@@ -1081,6 +1498,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     },
   })),
   addConstruct: (position, indicators = []) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     const id = `construct-${Date.now()}`;
     const name = nextConstructName(state.nodes);
     const fallback = nextConstructPosition(state.nodes);
@@ -1102,6 +1520,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   addConstructsFromIndicators: (indicators) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     const validIndicators = validUniqueIndicators(indicators, state.dataset, state.analysisSettings.groupColumn);
     if (validIndicators.length === 0) return state;
     let nextNodes = state.nodes.map((node) => ({
@@ -1134,6 +1553,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   addConstructsFromIndicatorGroups: (indicators) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     const validIndicators = validUniqueIndicators(indicators, state.dataset, state.analysisSettings.groupColumn);
     if (validIndicators.length === 0) return state;
     const groups = new Map<string, string[]>();
@@ -1170,6 +1590,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   duplicateSelected: () => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     const source = state.nodes.find((node) => node.id === state.selectedNodeId);
     if (!source) return state;
     const id = `construct-${Date.now()}`;
@@ -1186,6 +1607,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   removeSelection: () => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     const selectedNodeIds = new Set([
       ...state.nodes.filter((node) => node.selected).map((node) => node.id),
       ...(state.selectedNodeId ? [state.selectedNodeId] : []),
@@ -1210,6 +1632,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   reverseSelectedPath: () => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     const selected = state.edges.find((edge) => edge.id === state.selectedEdgeId);
     if (!selected || requiredInteractionEdge(state.nodes, selected) || state.edges.some((edge) => edge.id !== selected.id && edge.source === selected.target && edge.target === selected.source)) return state;
     return {
@@ -1379,6 +1802,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   assignIndicator: (constructId, indicator) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     const target = state.nodes.find((node) => node.id === constructId);
     if (
       !target
@@ -1407,6 +1831,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   assignIndicators: (constructId, indicators) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
     const target = state.nodes.find((node) => node.id === constructId);
     const unique = validUniqueIndicators(indicators, state.dataset, state.analysisSettings.groupColumn);
     if (!target || target.data.semantic === "interaction" || target.data.semantic === "higher_order" || unique.length === 0) return state;
@@ -1429,7 +1854,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       diagramLayout: syncedDiagramLayout(state.nodes, state.edges, { ...state.diagramLayout, indicatorLayouts: indicatorLayout }),
     };
   }),
-  unassignIndicator: (constructId, indicator) => set((state) => ({
+  unassignIndicator: (constructId, indicator) => set((state) => activeStandardSemModelV4Authority(state) ? state : ({
     ...historyPatch(state),
     nodes: state.nodes.map((node) => node.id === constructId ? {
       ...node,
@@ -1443,17 +1868,21 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       },
     }),
   })),
-  setDataset: (dataset) => set((state) => ({
+  setDataset: (dataset) => set((state) => activeStandardSemModelV4Authority(state) ? state : ({
     dataset,
     datasetCatalog: upsertDatasetCatalog(state.datasetCatalog, dataset),
+    datasetDescriptorOnly: false,
     view: "data",
     workflowDestinationContext: null,
     workflowCommandContext: null,
   })),
-  setDatasetCatalog: (datasetCatalog, datasetVersions) => set({ datasetCatalog, datasetVersions }),
-  commitDatasetVersion: ({ dataset, version }) => set((state) => ({
+  setDatasetCatalog: (datasetCatalog, datasetVersions) => set((state) => activeStandardSemModelV4Authority(state)
+    ? state
+    : { datasetCatalog, datasetVersions, datasetDescriptorOnly: false }),
+  commitDatasetVersion: ({ dataset, version }) => set((state) => activeStandardSemModelV4Authority(state) ? state : ({
     dataset,
     datasetCatalog: upsertDatasetCatalog(state.datasetCatalog, dataset),
+    datasetDescriptorOnly: false,
     datasetVersions: [
       ...state.datasetVersions.filter((candidate) => candidate.datasetId !== version.datasetId),
       version,
@@ -1463,39 +1892,538 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     workflowCommandContext: null,
   })),
   setExplorerSelection: (explorerSelection) => set({ explorerSelection }),
-  setProjectExplorer: ({ projectModels, activeModelId, modelPresentations, savedReports, explorerSelection }) => set((state) => ({
-    projectModels,
-    activeModelId,
-    modelPresentations,
-    savedReports,
-    explorerSelection: explorerSelection ?? state.explorerSelection,
-  })),
+  setProjectExplorer: ({ projectModels, activeModelId, modelPresentations, savedReports, explorerSelection }) => set((state) => {
+    const projectModelIds = new Set(projectModels.map((model) => model.id));
+    const nextActiveModelId = activeModelId && projectModelIds.has(activeModelId) ? activeModelId : null;
+    const standardSemModelV4Authorities = Object.fromEntries(
+      Object.entries(state.standardSemModelV4Authorities).filter(([modelId]) => projectModelIds.has(modelId)),
+    );
+    const standardSemModelV4ScientificEditLocks = Object.fromEntries(
+      Object.entries(state.standardSemModelV4ScientificEditLocks).filter(([modelId]) => projectModelIds.has(modelId)),
+    );
+    const strictModelIds = new Set(Object.keys(standardSemModelV4Authorities));
+    const legacyModelPresentations = Object.fromEntries(
+      Object.entries(modelPresentations).filter(([modelId]) => !strictModelIds.has(modelId)),
+    );
+    const activeChanged = state.activeModelId !== nextActiveModelId;
+    const outgoingAuthority = activeStandardSemModelV4Authority(state);
+    const targetAuthority = nextActiveModelId ? standardSemModelV4Authorities[nextActiveModelId] : undefined;
+    const retainedLayouts = Object.fromEntries(
+      Object.entries(state.standardSemModelV4Layouts).filter(([modelId]) => projectModelIds.has(modelId)),
+    );
+    const standardSemModelV4Layouts = activeChanged
+      && state.activeModelId
+      && outgoingAuthority
+      && projectModelIds.has(state.activeModelId)
+      ? {
+          ...retainedLayouts,
+          [state.activeModelId]: standardSemModelV4Layout(state.activeModelId, state.diagramLayout),
+        }
+      : retainedLayouts;
+    const standardSemModelV4Epochs = Object.fromEntries(
+      Object.entries(state.standardSemModelV4Epochs).filter(([modelId]) => projectModelIds.has(modelId)),
+    );
+    const standardSemModelV4Persistence = Object.fromEntries(
+      Object.entries(state.standardSemModelV4Persistence).filter(([modelId]) => projectModelIds.has(modelId)),
+    );
+    if (activeChanged) {
+      if (state.activeModelId && standardSemModelV4Authorities[state.activeModelId]) {
+        standardSemModelV4Epochs[state.activeModelId] = nextStandardSemModelV4Epoch();
+      }
+      if (nextActiveModelId && standardSemModelV4Authorities[nextActiveModelId]) {
+        standardSemModelV4Epochs[nextActiveModelId] = nextStandardSemModelV4Epoch();
+      }
+    }
+    const targetModel = nextActiveModelId ? projectModels.find((model) => model.id === nextActiveModelId) : undefined;
+    const target = activeChanged && (outgoingAuthority || targetAuthority)
+      ? targetAuthority
+        ? projectStandardSemModelV4DiagramV1(targetAuthority, standardSemModelV4Layouts[nextActiveModelId!])
+        : targetModel
+          ? nativeModelSnapshotFromCanonical(targetModel, legacyModelPresentations[nextActiveModelId!])
+          : { nodes: [], edges: [], diagramLayout: syncedDiagramLayout([], []) }
+      : null;
+    return {
+      projectModels,
+      activeModelId: nextActiveModelId,
+      modelPresentations: legacyModelPresentations,
+      savedReports,
+      standardSemModelV4Authorities,
+      standardSemModelV4ScientificEditLocks,
+      standardSemModelV4Layouts,
+      standardSemModelV4Epochs,
+      standardSemModelV4Persistence,
+      explorerSelection: explorerSelection ?? state.explorerSelection,
+      ...(target
+        ? {
+            nodes: target.nodes,
+            edges: target.edges,
+            diagramLayout: syncedDiagramLayout(target.nodes, target.edges, target.diagramLayout),
+            selectedNodeId: target.nodes[0]?.id ?? null,
+            selectedEdgeId: null,
+            past: [],
+            future: [],
+          }
+        : {}),
+    };
+  }),
+  installStandardSemModelV4Authority: (authority, layout) => {
+    const parsedAuthority = parseStandardSemModelV4AuthorityRecordV1(authority);
+    const modelId = parsedAuthority.model.id;
+    const parsedLayout = layout ? parseStandardSemModelV4DiagramLayoutV1(layout) : undefined;
+    if (parsedLayout && parsedLayout.model_id !== modelId) return false;
+    let installed = false;
+    set((state) => {
+      if (!state.projectModels.some((model) => model.id === modelId) && state.activeModelId !== modelId) return state;
+      const projection = projectStandardSemModelV4DiagramV1(parsedAuthority, parsedLayout);
+      const storedLayout = standardSemModelV4Layout(modelId, projection.diagramLayout);
+      const { [modelId]: _legacyPresentation, ...modelPresentations } = state.modelPresentations;
+      installed = true;
+      return {
+        standardSemModelV4Authorities: {
+          ...state.standardSemModelV4Authorities,
+          [modelId]: parsedAuthority,
+        },
+        standardSemModelV4Layouts: {
+          ...state.standardSemModelV4Layouts,
+          [modelId]: storedLayout,
+        },
+        standardSemModelV4Epochs: {
+          ...state.standardSemModelV4Epochs,
+          [modelId]: nextStandardSemModelV4Epoch(),
+        },
+        standardSemModelV4Persistence: {
+          ...state.standardSemModelV4Persistence,
+          [modelId]: {
+            readiness: "authoring_only",
+            scientificSha256: null,
+            anchorModelDocumentSha256: parsedAuthority.model_document_sha256,
+            anchorLayout: storedLayout,
+          },
+        },
+        modelPresentations,
+        ...(state.activeModelId === modelId
+          ? {
+              nodes: projection.nodes,
+              edges: projection.edges,
+              diagramLayout: projection.diagramLayout,
+              selectedNodeId: projection.nodes[0]?.id ?? null,
+              selectedEdgeId: null,
+              past: [],
+              future: [],
+            }
+          : {}),
+      };
+    });
+    return installed;
+  },
+  activateStandardSemModelV4Authorities: (installations, activeModelId, projectName, datasetDescriptors, scientificEditLockedModelIds = []) => {
+    if (!installations.length || !datasetDescriptors?.length) return false;
+    try {
+      const authorities: Record<string, StandardSemModelV4AuthorityRecordV1> = {};
+      const layouts: Record<string, StandardSemModelV4DiagramLayoutV1> = {};
+      const persistence: Record<string, StandardSemModelV4PersistenceV1> = {};
+      const projections = new Map<string, ReturnType<typeof projectStandardSemModelV4DiagramV1>>();
+      const descriptors = Object.fromEntries(datasetDescriptors.map((descriptor) => [descriptor.id, descriptor]));
+      if (Object.keys(descriptors).length !== datasetDescriptors.length) return false;
+      for (const installation of installations) {
+        const authority = parseStandardSemModelV4AuthorityRecordV1(installation.authority);
+        const modelId = authority.model.id;
+        if (
+          authorities[modelId]
+          || !validStandardSemModelV4Readiness(installation.readiness, installation.scientificSha256)
+          || !descriptors[authority.model.data_binding.dataset_id]
+        ) return false;
+        const suppliedLayout = installation.layout
+          ? parseStandardSemModelV4DiagramLayoutV1(installation.layout)
+          : undefined;
+        if (suppliedLayout && suppliedLayout.model_id !== modelId) return false;
+        const projection = projectStandardSemModelV4DiagramV1(authority, suppliedLayout);
+        const layout = standardSemModelV4Layout(modelId, projection.diagramLayout);
+        authorities[modelId] = authority;
+        layouts[modelId] = layout;
+        persistence[modelId] = {
+          readiness: installation.readiness,
+          scientificSha256: installation.scientificSha256,
+          anchorModelDocumentSha256: authority.model_document_sha256,
+          anchorLayout: layout,
+        };
+        projections.set(modelId, projection);
+      }
+      const active = projections.get(activeModelId);
+      if (!active) return false;
+      const activeDescriptor = descriptors[authorities[activeModelId].model.data_binding.dataset_id];
+      if (!activeDescriptor) return false;
+      const descriptorDatasets = datasetDescriptors.map(datasetFromStandardSemModelV4Descriptor);
+      const epochs = Object.fromEntries(
+        Object.keys(authorities).map((modelId) => [modelId, nextStandardSemModelV4Epoch()]),
+      );
+      const locked = new Set(scientificEditLockedModelIds);
+      if (locked.size !== scientificEditLockedModelIds.length
+        || [...locked].some((modelId) => !authorities[modelId])) return false;
+      set({
+        projectModels: [],
+        activeModelId,
+        modelPresentations: {},
+        standardSemModelV4Authorities: authorities,
+        standardSemModelV4ScientificEditLocks: Object.fromEntries([...locked].map((modelId) => [modelId, true])),
+        standardSemModelV4Layouts: layouts,
+        standardSemModelV4Epochs: epochs,
+        standardSemModelV4Persistence: persistence,
+        standardSemModelV4DatasetDescriptors: descriptors,
+        datasetDescriptorOnly: true,
+        dataset: datasetFromStandardSemModelV4Descriptor(activeDescriptor),
+        datasetCatalog: descriptorDatasets,
+        datasetVersions: [],
+        savedReports: [],
+        runs: [],
+        projectName,
+        projectPath: null,
+        projectWritable: false,
+        explorerSelection: { kind: "model", modelId: activeModelId },
+        nodes: active.nodes,
+        edges: active.edges,
+        diagramLayout: active.diagramLayout,
+        selectedNodeId: active.nodes[0]?.id ?? null,
+        selectedEdgeId: null,
+        selectedResultRunId: null,
+        diagramTool: "select",
+        view: "models",
+        past: [],
+        future: [],
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  appendStandardSemModelV4Revision: (cas, installation) => {
+    let appended = false;
+    try {
+      const authority = parseStandardSemModelV4AuthorityRecordV1(installation.authority);
+      const revisionModelId = authority.model.id;
+      set((state) => {
+        const source = state.standardSemModelV4Authorities[cas.sourceModelId];
+        const sourcePersistence = state.standardSemModelV4Persistence[cas.sourceModelId];
+        const sourceLayout = currentStandardSemModelV4Layout(state, cas.sourceModelId);
+        if (
+          state.activeModelId !== cas.sourceModelId
+          || !source
+          || !sourcePersistence
+          || !sourceLayout
+          || source.model_document_sha256 !== cas.expectedSourceModelDocumentSha256
+          || state.standardSemModelV4Epochs[cas.sourceModelId] !== cas.expectedSourceEpoch
+          || sourcePersistence.anchorModelDocumentSha256 !== source.model_document_sha256
+          || !sameStandardSemModelV4Layout(sourceLayout, sourcePersistence.anchorLayout)
+          || [...standardSemModelV4Queues.keys()].some((key) => key.startsWith(`${cas.sourceModelId}\0`))
+          || revisionModelId === cas.sourceModelId
+          || state.standardSemModelV4Authorities[revisionModelId]
+          || state.projectModels.some((model) => model.id === revisionModelId)
+          || !validStandardSemModelV4Readiness(installation.readiness, installation.scientificSha256)
+          || !state.standardSemModelV4DatasetDescriptors[authority.model.data_binding.dataset_id]
+        ) return state;
+        const suppliedLayout = installation.layout
+          ? parseStandardSemModelV4DiagramLayoutV1(installation.layout)
+          : undefined;
+        if (suppliedLayout && suppliedLayout.model_id !== revisionModelId) return state;
+        const projection = projectStandardSemModelV4DiagramV1(authority, suppliedLayout);
+        const revisionLayout = standardSemModelV4Layout(revisionModelId, projection.diagramLayout);
+        const targetDescriptor = state.standardSemModelV4DatasetDescriptors[authority.model.data_binding.dataset_id];
+        appended = true;
+        return {
+          standardSemModelV4Authorities: {
+            ...state.standardSemModelV4Authorities,
+            [revisionModelId]: authority,
+          },
+          standardSemModelV4Layouts: {
+            ...state.standardSemModelV4Layouts,
+            [cas.sourceModelId]: sourceLayout,
+            [revisionModelId]: revisionLayout,
+          },
+          standardSemModelV4Epochs: {
+            ...state.standardSemModelV4Epochs,
+            [revisionModelId]: nextStandardSemModelV4Epoch(),
+          },
+          standardSemModelV4Persistence: {
+            ...state.standardSemModelV4Persistence,
+            [revisionModelId]: {
+              readiness: installation.readiness,
+              scientificSha256: installation.scientificSha256,
+              anchorModelDocumentSha256: authority.model_document_sha256,
+              anchorLayout: revisionLayout,
+            },
+          },
+          activeModelId: revisionModelId,
+          explorerSelection: { kind: "model", modelId: revisionModelId },
+          nodes: projection.nodes,
+          edges: projection.edges,
+          diagramLayout: projection.diagramLayout,
+          dataset: datasetFromStandardSemModelV4Descriptor(targetDescriptor),
+          selectedNodeId: projection.nodes[0]?.id ?? null,
+          selectedEdgeId: null,
+          diagramTool: "select",
+          view: "models",
+          past: [],
+          future: [],
+        };
+      });
+    } catch {
+      return false;
+    }
+    return appended;
+  },
+  captureStandardSemModelV4SaveAuthorities: (modelIds) => {
+    const state = get();
+    if (!modelIds.length || new Set(modelIds).size !== modelIds.length) return null;
+    const captured: Record<string, StandardSemModelV4SaveAuthorityV1> = {};
+    for (const modelId of modelIds) {
+      const authority = state.standardSemModelV4Authorities[modelId];
+      const persistence = state.standardSemModelV4Persistence[modelId];
+      const layout = currentStandardSemModelV4Layout(state, modelId);
+      if (!authority || !persistence || !layout) return null;
+      captured[modelId] = {
+        authority,
+        layout,
+        readiness: persistence.readiness,
+        scientificSha256: persistence.scientificSha256,
+        dirty: authority.model_document_sha256 !== persistence.anchorModelDocumentSha256
+          || !sameStandardSemModelV4Layout(layout, persistence.anchorLayout),
+      };
+    }
+    return captured;
+  },
+  reanchorStandardSemModelV4Authorities: (captured) => {
+    let reanchored = false;
+    set((state) => {
+      const modelIds = Object.keys(captured);
+      if (
+        !modelIds.length
+        || modelIds.length !== Object.keys(state.standardSemModelV4Authorities).length
+      ) return state;
+      for (const modelId of modelIds) {
+        const expected = captured[modelId];
+        const authority = state.standardSemModelV4Authorities[modelId];
+        const persistence = state.standardSemModelV4Persistence[modelId];
+        const layout = currentStandardSemModelV4Layout(state, modelId);
+        if (
+          !authority
+          || !persistence
+          || !layout
+          || authority.model_document_sha256 !== expected.authority.model_document_sha256
+          || persistence.readiness !== expected.readiness
+          || persistence.scientificSha256 !== expected.scientificSha256
+          || !sameStandardSemModelV4Layout(layout, expected.layout)
+        ) return state;
+      }
+      reanchored = true;
+      return {
+        standardSemModelV4Layouts: {
+          ...state.standardSemModelV4Layouts,
+          ...Object.fromEntries(modelIds.map((modelId) => [modelId, captured[modelId].layout])),
+        },
+        standardSemModelV4Persistence: {
+          ...state.standardSemModelV4Persistence,
+          ...Object.fromEntries(modelIds.map((modelId) => [modelId, {
+            ...state.standardSemModelV4Persistence[modelId],
+            anchorModelDocumentSha256: captured[modelId].authority.model_document_sha256,
+            anchorLayout: captured[modelId].layout,
+          }])),
+        },
+      };
+    });
+    return reanchored;
+  },
+  clearStandardSemModelV4Workspace: (modelIds) => {
+    const state = get();
+    const expected = new Set(modelIds);
+    const installed = Object.keys(state.standardSemModelV4Authorities);
+    if (
+      !modelIds.length
+      || expected.size !== modelIds.length
+      || installed.length !== expected.size
+      || installed.some((modelId) => !expected.has(modelId))
+      || [...standardSemModelV4Queues.keys()].some((key) => modelIds.some((modelId) => key.startsWith(`${modelId}\0`)))
+    ) return false;
+    const captured = state.captureStandardSemModelV4SaveAuthorities(modelIds);
+    if (!captured || Object.values(captured).some((authority) => authority.dirty)) return false;
+    state.closeProject();
+    return Object.keys(get().standardSemModelV4Authorities).length === 0;
+  },
+  commitStandardSemModelV4Intent: async (intent) => {
+    const invoked = get();
+    const modelId = invoked.activeModelId;
+    const authority = activeStandardSemModelV4Authority(invoked);
+    const epoch = modelId ? invoked.standardSemModelV4Epochs[modelId] : undefined;
+    if (!modelId || !authority || epoch === undefined) return { status: "stale" };
+    if (invoked.standardSemModelV4ScientificEditLocks[modelId]) {
+      return {
+        status: "blocked",
+        diagnostic: {
+          code: "schema6_standard_authority.scientific_revision_fork_required",
+          message: `Model '${modelId}' is frozen by a RecipeV4 or canonical result authority.`,
+          correctiveAction: "Use Edit active model as new revision, then make scientific edits on the new model identity.",
+          authoringIssues: [],
+          readinessIssues: [],
+        },
+      };
+    }
+
+    return queueStandardSemModelV4Commit(modelId, epoch, async () => {
+      const sourceState = get();
+      const source = sourceState.standardSemModelV4Authorities[modelId];
+      if (
+        sourceState.activeModelId !== modelId
+        || sourceState.standardSemModelV4Epochs[modelId] !== epoch
+        || !source
+      ) return { status: "stale" };
+      const sourceStillCurrent = () => {
+        const current = get();
+        return current.activeModelId === modelId
+          && current.standardSemModelV4Epochs[modelId] === epoch
+          && current.standardSemModelV4Authorities[modelId]?.model_document_sha256 === source.model_document_sha256;
+      };
+
+      let candidate;
+      try {
+        candidate = reduceStandardSemModelV4AuthorityV1(source, intent);
+      } catch (error) {
+        return { status: "rejected", error };
+      }
+
+      let outcome: StandardSemModelV4AuthorityCasOutcomeV1;
+      try {
+        outcome = await compareAndSwapStandardSemModelV4Authority(
+          source.model,
+          source.model_document_sha256,
+          candidate.model,
+        );
+      } catch (error) {
+        return sourceStillCurrent() ? { status: "rejected", error } : { status: "stale" };
+      }
+      if (!sourceStillCurrent()) return { status: "stale" };
+      if (outcome.status === "blocked") return { status: "blocked", diagnostic: outcome.diagnostic };
+      if (
+        outcome.value.sourceModelDocumentSha256 !== source.model_document_sha256
+        || outcome.value.canonicalCandidate.id !== modelId
+      ) {
+        return {
+          status: "rejected",
+          error: new Error("The Standard SemModelV4 CAS receipt does not match the active source authority."),
+        };
+      }
+
+      let committedAuthority: StandardSemModelV4AuthorityRecordV1;
+      try {
+        committedAuthority = parseStandardSemModelV4AuthorityRecordV1({
+          schema_version: 1,
+          model_document_sha256: outcome.value.candidateModelDocumentSha256,
+          model: outcome.value.canonicalCandidate,
+        });
+      } catch (error) {
+        return { status: "rejected", error };
+      }
+
+      const beforeCommit = get();
+      if (!sourceStillCurrent()) return { status: "stale" };
+      const layout = standardSemModelV4Layout(modelId, beforeCommit.diagramLayout);
+      const projection = projectStandardSemModelV4DiagramV1(committedAuthority, layout);
+      let committed = false;
+      set((state) => {
+        if (
+          state.activeModelId !== modelId
+          || state.standardSemModelV4Epochs[modelId] !== epoch
+          || state.standardSemModelV4Authorities[modelId]?.model_document_sha256 !== source.model_document_sha256
+        ) return state;
+        committed = true;
+        return {
+          ...historyPatch(state),
+          standardSemModelV4Authorities: {
+            ...state.standardSemModelV4Authorities,
+            [modelId]: committedAuthority,
+          },
+          standardSemModelV4Layouts: {
+            ...state.standardSemModelV4Layouts,
+            [modelId]: standardSemModelV4Layout(modelId, projection.diagramLayout),
+          },
+          standardSemModelV4Persistence: {
+            ...state.standardSemModelV4Persistence,
+            [modelId]: {
+              ...(state.standardSemModelV4Persistence[modelId] ?? {
+                anchorModelDocumentSha256: source.model_document_sha256,
+                anchorLayout: layout,
+              }),
+              readiness: outcome.value.readiness,
+              scientificSha256: outcome.value.candidateScientificSha256,
+            },
+          },
+          nodes: projection.nodes,
+          edges: projection.edges,
+          diagramLayout: projection.diagramLayout,
+          selectedNodeId: null,
+          selectedEdgeId: null,
+        };
+      });
+      return committed
+        ? { status: "committed", authority: committedAuthority }
+        : { status: "stale" };
+    });
+  },
+  standardSemModelV4OperationBlocker: (operation) => {
+    const state = get();
+    return state.activeModelId && activeStandardSemModelV4Authority(state)
+      ? standardSemModelV4OperationMessage(state.activeModelId, operation)
+      : null;
+  },
   switchProjectModel: (modelId) => {
     let switched = false;
     set((state) => {
       const requestedModel = state.projectModels.find((model) => model.id === modelId);
-      if (!requestedModel) return state;
+      const requestedAuthority = state.standardSemModelV4Authorities[modelId];
+      if (!requestedModel && !requestedAuthority) return state;
+      switched = true;
+      if (state.activeModelId === modelId) return state;
 
+      const outgoingModelId = state.activeModelId;
+      const outgoingAuthority = activeStandardSemModelV4Authority(state);
       const currentModelName = state.projectModels.find((model) => model.id === state.activeModelId)?.name
         ?? state.projectName;
-      const projectModels = state.activeModelId
-        ? state.projectModels.map((model) => model.id === state.activeModelId
+      const projectModels = outgoingModelId && !outgoingAuthority
+        ? state.projectModels.map((model) => model.id === outgoingModelId
           ? buildNativeRecipeModel(model.id, currentModelName, state.nodes, state.edges)
           : model)
         : state.projectModels;
-      const modelPresentations = state.activeModelId
+      const modelPresentations = outgoingModelId && !outgoingAuthority
         ? {
             ...state.modelPresentations,
-            [state.activeModelId]: currentNativeModelPresentation(state.nodes, state.edges, state.diagramLayout),
+            [outgoingModelId]: currentNativeModelPresentation(state.nodes, state.edges, state.diagramLayout),
           }
         : state.modelPresentations;
-      const targetModel = projectModels.find((model) => model.id === modelId)!;
-      const target = nativeModelSnapshotFromCanonical(targetModel, modelPresentations[modelId]);
-      switched = true;
+      const standardSemModelV4Layouts = outgoingModelId && outgoingAuthority
+        ? {
+            ...state.standardSemModelV4Layouts,
+            [outgoingModelId]: standardSemModelV4Layout(outgoingModelId, state.diagramLayout),
+          }
+        : state.standardSemModelV4Layouts;
+      const standardSemModelV4Epochs = { ...state.standardSemModelV4Epochs };
+      if (outgoingModelId && outgoingAuthority) standardSemModelV4Epochs[outgoingModelId] = nextStandardSemModelV4Epoch();
+
+      const targetAuthority = requestedAuthority;
+      const targetDatasetDescriptor = targetAuthority
+        ? state.standardSemModelV4DatasetDescriptors[targetAuthority.model.data_binding.dataset_id]
+        : undefined;
+      if (targetAuthority && state.datasetDescriptorOnly && !targetDatasetDescriptor) return state;
+      const target = targetAuthority
+        ? projectStandardSemModelV4DiagramV1(targetAuthority, standardSemModelV4Layouts[modelId])
+        : nativeModelSnapshotFromCanonical(
+            requestedModel!,
+            modelPresentations[modelId],
+          );
+      if (targetAuthority) standardSemModelV4Epochs[modelId] = nextStandardSemModelV4Epoch();
       return {
         projectModels,
         activeModelId: modelId,
         modelPresentations,
+        standardSemModelV4Layouts,
+        standardSemModelV4Epochs,
         explorerSelection: { kind: "model", modelId },
         nodes: target.nodes,
         edges: target.edges,
@@ -1505,11 +2433,14 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
         diagramTool: "select",
         past: [],
         future: [],
+        ...(targetDatasetDescriptor
+          ? { dataset: datasetFromStandardSemModelV4Descriptor(targetDatasetDescriptor), datasetDescriptorOnly: true }
+          : {}),
       };
     });
     return switched;
   },
-  addRun: (run) => set((state) => ({
+  addRun: (run) => set((state) => activeStandardSemModelV4Authority(state) ? state : ({
     runs: [run, ...state.runs],
     selectedResultRunId: run.result ? run.id : state.selectedResultRunId,
     diagramOverlaySettings: run.result ? { ...state.diagramOverlaySettings, selectedRunId: run.id, mode: state.diagramOverlaySettings.mode === "model" ? "paths_r2" : state.diagramOverlaySettings.mode } : state.diagramOverlaySettings,
@@ -1542,6 +2473,13 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     projectModels: [],
     activeModelId: null,
     modelPresentations: {},
+    standardSemModelV4Authorities: {},
+    standardSemModelV4ScientificEditLocks: {},
+    standardSemModelV4Layouts: {},
+    standardSemModelV4Epochs: {},
+    standardSemModelV4Persistence: {},
+    standardSemModelV4DatasetDescriptors: {},
+    datasetDescriptorOnly: false,
     savedReports: [],
     explorerSelection: { kind: "data" },
     runs: [],
@@ -1579,6 +2517,13 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     projectModels: [sampleProjectModel],
     activeModelId: sampleProjectModelId,
     modelPresentations: { [sampleProjectModelId]: sampleModelPresentation },
+    standardSemModelV4Authorities: {},
+    standardSemModelV4ScientificEditLocks: {},
+    standardSemModelV4Layouts: {},
+    standardSemModelV4Epochs: {},
+    standardSemModelV4Persistence: {},
+    standardSemModelV4DatasetDescriptors: {},
+    datasetDescriptorOnly: false,
     savedReports: [],
     explorerSelection: { kind: "model", modelId: sampleProjectModelId },
     runs: [],
@@ -1601,6 +2546,13 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     projectModels: project.projectModels ?? [],
     activeModelId: project.activeModelId ?? null,
     modelPresentations: project.modelPresentations ?? {},
+    standardSemModelV4Authorities: {},
+    standardSemModelV4ScientificEditLocks: {},
+    standardSemModelV4Layouts: {},
+    standardSemModelV4Epochs: {},
+    standardSemModelV4Persistence: {},
+    standardSemModelV4DatasetDescriptors: {},
+    datasetDescriptorOnly: false,
     savedReports: project.savedReports ?? [],
     explorerSelection: project.explorerSelection
       ?? (project.activeModelId ? { kind: "model", modelId: project.activeModelId } : { kind: "data" }),

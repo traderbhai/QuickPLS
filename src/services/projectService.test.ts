@@ -1,36 +1,246 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activateNativeDataset,
+  appendInternalProjectSchema6CanonicalResultV2,
   autosaveNativeProject,
+  cancelInternalProjectUpgradeV6,
+  cancelInternalLabsRecipeV4CbsemJob,
+  cancelInternalLabsRecipeV4PlsJob,
   cancelNativeAnalysisJob,
   cancelNativeDiagnosticBundlePreview,
   cancelNativePlsJob,
   createNativeProject,
   dismissNativeAnalysisJob,
   dismissNativePlsJob,
+  dismissInternalLabsRecipeV4CbsemJob,
+  dismissInternalLabsRecipeV4PlsJob,
   exportNativeTextFile,
   exportNativeXlsxTables,
+  executeInternalProjectUpgradeV6,
   getNativeAnalysisJob,
   getNativeAnalysisJobResult,
   getNativeDatasetRows,
+  getInternalLabsRecipeV4CbsemJob,
+  getInternalLabsRecipeV4CbsemJobResult,
+  getInternalSemModelV4ScientificSha256,
+  getInternalLabsRecipeV4PlsJob,
+  getInternalLabsRecipeV4PlsJobResult,
   getNativePlsJob,
   getNativePlsJobResult,
   mutateNativeProjectExplorer,
+  inspectInternalProjectUpgradeV6,
   openNativeDemoProject,
   profileNativeDatasetGroups,
+  previewNativeDatasetTransformation,
+  applyNativeDatasetTransformation,
   previewNativeDiagnosticBundle,
+  planInternalProjectUpgradeV6,
+  persistInternalLabsRecipeV4CbsemJobResultToSchema6,
+  persistInternalLabsRecipeV4PlsJobResultToSchema6,
   recodeNativeDatasetColumn,
+  readInternalProjectSchema6CanonicalResultsV2,
+  runInternalLabsRecipeV4CbsemExecution,
+  runInternalLabsRecipeV4PlsExecution,
   saveNativeProject,
   saveNativeDiagnosticBundle,
   startNativeAnalysisJob,
   startNativePlsJob,
+  startInternalLabsRecipeV4CbsemJob,
+  startInternalLabsRecipeV4PlsJob,
 } from "./projectService";
 import type { NativeCanonicalModelSpec, NativeModelPresentation, RecodeColumnSpec } from "../types";
+import type { DatasetTransformationSpecV2 } from "../domain/datasetTransformationsV2";
+import type {
+  AnalysisRecipeV4,
+  InternalLabsRecipeV4PlsExecutionRequestV1,
+} from "../domain/internalRecipeV4PlsExecution";
+import type { SemModelV4 } from "../domain/semModelV4";
+import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
+import type { InternalLabsRecipeV4CbsemExecutionRequestV1 } from "../domain/internalRecipeV4CbsemExecution";
 
 const mocks = vi.hoisted(() => ({ invoke: vi.fn(), save: vi.fn() }));
 
+async function sha256Text(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 vi.mock("@tauri-apps/api/core", () => ({ invoke: mocks.invoke }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn(), save: mocks.save }));
+
+function legacyRecipeV4PlsResultFixture() {
+  return {
+    schema_version: 1,
+    provenance: {
+      adapter_version: "compiled_recipe_v4_pls_plan_v2_execution_v3",
+      compilation_receipt: { analytical_identity_sha256: "b".repeat(64) },
+      projected_recipe_schema_version: 3,
+      projected_recipe_sha256: "c".repeat(64),
+      dataset_id: "dataset-1",
+      estimator_method_version: "pls_pm_v1",
+    },
+    estimation: { method_version: "pls_pm_v1", iterations: 4, converged: true },
+  };
+}
+
+function legacyRecipeV4PlsCanonicalFixture(): CanonicalResultDocumentV2 {
+  return {
+    schema_version: 2,
+    document_id: "result.contract:pls-v1",
+    title: "PLS result",
+    provenance: {
+      run_id: "run-pls-v1",
+      project_id: "project-1",
+      model_id: "model-1",
+      model_digest: "a".repeat(64),
+      dataset_id: "dataset-1",
+      dataset_fingerprint: "b".repeat(64),
+      recipe_id: "recipe-1",
+      recipe_digest: "c".repeat(64),
+      capability_cell: {
+        registry_schema_version: 2,
+        capability_id: "smartpls.pls_algorithm",
+        cell_id: "qpls3.pls.algorithm",
+        capability_version: "pls_pm_v1",
+      },
+      method_version: "pls_pm_v1",
+      engine_version: "compiled_recipe_v4_pls_plan_v2_execution_v3",
+      seed: 42,
+      workers: 1,
+      started_at: "2026-08-14T00:00:00Z",
+      completed_at: "2026-08-14T00:00:01Z",
+    },
+    sections: [],
+    tables: [],
+    charts: [],
+    notices: [],
+    exclusions: [],
+    footnotes: [],
+    presentation: {
+      default_section_id: null,
+      default_table_id: null,
+      precision: 4,
+      missing_value_label: "N/A",
+      chart_defaults: {},
+    },
+  };
+}
+
+function legacyRecipeV4PlsCompletedFixture() {
+  return {
+    schemaVersion: 1,
+    analyticalResult: legacyRecipeV4PlsResultFixture(),
+    canonicalDocument: legacyRecipeV4PlsCanonicalFixture(),
+  };
+}
+
+function recipeV4CbsemExecutionFixture() {
+  const datasetFingerprint = "b".repeat(64);
+  return {
+    schema_version: 1,
+    provenance: {
+      adapter_version: "compiled_recipe_v4_cbsem_plan_v2_execution_v4",
+      compilation_receipt: {
+        schema_version: 1,
+        recipe_id: "00000000-0000-4000-8000-000000000001",
+        recipe_document_sha256: "1".repeat(64),
+        recipe_analytical_sha256: "2".repeat(64),
+        model_id: "model-v4",
+        model_document_sha256: "3".repeat(64),
+        model_scientific_sha256: "4".repeat(64),
+        dataset_fingerprint: datasetFingerprint,
+        compiler_target: "cbsem_plan_v2",
+        compiler_version: "sem_model_v4_cbsem_compiler_v2",
+        capability_cell: {
+          registry_schema_version: 2,
+          capability_id: "smartpls.cbsem",
+          cell_id: "qpls3.cbsem.ml",
+          capability_version: "cbsem_ml_v1",
+        },
+        plan_sha256: "5".repeat(64),
+        analytical_identity_sha256: "6".repeat(64),
+      },
+      dataset_id: "raw-data",
+      estimator_method_version: "cbsem_ml_exact_parameter_table_v3",
+      moment_input_method_version: "cbsem_ml_compiled_moment_input_mean_replacement_v1",
+    },
+    estimation: {
+      schema_version: 4,
+      method_version: "cbsem_ml_compiled_moment_input_mean_replacement_v1",
+      compiler_analytical_identity_sha256: "6".repeat(64),
+      plan_sha256: "5".repeat(64),
+      model_scientific_sha256: "4".repeat(64),
+      input: {
+        kind: "raw",
+        dataset_id: "raw-data",
+        dataset_fingerprint: datasetFingerprint,
+        declared_sample_size: null,
+        used_sample_size: 20,
+        omitted_observations: 0,
+        covariance_denominator: "maximum_likelihood_n",
+        variable_ids: ["observed:x1"],
+        source_columns: ["x1"],
+        standard_deviations: null,
+        canonical_ml_covariance_sha256: "7".repeat(64),
+        missing_data_treatment: {
+          method_version: "mean_replacement_v1",
+          policy: "mean_replacement",
+          source_dataset_id: "raw-data",
+          source_dataset_fingerprint: datasetFingerprint,
+          source_row_count: 20,
+          retained_row_count: 20,
+          omitted_row_count: 0,
+          modeled_variable_count: 1,
+          imputed_cell_count: 1,
+          affected_case_count: 1,
+          variable_warning_threshold: 0.05,
+          high_missingness_threshold: 0.15,
+          variables: [{
+            variable_order: 0,
+            variable_id: "observed:x1",
+            source_column: "x1",
+            canonical_missing_markers: ["NA"],
+            observed_count: 19,
+            missing_count: 1,
+            replacement_mean: 10,
+            missing_fraction: 0.05,
+            warning_level: "at_least_five_percent",
+          }],
+          cases: [{
+            row_index_zero_based: 0,
+            imputed_variable_ids: ["observed:x1"],
+            missing_fraction: 1,
+            high_missingness_warning: true,
+          }],
+          missingness_sha256: "8".repeat(64),
+          completed_matrix_sha256: "9".repeat(64),
+          receipt_sha256: "a".repeat(64),
+        },
+      },
+      covariance_ml: [[1]],
+      parameter_ids: {},
+      analysis: { method_version: "cbsem_ml_exact_parameter_table_v3" },
+    },
+  };
+}
+
+function recipeV4CbsemCompletedFixture() {
+  const analyticalResult = recipeV4CbsemExecutionFixture();
+  const canonicalDocument = JSON.parse(
+    JSON.stringify(legacyRecipeV4PlsCanonicalFixture()),
+  ) as CanonicalResultDocumentV2;
+  canonicalDocument.provenance.capability_cell = {
+    registry_schema_version: 2,
+    capability_id: "smartpls.cbsem",
+    cell_id: "qpls3.cbsem.ml",
+    capability_version: "cbsem_ml_v1",
+  };
+  canonicalDocument.provenance.dataset_id = analyticalResult.estimation.input.dataset_id;
+  canonicalDocument.provenance.dataset_fingerprint = analyticalResult.estimation.input.dataset_fingerprint;
+  canonicalDocument.provenance.method_version = analyticalResult.provenance.estimator_method_version;
+  canonicalDocument.provenance.engine_version = analyticalResult.provenance.adapter_version;
+  return { schemaVersion: 1, analyticalResult, canonicalDocument };
+}
 
 describe("native dataset row paging service", () => {
   beforeEach(() => {
@@ -122,6 +332,468 @@ describe("native generic analysis job service", () => {
   });
 });
 
+describe("internal Labs recipe-v4 PLS execution service", () => {
+  beforeEach(() => {
+    mocks.invoke.mockReset();
+    mocks.save.mockReset();
+  });
+
+  it("passes the exact typed resident-data request and returns the ephemeral receipt", async () => {
+    const model = {
+      schema_version: 4,
+      id: "model-v4",
+      name: "Internal fixture",
+    } as SemModelV4;
+    const recipe = {
+      schema_version: 4,
+      id: "00000000-0000-0000-0000-000000000004",
+      created_at: "2026-08-14T00:00:00Z",
+      dataset_fingerprint: "dataset-sha256",
+      model_binding: {
+        kind: "embedded_sem_model_v4",
+        model,
+        scientific_sha256: "a".repeat(64),
+      },
+      estimand_confirmation: "confirmed_composite",
+      settings: {},
+      method_config: { kind: "pls_algorithm" },
+      metadata: {},
+    } as AnalysisRecipeV4;
+    const request: InternalLabsRecipeV4PlsExecutionRequestV1 = {
+      surface: "internal_labs",
+      experimentalLabsEnabled: true,
+      residentData: "project_resident",
+      datasetId: "dataset-1",
+      datasetFingerprint: "dataset-sha256",
+      recipe,
+      model,
+      compilerTarget: "pls_plan_v2",
+      capabilityCell: {
+        registry_schema_version: 2,
+        capability_id: "smartpls.pls_algorithm",
+        cell_id: "qpls3.pls.algorithm",
+        capability_version: "pls_pm_v1",
+      },
+    };
+    const response = legacyRecipeV4PlsResultFixture();
+    mocks.invoke.mockResolvedValue(response);
+
+    await expect(runInternalLabsRecipeV4PlsExecution(request)).resolves.toEqual(response);
+    expect(mocks.invoke).toHaveBeenCalledWith(
+      "run_internal_labs_recipe_v4_pls_execution",
+      { request },
+    );
+  });
+
+  it("exposes start, status, cancel, result, and terminal dismissal as separate job calls", async () => {
+    const model = {
+      schema_version: 4,
+      id: "model-v4",
+      name: "Internal fixture",
+    } as SemModelV4;
+    const request = {
+      surface: "internal_labs",
+      experimentalLabsEnabled: true,
+      residentData: "project_resident",
+      datasetId: "dataset-1",
+      datasetFingerprint: "dataset-sha256",
+      recipe: {
+        schema_version: 4,
+        id: "00000000-0000-0000-0000-000000000004",
+        created_at: "2026-08-14T00:00:00Z",
+        dataset_fingerprint: "dataset-sha256",
+        model_binding: {
+          kind: "embedded_sem_model_v4",
+          model,
+          scientific_sha256: "a".repeat(64),
+        },
+        estimand_confirmation: "confirmed_composite",
+        settings: {},
+        method_config: { kind: "pls_algorithm" },
+        metadata: {},
+      } as AnalysisRecipeV4,
+      model,
+      compilerTarget: "pls_plan_v2",
+      capabilityCell: {
+        registry_schema_version: 2,
+        capability_id: "smartpls.pls_algorithm",
+        cell_id: "qpls3.pls.algorithm",
+        capability_version: "pls_pm_v1",
+      },
+    } satisfies InternalLabsRecipeV4PlsExecutionRequestV1;
+    mocks.invoke
+      .mockResolvedValueOnce({ schemaVersion: 1, jobId: "job-v4" })
+      .mockResolvedValueOnce({ schemaVersion: 1, jobId: "job-v4" })
+      .mockResolvedValueOnce({ schemaVersion: 1, jobId: "job-v4" })
+      .mockResolvedValueOnce(legacyRecipeV4PlsCompletedFixture())
+      .mockResolvedValueOnce(undefined);
+
+    await startInternalLabsRecipeV4PlsJob(request);
+    await getInternalLabsRecipeV4PlsJob("job-v4");
+    await cancelInternalLabsRecipeV4PlsJob("job-v4");
+    await getInternalLabsRecipeV4PlsJobResult("job-v4");
+    await dismissInternalLabsRecipeV4PlsJob("job-v4");
+
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      1,
+      "start_internal_labs_recipe_v4_pls_job",
+      { request },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      2,
+      "internal_labs_recipe_v4_pls_job_status",
+      { jobId: "job-v4" },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      3,
+      "cancel_internal_labs_recipe_v4_pls_job",
+      { jobId: "job-v4" },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      4,
+      "internal_labs_recipe_v4_pls_job_result",
+      { jobId: "job-v4" },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      5,
+      "dismiss_internal_labs_recipe_v4_pls_job",
+      { jobId: "job-v4" },
+    );
+  });
+});
+
+describe("internal Labs recipe-v4 CB-SEM execution service", () => {
+  beforeEach(() => {
+    mocks.invoke.mockReset();
+    mocks.save.mockReset();
+  });
+
+  const request = (): InternalLabsRecipeV4CbsemExecutionRequestV1 => {
+    const model = {
+      schema_version: 4,
+      id: "cbsem-model-v4",
+      name: "CB-SEM internal fixture",
+    } as SemModelV4;
+    return {
+      surface: "internal_labs",
+      experimentalLabsEnabled: true,
+      residentData: "project_resident",
+      datasetId: "matrix-dataset-1",
+      datasetFingerprint: "dataset-sha256",
+      recipe: {
+        schema_version: 4,
+        id: "00000000-0000-0000-0000-00000000cb51",
+        created_at: "2026-08-15T00:00:00Z",
+        dataset_fingerprint: "dataset-sha256",
+        model_binding: {
+          kind: "embedded_sem_model_v4",
+          model,
+          scientific_sha256: "a".repeat(64),
+        },
+        estimand_confirmation: "confirmed_common_factor",
+        settings: {},
+        method_config: { kind: "cbsem" },
+        metadata: {},
+      } as AnalysisRecipeV4,
+      model,
+      compilerTarget: "cbsem_plan_v2",
+      capabilityCell: {
+        registry_schema_version: 2,
+        capability_id: "smartpls.cbsem",
+        cell_id: "qpls3.cbsem.ml",
+        capability_version: "cbsem_ml_v1",
+      },
+    };
+  };
+
+  it("uses the native SemModelV4 digest authority and rejects malformed native output", async () => {
+    const model = request().model;
+    const nativeDigest = "ab".repeat(32);
+    mocks.invoke.mockResolvedValueOnce(nativeDigest);
+
+    await expect(getInternalSemModelV4ScientificSha256(model)).resolves.toBe(nativeDigest);
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      1,
+      "internal_sem_model_v4_scientific_sha256",
+      { model },
+    );
+
+    mocks.invoke.mockResolvedValueOnce("A".repeat(64));
+    await expect(getInternalSemModelV4ScientificSha256(model)).rejects.toThrow(/exact lowercase SHA-256/);
+  });
+
+  it("passes the exact capability-bound request and exposes the cancellable lifecycle", async () => {
+    const executionRequest = request();
+    const execution = recipeV4CbsemExecutionFixture();
+    const completed = recipeV4CbsemCompletedFixture();
+    const snapshot = { schemaVersion: 1, jobId: "job-cbsem-v4" };
+    mocks.invoke
+      .mockResolvedValueOnce(execution)
+      .mockResolvedValueOnce(snapshot)
+      .mockResolvedValueOnce(snapshot)
+      .mockResolvedValueOnce(snapshot)
+      .mockResolvedValueOnce(completed)
+      .mockResolvedValueOnce(undefined);
+
+    await expect(runInternalLabsRecipeV4CbsemExecution(executionRequest)).resolves.toEqual(execution);
+    await startInternalLabsRecipeV4CbsemJob(executionRequest);
+    await getInternalLabsRecipeV4CbsemJob("job-cbsem-v4");
+    await cancelInternalLabsRecipeV4CbsemJob("job-cbsem-v4");
+    await getInternalLabsRecipeV4CbsemJobResult("job-cbsem-v4");
+    await dismissInternalLabsRecipeV4CbsemJob("job-cbsem-v4");
+
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      1,
+      "run_internal_labs_recipe_v4_cbsem_execution",
+      { request: executionRequest },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      2,
+      "start_internal_labs_recipe_v4_cbsem_job",
+      { request: executionRequest },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      3,
+      "internal_labs_recipe_v4_cbsem_job_status",
+      { jobId: "job-cbsem-v4" },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      4,
+      "cancel_internal_labs_recipe_v4_cbsem_job",
+      { jobId: "job-cbsem-v4" },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      5,
+      "internal_labs_recipe_v4_cbsem_job_result",
+      { jobId: "job-cbsem-v4" },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      6,
+      "dismiss_internal_labs_recipe_v4_cbsem_job",
+      { jobId: "job-cbsem-v4" },
+    );
+  });
+
+  it("rejects untrusted direct and completed CB-SEM payloads before they reach consumers", async () => {
+    const executionRequest = request();
+    const direct = recipeV4CbsemExecutionFixture() as ReturnType<typeof recipeV4CbsemExecutionFixture> & { unexpected?: boolean };
+    direct.unexpected = true;
+    mocks.invoke.mockResolvedValueOnce(direct);
+    await expect(runInternalLabsRecipeV4CbsemExecution(executionRequest))
+      .rejects.toThrow(/unknown unexpected/);
+
+    const completed = recipeV4CbsemCompletedFixture() as ReturnType<typeof recipeV4CbsemCompletedFixture> & { unexpected?: boolean };
+    completed.unexpected = true;
+    mocks.invoke.mockResolvedValueOnce(completed);
+    await expect(getInternalLabsRecipeV4CbsemJobResult("job-cbsem-v4"))
+      .rejects.toThrow(/unknown unexpected/);
+  });
+
+  it("passes the native-built canonical document unchanged to the schema-6 writer", async () => {
+    const completed = recipeV4CbsemCompletedFixture();
+    const canonicalDocument = completed.canonicalDocument;
+    const appendOutcome = { status: "ok", value: { schema_version: 6 } };
+    mocks.invoke.mockResolvedValueOnce(completed).mockResolvedValueOnce(appendOutcome);
+
+    await expect(
+      persistInternalLabsRecipeV4CbsemJobResultToSchema6(
+        "job-cbsem-v4",
+        "D:\\study-v6.json",
+        "d".repeat(64),
+      ),
+    ).resolves.toEqual({ completed, appendOutcome });
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      1,
+      "internal_labs_recipe_v4_cbsem_job_result",
+      { jobId: "job-cbsem-v4" },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      2,
+      "append_internal_project_schema6_canonical_result_v2",
+      {
+        request: {
+          surface: "internal_labs",
+          experimentalLabsEnabled: true,
+          archivePath: "D:\\study-v6.json",
+          expectedSourceSha256: "d".repeat(64),
+          canonicalDocument,
+        },
+      },
+    );
+  });
+});
+
+describe("internal schema-6 canonical result append service", () => {
+  beforeEach(() => {
+    mocks.invoke.mockReset();
+  });
+
+  it("passes the exact digest-bound internal request without rewriting fields", async () => {
+    const request = {
+      surface: "internal_labs" as const,
+      experimentalLabsEnabled: true as const,
+      archivePath: "D:\\study-v6.json",
+      expectedSourceSha256: "a".repeat(64),
+      canonicalDocument: { schema_version: 2 } as CanonicalResultDocumentV2,
+    };
+    const response = { status: "ok", value: { schema_version: 6 } };
+    mocks.invoke.mockResolvedValue(response);
+
+    await expect(appendInternalProjectSchema6CanonicalResultV2(request)).resolves.toEqual(response);
+    expect(mocks.invoke).toHaveBeenCalledWith(
+      "append_internal_project_schema6_canonical_result_v2",
+      { request },
+    );
+  });
+
+  it("persists the native-built job document without rebuilding scientific tables in TypeScript", async () => {
+    const completed = legacyRecipeV4PlsCompletedFixture();
+    const canonicalDocument = completed.canonicalDocument;
+    const appendOutcome = { status: "ok", value: { schema_version: 6 } };
+    mocks.invoke
+      .mockResolvedValueOnce(completed)
+      .mockResolvedValueOnce(appendOutcome);
+
+    await expect(
+      persistInternalLabsRecipeV4PlsJobResultToSchema6(
+        "job-v4",
+        "D:\\study-v6.json",
+        "a".repeat(64),
+      ),
+    ).resolves.toEqual({ completed, appendOutcome });
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      1,
+      "internal_labs_recipe_v4_pls_job_result",
+      { jobId: "job-v4" },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      2,
+      "append_internal_project_schema6_canonical_result_v2",
+      {
+        request: {
+          surface: "internal_labs",
+          experimentalLabsEnabled: true,
+          archivePath: "D:\\study-v6.json",
+          expectedSourceSha256: "a".repeat(64),
+          canonicalDocument,
+        },
+      },
+    );
+  });
+});
+
+describe("internal schema-6 canonical result read service", () => {
+  beforeEach(() => {
+    mocks.invoke.mockReset();
+  });
+
+  it("passes the exact read-only digest-bound request", async () => {
+    const request = {
+      surface: "internal_labs" as const,
+      experimentalLabsEnabled: true as const,
+      archivePath: "D:\\study-v6.json",
+      expectedSourceSha256: "b".repeat(64),
+    };
+    const response = {
+      status: "ok",
+      value: {
+        schemaVersion: 1,
+        projectId: "project-1",
+        archivePath: request.archivePath,
+        sourceDocumentSha256: request.expectedSourceSha256,
+        canonicalResultDocumentCount: 0,
+        documents: [],
+        sourceRecheckedUnchanged: true,
+      },
+    };
+    mocks.invoke.mockResolvedValue(response);
+
+    await expect(readInternalProjectSchema6CanonicalResultsV2(request)).resolves.toEqual(response);
+    expect(mocks.invoke).toHaveBeenCalledWith(
+      "read_internal_project_schema6_canonical_results_v2",
+      { request },
+    );
+  });
+});
+
+describe("internal schema-6 project upgrade service", () => {
+  beforeEach(() => {
+    mocks.invoke.mockReset();
+    mocks.save.mockReset();
+  });
+
+  it("keeps inspect and plan calls in the internal Labs surface", async () => {
+    mocks.invoke.mockResolvedValue({ status: "ok", value: { state: "ready" } });
+
+    await inspectInternalProjectUpgradeV6("D:\\study.qpls");
+    await planInternalProjectUpgradeV6({
+      sourceArchivePath: "D:\\study.qpls",
+      destinationArchivePath: "D:\\study-v6.qpls",
+      expectedSourceArchiveSha256: "a".repeat(64),
+    });
+
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      1,
+      "inspect_internal_project_upgrade_v6",
+      {
+        request: {
+          surface: "internal_labs",
+          experimentalLabsEnabled: true,
+          sourceArchivePath: "D:\\study.qpls",
+        },
+      },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      2,
+      "plan_internal_project_upgrade_v6",
+      {
+        request: {
+          surface: "internal_labs",
+          experimentalLabsEnabled: true,
+          sourceArchivePath: "D:\\study.qpls",
+          destinationArchivePath: "D:\\study-v6.qpls",
+          expectedSourceArchiveSha256: "a".repeat(64),
+          legacyDisplayCovariances: {},
+          estimandConfirmations: {},
+        },
+      },
+    );
+  });
+
+  it("binds execute and cancel to the exact ephemeral plan identity", async () => {
+    mocks.invoke.mockResolvedValue({ status: "ok", value: {} });
+
+    await executeInternalProjectUpgradeV6("plan-1", "b".repeat(64));
+    await cancelInternalProjectUpgradeV6("plan-2", "c".repeat(64));
+
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      1,
+      "execute_internal_project_upgrade_v6",
+      {
+        request: {
+          surface: "internal_labs",
+          experimentalLabsEnabled: true,
+          planId: "plan-1",
+          expectedPlanSha256: "b".repeat(64),
+          confirmNewDestination: true,
+        },
+      },
+    );
+    expect(mocks.invoke).toHaveBeenNthCalledWith(
+      2,
+      "cancel_internal_project_upgrade_v6",
+      {
+        request: {
+          surface: "internal_labs",
+          experimentalLabsEnabled: true,
+          planId: "plan-2",
+          expectedPlanSha256: "c".repeat(64),
+        },
+      },
+    );
+  });
+});
+
 describe("native canonical project services", () => {
   beforeEach(() => {
     mocks.invoke.mockReset();
@@ -135,7 +807,6 @@ describe("native canonical project services", () => {
       readOnly: false,
       recovered: false,
       datasets: [],
-      datasetVersions: [],
       workspace: null,
     });
 
@@ -151,6 +822,23 @@ describe("native canonical project services", () => {
       activeModelId: null,
       modelPresentations: {},
       savedReports: [],
+      datasetVersions: [],
+    });
+  });
+
+  it("rejects malformed lineage returned across the untrusted project snapshot boundary", async () => {
+    mocks.invoke.mockResolvedValue({
+      name: "Malformed",
+      path: null,
+      readOnly: false,
+      recovered: false,
+      datasets: [],
+      datasetVersions: null,
+      workspace: null,
+    });
+
+    await expect(createNativeProject("Malformed")).rejects.toMatchObject({
+      code: "data_lineage.records_invalid",
     });
   });
 
@@ -260,6 +948,8 @@ describe("native dataset version services", () => {
   });
 
   it("sends the exact camelCase recode payload and retains the authoritative version record", async () => {
+    const sourceId = "00000000-0000-4000-8000-000000000001";
+    const outputId = "00000000-0000-4000-8000-000000000002";
     const spec: RecodeColumnSpec = {
       sourceColumn: "segment",
       targetColumn: "segment_binary",
@@ -270,10 +960,10 @@ describe("native dataset version services", () => {
       unmapped: "error",
     };
     const response = {
-      dataset: { id: "version-2", name: "Recode", columns: ["segment", "segment_binary"], missing: 1 },
+      dataset: { id: outputId, name: "Recode", columns: ["segment", "segment_binary"], missing: 1 },
       version: {
-        datasetId: "version-2",
-        parentDatasetId: "version-1",
+        datasetId: outputId,
+        parentDatasetId: sourceId,
         operation: "recode",
         createdAt: "2026-08-10T12:00:00Z",
         summary: "Recoded segment into segment_binary",
@@ -283,11 +973,83 @@ describe("native dataset version services", () => {
     };
     mocks.invoke.mockResolvedValue(response);
 
-    await expect(recodeNativeDatasetColumn("version-1", spec)).resolves.toEqual({
+    await expect(recodeNativeDatasetColumn(sourceId, spec)).resolves.toEqual({
       ...response,
       dataset: { ...response.dataset, rows: [] },
     });
-    expect(mocks.invoke).toHaveBeenCalledWith("recode_dataset_column", { datasetId: "version-1", spec });
+    expect(mocks.invoke).toHaveBeenCalledWith("recode_dataset_column", { datasetId: sourceId, spec });
+  });
+
+  it("previews and commits a typed immutable dataset transformation", async () => {
+    const sourceId = "00000000-0000-4000-8000-000000000001";
+    const outputId = "00000000-0000-4000-8000-000000000002";
+    const sourceFingerprint = `v2:${"a".repeat(64)}`;
+    const outputFingerprint = `v2:${"b".repeat(64)}`;
+    const spec: DatasetTransformationSpecV2 = {
+      kind: "reverse_scale",
+      source_column: "score",
+      target_column: "score_reversed",
+      scale_min: 1,
+      scale_max: 5,
+    };
+    const preview = {
+      schema_version: 2,
+      source_dataset_id: sourceId,
+      target_column: "score_reversed",
+      input_columns: ["score"],
+      inspected_rows: 2,
+      total_rows: 2,
+      output_missing_count: 0,
+      rows: [],
+      issues: [],
+    };
+    mocks.invoke.mockResolvedValueOnce(preview);
+    await expect(previewNativeDatasetTransformation(sourceId, spec)).resolves.toEqual(preview);
+    expect(mocks.invoke).toHaveBeenLastCalledWith("preview_dataset_transformation", {
+      datasetId: sourceId,
+      spec,
+    });
+
+    const specSha256 = "c".repeat(64);
+    const operationDigest = await sha256Text(`${sourceFingerprint}\u0000${specSha256}\u0000${outputId}`);
+    const response = {
+      dataset: { id: outputId, name: "Study - derived", columns: ["score", "score_reversed"], missing: 0 },
+      version: {
+        datasetId: outputId,
+        parentDatasetId: sourceId,
+        operation: "transform",
+        createdAt: "2026-08-14T12:00:00Z",
+        summary: "Derived score_reversed from score",
+        sourceColumn: "score",
+        targetColumn: "score_reversed",
+        transformation: {
+          schema_version: 2,
+          engine: "qpls.dataset_transform.v2",
+          operation_id: `dataset_transform:${operationDigest.slice(0, 24)}`,
+          source_dataset_id: sourceId,
+          source_dataset_fingerprint: sourceFingerprint,
+          output_dataset_id: outputId,
+          output_dataset_fingerprint: outputFingerprint,
+          created_at: "2026-08-14T12:00:00Z",
+          spec_sha256: specSha256,
+          spec,
+          input_columns: ["score"],
+          output_columns: ["score_reversed"],
+          source_row_count: 2,
+          output_missing_count: 0,
+        },
+      },
+    };
+    mocks.invoke.mockResolvedValueOnce(response);
+    await expect(applyNativeDatasetTransformation(sourceId, spec, "Study - derived")).resolves.toEqual({
+      ...response,
+      dataset: { ...response.dataset, rows: [] },
+    });
+    expect(mocks.invoke).toHaveBeenLastCalledWith("apply_dataset_transformation", {
+      datasetId: sourceId,
+      spec,
+      outputDatasetName: "Study - derived",
+    });
   });
 });
 

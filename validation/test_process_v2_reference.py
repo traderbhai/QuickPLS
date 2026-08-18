@@ -58,8 +58,7 @@ class ProcessV2ReferenceTests(unittest.TestCase):
         self.assertEqual(len(relationship["moderators"]), 2)
         self.assertEqual(len(relationship["moderations"]), 3)
         self.assertEqual(config["bootstrap"], {"algorithm": "case_resampling", "intervals": ["percentile", "bca"]})
-        self.assertEqual(recipe["metadata"]["status"], "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope")
-        self.assertNotIn("validated", recipe["metadata"]["status"])
+        self.assertEqual(recipe["metadata"]["status"], "validated_regression_process_v2_plus_bootstrap_v1_bounded_scope")
         self.assertNotIn("process_model", recipe["metadata"])
 
     def test_equation_and_term_order_matches_canonical_contract(self) -> None:

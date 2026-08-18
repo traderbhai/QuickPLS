@@ -3,12 +3,31 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
+import { useWorkspace } from "../store";
 import type { AnalysisRun } from "../types";
-import { Launcher, NATIVE_BUNDLED_SAMPLE_PROJECTS, openNativeSampleProject } from "./NativeDesktopApp";
+import {
+  aboutVisibleAnalysisLabelsV2,
+  completedRunNavigationTarget,
+  Launcher,
+  NATIVE_BUNDLED_SAMPLE_PROJECTS,
+  openNativeSampleProject,
+} from "./NativeDesktopApp";
+import {
+  NATIVE_ANALYSIS_CATALOG,
+  NATIVE_ESTABLISHED_WORKING_ANALYSIS_KINDS_V1,
+} from "./nativeAnalysisCatalog";
 import { buildNativeResultNavigation, completedResultRuns, nativeResultTables } from "./nativeResults";
 import { completedStructuralPathRandomizationRun } from "./nativeStructuralPathRandomization.testFixture";
 
 describe("native desktop result contracts", () => {
+  it("navigates once for each unique completed run even without an observed intermediate status", () => {
+    expect(completedRunNavigationTarget("completed", "run-a", null)).toBe("run-a");
+    expect(completedRunNavigationTarget("completed", "run-a", "run-a")).toBeNull();
+    expect(completedRunNavigationTarget("completed", "run-b", "run-a")).toBe("run-b");
+    expect(completedRunNavigationTarget("running", "run-b", "run-a")).toBeNull();
+    expect(completedRunNavigationTarget("completed", null, "run-a")).toBeNull();
+  });
+
   it("shows only completed runs with a real result payload", () => {
     const complete = completedSamplePlsRun();
     const failed: AnalysisRun = { ...complete, id: "failed", status: "failed" };
@@ -44,7 +63,7 @@ describe("native desktop result contracts", () => {
 
     expect(table).toMatchObject({
       title: "Structural path randomization",
-      status: "experimental",
+      status: "validated",
       columns: ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
     });
     expect(table?.rows).toHaveLength(5);
@@ -119,6 +138,49 @@ describe("native desktop multi-model shell contracts", () => {
     expect(source).toContain('navigate("data")');
   });
 
+  it("passes the persisted Labs preference and application-session warning ledger into Calculate", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+
+    expect(source).toContain("experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled}");
+    expect(source).toContain("experimentalWarningShownSessionKeys={experimentalWarningShownSessionKeys}");
+    expect(source).toContain("onExperimentalWarningShown={recordExperimentalWarningShown}");
+    expect(source).toContain("setExperimentalWarningShownSessionKeys((current) => {");
+  });
+
+  it("verifies the installed Rust registry before enabling native calculations", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+
+    expect(source).toContain("getNativeCapabilityRegistryV2()");
+    expect(source).toContain('setNativeRegistryVerification("verified")');
+    expect(source).toContain('setNativeRegistryVerification("failed")');
+    expect(source).toContain("registryUnavailableReason={nativeRegistryVerification");
+  });
+
+  it("keeps About synchronized with the established Calculate surface and scoped post-hoc add-on", () => {
+    const settings = useWorkspace.getState().analysisSettings;
+
+    const standardKinds = ["pls_algorithm", "plsc", "wpls", "gsca", "cca", "cta_pls", "ipma", "cbsem", "pls_bootstrap", "plsc_bootstrap", "pls_permutation", "pls_posthoc_technical_minimum_sample_size", "pls_sample_size_power", "mga", "predict", "nca", "pca", "regression"];
+    expect(aboutVisibleAnalysisLabelsV2(settings, false)).toEqual(standardKinds.map((kind) => (
+      NATIVE_ANALYSIS_CATALOG.find((item) => item.kind === kind)!.label
+    )));
+    const labs = aboutVisibleAnalysisLabelsV2(settings, true);
+    const expectedKinds = NATIVE_ANALYSIS_CATALOG
+      .map((item) => item.kind)
+      .filter((kind) => standardKinds.includes(kind)
+        || NATIVE_ESTABLISHED_WORKING_ANALYSIS_KINDS_V1.includes(kind as typeof NATIVE_ESTABLISHED_WORKING_ANALYSIS_KINDS_V1[number]));
+    const expected = expectedKinds.map((kind) => (
+      NATIVE_ANALYSIS_CATALOG.find((item) => item.kind === kind)!.label
+    ));
+    expect(labs).toEqual(expected);
+    expect(labs).toHaveLength(18);
+  });
+
+  it("binds Method Details to the selected immutable run only on Results", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+
+    expect(source).toContain('run={dialog === "trust" && surface === "results" ? selectedRun : null}');
+  });
+
   it("exposes a query-gated resident PROCESS v2 setup fixture without runs or models", () => {
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
     const start = source.lastIndexOf("loadProcessV2Fixture: () => {");
@@ -157,7 +219,7 @@ describe("native desktop multi-model shell contracts", () => {
   it("shows the active editable model name in the command context and document tab", () => {
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
     expect(source).toContain("modelName={activeEditableModelName}");
-    expect(source).toContain('<span title={modelName}>{modelName}</span>');
+    expect(source).toContain('<span className="nd-model-document-title" title={modelName}');
     expect(source).toContain('surface === "model" ? modelName : "Results"');
   });
 
@@ -165,5 +227,16 @@ describe("native desktop multi-model shell contracts", () => {
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
     expect(source).toContain('surface !== "launcher" || projectOpen');
     expect(source).toContain('surface === "launcher" && projectOpen ? "Project"');
+  });
+
+  it("routes strict group, higher-order, moderation, and navigator indicator actions through authority intents", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+    expect(source).toContain("commitStandardSemModelV4Intent");
+    for (const kind of ["set_group", "add_higher_order", "add_interaction", "assign_indicators", "add_construct"]) {
+      expect(source).toContain(`kind: \"${kind}\"`);
+    }
+    expect(source).toContain('title: `${label} blocked`');
+    expect(source).toContain('title: `${label} stale`');
+    expect(source).toContain('title: `${label} rejected`');
   });
 });

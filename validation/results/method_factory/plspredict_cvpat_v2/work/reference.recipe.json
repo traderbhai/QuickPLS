@@ -1,0 +1,75 @@
+{
+  "created_at": "2026-08-11T00:00:00Z",
+  "dataset_fingerprint": "v2:4cd9ac9d8dace6baca7d4e885e0e1fc78f7e0b763b9eee4d4a77fd76489528d9",
+  "id": "00000000-0000-0000-0000-000000000271",
+  "metadata": {
+    "fixture": "plspredict_indicator_reference_v2",
+    "status": "validated_plspredict_indicator_v2_bounded_scope",
+    "validation_recipe_migration": "schema_v2_fixture_to_explicit_schema_v3_copy"
+  },
+  "method_config": {
+    "kind": "predict"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x1"
+        ],
+        "mode": "reflective",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "m",
+        "indicators": [
+          "m1"
+        ],
+        "mode": "reflective",
+        "name": "M",
+        "short_name": "M"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y1"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "00000000-0000-0000-0000-000000000272",
+    "interactions": [],
+    "name": "Recursive indicator prediction reference",
+    "paths": [
+      {
+        "source": "x",
+        "target": "m"
+      },
+      {
+        "source": "m",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 3000,
+    "method": "predict",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260811,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-07,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

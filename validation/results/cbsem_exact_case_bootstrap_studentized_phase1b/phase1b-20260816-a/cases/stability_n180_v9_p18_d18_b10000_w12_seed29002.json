@@ -1,0 +1,127 @@
+{
+  "acceptance_reasons": [],
+  "aggregates": null,
+  "cancellation": null,
+  "case": {
+    "cancel_after": null,
+    "case_id": "stability_n180_v9_p18_d18_b10000_w12_seed29002",
+    "maximum_p95_elapsed_seconds": null,
+    "maximum_single_run_elapsed_seconds": 76.29804119467735,
+    "mode": "stability",
+    "order": 4,
+    "replicates": 10000,
+    "seed": 29002,
+    "workers": 12
+  },
+  "dimensions": {
+    "d_optimizer_dimensions": 18,
+    "n_complete_cases": 180,
+    "p_free_parameter_rows": 18,
+    "v_observed_variables": 9
+  },
+  "kind": "cbsem_exact_case_bootstrap_studentized_phase1b_case_v1",
+  "ledger": {
+    "attempted_refits": 10000,
+    "base_inference_status": "available",
+    "max_attempts_per_replicate": 1,
+    "minimum_usable_replicates": 9000,
+    "one_sided_95_percent_upper_bound": 0.0010510137186375541,
+    "one_sided_bound_method": "clopper_pearson_beta_quantile_one_sided_v1",
+    "one_sided_confidence_level": 0.95,
+    "point_failure_counts_by_kind": {
+      "inadmissible_solution": 0,
+      "moment_matrix_not_positive_definite": 0,
+      "non_convergence": 3,
+      "numerical_failure": 0
+    },
+    "point_failures": [
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer line search failed during bootstrap covariance point refit after 56 iterations (objective 1.1894086468870348, gradient norm 0.0000015037246970359993)",
+        "replicate_index": 2313,
+        "sample_indices_sha256": "98adf235c3444b1b93ef12b25e52cf20ecaffdcc0d34141d58c7cefbe4aae16d",
+        "sampling_positions_sha256": "19cdeb0ae7eb28ee65eb2712cccec7e4da706d3bbb974d099e794ee63be3aa8c"
+      },
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 53 iterations (objective 1.568825348752842, gradient norm 0.000011355600437688787)",
+        "replicate_index": 3677,
+        "sample_indices_sha256": "9ea02bfcd999b6f7792b0d01e8659517671ec638c1e1c9b3dd67ae76b9848b58",
+        "sampling_positions_sha256": "ccfb2e7cb5f4fd56baa8d1b495fbbc1c8c63e0abf21d68f9c3ddce6877ab79df"
+      },
+      {
+        "kind": "non_convergence",
+        "message": "exact CB-SEM optimizer stagnated above the convergence tolerance during bootstrap covariance point refit after 56 iterations (objective 1.295094772799498, gradient norm 0.00001830638547119592)",
+        "replicate_index": 8548,
+        "sample_indices_sha256": "029034df3715f20784f1c43c1e7d3111fba7e9085f62ddd1758ae249b7a4239e",
+        "sampling_positions_sha256": "60ce16f1f520c17858bfb394a60210cc63cc8d210e04512329f51bafec372db7"
+      }
+    ],
+    "point_failures_count": 3,
+    "point_partition_complete": true,
+    "point_successes": 9997,
+    "replicate_indices_digest_method": "sha256_canonical_json_ordered_u32_array_v1",
+    "requested_replicates": 10000,
+    "retry_policy": "no_retry_fixed_preplanned_primary_draws_v1",
+    "standard_error_available_replicate_indices_sha256": "1157b223f10a2be0072b4ffd8a6fa8c1ae28105cf871c8e86b24f8a60b65b92b",
+    "standard_error_partition_complete": true,
+    "standard_error_unavailable": [
+      {
+        "reason": "singular_information",
+        "replicate_index": 1616
+      },
+      {
+        "reason": "singular_information",
+        "replicate_index": 7844
+      }
+    ],
+    "standard_error_unavailable_count": 2,
+    "standard_error_unavailable_counts_by_reason": {
+      "derivative_unavailable": 0,
+      "information_not_positive_definite": 0,
+      "invalid_information_variance_or_standard_error": 0,
+      "numerical_information_failure": 0,
+      "singular_information": 2
+    },
+    "studentized_inference_status": "available",
+    "studentized_usable_refits": 9995,
+    "successful_replicate_indices_sha256": "ac1a430b47bdbd42dabd468291ae717ac914f6e9195aea4e2d714f764035f0f2",
+    "total_studentized_unusable": 5,
+    "total_studentized_unusable_fraction": 0.0005,
+    "upper_bound_threshold": 0.1,
+    "validation_status": "exact_partition_and_typed_outcomes_validated"
+  },
+  "manifest_sha256": "51619f155ebf5921dbf77978fd8726591c3d9059139616fa776d2d0ffbffc256",
+  "measured_runs": [],
+  "probe": {
+    "elapsed_seconds": 34.7630055998452,
+    "exit_code": 0,
+    "index": 0,
+    "orphan_processes": 0,
+    "peak_working_set_bytes": 71323648,
+    "phase": "stability",
+    "progress_values": [],
+    "result_bytes": 19169972,
+    "scientific_result_sha256": "8a0182c23436cfec20cad1d40542c52177c4c42eb62acd53dca68b26e52b5b7c"
+  },
+  "qualification_boundary": {
+    "missing_evidence": [
+      "authoritative_canonical_v11_bytes",
+      "authoritative_text_export_v11_bytes",
+      "coverage_and_failure_rate_simulation",
+      "broader_dimension_and_model_axes",
+      "package_and_integration_gates"
+    ],
+    "status": "blocked_not_product_qualification"
+  },
+  "runtime_acceptance": {
+    "evidence_role": "single_independent_stability_seed",
+    "maximum_p95_elapsed_seconds": null,
+    "maximum_single_run_elapsed_seconds": 76.29804119467735,
+    "observed_p95_elapsed_seconds": null
+  },
+  "schema_version": 1,
+  "scientific_result_sha256": "8a0182c23436cfec20cad1d40542c52177c4c42eb62acd53dca68b26e52b5b7c",
+  "status": "accepted_resource_candidate_evidence",
+  "warmup_runs": []
+}

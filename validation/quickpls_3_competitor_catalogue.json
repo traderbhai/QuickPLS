@@ -13,7 +13,7 @@
   "comparison_policy": {
     "rule": "Compare documented user outcomes within an explicitly bounded QuickPLS scope; do not claim copied internals, numerical identity, full parity, or SmartPLS project compatibility.",
     "competitive_scope": "All non-legacy catalogue entries are in the QuickPLS 3.0 competitor scope. Legacy Blindfolding and GoF are intentionally deferred and must remain disclosed.",
-    "status_source_of_truth": "Every competitor-scope row maps to a frozen method-factory capability. Capabilities already governed by the current 17-capability parity ledger derive status from that evidence-backed ledger; all other capabilities derive status only from their exact validated method manifest. Editable row status and source-file references cannot promote a claim."
+    "status_source_of_truth": "Capability Registry V2 is the current option-cell authority. Each method-manifest-linked option cell is fail-closed against the live state re-derived from its exact manifest; capability-cell contracts are separately validated by their exact qualification link. The historical parity ledger and generated legacy catalogue are non-authoritative records and projections. Editable row status, source-file references, and historical artifacts cannot promote a claim."
   },
   "allowed_statuses": [
     "release-qualified",
@@ -22,18 +22,53 @@
     "absent",
     "deferred"
   ],
-  "allowed_priorities": ["P0", "P1", "P2", "P3"],
+  "allowed_priorities": [
+    "P0",
+    "P1",
+    "P2",
+    "P3"
+  ],
   "target_releases": [
-    {"id": "current", "objective": "Preserve existing release-qualified evidence."},
-    {"id": "2.47.0", "objective": "Establish signed distribution, installer lifecycle certification, and release operations."},
-    {"id": "2.48.0", "objective": "Promote current native and assessment capabilities to release-qualified evidence."},
-    {"id": "2.49.0", "objective": "Complete diagnostic and extended-relationship native workflows."},
-    {"id": "2.50.0", "objective": "Complete segmentation workflows."},
-    {"id": "2.51.0", "objective": "Add power analysis and consistent inference/MGA."},
-    {"id": "2.52.0", "objective": "Add model comparison/selection and advanced CB-SEM workflows."},
-    {"id": "3.0.0-beta.1", "objective": "Run the signed external competitor beta."},
-    {"id": "3.0.0", "objective": "Publish the competitor-grade stable release after every claim gate passes."},
-    {"id": "post-3.0", "objective": "Reassess explicitly deferred legacy or low-value methods."}
+    {
+      "id": "current",
+      "objective": "Rebuild all source-bound qualification evidence before preserving or promoting any evidence claim."
+    },
+    {
+      "id": "2.47.0",
+      "objective": "Establish signed distribution, installer lifecycle certification, and release operations."
+    },
+    {
+      "id": "2.48.0",
+      "objective": "Rebuild source-bound engine, archive, native, and release evidence in sequence."
+    },
+    {
+      "id": "2.49.0",
+      "objective": "Complete diagnostic and extended-relationship native workflows."
+    },
+    {
+      "id": "2.50.0",
+      "objective": "Complete segmentation workflows."
+    },
+    {
+      "id": "2.51.0",
+      "objective": "Add power analysis and consistent inference/MGA."
+    },
+    {
+      "id": "2.52.0",
+      "objective": "Add model comparison/selection and advanced CB-SEM workflows."
+    },
+    {
+      "id": "3.0.0-beta.1",
+      "objective": "Run the signed external competitor beta."
+    },
+    {
+      "id": "3.0.0",
+      "objective": "Publish the competitor-grade stable release after every claim gate passes."
+    },
+    {
+      "id": "post-3.0",
+      "objective": "Reassess explicitly deferred legacy or low-value methods."
+    }
   ],
   "competitor_claim_gate": {
     "required_method_status": "release-qualified",
@@ -57,50 +92,853 @@
     "readiness_rule": "Commercial readiness and external-beta graduation are derived only by their fail-closed validators. Final competitor approval is a later non-circular envelope that cryptographically binds the current catalogue, validated reports, external-beta contract, and full method-manifest set; this planning catalogue contains no editable completion flags."
   },
   "methods": [
-    {"id":"smartpls.pls_algorithm","catalogue_position":1,"official_family":"Estimation & Core Algorithm","official_method":"PLS-SEM Algorithm","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Bounded recursive composite PLS path models.","quickpls_capability_ids":["qpls3.pls.algorithm"],"implementation_evidence":[],"dependencies":[],"remaining_gap":"Create method-scoped release evidence for the accepted native workflow."},
-    {"id":"smartpls.pls_power_analysis","catalogue_position":2,"official_family":"Estimation & Core Algorithm","official_method":"PLS-SEM Sample Size and Power Analysis","status":"absent","priority":"P1","target_release":"2.51.0","competitor_scope":true,"quickpls_scope":"Not factory-qualified.","quickpls_capability_ids":["qpls3.pls.sample_size_power"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Implement and qualify the frozen prospective and sensitivity power contract with independently validated equations."},
-    {"id":"smartpls.wpls","catalogue_position":3,"official_family":"Estimation & Core Algorithm","official_method":"Weighted PLS Algorithm (WPLS)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Positive case-weighted reflective PLS with bounded preprocessing and weighting modes.","quickpls_capability_ids":["qpls3.pls.weighted"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Create method-scoped release evidence; broader survey designs and inference remain excluded."},
-    {"id":"smartpls.plsc","catalogue_position":4,"official_family":"Estimation & Core Algorithm","official_method":"Consistent PLS-SEM (PLSc-SEM)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Reflective-only bounded PLSc.","quickpls_capability_ids":["qpls3.pls.consistent"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Create method-scoped release evidence; consistent resampling and MGA are separate gaps."},
-    {"id":"smartpls.pca_core","catalogue_position":5,"official_family":"Estimation & Core Algorithm","official_method":"Principal Component Analysis (PCA)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Listwise-standardized numeric raw-data PCA with bounded retention rules.","quickpls_capability_ids":["qpls3.standalone.pca"],"implementation_evidence":[],"dependencies":[],"remaining_gap":"Create method-scoped release evidence; rotations and inference remain excluded."},
-    {"id":"smartpls.pls_bootstrapping","catalogue_position":6,"official_family":"Resampling & Inference","official_method":"Bootstrapping","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Bounded PLS percentile, BCa, studentized/bootstrap-t, and jackknife inference.","quickpls_capability_ids":["qpls3.inference.bootstrap"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Create current method-scoped packaged release evidence."},
-    {"id":"smartpls.consistent_bootstrapping","catalogue_position":7,"official_family":"Resampling & Inference","official_method":"Consistent Bootstrapping","status":"absent","priority":"P1","target_release":"2.51.0","competitor_scope":true,"quickpls_scope":"Not factory-qualified as PLSc inference.","quickpls_capability_ids":["qpls3.inference.consistent_bootstrap"],"implementation_evidence":[],"dependencies":["smartpls.plsc","smartpls.pls_bootstrapping"],"remaining_gap":"Implement and qualify PLSc-specific bootstrap estimation, inference, persistence, UI, and packaged acceptance."},
-    {"id":"smartpls.blindfolding","catalogue_position":8,"official_family":"Resampling & Inference","official_method":"Blindfolding","status":"deferred","priority":"P3","target_release":"post-3.0","competitor_scope":false,"quickpls_scope":"Intentionally excluded from the 3.0 competitor gate as a legacy redundancy-analysis workflow; any existing Q-squared output is not promoted through this catalogue row.","quickpls_capability_ids":[],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Retain the frozen legacy manifest and public rationale; reassess only after the higher-priority prediction workflow is complete and credible demand is demonstrated."},
-    {"id":"smartpls.permutation","catalogue_position":9,"official_family":"Resampling & Inference","official_method":"Permutation","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Two-group MICOM/permutation MGA plus separately bounded fixed-score structural path randomization.","quickpls_capability_ids":["qpls3.groups.micom_permutation_mga","qpls3.inference.structural_path_randomization"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Release-qualify the accepted two-group permutation workflow; broader generic permutation claims remain excluded."},
-    {"id":"smartpls.consistent_permutation","catalogue_position":10,"official_family":"Resampling & Inference","official_method":"Consistent Permutation","status":"absent","priority":"P1","target_release":"2.51.0","competitor_scope":true,"quickpls_scope":"Not factory-qualified as PLSc permutation inference.","quickpls_capability_ids":["qpls3.inference.consistent_permutation"],"implementation_evidence":[],"dependencies":["smartpls.plsc","smartpls.permutation"],"remaining_gap":"Implement and qualify PLSc-specific permutation estimation, inference, UI, persistence, and packaged acceptance."},
-    {"id":"smartpls.cvpat","catalogue_position":11,"official_family":"Resampling & Inference","official_method":"Cross-validated Predictive Ability Test (CVPAT)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Single-model comparison against IA and LM benchmarks.","quickpls_capability_ids":["qpls3.prediction.plspredict_cvpat"],"implementation_evidence":[],"dependencies":["smartpls.plspredict"],"remaining_gap":"Create method-scoped release evidence and add separately saved competing-model comparison later."},
-    {"id":"smartpls.cca","catalogue_position":12,"official_family":"Validity, Reliability & Model Fit","official_method":"Confirmatory Composite Analysis (CCA)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Descriptive composite-correlation residual diagnostics only.","quickpls_capability_ids":["qpls3.assessment.cca_residuals"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Release-qualify the bounded residual workflow and develop full inferential CCA before broad claims."},
-    {"id":"smartpls.cta_pls","catalogue_position":13,"official_family":"Validity, Reliability & Model Fit","official_method":"Confirmatory Tetrad Analysis in PLS (CTA-PLS)","status":"release-qualified","priority":"P1","target_release":"current","competitor_scope":true,"quickpls_scope":"Bounded descriptive CTA-PLS tetrad diagnostics with strict native setup, results, export, persistence, and packaged Windows acceptance; inferential decision rules are not claimed.","quickpls_capability_ids":["qpls3.assessment.cta_pls"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm","smartpls.pls_bootstrapping"],"remaining_gap":"Maintain the bounded packaged evidence and independently validate bootstrap or permutation decision rules before making inferential CTA-PLS claims."},
-    {"id":"smartpls.htmt","catalogue_position":14,"official_family":"Validity, Reliability & Model Fit","official_method":"Discriminant Validity Assessment and HTMT","status":"absent","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"The frozen bounded HTMT and HTMT+ contract is not factory-qualified.","quickpls_capability_ids":["qpls3.assessment.htmt"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Qualify the independently tracked HTMT/HTMT+ capability and create method-scoped packaged release evidence."},
-    {"id":"smartpls.gof","catalogue_position":15,"official_family":"Validity, Reliability & Model Fit","official_method":"Goodness of Fit (GoF)","status":"deferred","priority":"P3","target_release":"post-3.0","competitor_scope":false,"quickpls_scope":"Intentionally not implemented because the official catalogue labels this measure legacy and advises against relying on it.","quickpls_capability_ids":[],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Retain a public rationale and reassess only if credible user demand outweighs the risk of encouraging legacy interpretation."},
-    {"id":"smartpls.model_fit","catalogue_position":16,"official_family":"Validity, Reliability & Model Fit","official_method":"Model Fit","status":"absent","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"The frozen bounded model-fit metric contract is not factory-qualified; d_G, NFI, and RMS_theta remain excluded.","quickpls_capability_ids":["qpls3.assessment.model_fit"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Qualify the bounded metric set; add further indices only when methodologically justified."},
-    {"id":"smartpls.pls_model_comparison","catalogue_position":17,"official_family":"Validity, Reliability & Model Fit","official_method":"Model Comparison","status":"absent","priority":"P1","target_release":"2.52.0","competitor_scope":true,"quickpls_scope":"The frozen competing-model analysis contract is not factory-qualified; the saved-run comparison view remains descriptive.","quickpls_capability_ids":["qpls3.comparison.pls_models"],"implementation_evidence":[],"dependencies":["smartpls.cvpat","smartpls.plspredict"],"remaining_gap":"Implement and qualify predictive and information-theoretic competing-model analysis."},
-    {"id":"smartpls.prediction_oriented_model_selection","catalogue_position":18,"official_family":"Validity, Reliability & Model Fit","official_method":"Prediction-oriented Model Selection","status":"absent","priority":"P1","target_release":"2.52.0","competitor_scope":true,"quickpls_scope":"The frozen prediction-oriented selection contract is not factory-qualified.","quickpls_capability_ids":["qpls3.selection.prediction_oriented"],"implementation_evidence":[],"dependencies":["smartpls.pls_model_comparison"],"remaining_gap":"Implement and qualify model search/selection with explicit candidate-space and multiplicity safeguards."},
-    {"id":"smartpls.micom","catalogue_position":19,"official_family":"Heterogeneity & Multigroup Analysis","official_method":"Measurement Invariance Assessment (MICOM)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Bounded two-group MICOM Steps 1-3.","quickpls_capability_ids":["qpls3.groups.micom_permutation_mga"],"implementation_evidence":[],"dependencies":["smartpls.permutation"],"remaining_gap":"Create method-scoped release evidence; broader groups and consistent MICOM remain excluded."},
-    {"id":"smartpls.mga","catalogue_position":20,"official_family":"Heterogeneity & Multigroup Analysis","official_method":"Multigroup Analysis (MGA)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Bounded two-group permutation MGA.","quickpls_capability_ids":["qpls3.groups.micom_permutation_mga"],"implementation_evidence":[],"dependencies":["smartpls.micom"],"remaining_gap":"Create method-scoped release evidence; parametric, bootstrap, one-tailed, and broader-group MGA remain excluded."},
-    {"id":"smartpls.consistent_mga","catalogue_position":21,"official_family":"Heterogeneity & Multigroup Analysis","official_method":"Consistent Multigroup Analysis (MGA)","status":"absent","priority":"P1","target_release":"2.51.0","competitor_scope":true,"quickpls_scope":"The frozen consistent-MGA contract is not factory-qualified.","quickpls_capability_ids":["qpls3.groups.consistent_mga"],"implementation_evidence":[],"dependencies":["smartpls.plsc","smartpls.consistent_permutation"],"remaining_gap":"Implement and qualify consistent measurement estimation and group-difference inference end to end."},
-    {"id":"smartpls.plspredict","catalogue_position":22,"official_family":"Prediction & Segmentation","official_method":"PLSpredict","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Bounded indicator-level single-model IA/LM benchmark workflow.","quickpls_capability_ids":["qpls3.prediction.plspredict_cvpat"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Create method-scoped release evidence; saved-model comparison, formative targets, and broader shapes remain excluded."},
-    {"id":"smartpls.pls_pos","catalogue_position":23,"official_family":"Prediction & Segmentation","official_method":"PLS Prediction-oriented Segmentation (PLS-POS)","status":"absent","priority":"P1","target_release":"2.50.0","competitor_scope":true,"quickpls_scope":"The frozen bounded PLS-POS contract is not factory-qualified; existing deterministic segmentation code does not satisfy this claim gate.","quickpls_capability_ids":["qpls3.segmentation.pls_pos"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Complete and qualify native setup, results, export, strict persistence, packaged save/reopen, and release evidence."},
-    {"id":"smartpls.fimix_pls","catalogue_position":24,"official_family":"Prediction & Segmentation","official_method":"Finite Mixture Partial Least Squares (FIMIX-PLS)","status":"absent","priority":"P1","target_release":"2.50.0","competitor_scope":true,"quickpls_scope":"The frozen bounded FIMIX-style contract is not factory-qualified; existing hard-partition code is not claimed as unrestricted FIMIX-PLS.","quickpls_capability_ids":["qpls3.segmentation.fimix_pls"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Implement or independently qualify the bounded contract, complete the native lifecycle, and preserve the explicit non-equivalence disclosure."},
-    {"id":"smartpls.ipma","catalogue_position":25,"official_family":"Prediction & Segmentation","official_method":"Importance-performance Map Analysis (IPMA)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"One-target predecessor-only observed-range IPMA.","quickpls_capability_ids":["qpls3.assessment.ipma"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Create method-scoped release evidence; multiple outcomes and cIPMA remain excluded."},
-    {"id":"smartpls.moderation","catalogue_position":26,"official_family":"Extended Relationships","official_method":"Moderation","status":"absent","priority":"P1","target_release":"2.49.0","competitor_scope":true,"quickpls_scope":"The frozen bounded single-interaction two-stage moderation contract is not factory-qualified.","quickpls_capability_ids":["qpls3.pls.moderation"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm","smartpls.pls_bootstrapping"],"remaining_gap":"Complete and qualify the native workflow; broader interaction systems remain excluded."},
-    {"id":"smartpls.mediation","catalogue_position":27,"official_family":"Extended Relationships","official_method":"Mediation","status":"absent","priority":"P1","target_release":"2.49.0","competitor_scope":true,"quickpls_scope":"The frozen bounded PLS mediation contract is not factory-qualified.","quickpls_capability_ids":["qpls3.pls.mediation"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm","smartpls.pls_bootstrapping"],"remaining_gap":"Complete and qualify the dedicated native PLS mediation workflow."},
-    {"id":"smartpls.nonlinear_relationships","catalogue_position":28,"official_family":"Extended Relationships","official_method":"Nonlinear Relationships","status":"absent","priority":"P1","target_release":"2.49.0","competitor_scope":true,"quickpls_scope":"The frozen bounded fixed-score quadratic contract is not factory-qualified.","quickpls_capability_ids":["qpls3.pls.nonlinear_quadratic"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm","smartpls.pls_bootstrapping"],"remaining_gap":"Complete and qualify native authoring, results, export, persistence, and the supported nonlinear family."},
-    {"id":"smartpls.higher_order_models","catalogue_position":29,"official_family":"Extended Relationships","official_method":"Higher-order Models","status":"absent","priority":"P1","target_release":"2.49.0","competitor_scope":true,"quickpls_scope":"The frozen bounded reflective two-stage higher-order contract is not factory-qualified; broader repeated and hybrid systems remain excluded.","quickpls_capability_ids":["qpls3.pls.higher_order_two_stage"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Qualify the bounded capability and extend authoring only with separately frozen scope."},
-    {"id":"smartpls.endogeneity_gaussian_copulas","catalogue_position":30,"official_family":"Extended Relationships","official_method":"Endogeneity and Gaussian Copulas","status":"absent","priority":"P1","target_release":"2.49.0","competitor_scope":true,"quickpls_scope":"The frozen bounded Gaussian-copula diagnostic contract is not factory-qualified.","quickpls_capability_ids":["qpls3.pls.gaussian_copula_endogeneity"],"implementation_evidence":[],"dependencies":["smartpls.pls_algorithm"],"remaining_gap":"Complete and qualify the native lifecycle while retaining the diagnostic-not-causal-proof warning."},
-    {"id":"smartpls.gsca","catalogue_position":31,"official_family":"Generalized Structured Component Analysis (GSCA)","official_method":"GSCA algorithm and bootstrapping","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Bounded GSCA ALS point estimates; GSCA bootstrap and inference are absent.","quickpls_capability_ids":["qpls3.gsca.als"],"implementation_evidence":[],"dependencies":[],"remaining_gap":"Release-qualify bounded point estimation and add separately qualified GSCA bootstrapping before claiming the full official entry."},
-    {"id":"smartpls.logistic_regression","catalogue_position":32,"official_family":"Regression, Path Analysis and PROCESS","official_method":"Logistic Regression","status":"release-qualified","priority":"P0","target_release":"current","competitor_scope":true,"quickpls_scope":"Binary numeric 0/1 bounded logistic regression.","quickpls_capability_ids":["qpls3.standalone.logistic"],"implementation_evidence":[],"dependencies":[],"remaining_gap":"Maintain evidence; multinomial, ordinal, weighted, clustered, and Firth variants remain excluded."},
-    {"id":"smartpls.nca","catalogue_position":33,"official_family":"Regression, Path Analysis and PROCESS","official_method":"Necessary Condition Analysis (NCA)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"One observed X/Y pair with bounded CE-FDH and CR-FDH analysis.","quickpls_capability_ids":["qpls3.standalone.nca"],"implementation_evidence":[],"dependencies":[],"remaining_gap":"Create method-scoped release evidence; latent-score, multiple-condition, and cIPMA workflows remain excluded."},
-    {"id":"smartpls.process","catalogue_position":34,"official_family":"Regression, Path Analysis and PROCESS","official_method":"Path Analysis and PROCESS","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Bounded graph-defined continuous-outcome OLS path and PROCESS-style workflow.","quickpls_capability_ids":["qpls3.standalone.process"],"implementation_evidence":[],"dependencies":["smartpls.regression"],"remaining_gap":"Restore method-scoped release evidence after the repeated-completion process-role stability gate passes; retain binary-equation, weights/clusters, copied-template, and unrestricted-catalogue exclusions."},
-    {"id":"smartpls.process_bootstrapping","catalogue_position":35,"official_family":"Regression, Path Analysis and PROCESS","official_method":"Path Analysis and PROCESS Bootstrapping","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Dedicated percentile and conditional-BCa case bootstrap in the bounded graph-defined PROCESS workflow.","quickpls_capability_ids":["qpls3.standalone.process"],"implementation_evidence":[],"dependencies":["smartpls.process","smartpls.regression_bootstrapping"],"remaining_gap":"Restore method-scoped release evidence after the repeated-completion process-role stability gate passes; studentized, custom-tail, custom-alpha, weighted, and clustered inference remain excluded."},
-    {"id":"smartpls.regression","catalogue_position":36,"official_family":"Regression, Path Analysis and PROCESS","official_method":"Regression","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Numeric complete-case OLS with HC3 inference.","quickpls_capability_ids":["qpls3.standalone.ols"],"implementation_evidence":[],"dependencies":[],"remaining_gap":"Create method-scoped release evidence; categorical helpers, weights, clustered SEs, mixed, and panel models remain excluded."},
-    {"id":"smartpls.regression_bootstrapping","catalogue_position":37,"official_family":"Regression, Path Analysis and PROCESS","official_method":"Regression Bootstrapping","status":"release-qualified","priority":"P0","target_release":"current","competitor_scope":true,"quickpls_scope":"Bounded OLS and binary-logistic case bootstrap.","quickpls_capability_ids":["qpls3.standalone.regression_bootstrap"],"implementation_evidence":[],"dependencies":["smartpls.regression","smartpls.logistic_regression"],"remaining_gap":"Maintain evidence; studentized and broader regression-family variants remain excluded."},
-    {"id":"smartpls.cbsem","catalogue_position":38,"official_family":"CB-SEM and CFA","official_method":"CB-SEM - Covariance-based Structural Equation Modeling (CB-SEM)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Single-group reflective raw-data ML CFA or recursive SEM.","quickpls_capability_ids":["qpls3.cbsem.ml"],"implementation_evidence":[],"dependencies":[],"remaining_gap":"Create method-scoped release evidence; robust ML, ordinal/WLSMV, FIML, broad constraints, interactions, and HOCs remain excluded."},
-    {"id":"smartpls.cbsem_bootstrapping","catalogue_position":39,"official_family":"CB-SEM and CFA","official_method":"CB-SEM Bootstrapping","status":"absent","priority":"P2","target_release":"2.52.0","competitor_scope":true,"quickpls_scope":"The frozen bounded CB-SEM bootstrap contract is not factory-qualified.","quickpls_capability_ids":["qpls3.cbsem.bootstrap"],"implementation_evidence":[],"dependencies":["smartpls.cbsem"],"remaining_gap":"Create independent reference and simulation evidence, complete the native lifecycle, and obtain current packaged acceptance."},
-    {"id":"smartpls.cbsem_model_comparison","catalogue_position":40,"official_family":"CB-SEM and CFA","official_method":"CB-SEM Model Comparison","status":"absent","priority":"P2","target_release":"2.52.0","competitor_scope":true,"quickpls_scope":"The frozen bounded CB-SEM model-comparison contract is not factory-qualified.","quickpls_capability_ids":["qpls3.cbsem.model_comparison"],"implementation_evidence":[],"dependencies":["smartpls.cbsem"],"remaining_gap":"Implement and qualify nested and non-nested model comparison, estimator compatibility, and fit-difference rules."},
-    {"id":"smartpls.cbsem_mga","catalogue_position":41,"official_family":"CB-SEM and CFA","official_method":"CB-SEM Multigroup Analysis (MGA)","status":"absent","priority":"P2","target_release":"2.52.0","competitor_scope":true,"quickpls_scope":"The frozen bounded CB-SEM multigroup contract is not factory-qualified.","quickpls_capability_ids":["qpls3.cbsem.multigroup"],"implementation_evidence":[],"dependencies":["smartpls.cbsem","smartpls.cbsem_bootstrapping"],"remaining_gap":"Complete and qualify group setup, constraints, inference, results, export, persistence, and packaged acceptance."},
-    {"id":"smartpls.cbsem_measurement_invariance","catalogue_position":42,"official_family":"CB-SEM and CFA","official_method":"CB-SEM Measurement Invariance Assessment","status":"absent","priority":"P2","target_release":"2.52.0","competitor_scope":true,"quickpls_scope":"The frozen bounded CB-SEM invariance contract is not factory-qualified.","quickpls_capability_ids":["qpls3.cbsem.measurement_invariance"],"implementation_evidence":[],"dependencies":["smartpls.cbsem"],"remaining_gap":"Complete and qualify configural, metric, scalar, and supported partial-invariance workflows with diagnostics and packaged evidence."},
-    {"id":"smartpls.cbsem_moderator","catalogue_position":43,"official_family":"CB-SEM and CFA","official_method":"CB-SEM Moderator Analysis","status":"absent","priority":"P2","target_release":"2.52.0","competitor_scope":true,"quickpls_scope":"The frozen bounded CB-SEM moderator contract is not factory-qualified.","quickpls_capability_ids":["qpls3.cbsem.moderator"],"implementation_evidence":[],"dependencies":["smartpls.cbsem","smartpls.cbsem_bootstrapping"],"remaining_gap":"Implement and qualify the frozen observed-interaction scope, probing, inference, and native evidence."},
-    {"id":"smartpls.cfa","catalogue_position":44,"official_family":"CB-SEM and CFA","official_method":"Confirmatory Factor Analysis (CFA)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"Single-group reflective raw-data ML measurement-only CFA.","quickpls_capability_ids":["qpls3.cbsem.ml"],"implementation_evidence":[],"dependencies":[],"remaining_gap":"Create method-scoped release evidence; robust, ordinal, FIML, mean-structure, and broader invariance scopes remain excluded."},
-    {"id":"smartpls.pca_cbsem","catalogue_position":45,"official_family":"CB-SEM and CFA","official_method":"Principal component analysis (PCA)","status":"native-qualified","priority":"P0","target_release":"2.48.0","competitor_scope":true,"quickpls_scope":"The same bounded standalone PCA capability mapped at official position 5.","quickpls_capability_ids":["qpls3.standalone.pca"],"implementation_evidence":[],"dependencies":[],"remaining_gap":"Preserve the duplicate catalogue mapping and avoid implying CB-SEM-specific PCA options beyond the bounded standalone workflow."}
+    {
+      "id": "smartpls.pls_algorithm",
+      "catalogue_position": 1,
+      "official_family": "Estimation & Core Algorithm",
+      "official_method": "PLS-SEM Algorithm",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Bounded recursive composite PLS path models.",
+      "quickpls_capability_ids": [
+        "qpls3.pls.algorithm"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [],
+      "remaining_gap": "Maintain current scoped evidence; cyclic and covariance-only models and bootstrap, permutation, prediction, group, PLSc, WPLS, and CB-SEM inference remain separate, and no SmartPLS numerical identity is claimed."
+    },
+    {
+      "id": "smartpls.pls_power_analysis",
+      "catalogue_position": 2,
+      "official_family": "Estimation & Core Algorithm",
+      "official_method": "PLS-SEM Sample Size and Power Analysis",
+      "status": "release-qualified",
+      "priority": "P1",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Two distinct scoped Standard cells are registered: the inference-aware retrospective technical sample-size v2 result for complete linked two-sided normal-reference PLS bootstrap probabilities, and prospective Monte Carlo power v2 for exactly two ordinary reflective constructs joined by one predictor-to-outcome path under the declared Gaussian, no-missing design. Historical prospective v1 remains readable only under its failed-calibration identity and is never relabeled as v2.",
+      "quickpls_capability_ids": [
+        "qpls3.pls.posthoc_technical_minimum_sample_size",
+        "qpls3.pls.sample_size_power"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Maintain current source-bound and packaged evidence for both bounded cells. Broader prospective designs, alternate distributions, formative or higher-order models, multiple paths, groups, weights, clustering, ordinal data, missing-data designs, retrospective observed power, heuristics, and SmartPLS numerical identity remain excluded."
+    },
+    {
+      "id": "smartpls.wpls",
+      "catalogue_position": 3,
+      "official_family": "Estimation & Core Algorithm",
+      "official_method": "Weighted PLS Algorithm (WPLS)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Positive case-weighted reflective PLS with bounded preprocessing and weighting modes.",
+      "quickpls_capability_ids": [
+        "qpls3.pls.weighted"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Maintain current scoped evidence; survey-design weights, weighted resampling inference, formative blocks, generated constructs, and PCA weighting remain excluded."
+    },
+    {
+      "id": "smartpls.plsc",
+      "catalogue_position": 4,
+      "official_family": "Estimation & Core Algorithm",
+      "official_method": "Consistent PLS-SEM (PLSc-SEM)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Reflective-only recursive PLSc point estimation with at least two indicators per construct, listwise preprocessing, and path or factor weighting.",
+      "quickpls_capability_ids": [
+        "qpls3.pls.consistent"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Maintain current scoped evidence; formative blocks, PCA weighting, generated interactions, HOCs, PLSc resampling/MGA, and historical plsc_v1 reinterpretation remain excluded."
+    },
+    {
+      "id": "smartpls.pca_core",
+      "catalogue_position": 5,
+      "official_family": "Estimation & Core Algorithm",
+      "official_method": "Principal Component Analysis (PCA)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Listwise-standardized numeric raw-data PCA with bounded retention rules.",
+      "quickpls_capability_ids": [
+        "qpls3.standalone.pca"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [],
+      "remaining_gap": "Supported within the documented pca_v1 scope; rotations, pairwise missing-data handling, matrix-only input, categorical input, and inferential resampling remain separate future versions."
+    },
+    {
+      "id": "smartpls.pls_bootstrapping",
+      "catalogue_position": 6,
+      "official_family": "Resampling & Inference",
+      "official_method": "Bootstrapping",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Indexed-resampling v4 inference for supported PLS-PM models: sign-aligned full refits, normal-reference tests, Type-7 percentile intervals, conditional BCa intervals, optional nested studentized/bootstrap-t intervals, deterministic jackknife support, and explicit requested/usable/failed accounting.",
+      "quickpls_capability_ids": [
+        "qpls3.inference.bootstrap"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Maintain current source-bound, archive, native, export, packaged Windows, and audit evidence for the bounded v4 workflow; regression, PLSc, permutation-under-the-null, unsupported PLS shapes, and unspecified resampling conventions remain separate or excluded."
+    },
+    {
+      "id": "smartpls.consistent_bootstrapping",
+      "catalogue_position": 7,
+      "official_family": "Resampling & Inference",
+      "official_method": "Consistent Bootstrapping",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Bounded full-refit PLSc bootstrap inference for supported reflective PLSc v2 models: 1,000 through 10,000 fixed indexed case resamples, two-sided normal-reference diagnostics, Type-7 percentile intervals, conditional BCa intervals, replayable successful primary and delete-one witnesses, and explicit failure accounting.",
+      "quickpls_capability_ids": [
+        "qpls3.inference.consistent_bootstrap"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.plsc",
+        "smartpls.pls_bootstrapping"
+      ],
+      "remaining_gap": "Maintain current source-bound, archive, native, export, packaged Windows, and audit evidence for the bounded v1 workflow; broader model shapes, interval controls, resampling designs, and assessment-only inference remain separate or excluded."
+    },
+    {
+      "id": "smartpls.blindfolding",
+      "catalogue_position": 8,
+      "official_family": "Resampling & Inference",
+      "official_method": "Blindfolding",
+      "status": "deferred",
+      "priority": "P3",
+      "target_release": "post-3.0",
+      "competitor_scope": false,
+      "quickpls_scope": "Intentionally excluded from the 3.0 competitor gate as a legacy redundancy-analysis workflow; any existing Q-squared output is not promoted through this catalogue row.",
+      "quickpls_capability_ids": [],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Retain the frozen legacy manifest and public rationale; reassess only after the higher-priority prediction workflow is complete and credible demand is demonstrated."
+    },
+    {
+      "id": "smartpls.permutation",
+      "catalogue_position": 9,
+      "official_family": "Resampling & Inference",
+      "official_method": "Permutation",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "2.48.0",
+      "competitor_scope": true,
+      "quickpls_scope": "Scoped Standard covers the coupled exactly-two-group MICOM/permutation-MGA v4 workflow and single-model direct structural-path randomization v1 conditional on fixed original converged PLS scores; it is not a generic unrestricted permutation claim.",
+      "quickpls_capability_ids": [
+        "qpls3.groups.micom_permutation_mga",
+        "qpls3.inference.structural_path_randomization"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Broader group counts, one-tailed or alternate MGA procedures, measurement-model refits, heteroskedastic or broader non-Gaussian structural inference, multiplicity adjustment, mediation inference, and causal proof remain excluded."
+    },
+    {
+      "id": "smartpls.consistent_permutation",
+      "catalogue_position": 10,
+      "official_family": "Resampling & Inference",
+      "official_method": "Consistent Permutation",
+      "status": "absent",
+      "priority": "P1",
+      "target_release": "2.51.0",
+      "competitor_scope": true,
+      "quickpls_scope": "A bounded internal source foundation executes fixed-size indexed two-group label reassignment with full reflective PLSc refits, corrected path/loading/rho_A/construct-correlation/R-squared differences, two-sided plus-one inference, both directed greater-or-equal and less-or-equal plus-one tails for the frozen A-minus-B contrast, and exact no-retry accounting. MICOM, broader parameter/model breadth, independent-oracle and simulation evidence, packaged acceptance, and a factory-qualified product capability remain absent.",
+      "quickpls_capability_ids": [
+        "qpls3.inference.consistent_permutation"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.plsc",
+        "smartpls.permutation"
+      ],
+      "remaining_gap": "Add MICOM, broaden eligible parameters, model shapes, and official direction-selection workflow coverage, implement the independent PLSc oracle and preregistered simulation evidence, complete product and packaged acceptance, and then qualify the exact option cell without reusing ordinary PLS permutation evidence."
+    },
+    {
+      "id": "smartpls.cvpat",
+      "catalogue_position": 11,
+      "official_family": "Resampling & Inference",
+      "official_method": "Cross-validated Predictive Ability Test (CVPAT)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Single-model comparison against IA and LM benchmarks.",
+      "quickpls_capability_ids": [
+        "qpls3.prediction.plspredict_cvpat"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.plspredict"
+      ],
+      "remaining_gap": "Refresh current-cohort source and packaged receipts after the coordinated binary is frozen; separately saved competing-model comparison remains outside this bounded single-model benchmark workflow."
+    },
+    {
+      "id": "smartpls.cca",
+      "catalogue_position": 12,
+      "official_family": "Validity, Reliability & Model Fit",
+      "official_method": "Confirmatory Composite Analysis (CCA)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Descriptive composite-correlation residual diagnostics only.",
+      "quickpls_capability_ids": [
+        "qpls3.assessment.cca_residuals"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Maintain current source, packaged Windows, and independent audit evidence for the bounded descriptive workflow; inferential CCA, resampled discrepancy tests, thresholds, and broad confirmatory claims remain excluded."
+    },
+    {
+      "id": "smartpls.cta_pls",
+      "catalogue_position": 13,
+      "official_family": "Validity, Reliability & Model Fit",
+      "official_method": "Confirmatory Tetrad Analysis in PLS (CTA-PLS)",
+      "status": "release-qualified",
+      "priority": "P1",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Release-qualified descriptive sample-covariance tetrad diagnostics for supported PLS blocks with at least four numeric indicators, using the exact complete-case preprocessing of the associated PLS run; inferential decisions and measurement classification are excluded.",
+      "quickpls_capability_ids": [
+        "qpls3.assessment.cta_pls"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm",
+        "smartpls.pls_bootstrapping"
+      ],
+      "remaining_gap": "Maintain current source, archive, native, export, and packaged Windows evidence for the bounded descriptive workflow; inferential CTA-PLS decisions, PCA weighting, smaller blocks, and measurement classification remain excluded."
+    },
+    {
+      "id": "smartpls.htmt",
+      "catalogue_position": 14,
+      "official_family": "Validity, Reliability & Model Fit",
+      "official_method": "Discriminant Validity Assessment and HTMT",
+      "status": "absent",
+      "priority": "P0",
+      "target_release": "2.48.0",
+      "competitor_scope": true,
+      "quickpls_scope": "A source-only bounded HTMT and HTMT+ foundation computes point matrices and exact case-resample bias-corrected 90% upper-bound decisions. Its QualificationSpec V2 contract is linked with zero accepted receipts, and required inference breadth remains incomplete; the parity cell therefore remains absent and non-executable.",
+      "quickpls_capability_ids": [
+        "qpls3.assessment.htmt"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Complete sidedness and interval-family breadth, PLSc-consistent inference, missing-data and SemModelV4 integration, then supply independent numerical, simulation, archive/export, packaged Windows, performance/soak, and scientific-review evidence."
+    },
+    {
+      "id": "smartpls.gof",
+      "catalogue_position": 15,
+      "official_family": "Validity, Reliability & Model Fit",
+      "official_method": "Goodness of Fit (GoF)",
+      "status": "deferred",
+      "priority": "P3",
+      "target_release": "post-3.0",
+      "competitor_scope": false,
+      "quickpls_scope": "Intentionally not implemented because the official catalogue labels this measure legacy and advises against relying on it.",
+      "quickpls_capability_ids": [],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Retain a public rationale and reassess only if credible user demand outweighs the risk of encouraging legacy interpretation."
+    },
+    {
+      "id": "smartpls.model_fit",
+      "catalogue_position": 16,
+      "official_family": "Validity, Reliability & Model Fit",
+      "official_method": "Model Fit",
+      "status": "absent",
+      "priority": "P0",
+      "target_release": "2.48.0",
+      "competitor_scope": true,
+      "quickpls_scope": "A bounded v2 implementation reports SRMR, d_ULS, d_G, maximum-likelihood-function Chi-square, degrees of freedom, and NFI for saturated and estimated recursive PLS or PLSc indicator-correlation models. A separately selected adapted Bollen-Stine source lane now performs saturated and estimated null transformations with fixed indexed full-refit ledgers and HI95/HI99 decisions. Its QualificationSpec V2 contract has zero accepted receipts, so evidence remains absent and the capability remains hidden from Calculate and non-executable in the CLI catalogue.",
+      "quickpls_capability_ids": [
+        "qpls3.assessment.model_fit"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Complete full supported PLS/PLSc shape breadth, extend the independent full-refit oracle to PLSc and advanced shapes, satisfy the second-oracle rule or approve a documented exception, run preregistered qualification-scale simulations and matching product adversarial matrices, and produce immutable archive/export, frontend, packaged Windows/accessibility, performance/soak, and independent scientific-review evidence."
+    },
+    {
+      "id": "smartpls.pls_model_comparison",
+      "catalogue_position": 17,
+      "official_family": "Validity, Reliability & Model Fit",
+      "official_method": "Model Comparison",
+      "status": "absent",
+      "priority": "P1",
+      "target_release": "2.52.0",
+      "competitor_scope": true,
+      "quickpls_scope": "The frozen competing-model analysis contract is not factory-qualified; the saved-run comparison view remains descriptive.",
+      "quickpls_capability_ids": [
+        "qpls3.comparison.pls_models"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.cvpat",
+        "smartpls.plspredict"
+      ],
+      "remaining_gap": "Implement and qualify predictive and information-theoretic competing-model analysis."
+    },
+    {
+      "id": "smartpls.prediction_oriented_model_selection",
+      "catalogue_position": 18,
+      "official_family": "Validity, Reliability & Model Fit",
+      "official_method": "Prediction-oriented Model Selection",
+      "status": "absent",
+      "priority": "P1",
+      "target_release": "2.52.0",
+      "competitor_scope": true,
+      "quickpls_scope": "The frozen prediction-oriented selection contract is not factory-qualified.",
+      "quickpls_capability_ids": [
+        "qpls3.selection.prediction_oriented"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_model_comparison"
+      ],
+      "remaining_gap": "Implement and qualify model search/selection with explicit candidate-space and multiplicity safeguards."
+    },
+    {
+      "id": "smartpls.micom",
+      "catalogue_position": 19,
+      "official_family": "Heterogeneity & Multigroup Analysis",
+      "official_method": "Measurement Invariance Assessment (MICOM)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "2.48.0",
+      "competitor_scope": true,
+      "quickpls_scope": "Release-qualified MICOM v4 Steps 1-3 for exactly two selected groups under one fixed shared no-retry partition plan; broader multigroup and consistent-MICOM variants remain excluded.",
+      "quickpls_capability_ids": [
+        "qpls3.groups.micom_permutation_mga"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.permutation"
+      ],
+      "remaining_gap": "Broader groups and consistent MICOM remain excluded from the qualified two-group v4 scope."
+    },
+    {
+      "id": "smartpls.mga",
+      "catalogue_position": 20,
+      "official_family": "Heterogeneity & Multigroup Analysis",
+      "official_method": "Multigroup Analysis (MGA)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "2.48.0",
+      "competitor_scope": true,
+      "quickpls_scope": "Release-qualified two-group permutation-MGA v4 for path, outer-loading, and outer-weight differences under the shared MICOM v4 fixed no-retry partition plan.",
+      "quickpls_capability_ids": [
+        "qpls3.groups.micom_permutation_mga"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.micom"
+      ],
+      "remaining_gap": "Parametric, bootstrap, one-tailed, omnibus, multiplicity-adjusted, and broader-group MGA remain excluded."
+    },
+    {
+      "id": "smartpls.consistent_mga",
+      "catalogue_position": 21,
+      "official_family": "Heterogeneity & Multigroup Analysis",
+      "official_method": "Consistent Multigroup Analysis (MGA)",
+      "status": "absent",
+      "priority": "P1",
+      "target_release": "2.51.0",
+      "competitor_scope": true,
+      "quickpls_scope": "The frozen consistent-MGA contract is not factory-qualified.",
+      "quickpls_capability_ids": [
+        "qpls3.groups.consistent_mga"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.plsc",
+        "smartpls.consistent_permutation"
+      ],
+      "remaining_gap": "Implement and qualify consistent measurement estimation and group-difference inference end to end."
+    },
+    {
+      "id": "smartpls.plspredict",
+      "catalogue_position": 22,
+      "official_family": "Prediction & Segmentation",
+      "official_method": "PLSpredict",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Bounded indicator-level single-model IA/LM benchmark workflow.",
+      "quickpls_capability_ids": [
+        "qpls3.prediction.plspredict_cvpat"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Refresh current-cohort source and packaged receipts after the coordinated binary is frozen; saved-model comparison, formative targets, and broader model shapes remain excluded."
+    },
+    {
+      "id": "smartpls.pls_pos",
+      "catalogue_position": 23,
+      "official_family": "Prediction & Segmentation",
+      "official_method": "PLS Prediction-oriented Segmentation (PLS-POS)",
+      "status": "absent",
+      "priority": "P1",
+      "target_release": "2.50.0",
+      "competitor_scope": true,
+      "quickpls_scope": "The frozen bounded PLS-POS contract is not factory-qualified; existing deterministic segmentation code does not satisfy this claim gate.",
+      "quickpls_capability_ids": [
+        "qpls3.segmentation.pls_pos"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Complete and qualify native setup, results, export, strict persistence, packaged save/reopen, and release evidence."
+    },
+    {
+      "id": "smartpls.fimix_pls",
+      "catalogue_position": 24,
+      "official_family": "Prediction & Segmentation",
+      "official_method": "Finite Mixture Partial Least Squares (FIMIX-PLS)",
+      "status": "absent",
+      "priority": "P1",
+      "target_release": "2.50.0",
+      "competitor_scope": true,
+      "quickpls_scope": "The frozen bounded FIMIX-style contract is not factory-qualified; existing hard-partition code is not claimed as unrestricted FIMIX-PLS.",
+      "quickpls_capability_ids": [
+        "qpls3.segmentation.fimix_pls"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Implement or independently qualify the bounded contract, complete the native lifecycle, and preserve the explicit non-equivalence disclosure."
+    },
+    {
+      "id": "smartpls.ipma",
+      "catalogue_position": 25,
+      "official_family": "Prediction & Segmentation",
+      "official_method": "Importance-performance Map Analysis (IPMA)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "One-target predecessor-only observed-range IPMA.",
+      "quickpls_capability_ids": [
+        "qpls3.assessment.ipma"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Refresh current-cohort source and packaged receipts after the coordinated binary is frozen; multiple outcomes, theoretical-range correction, resampling inference, and cIPMA remain excluded."
+    },
+    {
+      "id": "smartpls.moderation",
+      "catalogue_position": 26,
+      "official_family": "Extended Relationships",
+      "official_method": "Moderation",
+      "status": "engine-preview",
+      "priority": "P1",
+      "target_release": "2.49.0",
+      "competitor_scope": true,
+      "quickpls_scope": "One two-way interaction on an existing recursive PLS path using the bounded standardized two-stage score workflow and simple slopes at -1, 0, and +1.",
+      "quickpls_capability_ids": [
+        "qpls3.pls.moderation"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm",
+        "smartpls.pls_bootstrapping"
+      ],
+      "remaining_gap": "Create current method-scoped release evidence; multiple interactions, three-way interactions, arbitrary probing values, and broader interaction systems remain excluded."
+    },
+    {
+      "id": "smartpls.mediation",
+      "catalogue_position": 27,
+      "official_family": "Extended Relationships",
+      "official_method": "Mediation",
+      "status": "engine-preview",
+      "priority": "P1",
+      "target_release": "2.49.0",
+      "competitor_scope": true,
+      "quickpls_scope": "Bounded direct, total-indirect, and total-effect decomposition over directed paths in a supported recursive PLS model.",
+      "quickpls_capability_ids": [
+        "qpls3.pls.mediation"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm",
+        "smartpls.pls_bootstrapping"
+      ],
+      "remaining_gap": "Create current method-scoped release evidence; causal identification, counterfactual mediation, moderated mediation, and cyclic paths remain excluded."
+    },
+    {
+      "id": "smartpls.nonlinear_relationships",
+      "catalogue_position": 28,
+      "official_family": "Extended Relationships",
+      "official_method": "Nonlinear Relationships",
+      "status": "engine-preview",
+      "priority": "P1",
+      "target_release": "2.49.0",
+      "competitor_scope": true,
+      "quickpls_scope": "Bounded fixed-score centered-quadratic diagnostics for supported path- or factor-weighted PLS equations.",
+      "quickpls_capability_ids": [
+        "qpls3.pls.nonlinear_quadratic"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm",
+        "smartpls.pls_bootstrapping"
+      ],
+      "remaining_gap": "Add strict persistence, native authoring/results/export, and packaged release evidence; spline, logarithmic, threshold, custom-basis, and interaction terms remain excluded."
+    },
+    {
+      "id": "smartpls.higher_order_models",
+      "catalogue_position": 29,
+      "official_family": "Extended Relationships",
+      "official_method": "Higher-order Models",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "One bounded reflective-reflective disjoint two-stage higher-order construct with at least two measured lower-order components and one measured outcome.",
+      "quickpls_capability_ids": [
+        "qpls3.pls.higher_order_two_stage"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Refresh current-cohort source and packaged receipts after the coordinated binary is frozen; repeated-indicator, hybrid, formative, nested, multiple-HOC, incoming-HOC-path, and HOC resampling workflows remain excluded."
+    },
+    {
+      "id": "smartpls.endogeneity_gaussian_copulas",
+      "catalogue_position": 30,
+      "official_family": "Extended Relationships",
+      "official_method": "Endogeneity and Gaussian Copulas",
+      "status": "absent",
+      "priority": "P1",
+      "target_release": "2.49.0",
+      "competitor_scope": true,
+      "quickpls_scope": "Bounded fixed-score Gaussian-copula endogeneity diagnostics for supported path- or factor-weighted PLS structural equations.",
+      "quickpls_capability_ids": [
+        "qpls3.pls.gaussian_copula_endogeneity"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.pls_algorithm"
+      ],
+      "remaining_gap": "Create current method-scoped release evidence; instrumental-variable correction, custom copulas, resampling inference, and causal conclusions remain excluded."
+    },
+    {
+      "id": "smartpls.gsca",
+      "catalogue_position": 31,
+      "official_family": "Generalized Structured Component Analysis (GSCA)",
+      "official_method": "GSCA algorithm and bootstrapping",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Bounded GSCA ALS point estimates; GSCA bootstrap and inference are absent.",
+      "quickpls_capability_ids": [
+        "qpls3.gsca.als"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [],
+      "remaining_gap": "GSCA bootstrap and inference remain absent and cannot be claimed for the full official entry."
+    },
+    {
+      "id": "smartpls.logistic_regression",
+      "catalogue_position": 32,
+      "official_family": "Regression, Path Analysis and PROCESS",
+      "official_method": "Logistic Regression",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Binary numeric 0/1 maximum-likelihood logistic regression with fixed Wald inference and diagnostics; excluded variants are documented.",
+      "quickpls_capability_ids": [
+        "qpls3.standalone.logistic"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [],
+      "remaining_gap": "Maintain evidence; multinomial, ordinal, weighted, clustered, and Firth variants remain excluded."
+    },
+    {
+      "id": "smartpls.nca",
+      "catalogue_position": 33,
+      "official_family": "Regression, Path Analysis and PROCESS",
+      "official_method": "Necessary Condition Analysis (NCA)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "One observed X/Y pair with bounded CE-FDH and CR-FDH analysis.",
+      "quickpls_capability_ids": [
+        "qpls3.standalone.nca"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [],
+      "remaining_gap": "Maintain packaged Windows and method-audit evidence for the bounded workflow; latent-score, multiple-condition, theoretical-range, and cIPMA workflows remain excluded."
+    },
+    {
+      "id": "smartpls.process",
+      "catalogue_position": 34,
+      "official_family": "Regression, Path Analysis and PROCESS",
+      "official_method": "Path Analysis and PROCESS",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Bounded graph-defined continuous-outcome OLS path and PROCESS-style workflow.",
+      "quickpls_capability_ids": [
+        "qpls3.standalone.process"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.regression"
+      ],
+      "remaining_gap": "Maintain current method-scoped release evidence; binary equations, weights, clusters, copied templates, and unrestricted catalogue breadth remain excluded."
+    },
+    {
+      "id": "smartpls.process_bootstrapping",
+      "catalogue_position": 35,
+      "official_family": "Regression, Path Analysis and PROCESS",
+      "official_method": "Path Analysis and PROCESS Bootstrapping",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Dedicated percentile and conditional-BCa case bootstrap in the bounded graph-defined PROCESS workflow.",
+      "quickpls_capability_ids": [
+        "qpls3.standalone.process"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.process",
+        "smartpls.regression_bootstrapping"
+      ],
+      "remaining_gap": "Maintain current method-scoped release evidence; studentized, custom-tail, custom-alpha, weighted, and clustered inference remain excluded."
+    },
+    {
+      "id": "smartpls.regression",
+      "catalogue_position": 36,
+      "official_family": "Regression, Path Analysis and PROCESS",
+      "official_method": "Regression",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Numeric complete-case OLS with HC3 inference.",
+      "quickpls_capability_ids": [
+        "qpls3.standalone.ols"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [],
+      "remaining_gap": "Rebuild current source-bound qualification evidence; categorical helpers, weights, clustered SEs, mixed, and panel models remain excluded."
+    },
+    {
+      "id": "smartpls.regression_bootstrapping",
+      "catalogue_position": 37,
+      "official_family": "Regression, Path Analysis and PROCESS",
+      "official_method": "Regression Bootstrapping",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Bounded OLS and binary-logistic case bootstrap.",
+      "quickpls_capability_ids": [
+        "qpls3.standalone.regression_bootstrap"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.regression",
+        "smartpls.logistic_regression"
+      ],
+      "remaining_gap": "Maintain evidence; studentized and broader regression-family variants remain excluded."
+    },
+    {
+      "id": "smartpls.cbsem",
+      "catalogue_position": 38,
+      "official_family": "CB-SEM and CFA",
+      "official_method": "CB-SEM - Covariance-based Structural Equation Modeling (CB-SEM)",
+      "status": "absent",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Scoped Standard raw-data single-group continuous reflective maximum-likelihood CFA or recursive SEM with listwise deletion, marker identification, parameter estimates, residuals, fit indices, modification screening, typed persistence, and selected-run export. The separate CompiledCbsemPlanV2 covariance/scaled-correlation input cell remains Labs and unqualified.",
+      "quickpls_capability_ids": [
+        "qpls3.cbsem.ml",
+        "qpls3.cbsem.ml.matrix_input"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [],
+      "remaining_gap": "Maintain the bounded raw-data evidence. Matrix input, robust ML, ordinal/WLSMV, FIML, broad constraints, interactions, HOCs, and unrestricted multigroup/invariance require separate qualification before expansion."
+    },
+    {
+      "id": "smartpls.cbsem_bootstrapping",
+      "catalogue_position": 39,
+      "official_family": "CB-SEM and CFA",
+      "official_method": "CB-SEM Bootstrapping",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Recipe-v4 exact case bootstrap for raw continuous single-group reflective CFA with listwise deletion, 500 to 10,000 indexed no-retry full-ML refits, and fixed 95% percentile Type-7, analytic-studentized Type-7, or complete-delete-one BCa Type-7 output.",
+      "quickpls_capability_ids": [
+        "qpls3.cbsem.bootstrap"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.cbsem"
+      ],
+      "remaining_gap": "Maintain current method-scoped Windows package, export, save/reopen, and audit receipts for the bounded exact-CFA family; broader CB-SEM bootstrap variants remain excluded."
+    },
+    {
+      "id": "smartpls.cbsem_model_comparison",
+      "catalogue_position": 40,
+      "official_family": "CB-SEM and CFA",
+      "official_method": "CB-SEM Model Comparison",
+      "status": "absent",
+      "priority": "P2",
+      "target_release": "2.52.0",
+      "competitor_scope": true,
+      "quickpls_scope": "The frozen bounded CB-SEM model-comparison contract is not factory-qualified.",
+      "quickpls_capability_ids": [
+        "qpls3.cbsem.model_comparison"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.cbsem"
+      ],
+      "remaining_gap": "Implement and qualify nested and non-nested model comparison, estimator compatibility, and fit-difference rules."
+    },
+    {
+      "id": "smartpls.cbsem_mga",
+      "catalogue_position": 41,
+      "official_family": "CB-SEM and CFA",
+      "official_method": "CB-SEM Multigroup Analysis (MGA)",
+      "status": "absent",
+      "priority": "P2",
+      "target_release": "2.52.0",
+      "competitor_scope": true,
+      "quickpls_scope": "The frozen bounded CB-SEM multigroup contract is not factory-qualified.",
+      "quickpls_capability_ids": [
+        "qpls3.cbsem.multigroup"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.cbsem",
+        "smartpls.cbsem_bootstrapping"
+      ],
+      "remaining_gap": "Complete and qualify group setup, constraints, inference, results, export, persistence, and packaged acceptance."
+    },
+    {
+      "id": "smartpls.cbsem_measurement_invariance",
+      "catalogue_position": 42,
+      "official_family": "CB-SEM and CFA",
+      "official_method": "CB-SEM Measurement Invariance Assessment",
+      "status": "absent",
+      "priority": "P2",
+      "target_release": "2.52.0",
+      "competitor_scope": true,
+      "quickpls_scope": "The frozen bounded CB-SEM invariance contract is not factory-qualified.",
+      "quickpls_capability_ids": [
+        "qpls3.cbsem.measurement_invariance"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.cbsem"
+      ],
+      "remaining_gap": "Complete and qualify configural, metric, scalar, and supported partial-invariance workflows with diagnostics and packaged evidence."
+    },
+    {
+      "id": "smartpls.cbsem_moderator",
+      "catalogue_position": 43,
+      "official_family": "CB-SEM and CFA",
+      "official_method": "CB-SEM Moderator Analysis",
+      "status": "absent",
+      "priority": "P2",
+      "target_release": "2.52.0",
+      "competitor_scope": true,
+      "quickpls_scope": "The frozen bounded CB-SEM moderator contract is not factory-qualified.",
+      "quickpls_capability_ids": [
+        "qpls3.cbsem.moderator"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [
+        "smartpls.cbsem",
+        "smartpls.cbsem_bootstrapping"
+      ],
+      "remaining_gap": "Implement and qualify the frozen observed-interaction scope, probing, inference, and native evidence."
+    },
+    {
+      "id": "smartpls.cfa",
+      "catalogue_position": 44,
+      "official_family": "CB-SEM and CFA",
+      "official_method": "Confirmatory Factor Analysis (CFA)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "Single-group reflective raw-data ML measurement-only CFA.",
+      "quickpls_capability_ids": [
+        "qpls3.cbsem.ml"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [],
+      "remaining_gap": "Maintain the bounded raw-data ML CFA evidence; robust, ordinal, FIML, mean-structure, and broader invariance scopes require separate qualification."
+    },
+    {
+      "id": "smartpls.pca_cbsem",
+      "catalogue_position": 45,
+      "official_family": "CB-SEM and CFA",
+      "official_method": "Principal component analysis (PCA)",
+      "status": "release-qualified",
+      "priority": "P0",
+      "target_release": "current",
+      "competitor_scope": true,
+      "quickpls_scope": "The same bounded standalone PCA capability mapped at official position 5.",
+      "quickpls_capability_ids": [
+        "qpls3.standalone.pca"
+      ],
+      "implementation_evidence": [],
+      "dependencies": [],
+      "remaining_gap": "Supported through the shared standalone pca_v1 scope; CB-SEM-specific PCA options remain outside this version."
+    }
   ]
 }

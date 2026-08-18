@@ -1,0 +1,126 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "final_release_audit": {
+      "actual_packaged_viewport_matrix": true,
+      "bounded_claim": "One observed numeric condition and one observed numeric outcome with bounded CE-FDH and CR-FDH ceilings, seeded one-sided permutation p values, and observed-range bottleneck rows.",
+      "bounded_packaged_workflow": true,
+      "exact_required_check_receipt": true,
+      "excluded_scope": [
+        "Multiple simultaneous conditions or outcomes, latent-score NCA, cIPMA, categorical encoding, and theoretical ranges are excluded.",
+        "Ceiling techniques other than CE-FDH and CR-FDH and bottleneck grids outside 10 through 90 percent are excluded.",
+        "The bounded workflow is not a claim of full parity with another product or the R NCA package."
+      ],
+      "invalid_setup_no_state_mutation": true,
+      "packaged_artifact": {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/nca_v2/packaged_acceptance.identity.json"
+      },
+      "packaged_identity_passes": true,
+      "passed": true,
+      "prior_factory_native": true,
+      "release_evidence_contract_passes": true,
+      "required_cancellation_retry": true,
+      "same_run_archive": true,
+      "source_receipt_and_cli_current": true,
+      "verified_prior_artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/nca_v2/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/nca_v2/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/nca_v2/native_stage.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ]
+    }
+  },
+  "feature_id": "qpls3.standalone.nca",
+  "generated_at_utc": "2026-08-18T14:16:06.289863Z",
+  "method_version": "nca_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+      "sha256": "d09c6a136bea5d983f0165cbac3b03d2abb43d089945bcaab83c8046eae47954",
+      "size": 7178
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/nca_v2.manifest.json",
+      "sha256": "cfe666fb8c04e0cfa2b880d8801277af9714eb47341ba3ed0f9f055331694b30",
+      "size": 15381
+    },
+    {
+      "path": "validation/nca_v2_packaged_acceptance.py",
+      "sha256": "75277eaa8a2d5486ea98ad500d1c4843017e1a65a88487b24e316325bf9a1ed1",
+      "size": 249
+    },
+    {
+      "path": "validation/nca_v2_release_audit.py",
+      "sha256": "69dfe5bc7a528d51b912e0b084e6356417ce37caad6bc6853aef214236176d5b",
+      "size": 267
+    },
+    {
+      "path": "validation/packaged_windows_acceptance_v2.py",
+      "sha256": "fc7131e16ecf11afcb0717cc1277a4276894f817464bab8c5c1a687ac3811626",
+      "size": 9460
+    },
+    {
+      "path": "validation/phase2_release_packaged_common.py",
+      "sha256": "ac2e758e49d380ce66d8b5987b0d76e1752fb4bf6ad5e6e65f16b1e4e5b15775",
+      "size": 70975
+    },
+    {
+      "path": "validation/results/method_factory/nca_v2/packaged_acceptance.identity.json",
+      "sha256": "7f88be03072e586496479da332be9479f1813110b9604a560fa4ab39ee2895d9",
+      "size": 35626
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    },
+    {
+      "path": "validation/test_phase2_release_packaged_common.py",
+      "sha256": "e50a98a98d0f3e5f29373801eaa5ec0b0352d8cdeb7d8cc6c71a5b67b87af92d",
+      "size": 38027
+    }
+  ]
+}
