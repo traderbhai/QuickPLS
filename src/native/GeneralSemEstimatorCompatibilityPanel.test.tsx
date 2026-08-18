@@ -46,16 +46,20 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
 
     expect(html).toContain('data-general-sem-estimator-compatibility="v1"');
     expect(html).toContain("Estimator compatibility preview");
-    expect(html).toContain("The native compiler confirms the final capability decision before calculation.");
+    expect(html).toContain("Compile-qualification preview only: this panel does not run a calculation or invoke native General SEM execution.");
+    expect(html).not.toContain("likely to calculate");
+    expect(html).not.toContain("before calculation");
     expect(html.match(/data-general-sem-estimator-card=/g)).toHaveLength(2);
     expect(html).toContain('role="status"');
     expect(html).toContain('aria-live="polite"');
     expect(html).toContain('aria-atomic="true"');
     expect(html).toContain("PLS-SEM General v3: Experimental");
     expect(html).toContain("CB-SEM General v3: Blocked");
-    expect(html).toContain("PLS-SEM can calculate this request in Experimental Labs.");
-    expect(html).toContain("The complete recursive model is re-estimated by the proven PLS score executor");
-    expect(html).toContain("Experimental Labs.</strong> This request is runnable only through the exact experimental capability");
+    expect(html).toContain("PLS-SEM can compile this exact request in Experimental Labs.");
+    expect(html).toContain("The compiler binds the proven PLS scoring plan to stable relation-path identities.");
+    expect(html).toContain("Experimental Labs.</strong> This request passes the exact compiler-qualification cells listed above.");
+    expect(html).toContain("Selecting it records an estimator preference only; it does not start native execution.");
+    expect(html).toContain("Exact capability cells: qpls3.pls.mediation (pls_mediation_v1)");
     expect(html).toContain("Diagnostics and next actions");
     expect(html).toContain("How to proceed");
     expect(html).toContain("Cannot select:");
@@ -79,11 +83,11 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
       selectedEstimatorId={GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1}
       onSelectEstimator={() => undefined}
     />);
-    expect(blockedSelectedHtml).toContain("No runnable estimator selected.");
+    expect(blockedSelectedHtml).toContain("No compile-qualified estimator selected.");
     expect(blockedSelectedHtml).not.toContain("Selected CB-SEM General v3");
   });
 
-  it("disables both controls and renders actionable inference guidance when PLS is blocked", () => {
+  it("qualifies supported percentile two-sided bootstrap as Experimental and renders every exact capability cell", () => {
     const config = defaultGeneralSemConfigV1();
     config.inference = {
       kind: "case_bootstrap",
@@ -99,9 +103,14 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
       onSelectEstimator={() => undefined}
     />);
 
-    expect(html.match(/<button[^>]*disabled=""[^>]*data-general-sem-estimator-select=/g)).toHaveLength(2);
-    expect(html).toContain("General SEM case-bootstrap inference is requested but is not connected");
-    expect(html).toContain("Set General SEM inference to none for the current point-estimation slice");
+    expect(html).toContain("PLS-SEM General v3: Experimental");
+    expect(html).toContain("General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight.");
+    expect(html).toContain("qpls3.pls.mediation (pls_mediation_v1)");
+    expect(html).toContain("qpls3.inference.bootstrap (indexed_resampling_v4)");
+    expect(html).toContain("Runtime inference must carry a matching complete-model re-estimation receipt before publication.");
+    expect(html).toContain("Compile-qualification preview only: this panel does not run a calculation or invoke native General SEM execution.");
+    expect(html.match(/<button[^>]*disabled=""[^>]*data-general-sem-estimator-select=/g)).toHaveLength(1);
+    expect(html).toMatch(/<button(?=[^>]*data-general-sem-estimator-select="qpls\.pls_sem\.v3")(?![^>]*disabled="")[^>]*>Select PLS-SEM General v3<\/button>/);
     expect(html).toContain('aria-disabled="true"');
   });
 

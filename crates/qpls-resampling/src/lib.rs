@@ -46,12 +46,14 @@ mod cbsem_bootstrap;
 mod cbsem_exact_bootstrap;
 mod consistent_bootstrap;
 mod consistent_permutation;
+mod general_sem_pls_bootstrap_v1;
 mod pls_model_fit_exact;
 mod power;
 pub use cbsem_bootstrap::*;
 pub use cbsem_exact_bootstrap::*;
 pub use consistent_bootstrap::*;
 pub use consistent_permutation::*;
+pub use general_sem_pls_bootstrap_v1::*;
 pub use pls_model_fit_exact::*;
 pub use power::*;
 

@@ -5,6 +5,20 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 pub const CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION: u32 = 2;
 pub const CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION: u32 = 1;
+pub const GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1: &str =
+    "general_sem_pls_full_model_case_bootstrap_v1";
+pub const GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
+    "general_sem_pls_case_bootstrap_v1";
+pub const GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1: &str =
+    "indexed_case_resampling_v1";
+pub const GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1: &str = "type7_quantile_v1";
+pub const GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1: &str =
+    "sample_standard_error_b_minus_1_v1";
+pub const GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1: &str = "neumaier_compensated_sum_v1";
+pub const GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1: &str =
+    "null_centered_plus_one_v1";
+pub const GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1: &str =
+    "minimum_usable_fraction_0_9_v1";
 const MAX_SAFE_INTEGER: i64 = 9_007_199_254_740_991;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -24,6 +38,10 @@ pub fn capability_cell_reference_identity_v2(reference: &CapabilityCellReference
         reference.cell_id,
         reference.capability_version
     )
+}
+
+pub fn general_sem_pls_bootstrap_capability_cell_v1() -> CapabilityCellReferenceV2 {
+    crate::pls_general_bootstrap_capability_cell_v1()
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -301,6 +319,10 @@ pub struct CanonicalGeneralSemResultTraceV1 {
 pub struct CanonicalGeneralSemEstimateV1 {
     pub estimate: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bootstrap_mean: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bootstrap_bias: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub standard_error: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lower: Option<f64>,
@@ -308,6 +330,89 @@ pub struct CanonicalGeneralSemEstimateV1 {
     pub upper: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub p_value: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bootstrap_usable_replicates: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bootstrap_two_sided_exceedances: Option<u32>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalGeneralSemInferenceKindV1 {
+    CaseBootstrap,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalGeneralSemBootstrapIntervalV1 {
+    PercentileType7,
+    Bca,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalGeneralSemInferenceTailV1 {
+    TwoSided,
+    OneSidedLower,
+    OneSidedUpper,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalGeneralSemFailedReplicateV1 {
+    pub replicate_index: u32,
+    pub reason_code: CanonicalGeneralSemFailedReplicateReasonV1,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalGeneralSemFailedReplicateReasonV1 {
+    InsufficientObservations,
+    ConstantIndicator,
+    RankDeficient,
+    IsolatedConstruct,
+    EstimationNonconvergence,
+    NumericalFailure,
+}
+
+/// Exact resampling and identity receipt for inferred General SEM effect rows.
+/// The first executor slice uses indexed, full-model PLS case resampling; the
+/// versioned fields prevent later algorithms from being read as that slice.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalGeneralSemInferenceReceiptV1 {
+    pub kind: CanonicalGeneralSemInferenceKindV1,
+    pub capability_cell: CapabilityCellReferenceV2,
+    pub method_version: String,
+    pub resampling_operation_version: String,
+    pub resampling_stream_version: String,
+    pub quantile_method_version: String,
+    pub standard_error_method_version: String,
+    pub summation_method_version: String,
+    pub p_value_method_version: String,
+    pub failure_policy_version: String,
+    pub compilation_artifact_identity_sha256: String,
+    pub compiled_plan_sha256: String,
+    pub general_sem_config_sha256: String,
+    pub recipe_analytical_sha256: String,
+    pub model_scientific_sha256: String,
+    pub source_dataset_fingerprint: String,
+    pub complete_case_frame_sha256: String,
+    pub usable_replicate_indices_sha256: String,
+    pub effect_identity_set_sha256: String,
+    pub effect_ids: Vec<String>,
+    pub interval: CanonicalGeneralSemBootstrapIntervalV1,
+    pub tail: CanonicalGeneralSemInferenceTailV1,
+    pub confidence_level: f64,
+    pub resamples_requested: u32,
+    pub resamples_usable: u32,
+    pub minimum_usable_resamples: u32,
+    /// Decimal u64 wire form. This remains exact in JavaScript runtimes.
+    pub seed: String,
+    pub workers: u32,
+    pub complete_model_reestimated_per_replicate: bool,
+    pub failed_replicates: Vec<CanonicalGeneralSemFailedReplicateV1>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -316,6 +421,8 @@ pub struct CanonicalSpecificIndirectEffectResultV1 {
     pub effect_id: String,
     pub estimand_id: String,
     pub trace: CanonicalGeneralSemResultTraceV1,
+    pub source_id: String,
+    pub target_id: String,
     pub ordered_relation_ids: Vec<String>,
     pub value: CanonicalGeneralSemEstimateV1,
 }
@@ -336,7 +443,156 @@ pub struct CanonicalAggregateEffectResultV1 {
     pub kind: CanonicalAggregateEffectKindV1,
     pub source_id: String,
     pub target_id: String,
+    pub direct_relation_ids: Vec<String>,
+    pub contributing_path_identities: Vec<String>,
     pub value: CanonicalGeneralSemEstimateV1,
+}
+
+/// Typed scientific identity hashed by an inference receipt. Estimates and
+/// presentation are intentionally absent; authored/compiled estimand meaning
+/// is fully bound.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum CanonicalGeneralSemEffectIdentityV1 {
+    SpecificIndirect {
+        effect_id: String,
+        estimand_id: String,
+        source_id: String,
+        target_id: String,
+        ordered_relation_ids: Vec<String>,
+    },
+    TotalIndirect {
+        effect_id: String,
+        estimand_id: String,
+        source_id: String,
+        target_id: String,
+        contributing_path_identities: Vec<String>,
+    },
+    TotalEffect {
+        effect_id: String,
+        estimand_id: String,
+        source_id: String,
+        target_id: String,
+        direct_relation_ids: Vec<String>,
+        contributing_path_identities: Vec<String>,
+    },
+}
+
+impl CanonicalGeneralSemEffectIdentityV1 {
+    pub fn effect_id(&self) -> &str {
+        match self {
+            Self::SpecificIndirect { effect_id, .. }
+            | Self::TotalIndirect { effect_id, .. }
+            | Self::TotalEffect { effect_id, .. } => effect_id,
+        }
+    }
+}
+
+pub fn canonical_general_sem_effect_identities_v1(
+    results: &CanonicalGeneralSemResultsV1,
+) -> Vec<CanonicalGeneralSemEffectIdentityV1> {
+    let mut identities = results
+        .specific_indirect_effects
+        .iter()
+        .map(
+            |effect| CanonicalGeneralSemEffectIdentityV1::SpecificIndirect {
+                effect_id: effect.effect_id.clone(),
+                estimand_id: effect.estimand_id.clone(),
+                source_id: effect.source_id.clone(),
+                target_id: effect.target_id.clone(),
+                ordered_relation_ids: effect.ordered_relation_ids.clone(),
+            },
+        )
+        .chain(
+            results
+                .aggregate_effects
+                .iter()
+                .map(|effect| match effect.kind {
+                    CanonicalAggregateEffectKindV1::TotalIndirect => {
+                        CanonicalGeneralSemEffectIdentityV1::TotalIndirect {
+                            effect_id: effect.effect_id.clone(),
+                            estimand_id: effect.estimand_id.clone(),
+                            source_id: effect.source_id.clone(),
+                            target_id: effect.target_id.clone(),
+                            contributing_path_identities: effect
+                                .contributing_path_identities
+                                .clone(),
+                        }
+                    }
+                    CanonicalAggregateEffectKindV1::TotalEffect => {
+                        CanonicalGeneralSemEffectIdentityV1::TotalEffect {
+                            effect_id: effect.effect_id.clone(),
+                            estimand_id: effect.estimand_id.clone(),
+                            source_id: effect.source_id.clone(),
+                            target_id: effect.target_id.clone(),
+                            direct_relation_ids: effect.direct_relation_ids.clone(),
+                            contributing_path_identities: effect
+                                .contributing_path_identities
+                                .clone(),
+                        }
+                    }
+                }),
+        )
+        .collect::<Vec<_>>();
+    identities.sort_by(|left, right| left.effect_id().cmp(right.effect_id()));
+    identities
+}
+
+pub fn compiled_pls_effect_identities_v1(
+    estimands: &[crate::CompiledPlsEffectEstimandV3],
+) -> Vec<CanonicalGeneralSemEffectIdentityV1> {
+    let mut identities = estimands
+        .iter()
+        .map(|estimand| match estimand {
+            crate::CompiledPlsEffectEstimandV3::SpecificIndirect {
+                estimand_id,
+                path_identity,
+                source_id,
+                target_id,
+                ordered_relation_ids,
+            } => CanonicalGeneralSemEffectIdentityV1::SpecificIndirect {
+                effect_id: path_identity.clone(),
+                estimand_id: estimand_id.clone(),
+                source_id: source_id.clone(),
+                target_id: target_id.clone(),
+                ordered_relation_ids: ordered_relation_ids.clone(),
+            },
+            crate::CompiledPlsEffectEstimandV3::TotalIndirect {
+                estimand_id,
+                source_id,
+                target_id,
+                contributing_path_identities,
+            } => CanonicalGeneralSemEffectIdentityV1::TotalIndirect {
+                effect_id: estimand_id.clone(),
+                estimand_id: estimand_id.clone(),
+                source_id: source_id.clone(),
+                target_id: target_id.clone(),
+                contributing_path_identities: contributing_path_identities.clone(),
+            },
+            crate::CompiledPlsEffectEstimandV3::TotalEffect {
+                estimand_id,
+                source_id,
+                target_id,
+                direct_relation_ids,
+                contributing_indirect_path_identities,
+            } => CanonicalGeneralSemEffectIdentityV1::TotalEffect {
+                effect_id: estimand_id.clone(),
+                estimand_id: estimand_id.clone(),
+                source_id: source_id.clone(),
+                target_id: target_id.clone(),
+                direct_relation_ids: direct_relation_ids.clone(),
+                contributing_path_identities: contributing_indirect_path_identities.clone(),
+            },
+        })
+        .collect::<Vec<_>>();
+    identities.sort_by(|left, right| left.effect_id().cmp(right.effect_id()));
+    identities
+}
+
+pub fn general_sem_effect_identity_set_sha256_v1(
+    identities: &[CanonicalGeneralSemEffectIdentityV1],
+) -> String {
+    crate::sha256_serialized(&identities)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -507,6 +763,8 @@ pub struct CanonicalIdentificationDiagnosticV1 {
 #[serde(deny_unknown_fields)]
 pub struct CanonicalGeneralSemResultsV1 {
     pub schema_version: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inference_receipt: Option<CanonicalGeneralSemInferenceReceiptV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub specific_indirect_effects: Vec<CanonicalSpecificIndirectEffectResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -742,6 +1000,18 @@ fn validate_general_sem_estimate(
         errors.push(format!("{context}.estimate must be finite"));
     }
     if value
+        .bootstrap_mean
+        .is_some_and(|bootstrap_mean| !bootstrap_mean.is_finite())
+    {
+        errors.push(format!("{context}.bootstrap_mean must be finite"));
+    }
+    if value
+        .bootstrap_bias
+        .is_some_and(|bootstrap_bias| !bootstrap_bias.is_finite())
+    {
+        errors.push(format!("{context}.bootstrap_bias must be finite"));
+    }
+    if value
         .standard_error
         .is_some_and(|standard_error| !standard_error.is_finite() || standard_error < 0.0)
     {
@@ -758,6 +1028,42 @@ fn validate_general_sem_estimate(
         ));
     }
     validate_general_sem_bounds(errors, value.lower, value.upper, context);
+    let inference_field_count = [
+        value.bootstrap_mean.is_some(),
+        value.bootstrap_bias.is_some(),
+        value.standard_error.is_some(),
+        value.lower.is_some(),
+        value.upper.is_some(),
+        value.p_value.is_some(),
+        value.bootstrap_usable_replicates.is_some(),
+        value.bootstrap_two_sided_exceedances.is_some(),
+    ]
+    .into_iter()
+    .filter(|present| *present)
+    .count();
+    if inference_field_count != 0 && inference_field_count != 8 {
+        errors.push(format!(
+            "{context} bootstrap inference fields must be either all absent or all present"
+        ));
+    }
+    if let (Some(mean), Some(bias)) = (value.bootstrap_mean, value.bootstrap_bias)
+        && !approximately_equal(mean - value.estimate, bias)
+    {
+        errors.push(format!(
+            "{context}.bootstrap_bias must equal bootstrap_mean minus estimate"
+        ));
+    }
+}
+
+fn general_sem_estimate_has_inference(value: &CanonicalGeneralSemEstimateV1) -> bool {
+    value.bootstrap_mean.is_some()
+        || value.bootstrap_bias.is_some()
+        || value.standard_error.is_some()
+        || value.lower.is_some()
+        || value.upper.is_some()
+        || value.p_value.is_some()
+        || value.bootstrap_usable_replicates.is_some()
+        || value.bootstrap_two_sided_exceedances.is_some()
 }
 
 fn approximately_equal(left: f64, right: f64) -> bool {
@@ -785,18 +1091,385 @@ fn conditional_probe_value(
     }
 }
 
+fn validate_general_sem_inference_receipt_v1(
+    errors: &mut Vec<String>,
+    results: &CanonicalGeneralSemResultsV1,
+    provenance: &CanonicalResultProvenanceV2,
+    document_capability_ids: Option<&HashSet<String>>,
+) {
+    let context = "general_sem_results.inference_receipt";
+    let effect_values = results
+        .specific_indirect_effects
+        .iter()
+        .map(|effect| (effect.effect_id.as_str(), &effect.value, &effect.trace))
+        .chain(
+            results
+                .aggregate_effects
+                .iter()
+                .map(|effect| (effect.effect_id.as_str(), &effect.value, &effect.trace)),
+        )
+        .collect::<Vec<_>>();
+    let uncovered_inference = results
+        .conditional_effects
+        .iter()
+        .any(|effect| general_sem_estimate_has_inference(&effect.value))
+        || results.higher_order_stages.iter().any(|stage| {
+            stage
+                .relation_estimates
+                .iter()
+                .any(|relation| general_sem_estimate_has_inference(&relation.value))
+        });
+
+    let Some(receipt) = &results.inference_receipt else {
+        if effect_values
+            .iter()
+            .any(|(_, value, _)| general_sem_estimate_has_inference(value))
+            || uncovered_inference
+        {
+            errors.push("general_sem_results inference fields require inference_receipt".into());
+        }
+        return;
+    };
+
+    validate_capability_reference(
+        errors,
+        &receipt.capability_cell,
+        &format!("{context}.capability_cell"),
+    );
+    if receipt.capability_cell != general_sem_pls_bootstrap_capability_cell_v1() {
+        errors.push(format!(
+            "{context}.capability_cell must equal the indexed PLS bootstrap v4 option cell"
+        ));
+    }
+    let capability_identity = capability_cell_reference_identity_v2(&receipt.capability_cell);
+    match document_capability_ids {
+        Some(identities) if !identities.contains(&capability_identity) => errors.push(format!(
+            "{context}.capability_cell references undeclared option cell {capability_identity}"
+        )),
+        None => errors.push(format!(
+            "{context}.capability_cell requires document capability_cells"
+        )),
+        _ => {}
+    }
+
+    for (name, value) in [
+        ("method_version", receipt.method_version.as_str()),
+        (
+            "resampling_operation_version",
+            receipt.resampling_operation_version.as_str(),
+        ),
+        (
+            "resampling_stream_version",
+            receipt.resampling_stream_version.as_str(),
+        ),
+        (
+            "quantile_method_version",
+            receipt.quantile_method_version.as_str(),
+        ),
+        (
+            "standard_error_method_version",
+            receipt.standard_error_method_version.as_str(),
+        ),
+        (
+            "summation_method_version",
+            receipt.summation_method_version.as_str(),
+        ),
+        (
+            "p_value_method_version",
+            receipt.p_value_method_version.as_str(),
+        ),
+        (
+            "failure_policy_version",
+            receipt.failure_policy_version.as_str(),
+        ),
+    ] {
+        require_stable_id(errors, value, &format!("{context}.{name}"));
+    }
+    if receipt.method_version != GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1 {
+        errors.push(format!(
+            "{context}.method_version must equal {GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1}"
+        ));
+    }
+    if receipt.resampling_operation_version != GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1 {
+        errors.push(format!(
+            "{context}.resampling_operation_version must equal {GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1}"
+        ));
+    }
+    if receipt.resampling_stream_version != GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1 {
+        errors.push(format!(
+            "{context}.resampling_stream_version must equal {GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1}"
+        ));
+    }
+    if receipt.quantile_method_version != GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1 {
+        errors.push(format!(
+            "{context}.quantile_method_version must equal {GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1}"
+        ));
+    }
+    if receipt.standard_error_method_version != GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1
+    {
+        errors.push(format!(
+            "{context}.standard_error_method_version must equal {GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1}"
+        ));
+    }
+    if receipt.summation_method_version != GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1 {
+        errors.push(format!(
+            "{context}.summation_method_version must equal {GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1}"
+        ));
+    }
+    if receipt.p_value_method_version
+        != GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1
+    {
+        errors.push(format!(
+            "{context}.p_value_method_version must equal {GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1}"
+        ));
+    }
+    if receipt.failure_policy_version != GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1 {
+        errors.push(format!(
+            "{context}.failure_policy_version must equal {GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1}"
+        ));
+    }
+    for (name, value) in [
+        (
+            "compilation_artifact_identity_sha256",
+            receipt.compilation_artifact_identity_sha256.as_str(),
+        ),
+        (
+            "compiled_plan_sha256",
+            receipt.compiled_plan_sha256.as_str(),
+        ),
+        (
+            "general_sem_config_sha256",
+            receipt.general_sem_config_sha256.as_str(),
+        ),
+        (
+            "recipe_analytical_sha256",
+            receipt.recipe_analytical_sha256.as_str(),
+        ),
+        (
+            "model_scientific_sha256",
+            receipt.model_scientific_sha256.as_str(),
+        ),
+        (
+            "complete_case_frame_sha256",
+            receipt.complete_case_frame_sha256.as_str(),
+        ),
+        (
+            "usable_replicate_indices_sha256",
+            receipt.usable_replicate_indices_sha256.as_str(),
+        ),
+        (
+            "effect_identity_set_sha256",
+            receipt.effect_identity_set_sha256.as_str(),
+        ),
+    ] {
+        if !is_lowercase_sha256(value) {
+            errors.push(format!("{context}.{name} must be a lowercase SHA-256"));
+        }
+    }
+    if !is_dataset_fingerprint_v1(&receipt.source_dataset_fingerprint) {
+        errors.push(format!(
+            "{context}.source_dataset_fingerprint must be a bare lowercase SHA-256 or v2:<lowercase SHA-256>"
+        ));
+    }
+    require_canonical_stable_ids(
+        errors,
+        receipt.effect_ids.iter().map(String::as_str),
+        &format!("{context}.effect_ids"),
+    );
+    if receipt.effect_ids.is_empty() {
+        errors.push(format!("{context}.effect_ids must not be empty"));
+    }
+    let mut expected_effect_ids = effect_values
+        .iter()
+        .map(|(effect_id, _, _)| (*effect_id).to_string())
+        .collect::<Vec<_>>();
+    expected_effect_ids.sort();
+    if receipt.effect_ids != expected_effect_ids {
+        errors.push(format!(
+            "{context}.effect_ids must exactly cover specific and aggregate effect rows"
+        ));
+    }
+    let effect_identities = canonical_general_sem_effect_identities_v1(results);
+    if receipt.effect_identity_set_sha256
+        != general_sem_effect_identity_set_sha256_v1(&effect_identities)
+    {
+        errors.push(format!(
+            "{context}.effect_identity_set_sha256 does not match the typed effect identity set"
+        ));
+    }
+    if receipt.model_scientific_sha256 != provenance.model_digest {
+        errors.push(format!(
+            "{context}.model_scientific_sha256 must equal provenance.model_digest"
+        ));
+    }
+    if receipt.source_dataset_fingerprint != provenance.dataset_fingerprint {
+        errors.push(format!(
+            "{context}.source_dataset_fingerprint must equal provenance.dataset_fingerprint"
+        ));
+    }
+    if receipt.recipe_analytical_sha256 != provenance.recipe_digest {
+        errors.push(format!(
+            "{context}.recipe_analytical_sha256 must equal provenance.recipe_digest"
+        ));
+    }
+    if !receipt.confidence_level.is_finite()
+        || receipt.confidence_level <= 0.0
+        || receipt.confidence_level >= 1.0
+    {
+        errors.push(format!(
+            "{context}.confidence_level must be finite and strictly between 0 and 1"
+        ));
+    }
+    if receipt.interval != CanonicalGeneralSemBootstrapIntervalV1::PercentileType7 {
+        errors.push(format!(
+            "{context}.interval must equal percentile_type7 for the v1 executor"
+        ));
+    }
+    if receipt.tail != CanonicalGeneralSemInferenceTailV1::TwoSided {
+        errors.push(format!(
+            "{context}.tail must equal two_sided for the v1 executor"
+        ));
+    }
+    if !(2..=10_000).contains(&receipt.resamples_requested) {
+        errors.push(format!(
+            "{context}.resamples_requested must be between 2 and 10000"
+        ));
+    }
+    let expected_minimum = ((f64::from(receipt.resamples_requested) * 0.9).ceil() as u32).max(2);
+    if receipt.minimum_usable_resamples != expected_minimum {
+        errors.push(format!(
+            "{context}.minimum_usable_resamples must equal the 90 percent usable gate"
+        ));
+    }
+    if receipt.resamples_usable < receipt.minimum_usable_resamples
+        || receipt.resamples_usable > receipt.resamples_requested
+    {
+        errors.push(format!(
+            "{context}.resamples_usable must satisfy the declared usable gate"
+        ));
+    }
+    if receipt.resamples_usable as usize + receipt.failed_replicates.len()
+        != receipt.resamples_requested as usize
+    {
+        errors.push(format!(
+            "{context} requested count must equal usable plus failed replicates"
+        ));
+    }
+    if !(1..=64).contains(&receipt.workers) {
+        errors.push(format!("{context}.workers must be between 1 and 64"));
+    }
+    match receipt.seed.parse::<u64>() {
+        Ok(seed) if seed.to_string() == receipt.seed => {
+            if provenance.seed.and_then(|value| u64::try_from(value).ok()) != Some(seed) {
+                errors.push(format!("{context}.seed must equal provenance.seed"));
+            }
+        }
+        _ => errors.push(format!("{context}.seed must be a canonical decimal u64")),
+    }
+    if i64::from(receipt.workers) != provenance.workers {
+        errors.push(format!("{context}.workers must equal provenance.workers"));
+    }
+    if !receipt.complete_model_reestimated_per_replicate {
+        errors.push(format!(
+            "{context}.complete_model_reestimated_per_replicate must be true"
+        ));
+    }
+    let mut previous_failure_index = None;
+    let mut failed_indices = BTreeSet::new();
+    for (index, failure) in receipt.failed_replicates.iter().enumerate() {
+        let failure_context = format!("{context}.failed_replicates[{index}]");
+        if failure.replicate_index >= receipt.resamples_requested {
+            errors.push(format!(
+                "{failure_context}.replicate_index is outside the requested plan"
+            ));
+        }
+        failed_indices.insert(failure.replicate_index);
+        if previous_failure_index.is_some_and(|previous| previous >= failure.replicate_index) {
+            errors.push(format!(
+                "{context}.failed_replicates must be strictly ordered by replicate_index"
+            ));
+        }
+        previous_failure_index = Some(failure.replicate_index);
+        if failure.message.trim().is_empty() {
+            errors.push(format!("{failure_context}.message must be nonempty"));
+        }
+    }
+    let usable_replicate_indices = (0..receipt.resamples_requested)
+        .filter(|replicate_index| !failed_indices.contains(replicate_index))
+        .collect::<Vec<_>>();
+    if usable_replicate_indices.len() != receipt.resamples_usable as usize {
+        errors.push(format!(
+            "{context}.resamples_usable contradicts the failure ledger"
+        ));
+    }
+    if receipt.usable_replicate_indices_sha256
+        != crate::sha256_serialized(&usable_replicate_indices)
+    {
+        errors.push(format!(
+            "{context}.usable_replicate_indices_sha256 does not match the failure ledger"
+        ));
+    }
+    if effect_values
+        .iter()
+        .any(|(_, value, _)| !general_sem_estimate_has_inference(value))
+    {
+        errors.push(format!(
+            "{context} requires complete inference fields for every covered effect"
+        ));
+    }
+    if uncovered_inference {
+        errors.push(format!(
+            "{context} v1 does not cover conditional or higher-order estimate inference"
+        ));
+    }
+    let expected_effect_capability = crate::pls_general_recursive_effects_capability_cell_v1();
+    for (effect_id, value, trace) in effect_values {
+        if trace.capability_cell != expected_effect_capability {
+            errors.push(format!(
+                "{context} effect {effect_id} trace.capability_cell must equal the PLS recursive-effects option cell"
+            ));
+        }
+        let Some(usable) = value.bootstrap_usable_replicates else {
+            continue;
+        };
+        let Some(exceedances) = value.bootstrap_two_sided_exceedances else {
+            continue;
+        };
+        if usable != receipt.resamples_usable {
+            errors.push(format!(
+                "{context} effect {effect_id} usable replicate count contradicts the receipt"
+            ));
+        }
+        if exceedances > usable {
+            errors.push(format!(
+                "{context} effect {effect_id} exceedance count exceeds usable replicates"
+            ));
+        }
+        if let Some(p_value) = value.p_value {
+            let expected = f64::from(exceedances + 1) / f64::from(usable + 1);
+            if !approximately_equal(p_value, expected) {
+                errors.push(format!(
+                    "{context} effect {effect_id} p_value contradicts the plus-one exceedance ledger"
+                ));
+            }
+        }
+    }
+}
+
 fn validate_general_sem_results_v1(
     errors: &mut Vec<String>,
     results: &CanonicalGeneralSemResultsV1,
-    document_model_id: &str,
+    provenance: &CanonicalResultProvenanceV2,
     document_capability_ids: Option<&HashSet<String>>,
 ) {
     let context = "general_sem_results";
+    let document_model_id = provenance.model_id.as_str();
     if results.schema_version != CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION {
         errors.push(format!(
             "{context}.schema_version must equal {CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION}"
         ));
     }
+    validate_general_sem_inference_receipt_v1(errors, results, provenance, document_capability_ids);
     if results.specific_indirect_effects.is_empty()
         && results.aggregate_effects.is_empty()
         && results.conditional_effect_probes.is_empty()
@@ -874,6 +1547,7 @@ fn validate_general_sem_results_v1(
     );
 
     let mut effect_ids = BTreeSet::new();
+    let mut estimand_ids = BTreeSet::new();
     let mut specific_signatures = BTreeSet::new();
     for (index, effect) in results.specific_indirect_effects.iter().enumerate() {
         let item_context = format!("{context}.specific_indirect_effects[{index}]");
@@ -887,6 +1561,26 @@ fn validate_general_sem_results_v1(
             &effect.estimand_id,
             &format!("{item_context}.estimand_id"),
         );
+        if !estimand_ids.insert(effect.estimand_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.estimand_id is duplicated across effect sections"
+            ));
+        }
+        require_stable_id(
+            errors,
+            &effect.source_id,
+            &format!("{item_context}.source_id"),
+        );
+        require_stable_id(
+            errors,
+            &effect.target_id,
+            &format!("{item_context}.target_id"),
+        );
+        if effect.source_id == effect.target_id {
+            errors.push(format!(
+                "{item_context} requires distinct source_id and target_id"
+            ));
+        }
         validate_general_sem_trace(
             errors,
             &effect.trace,
@@ -904,6 +1598,13 @@ fn validate_general_sem_results_v1(
             effect.ordered_relation_ids.iter().map(String::as_str),
             &format!("{item_context}.ordered_relation_ids"),
         );
+        if crate::specific_directed_path_identity_v1(&effect.ordered_relation_ids)
+            != effect.effect_id
+        {
+            errors.push(format!(
+                "{item_context}.effect_id must equal the canonical ordered relation-path identity"
+            ));
+        }
         if !specific_signatures.insert(effect.ordered_relation_ids.join("\0")) {
             errors.push(format!(
                 "{item_context} duplicates another specific indirect path"
@@ -925,6 +1626,11 @@ fn validate_general_sem_results_v1(
             &effect.estimand_id,
             &format!("{item_context}.estimand_id"),
         );
+        if !estimand_ids.insert(effect.estimand_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.estimand_id is duplicated across effect sections"
+            ));
+        }
         validate_general_sem_trace(
             errors,
             &effect.trace,
@@ -947,9 +1653,48 @@ fn validate_general_sem_results_v1(
                 "{item_context} requires distinct source_id and target_id"
             ));
         }
+        if effect.effect_id != effect.estimand_id {
+            errors.push(format!(
+                "{item_context}.effect_id must equal estimand_id for aggregate effects"
+            ));
+        }
+        require_canonical_stable_ids(
+            errors,
+            effect.direct_relation_ids.iter().map(String::as_str),
+            &format!("{item_context}.direct_relation_ids"),
+        );
+        require_canonical_stable_ids(
+            errors,
+            effect
+                .contributing_path_identities
+                .iter()
+                .map(String::as_str),
+            &format!("{item_context}.contributing_path_identities"),
+        );
         let kind = match effect.kind {
-            CanonicalAggregateEffectKindV1::TotalIndirect => "total_indirect",
-            CanonicalAggregateEffectKindV1::TotalEffect => "total_effect",
+            CanonicalAggregateEffectKindV1::TotalIndirect => {
+                if !effect.direct_relation_ids.is_empty() {
+                    errors.push(format!(
+                        "{item_context}.direct_relation_ids must be empty for total indirect effects"
+                    ));
+                }
+                if effect.contributing_path_identities.is_empty() {
+                    errors.push(format!(
+                        "{item_context}.contributing_path_identities must not be empty"
+                    ));
+                }
+                "total_indirect"
+            }
+            CanonicalAggregateEffectKindV1::TotalEffect => {
+                if effect.direct_relation_ids.is_empty()
+                    && effect.contributing_path_identities.is_empty()
+                {
+                    errors.push(format!(
+                        "{item_context} must identify at least one direct relation or indirect path"
+                    ));
+                }
+                "total_effect"
+            }
         };
         if !aggregate_signatures.insert(format!(
             "{kind}\0{}\0{}",
@@ -1383,6 +2128,12 @@ fn is_lowercase_sha256(value: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
+fn is_dataset_fingerprint_v1(value: &str) -> bool {
+    value
+        .strip_prefix("v2:")
+        .map_or_else(|| is_lowercase_sha256(value), is_lowercase_sha256)
+}
+
 fn parse_timestamp(value: &str) -> Option<DateTime<chrono::FixedOffset>> {
     DateTime::parse_from_rfc3339(value).ok()
 }
@@ -1466,7 +2217,7 @@ pub fn validate_canonical_result_document_v2(
         validate_general_sem_results_v1(
             &mut errors,
             results,
-            &document.provenance.model_id,
+            &document.provenance,
             document_capability_ids.as_ref(),
         );
     }
@@ -1771,8 +2522,11 @@ pub fn validate_canonical_result_document_v2(
     if !is_lowercase_sha256(&provenance.model_digest) {
         errors.push("provenance.model_digest must be lowercase SHA-256".to_string());
     }
-    if !is_lowercase_sha256(&provenance.dataset_fingerprint) {
-        errors.push("provenance.dataset_fingerprint must be lowercase SHA-256".to_string());
+    if !is_dataset_fingerprint_v1(&provenance.dataset_fingerprint) {
+        errors.push(
+            "provenance.dataset_fingerprint must be bare lowercase SHA-256 or v2:<lowercase SHA-256>"
+                .to_string(),
+        );
     }
     if !is_lowercase_sha256(&provenance.recipe_digest) {
         errors.push("provenance.recipe_digest must be lowercase SHA-256".to_string());
@@ -1908,6 +2662,16 @@ pub fn canonical_analytical_result_json(
         provenance.remove("workers");
         provenance.remove("started_at");
         provenance.remove("completed_at");
+    }
+    if let Some(receipt) = root
+        .get_mut("general_sem_results")
+        .and_then(Value::as_object_mut)
+        .and_then(|results| results.get_mut("inference_receipt"))
+        .and_then(Value::as_object_mut)
+    {
+        // Worker count is execution provenance, not a scientific estimand.
+        // The complete receipt still preserves it in the archival document.
+        receipt.remove("workers");
     }
 
     if let Some(tables) = root.get_mut("tables").and_then(Value::as_array_mut) {
@@ -2065,12 +2829,11 @@ mod tests {
     }
 
     fn secondary_capability_reference() -> CapabilityCellReferenceV2 {
-        CapabilityCellReferenceV2 {
-            registry_schema_version: 2,
-            capability_id: "smartpls.pls_bootstrapping".to_string(),
-            cell_id: "qpls3.inference.bootstrap".to_string(),
-            capability_version: "pls_bootstrap_v1".to_string(),
-        }
+        general_sem_pls_bootstrap_capability_cell_v1()
+    }
+
+    fn general_sem_effect_capability_reference() -> CapabilityCellReferenceV2 {
+        crate::pls_general_recursive_effects_capability_cell_v1()
     }
 
     fn provenance() -> CanonicalResultProvenanceV2 {
@@ -2203,40 +2966,72 @@ mod tests {
     fn effect_value(estimate: f64) -> CanonicalGeneralSemEstimateV1 {
         CanonicalGeneralSemEstimateV1 {
             estimate,
+            bootstrap_mean: None,
+            bootstrap_bias: None,
+            standard_error: None,
+            lower: None,
+            upper: None,
+            p_value: None,
+            bootstrap_usable_replicates: None,
+            bootstrap_two_sided_exceedances: None,
+        }
+    }
+
+    fn inferred_effect_value(estimate: f64) -> CanonicalGeneralSemEstimateV1 {
+        CanonicalGeneralSemEstimateV1 {
+            estimate,
+            bootstrap_mean: Some(estimate + 0.01),
+            bootstrap_bias: Some(0.01),
             standard_error: Some(0.04),
             lower: Some(estimate - 0.08),
             upper: Some(estimate + 0.08),
-            p_value: Some(0.02),
+            p_value: Some(0.2),
+            bootstrap_usable_replicates: Some(9),
+            bootstrap_two_sided_exceedances: Some(1),
         }
     }
 
     fn general_sem_results_fixture() -> CanonicalGeneralSemResultsV1 {
-        CanonicalGeneralSemResultsV1 {
+        let mut results = CanonicalGeneralSemResultsV1 {
             schema_version: CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
+            inference_receipt: None,
             specific_indirect_effects: vec![CanonicalSpecificIndirectEffectResultV1 {
-                effect_id: "effect_specific_1".to_string(),
+                effect_id: crate::specific_directed_path_identity_v1(&[
+                    "relation_a".to_string(),
+                    "relation_b".to_string(),
+                ]),
                 estimand_id: "estimand_specific_1".to_string(),
                 trace: general_sem_trace(),
+                source_id: "construct_x".to_string(),
+                target_id: "construct_y".to_string(),
                 ordered_relation_ids: vec!["relation_a".to_string(), "relation_b".to_string()],
                 value: effect_value(0.12),
             }],
             aggregate_effects: vec![
                 CanonicalAggregateEffectResultV1 {
-                    effect_id: "effect_total_1".to_string(),
+                    effect_id: "estimand_total_indirect_1".to_string(),
                     estimand_id: "estimand_total_indirect_1".to_string(),
                     trace: general_sem_trace(),
                     kind: CanonicalAggregateEffectKindV1::TotalIndirect,
                     source_id: "construct_x".to_string(),
                     target_id: "construct_y".to_string(),
+                    direct_relation_ids: Vec::new(),
+                    contributing_path_identities: vec![crate::specific_directed_path_identity_v1(
+                        &["relation_a".to_string(), "relation_b".to_string()],
+                    )],
                     value: effect_value(0.18),
                 },
                 CanonicalAggregateEffectResultV1 {
-                    effect_id: "effect_total_2".to_string(),
+                    effect_id: "estimand_total_effect_1".to_string(),
                     estimand_id: "estimand_total_effect_1".to_string(),
                     trace: general_sem_trace(),
                     kind: CanonicalAggregateEffectKindV1::TotalEffect,
                     source_id: "construct_x".to_string(),
                     target_id: "construct_y".to_string(),
+                    direct_relation_ids: vec!["relation_direct".to_string()],
+                    contributing_path_identities: vec![crate::specific_directed_path_identity_v1(
+                        &["relation_a".to_string(), "relation_b".to_string()],
+                    )],
                     value: effect_value(0.60),
                 },
             ],
@@ -2378,7 +3173,89 @@ mod tests {
                 message: "The compiled model passed identification checks.".to_string(),
                 degrees_of_freedom: Some(8),
             }],
+        };
+        results
+            .aggregate_effects
+            .sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+        results
+    }
+
+    fn general_sem_inference_document_fixture() -> CanonicalResultDocumentV2 {
+        let mut document = document_fixture();
+        let mut results = general_sem_results_fixture();
+        results.specific_indirect_effects[0].value = inferred_effect_value(0.12);
+        results.specific_indirect_effects[0].trace.capability_cell =
+            general_sem_effect_capability_reference();
+        for effect in &mut results.aggregate_effects {
+            effect.value = inferred_effect_value(effect.value.estimate);
+            effect.trace.capability_cell = general_sem_effect_capability_reference();
         }
+        let mut effect_ids = results
+            .specific_indirect_effects
+            .iter()
+            .map(|effect| effect.effect_id.clone())
+            .chain(
+                results
+                    .aggregate_effects
+                    .iter()
+                    .map(|effect| effect.effect_id.clone()),
+            )
+            .collect::<Vec<_>>();
+        effect_ids.sort();
+        let failed_replicates = vec![CanonicalGeneralSemFailedReplicateV1 {
+            replicate_index: 7,
+            reason_code: CanonicalGeneralSemFailedReplicateReasonV1::EstimationNonconvergence,
+            message: "The complete PLS model did not converge for this draw.".to_string(),
+        }];
+        let usable_replicate_indices = (0..10_u32)
+            .filter(|replicate_index| *replicate_index != 7)
+            .collect::<Vec<_>>();
+        results.inference_receipt = Some(CanonicalGeneralSemInferenceReceiptV1 {
+            kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
+            capability_cell: secondary_capability_reference(),
+            method_version: GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1.to_string(),
+            resampling_operation_version: GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+                .to_string(),
+            resampling_stream_version: GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1
+                .to_string(),
+            quantile_method_version: GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1.to_string(),
+            standard_error_method_version: GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1
+                .to_string(),
+            summation_method_version: GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1.to_string(),
+            p_value_method_version: GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1
+                .to_string(),
+            failure_policy_version: GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1
+                .to_string(),
+            compilation_artifact_identity_sha256: "d".repeat(64),
+            compiled_plan_sha256: "9".repeat(64),
+            general_sem_config_sha256: "e".repeat(64),
+            recipe_analytical_sha256: "c".repeat(64),
+            model_scientific_sha256: "a".repeat(64),
+            source_dataset_fingerprint: "b".repeat(64),
+            complete_case_frame_sha256: "f".repeat(64),
+            usable_replicate_indices_sha256: crate::sha256_serialized(&usable_replicate_indices),
+            effect_identity_set_sha256: general_sem_effect_identity_set_sha256_v1(
+                &canonical_general_sem_effect_identities_v1(&results),
+            ),
+            effect_ids,
+            interval: CanonicalGeneralSemBootstrapIntervalV1::PercentileType7,
+            tail: CanonicalGeneralSemInferenceTailV1::TwoSided,
+            confidence_level: 0.95,
+            resamples_requested: 10,
+            resamples_usable: 9,
+            minimum_usable_resamples: 9,
+            seed: "42".to_string(),
+            workers: 4,
+            complete_model_reestimated_per_replicate: true,
+            failed_replicates,
+        });
+        document.capability_cells = Some(vec![
+            capability_reference(),
+            general_sem_effect_capability_reference(),
+            secondary_capability_reference(),
+        ]);
+        document.general_sem_results = Some(results);
+        document
     }
 
     #[test]
@@ -2433,6 +3310,198 @@ mod tests {
     }
 
     #[test]
+    fn general_sem_bootstrap_inference_requires_a_complete_exact_receipt() {
+        let document = general_sem_inference_document_fixture();
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(validation.passed, "{:?}", validation.errors);
+
+        let encoded = serde_json::to_value(&document).unwrap();
+        let estimate = &encoded["general_sem_results"]["specific_indirect_effects"][0]["value"];
+        assert_eq!(estimate["bootstrap_mean"], serde_json::json!(0.13));
+        assert_eq!(estimate["bootstrap_bias"], serde_json::json!(0.01));
+        assert_eq!(
+            encoded["general_sem_results"]["inference_receipt"]["seed"],
+            serde_json::json!("42")
+        );
+
+        let mut missing_receipt = document.clone();
+        missing_receipt
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt = None;
+        assert!(
+            validate_canonical_result_document_v2(&missing_receipt)
+                .errors
+                .iter()
+                .any(|error| error.contains("inference fields require inference_receipt"))
+        );
+
+        let mut partial_tuple = document.clone();
+        partial_tuple
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .specific_indirect_effects[0]
+            .value
+            .upper = None;
+        assert!(
+            validate_canonical_result_document_v2(&partial_tuple)
+                .errors
+                .iter()
+                .any(|error| error.contains(
+                    "bootstrap inference fields must be either all absent or all present"
+                ))
+        );
+
+        let mut different_worker_count = document.clone();
+        different_worker_count
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .workers = 3;
+        assert_ne!(
+            canonical_result_document_json(&document).unwrap(),
+            canonical_result_document_json(&different_worker_count).unwrap()
+        );
+        assert_eq!(
+            canonical_analytical_result_json(&document).unwrap(),
+            canonical_analytical_result_json(&different_worker_count).unwrap()
+        );
+    }
+
+    #[test]
+    fn general_sem_bootstrap_receipt_identity_and_capability_tampering_fail_closed() {
+        let mut undeclared = general_sem_inference_document_fixture();
+        undeclared.capability_cells = Some(vec![capability_reference()]);
+        assert!(
+            validate_canonical_result_document_v2(&undeclared)
+                .errors
+                .iter()
+                .any(|error| error.contains("references undeclared option cell"))
+        );
+
+        let mut wrong_cell = general_sem_inference_document_fixture();
+        wrong_cell
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .capability_cell = capability_reference();
+        assert!(
+            validate_canonical_result_document_v2(&wrong_cell)
+                .errors
+                .iter()
+                .any(|error| error.contains("must equal the indexed PLS bootstrap v4 option cell"))
+        );
+
+        let mut changed_effect_set = general_sem_inference_document_fixture();
+        changed_effect_set
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .effect_ids[0] = "effect_other".to_string();
+        let errors = validate_canonical_result_document_v2(&changed_effect_set).errors;
+        assert!(
+            errors.iter().any(
+                |error| error.contains("must exactly cover specific and aggregate effect rows")
+            )
+        );
+
+        let mut changed_typed_identity = general_sem_inference_document_fixture();
+        changed_typed_identity
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .aggregate_effects[0]
+            .source_id = "construct_other".to_string();
+        let errors = validate_canonical_result_document_v2(&changed_typed_identity).errors;
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.contains("effect_identity_set_sha256 does not match"))
+        );
+
+        let mut wrong_effect_trace = general_sem_inference_document_fixture();
+        wrong_effect_trace
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .specific_indirect_effects[0]
+            .trace
+            .capability_cell = capability_reference();
+        assert!(
+            validate_canonical_result_document_v2(&wrong_effect_trace)
+                .errors
+                .iter()
+                .any(|error| error.contains("must equal the PLS recursive-effects option cell"))
+        );
+    }
+
+    #[test]
+    fn general_sem_bootstrap_receipt_versions_plan_and_failure_ledger_fail_closed() {
+        let mut document = general_sem_inference_document_fixture();
+        let receipt = document
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap();
+        receipt.method_version = "other_method_v1".to_string();
+        receipt.interval = CanonicalGeneralSemBootstrapIntervalV1::Bca;
+        receipt.tail = CanonicalGeneralSemInferenceTailV1::OneSidedUpper;
+        receipt.seed = "01".to_string();
+        receipt.resamples_usable = 8;
+        receipt.failed_replicates[0].replicate_index = 10;
+
+        let errors = validate_canonical_result_document_v2(&document).errors;
+        for expected in [
+            "method_version must equal",
+            "interval must equal percentile_type7",
+            "tail must equal two_sided",
+            "seed must be a canonical decimal u64",
+            "requested count must equal usable plus failed replicates",
+            "replicate_index is outside the requested plan",
+            "resamples_usable contradicts the failure ledger",
+            "usable_replicate_indices_sha256 does not match",
+        ] {
+            assert!(
+                errors.iter().any(|error| error.contains(expected)),
+                "missing {expected:?} in {errors:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn point_only_general_sem_estimates_keep_the_legacy_extension_shape() {
+        let mut document = document_fixture();
+        document.general_sem_results = Some(general_sem_results_fixture());
+        let value = serde_json::to_value(&document).unwrap();
+        let results = &value["general_sem_results"];
+        assert!(results.get("inference_receipt").is_none());
+        let estimate = &results["specific_indirect_effects"][0]["value"];
+        for absent in [
+            "bootstrap_mean",
+            "bootstrap_bias",
+            "standard_error",
+            "lower",
+            "upper",
+            "p_value",
+        ] {
+            assert!(estimate.get(absent).is_none(), "unexpected {absent}");
+        }
+    }
+
+    #[test]
     fn general_sem_identity_path_and_aggregate_contradictions_fail_closed() {
         let mut document = document_fixture();
         let mut results = general_sem_results_fixture();
@@ -2442,7 +3511,11 @@ mod tests {
         results.specific_indirect_effects[0].ordered_relation_ids =
             vec!["relation_a".to_string(), "relation_a".to_string()];
         results.aggregate_effects[0].target_id = "construct_x".to_string();
-        results.aggregate_effects[1].effect_id = "effect_specific_1".to_string();
+        results.aggregate_effects[0].estimand_id =
+            results.specific_indirect_effects[0].estimand_id.clone();
+        results.aggregate_effects[0].effect_id = results.aggregate_effects[0].estimand_id.clone();
+        results.aggregate_effects[1].effect_id =
+            results.specific_indirect_effects[0].effect_id.clone();
         document.general_sem_results = Some(results);
 
         let validation = validate_canonical_result_document_v2(&document);
@@ -2452,6 +3525,7 @@ mod tests {
             "references undeclared option cell",
             "ordered_relation_ids contains duplicate IDs",
             "requires distinct source_id and target_id",
+            "estimand_id is duplicated across effect sections",
             "effect_id is duplicated across effect sections",
         ] {
             assert!(
@@ -2571,6 +3645,7 @@ mod tests {
         let mut empty = document_fixture();
         empty.general_sem_results = Some(CanonicalGeneralSemResultsV1 {
             schema_version: CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
+            inference_receipt: None,
             specific_indirect_effects: Vec::new(),
             aggregate_effects: Vec::new(),
             conditional_effect_probes: Vec::new(),

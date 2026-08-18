@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultGeneralSemConfigV1,
+  GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1,
+  GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1,
+  GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1,
   parseGeneralSemConfigV1,
   type GeneralSemBootstrapIntervalV1,
   type GeneralSemConfigV1,
@@ -233,7 +236,7 @@ describe("GeneralSemConfigV1", () => {
         const config = comprehensiveConfig();
         config.inference = {
           kind: "case_bootstrap",
-          resamples: 1,
+          resamples: GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1,
           seed: 0,
           confidence_level: 0.95,
           interval,
@@ -243,11 +246,31 @@ describe("GeneralSemConfigV1", () => {
       }
     }
 
-    const zeroResamples = comprehensiveConfig();
-    if (zeroResamples.inference.kind === "case_bootstrap") {
-      zeroResamples.inference.resamples = 0;
+    for (const resamples of [
+      0,
+      1,
+      GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1 + 1,
+    ]) {
+      const invalidResamples = comprehensiveConfig();
+      if (invalidResamples.inference.kind === "case_bootstrap") {
+        invalidResamples.inference.resamples = resamples;
+      }
+      expectCode(
+        invalidResamples,
+        "general_sem_config_v1.bootstrap_resamples_out_of_range",
+      );
     }
-    expectCode(zeroResamples, "general_sem_config_v1.bootstrap_resamples_zero");
+
+    for (const resamples of [
+      GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1,
+      GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1,
+    ]) {
+      const validBoundary = comprehensiveConfig();
+      if (validBoundary.inference.kind === "case_bootstrap") {
+        validBoundary.inference.resamples = resamples;
+      }
+      expect(parseGeneralSemConfigV1(validBoundary).inference).toEqual(validBoundary.inference);
+    }
 
     for (const confidenceLevel of [Number.NaN, Number.NEGATIVE_INFINITY, 0, 1, 1.01]) {
       const config = comprehensiveConfig();
@@ -264,16 +287,15 @@ describe("GeneralSemConfigV1", () => {
 
     const unsafeSeed = comprehensiveConfig();
     if (unsafeSeed.inference.kind === "case_bootstrap") {
-      unsafeSeed.inference.seed = Number.MAX_SAFE_INTEGER + 1;
+      unsafeSeed.inference.seed = GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1 + 1;
     }
     expectCode(unsafeSeed, "general_sem_config_v1.u64_safe_integer_required");
 
-    const maxResamples = comprehensiveConfig();
-    if (maxResamples.inference.kind === "case_bootstrap") {
-      maxResamples.inference.resamples = 0xffff_ffff;
-      maxResamples.inference.seed = Number.MAX_SAFE_INTEGER;
+    const maxSeed = comprehensiveConfig();
+    if (maxSeed.inference.kind === "case_bootstrap") {
+      maxSeed.inference.seed = GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1;
     }
-    expect(parseGeneralSemConfigV1(maxResamples).inference).toEqual(maxResamples.inference);
+    expect(parseGeneralSemConfigV1(maxSeed).inference).toEqual(maxSeed.inference);
   });
 
   it("requires a positive materialization limit and an explicit nontruncating limit policy", () => {

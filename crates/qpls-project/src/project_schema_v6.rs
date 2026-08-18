@@ -27,15 +27,19 @@ use super::{
 use chrono::{DateTime, Utc};
 use qpls_core::{
     AnalysisMethod, AnalysisRecipe, AnalysisRecipeModelBindingV4, AnalysisRecipeV4,
-    AnalysisRecipeV4Error, CbsemBootstrapAlgorithm, CbsemBootstrapInterval, CbsemBootstrapTestTail,
-    CbsemEstimator, CbsemInput, CbsemModelType, CompiledCbsemParameterStatusV2,
-    CompiledRecipePlanV4, LegacyBasicModelConversionErrorV4, LegacyBasicModelInterpretationV4,
-    LegacyDisplayCovarianceV4, MethodConfig, ModelSpec, PLS_ALGORITHM_CAPABILITY_ID,
-    PLS_ALGORITHM_CAPABILITY_VERSION, PLS_ALGORITHM_CELL_ID, PLS_NONLINEAR_EFFECTS_CAPABILITY_ID,
-    PLS_NONLINEAR_EFFECTS_CAPABILITY_VERSION, PLS_NONLINEAR_EFFECTS_CELL_ID,
-    RecipeV4CompilerTarget, SemDerivedTermV4, SemEndpointV4, SemModelV4, SemModelV4ValidationError,
-    SemParameterTargetV4, SemVariableV4, compile_analysis_recipe_v4,
-    compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1, confirm_legacy_recipe_estimand_v4,
+    AnalysisRecipeV4Error, CanonicalGeneralSemBootstrapIntervalV1,
+    CanonicalGeneralSemInferenceTailV1, CbsemBootstrapAlgorithm, CbsemBootstrapInterval,
+    CbsemBootstrapTestTail, CbsemEstimator, CbsemInput, CbsemModelType,
+    CompiledCbsemParameterStatusV2, CompiledRecipePlanV4, GENERAL_SEM_EFFECTS_V1_METHOD_VERSION,
+    GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1, GeneralSemBootstrapIntervalV1,
+    GeneralSemInferenceTailV1, GeneralSemInferenceV1, LegacyBasicModelConversionErrorV4,
+    LegacyBasicModelInterpretationV4, LegacyDisplayCovarianceV4, MethodConfig, ModelSpec,
+    PLS_ALGORITHM_CAPABILITY_ID, PLS_ALGORITHM_CAPABILITY_VERSION, PLS_ALGORITHM_CELL_ID,
+    PLS_NONLINEAR_EFFECTS_CAPABILITY_ID, PLS_NONLINEAR_EFFECTS_CAPABILITY_VERSION,
+    PLS_NONLINEAR_EFFECTS_CELL_ID, RecipeV4CompilerTarget, SemDerivedTermV4, SemEndpointV4,
+    SemModelV4, SemModelV4ValidationError, SemParameterTargetV4, SemVariableV4,
+    compile_analysis_recipe_v4, compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1,
+    compile_general_sem_pls_recipe_v1, confirm_legacy_recipe_estimand_v4,
     convert_legacy_basic_model_v4, sha256_serialized,
 };
 use qpls_data::DatasetDescriptor;
@@ -725,10 +729,54 @@ impl ProjectArchiveDocumentV6 {
         for attachment in &self.canonical_result_documents {
             attachment.ensure_valid(&expected_project_id)?;
             let canonical = attachment.canonical_document();
-            if canonical.general_sem_results.is_some() && !self.supports_general_sem_v1() {
-                return Err(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration {
-                    subject: format!("canonical result document {}", canonical.document_id),
-                });
+            if canonical.general_sem_results.is_some() {
+                if !self.supports_general_sem_v1() {
+                    return Err(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration {
+                        subject: format!("canonical result document {}", canonical.document_id),
+                    });
+                }
+                let recipe = self
+                    .recipes
+                    .iter()
+                    .find(|recipe| recipe.id.to_string() == canonical.provenance.recipe_id)
+                    .ok_or_else(|| {
+                        invalid_general_sem_authority(format!(
+                            "resident Recipe-v4 {} is unavailable",
+                            canonical.provenance.recipe_id
+                        ))
+                    })?;
+                let model = match &recipe.model_binding {
+                    AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 { model, .. } => model,
+                    AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+                        model_id, ..
+                    } => scientific_models
+                        .get(model_id.as_str())
+                        .map(|(model, _)| *model)
+                        .ok_or_else(|| {
+                            invalid_general_sem_authority(format!(
+                                "resident SemModelV4 {model_id} is unavailable"
+                            ))
+                        })?,
+                    AnalysisRecipeModelBindingV4::LegacyEstimandUnspecified {
+                        legacy_model_id,
+                        ..
+                    } => {
+                        return Err(invalid_general_sem_authority(format!(
+                            "General SEM result cannot bind legacy estimand-unspecified model {legacy_model_id}"
+                        )));
+                    }
+                };
+                let dataset = self
+                    .datasets
+                    .iter()
+                    .find(|dataset| dataset.id.to_string() == canonical.provenance.dataset_id)
+                    .ok_or_else(|| {
+                        invalid_general_sem_authority(format!(
+                            "resident dataset {} is unavailable",
+                            canonical.provenance.dataset_id
+                        ))
+                    })?;
+                validate_general_sem_result_authority_v1(canonical, recipe, model, dataset)?;
             }
             if is_exact_recipe_v4_cbsem_result(canonical) {
                 let is_score_lm_current = matches!(
@@ -1093,6 +1141,151 @@ impl ProjectArchiveDocumentV6 {
             }
         }
         Ok(())
+    }
+}
+
+fn invalid_general_sem_authority(message: impl Into<String>) -> ProjectArchiveV6Error {
+    ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message.into())
+}
+
+// qpls-project cannot depend on qpls-runner without reversing the runtime
+// layering. The runner-backed test below locks these archive-recognition
+// values to qpls-runner's exported adapter constants so executor identity
+// changes cannot drift silently across the persistence boundary.
+const GENERAL_SEM_PLS_POINT_EXECUTION_ADAPTER_VERSION_V1: &str =
+    "compiled_general_sem_pls_recipe_v1_point_execution_v1";
+const GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1: &str =
+    "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1";
+
+fn project_capability_cell_v2(
+    reference: &qpls_core::CapabilityCellReferenceV2,
+) -> crate::CapabilityCellReferenceV2 {
+    crate::CapabilityCellReferenceV2 {
+        registry_schema_version: reference.registry_schema_version,
+        capability_id: reference.capability_id.clone(),
+        cell_id: reference.cell_id.clone(),
+        capability_version: reference.capability_version.clone(),
+    }
+}
+
+/// Rebuilds the exact General SEM PLS authority from the schema-6 residents.
+/// A canonical attachment is an immutable result, not an alternate source of
+/// scientific truth, so every persisted identity must reconcile with this
+/// deterministic recompilation before the archive is accepted.
+fn validate_general_sem_result_authority_v1(
+    document: &CanonicalResultDocumentV2,
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+    dataset: &DatasetDescriptor,
+) -> Result<(), ProjectArchiveV6Error> {
+    let results = document.general_sem_results.as_ref().ok_or_else(|| {
+        invalid_general_sem_authority("General SEM authority validation requires typed results")
+    })?;
+    let artifact = compile_general_sem_pls_recipe_v1(recipe, Some(model)).map_err(|error| {
+        invalid_general_sem_authority(format!(
+            "resident General SEM Recipe-v4 recompilation failed: {error}"
+        ))
+    })?;
+    let model_scientific_sha256 = model
+        .scientific_sha256()
+        .map_err(|error| invalid_general_sem_authority(error.to_string()))?;
+    let dataset_id = dataset.id.to_string();
+    let resident_config = recipe.general_sem_config.as_ref().ok_or_else(|| {
+        invalid_general_sem_authority("the resident Recipe-v4 does not contain GeneralSemConfigV1")
+    })?;
+    let (expected_method_version, expected_engine_version) = match resident_config.inference {
+        GeneralSemInferenceV1::None => (
+            GENERAL_SEM_EFFECTS_V1_METHOD_VERSION,
+            GENERAL_SEM_PLS_POINT_EXECUTION_ADAPTER_VERSION_V1,
+        ),
+        GeneralSemInferenceV1::CaseBootstrap { .. } => (
+            GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+            GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+        ),
+    };
+
+    if document.provenance.recipe_id != recipe.id.to_string()
+        || document.provenance.recipe_digest != artifact.recipe_analytical_sha256()
+        || document.provenance.model_id != model.id
+        || document.provenance.model_digest != model_scientific_sha256
+        || document.provenance.dataset_id != dataset_id
+        || document.provenance.dataset_id != artifact.plan().base_plan().dataset_id()
+        || document.provenance.dataset_fingerprint != dataset.fingerprint.0
+        || document.provenance.dataset_fingerprint != recipe.dataset_fingerprint
+        || document.provenance.capability_cell
+            != project_capability_cell_v2(artifact.capability_cell())
+        || document.provenance.method_version != expected_method_version
+        || document.provenance.engine_version != expected_engine_version
+        || document.provenance.seed != Some(recipe.settings.seed)
+        || usize::try_from(document.provenance.workers).ok() != Some(recipe.settings.workers)
+    {
+        return Err(invalid_general_sem_authority(
+            "canonical provenance differs from the resident General SEM recipe, model, dataset, method/engine, or deterministic compilation",
+        ));
+    }
+
+    match (&recipe.general_sem_config, &results.inference_receipt) {
+        (Some(config), None) if matches!(config.inference, GeneralSemInferenceV1::None) => Ok(()),
+        (Some(config), Some(receipt)) => {
+            let GeneralSemInferenceV1::CaseBootstrap {
+                resamples,
+                seed,
+                confidence_level,
+                interval,
+                tail,
+            } = config.inference
+            else {
+                return Err(invalid_general_sem_authority(
+                    "a General SEM inference receipt requires case-bootstrap inference in the resident recipe",
+                ));
+            };
+            let expected_interval = match interval {
+                GeneralSemBootstrapIntervalV1::Percentile => {
+                    CanonicalGeneralSemBootstrapIntervalV1::PercentileType7
+                }
+                GeneralSemBootstrapIntervalV1::Bca => CanonicalGeneralSemBootstrapIntervalV1::Bca,
+            };
+            let expected_tail = match tail {
+                GeneralSemInferenceTailV1::TwoSided => CanonicalGeneralSemInferenceTailV1::TwoSided,
+                GeneralSemInferenceTailV1::OneSidedLower => {
+                    CanonicalGeneralSemInferenceTailV1::OneSidedLower
+                }
+                GeneralSemInferenceTailV1::OneSidedUpper => {
+                    CanonicalGeneralSemInferenceTailV1::OneSidedUpper
+                }
+            };
+            let receipt_seed = receipt.seed.parse::<u64>().ok();
+            if receipt.compilation_artifact_identity_sha256 != artifact.artifact_identity_sha256()
+                || receipt.compiled_plan_sha256 != artifact.plan().deterministic_sha256()
+                || receipt.general_sem_config_sha256 != artifact.general_sem_config_sha256()
+                || receipt.recipe_analytical_sha256 != artifact.recipe_analytical_sha256()
+                || receipt.model_scientific_sha256 != model_scientific_sha256
+                || receipt.source_dataset_fingerprint != dataset.fingerprint.0
+                || receipt.resamples_requested != resamples
+                || receipt.seed != seed.to_string()
+                || receipt_seed != Some(seed)
+                || receipt.confidence_level.to_bits() != confidence_level.to_bits()
+                || receipt.interval != expected_interval
+                || receipt.tail != expected_tail
+                || usize::try_from(receipt.workers).ok() != Some(recipe.settings.workers)
+                || recipe.settings.bootstrap_samples != resamples
+                || recipe.settings.seed != seed
+                || recipe.settings.confidence_level.to_bits() != confidence_level.to_bits()
+                || recipe.settings.bootstrap_test_tail != qpls_core::PlsBootstrapTestTail::TwoSided
+                || recipe.settings.studentized_inner_samples != 0
+            {
+                return Err(invalid_general_sem_authority(
+                    "General SEM inference receipt differs from the resident compiled artifact, plan, config, recipe, model, dataset, or bootstrap settings",
+                ));
+            }
+            Ok(())
+        }
+        (Some(_), None) => Err(invalid_general_sem_authority(
+            "the resident case-bootstrap recipe requires a General SEM inference receipt",
+        )),
+        (None, _) => Err(invalid_general_sem_authority(
+            "the resident Recipe-v4 does not contain GeneralSemConfigV1",
+        )),
     }
 }
 
@@ -6411,6 +6604,8 @@ pub enum ProjectArchiveV6Error {
         "{subject} uses General SEM v1 features; create a new schema-6 project with general_sem_v1 authority"
     )]
     GeneralSemFeatureRequiresGeneration { subject: String },
+    #[error("schema-v6 General SEM canonical authority is invalid: {0}")]
+    CanonicalGeneralSemAuthority(String),
     #[error("legacy model {0} has conflicting scientific content")]
     ConflictingLegacyModel(String),
     #[error("display covariance input references unknown model {0}")]
@@ -6566,8 +6761,8 @@ mod tests {
     use chrono::TimeZone;
     use qpls_core::{
         ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisPayload, AnalysisRecipe, AnalysisSettings,
-        Construct, FactorIdentificationV4, MeasurementMode, MethodConfig, ObservedRoleV4,
-        ObservedScaleV4, RESULT_SCHEMA_VERSION, RunProvenance, RunStatus,
+        Construct, FactorIdentificationV4, GeneralSemConfigV1, MeasurementMode, MethodConfig,
+        ObservedRoleV4, ObservedScaleV4, RESULT_SCHEMA_VERSION, RunProvenance, RunStatus,
         SamplingWeightNormalizationV4, SemDataBindingV4, SemVariableV4, SemWeightBindingV4,
         StructuralPath, migrate_analysis_recipe_to_v4_pending, resolve_weight_declaration_v1,
     };
@@ -8051,6 +8246,278 @@ mod tests {
         assert!(matches!(
             upgraded.ensure_valid(),
             Err(ProjectArchiveV6Error::GeneralSemGenerationRequiresNewProject)
+        ));
+    }
+
+    fn general_sem_schema6_authority_fixture()
+    -> (ProjectArchiveDocumentV6, CanonicalResultDocumentV2) {
+        let dataset = qpls_data::import_delimited_bytes(
+            b"x1,x2,m11,m12,m21,m22,y1,y2\n1,2,2,1,1,3,2,1\n2,1,3,2,2,2,3,2\n3,4,4,3,4,3,5,4\n4,3,5,5,3,5,6,5\n5,6,7,6,6,7,8,7\n6,5,6,7,7,6,9,8\n7,8,9,7,8,9,11,9\n8,7,8,9,9,8,10,11\n9,10,11,10,10,12,13,12\n10,9,12,11,12,10,14,13\n11,12,13,12,13,14,16,15\n12,11,14,13,14,13,17,16\n",
+            "general-sem-schema6-authority.csv",
+            b',',
+            &qpls_data::ImportOptions::default(),
+        )
+        .unwrap();
+        let source_model = ModelSpec {
+            id: Uuid::from_u128(0x6a01),
+            name: "General SEM schema-6 authority".into(),
+            constructs: ["x", "m1", "m2", "y"]
+                .into_iter()
+                .map(|id| Construct {
+                    id: id.into(),
+                    name: id.to_uppercase(),
+                    short_name: id.to_uppercase(),
+                    mode: MeasurementMode::Reflective,
+                    indicators: vec![format!("{id}1"), format!("{id}2")],
+                })
+                .collect(),
+            paths: [
+                ("x", "m1"),
+                ("x", "m2"),
+                ("x", "y"),
+                ("m1", "m2"),
+                ("m1", "y"),
+                ("m2", "y"),
+            ]
+            .into_iter()
+            .map(|(source, target)| StructuralPath {
+                source: source.into(),
+                target: target.into(),
+            })
+            .collect(),
+            controls: Vec::new(),
+            higher_order_constructs: Vec::new(),
+            interactions: Vec::new(),
+        };
+        let source_recipe = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: Uuid::from_u128(0x6a02),
+            created_at: Utc.timestamp_opt(1_700_000_000, 0).unwrap(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: source_model.clone(),
+            settings: AnalysisSettings {
+                method: AnalysisMethod::PlsPm,
+                bootstrap_samples: 20,
+                bootstrap_test_tail: qpls_core::PlsBootstrapTestTail::TwoSided,
+                studentized_inner_samples: 0,
+                confidence_level: 0.95,
+                seed: 42,
+                workers: 2,
+                ..AnalysisSettings::default()
+            },
+            method_config: Some(MethodConfig::PlsAlgorithm),
+            metadata: BTreeMap::new(),
+        };
+        let pending = migrate_analysis_recipe_to_v4_pending(&source_recipe).unwrap();
+        let (mut recipe, mut model) = confirm_legacy_recipe_estimand_v4(
+            &pending,
+            &source_model,
+            &[],
+            LegacyBasicModelInterpretationV4::PlsComposite,
+        )
+        .unwrap();
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut model.data_binding else {
+            unreachable!()
+        };
+        *dataset_id = dataset.id.to_string();
+        let model_scientific_sha256 = model.scientific_sha256().unwrap();
+        recipe.model_binding = AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+            model_id: model.id.clone(),
+            scientific_sha256: model_scientific_sha256.clone(),
+        };
+        recipe.general_sem_config = Some(GeneralSemConfigV1 {
+            inference: GeneralSemInferenceV1::CaseBootstrap {
+                resamples: 20,
+                seed: 42,
+                confidence_level: 0.95,
+                interval: GeneralSemBootstrapIntervalV1::Percentile,
+                tail: GeneralSemInferenceTailV1::TwoSided,
+            },
+            ..GeneralSemConfigV1::default()
+        });
+        recipe.ensure_valid().unwrap();
+        let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+        let execution = qpls_runner::run_compiled_general_sem_pls_recipe_v1(
+            &dataset,
+            &recipe,
+            &model,
+            &artifact,
+            || false,
+            |_| {},
+        )
+        .unwrap();
+        let general_sem_results = execution.canonical_general_sem_results_v1().unwrap();
+
+        let mut project = ProjectArchiveDocumentV6::new_general_sem_v1(
+            Uuid::from_u128(0x6a03),
+            "General SEM authority fixture",
+            Utc.timestamp_opt(1_800_000_000, 0).unwrap(),
+        );
+        project.datasets.push(DatasetDescriptor::from(&dataset));
+        project.models.push(ProjectModelRecordV6 {
+            model_id: model.id.clone(),
+            payload: ProjectModelPayloadV6::SemModelV4 {
+                model: model.clone(),
+                scientific_sha256: model_scientific_sha256.clone(),
+            },
+        });
+        project.recipes.push(recipe.clone());
+        crate::write_project_data_lineage_v1(
+            &mut project.layouts,
+            &crate::ProjectDataLineageV1 {
+                schema_version: crate::PROJECT_DATA_LINEAGE_SCHEMA_VERSION_V1,
+                records: vec![crate::ProjectDatasetVersionRecordV1 {
+                    dataset_id: dataset.id.to_string(),
+                    parent_dataset_id: None,
+                    operation: crate::ProjectDatasetVersionOperationV1::Import,
+                    created_at: None,
+                    summary: "Imported General SEM authority fixture".into(),
+                    source_column: None,
+                    target_column: None,
+                    transformation: None,
+                }],
+            },
+        )
+        .unwrap();
+
+        let canonical = CanonicalResultDocumentV2 {
+            schema_version: 2,
+            document_id: "general_sem_authority_document".into(),
+            title: "General SEM PLS results".into(),
+            provenance: CanonicalResultProvenanceV2 {
+                run_id: "general_sem_authority_run".into(),
+                project_id: project.project_id.to_string(),
+                model_id: model.id,
+                model_digest: model_scientific_sha256,
+                dataset_id: dataset.id.to_string(),
+                dataset_fingerprint: dataset.fingerprint.0,
+                recipe_id: recipe.id.to_string(),
+                recipe_digest: artifact.recipe_analytical_sha256().into(),
+                capability_cell: project_capability_cell_v2(artifact.capability_cell()),
+                method_version: GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1.into(),
+                engine_version: execution.adapter_version().into(),
+                seed: Some(recipe.settings.seed),
+                workers: recipe.settings.workers as u32,
+                started_at: "2026-08-19T00:00:00Z".into(),
+                completed_at: "2026-08-19T00:00:01Z".into(),
+            },
+            capability_cells: Some(vec![
+                project_capability_cell_v2(artifact.capability_cell()),
+                project_capability_cell_v2(
+                    &qpls_core::general_sem_pls_bootstrap_capability_cell_v1(),
+                ),
+            ]),
+            general_sem_results: Some(general_sem_results),
+            sections: Vec::new(),
+            tables: Vec::new(),
+            charts: Vec::new(),
+            notices: Vec::new(),
+            exclusions: Vec::new(),
+            footnotes: Vec::new(),
+            presentation: CanonicalResultPresentationV2 {
+                default_section_id: None,
+                default_table_id: None,
+                precision: 4,
+                missing_value_label: "—".into(),
+                chart_defaults: CanonicalChartDisplayOptionsV2::default(),
+            },
+        };
+        canonical.ensure_valid().unwrap();
+        project
+            .canonical_result_documents
+            .push(CanonicalResultDocumentAttachmentV2::from_document(canonical.clone()).unwrap());
+        (project, canonical)
+    }
+
+    #[test]
+    fn general_sem_result_is_bound_to_resident_schema6_authorities() {
+        assert_eq!(
+            GENERAL_SEM_PLS_POINT_EXECUTION_ADAPTER_VERSION_V1,
+            qpls_runner::RECIPE_V4_GENERAL_SEM_PLS_EXECUTION_ADAPTER_VERSION_V1
+        );
+        assert_eq!(
+            GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+            qpls_runner::RECIPE_V4_GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+        );
+        let (project, canonical) = general_sem_schema6_authority_fixture();
+        project.ensure_valid().unwrap();
+
+        let mut no_generation = project.clone();
+        no_generation.sem_generation = None;
+        assert!(matches!(
+            no_generation.ensure_valid(),
+            Err(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration { .. })
+        ));
+
+        let mut no_recipe = project.clone();
+        no_recipe.recipes.clear();
+        assert!(matches!(
+            no_recipe.ensure_valid(),
+            Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
+                if message.contains("Recipe-v4")
+        ));
+
+        let mut artifact_tamper = canonical.clone();
+        artifact_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .compilation_artifact_identity_sha256 = "0".repeat(64);
+        artifact_tamper.ensure_valid().unwrap();
+        let mut artifact_project = project.clone();
+        artifact_project.canonical_result_documents =
+            vec![CanonicalResultDocumentAttachmentV2::from_document(artifact_tamper).unwrap()];
+        assert!(matches!(
+            artifact_project.ensure_valid(),
+            Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
+                if message.contains("compiled artifact")
+        ));
+
+        let mut method_tamper = canonical.clone();
+        method_tamper.provenance.method_version = GENERAL_SEM_EFFECTS_V1_METHOD_VERSION.into();
+        method_tamper.ensure_valid().unwrap();
+        let mut method_project = project.clone();
+        method_project.canonical_result_documents =
+            vec![CanonicalResultDocumentAttachmentV2::from_document(method_tamper).unwrap()];
+        assert!(matches!(
+            method_project.ensure_valid(),
+            Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
+                if message.contains("method/engine")
+        ));
+
+        let mut engine_tamper = canonical.clone();
+        engine_tamper.provenance.engine_version =
+            GENERAL_SEM_PLS_POINT_EXECUTION_ADAPTER_VERSION_V1.into();
+        engine_tamper.ensure_valid().unwrap();
+        let mut engine_project = project.clone();
+        engine_project.canonical_result_documents =
+            vec![CanonicalResultDocumentAttachmentV2::from_document(engine_tamper).unwrap()];
+        assert!(matches!(
+            engine_project.ensure_valid(),
+            Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
+                if message.contains("method/engine")
+        ));
+
+        let mut bootstrap_tamper = canonical;
+        bootstrap_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .confidence_level = 0.9;
+        bootstrap_tamper.ensure_valid().unwrap();
+        let mut bootstrap_project = project;
+        bootstrap_project.canonical_result_documents =
+            vec![CanonicalResultDocumentAttachmentV2::from_document(bootstrap_tamper).unwrap()];
+        assert!(matches!(
+            bootstrap_project.ensure_valid(),
+            Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
+                if message.contains("bootstrap settings")
         ));
     }
 

@@ -337,12 +337,14 @@ fn specific_estimand(
 }
 
 fn indirect_path_ids(topology: &CompiledSemTopologyV1, source: &str, target: &str) -> Vec<String> {
-    topology
+    let mut identities = topology
         .specific_directed_paths()
         .iter()
         .filter(|path| path.source() == source && path.target() == target)
         .map(|path| path.identity().to_string())
-        .collect()
+        .collect::<Vec<_>>();
+    identities.sort();
+    identities
 }
 
 fn direct_relation_ids(
@@ -350,7 +352,7 @@ fn direct_relation_ids(
     source: &str,
     target: &str,
 ) -> Vec<String> {
-    topology
+    let mut relation_ids = topology
         .structural_relations()
         .iter()
         .filter(|relation| {
@@ -359,7 +361,9 @@ fn direct_relation_ids(
                 && relation.target() == target
         })
         .map(|relation| relation.relation_id().to_string())
-        .collect()
+        .collect::<Vec<_>>();
+    relation_ids.sort();
+    relation_ids
 }
 
 fn auto_effect_identity(kind: &str, source: &str, target: &str) -> String {
