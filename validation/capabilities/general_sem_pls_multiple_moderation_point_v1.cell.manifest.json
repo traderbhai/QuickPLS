@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.moderation",
+  "execution_context": "recipe_v4_compiled_pls_plan_v3_general_sem_point_execution",
+  "feature": {
+    "id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+    "label": "General SEM simultaneous two-way PLS moderation point estimates",
+    "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+    "analytical_method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+    "method_kind": "two_stage_joint_ols_point_estimation"
+  },
+  "coverage_state": "partial",
+  "evidence_state": "engine_only",
+  "surface": "labs",
+  "availability": "experimental_labs_opt_in",
+  "qualification_ready": false,
+  "promotion_allowed": false,
+  "method_contract": "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_V1.md",
+  "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+  "exact_predicate": {
+    "schema_generation": "general_sem_v1",
+    "derived_term": "interaction_v2",
+    "interaction_order": "two_way",
+    "construction": "two_stage",
+    "hierarchy": "strong",
+    "interaction_count": "one_or_more",
+    "structural_topology": "direct_only_acyclic",
+    "inference": "point_only",
+    "input": "raw_continuous",
+    "missing_data": "listwise",
+    "weights": "none",
+    "groups": "single"
+  },
+  "implemented_contracts": [
+    "deterministic CompiledPlsPlanV3 interaction identities and one shared stage-one score model",
+    "joint stage-two estimation for simultaneous same-focal and different-focal two-way interactions",
+    "typed canonical interaction effects with standardized-product coefficients, scientific rescaled gamma values, and product mean and sample-standard-deviation receipts",
+    "stable conditional-effect and interaction-plot rows cross-referenced to the authoritative interaction-effect identity",
+    "typed cancellation and fail-closed raw-result tamper validation"
+  ],
+  "blocked_contracts": [
+    "bootstrap or other resampling inference",
+    "three-way and higher-order interactions",
+    "moderated mediation and directed structural chains",
+    "authored arbitrary probe policies",
+    "groups, weights, non-listwise missing-data handling, and non-continuous inputs"
+  ],
+  "remaining_qualification": [
+    "Independent simultaneous-interaction numerical oracle evidence is not yet recorded.",
+    "Simulation recovery, interval coverage, adversarial boundaries, worker invariance, and resampling-stage evidence are not yet recorded.",
+    "GUI, CLI, native persistence, semantic export, packaged Windows, accessibility, performance, soak, and independent scientific-review evidence are not yet recorded.",
+    "The cell must remain Labs and must not be promoted to Standard while qualification_ready is false."
+  ]
+}

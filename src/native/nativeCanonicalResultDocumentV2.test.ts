@@ -25,6 +25,10 @@ import {
   GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
+  GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1,
+  GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1,
   GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1,
   GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1,
   canonicalResultDocumentFromAnalysisRunV2,
@@ -235,6 +239,99 @@ function completeGeneralSemResultsFixture(
       code: "identified",
       message: "The compiled model passed identification checks.",
       degrees_of_freedom: 8,
+    }],
+  };
+}
+
+function completeGeneralSemInteractionResultsFixture(
+  document: NativeCanonicalResultDocumentV2,
+): CanonicalGeneralSemResultsV1 {
+  const moderationCell = {
+    registry_schema_version: 2 as const,
+    capability_id: "smartpls.moderation",
+    cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+    capability_version: "general_sem_pls_multiple_two_way_moderation_point_v1",
+  };
+  document.capability_cells ??= [document.provenance.capability_cell];
+  document.capability_cells.push(moderationCell);
+  document.capability_cells.sort((left, right) => {
+    const leftIdentity = `${left.registry_schema_version}:${left.capability_id}:${left.cell_id}:${left.capability_version}`;
+    const rightIdentity = `${right.registry_schema_version}:${right.capability_id}:${right.cell_id}:${right.capability_version}`;
+    return leftIdentity < rightIdentity ? -1 : leftIdentity > rightIdentity ? 1 : 0;
+  });
+  const trace = {
+    model_id: document.provenance.model_id,
+    capability_cell: { ...moderationCell },
+  };
+  const interactionEffectId = "relation_interaction_x_by_w_effect";
+  const probeId = "probe_interaction_x_by_w_standardized";
+  const stageOneDigest = document.provenance.model_digest === "e".repeat(64)
+    ? "f".repeat(64)
+    : "e".repeat(64);
+  return {
+    schema_version: 1,
+    interaction_effects: [{
+      effect_id: interactionEffectId,
+      trace: structuredClone(trace),
+      interaction_id: "interaction_x_by_w",
+      focal_relation_id: "relation_x_y",
+      interaction_effect_relation_id: interactionEffectId,
+      interaction_effect_parameter_id: "parameter_interaction_x_by_w_effect",
+      focal_predictor_id: "construct_x",
+      moderator_id: "construct_w",
+      outcome_id: "construct_y",
+      generated_product_column_id: "generated_interaction_x_by_w_product",
+      stage_one_model_scientific_sha256: stageOneDigest,
+      method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+      construction_method: "two_stage",
+      product_scale_version: GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
+      hierarchy_policy: "strong",
+      hierarchy_policy_version: GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1,
+      conditioning_policy_version: GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1,
+      observation_count: 61,
+      unstandardized_product_mean: 0.125,
+      unstandardized_product_sample_standard_deviation: 0.5,
+      standardized_product_coefficient: { estimate: 0.2 },
+      scientific_rescaled_gamma: { estimate: 0.4 },
+    }],
+    conditional_effect_probes: [{
+      probe_id: probeId,
+      trace: structuredClone(trace),
+      moderator_id: "construct_w",
+      values: { kind: "explicit", values: [-1, 0, 1] },
+    }],
+    conditional_effects: [-1, 0, 1].map((moderatorValue, probeValueIndex) => ({
+      effect_id: `conditional_interaction_x_by_w_${probeValueIndex}`,
+      estimand_id: "conditional_slope_interaction_x_by_w",
+      trace: structuredClone(trace),
+      interaction_id: "interaction_x_by_w",
+      interaction_effect_id: interactionEffectId,
+      focal_relation_id: "relation_x_y",
+      probe_id: probeId,
+      moderator_id: "construct_w",
+      probe_value_index: probeValueIndex,
+      moderator_value: moderatorValue,
+      value: { estimate: 0.3 + 0.4 * moderatorValue },
+    })),
+    interaction_plots: [{
+      plot_id: "plot_interaction_x_by_w",
+      trace,
+      interaction_id: "interaction_x_by_w",
+      interaction_effect_id: interactionEffectId,
+      focal_relation_id: "relation_x_y",
+      focal_predictor_id: "construct_x",
+      moderator_id: "construct_w",
+      outcome_id: "construct_y",
+      series: [-1, 0, 1].map((moderatorValue, probeValueIndex) => ({
+        series_id: `series_interaction_x_by_w_${probeValueIndex}`,
+        probe_id: probeId,
+        probe_value_index: probeValueIndex,
+        moderator_value: moderatorValue,
+        points: [-1, 0, 1].map((focalValue) => ({
+          focal_value: focalValue,
+          predicted_value: focalValue * (0.3 + 0.4 * moderatorValue),
+        })),
+      })),
     }],
   };
 }
@@ -658,6 +755,60 @@ describe("CanonicalResultDocumentV2 native runtime adapter", () => {
     ]) {
       expect(Object.prototype.hasOwnProperty.call(pointEstimate, field)).toBe(false);
     }
+  });
+
+  it("reads interaction coefficient provenance and rejects scale or cross-reference tampering", async () => {
+    const built = await canonicalResultDocumentFromAnalysisRunV2(currentPlsRun());
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    const document = structuredClone(built.document);
+    document.general_sem_results = completeGeneralSemInteractionResultsFixture(document);
+
+    const readback = parseNativeCanonicalResultDocumentV2(structuredClone(document));
+    expect(readback.general_sem_results?.interaction_effects?.[0]).toMatchObject({
+      interaction_id: "interaction_x_by_w",
+      standardized_product_coefficient: { estimate: 0.2 },
+      scientific_rescaled_gamma: { estimate: 0.4 },
+      construction_method: "two_stage",
+    });
+    expect(readback.general_sem_results?.conditional_effects?.[0].interaction_effect_id)
+      .toBe("relation_interaction_x_by_w_effect");
+    expect(readback.general_sem_results?.interaction_plots?.[0].interaction_effect_id)
+      .toBe("relation_interaction_x_by_w_effect");
+
+    const wrongGamma = structuredClone(document);
+    wrongGamma.general_sem_results!.interaction_effects![0]!.scientific_rescaled_gamma.estimate = 0.41;
+    expect(() => parseNativeCanonicalResultDocumentV2(wrongGamma))
+      .toThrow(/scientific_rescaled_gamma must equal/);
+
+    const missingCrossReference = structuredClone(document);
+    delete missingCrossReference.general_sem_results!.conditional_effects![0]!.interaction_effect_id;
+    expect(() => parseNativeCanonicalResultDocumentV2(missingCrossReference))
+      .toThrow(/interaction_effect_id is required/);
+
+    const wrongProjection = structuredClone(document);
+    wrongProjection.general_sem_results!.interaction_effects![0]!.stage_one_model_scientific_sha256 =
+      wrongProjection.provenance.model_digest;
+    expect(() => parseNativeCanonicalResultDocumentV2(wrongProjection))
+      .toThrow(/projected interaction-free scoring model/);
+
+    const wrongProbePolicy = structuredClone(document);
+    wrongProbePolicy.general_sem_results!.conditional_effect_probes![0]!.values = {
+      kind: "explicit",
+      values: [-2, 0, 1],
+    };
+    expect(() => parseNativeCanonicalResultDocumentV2(wrongProbePolicy))
+      .toThrow(/frozen standardized -1\/0\/\+1 interaction policy/);
+
+    const omittedConditionalRow = structuredClone(document);
+    omittedConditionalRow.general_sem_results!.conditional_effects!.pop();
+    expect(() => parseNativeCanonicalResultDocumentV2(omittedConditionalRow))
+      .toThrow(/exactly three conditional rows/);
+
+    const omittedPlot = structuredClone(document);
+    omittedPlot.general_sem_results!.interaction_plots = [];
+    expect(() => parseNativeCanonicalResultDocumentV2(omittedPlot))
+      .toThrow(/exactly one cross-referenced interaction plot/);
   });
 
   it("strictly and losslessly reads the exact General SEM bootstrap inference receipt", async () => {

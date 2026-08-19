@@ -307,6 +307,8 @@ pub enum CompiledPlsPlanV3Error {
     Topology(#[from] CompiledSemTopologyV1Error),
     #[error(transparent)]
     BasePlan(#[from] CompiledPlsPlanV2Error),
+    #[error(transparent)]
+    Interaction(#[from] CompiledPlsInteractionV3Error),
     #[error("compiled PLS v3 does not yet implement lazy specific-path materialization")]
     LazySpecificPathMaterializationNotImplemented,
     #[error("PLS v3 requires an acyclic structural topology")]
@@ -344,13 +346,11 @@ pub fn compile_pls_plan_v3(
     if topology.has_feedback() {
         return Err(CompiledPlsPlanV3Error::StructuralFeedback);
     }
-    let two_way_interactions = compile_pls_two_way_interactions_v3(model)
-        .map_err(interaction_compilation_as_base_plan_error)?;
+    let two_way_interactions = compile_pls_two_way_interactions_v3(model)?;
     let (base_plan, stage_one_projection_scientific_sha256) = if two_way_interactions.is_empty() {
         (compile_pls_plan_v2(model)?, None)
     } else {
-        let projection = compile_pls_stage_one_projection_v3(model)
-            .map_err(interaction_compilation_as_base_plan_error)?;
+        let projection = compile_pls_stage_one_projection_v3(model)?;
         let base_plan = compile_pls_plan_v2(projection.projected_model())?;
         debug_assert_eq!(
             base_plan.scientific_hash(),
@@ -654,16 +654,6 @@ pub fn compile_pls_stage_one_projection_v3(
         projected_scientific_sha256,
         projected_model,
     })
-}
-
-fn interaction_compilation_as_base_plan_error(
-    error: CompiledPlsInteractionV3Error,
-) -> CompiledPlsPlanV3Error {
-    CompiledPlsPlanV2Error::Unsupported {
-        code: "interaction_v3".to_string(),
-        subject: error.to_string(),
-    }
-    .into()
 }
 
 fn relation_references_variable(relation: &SemRelationV4, variable_id: &str) -> bool {

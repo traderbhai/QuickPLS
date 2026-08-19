@@ -1,13 +1,18 @@
-use qpls_core::{CompiledPlsPlanV3, CompiledPlsTwoWayInteractionV3};
+use qpls_core::{
+    CompiledPlsPlanV3, CompiledPlsTwoWayInteractionV3, InteractionHierarchyPolicyV2,
+    InteractionMethodV4,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1: &str =
-    "qpls.general-sem-pls.multiple-two-way.point.v1";
+    qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1;
 pub const GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1: &str =
-    "qpls.general-sem-pls.two-stage-product.sample-standardized.v1";
+    qpls_core::GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1;
 pub const GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1: &str =
-    "qpls.general-sem-pls.simple-slope.other-moderators-zero.v1";
+    qpls_core::GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1;
+pub const GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1: &str =
+    qpls_core::GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1;
 
 /// Auditable scale transformation for a two-stage product. Both operands are
 /// first sample-standardized. Their row-wise product is then mean-centered and
@@ -96,9 +101,13 @@ pub struct GeneralSemPlsInteractionCoefficientV1 {
     interaction_id: String,
     focal_relation_id: String,
     interaction_effect_relation_id: String,
+    interaction_effect_parameter_id: String,
     focal_predictor_id: String,
     moderator_id: String,
     outcome_id: String,
+    construction_method: InteractionMethodV4,
+    hierarchy_policy: InteractionHierarchyPolicyV2,
+    hierarchy_policy_version: String,
     standardized_product_estimate: f64,
     raw_product_estimate: f64,
 }
@@ -116,6 +125,10 @@ impl GeneralSemPlsInteractionCoefficientV1 {
         &self.interaction_effect_relation_id
     }
 
+    pub fn interaction_effect_parameter_id(&self) -> &str {
+        &self.interaction_effect_parameter_id
+    }
+
     pub fn focal_predictor_id(&self) -> &str {
         &self.focal_predictor_id
     }
@@ -126,6 +139,18 @@ impl GeneralSemPlsInteractionCoefficientV1 {
 
     pub fn outcome_id(&self) -> &str {
         &self.outcome_id
+    }
+
+    pub fn construction_method(&self) -> &InteractionMethodV4 {
+        &self.construction_method
+    }
+
+    pub fn hierarchy_policy(&self) -> InteractionHierarchyPolicyV2 {
+        self.hierarchy_policy
+    }
+
+    pub fn hierarchy_policy_version(&self) -> &str {
+        &self.hierarchy_policy_version
     }
 
     pub fn standardized_product_estimate(&self) -> f64 {
@@ -215,6 +240,182 @@ impl GeneralSemPlsMultipleInteractionPointResultV1 {
         &self.simple_slopes
     }
 
+    /// Revalidates the complete point payload against the immutable compiled
+    /// interaction plan. Runtime adapters call this before publishing any
+    /// canonical result so drifted IDs, scaling receipts, or coefficients fail
+    /// closed rather than being interpreted as a different estimand.
+    pub fn ensure_valid_against_plan_v1(
+        &self,
+        plan: &CompiledPlsPlanV3,
+    ) -> Result<(), GeneralSemPlsInteractionPointErrorV1> {
+        self.ensure_self_consistent_v1()?;
+        let expected_interaction_ids = plan
+            .two_way_interactions()
+            .iter()
+            .map(|interaction| interaction.interaction_id())
+            .collect::<Vec<_>>();
+        let actual_interaction_ids = self
+            .interaction_coefficients
+            .iter()
+            .map(|coefficient| coefficient.interaction_id.as_str())
+            .collect::<Vec<_>>();
+        if actual_interaction_ids != expected_interaction_ids {
+            return Err(invalid_result(
+                "interaction coefficient identities differ from the compiled PLS v3 plan",
+            ));
+        }
+        let expected_relation_ids = plan
+            .base_plan()
+            .paths()
+            .iter()
+            .map(|path| path.relation_id())
+            .collect::<Vec<_>>();
+        let actual_relation_ids = self
+            .structural_coefficients
+            .iter()
+            .map(|coefficient| coefficient.relation_id.as_str())
+            .collect::<Vec<_>>();
+        if actual_relation_ids != expected_relation_ids {
+            return Err(invalid_result(
+                "ordinary structural coefficient identities differ from the compiled stage-one plan",
+            ));
+        }
+        for contract in plan.two_way_interactions() {
+            let receipt = self
+                .product_scale_receipts
+                .iter()
+                .find(|receipt| receipt.interaction_id == contract.interaction_id())
+                .ok_or_else(|| {
+                    invalid_result("a compiled interaction has no product-scale receipt")
+                })?;
+            let coefficient = self
+                .interaction_coefficients
+                .iter()
+                .find(|coefficient| coefficient.interaction_id == contract.interaction_id())
+                .ok_or_else(|| invalid_result("a compiled interaction has no coefficient"))?;
+            if receipt.generated_product_column_id != contract.generated_product_column_id()
+                || receipt.focal_predictor_id != contract.focal_predictor_id()
+                || receipt.moderator_id != contract.moderator_id()
+                || coefficient.focal_relation_id != contract.focal_relation_id()
+                || coefficient.interaction_effect_relation_id
+                    != contract.interaction_effect_relation_id()
+                || coefficient.interaction_effect_parameter_id
+                    != contract.interaction_effect_parameter_id()
+                || coefficient.focal_predictor_id != contract.focal_predictor_id()
+                || coefficient.moderator_id != contract.moderator_id()
+                || coefficient.outcome_id != contract.outcome_id()
+                || coefficient.construction_method != *contract.method()
+                || coefficient.hierarchy_policy != contract.hierarchy_policy()
+            {
+                return Err(invalid_result(format!(
+                    "interaction {} metadata differs from its compiled contract",
+                    contract.interaction_id()
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    /// Validates identities, ordering, frozen policies, and the exact algebraic
+    /// relationship between the standardized-product coefficient and the
+    /// scientifically interpreted gamma coefficient.
+    pub fn ensure_self_consistent_v1(&self) -> Result<(), GeneralSemPlsInteractionPointErrorV1> {
+        if self.method_version != GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1 {
+            return Err(invalid_result(
+                "the interaction method version is unsupported",
+            ));
+        }
+        if self.observation_count < 3 {
+            return Err(invalid_result(
+                "the interaction result has fewer than three observations",
+            ));
+        }
+        if self.product_scale_receipts.len() != self.interaction_coefficients.len()
+            || self.simple_slopes.len() != self.interaction_coefficients.len() * 3
+        {
+            return Err(invalid_result(
+                "interaction coefficients, scale receipts, and simple slopes have inconsistent cardinality",
+            ));
+        }
+        if !strictly_sorted_unique(
+            self.product_scale_receipts
+                .iter()
+                .map(|receipt| receipt.interaction_id.as_str()),
+        ) || !strictly_sorted_unique(
+            self.interaction_coefficients
+                .iter()
+                .map(|coefficient| coefficient.interaction_id.as_str()),
+        ) || !strictly_sorted_unique(
+            self.structural_coefficients
+                .iter()
+                .map(|coefficient| coefficient.relation_id.as_str()),
+        ) {
+            return Err(invalid_result(
+                "interaction result identities are not in strict canonical order",
+            ));
+        }
+        for receipt in &self.product_scale_receipts {
+            if receipt.scale_version != GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1
+                || receipt.observation_count != self.observation_count
+                || !receipt.unstandardized_product_mean.is_finite()
+                || !receipt
+                    .unstandardized_product_sample_standard_deviation
+                    .is_finite()
+                || receipt.unstandardized_product_sample_standard_deviation <= f64::EPSILON
+            {
+                return Err(invalid_result(format!(
+                    "interaction {} has an invalid product-scale receipt",
+                    receipt.interaction_id
+                )));
+            }
+        }
+        for coefficient in &self.interaction_coefficients {
+            let receipt = self
+                .product_scale_receipts
+                .iter()
+                .find(|receipt| receipt.interaction_id == coefficient.interaction_id)
+                .ok_or_else(|| invalid_result("an interaction coefficient has no scale receipt"))?;
+            let expected_gamma = coefficient.standardized_product_estimate
+                / receipt.unstandardized_product_sample_standard_deviation;
+            if !coefficient.standardized_product_estimate.is_finite()
+                || !coefficient.raw_product_estimate.is_finite()
+                || expected_gamma.to_bits() != coefficient.raw_product_estimate.to_bits()
+                || coefficient.construction_method != InteractionMethodV4::TwoStage
+                || coefficient.hierarchy_policy != InteractionHierarchyPolicyV2::Strong
+                || coefficient.hierarchy_policy_version
+                    != GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1
+            {
+                return Err(invalid_result(format!(
+                    "interaction {} has inconsistent coefficient scaling or policy provenance",
+                    coefficient.interaction_id
+                )));
+            }
+        }
+        for (interaction_index, coefficient) in self.interaction_coefficients.iter().enumerate() {
+            let slopes = &self.simple_slopes[interaction_index * 3..interaction_index * 3 + 3];
+            for (slope, expected_probe) in slopes.iter().zip([-1.0_f64, 0.0, 1.0]) {
+                let expected = self.conditional_focal_slope_v1(
+                    &coefficient.focal_relation_id,
+                    &BTreeMap::from([(coefficient.moderator_id.clone(), expected_probe)]),
+                )?;
+                if slope.policy_version != GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1
+                    || slope.interaction_id != coefficient.interaction_id
+                    || slope.focal_relation_id != coefficient.focal_relation_id
+                    || slope.moderator_id != coefficient.moderator_id
+                    || slope.moderator_value_standardized.to_bits() != expected_probe.to_bits()
+                    || !slope.other_same_focal_moderators_held_at_standardized_zero
+                    || slope.estimate.to_bits() != expected.to_bits()
+                {
+                    return Err(invalid_result(format!(
+                        "interaction {} has an inconsistent frozen simple-slope ledger",
+                        coefficient.interaction_id
+                    )));
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Conditional derivative of a standardized outcome with respect to its
     /// standardized focal score. Missing moderator values are explicitly held
     /// at standardized zero.
@@ -272,6 +473,75 @@ impl GeneralSemPlsMultipleInteractionPointResultV1 {
         Ok(focal_value_standardized
             * self.conditional_focal_slope_v1(focal_relation_id, moderator_values_standardized)?)
     }
+
+    /// Complete stage-two standardized linear predictor for one outcome. Any
+    /// omitted ordinary predictor or interaction operand is held at zero. The
+    /// product mean is retained, so plots do not silently drop the intercept
+    /// introduced when the raw product of standardized operands is centered.
+    pub fn standardized_outcome_linear_predictor_v1(
+        &self,
+        outcome_id: &str,
+        predictor_values_standardized: &BTreeMap<String, f64>,
+    ) -> Result<f64, GeneralSemPlsInteractionPointErrorV1> {
+        if let Some((variable_id, _)) = predictor_values_standardized
+            .iter()
+            .find(|(_, value)| !value.is_finite())
+        {
+            return Err(
+                GeneralSemPlsInteractionPointErrorV1::NonFinitePredictorProbe {
+                    variable_id: variable_id.clone(),
+                },
+            );
+        }
+        if !self
+            .structural_coefficients
+            .iter()
+            .any(|coefficient| coefficient.target_id == outcome_id)
+            && !self
+                .interaction_coefficients
+                .iter()
+                .any(|coefficient| coefficient.outcome_id == outcome_id)
+        {
+            return Err(GeneralSemPlsInteractionPointErrorV1::UnknownOutcome {
+                outcome_id: outcome_id.to_string(),
+            });
+        }
+        let mut predicted = self
+            .structural_coefficients
+            .iter()
+            .filter(|coefficient| coefficient.target_id == outcome_id)
+            .map(|coefficient| {
+                coefficient.estimate
+                    * predictor_values_standardized
+                        .get(&coefficient.source_id)
+                        .copied()
+                        .unwrap_or(0.0)
+            })
+            .sum::<f64>();
+        for coefficient in self
+            .interaction_coefficients
+            .iter()
+            .filter(|coefficient| coefficient.outcome_id == outcome_id)
+        {
+            let receipt = self
+                .product_scale_receipts
+                .iter()
+                .find(|receipt| receipt.interaction_id == coefficient.interaction_id)
+                .ok_or_else(|| invalid_result("an interaction coefficient has no scale receipt"))?;
+            let focal = predictor_values_standardized
+                .get(&coefficient.focal_predictor_id)
+                .copied()
+                .unwrap_or(0.0);
+            let moderator = predictor_values_standardized
+                .get(&coefficient.moderator_id)
+                .copied()
+                .unwrap_or(0.0);
+            predicted += coefficient.standardized_product_estimate
+                * (focal * moderator - receipt.unstandardized_product_mean)
+                / receipt.unstandardized_product_sample_standard_deviation;
+        }
+        Ok(predicted)
+    }
 }
 
 #[derive(Debug, Clone, thiserror::Error, PartialEq, Eq)]
@@ -322,6 +592,12 @@ pub enum GeneralSemPlsInteractionPointErrorV1 {
     NonFiniteModeratorProbe { moderator_id: String },
     #[error("focal probe is non-finite")]
     NonFiniteFocalProbe,
+    #[error("predictor probe for {variable_id} is non-finite")]
+    NonFinitePredictorProbe { variable_id: String },
+    #[error("outcome {outcome_id} is absent from the joint stage-two result")]
+    UnknownOutcome { outcome_id: String },
+    #[error("interaction point result contract is invalid: {0}")]
+    InvalidResultContract(String),
 }
 
 #[derive(Clone)]
@@ -542,9 +818,16 @@ pub fn estimate_general_sem_pls_multiple_two_way_interactions_v1(
                         interaction_effect_relation_id: contract
                             .interaction_effect_relation_id()
                             .to_string(),
+                        interaction_effect_parameter_id: contract
+                            .interaction_effect_parameter_id()
+                            .to_string(),
                         focal_predictor_id: contract.focal_predictor_id().to_string(),
                         moderator_id: contract.moderator_id().to_string(),
                         outcome_id: outcome_id.clone(),
+                        construction_method: contract.method().clone(),
+                        hierarchy_policy: contract.hierarchy_policy(),
+                        hierarchy_policy_version:
+                            GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1.to_string(),
                         standardized_product_estimate: estimate,
                         raw_product_estimate: estimate / product_sample_standard_deviation,
                     });
@@ -585,10 +868,21 @@ pub fn estimate_general_sem_pls_multiple_two_way_interactions_v1(
             });
         }
     }
-    Ok(GeneralSemPlsMultipleInteractionPointResultV1 {
+    let result = GeneralSemPlsMultipleInteractionPointResultV1 {
         simple_slopes,
         ..provisional
-    })
+    };
+    result.ensure_valid_against_plan_v1(plan)?;
+    Ok(result)
+}
+
+fn invalid_result(message: impl Into<String>) -> GeneralSemPlsInteractionPointErrorV1 {
+    GeneralSemPlsInteractionPointErrorV1::InvalidResultContract(message.into())
+}
+
+fn strictly_sorted_unique<'a>(values: impl IntoIterator<Item = &'a str>) -> bool {
+    let values = values.into_iter().collect::<Vec<_>>();
+    values.windows(2).all(|pair| pair[0] < pair[1])
 }
 
 fn sample_standardize(

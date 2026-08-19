@@ -5,21 +5,30 @@ use crate::{
 use qpls_core::{
     AnalysisRecipeV4, CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
     CanonicalAggregateEffectKindV1, CanonicalAggregateEffectResultV1,
-    CanonicalGeneralSemBootstrapIntervalV1, CanonicalGeneralSemEffectIdentityV1,
-    CanonicalGeneralSemEstimateV1, CanonicalGeneralSemFailedReplicateReasonV1,
-    CanonicalGeneralSemFailedReplicateV1, CanonicalGeneralSemInferenceKindV1,
-    CanonicalGeneralSemInferenceReceiptV1, CanonicalGeneralSemInferenceTailV1,
-    CanonicalGeneralSemResultTraceV1, CanonicalGeneralSemResultsV1,
-    CanonicalSpecificIndirectEffectResultV1, CapabilityCellReferenceV2,
-    CompiledGeneralSemPlsRecipeV1, CompiledPlsEffectEstimandV3, ExecutionRecipeError,
-    GeneralSemBootstrapIntervalV1, GeneralSemEffectsV1, GeneralSemEffectsV1Error,
-    GeneralSemInferenceTailV1, GeneralSemInferenceV1, GeneralSemPlsRecipeCompilationErrorV1,
-    MethodConfig, SemModelV4, StructuralRelationRoleV4, ValidatedExecutionRecipe,
-    decompose_general_sem_effects_v1, general_sem_effect_identity_set_sha256_v1,
-    pls_general_bootstrap_capability_cell_v1, project_general_sem_pls_base_recipe_v1,
-    validate_compiled_general_sem_pls_recipe_v1,
+    CanonicalConditionalEffectProbeResultV1, CanonicalConditionalEffectResultV1,
+    CanonicalConditionalProbeValuesResultV1, CanonicalGeneralSemBootstrapIntervalV1,
+    CanonicalGeneralSemEffectIdentityV1, CanonicalGeneralSemEstimateV1,
+    CanonicalGeneralSemFailedReplicateReasonV1, CanonicalGeneralSemFailedReplicateV1,
+    CanonicalGeneralSemInferenceKindV1, CanonicalGeneralSemInferenceReceiptV1,
+    CanonicalGeneralSemInferenceTailV1, CanonicalGeneralSemResultTraceV1,
+    CanonicalGeneralSemResultsV1, CanonicalInteractionConstructionMethodV1,
+    CanonicalInteractionEffectResultV1, CanonicalInteractionHierarchyPolicyV1,
+    CanonicalInteractionPlotPointV1, CanonicalInteractionPlotResultV1,
+    CanonicalInteractionPlotSeriesV1, CanonicalSpecificIndirectEffectResultV1,
+    CapabilityCellReferenceV2, CompiledGeneralSemPlsRecipeV1, CompiledPlsEffectEstimandV3,
+    ExecutionRecipeError, GeneralSemBootstrapIntervalV1, GeneralSemEffectsV1,
+    GeneralSemEffectsV1Error, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
+    GeneralSemPlsRecipeCompilationErrorV1, MethodConfig, SemModelV4, StructuralRelationRoleV4,
+    ValidatedExecutionRecipe, decompose_general_sem_effects_v1,
+    general_sem_effect_identity_set_sha256_v1, pls_general_bootstrap_capability_cell_v1,
+    project_general_sem_pls_stage_one_recipe_v1, validate_compiled_general_sem_pls_recipe_v1,
 };
 use qpls_data::Dataset;
+use qpls_estimation::{
+    GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1, GeneralSemPlsInteractionPointErrorV1,
+    GeneralSemPlsMultipleInteractionPointResultV1,
+    estimate_general_sem_pls_multiple_two_way_interactions_v1,
+};
 use qpls_resampling::{
     GeneralSemPlsBootstrapEffectInferenceV1, GeneralSemPlsBootstrapErrorV1,
     GeneralSemPlsBootstrapResultV1, bootstrap_general_sem_pls_v1,
@@ -32,6 +41,8 @@ pub const RECIPE_V4_GENERAL_SEM_PLS_EXECUTION_ADAPTER_VERSION_V1: &str =
     "compiled_general_sem_pls_recipe_v1_point_execution_v1";
 pub const RECIPE_V4_GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1: &str =
     "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1";
+pub const RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1: &str =
+    "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
@@ -152,10 +163,13 @@ pub struct RecipeV4GeneralSemPlsExecutionResultV1 {
     compiled_plan_sha256: String,
     recipe_analytical_sha256: String,
     model_scientific_sha256: String,
+    stage_one_model_scientific_sha256: String,
     source_dataset_fingerprint: String,
     general_sem_config_sha256: String,
     point_estimation: RecipeV4PlsExecutionResultV1,
     requested_effects: Vec<GeneralSemRequestedEffectEstimateV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    interaction_point_estimation: Option<GeneralSemPlsMultipleInteractionPointResultV1>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     bootstrap_inference: Option<GeneralSemPlsBootstrapResultV1>,
 }
@@ -193,6 +207,10 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
         &self.model_scientific_sha256
     }
 
+    pub fn stage_one_model_scientific_sha256(&self) -> &str {
+        &self.stage_one_model_scientific_sha256
+    }
+
     pub fn source_dataset_fingerprint(&self) -> &str {
         &self.source_dataset_fingerprint
     }
@@ -203,6 +221,12 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
 
     pub fn requested_effects(&self) -> &[GeneralSemRequestedEffectEstimateV1] {
         &self.requested_effects
+    }
+
+    pub fn interaction_point_estimation(
+        &self,
+    ) -> Option<&GeneralSemPlsMultipleInteractionPointResultV1> {
+        self.interaction_point_estimation.as_ref()
     }
 
     pub fn bootstrap_inference(&self) -> Option<&GeneralSemPlsBootstrapResultV1> {
@@ -216,7 +240,7 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
         &self,
     ) -> Result<CanonicalGeneralSemResultsV1, RecipeV4GeneralSemPlsExecutionErrorV1> {
         let point_receipt = self.point_estimation.provenance().compilation_receipt();
-        if point_receipt.model_scientific_sha256() != self.model_scientific_sha256
+        if point_receipt.model_scientific_sha256() != self.stage_one_model_scientific_sha256
             || point_receipt.dataset_fingerprint() != self.source_dataset_fingerprint
         {
             return Err(
@@ -304,6 +328,12 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
         }
         specific_indirect_effects.sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
         aggregate_effects.sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+        let (
+            interaction_effects,
+            conditional_effect_probes,
+            conditional_effects,
+            interaction_plots,
+        ) = canonical_interaction_sections_v1(self, &trace)?;
         Ok(CanonicalGeneralSemResultsV1 {
             schema_version: CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
             inference_receipt: self
@@ -313,9 +343,10 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
                 .transpose()?,
             specific_indirect_effects,
             aggregate_effects,
-            conditional_effect_probes: Vec::new(),
-            conditional_effects: Vec::new(),
-            interaction_plots: Vec::new(),
+            interaction_effects,
+            conditional_effect_probes,
+            conditional_effects,
+            interaction_plots,
             higher_order_stages: Vec::new(),
             cbsem_fit: Vec::new(),
             identification_diagnostics: Vec::new(),
@@ -351,6 +382,195 @@ fn canonical_estimate(
         bootstrap_usable_replicates: Some(inference.usable_replicates),
         bootstrap_two_sided_exceedances: Some(inference.two_sided_exceedances),
     }
+}
+
+type CanonicalInteractionSectionsV1 = (
+    Vec<CanonicalInteractionEffectResultV1>,
+    Vec<CanonicalConditionalEffectProbeResultV1>,
+    Vec<CanonicalConditionalEffectResultV1>,
+    Vec<CanonicalInteractionPlotResultV1>,
+);
+
+fn canonical_interaction_sections_v1(
+    result: &RecipeV4GeneralSemPlsExecutionResultV1,
+    trace: &CanonicalGeneralSemResultTraceV1,
+) -> Result<CanonicalInteractionSectionsV1, RecipeV4GeneralSemPlsExecutionErrorV1> {
+    let Some(interactions) = &result.interaction_point_estimation else {
+        if result.stage_one_model_scientific_sha256 != result.model_scientific_sha256 {
+            return Err(
+                RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                    "a projected stage-one model requires a typed interaction point payload".into(),
+                ),
+            );
+        }
+        return Ok((Vec::new(), Vec::new(), Vec::new(), Vec::new()));
+    };
+    interactions.ensure_self_consistent_v1()?;
+    if result.capability_cell
+        != qpls_core::pls_general_multiple_moderation_point_capability_cell_v1()
+        || result.bootstrap_inference.is_some()
+        || !result.requested_effects.is_empty()
+        || result.stage_one_model_scientific_sha256 == result.model_scientific_sha256
+    {
+        return Err(
+            RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                "interaction point payload contradicts its capability, source projection, or point-only scope"
+                    .into(),
+            ),
+        );
+    }
+
+    let receipts = interactions
+        .product_scale_receipts()
+        .iter()
+        .map(|receipt| (receipt.interaction_id(), receipt))
+        .collect::<BTreeMap<_, _>>();
+    let mut interaction_effects = Vec::new();
+    let mut probes = Vec::new();
+    let mut conditional_effects = Vec::new();
+    let mut plots = Vec::new();
+    for coefficient in interactions.interaction_coefficients() {
+        let receipt = receipts.get(coefficient.interaction_id()).ok_or_else(|| {
+            GeneralSemPlsInteractionPointErrorV1::InvalidResultContract(format!(
+                "interaction {} has no canonical product-scale receipt",
+                coefficient.interaction_id()
+            ))
+        })?;
+        let interaction_effect_id = coefficient.interaction_effect_relation_id().to_string();
+        interaction_effects.push(CanonicalInteractionEffectResultV1 {
+            effect_id: interaction_effect_id.clone(),
+            trace: trace.clone(),
+            interaction_id: coefficient.interaction_id().to_string(),
+            focal_relation_id: coefficient.focal_relation_id().to_string(),
+            interaction_effect_relation_id: coefficient
+                .interaction_effect_relation_id()
+                .to_string(),
+            interaction_effect_parameter_id: coefficient
+                .interaction_effect_parameter_id()
+                .to_string(),
+            focal_predictor_id: coefficient.focal_predictor_id().to_string(),
+            moderator_id: coefficient.moderator_id().to_string(),
+            outcome_id: coefficient.outcome_id().to_string(),
+            generated_product_column_id: receipt.generated_product_column_id().to_string(),
+            stage_one_model_scientific_sha256: result.stage_one_model_scientific_sha256.clone(),
+            method_version: interactions.method_version().to_string(),
+            construction_method: CanonicalInteractionConstructionMethodV1::TwoStage,
+            product_scale_version: receipt.scale_version().to_string(),
+            hierarchy_policy: CanonicalInteractionHierarchyPolicyV1::Strong,
+            hierarchy_policy_version: coefficient.hierarchy_policy_version().to_string(),
+            conditioning_policy_version: GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1.to_string(),
+            observation_count: u32::try_from(interactions.observation_count()).map_err(|_| {
+                GeneralSemPlsInteractionPointErrorV1::InvalidResultContract(
+                    "interaction observation count does not fit the canonical u32 wire".into(),
+                )
+            })?,
+            unstandardized_product_mean: receipt.unstandardized_product_mean(),
+            unstandardized_product_sample_standard_deviation: receipt
+                .unstandardized_product_sample_standard_deviation(),
+            standardized_product_coefficient: canonical_estimate(
+                coefficient.standardized_product_estimate(),
+                None,
+            ),
+            scientific_rescaled_gamma: canonical_estimate(coefficient.raw_product_estimate(), None),
+        });
+
+        let probe_id = format!(
+            "probe:{}:standardized_minus1_zero_plus1",
+            coefficient.interaction_id()
+        );
+        probes.push(CanonicalConditionalEffectProbeResultV1 {
+            probe_id: probe_id.clone(),
+            trace: trace.clone(),
+            moderator_id: coefficient.moderator_id().to_string(),
+            values: CanonicalConditionalProbeValuesResultV1::Explicit {
+                values: vec![-1.0, 0.0, 1.0],
+            },
+        });
+        let slopes = interactions
+            .simple_slopes()
+            .iter()
+            .filter(|slope| slope.interaction_id() == coefficient.interaction_id())
+            .collect::<Vec<_>>();
+        if slopes.len() != 3 {
+            return Err(
+                GeneralSemPlsInteractionPointErrorV1::InvalidResultContract(format!(
+                    "interaction {} does not have exactly three canonical simple slopes",
+                    coefficient.interaction_id()
+                ))
+                .into(),
+            );
+        }
+        let estimand_id = format!("conditional_slope:{}", coefficient.interaction_id());
+        let mut series = Vec::new();
+        for (probe_value_index, slope) in slopes.into_iter().enumerate() {
+            let probe_value_index = u32::try_from(probe_value_index).expect("three probes fit u32");
+            conditional_effects.push(CanonicalConditionalEffectResultV1 {
+                effect_id: format!(
+                    "conditional:{}:{}",
+                    coefficient.interaction_id(),
+                    probe_value_index
+                ),
+                estimand_id: estimand_id.clone(),
+                trace: trace.clone(),
+                interaction_id: coefficient.interaction_id().to_string(),
+                interaction_effect_id: Some(interaction_effect_id.clone()),
+                focal_relation_id: coefficient.focal_relation_id().to_string(),
+                probe_id: probe_id.clone(),
+                moderator_id: coefficient.moderator_id().to_string(),
+                probe_value_index,
+                moderator_value: slope.moderator_value_standardized(),
+                value: canonical_estimate(slope.estimate(), None),
+            });
+            let points = [-1.0_f64, 0.0, 1.0]
+                .into_iter()
+                .map(|focal_value| {
+                    let predictor_values = BTreeMap::from([
+                        (coefficient.focal_predictor_id().to_string(), focal_value),
+                        (
+                            coefficient.moderator_id().to_string(),
+                            slope.moderator_value_standardized(),
+                        ),
+                    ]);
+                    Ok(CanonicalInteractionPlotPointV1 {
+                        focal_value,
+                        predicted_value: interactions.standardized_outcome_linear_predictor_v1(
+                            coefficient.outcome_id(),
+                            &predictor_values,
+                        )?,
+                        lower: None,
+                        upper: None,
+                    })
+                })
+                .collect::<Result<Vec<_>, GeneralSemPlsInteractionPointErrorV1>>()?;
+            series.push(CanonicalInteractionPlotSeriesV1 {
+                series_id: format!(
+                    "series:{}:{}",
+                    coefficient.interaction_id(),
+                    probe_value_index
+                ),
+                probe_id: probe_id.clone(),
+                probe_value_index,
+                moderator_value: slope.moderator_value_standardized(),
+                points,
+            });
+        }
+        plots.push(CanonicalInteractionPlotResultV1 {
+            plot_id: format!("plot:{}", coefficient.interaction_id()),
+            trace: trace.clone(),
+            interaction_id: coefficient.interaction_id().to_string(),
+            interaction_effect_id: Some(interaction_effect_id),
+            focal_relation_id: coefficient.focal_relation_id().to_string(),
+            focal_predictor_id: coefficient.focal_predictor_id().to_string(),
+            moderator_id: coefficient.moderator_id().to_string(),
+            outcome_id: coefficient.outcome_id().to_string(),
+            series,
+        });
+    }
+    interaction_effects.sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+    probes.sort_by(|left, right| left.probe_id.cmp(&right.probe_id));
+    conditional_effects.sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+    plots.sort_by(|left, right| left.plot_id.cmp(&right.plot_id));
+    Ok((interaction_effects, probes, conditional_effects, plots))
 }
 
 fn validate_bootstrap_inference_binding(
@@ -556,6 +776,8 @@ pub enum RecipeV4GeneralSemPlsExecutionErrorV1 {
     #[error(transparent)]
     Bootstrap(#[from] GeneralSemPlsBootstrapErrorV1),
     #[error(transparent)]
+    InteractionPoint(#[from] GeneralSemPlsInteractionPointErrorV1),
+    #[error(transparent)]
     EffectDecomposition(#[from] GeneralSemEffectsV1Error),
     #[error(
         "PLS result does not contain exactly one coefficient for relation {relation_id} ({source_id} -> {target_id})"
@@ -587,11 +809,12 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
         return Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled);
     }
     validate_compiled_general_sem_pls_recipe_v1(artifact, recipe, Some(resolved_model))?;
-    let base_recipe = project_general_sem_pls_base_recipe_v1(recipe)?;
+    let (base_recipe, stage_one_model) =
+        project_general_sem_pls_stage_one_recipe_v1(recipe, resolved_model)?;
     let point_estimation = run_compiled_pls_recipe_v4(
         dataset,
         &base_recipe,
-        resolved_model,
+        &stage_one_model,
         artifact.base_artifact(),
         None,
         &should_cancel,
@@ -604,10 +827,37 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
     if should_cancel() {
         return Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled);
     }
-    let relation_coefficients = relation_coefficients(artifact, point_estimation.estimation())?;
-    let decomposition =
-        decompose_general_sem_effects_v1(artifact.plan().topology(), &relation_coefficients)?;
-    let requested_effects = select_requested_effects(artifact, &decomposition)?;
+    let interaction_point_estimation = if artifact.plan().two_way_interactions().is_empty() {
+        None
+    } else {
+        progress(RunnerProgress {
+            phase: "general_sem_interaction_point".into(),
+            completed_units: 0,
+            total_units: 1,
+        });
+        if should_cancel() {
+            return Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled);
+        }
+        let result = estimate_general_sem_pls_multiple_two_way_interactions_v1(
+            artifact.plan(),
+            &point_estimation.estimation().construct_scores,
+        )?;
+        result.ensure_valid_against_plan_v1(artifact.plan())?;
+        progress(RunnerProgress {
+            phase: "general_sem_interaction_point".into(),
+            completed_units: 1,
+            total_units: 1,
+        });
+        Some(result)
+    };
+    let requested_effects = if interaction_point_estimation.is_some() {
+        Vec::new()
+    } else {
+        let relation_coefficients = relation_coefficients(artifact, point_estimation.estimation())?;
+        let decomposition =
+            decompose_general_sem_effects_v1(artifact.plan().topology(), &relation_coefficients)?;
+        select_requested_effects(artifact, &decomposition)?
+    };
     let config = recipe
         .general_sem_config
         .as_ref()
@@ -657,7 +907,9 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
     if should_cancel() {
         return Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled);
     }
-    let adapter_version = if bootstrap_inference.is_some() {
+    let adapter_version = if interaction_point_estimation.is_some() {
+        RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1
+    } else if bootstrap_inference.is_some() {
         RECIPE_V4_GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
     } else {
         RECIPE_V4_GENERAL_SEM_PLS_EXECUTION_ADAPTER_VERSION_V1
@@ -670,10 +922,16 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
         compiled_plan_sha256: artifact.plan().deterministic_sha256(),
         recipe_analytical_sha256: artifact.recipe_analytical_sha256().into(),
         model_scientific_sha256: artifact.plan().scientific_hash().into(),
+        stage_one_model_scientific_sha256: artifact
+            .plan()
+            .stage_one_projection_scientific_sha256()
+            .unwrap_or_else(|| artifact.plan().scientific_hash())
+            .into(),
         source_dataset_fingerprint: dataset.fingerprint.0.clone(),
         general_sem_config_sha256: artifact.general_sem_config_sha256().into(),
         point_estimation,
         requested_effects,
+        interaction_point_estimation,
         bootstrap_inference,
     })
 }
@@ -813,8 +1071,10 @@ mod tests {
     use qpls_core::{
         ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe,
         AnalysisRecipeModelBindingV4, AnalysisSettings, Construct, GeneralSemConfigV1,
-        LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig, ModelSpec,
-        SemDataBindingV4, StructuralPath, compile_general_sem_pls_recipe_v1, compile_pls_plan_v3,
+        InteractionHierarchyPolicyV2, InteractionMethodV4, LegacyBasicModelInterpretationV4,
+        MeasurementMode, MethodConfig, ModelSpec, SemDataBindingV4, SemDerivedTermV4,
+        SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4, StructuralPath,
+        StructuralRelationRoleV4, compile_general_sem_pls_recipe_v1, compile_pls_plan_v3,
         confirm_legacy_recipe_estimand_v4, convert_legacy_basic_model_v4,
         migrate_analysis_recipe_to_v4_pending,
     };
@@ -865,6 +1125,206 @@ mod tests {
             &[],
         )
         .unwrap()
+    }
+
+    fn structural_relation_id(model: &SemModelV4, source: &str, target: &str) -> String {
+        model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                SemRelationV4::Structural {
+                    id,
+                    source: actual_source,
+                    target: actual_target,
+                    ..
+                } if actual_source == source && actual_target == target => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap()
+    }
+
+    fn add_two_way_interaction(
+        model: &mut SemModelV4,
+        interaction_id: &str,
+        focal_predictor_id: &str,
+        moderator_id: &str,
+    ) {
+        let focal_relation = structural_relation_id(model, focal_predictor_id, "construct:y");
+        let output = format!("derived:{interaction_id}");
+        let effect_relation = format!("relation:{interaction_id}:effect");
+        let effect_parameter = format!("parameter:{interaction_id}:effect");
+        model.variables.push(SemVariableV4::Derived {
+            id: output.clone(),
+            label: interaction_id.to_string(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: effect_relation,
+            source: output.clone(),
+            target: "construct:y".into(),
+            parameter: effect_parameter.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: effect_parameter,
+            label: format!("{interaction_id} -> Y"),
+            target: SemParameterTargetV4::Regression {
+                source: output.clone(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+            id: interaction_id.to_string(),
+            output,
+            operands: vec![focal_predictor_id.to_string(), moderator_id.to_string()],
+            focal_relation,
+            method: InteractionMethodV4::TwoStage,
+            hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+            product_indicator: None,
+        });
+        model.ensure_valid().unwrap();
+    }
+
+    fn moderation_execution_fixture(
+        different_focal_paths: bool,
+    ) -> (
+        Dataset,
+        AnalysisRecipeV4,
+        SemModelV4,
+        CompiledGeneralSemPlsRecipeV1,
+    ) {
+        let source_model = ModelSpec {
+            id: Uuid::from_u128(if different_focal_paths {
+                0x4d4f_4452_554e_4e45_5200_0002
+            } else {
+                0x4d4f_4452_554e_4e45_5200_0001
+            }),
+            name: if different_focal_paths {
+                "Different-focal simultaneous moderation"
+            } else {
+                "Same-focal simultaneous moderation"
+            }
+            .into(),
+            constructs: ["x", "w", "z", "y"]
+                .into_iter()
+                .map(|id| Construct {
+                    id: id.into(),
+                    name: id.to_uppercase(),
+                    short_name: id.to_uppercase(),
+                    mode: MeasurementMode::Reflective,
+                    indicators: vec![format!("{id}1"), format!("{id}2")],
+                })
+                .collect(),
+            paths: [("x", "y"), ("w", "y"), ("z", "y")]
+                .into_iter()
+                .map(|(source, target)| StructuralPath {
+                    source: source.into(),
+                    target: target.into(),
+                })
+                .collect(),
+            controls: Vec::new(),
+            higher_order_constructs: Vec::new(),
+            interactions: Vec::new(),
+        };
+        let mut csv = String::from("x1,x2,w1,w2,z1,z2,y1,y2\n");
+        for row in 0..81 {
+            let row = f64::from(row);
+            let x = (row - 40.0) / 13.0;
+            let w = (row * 0.71).sin() + 0.2 * (row * 0.13).cos();
+            let z = (row * 0.37).cos() - 0.3 * (row * 0.19).sin();
+            let interaction_signal = if different_focal_paths {
+                0.55 * x * w - 0.35 * w * z
+            } else {
+                0.65 * x * w - 0.40 * x * z
+            };
+            let y = 0.25 * x + 0.20 * w - 0.15 * z + interaction_signal;
+            csv.push_str(&format!(
+                "{},{},{},{},{},{},{},{}\n",
+                x + 0.03 * (row * 0.11).sin(),
+                1.02 * x + 0.02 * (row * 0.17).cos(),
+                w + 0.03 * (row * 0.23).cos(),
+                0.98 * w + 0.02 * (row * 0.29).sin(),
+                z + 0.03 * (row * 0.31).sin(),
+                1.01 * z + 0.02 * (row * 0.41).cos(),
+                y + 0.03 * (row * 0.43).sin(),
+                1.01 * y + 0.02 * (row * 0.47).cos(),
+            ));
+        }
+        let dataset = import_delimited_bytes(
+            csv.as_bytes(),
+            if different_focal_paths {
+                "general-sem-different-focal-moderation.csv"
+            } else {
+                "general-sem-same-focal-moderation.csv"
+            },
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let source_recipe = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: Uuid::from_u128(if different_focal_paths {
+                0x4d4f_4452_5245_4349_5045_0002
+            } else {
+                0x4d4f_4452_5245_4349_5045_0001
+            }),
+            created_at: Utc.timestamp_opt(1_700_000_000, 0).unwrap(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: source_model.clone(),
+            settings: AnalysisSettings {
+                method: AnalysisMethod::PlsPm,
+                workers: 1,
+                ..AnalysisSettings::default()
+            },
+            method_config: Some(MethodConfig::PlsAlgorithm),
+            metadata: BTreeMap::new(),
+        };
+        let pending = migrate_analysis_recipe_to_v4_pending(&source_recipe).unwrap();
+        let (mut recipe, mut model) = confirm_legacy_recipe_estimand_v4(
+            &pending,
+            &source_model,
+            &[],
+            LegacyBasicModelInterpretationV4::PlsComposite,
+        )
+        .unwrap();
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut model.data_binding else {
+            unreachable!()
+        };
+        *dataset_id = dataset.id.to_string();
+        add_two_way_interaction(
+            &mut model,
+            "interaction:x_by_w",
+            "construct:x",
+            "construct:w",
+        );
+        if different_focal_paths {
+            add_two_way_interaction(
+                &mut model,
+                "interaction:w_by_z",
+                "construct:w",
+                "construct:z",
+            );
+        } else {
+            add_two_way_interaction(
+                &mut model,
+                "interaction:x_by_z",
+                "construct:x",
+                "construct:z",
+            );
+        }
+        recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+            scientific_sha256: model.scientific_sha256().unwrap(),
+            model: model.clone(),
+        };
+        recipe.general_sem_config = Some(GeneralSemConfigV1::default());
+        recipe.ensure_valid().unwrap();
+        let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+        (dataset, recipe, model, artifact)
     }
 
     #[test]
@@ -1164,6 +1624,142 @@ mod tests {
                 },
             ),
             Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled)
+        ));
+    }
+
+    #[test]
+    fn production_runner_publishes_joint_same_and_different_focal_interaction_authority() {
+        for different_focal_paths in [false, true] {
+            let (dataset, recipe, model, artifact) =
+                moderation_execution_fixture(different_focal_paths);
+            assert_eq!(
+                artifact.capability_cell(),
+                &qpls_core::pls_general_multiple_moderation_point_capability_cell_v1()
+            );
+            assert_eq!(
+                artifact.compiler_version(),
+                qpls_core::GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_RECIPE_COMPILER_VERSION_V1
+            );
+            assert_eq!(artifact.plan().two_way_interactions().len(), 2);
+            assert_ne!(
+                artifact.plan().scientific_hash(),
+                artifact
+                    .plan()
+                    .stage_one_projection_scientific_sha256()
+                    .unwrap()
+            );
+
+            let first = run_compiled_general_sem_pls_recipe_v1(
+                &dataset,
+                &recipe,
+                &model,
+                &artifact,
+                || false,
+                |_| {},
+            )
+            .unwrap();
+            let second = run_compiled_general_sem_pls_recipe_v1(
+                &dataset,
+                &recipe,
+                &model,
+                &artifact,
+                || false,
+                |_| {},
+            )
+            .unwrap();
+            assert_eq!(first, second);
+            assert_eq!(
+                first.adapter_version(),
+                RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1
+            );
+            assert!(first.requested_effects().is_empty());
+            assert!(first.bootstrap_inference().is_none());
+            first
+                .interaction_point_estimation()
+                .unwrap()
+                .ensure_valid_against_plan_v1(artifact.plan())
+                .unwrap();
+
+            let canonical = first.canonical_general_sem_results_v1().unwrap();
+            assert_eq!(canonical.interaction_effects.len(), 2);
+            assert_eq!(canonical.conditional_effect_probes.len(), 2);
+            assert_eq!(canonical.conditional_effects.len(), 6);
+            assert_eq!(canonical.interaction_plots.len(), 2);
+            assert!(canonical.specific_indirect_effects.is_empty());
+            assert!(canonical.aggregate_effects.is_empty());
+            assert!(canonical.interaction_effects.iter().all(|effect| {
+                effect.method_version
+                    == qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+                    && effect.product_scale_version
+                        == qpls_core::GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1
+                    && effect.stage_one_model_scientific_sha256
+                        == first.stage_one_model_scientific_sha256()
+                    && effect.construction_method
+                        == CanonicalInteractionConstructionMethodV1::TwoStage
+                    && (effect.standardized_product_coefficient.estimate
+                        - effect.scientific_rescaled_gamma.estimate
+                            * effect.unstandardized_product_sample_standard_deviation)
+                        .abs()
+                        <= f64::EPSILON * 8.0
+            }));
+            let effect_ids = canonical
+                .interaction_effects
+                .iter()
+                .map(|effect| effect.effect_id.as_str())
+                .collect::<std::collections::BTreeSet<_>>();
+            assert!(canonical.conditional_effects.iter().all(|effect| {
+                effect
+                    .interaction_effect_id
+                    .as_deref()
+                    .is_some_and(|effect_id| effect_ids.contains(effect_id))
+            }));
+            assert!(canonical.interaction_plots.iter().all(|plot| {
+                plot.interaction_effect_id
+                    .as_deref()
+                    .is_some_and(|effect_id| effect_ids.contains(effect_id))
+            }));
+        }
+    }
+
+    #[test]
+    fn interaction_stage_cancellation_and_scale_tampering_publish_no_canonical_result() {
+        let (dataset, recipe, model, artifact) = moderation_execution_fixture(false);
+        let cancel = AtomicBool::new(false);
+        let cancelled = run_compiled_general_sem_pls_recipe_v1(
+            &dataset,
+            &recipe,
+            &model,
+            &artifact,
+            || cancel.load(Ordering::SeqCst),
+            |update| {
+                if update.phase == "general_sem_interaction_point" && update.completed_units == 0 {
+                    cancel.store(true, Ordering::SeqCst);
+                }
+            },
+        );
+        assert!(matches!(
+            cancelled,
+            Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled)
+        ));
+
+        let mut result = run_compiled_general_sem_pls_recipe_v1(
+            &dataset,
+            &recipe,
+            &model,
+            &artifact,
+            || false,
+            |_| {},
+        )
+        .unwrap();
+        let mut payload =
+            serde_json::to_value(result.interaction_point_estimation().unwrap()).unwrap();
+        payload["interaction_coefficients"][0]["raw_product_estimate"] = serde_json::json!(123.456);
+        result.interaction_point_estimation = Some(serde_json::from_value(payload).unwrap());
+        assert!(matches!(
+            result.canonical_general_sem_results_v1(),
+            Err(RecipeV4GeneralSemPlsExecutionErrorV1::InteractionPoint(
+                GeneralSemPlsInteractionPointErrorV1::InvalidResultContract(_)
+            ))
         ));
     }
 }

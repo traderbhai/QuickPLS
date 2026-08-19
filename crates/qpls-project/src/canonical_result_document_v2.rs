@@ -10,8 +10,10 @@ pub use qpls_core::{
     CanonicalGeneralSemResultTraceV1, CanonicalGeneralSemResultsV1, CanonicalHocRelationEstimateV1,
     CanonicalHocStageKindV1, CanonicalHocStageResultV1, CanonicalIdentificationDiagnosticV1,
     CanonicalIdentificationScopeV1, CanonicalIdentificationStatusV1,
-    CanonicalInteractionPlotPointV1, CanonicalInteractionPlotResultV1,
-    CanonicalInteractionPlotSeriesV1, CanonicalSpecificIndirectEffectResultV1,
+    CanonicalInteractionConstructionMethodV1, CanonicalInteractionEffectResultV1,
+    CanonicalInteractionHierarchyPolicyV1, CanonicalInteractionPlotPointV1,
+    CanonicalInteractionPlotResultV1, CanonicalInteractionPlotSeriesV1,
+    CanonicalSpecificIndirectEffectResultV1,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -636,6 +638,25 @@ fn ensure_general_sem_results_finite(
             &format!("general_sem_results.aggregate_effects[{index}].value"),
         )?;
     }
+    for (index, effect) in results.interaction_effects.iter().enumerate() {
+        let context = format!("general_sem_results.interaction_effects[{index}]");
+        require_finite(
+            effect.unstandardized_product_mean,
+            &format!("{context}.unstandardized_product_mean"),
+        )?;
+        require_finite(
+            effect.unstandardized_product_sample_standard_deviation,
+            &format!("{context}.unstandardized_product_sample_standard_deviation"),
+        )?;
+        ensure_general_sem_estimate_finite(
+            &effect.standardized_product_coefficient,
+            &format!("{context}.standardized_product_coefficient"),
+        )?;
+        ensure_general_sem_estimate_finite(
+            &effect.scientific_rescaled_gamma,
+            &format!("{context}.scientific_rescaled_gamma"),
+        )?;
+    }
     for (index, probe) in results.conditional_effect_probes.iter().enumerate() {
         let context = format!("general_sem_results.conditional_effect_probes[{index}].values");
         match &probe.values {
@@ -1144,6 +1165,7 @@ mod tests {
                     value: estimate(0.2),
                 },
             ],
+            interaction_effects: Vec::new(),
             conditional_effect_probes: vec![
                 CanonicalConditionalEffectProbeResultV1 {
                     probe_id: "probe_explicit".into(),
@@ -1169,6 +1191,7 @@ mod tests {
                 estimand_id: "estimand_conditional_1".into(),
                 trace: trace(),
                 interaction_id: "interaction_1".into(),
+                interaction_effect_id: None,
                 focal_relation_id: "relation_x_y".into(),
                 probe_id: "probe_explicit".into(),
                 moderator_id: "construct:w".into(),
@@ -1180,6 +1203,7 @@ mod tests {
                 plot_id: "plot_1".into(),
                 trace: trace(),
                 interaction_id: "interaction_1".into(),
+                interaction_effect_id: None,
                 focal_relation_id: "relation_x_y".into(),
                 focal_predictor_id: "construct:x".into(),
                 moderator_id: "construct:w".into(),
