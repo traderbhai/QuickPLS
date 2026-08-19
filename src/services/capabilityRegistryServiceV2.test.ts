@@ -41,7 +41,7 @@ describe("Capability Registry V2 project service", () => {
       registry_id: "quickpls.capability_registry.v2",
       capability_row_count: 45,
       active_row_count: 43,
-      option_cell_count: 48,
+      option_cell_count: 49,
     });
     expect(snapshot.registry.capabilities).toHaveLength(45);
   });

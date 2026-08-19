@@ -1,0 +1,163 @@
+{
+  "acceptance": {
+    "maximum_absolute_bias": 0.025,
+    "maximum_absolute_mean_bootstrap_bias": 0.02,
+    "maximum_absolute_relative_bias": 0.1,
+    "maximum_rmse": 0.15,
+    "minimum_percentile_95_truth_inclusion_smoke_rate": 0.85,
+    "minimum_usable_rule": "max(2, ceil(0.9 * requested))"
+  },
+  "catalogue_snapshot_date": "2026-08-19",
+  "checks": {
+    "absolute_bias_within_bound": true,
+    "all_bootstrap_refits_usable": true,
+    "all_trials_publish": true,
+    "bootstrap_bias_within_bound": true,
+    "deterministic_replay": true,
+    "interval_widths_positive": true,
+    "percentile_truth_inclusion_smoke_above_floor": true,
+    "relative_bias_within_bound": true,
+    "rmse_within_bound": true,
+    "singular_path_system_rejected": true,
+    "specific_and_total_effects_reconcile": true,
+    "usable_gate_accepts_exact_boundary": true,
+    "usable_gate_preserves_minimum_two": true,
+    "usable_gate_rejects_below_boundary": true
+  },
+  "design": {
+    "bootstrap_replicates_per_trial": 199,
+    "bootstrap_seed": "91700113",
+    "confidence_level": 0.95,
+    "data_seed": "73104729",
+    "estimator": "independent complete unstandardized OLS path-system refit per case bootstrap",
+    "interval": "percentile_type7",
+    "monte_carlo_trials": 96,
+    "observations_per_trial": 240,
+    "system": "mixed parallel and serial unstandardized observed-score linear mediation"
+  },
+  "evidence_scope": "independent_unstandardized_observed_score_estimand_percentile_smoke_only",
+  "feature_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+  "generated_at_utc": "2026-08-19T04:16:57.0846520Z",
+  "limitations": [
+    "This independent smoke reference never calls production Rust or compares a shared Rust-Python bootstrap ledger.",
+    "It covers only unstandardized observed-score path products, bootstrap means, Type-7 percentile behavior, and the usable-replicate gate.",
+    "PLS path scores are standardized; this report is not a PLS-PM scoring or full-refit oracle and does not validate latent-score recovery.",
+    "Sample standard errors, plus-one probabilities, and null-rejection calibration are outside this simulation.",
+    "Ninety-six trials provide a deterministic engine smoke gate, not qualification-scale interval-coverage evidence.",
+    "Wilson intervals are descriptive Monte Carlo uncertainty only; interval-width, efficiency, and standard-error calibration are excluded.",
+    "It is not SmartPLS numerical-parity, native qualification, packaged acceptance, or release evidence.",
+    "Qualification-scale PLS simulations across loading, reliability, nonnormality, missingness, and failure-rate axes remain pending."
+  ],
+  "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+  "metrics": {
+    "run_summary": {
+      "bootstrap_refit_failures": 0,
+      "bootstrap_replicates_per_trial": 199,
+      "maximum_effect_reconciliation_error": 0.0,
+      "trials_published": 96,
+      "trials_requested": 96
+    },
+    "specific_x_m1_m2_y": {
+      "absolute_relative_bias": 0.002679505763,
+      "bias": 0.000375130807,
+      "mean_bootstrap_bias": 0.000165724835,
+      "mean_estimate": 0.140375130807,
+      "mean_interval_width": 0.118494143558,
+      "percentile_95_coverage": 0.916666666667,
+      "percentile_95_coverage_hits": 88,
+      "percentile_95_coverage_trials": 96,
+      "percentile_95_coverage_wilson_lower": 0.844100967603,
+      "percentile_95_coverage_wilson_upper": 0.957169375849,
+      "rmse": 0.033274638072,
+      "truth": 0.14
+    },
+    "specific_x_m1_y": {
+      "absolute_relative_bias": 0.007968365614,
+      "bias": -0.002390509684,
+      "mean_bootstrap_bias": -9.4200236e-05,
+      "mean_estimate": 0.297609490316,
+      "mean_interval_width": 0.182113045603,
+      "percentile_95_coverage": 0.927083333333,
+      "percentile_95_coverage_hits": 89,
+      "percentile_95_coverage_trials": 96,
+      "percentile_95_coverage_wilson_lower": 0.857069683349,
+      "percentile_95_coverage_wilson_upper": 0.96423241869,
+      "rmse": 0.046846289822,
+      "truth": 0.3
+    },
+    "specific_x_m2_y": {
+      "absolute_relative_bias": 0.015896754715,
+      "bias": 0.00333831849,
+      "mean_bootstrap_bias": -1.3553349e-05,
+      "mean_estimate": 0.21333831849,
+      "mean_interval_width": 0.17861125892,
+      "percentile_95_coverage": 0.895833333333,
+      "percentile_95_coverage_hits": 86,
+      "percentile_95_coverage_trials": 96,
+      "percentile_95_coverage_wilson_lower": 0.818778358697,
+      "percentile_95_coverage_wilson_upper": 0.942428467583,
+      "rmse": 0.055425718078,
+      "truth": 0.21
+    },
+    "total_indirect_x_y": {
+      "absolute_relative_bias": 0.002035291712,
+      "bias": 0.001322939613,
+      "mean_bootstrap_bias": 5.797125e-05,
+      "mean_estimate": 0.651322939613,
+      "mean_interval_width": 0.268164884844,
+      "percentile_95_coverage": 0.9375,
+      "percentile_95_coverage_hits": 90,
+      "percentile_95_coverage_trials": 96,
+      "percentile_95_coverage_wilson_lower": 0.870290534936,
+      "percentile_95_coverage_wilson_upper": 0.971043325689,
+      "rmse": 0.071008680712,
+      "truth": 0.65
+    },
+    "total_x_y": {
+      "absolute_relative_bias": 0.004160266813,
+      "bias": 0.003536226791,
+      "mean_bootstrap_bias": 0.000375783141,
+      "mean_estimate": 0.853536226791,
+      "mean_interval_width": 0.305265387292,
+      "percentile_95_coverage": 0.927083333333,
+      "percentile_95_coverage_hits": 89,
+      "percentile_95_coverage_trials": 96,
+      "percentile_95_coverage_wilson_lower": 0.857069683349,
+      "percentile_95_coverage_wilson_upper": 0.96423241869,
+      "rmse": 0.07567828298,
+      "truth": 0.85
+    }
+  },
+  "passed": true,
+  "qualification_ready": false,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "simulation_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/general_sem_pls_multiple_mediation_bootstrap_v1_kernel_simulation.py",
+      "sha256": "0bc587f4190726e00cbf82f50940a902a76748f1f3349b78dde5b02c6614fbf2",
+      "size": 17983
+    },
+    {
+      "path": "validation/methods/general_sem_pls_multiple_mediation_bootstrap_v1.manifest.json",
+      "sha256": "08e9ef61f6dcec686bdf526c18a9b42ebc7b3cb355b72e3fb32137a444bdc5c1",
+      "size": 16095
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

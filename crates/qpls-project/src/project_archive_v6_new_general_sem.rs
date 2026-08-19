@@ -7,11 +7,17 @@
 
 use super::{
     PROJECT_ARCHIVE_SCHEMA_V6_VERSION, ProjectArchiveDocumentV6, ProjectArchiveV6SaveCopyError,
+    ProjectError, ProjectModelPayloadV6, ProjectModelRecordV6,
     project_archive_v6_save_copy::{
         ProjectArchiveV6NewDocumentPublication, publish_new_project_archive_v6_document,
+        publish_new_project_archive_v6_document_with_resident_datasets,
     },
 };
 use chrono::{DateTime, Utc};
+use qpls_core::{
+    AnalysisRecipeModelBindingV4, AnalysisRecipeV4, SemDataBindingV4, SemModelV4, sha256_serialized,
+};
+use qpls_data::{Dataset, DatasetDescriptor};
 use serde::Serialize;
 use std::path::Path;
 use uuid::Uuid;
@@ -30,6 +36,26 @@ pub struct GeneralSemProjectArchiveCreationReceiptV1 {
     pub destination_archive_sha256: String,
     pub destination_archive_bytes: u64,
     pub strict_reopen_validated: bool,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct GeneralSemPopulatedProjectArchiveCreationReceiptV1 {
+    pub schema_version: u32,
+    pub archive_schema_version: u32,
+    pub project_id: Uuid,
+    pub name: String,
+    pub created_at: DateTime<Utc>,
+    pub destination_archive_path: String,
+    pub destination_archive_sha256: String,
+    pub destination_archive_bytes: u64,
+    pub strict_reopen_validated: bool,
+    pub resident_dataset_id: Uuid,
+    pub resident_dataset_fingerprint: String,
+    pub resident_model_id: String,
+    pub resident_model_scientific_sha256: String,
+    pub resident_recipe_id: Uuid,
+    pub resident_recipe_document_sha256: String,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -72,6 +98,120 @@ pub fn create_general_sem_project_archive_v6(
         destination_archive_bytes,
         strict_reopen_validated,
     })
+}
+
+/// Creates a new General SEM archive with exactly one resident dataset, one
+/// promoted SemModelV4 authority, and one bound RecipeV4. This is a new-project
+/// bootstrap only: no legacy project models, recipes, results, or layouts are
+/// copied into the document.
+pub fn create_populated_general_sem_project_archive_v6(
+    destination: &Path,
+    project_id: Uuid,
+    name: impl Into<String>,
+    created_at: DateTime<Utc>,
+    dataset: &Dataset,
+    model: SemModelV4,
+    recipe: AnalysisRecipeV4,
+) -> Result<
+    GeneralSemPopulatedProjectArchiveCreationReceiptV1,
+    GeneralSemProjectArchiveCreationErrorV1,
+> {
+    let name = name.into();
+    let model_scientific_sha256 = model.scientific_sha256().map_err(|error| {
+        GeneralSemProjectArchiveCreationErrorV1::Publication(
+            ProjectArchiveV6SaveCopyError::Project(ProjectError::Invalid(format!(
+                "General SEM model authority is invalid: {error}"
+            ))),
+        )
+    })?;
+    let AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+        model_id,
+        scientific_sha256,
+    } = &recipe.model_binding
+    else {
+        return invalid_populated_contract(
+            "General SEM bootstrap requires a project-resident SemModelV4 recipe reference",
+        );
+    };
+    if model_id != &model.id || scientific_sha256 != &model_scientific_sha256 {
+        return invalid_populated_contract(
+            "General SEM recipe model identity or scientific digest differs from the promoted model",
+        );
+    }
+    let resident_model_id = model_id.clone();
+    if recipe.general_sem_config.is_none() {
+        return invalid_populated_contract(
+            "General SEM bootstrap requires a versioned general_sem_config",
+        );
+    }
+    if recipe.dataset_fingerprint != dataset.fingerprint.0 {
+        return invalid_populated_contract(
+            "General SEM recipe dataset fingerprint differs from the resident dataset",
+        );
+    }
+    match &model.data_binding {
+        SemDataBindingV4::Raw { dataset_id, .. } if dataset_id == &dataset.id.to_string() => {}
+        _ => {
+            return invalid_populated_contract(
+                "General SEM PLS bootstrap requires a raw-data model bound to the resident dataset UUID",
+            );
+        }
+    }
+
+    let mut document =
+        ProjectArchiveDocumentV6::new_general_sem_v1(project_id, name.clone(), created_at);
+    document.datasets.push(DatasetDescriptor::from(dataset));
+    document.models.push(ProjectModelRecordV6 {
+        model_id: model.id.clone(),
+        payload: ProjectModelPayloadV6::SemModelV4 {
+            model,
+            scientific_sha256: model_scientific_sha256.clone(),
+        },
+    });
+    let recipe_id = recipe.id;
+    let recipe_document_sha256 = sha256_serialized(&recipe);
+    document.recipes.push(recipe);
+    document.ensure_valid().map_err(|error| {
+        GeneralSemProjectArchiveCreationErrorV1::Publication(
+            ProjectArchiveV6SaveCopyError::Contract(error),
+        )
+    })?;
+
+    let ProjectArchiveV6NewDocumentPublication {
+        destination_archive_sha256,
+        destination_archive_bytes,
+        strict_reopen_validated,
+    } = publish_new_project_archive_v6_document_with_resident_datasets(
+        destination,
+        &document,
+        std::slice::from_ref(dataset),
+    )?;
+
+    Ok(GeneralSemPopulatedProjectArchiveCreationReceiptV1 {
+        schema_version: GENERAL_SEM_PROJECT_ARCHIVE_CREATION_V1_SCHEMA_VERSION,
+        archive_schema_version: PROJECT_ARCHIVE_SCHEMA_V6_VERSION,
+        project_id,
+        name,
+        created_at,
+        destination_archive_path: destination.to_string_lossy().into_owned(),
+        destination_archive_sha256,
+        destination_archive_bytes,
+        strict_reopen_validated,
+        resident_dataset_id: dataset.id,
+        resident_dataset_fingerprint: dataset.fingerprint.0.clone(),
+        resident_model_id,
+        resident_model_scientific_sha256: model_scientific_sha256,
+        resident_recipe_id: recipe_id,
+        resident_recipe_document_sha256: recipe_document_sha256,
+    })
+}
+
+fn invalid_populated_contract<T>(
+    message: impl Into<String>,
+) -> Result<T, GeneralSemProjectArchiveCreationErrorV1> {
+    Err(GeneralSemProjectArchiveCreationErrorV1::Publication(
+        ProjectArchiveV6SaveCopyError::Project(ProjectError::Invalid(message.into())),
+    ))
 }
 
 #[cfg(all(test, windows))]

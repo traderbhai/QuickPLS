@@ -31,6 +31,34 @@ function model(
   }, interpretation);
 }
 
+function multipleMediationModel(): SemModelV4 {
+  return model([
+    ["x", "m1"],
+    ["x", "m2"],
+    ["x", "y"],
+    ["m1", "m2"],
+    ["m1", "y"],
+    ["m2", "y"],
+  ]);
+}
+
+function modelWithSamplingControl(): SemModelV4 {
+  const value = model();
+  value.variables.push({
+    kind: "observed",
+    id: "observed:sampling_control",
+    label: "Sampling control",
+    source_column: "sampling_control",
+    scale: "continuous",
+    role: "control",
+    categories: [],
+    value_labels: {},
+    missing_markers: [],
+    transformation_lineage: [],
+  });
+  return value;
+}
+
 function addFeedback(value: SemModelV4): SemModelV4 {
   const feedback = structuredClone(value);
   const targetVariable = feedback.variables.find((variable) => variable.id === "construct:x");
@@ -95,6 +123,19 @@ describe("General SEM capability preflight v1", () => {
     expect(config).toEqual(configBefore);
   });
 
+  it("does not label a direct-only recursive graph as the mediation point cell", () => {
+    const decision = preflightGeneralSemPlsV1(
+      model([["x", "y"]]),
+      defaultGeneralSemConfigV1(),
+    );
+
+    expect(decision.status).toBe("blocked");
+    expect(codes(decision)).toContain("sem.capability.pls.mediation_requires_indirect_path");
+    expect(decision.diagnostics.find((diagnostic) => (
+      diagnostic.code === "sem.capability.pls.mediation_requires_indirect_path"
+    ))?.corrections).not.toEqual([]);
+  });
+
   it("detects feedback by deterministic SCCs regardless of declaration order", () => {
     const feedback = addFeedback(model());
     const reordered = structuredClone(feedback);
@@ -132,7 +173,113 @@ describe("General SEM capability preflight v1", () => {
     expect(derivedModel).toEqual(derivedBefore);
   });
 
+  it("blocks authored missing markers and transformation lineage without rewriting them", () => {
+    const missingMarkerModel = model();
+    const missingMarkerVariable = missingMarkerModel.variables.find((variable) => (
+      variable.kind === "observed" && variable.source_column === "x1"
+    ));
+    if (missingMarkerVariable?.kind !== "observed") throw new Error("x1 fixture missing");
+    missingMarkerVariable.missing_markers = ["-999"];
+
+    const transformedModel = model();
+    const transformedVariable = transformedModel.variables.find((variable) => (
+      variable.kind === "observed" && variable.source_column === "x1"
+    ));
+    if (transformedVariable?.kind !== "observed") throw new Error("x1 fixture missing");
+    transformedVariable.transformation_lineage = [{
+      id: "transform:x1:mean_center",
+      input_columns: ["x1_raw"],
+      output_column: "x1",
+      operation: { kind: "mean_center" },
+    }];
+
+    for (const inputModel of [missingMarkerModel, transformedModel]) {
+      const before = structuredClone(inputModel);
+      const decision = preflightGeneralSemPlsV1(inputModel, defaultGeneralSemConfigV1());
+
+      expect(decision.status).toBe("blocked");
+      expect(decision.diagnostics).toContainEqual(expect.objectContaining({
+        code: "sem.capability.pls.observed_semantics_not_executable",
+        subject: "observed:x1",
+      }));
+      expect(inputModel).toEqual(before);
+    }
+  });
+
+  it("blocks non-listwise deletion and each complex-sampling role", () => {
+    const nonListwise = model();
+    if (nonListwise.data_binding.kind !== "raw") throw new Error("raw fixture required");
+    nonListwise.data_binding.missing_data = "mean_replacement";
+    expect(codes(preflightGeneralSemPlsV1(nonListwise, defaultGeneralSemConfigV1())))
+      .toContain("sem.capability.pls.listwise_deletion_required");
+
+    const complexSamplingModels = [
+      (() => {
+        const value = modelWithSamplingControl();
+        if (value.data_binding.kind !== "raw") throw new Error("raw fixture required");
+        value.data_binding.weight = { kind: "case", variable: "observed:sampling_control" };
+        return value;
+      })(),
+      (() => {
+        const value = modelWithSamplingControl();
+        if (value.data_binding.kind !== "raw") throw new Error("raw fixture required");
+        value.data_binding.cluster_variable = "observed:sampling_control";
+        return value;
+      })(),
+      (() => {
+        const value = modelWithSamplingControl();
+        if (value.data_binding.kind !== "raw") throw new Error("raw fixture required");
+        value.data_binding.strata_variable = "observed:sampling_control";
+        return value;
+      })(),
+    ];
+
+    for (const inputModel of complexSamplingModels) {
+      const before = structuredClone(inputModel);
+      const decision = preflightGeneralSemPlsV1(inputModel, defaultGeneralSemConfigV1());
+
+      expect(decision.status).toBe("blocked");
+      expect(codes(decision)).toContain("sem.capability.pls.complex_sampling_not_executable");
+      expect(inputModel).toEqual(before);
+    }
+  });
+
   it("admits percentile two-sided bootstrap only with both exact capability cells", () => {
+    const config = defaultGeneralSemConfigV1();
+    config.inference = {
+      kind: "case_bootstrap",
+      resamples: 500,
+      seed: 7,
+      confidence_level: 0.95,
+      interval: "percentile",
+      tail: "two_sided",
+    };
+
+    const decision = preflightGeneralSemPlsV1(multipleMediationModel(), config);
+
+    expect(decision.status).toBe("experimental");
+    expect(decision.capability_cells).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        capability_id: "smartpls.mediation",
+        cell_id: "qpls3.pls.mediation",
+        capability_version: "pls_mediation_v1",
+      }),
+      expect.objectContaining({
+        capability_id: "smartpls.mediation",
+        cell_id: "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+        capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
+      }),
+    ]));
+    expect(decision.capability_cells).toHaveLength(2);
+    expect(decision.evidence.map((item) => item.evidence_id)).toEqual(expect.arrayContaining([
+      "compiler:recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1",
+      "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_multiple_mediation_bootstrap:general_sem_pls_full_model_case_bootstrap_v1",
+      "capability_dependency:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
+    ]));
+    expect(decision.explanation).toContain("matching complete-model");
+  });
+
+  it("blocks a single indirect path from the exact multiple-mediation bootstrap cell", () => {
     const config = defaultGeneralSemConfigV1();
     config.inference = {
       kind: "case_bootstrap",
@@ -145,25 +292,13 @@ describe("General SEM capability preflight v1", () => {
 
     const decision = preflightGeneralSemPlsV1(model(), config);
 
-    expect(decision.status).toBe("experimental");
-    expect(decision.capability_cells).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        capability_id: "smartpls.mediation",
-        cell_id: "qpls3.pls.mediation",
-        capability_version: "pls_mediation_v1",
-      }),
-      expect.objectContaining({
-        capability_id: "smartpls.pls_bootstrapping",
-        cell_id: "qpls3.inference.bootstrap",
-        capability_version: "indexed_resampling_v4",
-      }),
-    ]));
-    expect(decision.capability_cells).toHaveLength(2);
-    expect(decision.evidence.map((item) => item.evidence_id)).toEqual(expect.arrayContaining([
-      "compiler:recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1",
-      "capability_registry_v2:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
-    ]));
-    expect(decision.explanation).toContain("matching complete-model");
+    expect(decision.status).toBe("blocked");
+    expect(codes(decision)).toContain(
+      "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
+    );
+    expect(decision.diagnostics.find((diagnostic) => (
+      diagnostic.code === "sem.capability.pls.multiple_mediation_requires_two_indirect_paths"
+    ))?.corrections).not.toEqual([]);
   });
 
   it("blocks BCa and one-sided bootstrap with corrective typed diagnostics", () => {
@@ -192,7 +327,7 @@ describe("General SEM capability preflight v1", () => {
     for (const [inference, expectedCode] of cases) {
       const config = defaultGeneralSemConfigV1();
       config.inference = inference;
-      const decision = preflightGeneralSemPlsV1(model(), config);
+      const decision = preflightGeneralSemPlsV1(multipleMediationModel(), config);
       expect(decision.status).toBe("blocked");
       expect(codes(decision)).toContain(expectedCode);
       expect(decision.capability_cells).toHaveLength(2);

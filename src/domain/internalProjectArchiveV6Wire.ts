@@ -926,7 +926,10 @@ function parseMethodConfig(value: unknown, path: string): WireRecord {
   return fail("project_archive_v6.method_config_kind", `${path}.kind`, `${path}.kind is unsupported.`);
 }
 
-function parseRecipe(value: unknown, path: string): ProjectAnalysisRecipeV4Wire {
+export function parseProjectAnalysisRecipeV4Wire(
+  value: unknown,
+  path = "recipe",
+): ProjectAnalysisRecipeV4Wire {
   const recipe = exactRecordAt(value, [
     "schema_version",
     "id",
@@ -1168,7 +1171,7 @@ export function parseInternalProjectArchiveV6Wire(input: unknown): InternalProje
   });
 
   const recipes = arrayAt(hasOwn(root, "recipes") ? root.recipes : [], "project.recipes")
-    .map((recipe, index) => parseRecipe(recipe, `project.recipes[${index}]`));
+    .map((recipe, index) => parseProjectAnalysisRecipeV4Wire(recipe, `project.recipes[${index}]`));
   recipes.forEach((recipe, index) => {
     if (recipeIds.has(recipe.id)) {
       fail("project_archive_v6.recipe_id_duplicate", `project.recipes[${index}].id`, "Current and historical recipe ids must be unique together.");

@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+boundary_report",
+  "feature_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+  "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+  "catalogue_snapshot_date": "2026-08-19",
+  "generated_at_utc": "2026-08-19T06:51:13.317569Z",
+  "passed": true,
+  "qualification_ready": false,
+  "evidence_scope": "engine_only_contract_micro_reference_boundary_and_source_binding",
+  "checks": {
+    "independent_contract_reference_executed": true,
+    "parallel_specific_path_product": true,
+    "serial_specific_path_product": true,
+    "total_indirect_reconciliation": true,
+    "total_effect_reconciliation": true,
+    "type7_percentile_microcase": true,
+    "sample_standard_error_microcase": true,
+    "null_centered_plus_one_microcase": true,
+    "usable_replicate_boundary_microcases": true,
+    "exact_combination_capability_identity_wired": true,
+    "minimum_two_specific_indirect_paths_enforced": true,
+    "generic_indexed_resampling_dependency_preserved": true,
+    "production_compiler_kernel_runner_and_schema6_sources_bound": true,
+    "assigned_engine_evidence_roles_complete": true,
+    "separate_observed_score_reference_simulation_bound_by_manifest": true,
+    "full_independent_pls_refit_oracle_complete": false,
+    "cross_runtime_golden_complete": false,
+    "same_app_native_labs_components_implemented": true,
+    "end_to_end_general_sem_project_activation_connected": true,
+    "independent_native_qualification_evidence_complete": false,
+    "full_pls_qualification_simulation_complete": false,
+    "release_qualification_complete": false
+  },
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-core/src/canonical_result_v2.rs",
+      "size": 153113,
+      "sha256": "868d5c348cb5e57d2096e5797b493380ed7029d9932680febd6fc300ff121d57"
+    },
+    {
+      "path": "crates/qpls-core/src/compiled_pls_plan_v3.rs",
+      "size": 22219,
+      "sha256": "86a0015b54f9d14fa33d7723dee56c2522f45cb3f03e6f33f0e9985613bed027"
+    },
+    {
+      "path": "crates/qpls-core/src/general_sem_capability_preflight_v1.rs",
+      "size": 35513,
+      "sha256": "ffbc965602f5dc0594c3764af1cdb96569e9c893fcb1a679291a676bc608f6b4"
+    },
+    {
+      "path": "crates/qpls-core/src/general_sem_recipe_compiler_v1.rs",
+      "size": 33205,
+      "sha256": "aaa12f886c7fd1c26cfb38f1587aa734fbebd103f13cb3a2b13f590bea716b1a"
+    },
+    {
+      "path": "crates/qpls-project/src/project_schema_v6.rs",
+      "size": 410819,
+      "sha256": "4e347f7c8c46e06277f661110cefc2d2b73201642238bab9b76d504ca0a72073"
+    },
+    {
+      "path": "crates/qpls-resampling/src/general_sem_pls_bootstrap_v1.rs",
+      "size": 68521,
+      "sha256": "cedc04e184040182746e62a23d41de7817a2a44b9aa8aab051c7595cef79033b"
+    },
+    {
+      "path": "crates/qpls-runner/src/recipe_v4_general_sem_pls_execution.rs",
+      "size": 48229,
+      "sha256": "b5e10a78c4ff247caa513bc8e1139185fb7f3d0af01c993fbf0cc171081440fe"
+    },
+    {
+      "path": "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MEDIATION_BOOTSTRAP_V1.md",
+      "size": 7211,
+      "sha256": "be43ea25c5ed8a28354ab10ceea94edee8d2cb4a8d10f44269da30e2388c4e99"
+    },
+    {
+      "path": "src-tauri/src/project_archive_v6_general_sem_bootstrap.rs",
+      "size": 50711,
+      "sha256": "499202ebe3b0319c7d212ddd3b90b8a8d8e62296b85863a6953d527de009f0c1"
+    },
+    {
+      "path": "src-tauri/src/project_archive_v6_general_sem_preflight.rs",
+      "size": 17275,
+      "sha256": "ee3cb3b1a4290310d0db079d4b69966cd162b603eb96792de4c2750970858e69"
+    },
+    {
+      "path": "src-tauri/src/recipe_v4_general_sem_canonical_result.rs",
+      "size": 21586,
+      "sha256": "cf98dd0fe230d8c9bb854d35fe10e4d0f33105f10b13637de4f0e1f9125d3282"
+    },
+    {
+      "path": "src-tauri/src/recipe_v4_general_sem_pls_jobs.rs",
+      "size": 59019,
+      "sha256": "4097c79d4f5887b2d50d2d2658b7d82aa82cc8dedae552f14fa70e208d8c0127"
+    },
+    {
+      "path": "src/domain/canonicalGeneralSemResultsV1.ts",
+      "size": 63521,
+      "sha256": "e33866d6e9692593d6e2df7a87b90f2d35d78e70726535300cb5961ae5cf620b"
+    },
+    {
+      "path": "src/domain/generalSemCapabilityPreflightV1.test.ts",
+      "size": 17504,
+      "sha256": "fb4b47bc450c84dbce218607efc0ea6d45d286d37da1caba0ee452219a63cca8"
+    },
+    {
+      "path": "src/domain/generalSemCapabilityPreflightV1.ts",
+      "size": 27211,
+      "sha256": "0d83cabe923217942cd310f7f711cd338847790b86142deee01ddf5bca3ef3d7"
+    },
+    {
+      "path": "src/domain/internalRecipeV4GeneralSemWorkspace.ts",
+      "size": 39718,
+      "sha256": "4e11af7b87ec349c4e6799bf2ce34531ddf8aa86504ffa5abaf6cccefc45ed90"
+    },
+    {
+      "path": "src/native/NativeDesktopApp.tsx",
+      "size": 110023,
+      "sha256": "c7d45314bf038716e6017e87866e702c5428df383c8983557e0e84da3bd95139"
+    },
+    {
+      "path": "src/native/NativeRecipeV4GeneralSemWorkspace.tsx",
+      "size": 65730,
+      "sha256": "fcbce9fd818f5030ac849999cac3d66b110ef9a90455dffa2890b1c40ba16cd6"
+    },
+    {
+      "path": "src/services/projectService.ts",
+      "size": 26181,
+      "sha256": "bd0a0aaac5810b2780d8aa39f4b6f3e4868abc48393f0dc708d5c02f850310ec"
+    },
+    {
+      "path": "validation/general_sem_pls_multiple_mediation_bootstrap_v1_reference.py",
+      "size": 4343,
+      "sha256": "99a0462abad658939e1bc883af6881ed53b8ec93960f7205a1682ad0ec98d559"
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "size": 34283,
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865"
+    },
+    {
+      "path": "validation/methods/general_sem_pls_multiple_mediation_bootstrap_v1.manifest.json",
+      "size": 16095,
+      "sha256": "08e9ef61f6dcec686bdf526c18a9b42ebc7b3cb355b72e3fb32137a444bdc5c1"
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "size": 15836,
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743"
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "size": 21368,
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926"
+    }
+  ]
+}

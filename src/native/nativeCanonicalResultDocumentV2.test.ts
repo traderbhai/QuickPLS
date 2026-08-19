@@ -34,6 +34,12 @@ import {
 import { buildNativeResultNavigation } from "./nativeResults";
 
 const SPECIFIC_PATH_EFFECT_ID = "sem_specific_path_v1_be495c8d1bd8639e5065b03ffe6cf107b3a753d6509fde70bd03e7c0cd94e6b1";
+const GENERAL_SEM_MULTIPLE_MEDIATION_BOOTSTRAP_CELL = {
+  registry_schema_version: 2,
+  capability_id: "smartpls.mediation",
+  cell_id: "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+  capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
+} as const;
 
 function currentPlsRun(): AnalysisRun {
   const base = completedSamplePlsRun();
@@ -283,11 +289,15 @@ async function completeGeneralSemInferenceResultsFixture(
   document: NativeCanonicalResultDocumentV2,
 ): Promise<CanonicalGeneralSemResultsV1> {
   const results = completeGeneralSemResultsFixture(document);
-  const bootstrapCell = document.capability_cells?.find((cell) => (
-    cell.capability_id === "smartpls.pls_bootstrapping"
-    && cell.cell_id === "qpls3.inference.bootstrap"
-  ));
-  if (!bootstrapCell) throw new Error("Indexed PLS bootstrap capability fixture is missing");
+  const bootstrapCell = { ...GENERAL_SEM_MULTIPLE_MEDIATION_BOOTSTRAP_CELL };
+  document.capability_cells = [
+    ...(document.capability_cells ?? []),
+    bootstrapCell,
+  ].sort((left, right) => {
+    const leftIdentity = `${left.registry_schema_version}:${left.capability_id}:${left.cell_id}:${left.capability_version}`;
+    const rightIdentity = `${right.registry_schema_version}:${right.capability_id}:${right.cell_id}:${right.capability_version}`;
+    return leftIdentity.localeCompare(rightIdentity);
+  });
   const inferredValue = (estimate: number): CanonicalGeneralSemEstimateV1 => ({
     estimate,
     bootstrap_mean: estimate + 0.01,
@@ -764,7 +774,7 @@ describe("CanonicalResultDocumentV2 native runtime adapter", () => {
     expectReceiptFailure((receipt) => { receipt.workers = 3; }, "general_sem_results.inference_receipt.workers");
     expectReceiptFailure((receipt) => { receipt.complete_model_reestimated_per_replicate = false; }, "general_sem_results.inference_receipt.complete_model_reestimated_per_replicate");
     expectReceiptFailure((receipt) => {
-      (receipt.capability_cell as Record<string, unknown>).capability_version = "indexed_resampling_v3";
+      (receipt.capability_cell as Record<string, unknown>).capability_version = "general_sem_pls_full_model_case_bootstrap_v0";
     }, "general_sem_results.inference_receipt.capability_cell");
   });
 

@@ -1,8 +1,15 @@
 # General SEM upgrade execution
 
-This document tracks the isolated `codx/sem-platform-upgrade` implementation.
-It is a checkpoint record, not a claim that the General SEM roadmap or a
-Standard-tier method is complete.
+This document tracks the work that began on `codx/sem-platform-upgrade` and the
+current `codx/sem-native-mediation-workflow-v1` integration branch. It is a
+checkpoint record, not a claim that the General SEM roadmap or a Standard-tier
+method is complete.
+
+This work upgrades the existing QuickPLS application. The integration branch,
+short-lived child branches, and separate worktrees are development-isolation
+mechanisms only; they do not create a second application or a user-facing fork.
+The `general_sem_v1` marker is likewise a project-generation safety boundary
+inside QuickPLS, not a separate product format or estimator application.
 
 Baseline commit: `4ad3252639a53b3a586d970f32373d72fe8befc5`.
 
@@ -127,10 +134,12 @@ Within that boundary the slice:
   not a native calculation workflow.
 
 BCa, one-sided, studentized, conditional-probe, and lazy-materialization cells
-remain blocked. There is no native General SEM execution command and no complete
-new-project creation -> model/data binding -> calculate journey. This checkpoint
-therefore remains Labs-only; it is neither roadmap completion nor a Standard
-promotion.
+remain blocked. When Checkpoint C closed, there was no native General SEM
+execution command or complete project creation -> model/data binding ->
+calculate journey. Checkpoint D below adds native execution and result plumbing,
+but deliberately does not claim that the primary new-project authoring journey
+is connected. Checkpoint C therefore remains a Labs-only engine checkpoint; it
+was neither roadmap completion nor a Standard promotion.
 
 ### Verified evidence for checkpoint C
 
@@ -146,8 +155,84 @@ promotion.
 | `quickpls-desktop` full suite | 143 passed; 1 intentionally ignored | Green for native-shell compilation and existing desktop regressions |
 
 These results qualify only the bounded Labs compiler/runtime cell described
-above. They do not imply a user-visible native calculation workflow or a
-Standard promotion.
+above. At the Checkpoint C boundary they did not imply a user-visible native
+calculation workflow, and they still do not imply a Standard promotion.
+
+## Checkpoint D: connected same-app General SEM project-mode UX
+
+The bounded multiple-mediation slice has native archive-bound execution,
+monitor/cancel, canonical result, persistence/reopen, and XLSX plumbing in the
+existing QuickPLS desktop application. It is not a second application.
+
+The primary canvas journey is now connected as an opt-in Labs project mode in
+the same QuickPLS application. The New Project dialog lets desktop users choose
+Standard or General SEM. General SEM first creates a fresh, empty ordinary
+desktop project with a new identity, then binds a transient
+`general_sem_v1` draft marker to that exact identity. The marker is cleared by
+ordinary project creation, open, close, reset, identity drift, or strict
+schema-6 activation. It is never written as an unmarked legacy project.
+
+Only that explicitly fresh draft may adapt its newly imported raw dataset and
+newly authored canvas into `SemModelV4`. An arbitrary existing project cannot
+be adapted, copied, upgraded, or relabelled by the General SEM workspace.
+Ordinary Save and autosave are blocked while the transient draft is active;
+the General SEM **Save and activate project** action is the only persistence
+route for that draft.
+
+The connected authority flow is:
+
+1. The New Project controller creates a fresh empty desktop project, verifies
+   its exact identity and empty state, and records only a transient
+   `general_sem_v1` draft marker. Raw data is imported and the model is authored
+   on the existing QuickPLS canvas.
+2. The General SEM workspace adapts the canvas only when the exact draft marker
+   is present. It creates a new schema-6 project file marked
+   `general_sem_v1`, binding exactly one dataset, promoted model, and Recipe V4.
+3. QuickPLS strictly inspects the completed bootstrap receipt and opens the
+   exact returned snapshot in the internal schema-6 session. The existing
+   native authority resolver then atomically installs the archive's strict
+   `SemModelV4` and Recipe V4 as the active same-app canvas authorities. The
+   transient draft marker is cleared only through this activation.
+4. The compatibility preflight evaluates the exact selected model and General
+   SEM configuration against the registered PLS and CB-SEM predicates.
+5. Archive-bound job admission reopens the project file, verifies its SHA-256
+   and resident project/dataset/model/recipe identities, recompiles the stored
+   authority, and then starts the native General SEM PLS job. The existing
+   QuickPLS Labs surface monitors progress, supports cancellation and dismissal,
+   and publishes only a completed canonical result.
+6. QuickPLS appends the result to the same schema-6 archive, strictly reopens it,
+   and can export its table projection to XLSX. Stale archives, authority
+   mismatches, tampering, cancellation, failed computation, or inadmissibility
+   do not publish a partial result.
+
+The workflow is bound to the exact Experimental Labs cell
+`smartpls.mediation::qpls3.pls.general_sem_multiple_mediation_bootstrap::general_sem_pls_full_model_case_bootstrap_v1`.
+Bootstrap execution requires at least two compiled indirect paths; the narrower
+single-path point-estimation behavior remains readable without relabeling it as
+multiple mediation. The cell remains registered as
+`partial / engine_only / labs` with `qualification_ready = false`. Connecting
+the native workflow is implementation progress, not evidence sufficient to
+promote the cell to Standard.
+
+### Verified evidence for checkpoint D
+
+| Scope | Verified result | Qualification |
+| --- | ---: | --- |
+| `qpls-core` full suite | 244 passed | Green for current shared topology, exact-cell preflight, plan, and canonical contracts |
+| `qpls-project` full suite | 171 unit + 2 integration passed | Green for current schema-6 authority, persistence, strict reopen, and result binding |
+| `qpls-runner` full suite | 60 passed; 2 intentionally ignored | Green for current bounded point/bootstrap runners |
+| `qpls-resampling` full suite | 115 passed | Green for current bounded deterministic case-bootstrap kernel and regressions |
+| Frontend full Vitest suite | 177 files; 1,387 passed | Green after the connected project mode, strict reopen/data paging, lifecycle recovery, and canonical readback changes |
+| Frontend full typecheck | Passed | Repository command `npm run typecheck:full` |
+| Frontend production build | Passed | Repository command `npm run build`; this is not a packaged-Windows acceptance run |
+| `quickpls-desktop` full suite | 168 passed; 1 intentionally ignored | Green for native archive authority, project-mode lifecycle, strict paging, cancellation, one-shot result, and canonical point/bootstrap behavior |
+| Exact new-cell evidence manifest | Passed; 29/29 source descriptors current | Derived `engine_only`; deterministic simulation replay, 14/14 micro-reference checks, focused registry, and complexity gates passed |
+
+These checks establish bounded engine and workflow-plumbing evidence only. The
+same-app new-project authoring and authority-activation journey is connected,
+but it remains an Experimental Labs path and does not replace an independent
+scientific oracle, cross-runtime qualification fixture, packaged Windows
+verification, or Capability Registry promotion audit.
 
 ## Remaining Labs blockers
 
@@ -159,28 +244,43 @@ is implemented and rerun:
   including BCa, one-sided and studentized inference, conditional probes, lazy
   materialization, and any unfrozen interval or tail semantics;
 - conditional-effect probes and moderated-mediation execution;
-- execution of multiple interactions in one model, three-way interaction
-  authoring, and conditional interaction surfaces;
+- integration of the isolated `codx/sem-multiple-moderation-v1` point slice
+  into this branch and the same-app native workflow. That branch implements
+  simultaneous two-way point estimation with joint same- and different-focal
+  interactions, but moderation bootstrap, three-way execution, authored probes,
+  and moderated mediation remain blocked;
+- release hardening for the now-connected same-app General SEM project flow,
+  including packaged-Windows roundtrip, crash recovery during draft promotion,
+  accessibility verification, and full-suite regression evidence;
 - higher-order-construct expansion and staged estimation beyond the preserved
   legacy bounded workflow;
 - the CB-SEM General runtime adapter, including feedback/nonrecursive models;
 - strict parsing of raw legacy-workspace `interaction_v2` payloads outside the
   schema-6 authority path;
-- wiring the authoritative native preflight into the calculation workflow;
-- a resident-authority-valid Rust output -> schema-6 archive -> frontend
-  golden readback fixture; current frontend fixtures prove strict parser
-  behavior but are not substitutes for that cross-runtime qualification;
-- registering and independently qualifying an exact combination-specific
-  Capability Registry V2 option cell for General SEM multiple-mediation,
-  full-model percentile bootstrap instead of treating the existing generic
-  bootstrap cell as qualification of that combined workflow;
-- a native General SEM execution, monitoring/cancellation, canonical-result
-  persistence, result-view, and export path; and
-- General SEM-aware semantic result comparison and semantic export/readback;
-  the current table-oriented projections intentionally do not interpret the
-  additive General SEM result extension; and
-- end-to-end UI workflow wiring for configuration, estimator selection,
-  execution, progress/cancellation, results, export, reopen, and recovery.
+- an independently generated, resident-authority-valid Rust output -> schema-6
+  archive -> frontend golden readback fixture; strict native reopen and
+  frontend parser tests are not substitutes for that cross-runtime
+  qualification;
+- advancing the now-registered exact
+  `qpls3.pls.general_sem_multiple_mediation_bootstrap` cell beyond its current
+  `partial / engine_only / labs` state: it still needs an independent full-PLS
+  refit oracle, public SmartPLS settings comparison, statistical simulations,
+  cross-runtime schema-6 golden readback, semantic exports/readback, packaged
+  Windows evidence, and accepted QualificationSpec V2 receipts;
+- General SEM semantic export qualification beyond the current typed result
+  comparison and table-projection readback. CSV, HTML, SVG, PNG, packaged XLSX,
+  and cross-runtime semantic readback still require exact capability evidence;
+- accessibility acceptance, scaling, large-model performance, memory, soak,
+  crash-recovery, and packaged offline Windows evidence for the complete
+  workflow;
+- exact Registry promotion audit after the broader legacy evidence registry's
+  56 stale or source-bound failures are resolved or explicitly dispositioned;
+  the exact new-cell manifest passing does not make the overall registry green;
+  and
+- Standard-quality runtime and workflow slices for simultaneous two-way
+  moderation, three-way moderation, moderated mediation, expanded HOCs, and
+  general CB-SEM (including separately identified feedback cells).
 
 No capability should be promoted from Blocked or Experimental Labs solely from
-the foundation, point-estimation, or bounded case-bootstrap slices.
+the foundation, point-estimation, bounded case-bootstrap, or same-app native
+workflow slices.

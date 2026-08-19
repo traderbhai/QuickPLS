@@ -14,6 +14,7 @@ import type {
   ProjectModelRecordV6Wire,
   ProjectModelPayloadV6Wire,
 } from "./domain/internalProjectArchiveV6Wire";
+import { supportsGeneralSemV1 } from "./domain/internalProjectArchiveV6Wire";
 import type { SemModelV4 } from "./domain/semModelV4";
 import { buildInternalProjectArchiveV6ModelRevisionV1 } from "./domain/internalProjectArchiveV6ModelRevision";
 import type {
@@ -31,6 +32,7 @@ import type {
 } from "./domain/standardSemModelV4AuthorityCas";
 import { saveInternalProjectArchiveV6Copy } from "./services/internalProjectArchiveV6SaveCopyService";
 import { appendResolvedInternalProjectArchiveV6ModelRevision } from "./services/internalProjectArchiveV6ModelMutationService";
+import { invalidateNativeGeneralSemFreshDraftAuthorityV1 } from "./services/projectService";
 import { resolveStandardSemModelV4Authority } from "./services/standardSemModelV4AuthorityService";
 import { useWorkspace } from "./store";
 import { parseStandardSemModelV4AuthorityRecordV1 } from "./domain/standardSemModelV4Authority";
@@ -95,6 +97,8 @@ export type InternalProjectArchiveV6StandardAuthorityResolver = (
   model: SemModelV4,
 ) => Promise<StandardSemModelV4AuthorityResolveOutcomeV1>;
 
+export type InternalProjectArchiveV6GeneralSemDraftRevoker = () => Promise<void>;
+
 export type InternalProjectArchiveV6ModelRevisionAppender = (
   project: InternalProjectArchiveV6Wire,
   resolved: StandardSemModelV4AuthorityResolveResultV1,
@@ -130,6 +134,11 @@ export type InternalProjectArchiveV6CloseStandardProjectResult =
   | "blocked"
   | "inactive";
 
+export type InternalProjectArchiveV6GeneralSemReanchorResult =
+  | "reanchored"
+  | "blocked"
+  | "inactive";
+
 export interface InternalProjectArchiveV6SessionState {
   phase: InternalProjectArchiveV6SessionPhase;
   session: InternalProjectArchiveV6ReadOnlySession | null;
@@ -137,7 +146,7 @@ export interface InternalProjectArchiveV6SessionState {
   statusMessage: string;
   requestEpoch: number;
   dirty: boolean;
-  persistence: "not_persisted" | "persisted_new_copy" | null;
+  persistence: "not_persisted" | "persisted_new_copy" | "persisted_validated_archive" | null;
   modelMutationPending: boolean;
   modelMutationFailure: InternalProjectArchiveV6ModelMutationDiagnosticV1 | null;
   modelMutationStatusMessage: string;
@@ -159,6 +168,7 @@ export interface InternalProjectArchiveV6SessionState {
   ) => Promise<InternalProjectArchiveV6ModelMutationApplyResult>;
   activateStandardAuthorities: (
     resolver?: InternalProjectArchiveV6StandardAuthorityResolver,
+    revokeGeneralSemDraft?: InternalProjectArchiveV6GeneralSemDraftRevoker,
   ) => Promise<InternalProjectArchiveV6StandardActivationApplyResult>;
   forkActiveRecipeBoundRevision: (
     options?: InternalProjectArchiveV6ModelRevisionForkOptions,
@@ -166,6 +176,9 @@ export interface InternalProjectArchiveV6SessionState {
   saveCopy: (
     executor?: InternalProjectArchiveV6SaveCopyExecutor,
   ) => Promise<InternalProjectArchiveV6SaveCopyApplyResult>;
+  reanchorGeneralSemSnapshot: (
+    snapshot: InternalProjectArchiveV6ReadSnapshotV1,
+  ) => InternalProjectArchiveV6GeneralSemReanchorResult;
   closeStandardProject: () => InternalProjectArchiveV6CloseStandardProjectResult;
   deactivate: () => void;
 }
@@ -398,7 +411,10 @@ export const useInternalProjectArchiveV6Session =
       return "blocked";
     },
 
-    activateStandardAuthorities: async (resolver = resolveStandardSemModelV4Authority) => {
+    activateStandardAuthorities: async (
+      resolver = resolveStandardSemModelV4Authority,
+      revokeGeneralSemDraft = invalidateNativeGeneralSemFreshDraftAuthorityV1,
+    ) => {
       const session = get().session;
       if (!session) {
         set({
@@ -442,6 +458,10 @@ export const useInternalProjectArchiveV6Session =
       });
 
       try {
+        if (supportsGeneralSemV1(session.project)) {
+          await revokeGeneralSemDraft();
+          if (get().requestEpoch !== requestEpoch || get().session !== session) return "stale";
+        }
         const outcomes = await Promise.all(records.map((record) => resolver(record.payload.model)));
         if (get().requestEpoch !== requestEpoch) return "stale";
         if (useWorkspace.getState() !== workspaceBefore) {
@@ -486,6 +506,9 @@ export const useInternalProjectArchiveV6Session =
           internalProjectArchiveV6ScientificEditLockedModelIdsV1(session.project),
         );
         if (!installed) throw new Error("The resolved Standard authority set could not be installed atomically.");
+        if (supportsGeneralSemV1(session.project)) {
+          useWorkspace.getState().setProjectWritable(false);
+        }
         const current = get().session;
         if (!current || current !== session || get().requestEpoch !== requestEpoch) return "stale";
         set({
@@ -497,7 +520,7 @@ export const useInternalProjectArchiveV6Session =
             },
           },
           dirty: false,
-          persistence: null,
+          persistence: supportsGeneralSemV1(session.project) ? "persisted_validated_archive" : null,
           standardActivationPending: false,
           standardActivationFailure: null,
           standardActivationStatusMessage: `${records.length} schema-6 model${records.length === 1 ? "" : "s"} activated as the sole Standard science authority.`,
@@ -528,6 +551,18 @@ export const useInternalProjectArchiveV6Session =
           revisionForkStatusMessage: "Model revision blocked because no bound Standard project is active.",
         });
         return "inactive";
+      }
+      if (supportsGeneralSemV1(session.project)) {
+        set({
+          revisionForkFailure: {
+            code: "schema6_model_revision.general_sem_execution_authority_revision_required",
+            message: "General SEM model revisions are disabled because the resident RecipeV4 is the immutable execution authority.",
+            correctiveAction: "Keep this archive unchanged until a versioned model-and-recipe execution-authority revision workflow is available.",
+            authoringIssues: [], readinessIssues: [],
+          },
+          revisionForkStatusMessage: "General SEM model revision blocked before any authority mutation.",
+        });
+        return "blocked";
       }
       if (get().standardActivationPending || get().revisionForkPending || get().saveCopyPending) return "blocked";
       const workspace = useWorkspace.getState();
@@ -641,6 +676,17 @@ export const useInternalProjectArchiveV6Session =
           saveCopyStatusMessage: "Save copy was blocked because no schema-6 session is active.",
         });
         return "inactive";
+      }
+      if (supportsGeneralSemV1(session.project)) {
+        set({
+          saveCopyFailure: {
+            code: "schema6_save_copy.general_sem_execution_authority_revision_required",
+            message: "General SEM Save copy is disabled because it cannot yet revise the resident model and RecipeV4 execution authority together.",
+            correctiveAction: "Keep this validated archive unchanged until the versioned General SEM execution-authority revision workflow is available.",
+          },
+          saveCopyStatusMessage: "General SEM Save copy blocked before candidate derivation or native file selection.",
+        });
+        return "blocked";
       }
       if (!session.standardActivation) {
         set({
@@ -760,6 +806,88 @@ export const useInternalProjectArchiveV6Session =
       }
     },
 
+    reanchorGeneralSemSnapshot: (snapshot) => {
+      const state = get();
+      const session = state.session;
+      const activation = session?.standardActivation;
+      if (!session || !activation) return "inactive";
+      if (state.standardActivationPending || state.revisionForkPending || state.saveCopyPending || state.dirty) {
+        set({
+          standardActivationFailure: {
+            code: "schema6_general_sem_reanchor.operation_pending_or_dirty",
+            message: "The General SEM project cannot be reanchored while another authority operation or unsaved model change exists.",
+            correctiveAction: "Wait for the current operation or restore the exact clean project authority, then verify the archive again.",
+            authoringIssues: [],
+            readinessIssues: [],
+          },
+          standardActivationStatusMessage: "General SEM archive reanchor was blocked; the current source binding is unchanged.",
+        });
+        return "blocked";
+      }
+      const previous = session.snapshot.generalSemExecutionAuthority;
+      const next = snapshot.generalSemExecutionAuthority;
+      const sameModelIds = [...activation.modelIds].sort().join("\0")
+        === snapshot.project.models.map((record) => record.model_id).sort().join("\0");
+      if (!supportsGeneralSemV1(session.project)
+        || !supportsGeneralSemV1(snapshot.project)
+        || session.snapshot.archivePath !== snapshot.archivePath
+        || session.project.project_id !== snapshot.project.project_id
+        || !previous
+        || !next
+        || previous.projectId !== next.projectId
+        || previous.datasetId !== next.datasetId
+        || previous.datasetFingerprint !== next.datasetFingerprint
+        || previous.modelId !== next.modelId
+        || previous.modelScientificSha256 !== next.modelScientificSha256
+        || previous.recipeId !== next.recipeId
+        || previous.recipeDocumentSha256 !== next.recipeDocumentSha256
+        || !sameModelIds) {
+        set({
+          standardActivationFailure: {
+            code: "schema6_general_sem_reanchor.authority_mismatch",
+            message: "The strictly reopened archive differs from the active General SEM project authority.",
+            correctiveAction: "Preserve both files unchanged and do not display, export, or append results from this archive.",
+            authoringIssues: [],
+            readinessIssues: [],
+          },
+          standardActivationStatusMessage: "General SEM archive reanchor failed closed; the previous source binding remains active.",
+        });
+        return "blocked";
+      }
+      const captured = useWorkspace.getState().captureStandardSemModelV4SaveAuthorities(activation.modelIds);
+      if (!captured
+        || Object.values(captured).some((item) => item.dirty)
+        || captured[next.modelId]?.scientificSha256 !== next.modelScientificSha256) {
+        set({
+          standardActivationFailure: {
+            code: "schema6_general_sem_reanchor.workspace_authority_stale",
+            message: "The active canvas authority no longer matches the strictly reopened General SEM archive.",
+            correctiveAction: "Keep the current project open and resolve the stale model authority before continuing.",
+            authoringIssues: [],
+            readinessIssues: [],
+          },
+          standardActivationStatusMessage: "General SEM archive reanchor failed closed; the canvas binding is unchanged.",
+        });
+        return "blocked";
+      }
+      set({
+        session: {
+          ...session,
+          snapshot,
+          project: snapshot.project,
+          standardActivation: {
+            ...activation,
+            sourceArchiveSha256: snapshot.archiveSha256,
+          },
+        },
+        dirty: false,
+        persistence: "persisted_validated_archive",
+        standardActivationFailure: null,
+        standardActivationStatusMessage: "The active General SEM project was reanchored to the strictly validated current archive.",
+      });
+      return "reanchored";
+    },
+
     closeStandardProject: () => {
       const state = get();
       const activation = state.session?.standardActivation;
@@ -769,7 +897,7 @@ export const useInternalProjectArchiveV6Session =
         || state.revisionForkPending
         || state.saveCopyPending
         || state.dirty
-        || state.persistence !== "persisted_new_copy"
+        || (state.persistence !== "persisted_new_copy" && state.persistence !== "persisted_validated_archive")
       ) {
         set({
           standardActivationFailure: {

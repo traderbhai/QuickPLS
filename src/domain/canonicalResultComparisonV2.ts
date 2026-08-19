@@ -1,4 +1,5 @@
 import {
+  canonicalAnalyticalResultJson,
   capabilityCellReferenceIdentityV2,
   type CanonicalResultCell,
   type CanonicalResultDocumentV2,
@@ -21,6 +22,7 @@ export type CanonicalComparisonIssueCodeV2 =
   | "dataset_mismatch"
   | "model_mismatch"
   | "settings_mismatch"
+  | "general_sem_results_mismatch"
   | "table_set_mismatch"
   | "column_set_mismatch"
   | "column_type_mismatch"
@@ -226,6 +228,12 @@ function isHistoricalTextFallback(document: CanonicalResultDocumentV2): boolean 
     );
 }
 
+function canonicalGeneralSemAnalyticalJson(document: CanonicalResultDocumentV2): string | undefined {
+  const analytical = JSON.parse(canonicalAnalyticalResultJson(document)) as Record<string, unknown>;
+  if (!Object.prototype.hasOwnProperty.call(analytical, "general_sem_results")) return undefined;
+  return JSON.stringify(analytical.general_sem_results);
+}
+
 function invalidDocumentIssues(
   left: CanonicalResultDocumentV2,
   right: CanonicalResultDocumentV2,
@@ -370,6 +378,15 @@ export function canonicalResultCompatibilityV2(
       "settings_mismatch",
       "Analysis settings differ",
       "These results use different analysis settings. Choose runs calculated with the same settings.",
+    ));
+  }
+  if (canonicalGeneralSemAnalyticalJson(left) !== canonicalGeneralSemAnalyticalJson(right)) {
+    issues.push(issue(
+      "general_sem_results_mismatch",
+      "general_sem_results_mismatch",
+      "General SEM analytical results differ",
+      "These runs contain different General SEM analytical results. This comparison version cannot safely reduce every nested General SEM result to typed table deltas, so it will not report an incomplete zero-change comparison.",
+      [left.document_id, right.document_id],
     ));
   }
 

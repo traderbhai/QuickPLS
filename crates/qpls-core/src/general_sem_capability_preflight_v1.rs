@@ -1,10 +1,11 @@
 use crate::{
     CompiledCbsemExecutionDispositionV3, CompiledCbsemStructuralFormV3, CompiledPlsPlanV3Error,
     GeneralSemBootstrapIntervalV1, GeneralSemConfigV1, GeneralSemInferenceTailV1,
-    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, SemCapabilityCellIdV1,
-    SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1, SemCapabilityDecisionV1ValidationError,
-    SemCapabilityDiagnosticSeverityV1, SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1,
-    SemModelV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
+    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicyV4,
+    ObservedScaleV4, SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
+    SemCapabilityDecisionV1ValidationError, SemCapabilityDiagnosticSeverityV1,
+    SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1, SemDataBindingV4, SemGroupV4, SemModelV4,
+    SemVariableV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
 };
 
 pub const GENERAL_SEM_PLS_ESTIMATOR_ID_V1: &str = "qpls.pls_sem.v3";
@@ -37,13 +38,46 @@ pub fn preflight_general_sem_pls_v1(
             "The bootstrap compiler binds exact Recipe V4 inference settings to the General SEM config while retaining the proven point-scoring plan.",
         )?);
         evidence.push(SemCapabilityEvidenceV1::new(
-            "capability_registry_v2:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
-            "Capability Registry V2 exposes the bounded indexed case-resampling primitive used by this General SEM compiler slice.",
+            "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_multiple_mediation_bootstrap:general_sem_pls_full_model_case_bootstrap_v1",
+            "Capability Registry V2 exposes this exact multiple-mediation, full-model percentile case-bootstrap combination in Experimental Labs.",
+        )?);
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "capability_dependency:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
+            "The exact General SEM cell uses the separately governed indexed case-resampling mechanism without inheriting that mechanism cell's release maturity.",
         )?);
     }
-    let mut diagnostics = execution_scope_diagnostics(config)?;
+    let mut diagnostics = execution_scope_diagnostics(model, config)?;
     match compile_pls_plan_v3(model, config) {
-        Ok(_) => {}
+        Ok(plan) => {
+            let found = plan.topology().specific_directed_paths().len();
+            match config.inference {
+                GeneralSemInferenceV1::None if found == 0 => {
+                    diagnostics.push(SemCapabilityDiagnosticV1::new(
+                        "sem.capability.pls.mediation_requires_indirect_path",
+                        SemCapabilityDiagnosticSeverityV1::Error,
+                        None,
+                        "The PLS mediation point cell requires at least one compiled specific indirect path; this graph has none.",
+                        vec![
+                            "Add a supported mediator path, or use the existing ordinary PLS workflow for a direct-only recursive model.".into(),
+                        ],
+                    )?);
+                }
+                GeneralSemInferenceV1::CaseBootstrap { .. } if found < 2 => {
+                    diagnostics.push(SemCapabilityDiagnosticV1::new(
+                        "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
+                        SemCapabilityDiagnosticSeverityV1::Error,
+                        None,
+                        format!(
+                            "The exact multiple-mediation bootstrap cell requires at least two compiled specific indirect paths; this graph has {found}."
+                        ),
+                        vec![
+                            "Add a second supported parallel or serial mediation path, or use point inference under the mediation cell until a single-mediation bootstrap cell is separately governed.".into(),
+                        ],
+                    )?);
+                }
+                _ => {}
+            }
+        }
         Err(error) => diagnostics.push(pls_compile_diagnostic(error)?),
     }
     if !diagnostics.is_empty() {
@@ -82,7 +116,7 @@ pub fn preflight_general_sem_pls_v1(
                 "The compiler binds the proven PLS scoring plan to stable relation-path identities. Runtime validation remains authoritative before a result can be published."
             }
             GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                "The compiler binds percentile, two-sided case resampling to both the mediation and indexed-resampling cells. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
+                "The compiler binds percentile, two-sided case resampling to the exact multiple-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
             }
         },
     )
@@ -155,9 +189,83 @@ pub fn preflight_general_sem_cbsem_v1(
 }
 
 fn execution_scope_diagnostics(
+    model: &SemModelV4,
     config: &GeneralSemConfigV1,
 ) -> Result<Vec<SemCapabilityDiagnosticV1>, SemCapabilityDecisionV1ValidationError> {
     let mut diagnostics = Vec::new();
+    match &model.data_binding {
+        SemDataBindingV4::Raw {
+            missing_data,
+            weight,
+            cluster_variable,
+            strata_variable,
+            ..
+        } => {
+            if *missing_data != MissingDataPolicyV4::ListwiseDeletion {
+                diagnostics.push(SemCapabilityDiagnosticV1::new(
+                    "sem.capability.pls.listwise_deletion_required",
+                    SemCapabilityDiagnosticSeverityV1::Error,
+                    Some(model.id.clone()),
+                    "The exact General SEM PLS cell requires listwise deletion; the authored missing-data policy is preserved but unsupported.",
+                    vec!["Select listwise deletion explicitly for this PLS request.".into()],
+                )?);
+            }
+            if weight.is_some() || cluster_variable.is_some() || strata_variable.is_some() {
+                diagnostics.push(SemCapabilityDiagnosticV1::new(
+                    "sem.capability.pls.complex_sampling_not_executable",
+                    SemCapabilityDiagnosticSeverityV1::Error,
+                    Some(model.id.clone()),
+                    "Weights, cluster variables, and strata variables are not executable in this exact General SEM PLS cell.",
+                    vec!["Use an unweighted single-level request, or retain these semantics for a future qualified cell.".into()],
+                )?);
+            }
+        }
+        SemDataBindingV4::Covariance { .. } | SemDataBindingV4::Correlation { .. } => {
+            diagnostics.push(SemCapabilityDiagnosticV1::new(
+                "sem.capability.pls.raw_data_required",
+                SemCapabilityDiagnosticSeverityV1::Error,
+                Some(model.id.clone()),
+                "The exact General SEM PLS cell requires raw case-level data.",
+                vec![
+                    "Choose a raw resident dataset, or use a qualified matrix-input CB-SEM cell."
+                        .into(),
+                ],
+            )?);
+        }
+    }
+    if model.group != SemGroupV4::SingleGroup {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.pls.single_group_required",
+            SemCapabilityDiagnosticSeverityV1::Error,
+            Some(model.id.clone()),
+            "The exact General SEM PLS cell currently executes single-group models only.",
+            vec!["Select the single-group definition, or retain the group semantics for a future qualified multi-group cell.".into()],
+        )?);
+    }
+    for variable in &model.variables {
+        let SemVariableV4::Observed {
+            id,
+            scale,
+            missing_markers,
+            transformation_lineage,
+            ..
+        } = variable
+        else {
+            continue;
+        };
+        if *scale != ObservedScaleV4::Continuous
+            || !missing_markers.is_empty()
+            || !transformation_lineage.is_empty()
+        {
+            diagnostics.push(SemCapabilityDiagnosticV1::new(
+                "sem.capability.pls.observed_semantics_not_executable",
+                SemCapabilityDiagnosticSeverityV1::Error,
+                Some(id.clone()),
+                "This observed variable carries scale, missing-marker, or transformation semantics outside the exact General SEM PLS cell.",
+                vec!["Keep the authored semantics unchanged and use an explicit, lineage-recorded dataset transformation or a future qualified cell.".into()],
+            )?);
+        }
+    }
     if !config.conditional_effect_probes.is_empty() {
         diagnostics.push(SemCapabilityDiagnosticV1::new(
             "sem.capability.pls.conditional_probes_not_executable",
@@ -268,9 +376,9 @@ fn pls_cell() -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1Validation
 fn pls_bootstrap_cell() -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
     SemCapabilityCellIdV1::new(
         2,
-        "smartpls.pls_bootstrapping",
-        "qpls3.inference.bootstrap",
-        "indexed_resampling_v4",
+        "smartpls.mediation",
+        "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+        "general_sem_pls_full_model_case_bootstrap_v1",
     )
 }
 
@@ -295,8 +403,9 @@ fn cbsem_cell() -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1Validati
 mod tests {
     use super::*;
     use crate::{
-        Construct, LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec, StructuralPath,
-        convert_legacy_basic_model_v4,
+        Construct, LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec, ObservedRoleV4,
+        ObservedTransformationOperationV4, ObservedTransformationStepV4, SemWeightBindingV4,
+        StructuralPath, convert_legacy_basic_model_v4,
     };
     use uuid::Uuid;
 
@@ -332,6 +441,91 @@ mod tests {
             &[],
         )
         .unwrap()
+    }
+
+    fn direct_only_model() -> SemModelV4 {
+        let constructs = ["x", "y"]
+            .into_iter()
+            .map(|id| Construct {
+                id: id.into(),
+                name: id.to_uppercase(),
+                short_name: id.to_uppercase(),
+                mode: MeasurementMode::Reflective,
+                indicators: vec![format!("{id}1"), format!("{id}2")],
+            })
+            .collect();
+        convert_legacy_basic_model_v4(
+            &ModelSpec {
+                id: Uuid::from_u128(0x5031_5312),
+                name: "Direct-only preflight".into(),
+                constructs,
+                paths: vec![StructuralPath {
+                    source: "x".into(),
+                    target: "y".into(),
+                }],
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            LegacyBasicModelInterpretationV4::PlsComposite,
+            &[],
+        )
+        .unwrap()
+    }
+
+    fn multiple_mediation_model() -> SemModelV4 {
+        let constructs = ["x", "m1", "m2", "y"]
+            .into_iter()
+            .map(|id| Construct {
+                id: id.into(),
+                name: id.to_uppercase(),
+                short_name: id.to_uppercase(),
+                mode: MeasurementMode::Reflective,
+                indicators: vec![format!("{id}1"), format!("{id}2")],
+            })
+            .collect();
+        let paths = [
+            ("x", "m1"),
+            ("x", "m2"),
+            ("x", "y"),
+            ("m1", "m2"),
+            ("m1", "y"),
+            ("m2", "y"),
+        ]
+        .into_iter()
+        .map(|(source, target)| StructuralPath {
+            source: source.into(),
+            target: target.into(),
+        })
+        .collect();
+        convert_legacy_basic_model_v4(
+            &ModelSpec {
+                id: Uuid::from_u128(0x5031_5311),
+                name: "Multiple-mediation preflight".into(),
+                constructs,
+                paths,
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            LegacyBasicModelInterpretationV4::PlsComposite,
+            &[],
+        )
+        .unwrap()
+    }
+
+    fn add_sampling_control(model: &mut SemModelV4) {
+        model.variables.push(SemVariableV4::Observed {
+            id: "observed:sampling_control".into(),
+            label: "Sampling control".into(),
+            source_column: "sampling_control".into(),
+            scale: ObservedScaleV4::Continuous,
+            role: ObservedRoleV4::Control,
+            categories: Vec::new(),
+            value_labels: Default::default(),
+            missing_markers: Vec::new(),
+            transformation_lineage: Vec::new(),
+        });
     }
 
     #[test]
@@ -391,8 +585,132 @@ mod tests {
     }
 
     #[test]
+    fn direct_only_graph_is_not_mislabelled_as_the_mediation_point_cell() {
+        let decision =
+            preflight_general_sem_pls_v1(&direct_only_model(), &GeneralSemConfigV1::default())
+                .unwrap();
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert!(decision.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code() == "sem.capability.pls.mediation_requires_indirect_path"
+                && !diagnostic.corrections().is_empty()
+        }));
+    }
+
+    #[test]
+    fn authored_missing_markers_and_transformation_lineage_are_blocked_without_mutation() {
+        let mut missing_marker_model = recursive_model();
+        let SemVariableV4::Observed {
+            missing_markers, ..
+        } = missing_marker_model
+            .variables
+            .iter_mut()
+            .find(|variable| {
+                matches!(
+                    variable,
+                    SemVariableV4::Observed { source_column, .. } if source_column == "x1"
+                )
+            })
+            .unwrap()
+        else {
+            unreachable!()
+        };
+        *missing_markers = vec!["-999".into()];
+
+        let mut transformed_model = recursive_model();
+        let SemVariableV4::Observed {
+            transformation_lineage,
+            ..
+        } = transformed_model
+            .variables
+            .iter_mut()
+            .find(|variable| {
+                matches!(
+                    variable,
+                    SemVariableV4::Observed { source_column, .. } if source_column == "x1"
+                )
+            })
+            .unwrap()
+        else {
+            unreachable!()
+        };
+        *transformation_lineage = vec![ObservedTransformationStepV4 {
+            id: "transform:x1:mean_center".into(),
+            input_columns: vec!["x1_raw".into()],
+            output_column: "x1".into(),
+            operation: ObservedTransformationOperationV4::MeanCenter,
+        }];
+
+        for model in [missing_marker_model, transformed_model] {
+            model.ensure_valid().unwrap();
+            let before = model.clone();
+            let decision =
+                preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
+            assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+            assert!(decision.diagnostics().iter().any(|diagnostic| {
+                diagnostic.code() == "sem.capability.pls.observed_semantics_not_executable"
+                    && diagnostic.subject() == Some("observed:x1")
+            }));
+            assert_eq!(model, before);
+        }
+    }
+
+    #[test]
+    fn non_listwise_and_each_complex_sampling_role_are_blocked() {
+        let mut non_listwise = recursive_model();
+        let SemDataBindingV4::Raw { missing_data, .. } = &mut non_listwise.data_binding else {
+            unreachable!()
+        };
+        *missing_data = MissingDataPolicyV4::MeanReplacement;
+        non_listwise.ensure_valid().unwrap();
+        let decision =
+            preflight_general_sem_pls_v1(&non_listwise, &GeneralSemConfigV1::default()).unwrap();
+        assert!(decision.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code() == "sem.capability.pls.listwise_deletion_required"
+        }));
+
+        let mut weighted = recursive_model();
+        add_sampling_control(&mut weighted);
+        let SemDataBindingV4::Raw { weight, .. } = &mut weighted.data_binding else {
+            unreachable!()
+        };
+        *weight = Some(SemWeightBindingV4::Case {
+            variable: "observed:sampling_control".into(),
+        });
+
+        let mut clustered = recursive_model();
+        add_sampling_control(&mut clustered);
+        let SemDataBindingV4::Raw {
+            cluster_variable, ..
+        } = &mut clustered.data_binding
+        else {
+            unreachable!()
+        };
+        *cluster_variable = Some("observed:sampling_control".into());
+
+        let mut stratified = recursive_model();
+        add_sampling_control(&mut stratified);
+        let SemDataBindingV4::Raw {
+            strata_variable, ..
+        } = &mut stratified.data_binding
+        else {
+            unreachable!()
+        };
+        *strata_variable = Some("observed:sampling_control".into());
+
+        for model in [weighted, clustered, stratified] {
+            model.ensure_valid().unwrap();
+            let decision =
+                preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
+            assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+            assert!(decision.diagnostics().iter().any(|diagnostic| {
+                diagnostic.code() == "sem.capability.pls.complex_sampling_not_executable"
+            }));
+        }
+    }
+
+    #[test]
     fn percentile_two_sided_bootstrap_is_experimental_and_requires_both_exact_cells() {
-        let model = recursive_model();
+        let model = multiple_mediation_model();
         let mut config = GeneralSemConfigV1::default();
         config.inference = GeneralSemInferenceV1::CaseBootstrap {
             resamples: 500,
@@ -411,9 +729,13 @@ mod tests {
             cell.capability_id() == "smartpls.mediation" && cell.cell_id() == "qpls3.pls.mediation"
         }));
         assert!(decision.capability_cells().iter().any(|cell| {
-            cell.capability_id() == "smartpls.pls_bootstrapping"
-                && cell.cell_id() == "qpls3.inference.bootstrap"
-                && cell.capability_version() == "indexed_resampling_v4"
+            cell.capability_id() == "smartpls.mediation"
+                && cell.cell_id() == "qpls3.pls.general_sem_multiple_mediation_bootstrap"
+                && cell.capability_version() == "general_sem_pls_full_model_case_bootstrap_v1"
+        }));
+        assert!(decision.evidence().iter().any(|item| {
+            item.evidence_id()
+                == "capability_dependency:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4"
         }));
         assert!(decision.evidence().iter().any(|item| {
             item.evidence_id() == "compiler:recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1"
@@ -422,8 +744,27 @@ mod tests {
     }
 
     #[test]
-    fn bca_and_one_sided_bootstrap_are_typed_blocked_without_dropping_cells() {
+    fn single_indirect_path_is_blocked_from_the_exact_multiple_mediation_bootstrap_cell() {
         let model = recursive_model();
+        let mut config = GeneralSemConfigV1::default();
+        config.inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 11,
+            confidence_level: 0.95,
+            interval: crate::GeneralSemBootstrapIntervalV1::Percentile,
+            tail: crate::GeneralSemInferenceTailV1::TwoSided,
+        };
+        let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert!(decision.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code() == "sem.capability.pls.multiple_mediation_requires_two_indirect_paths"
+                && !diagnostic.corrections().is_empty()
+        }));
+    }
+
+    #[test]
+    fn bca_and_one_sided_bootstrap_are_typed_blocked_without_dropping_cells() {
+        let model = multiple_mediation_model();
         for (interval, tail, expected_code) in [
             (
                 crate::GeneralSemBootstrapIntervalV1::Bca,

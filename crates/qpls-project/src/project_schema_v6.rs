@@ -8402,10 +8402,10 @@ mod tests {
                 completed_at: "2026-08-19T00:00:01Z".into(),
             },
             capability_cells: Some(vec![
-                project_capability_cell_v2(artifact.capability_cell()),
                 project_capability_cell_v2(
                     &qpls_core::general_sem_pls_bootstrap_capability_cell_v1(),
                 ),
+                project_capability_cell_v2(artifact.capability_cell()),
             ]),
             general_sem_results: Some(general_sem_results),
             sections: Vec::new(),

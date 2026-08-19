@@ -582,7 +582,18 @@ export interface NativeProjectFutureUnsupported {
   results: number;
 }
 
+/**
+ * Transient authority for a freshly created, unsaved General SEM project.
+ * It is never serialized into the historical desktop project format.
+ */
+export interface GeneralSemProjectDraftModeV1 {
+  schemaVersion: 1;
+  semGeneration: "general_sem_v1";
+  sourceProjectId: string;
+}
+
 export interface NativeProjectSnapshot {
+  projectId: string;
   name: string;
   path: string | null;
   readOnly: boolean;

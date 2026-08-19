@@ -21,7 +21,27 @@ describe("native controller release contracts", () => {
     expect(controller).toContain('buttons: { yes: "Save", no: "Don\'t Save", cancel: "Cancel" }');
     expect(controller).toContain("authorityOperationPendingRef.current");
     expect(controller).toContain("Wait for Standard activation or validated save-copy to finish before");
+    expect(controller).toContain("generalSemPublicationPendingRef.current");
+    expect(controller).toContain("Wait for the marked project file to finish publishing and validating before");
+    expect(controller).toContain("generalSemTransientWorkBlockerRef.current");
+    expect(controller).toContain("Save and strictly reopen the result, or dismiss it explicitly, before");
     expect(app).not.toContain('loadProject({ nodes: [], edges: [], dataset: { id: crypto.randomUUID()');
+  });
+
+  it("binds General SEM only to a fresh native project and blocks unmarked persistence", () => {
+    expect(app).toContain('uiPreferences.experimentalLabsEnabled && isNativeDesktop()');
+    expect(app).toContain('commandEvent("new-project", { name, projectMode })');
+    expect(controller).toContain('detail?.projectMode === "general_sem_v1"');
+    expect(controller).toContain('useWorkspace.getState().uiPreferences.experimentalLabsEnabled');
+    expect(controller).toContain('beginGeneralSemProjectDraftMode(created.projectId)');
+    expect(controller).toContain('if (currentState.generalSemProjectDraftMode)');
+    expect(controller).toContain('title: "Use General SEM save and activation"');
+
+    const autosaveStart = controller.indexOf("const scheduledSignature = projectSignature");
+    const draftGate = controller.indexOf("if (state.generalSemProjectDraftMode) return;", autosaveStart);
+    const autosaveNative = controller.indexOf("autosaveNativeProject(projectPath", autosaveStart);
+    expect(draftGate).toBeGreaterThan(autosaveStart);
+    expect(draftGate).toBeLessThan(autosaveNative);
   });
 
   it("uses canonical Standard authority anchors for every dirty-work guard", () => {
@@ -29,8 +49,12 @@ describe("native controller release contracts", () => {
     expect(controller).toContain("active: strictAuthorityActive");
     expect(controller).toContain("dirty: strictAuthorityDirty");
     expect(controller).toContain("operationPending: authorityOperationPending");
-    expect(controller).toContain("if (!dirtyRef.current && !authorityOperationPendingRef.current) return;");
+    expect(controller).toContain("!generalSemTransientWorkBlockerRef.current");
+    expect(controller).toMatch(/onCloseRequested[\s\S]*generalSemPublicationPendingRef\.current[\s\S]*event\.preventDefault\(\)/);
+    expect(controller).toMatch(/onCloseRequested[\s\S]*generalSemTransientWorkBlockerRef\.current[\s\S]*event\.preventDefault\(\)/);
     expect(controller).toMatch(/onCloseRequested[\s\S]*authorityOperationPendingRef\.current[\s\S]*event\.preventDefault\(\)/);
+    expect(app).toContain('generalSemTransientWorkBlocker && next !== surface');
+    expect(app).toContain('documentView === "general_sem_labs" && generalSemTransientWorkBlocker');
   });
 
   it("navigates only after a project or dataset operation succeeds", () => {
@@ -100,11 +124,23 @@ describe("native controller release contracts", () => {
   });
 
   it("forwards validated data-kind, sample-size, and missing-marker import options", () => {
-    expect(app).toContain('case "project.import-data": openDialog("import-data")');
+    expect(app).toContain('case "project.import-data":');
+    expect(app).toContain('if (!rejectLockedDataMutation("Import data")) openDialog("import-data")');
     expect(app).toContain('<NativeDataImportDialog close={closeDialog} importData={beginDataImport} />');
     expect(controller).toContain('normalizeNativeDataImportRequest((event as CustomEvent<unknown>).detail)');
     expect(controller).toContain('importNativeDataset(request.dataKind, request.sampleSize, request.missingMarkers)');
     expect(controller).not.toContain("const imported = await importNativeDataset();");
+  });
+
+  it("reopens marked General SEM archives as non-writable strict projects", () => {
+    const markedOpen = controller.slice(
+      controller.indexOf('if (inspected.status === "ok" && supportsGeneralSemV1(inspected.value.project))'),
+      controller.indexOf("return;", controller.indexOf('title: "General SEM project opened"')),
+    );
+    expect(markedOpen).toContain("activateStandardAuthorities");
+    expect(markedOpen).toContain("rehydrateGeneralSemExecutionAuthorityV1");
+    expect(markedOpen).toContain("updateProjectWritable(false)");
+    expect(markedOpen).not.toContain("updateProjectWritable(true)");
   });
 
   it("attempts to dismiss failed native jobs before exposing retry", () => {

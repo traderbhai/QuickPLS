@@ -1,0 +1,348 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-19T00:00:00Z",
+    "manifest_path": "validation/methods/general_sem_pls_multiple_mediation_bootstrap_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+    "label": "General SEM PLS Multiple-Mediation Full-Model Percentile Bootstrap",
+    "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-19",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
+  "claim": {
+    "supported_scope": "Opt-in Experimental Labs execution for parallel, serial, and mixed multiple-mediation effects in a supported single-group recursive General SEM PLS composite model, using deterministic full-model case resampling, two-sided Type-7 percentile intervals, sample standard errors, plus-one probabilities, and an explicit 90% usable-replicate gate.",
+    "estimand": "Stable specific path products plus source-target total indirect and total effects, recomputed after a complete PLS model refit for each usable indexed case-resample.",
+    "assumptions": [
+      "The schema-6 project is newly created with general_sem_v1 authority and the compiled structural graph is acyclic.",
+      "The model and raw continuous data satisfy the exact CompiledPlsPlanV2 scoring boundary and listwise-deletion policy.",
+      "Every effect and inference receipt remains bound to the same recipe, model, dataset, compiled plan, seed, and typed capability identity."
+    ],
+    "exclusions": [
+      "Feedback, reciprocal, multigroup, interaction, higher-order, constrained, common-factor, covariance-input, weighted, clustered, and stratified models are excluded.",
+      "Conditional probes, lazy path materialization, BCa, studentized, and one-sided inference are excluded.",
+      "Causal mediation identification, counterfactual effects, and observed-variable PROCESS workflows are separate concerns."
+    ],
+    "warnings": [
+      "Engine evidence includes a bounded independent unstandardized observed-score reference simulation for path products, bootstrap means, Type-7 percentile truth inclusion, and the usable-replicate gate only; it never calls production Rust and does not establish standardized PLS scoring, sample-SE or plus-one-probability behavior, null calibration, full PLS-PM refit simulation, archive, native qualification, export, packaged Windows, SmartPLS numerical parity, or release evidence.",
+      "A statistically nonzero indirect effect does not by itself establish a causal mechanism."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "specific_and_total_indirect",
+        "expression": "specific_p = product_{e in p} beta_e; total_indirect_ij = sum_{p in P_ij,length(p)>=2} specific_p",
+        "variables": [
+          "specific_p",
+          "beta_e",
+          "P_ij",
+          "total_indirect_ij"
+        ],
+        "source_reference_id": "smartpls_mediation_public"
+      },
+      {
+        "id": "percentile_bootstrap_summary",
+        "expression": "CI = [Type7(alpha/2), Type7(1-alpha/2)]; SE = sqrt(sum((theta_b-mean)^2)/(B_usable-1)); p = (exceedances+1)/(B_usable+1)",
+        "variables": [
+          "alpha",
+          "theta_b",
+          "B_usable",
+          "exceedances"
+        ],
+        "source_reference_id": "independent_contract_reference"
+      }
+    ],
+    "references": [
+      {
+        "id": "smartpls_mediation_public",
+        "kind": "primary_paper",
+        "citation": "SmartPLS public mediation documentation and its cited mediation literature",
+        "locator": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+        "independence_group": "published_mediation_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_contract_reference",
+        "kind": "independent_python",
+        "citation": "Validation-only independent path-product, Type-7, sample-SE, plus-one, and usable-gate micro-reference",
+        "locator": "validation/general_sem_pls_multiple_mediation_bootstrap_v1_reference.py",
+        "independence_group": "python_contract_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "downstream_observed_score_reference_smoke_v1",
+        "purpose": "recovery",
+        "design": "Ninety-six deterministic unstandardized observed-score mixed-mediation trials with 240 rows each. Every trial independently refits the complete downstream OLS path system in 199 case bootstraps and evaluates three focal X-to-Y specific indirect effects plus the focal total indirect and total effect; production Rust is not called or compared.",
+        "seed_policy": "Frozen scenario-indexed data and bootstrap seeds with an exact replay check; singular fits count as failed refits and the 90 percent publication boundary is tested on and below its threshold.",
+        "metrics": [
+          "specific_and_total_effect_bias",
+          "relative_bias",
+          "rmse",
+          "percentile_truth_inclusion_smoke_rate",
+          "mean_bootstrap_bias",
+          "failure_gate_behavior"
+        ],
+        "acceptance_rule": "All deterministic checks pass; absolute bias <= 0.025, absolute relative bias <= 0.10, RMSE <= 0.15, absolute mean bootstrap bias <= 0.02, and at least 82 of 96 Type-7 percentile intervals include the truth for every frozen focal effect. Hit counts and descriptive Wilson intervals are reported. This is a bounded engine smoke reference, not nominal-coverage qualification or a full PLS-PM simulation oracle."
+      },
+      {
+        "id": "multiple_mediation_recovery_pending",
+        "purpose": "coverage",
+        "design": "Parallel, serial, and mixed recursive PLS population models across loading, path, sample-size, reliability, nonnormality, missingness, and failure-rate axes.",
+        "seed_policy": "Frozen scenario-indexed data and resampling streams with failed fits retained in the denominator.",
+        "metrics": [
+          "specific_effect_bias",
+          "total_indirect_bias",
+          "interval_coverage",
+          "failure_rate"
+        ],
+        "acceptance_rule": "Pending independent full-refit qualification; this manifest does not claim that the simulation gate has run."
+      },
+      {
+        "id": "null_indirect_calibration_pending",
+        "purpose": "type_i_error",
+        "design": "Parallel and serial graphs with one or more broken mediation stages while nuisance and direct paths remain present.",
+        "seed_policy": "Frozen indexed scenarios and case-resampling streams.",
+        "metrics": [
+          "false_positive_rate",
+          "coverage",
+          "failed_fit_fraction"
+        ],
+        "acceptance_rule": "Pending independent full PLS-PM refit qualification; the bounded observed-score reference simulation is not null-rejection calibration evidence."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "singular_or_failed_refit",
+        "category": "data_pathology",
+        "case": "A bootstrap sample is constant, singular, nonconvergent, or cannot estimate a requested path.",
+        "expected_behavior": "Record the indexed typed failure; publish no result if usable replicates fall below max(2, ceil(0.9B))."
+      },
+      {
+        "id": "unsupported_general_sem_shape",
+        "category": "unsupported_scope",
+        "case": "The graph contains feedback, an interaction, a higher-order construct, a conditional probe, lazy materialization, or another unsupported scoring semantic.",
+        "expected_behavior": "Preserve the model and return a corrective blocked capability decision without silently dropping semantics."
+      },
+      {
+        "id": "order_and_scale_relations",
+        "category": "metamorphic",
+        "case": "Rows, declarations, constructs, indicators, or eligible labels are consistently permuted, or permitted scale/location transformations are applied.",
+        "expected_behavior": "Mapped effect identities and scientific summaries remain equivalent under the frozen preprocessing and orientation contract."
+      },
+      {
+        "id": "seed_worker_replay",
+        "category": "determinism",
+        "case": "The same valid recipe is replayed with one and four supported workers.",
+        "expected_behavior": "The scientific result, replicate ledger, and usable-index digest are identical after normalizing worker metadata."
+      },
+      {
+        "id": "resident_authority_tamper",
+        "category": "tamper",
+        "case": "A recipe, model, dataset, plan, effect identity, interval, p-value ledger, method version, or receipt digest is altered.",
+        "expected_behavior": "Strict schema-6 authority validation rejects the attachment and no partial result is shown."
+      }
+    ],
+    "numerical_tolerance": 1e-12
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 4,
+      "result_schema_version": 2,
+      "payload_kind": "canonical_result_document_v2_general_sem_results_v1",
+      "tamper_tests": [
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose exact General SEM mediation-bootstrap capability differs from its recipe and receipt."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a result relabeled with another bootstrap or mediation version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose resident dataset fingerprint differs."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject a changed project member or canonical attachment digest."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, invalid counts, non-finite values, unordered identities, or inconsistent effect ledgers."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never attach this identity to historical projects or results without general_sem_v1 authority."
+        }
+      ],
+      "legacy_policy": "This capability applies only to newly created schema-6 general_sem_v1 projects; no legacy migration or upgrade-copy route is provided."
+    },
+    "native": {
+      "setup_controls": [
+        "Exact recursive multiple-mediation graph",
+        "Requested effect identities",
+        "Case-resample count",
+        "Confidence level",
+        "Fixed seed",
+        "Workers"
+      ],
+      "applicability_blockers": [
+        "Missing general_sem_v1 authority",
+        "Fewer than two indirect paths",
+        "Unsupported graph or data predicate",
+        "Non-percentile or non-two-sided inference",
+        "Failed point fit or insufficient usable bootstrap replicates"
+      ],
+      "result_surfaces": [
+        "Specific indirect effects",
+        "Total indirect effects",
+        "Total effects",
+        "Bootstrap standard errors, intervals, and probabilities",
+        "Typed replicate failures and provenance"
+      ],
+      "gui_cli_parity_rule": "For identical recipe, model, data, seed, compiler plan, and workers, all product surfaces must read the same canonical result. The same-app native schema-6 General SEM project-mode workflow is connected from dataset/model activation through execution, canonical result persistence, close, and reopen, but independent cross-surface, packaged, and release qualification remain pending.",
+      "accessibility_rules": [
+        "Every effect, interval, probability, failure, and unavailable reason is available in an accessible table.",
+        "Support and error states remain understandable without color, diagram position, or pointer-only interaction."
+      ]
+    },
+    "export": {
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf",
+        "png"
+      ],
+      "tables": [
+        "Specific indirect effects",
+        "Aggregate effects",
+        "Bootstrap inference ledger",
+        "Run provenance"
+      ],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "engine_only",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": [
+        "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MEDIATION_BOOTSTRAP_V1.md"
+      ],
+      "independent_reference": [
+        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_reference.py"
+      ],
+      "simulation_report": [
+        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_kernel_simulation.py"
+      ],
+      "boundary_report": [
+        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_reference.py"
+      ],
+      "persistence_report": [
+        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_persistence_gate.py"
+      ],
+      "frontend_report": [
+        "src/domain/generalSemPlsMultipleMediationBootstrapV1.golden.test.ts"
+      ],
+      "export_report": [
+        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_export_gate.py"
+      ],
+      "method_audit": [
+        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_method_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_general_sem_pls_multiple_mediation_bootstrap_v1_native_acceptance.ps1"
+      ]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/engine_evidence.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "boundary_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/kernel_simulation.identity.json",
+          "roles": [
+            "simulation_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [],
+      "native_qualified": [],
+      "release_qualified": []
+    }
+  }
+}

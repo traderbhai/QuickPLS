@@ -155,7 +155,11 @@ describe("native desktop command surface contracts", () => {
     const data = read("src/native/NativeDataSurface.tsx");
     const dialog = read("src/native/NativeRecodeDialog.tsx");
 
-    expect(app).toContain("const dataMutationsLocked = datasetDescriptorOnly || isNativeCalculationActive(runMonitor.status)");
+    expect(app).toMatch(/const dataMutationsLocked = datasetDescriptorOnly[\s\S]*generalSemPublicationPending[\s\S]*isNativeCalculationActive/);
+    expect(app).toContain("rejectLockedDataMutation");
+    expect(data).toContain("readNativeDatasetPageV1");
+    expect(data).toContain("readInternalProjectArchiveV6DatasetRows");
+    expect(data).toContain("mutationDisabledReason");
     expect(data).toContain('<DataPaneTitle title="Variables" />');
     expect(data).not.toContain('title="Variables" action=');
     expect(data).toContain("disabled={Boolean(activatingDatasetId) || mutationsLocked}");

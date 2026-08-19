@@ -1056,11 +1056,12 @@ mod tests {
     }
 
     fn bootstrap_capability_cell() -> CapabilityCellReferenceV2 {
+        let cell = qpls_core::general_sem_pls_bootstrap_capability_cell_v1();
         CapabilityCellReferenceV2 {
-            registry_schema_version: 2,
-            capability_id: "smartpls.pls_bootstrapping".into(),
-            cell_id: "qpls3.inference.bootstrap".into(),
-            capability_version: "indexed_resampling_v4".into(),
+            registry_schema_version: cell.registry_schema_version,
+            capability_id: cell.capability_id,
+            cell_id: cell.cell_id,
+            capability_version: cell.capability_version,
         }
     }
 
@@ -1435,7 +1436,7 @@ mod tests {
     #[test]
     fn general_sem_inference_receipt_round_trips_and_fails_closed_in_archive_wire() {
         let mut source = document();
-        source.capability_cells = Some(vec![capability_cell(), bootstrap_capability_cell()]);
+        source.capability_cells = Some(vec![bootstrap_capability_cell(), capability_cell()]);
         source.general_sem_results = Some(complete_general_sem_inference_results());
         source.ensure_valid().unwrap();
 

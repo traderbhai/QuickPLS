@@ -38,7 +38,9 @@ import { currentNativeModelPresentation, nativeModelSnapshotFromCanonical } from
 import { nativeHigherOrderCreationBlocker, nativeHigherOrderDraftProblems, type NativeHigherOrderDraft } from "./native/nativeHigherOrder";
 import { compareAndSwapStandardSemModelV4Authority } from "./services/standardSemModelV4AuthorityService";
 import type { StandardSemModelV4AuthorityCasDiagnosticV1, StandardSemModelV4AuthorityCasOutcomeV1 } from "./domain/standardSemModelV4AuthorityCas";
-import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeProcessGraphRelationshipConfig, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, SemModelV4AuthoringEndpoint, SemModelV4ConstructAuthoring, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
+import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, GeneralSemProjectDraftModeV1, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeProcessGraphRelationshipConfig, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, SemModelV4AuthoringEndpoint, SemModelV4ConstructAuthoring, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
+
+export type GeneralSemTransientWorkBlockerV1 = "job_active" | "temporary_result_pending";
 
 type AlignTarget = "left" | "centerX" | "right" | "top" | "centerY" | "bottom";
 type DistributeAxis = "horizontal" | "vertical";
@@ -181,8 +183,12 @@ export interface WorkspaceState {
   runs: AnalysisRun[];
   analysisSettings: AnalysisUiSettings;
   projectName: string;
+  projectId: string | null;
   projectPath: string | null;
   projectWritable: boolean;
+  generalSemProjectDraftMode: GeneralSemProjectDraftModeV1 | null;
+  generalSemPublicationPending: boolean;
+  generalSemTransientWorkBlocker: GeneralSemTransientWorkBlockerV1 | null;
   past: HistorySnapshot[];
   future: HistorySnapshot[];
   setView: (view: WorkspaceView, context?: Omit<WorkflowDestinationContext, "timestamp">) => void;
@@ -296,11 +302,15 @@ export interface WorkspaceState {
   switchProjectModel: (modelId: string) => boolean;
   addRun: (run: AnalysisRun) => void;
   setAnalysisSettings: (patch: Partial<AnalysisUiSettings>) => void;
-  setProjectMeta: (name: string, path: string | null) => void;
+  setProjectMeta: (name: string, path: string | null, projectId?: string | null) => void;
   setProjectWritable: (writable: boolean) => void;
+  beginGeneralSemProjectDraftMode: (sourceProjectId: string) => boolean;
+  clearGeneralSemProjectDraftMode: () => void;
+  setGeneralSemPublicationPending: (pending: boolean) => void;
+  setGeneralSemTransientWorkBlocker: (blocker: GeneralSemTransientWorkBlockerV1 | null) => void;
   closeProject: () => void;
   resetProject: () => void;
-  loadProject: (project: { nodes: Array<Node<ConstructData>>; edges: Edge[]; dataset: Dataset; datasets?: Dataset[]; datasetVersions?: DatasetVersionRecord[]; projectModels?: NativeCanonicalModelSpec[]; activeModelId?: string | null; modelPresentations?: Record<string, NativeModelPresentation>; savedReports?: NativeSavedReport[]; explorerSelection?: NativeExplorerSelection; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState> }) => void;
+  loadProject: (project: { nodes: Array<Node<ConstructData>>; edges: Edge[]; dataset: Dataset; datasets?: Dataset[]; datasetVersions?: DatasetVersionRecord[]; projectModels?: NativeCanonicalModelSpec[]; activeModelId?: string | null; modelPresentations?: Record<string, NativeModelPresentation>; savedReports?: NativeSavedReport[]; explorerSelection?: NativeExplorerSelection; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState>; preserveGeneralSemProjectDraftMode?: GeneralSemProjectDraftModeV1 }) => void;
 }
 
 const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap", "permutation", "pls_sample_size_power", "plsc", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation", "predict", "mga", "ipma", "cbsem", "pca", "gsca", "regression", "nca"]);
@@ -972,8 +982,12 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
   runs: [],
   analysisSettings: defaultAnalysisSettings,
   projectName: "Corporate Reputation Study",
+  projectId: null,
   projectPath: null,
   projectWritable: true,
+  generalSemProjectDraftMode: null,
+  generalSemPublicationPending: false,
+  generalSemTransientWorkBlocker: null,
   past: [],
   future: [],
   setView: (view, context) => set((state) => {
@@ -996,6 +1010,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
   setInspectorCollapsed: (inspectorCollapsed) => set({ inspectorCollapsed }),
   setExplorerWidth: (explorerWidth) => set({ explorerWidth: Math.min(430, Math.max(250, Math.trunc(explorerWidth))) }),
   setUiPreferences: (patch) => set((state) => {
+    if (state.generalSemTransientWorkBlocker && patch.experimentalLabsEnabled === false) return {};
     const uiPreferences = normalizedUiPreferences({ ...state.uiPreferences, ...patch });
     persistUiPreferences(uiPreferences);
     return { uiPreferences };
@@ -1948,7 +1963,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       },
     }),
   })),
-  setDataset: (dataset) => set((state) => activeStandardSemModelV4Authority(state) ? state : ({
+  setDataset: (dataset) => set((state) => activeStandardSemModelV4Authority(state) || state.generalSemPublicationPending ? state : ({
     dataset,
     datasetCatalog: upsertDatasetCatalog(state.datasetCatalog, dataset),
     datasetDescriptorOnly: false,
@@ -1956,10 +1971,10 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     workflowDestinationContext: null,
     workflowCommandContext: null,
   })),
-  setDatasetCatalog: (datasetCatalog, datasetVersions) => set((state) => activeStandardSemModelV4Authority(state)
+  setDatasetCatalog: (datasetCatalog, datasetVersions) => set((state) => activeStandardSemModelV4Authority(state) || state.generalSemPublicationPending
     ? state
     : { datasetCatalog, datasetVersions, datasetDescriptorOnly: false }),
-  commitDatasetVersion: ({ dataset, version }) => set((state) => activeStandardSemModelV4Authority(state) ? state : ({
+  commitDatasetVersion: ({ dataset, version }) => set((state) => activeStandardSemModelV4Authority(state) || state.generalSemPublicationPending ? state : ({
     dataset,
     datasetCatalog: upsertDatasetCatalog(state.datasetCatalog, dataset),
     datasetDescriptorOnly: false,
@@ -2151,6 +2166,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         standardSemModelV4Persistence: persistence,
         standardSemModelV4DatasetDescriptors: descriptors,
         datasetDescriptorOnly: true,
+        generalSemProjectDraftMode: null,
         dataset: datasetFromStandardSemModelV4Descriptor(activeDescriptor),
         datasetCatalog: descriptorDatasets,
         datasetVersions: [],
@@ -2527,8 +2543,49 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     view: "runs",
   })),
   setAnalysisSettings: (patch) => set((state) => ({ analysisSettings: normalizeAnalysisSettings({ ...state.analysisSettings, ...patch }) })),
-  setProjectMeta: (projectName, projectPath) => set({ projectName, projectPath }),
+  setProjectMeta: (projectName, projectPath, projectId = null) => set((state) => ({
+    projectName,
+    projectPath,
+    projectId,
+    generalSemProjectDraftMode: state.generalSemProjectDraftMode
+      && projectPath === null
+      && projectId === state.generalSemProjectDraftMode.sourceProjectId
+      ? state.generalSemProjectDraftMode
+      : null,
+  })),
   setProjectWritable: (projectWritable) => set({ projectWritable }),
+  beginGeneralSemProjectDraftMode: (sourceProjectId) => {
+    let activated = false;
+    set((state) => {
+      const noResidentData = state.datasetCatalog.length === 0
+        || (state.datasetCatalog.length === 1
+          && state.datasetCatalog[0].columns.length === 0
+          && (state.datasetCatalog[0].rowCount ?? state.datasetCatalog[0].rows.length) === 0);
+      const fresh = sourceProjectId.length > 0
+        && state.projectId === sourceProjectId
+        && state.projectPath === null
+        && noResidentData
+        && state.projectModels.length === 0
+        && state.activeModelId === null
+        && state.nodes.length === 0
+        && state.edges.length === 0
+        && state.runs.length === 0
+        && Object.keys(state.standardSemModelV4Authorities).length === 0;
+      if (!fresh) return state;
+      activated = true;
+      return {
+        generalSemProjectDraftMode: {
+          schemaVersion: 1,
+          semGeneration: "general_sem_v1",
+          sourceProjectId,
+        },
+      };
+    });
+    return activated;
+  },
+  clearGeneralSemProjectDraftMode: () => set({ generalSemProjectDraftMode: null }),
+  setGeneralSemPublicationPending: (generalSemPublicationPending) => set({ generalSemPublicationPending }),
+  setGeneralSemTransientWorkBlocker: (generalSemTransientWorkBlocker) => set({ generalSemTransientWorkBlocker }),
   closeProject: () => set({
     nodes: [],
     edges: [],
@@ -2568,8 +2625,12 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     workflowDestinationContext: null,
     workflowCommandContext: null,
     projectName: "No project open",
+    projectId: null,
     projectPath: null,
     projectWritable: true,
+    generalSemProjectDraftMode: null,
+    generalSemPublicationPending: false,
+    generalSemTransientWorkBlocker: null,
     past: [],
     future: [],
   }),
@@ -2612,12 +2673,16 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     workflowDestinationContext: null,
     workflowCommandContext: null,
     projectName: "Untitled project",
+    projectId: null,
     projectPath: null,
     projectWritable: true,
+    generalSemProjectDraftMode: null,
+    generalSemPublicationPending: false,
+    generalSemTransientWorkBlocker: null,
     past: [],
     future: [],
   }),
-  loadProject: (project) => set({
+  loadProject: (project) => set((state) => ({
     nodes: project.nodes,
     edges: project.edges,
     dataset: project.dataset,
@@ -2633,6 +2698,15 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     standardSemModelV4Persistence: {},
     standardSemModelV4DatasetDescriptors: {},
     datasetDescriptorOnly: false,
+    projectId: null,
+    generalSemTransientWorkBlocker: null,
+    generalSemProjectDraftMode: project.preserveGeneralSemProjectDraftMode
+      && state.generalSemProjectDraftMode
+      && state.projectPath === null
+      && state.projectId === project.preserveGeneralSemProjectDraftMode.sourceProjectId
+      && state.generalSemProjectDraftMode.sourceProjectId === project.preserveGeneralSemProjectDraftMode.sourceProjectId
+      ? state.generalSemProjectDraftMode
+      : null,
     savedReports: project.savedReports ?? [],
     explorerSelection: project.explorerSelection
       ?? (project.activeModelId ? { kind: "model", modelId: project.activeModelId } : { kind: "data" }),
@@ -2657,5 +2731,5 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     workflowCommandContext: null,
     past: [],
     future: [],
-  }),
+  })),
 }));

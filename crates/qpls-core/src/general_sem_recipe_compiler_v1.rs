@@ -15,9 +15,11 @@ pub const GENERAL_SEM_PLS_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1: &str =
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_ID_V1: &str = "smartpls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CELL_ID_V1: &str = "qpls3.pls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_VERSION_V1: &str = "pls_mediation_v1";
-pub const PLS_GENERAL_BOOTSTRAP_CAPABILITY_ID_V1: &str = "smartpls.pls_bootstrapping";
-pub const PLS_GENERAL_BOOTSTRAP_CELL_ID_V1: &str = "qpls3.inference.bootstrap";
-pub const PLS_GENERAL_BOOTSTRAP_CAPABILITY_VERSION_V1: &str = "indexed_resampling_v4";
+pub const PLS_GENERAL_BOOTSTRAP_CAPABILITY_ID_V1: &str = "smartpls.mediation";
+pub const PLS_GENERAL_BOOTSTRAP_CELL_ID_V1: &str =
+    "qpls3.pls.general_sem_multiple_mediation_bootstrap";
+pub const PLS_GENERAL_BOOTSTRAP_CAPABILITY_VERSION_V1: &str =
+    "general_sem_pls_full_model_case_bootstrap_v1";
 
 pub fn pls_general_recursive_effects_capability_cell_v1() -> CapabilityCellReferenceV2 {
     CapabilityCellReferenceV2 {
@@ -137,6 +139,14 @@ pub enum GeneralSemPlsRecipeCompilationErrorV1 {
     PlsPlanV3(#[from] CompiledPlsPlanV3Error),
     #[error("compiled PLS v3 base plan differs from the proven recipe-v4 PLS v2 plan")]
     BasePlanMismatch,
+    #[error(
+        "General SEM PLS mediation point estimation requires at least one compiled specific indirect path (found {found})"
+    )]
+    MediationRequiresIndirectPath { found: usize },
+    #[error(
+        "General SEM multiple-mediation bootstrap requires at least two compiled specific indirect paths (found {found})"
+    )]
+    MultipleMediationRequiresTwoIndirectPaths { found: usize },
     #[error("compiled General SEM artifact contract is invalid")]
     InvalidArtifactContract,
     #[error("compiled General SEM artifact differs from deterministic recompilation")]
@@ -166,6 +176,22 @@ pub fn compile_general_sem_pls_recipe_v1(
     )?;
     let model = resolved_model_from_recipe(recipe, resolved_model)?;
     let plan = compile_pls_plan_v3(model, config)?;
+    let found = plan.topology().specific_directed_paths().len();
+    match config.inference {
+        GeneralSemInferenceV1::None if found == 0 => {
+            return Err(
+                GeneralSemPlsRecipeCompilationErrorV1::MediationRequiresIndirectPath { found },
+            );
+        }
+        GeneralSemInferenceV1::CaseBootstrap { .. } if found < 2 => {
+            return Err(
+                GeneralSemPlsRecipeCompilationErrorV1::MultipleMediationRequiresTwoIndirectPaths {
+                    found,
+                },
+            );
+        }
+        _ => {}
+    }
     let CompiledRecipePlanV4::PlsPlanV2 { plan: base_plan } = base_artifact.plan() else {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::BasePlanMismatch);
     };
@@ -588,6 +614,86 @@ mod tests {
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model))
                 .unwrap()
                 .artifact_identity_sha256()
+        );
+    }
+
+    #[test]
+    fn mediation_point_cell_rejects_a_direct_only_recursive_model() {
+        let (mut recipe, mut model) = recipe_and_model();
+        model.relations.retain(|relation| match relation {
+            crate::SemRelationV4::Structural { source, target, .. } => {
+                source == "construct:x" && target == "construct:y"
+            }
+            _ => true,
+        });
+        let retained_parameter_ids = model
+            .relations
+            .iter()
+            .filter_map(|relation| match relation {
+                crate::SemRelationV4::Structural { parameter, .. } => Some(parameter.as_str()),
+                _ => None,
+            })
+            .collect::<std::collections::BTreeSet<_>>();
+        model.parameters.retain(|parameter| {
+            retained_parameter_ids.contains(parameter.id())
+                || !matches!(
+                    parameter.target(),
+                    crate::SemParameterTargetV4::Regression { .. }
+                )
+        });
+        model.ensure_valid().unwrap();
+        recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+            scientific_sha256: model.scientific_sha256().unwrap(),
+            model: model.clone(),
+        };
+
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::MediationRequiresIndirectPath { found: 0 })
+        );
+    }
+
+    #[test]
+    fn exact_multiple_mediation_bootstrap_cell_rejects_a_single_indirect_path() {
+        let (mut recipe, mut model) = recipe_and_model();
+        configure_percentile_bootstrap(&mut recipe);
+        model.relations.retain(|relation| match relation {
+            crate::SemRelationV4::Structural { source, target, .. } => {
+                !(source == "construct:x" && target == "construct:m2")
+                    && !(source == "construct:m1" && target == "construct:m2")
+                    && !(source == "construct:m2" && target == "construct:y")
+            }
+            _ => true,
+        });
+        let retained_parameter_ids = model
+            .relations
+            .iter()
+            .filter_map(|relation| match relation {
+                crate::SemRelationV4::Structural { parameter, .. } => Some(parameter.as_str()),
+                _ => None,
+            })
+            .collect::<std::collections::BTreeSet<_>>();
+        model.parameters.retain(|parameter| {
+            retained_parameter_ids.contains(parameter.id())
+                || !matches!(
+                    parameter.target(),
+                    crate::SemParameterTargetV4::Regression { .. }
+                )
+        });
+        model.ensure_valid().unwrap();
+        let scientific_sha256 = model.scientific_sha256().unwrap();
+        recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+            model: model.clone(),
+            scientific_sha256,
+        };
+
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(
+                GeneralSemPlsRecipeCompilationErrorV1::MultipleMediationRequiresTwoIndirectPaths {
+                    found: 1,
+                }
+            )
         );
     }
 

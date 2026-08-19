@@ -597,7 +597,8 @@
       "competitor_scope": true,
       "quickpls_scope": "Bounded direct, total-indirect, and total-effect decomposition over directed paths in a supported recursive PLS model.",
       "quickpls_capability_ids": [
-        "qpls3.pls.mediation"
+        "qpls3.pls.mediation",
+        "qpls3.pls.general_sem_multiple_mediation_bootstrap"
       ],
       "implementation_evidence": [],
       "dependencies": [

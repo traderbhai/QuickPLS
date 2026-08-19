@@ -260,10 +260,10 @@ export function InternalProjectArchiveV6SessionView({
         {session?.standardActivation ? <div className="qpls2-command-row">
           <ToolbarButton
             type="button"
-            disabled={controlsDisabled || state.dirty || state.persistence !== "persisted_new_copy"}
+            disabled={controlsDisabled || state.dirty || (state.persistence !== "persisted_new_copy" && state.persistence !== "persisted_validated_archive")}
             title={state.dirty
               ? "Save a validated new copy before closing the Standard project."
-              : state.persistence !== "persisted_new_copy"
+              : state.persistence !== "persisted_new_copy" && state.persistence !== "persisted_validated_archive"
                 ? "A validated new copy is required before closing the bound Standard project."
                 : "Close Standard and release its schema-6 source binding."}
             onClick={onCloseStandardProject}

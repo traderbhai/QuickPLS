@@ -115,6 +115,26 @@ function resultDocument(documentId: string, right = false): CanonicalResultDocum
   };
 }
 
+function withGeneralSemFit(document: CanonicalResultDocumentV2, chiSquare = 12.5): CanonicalResultDocumentV2 {
+  document.general_sem_results = {
+    schema_version: 1,
+    cbsem_fit: [{
+      fit_id: "fit_model",
+      trace: {
+        model_id: document.provenance.model_id,
+        capability_cell: { ...document.provenance.capability_cell },
+      },
+      chi_square: chiSquare,
+      degrees_of_freedom: 8,
+      chi_square_p_value: 0.13,
+      rmsea: 0.04,
+      cfi: 0.97,
+      srmr: 0.03,
+    }],
+  };
+  return document;
+}
+
 function clone<T>(value: T): T {
   return structuredClone(value);
 }
@@ -206,6 +226,55 @@ describe("CanonicalResultDocumentV2 semantic comparison", () => {
     expect(expected.compatible && actual.compatible).toBe(true);
     if (!expected.compatible || !actual.compatible) return;
     expect(canonicalResultComparisonJson(actual.comparison)).toBe(canonicalResultComparisonJson(expected.comparison));
+  });
+
+  it("accepts identical valid General SEM analytical extensions", () => {
+    const left = withGeneralSemFit(resultDocument("result.left"));
+    const right = clone(left);
+    right.document_id = "result.right";
+    right.provenance.run_id = "run-right";
+    expect(validateCanonicalResultDocumentV2(left)).toEqual({ passed: true, errors: [] });
+    expect(validateCanonicalResultDocumentV2(right)).toEqual({ passed: true, errors: [] });
+
+    const built = compareCanonicalResultDocumentsV2(left, right);
+
+    expect(built.compatible).toBe(true);
+    if (!built.compatible) return;
+    expect(built.comparison.summary.changed_cell_count).toBe(0);
+  });
+
+  it("fails closed instead of reporting zero changes when only General SEM results differ", () => {
+    const left = withGeneralSemFit(resultDocument("result.left"), 12.5);
+    const right = clone(left);
+    right.document_id = "result.right";
+    right.provenance.run_id = "run-right";
+    right.general_sem_results!.cbsem_fit![0].chi_square = 14.25;
+    expect(validateCanonicalResultDocumentV2(left)).toEqual({ passed: true, errors: [] });
+    expect(validateCanonicalResultDocumentV2(right)).toEqual({ passed: true, errors: [] });
+
+    expect(compareCanonicalResultDocumentsV2(left, right)).toMatchObject({
+      compatible: false,
+      issues: [{
+        code: "general_sem_results_mismatch",
+        title: "General SEM analytical results differ",
+      }],
+    });
+  });
+
+  it("rejects tampered General SEM results before compatibility analysis", () => {
+    const left = withGeneralSemFit(resultDocument("result.left"));
+    const right = clone(left);
+    right.document_id = "result.right";
+    const tampered = right.general_sem_results!.cbsem_fit![0] as unknown as Record<string, unknown>;
+    tampered.unexpected = true;
+
+    expect(canonicalResultCompatibilityV2(left, right)).toMatchObject({
+      compatible: false,
+      issues: [{
+        code: "second_result_invalid",
+        technical_details: [expect.stringContaining("general_sem_results.cbsem_fit[0].unexpected")],
+      }],
+    });
   });
 
   it("excludes display caches, chart styling, precision, workers, and timing", () => {

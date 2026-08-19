@@ -10,6 +10,7 @@ import {
   completedRunNavigationTarget,
   Launcher,
   NATIVE_BUNDLED_SAMPLE_PROJECTS,
+  NewProjectDialog,
   openNativeSampleProject,
 } from "./NativeDesktopApp";
 import {
@@ -74,6 +75,25 @@ describe("native desktop result contracts", () => {
 
 describe("native desktop multi-model shell contracts", () => {
   afterEach(() => vi.unstubAllGlobals());
+
+  it("offers General SEM only as an explicit desktop Labs new-project mode", () => {
+    const markup = renderToStaticMarkup(createElement(NewProjectDialog, {
+      value: "New SEM study",
+      setValue: vi.fn(),
+      projectMode: "general_sem_v1",
+      setProjectMode: vi.fn(),
+      close: vi.fn(),
+      create: vi.fn(),
+      experimentalLabsEnabled: true,
+      nativeDesktop: true,
+    }));
+
+    expect(markup).toContain('value="standard"');
+    expect(markup).toMatch(/<input(?=[^>]*value="general_sem_v1")(?=[^>]*checked="")[^>]*>/);
+    expect(markup).not.toMatch(/value="general_sem_v1"[^>]*disabled/);
+    expect(markup).toContain("It starts empty");
+    expect(markup).toContain("Existing projects are never converted.");
+  });
 
   it("mounts exactly the three genuine sample choices in the production launcher", () => {
     const markup = renderToStaticMarkup(createElement(Launcher, {

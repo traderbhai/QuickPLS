@@ -1,5 +1,8 @@
 import {
+  parseProjectAnalysisRecipeV4Wire,
   parseInternalProjectArchiveV6Wire,
+  supportsGeneralSemV1,
+  type ProjectAnalysisRecipeV4Wire,
   type InternalProjectArchiveV6Wire,
 } from "./internalProjectArchiveV6Wire";
 
@@ -46,6 +49,18 @@ export interface InternalProjectArchiveV6ReadCountsV1 {
   canonicalResultDocuments: number;
 }
 
+export interface InternalProjectArchiveV6GeneralSemExecutionAuthorityV1 {
+  schemaVersion: 1;
+  projectId: string;
+  datasetId: string;
+  datasetFingerprint: string;
+  modelId: string;
+  modelScientificSha256: string;
+  recipeId: string;
+  recipeDocumentSha256: string;
+  recipe: ProjectAnalysisRecipeV4Wire;
+}
+
 export interface InternalProjectArchiveV6ReadSnapshotV1 {
   schemaVersion: 1;
   access: "read_only";
@@ -57,6 +72,8 @@ export interface InternalProjectArchiveV6ReadSnapshotV1 {
   project: InternalProjectArchiveV6Wire;
   residentDatasets: InternalProjectArchiveV6ResidentDatasetV1[];
   counts: InternalProjectArchiveV6ReadCountsV1;
+  /** Native-resolved exact execution authority for a bounded marked project. */
+  generalSemExecutionAuthority?: InternalProjectArchiveV6GeneralSemExecutionAuthorityV1 | null;
   sourceRecheckedUnchanged: true;
 }
 
@@ -99,6 +116,27 @@ function exactRecordAt(
 ): WireRecord {
   const record = recordAt(value, path);
   const allowed = new Set(required);
+  for (const key of required) {
+    if (!Object.prototype.hasOwnProperty.call(record, key)) {
+      fail("schema6_archive_read.field_missing", `${path}.${key}`, `${path}.${key} is required.`);
+    }
+  }
+  for (const key of Object.keys(record)) {
+    if (!allowed.has(key)) {
+      fail("schema6_archive_read.field_unknown", `${path}.${key}`, `${path}.${key} is not part of the read-only schema-6 bridge.`);
+    }
+  }
+  return record;
+}
+
+function exactRecordWithOptionalAt(
+  value: unknown,
+  required: readonly string[],
+  optional: readonly string[],
+  path: string,
+): WireRecord {
+  const record = recordAt(value, path);
+  const allowed = new Set([...required, ...optional]);
   for (const key of required) {
     if (!Object.prototype.hasOwnProperty.call(record, key)) {
       fail("schema6_archive_read.field_missing", `${path}.${key}`, `${path}.${key} is required.`);
@@ -225,8 +263,51 @@ function parseCounts(value: unknown): InternalProjectArchiveV6ReadCountsV1 {
   };
 }
 
+function parseGeneralSemExecutionAuthority(
+  value: unknown,
+): InternalProjectArchiveV6GeneralSemExecutionAuthorityV1 {
+  const path = "outcome.value.generalSemExecutionAuthority";
+  const authority = exactRecordAt(value, [
+    "schemaVersion",
+    "projectId",
+    "datasetId",
+    "datasetFingerprint",
+    "modelId",
+    "modelScientificSha256",
+    "recipeId",
+    "recipeDocumentSha256",
+    "recipe",
+  ], path);
+  if (authority.schemaVersion !== 1) {
+    fail("schema6_archive_read.general_sem_authority_schema", `${path}.schemaVersion`, "The General SEM execution authority must use schema version 1.");
+  }
+  const projectId = textAt(authority.projectId, `${path}.projectId`);
+  if (!CANONICAL_UUID.test(projectId)) {
+    fail("schema6_archive_read.project_id_invalid", `${path}.projectId`, "The General SEM authority project id must be a canonical lowercase UUID.");
+  }
+  const recipeId = textAt(authority.recipeId, `${path}.recipeId`);
+  if (!CANONICAL_UUID.test(recipeId)) {
+    fail("schema6_archive_read.recipe_id_invalid", `${path}.recipeId`, "The General SEM authority recipe id must be a canonical lowercase UUID.");
+  }
+  const recipe = parseProjectAnalysisRecipeV4Wire(authority.recipe, `${path}.recipe`);
+  if (recipe.id !== recipeId) {
+    fail("schema6_archive_read.general_sem_recipe_identity", path, "The General SEM authority recipe id differs from its resident RecipeV4 document.");
+  }
+  return {
+    schemaVersion: 1,
+    projectId,
+    datasetId: textAt(authority.datasetId, `${path}.datasetId`),
+    datasetFingerprint: textAt(authority.datasetFingerprint, `${path}.datasetFingerprint`),
+    modelId: textAt(authority.modelId, `${path}.modelId`),
+    modelScientificSha256: sha256At(authority.modelScientificSha256, `${path}.modelScientificSha256`),
+    recipeId,
+    recipeDocumentSha256: sha256At(authority.recipeDocumentSha256, `${path}.recipeDocumentSha256`),
+    recipe,
+  };
+}
+
 function assertSnapshotBindings(snapshot: InternalProjectArchiveV6ReadSnapshotV1): void {
-  const { manifest, project, counts, residentDatasets } = snapshot;
+  const { manifest, project, counts, residentDatasets, generalSemExecutionAuthority } = snapshot;
   if (manifest.project_id !== project.project_id
     || manifest.name !== project.name
     || manifest.created_at !== project.created_at
@@ -263,11 +344,39 @@ function assertSnapshotBindings(snapshot: InternalProjectArchiveV6ReadSnapshotV1
       fail("schema6_archive_read.resident_dataset_mismatch", path, "The resident Arrow summary differs from its schema-6 dataset descriptor.");
     }
   });
+
+  if (supportsGeneralSemV1(project)) {
+    if (!generalSemExecutionAuthority) {
+      if (project.datasets.length === 0 && project.models.length === 0 && project.recipes.length === 0) return;
+      fail("schema6_archive_read.general_sem_authority_missing", "outcome.value.generalSemExecutionAuthority", "A populated general_sem_v1 archive must expose its native execution authority.");
+    }
+    const authority = generalSemExecutionAuthority;
+    const dataset = project.datasets.find((candidate) => candidate.id === authority.datasetId);
+    const model = project.models.find((candidate) => candidate.model_id === authority.modelId);
+    const recipe = project.recipes.find((candidate) => candidate.id === authority.recipeId);
+    const modelScientificSha256 = model?.payload.kind === "sem_model_v4"
+      ? model.payload.scientific_sha256
+      : null;
+    const binding = recipe?.model_binding.kind === "project_sem_model_v4_reference"
+      ? recipe.model_binding
+      : null;
+    if (authority.projectId !== project.project_id
+      || dataset?.fingerprint !== authority.datasetFingerprint
+      || modelScientificSha256 !== authority.modelScientificSha256
+      || binding?.model_id !== authority.modelId
+      || binding.scientific_sha256 !== authority.modelScientificSha256
+      || recipe?.dataset_fingerprint !== authority.datasetFingerprint
+      || JSON.stringify(recipe) !== JSON.stringify(authority.recipe)) {
+      fail("schema6_archive_read.general_sem_authority_mismatch", "outcome.value.generalSemExecutionAuthority", "The native General SEM execution authority differs from the strictly parsed project document.");
+    }
+  } else if (generalSemExecutionAuthority) {
+    fail("schema6_archive_read.general_sem_authority_unmarked", "outcome.value.generalSemExecutionAuthority", "An unmarked schema-6 archive cannot expose General SEM execution authority.");
+  }
 }
 
 function parseSnapshot(value: unknown): InternalProjectArchiveV6ReadSnapshotV1 {
   const path = "outcome.value";
-  const snapshot = exactRecordAt(value, [
+  const snapshot = exactRecordWithOptionalAt(value, [
     "schemaVersion",
     "access",
     "loader",
@@ -279,7 +388,7 @@ function parseSnapshot(value: unknown): InternalProjectArchiveV6ReadSnapshotV1 {
     "residentDatasets",
     "counts",
     "sourceRecheckedUnchanged",
-  ], path);
+  ], ["generalSemExecutionAuthority"], path);
   if (snapshot.schemaVersion !== 1) {
     fail("schema6_archive_read.snapshot_schema", `${path}.schemaVersion`, "The schema-6 read snapshot must use contract version 1.");
   }
@@ -306,6 +415,9 @@ function parseSnapshot(value: unknown): InternalProjectArchiveV6ReadSnapshotV1 {
     project: parseInternalProjectArchiveV6Wire(snapshot.project),
     residentDatasets: snapshot.residentDatasets.map(parseResidentDataset),
     counts: parseCounts(snapshot.counts),
+    generalSemExecutionAuthority: snapshot.generalSemExecutionAuthority == null
+      ? null
+      : parseGeneralSemExecutionAuthority(snapshot.generalSemExecutionAuthority),
     sourceRecheckedUnchanged: true,
   };
   assertSnapshotBindings(parsed);

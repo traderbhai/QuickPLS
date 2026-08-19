@@ -106,7 +106,9 @@ describe("Experimental SemModelV4 scientific authoring UI", () => {
     expect(app).toContain("<NativeModelInspector readiness={readiness} />");
     expect(app).toContain("experimentalSemAuthoringEnabled ? <button");
     expect(app).toContain("if (view === \"parameters\" && !experimentalSemAuthoringEnabled) return;");
-    expect(app).toContain('experimentalSemAuthoringEnabled ? ["canvas", "parameters", "cbsem_labs"] : ["canvas", "cbsem_labs"]');
+    expect(app).toContain('["canvas", "parameters", "general_sem_labs", "cbsem_labs"]');
+    expect(app).toContain('id="nd-model-general-sem-labs-tab"');
+    expect(app).toContain('<NativeRecipeV4GeneralSemWorkspace modelName={modelName} experimentalLabsEnabled projectActivationConnected />');
     expect(app).toContain('id="nd-model-cbsem-labs-tab"');
     expect(app).toContain('<NativeRecipeV4CbsemWorkspace modelName={modelName} experimentalLabsEnabled={false} />');
     expect(modelInspector).toContain('mode === "expert" && experimentalSemAuthoringEnabled ? <NativeSemConstructAuthoringFields');

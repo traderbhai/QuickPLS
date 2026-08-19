@@ -64,6 +64,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
   const diagramOverlaySettings = useWorkspace((state) => state.diagramOverlaySettings);
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
   const dataset = useWorkspace((state) => state.dataset);
+  const generalSemPublicationPending = useWorkspace((state) => state.generalSemPublicationPending);
   const strictAuthority = useWorkspace((state) => state.activeModelId
     ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
     : null);
@@ -98,6 +99,10 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
   const strictIdCounter = useRef(0);
   const nextStrictId = (kind: string) => `standard:editor:${kind}:${Date.now()}:${++strictIdCounter.current}`;
   const commitStrict = (intent: StandardSemModelV4EditorIntentV1) => {
+    if (generalSemPublicationPending) {
+      setActionFeedback({ message: "Wait for the General SEM project file to finish publishing before editing the model." });
+      return;
+    }
     setActionFeedback({ message: "Committing strict Standard model edit…" });
     void commitStandardIntent(intent).then((result) => {
       if (result.status === "committed") setActionFeedback({ message: "Committed to the strict Standard model authority." });
@@ -128,7 +133,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
   const resultDiagramMode = diagramMode === "smartpls_result" || diagramMode === "publication";
   const paperStyleCanvas = diagramMode === "sem" || diagramMode === "publication" || diagramMode === "smartpls_result";
   const layoutLocked = diagramLayout.layoutLocked && !resultDiagramMode;
-  const canEditLayout = !resultDiagramMode && !layoutLocked;
+  const canEditLayout = !resultDiagramMode && !layoutLocked && !generalSemPublicationPending;
   const standardPresentation = diagramLayout.standardSemPresentation ?? { schemaVersion: 1, objects: [] };
   const updateStandardPresentation = (presentation: StandardSemPresentationLayoutV1) => {
     if (!strictAuthority || !canEditLayout) return;
@@ -404,8 +409,10 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
     };
     const handleFit = () => { void flow?.fitView({ padding: 0.22, duration: animationDuration(220) }); };
     const handleDeleteSelection = () => {
-      if (resultDiagramMode) {
-        setActionFeedback({ message: "Result and publication views are locked. Switch to Edit model before deleting diagram objects." });
+      if (!canEditLayout) {
+        setActionFeedback({ message: generalSemPublicationPending
+          ? "Wait for the General SEM project file to finish publishing before deleting diagram objects."
+          : "Result and publication views are locked. Switch to Edit model before deleting diagram objects." });
         return;
       }
       if (strictAuthority) {
@@ -414,8 +421,8 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
         else if (state.selectedEdgeId) commitStrict({ kind: "delete_relationship", relationship_id: state.selectedEdgeId });
       } else removeSelection();
     };
-    const handleUndo = () => undo();
-    const handleRedo = () => redo();
+    const handleUndo = () => { if (canEditLayout) undo(); };
+    const handleRedo = () => { if (canEditLayout) redo(); };
 
     window.addEventListener("quickpls:model-tool", handleTool);
     window.addEventListener("quickpls:model-add-construct", handleAddConstruct);
@@ -433,7 +440,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
       window.removeEventListener("quickpls:model-undo", handleUndo);
       window.removeEventListener("quickpls:model-redo", handleRedo);
     };
-  }, [addConstruct, arrangeModel, canEditLayout, flow, layoutLocked, redo, removeSelection, resultDiagramMode, selectTool, strictAuthority, undo]);
+  }, [addConstruct, arrangeModel, canEditLayout, flow, generalSemPublicationPending, layoutLocked, redo, removeSelection, selectTool, strictAuthority, undo]);
   const selectIndicatorForToolbar = (constructId: string, _indicator: string) => {
     setSelectedNode(constructId);
   };
@@ -450,6 +457,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
   };
   return <div className={`model-canvas theme-${diagramLayout.diagramTheme}${paperStyleCanvas ? " smartpls-result-canvas" : ""}${resultDiagramMode ? " locked-result-canvas" : ""}${layoutLocked ? " layout-locked-canvas" : ""}${showDropCue ? " can-drop-variables" : ""}`}>
     {resultDiagramMode ? <div className="canvas-tool-status warning">Result view is locked. Switch to Edit model to change diagram objects.</div> : null}
+    {generalSemPublicationPending ? <div className="canvas-tool-status warning" role="status">General SEM project publication is in progress. Canvas editing is temporarily locked.</div> : null}
     {!resultDiagramMode && (diagramTool === "path" || diagramTool === "covariance") ? <span className="sr-only" role="status" aria-live="polite">{pathSource ? `Choose ${diagramTool === "path" ? "outcome construct" : "second construct"}` : `Choose ${diagramTool === "path" ? "predictor construct" : "first construct"}`}</span> : null}
     {actionFeedback ? <div
       className={`canvas-action-feedback${actionFeedback.x !== undefined && actionFeedback.y !== undefined ? " local" : ""}`}

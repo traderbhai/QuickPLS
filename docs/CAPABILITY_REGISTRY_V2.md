@@ -91,23 +91,23 @@ Evidence is a separate internal axis:
 | Evidence state | Count |
 | --- | ---: |
 | `absent` | 16 |
-| `engine_only` | 1 |
-| `archive_qualified` | 2 |
+| `engine_only` | 2 |
+| `archive_qualified` | 1 |
 | `native_qualified` | 0 |
 | `release_qualified` | 26 |
 
 These labels are governance data, not customer copy.
 
-The authoritative inventory contains 48 option cells: 46 active and two
-legacy. Their baseline coverage counts are 0 full, 35 partial, 11 absent, and
+The authoritative inventory contains 49 option cells: 47 active and two
+legacy. Their baseline coverage counts are 0 full, 36 partial, 11 absent, and
 2 intentionally excluded. The different cell count is expected because the
-sample-size/power and permutation catalogue rows each contain two separately
-governed options. The frozen 45-row counts above remain the conservative
+sample-size/power, mediation, and permutation catalogue rows contain separately
+governed option cells. The frozen 45-row counts above remain the conservative
 compatibility projection used by historical reports.
 
-Option-cell evidence is 16 absent, one engine-only, two archive-qualified,
+Option-cell evidence is 16 absent, two engine-only, two archive-qualified,
 zero native-qualified, and 29 release-qualified. Row evidence is 16 absent,
-one engine-only, two archive-qualified, zero native-qualified, and 26
+two engine-only, one archive-qualified, zero native-qualified, and 26
 release-qualified; the row projection remains conservative when independently
 governed cells on one official row differ.
 

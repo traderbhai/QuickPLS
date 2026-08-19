@@ -72,4 +72,34 @@ describe("native dataset catalog state", () => {
     expect(state.datasetCatalog).toEqual([{ ...source, name: "Activated source" }]);
     expect(state.datasetVersions).toEqual([importVersion]);
   });
+
+  it("rejects late dataset snapshots and version commits while General SEM publication is pending", () => {
+    const source = makeDataset("dataset-v1");
+    const attempted = makeDataset("dataset-v2", ["group", "derived"]);
+    useWorkspace.getState().setDataset(source);
+    const before = useWorkspace.getState();
+    useWorkspace.getState().setGeneralSemPublicationPending(true);
+
+    useWorkspace.getState().setDataset(attempted);
+    useWorkspace.getState().setDatasetCatalog([attempted], []);
+    useWorkspace.getState().commitDatasetVersion({
+      dataset: attempted,
+      version: {
+        datasetId: attempted.id,
+        parentDatasetId: source.id,
+        operation: "transform",
+        createdAt: "2026-08-19T00:00:00Z",
+        summary: "Must not commit",
+        sourceColumn: "group",
+        targetColumn: "derived",
+      },
+    });
+
+    expect(useWorkspace.getState()).toMatchObject({
+      dataset: before.dataset,
+      datasetCatalog: before.datasetCatalog,
+      datasetVersions: before.datasetVersions,
+      generalSemPublicationPending: true,
+    });
+  });
 });

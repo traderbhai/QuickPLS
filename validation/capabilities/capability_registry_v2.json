@@ -1,8 +1,8 @@
 {
   "registry_schema_version": 2,
   "registry_id": "quickpls.capability_registry.v2",
-  "registry_version": "2.2.0",
-  "frozen_on": "2026-08-17",
+  "registry_version": "2.3.0",
+  "frozen_on": "2026-08-19",
   "catalogue_snapshot": {
     "provider": "SmartPLS GmbH",
     "product": "SmartPLS 4",
@@ -5037,7 +5037,7 @@
       "official_lifecycle": "active",
       "official_url": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
       "coverage_state": "partial",
-      "evidence_state": "archive_qualified",
+      "evidence_state": "engine_only",
       "surface": "labs",
       "product_areas": [
         "diagram",
@@ -5106,7 +5106,8 @@
       },
       "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
       "qualification_references": [
-        "validation/methods/mediation_v1.manifest.json"
+        "validation/methods/mediation_v1.manifest.json",
+        "validation/methods/general_sem_pls_multiple_mediation_bootstrap_v1.manifest.json"
       ],
       "qualification_links": [
         {
@@ -5114,11 +5115,18 @@
           "capability_id": "smartpls.mediation",
           "cell_id": "qpls3.pls.mediation",
           "capability_version": "pls_mediation_v1"
+        },
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.mediation",
+          "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+          "capability_version": "general_sem_pls_full_model_case_bootstrap_v1"
         }
       ],
       "qualification_spec": {
         "references": [
-          "validation/methods/mediation_v1.manifest.json"
+          "validation/methods/mediation_v1.manifest.json",
+          "validation/methods/general_sem_pls_multiple_mediation_bootstrap_v1.manifest.json"
         ],
         "links": [
           {
@@ -5126,6 +5134,12 @@
             "capability_id": "smartpls.mediation",
             "cell_id": "qpls3.pls.mediation",
             "capability_version": "pls_mediation_v1"
+          },
+          {
+            "registry_schema_version": 2,
+            "capability_id": "smartpls.mediation",
+            "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+            "capability_version": "general_sem_pls_full_model_case_bootstrap_v1"
           }
         ]
       },
@@ -5143,7 +5157,8 @@
         "competitor_scope": true,
         "quickpls_scope": "Bounded direct, total-indirect, and total-effect decomposition over directed paths in a supported recursive PLS model.",
         "quickpls_capability_ids": [
-          "qpls3.pls.mediation"
+          "qpls3.pls.mediation",
+          "qpls3.pls.general_sem_multiple_mediation_bootstrap"
         ],
         "implementation_evidence": [],
         "dependencies": [
@@ -5206,6 +5221,86 @@
           },
           "known_differences": [
             "Create current method-scoped release evidence; causal identification, counterfactual mediation, moderated mediation, and cyclic paths remain excluded."
+          ]
+        },
+        {
+          "capability_id": "smartpls.mediation",
+          "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+          "capability_version": "general_sem_pls_full_model_case_bootstrap_v1",
+          "coverage_state": "partial",
+          "evidence_state": "engine_only",
+          "surface": "labs",
+          "supported_model_predicate": {
+            "official": [
+              "model_family:pls_sem",
+              "relationship:multiple_mediation",
+              "topology:parallel_or_serial"
+            ],
+            "quickpls": [
+              "project_schema:6",
+              "sem_generation:general_sem_v1",
+              "estimator:qpls.pls_sem.v3",
+              "topology:recursive_dag",
+              "indirect_paths:min_2",
+              "group:single",
+              "constructs:composite_only",
+              "interactions:none",
+              "higher_order_constructs:none",
+              "conditional_effect_probes:none",
+              "inference:full_model_case_bootstrap",
+              "interval:percentile_type7",
+              "tail:two_sided",
+              "resamples:2..10000",
+              "usable_replicates:min_max_2_ceil_0_9_b",
+              "specific_path_materialization:eager_only"
+            ]
+          },
+          "supported_data_predicate": {
+            "official": [
+              "input:raw_numeric",
+              "missing_data:method_defined"
+            ],
+            "quickpls": [
+              "input:raw_numeric",
+              "observed_scale:continuous",
+              "missing_data:listwise_deletion",
+              "weight:none",
+              "cluster_variable:none",
+              "strata_variable:none",
+              "observed_missing_markers:none",
+              "transformation_lineage:none"
+            ]
+          },
+          "settings_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+              "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"
+            ]
+          },
+          "result_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+              "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/"
+            ]
+          },
+          "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+          "qualification_spec": {
+            "references": [
+              "validation/methods/general_sem_pls_multiple_mediation_bootstrap_v1.manifest.json"
+            ],
+            "links": [
+              {
+                "registry_schema_version": 2,
+                "capability_id": "smartpls.mediation",
+                "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+                "capability_version": "general_sem_pls_full_model_case_bootstrap_v1"
+              }
+            ]
+          },
+          "known_differences": [
+            "This exact combination has engine-only evidence from a contract micro-reference plus a bounded independent unstandardized observed-score smoke reference for path products, bootstrap means, Type-7 percentile truth inclusion, and the usable-replicate gate. The reference never calls production Rust and is not standardized PLS scoring, sample-SE or plus-one-probability evidence, nominal-coverage qualification, or a full independent PLS-PM refit oracle. The same-app native Labs schema-6 General SEM project-mode workflow is connected from dataset/model activation through execution, canonical result persistence, close, and reopen. Independent full-PLS simulation, native QualificationSpec V2 receipts, a cross-runtime golden archive, semantic export qualification, packaged Windows acceptance, and release promotion remain absent, so qualification_ready remains false.",
+            "BCa, one-sided, studentized, conditional-probe, lazy-materialization, interaction, higher-order, feedback, cyclic, and multigroup combinations are excluded from this cell.",
+            "Public SmartPLS examples are compatibility observations only; no SmartPLS numerical identity is claimed."
           ]
         }
       ]

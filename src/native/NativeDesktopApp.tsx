@@ -44,6 +44,7 @@ import { NativeRecodeDialog } from "./NativeRecodeDialog";
 import { NativeDataSurface } from "./NativeDataSurface";
 import { NativeModelInspector } from "./NativeModelInspector";
 import { NativeRecipeV4CbsemWorkspace } from "./NativeRecipeV4CbsemWorkspace";
+import { NativeRecipeV4GeneralSemWorkspace } from "./NativeRecipeV4GeneralSemWorkspace";
 import { NativeSemParameterTable } from "./NativeSemParameterTable";
 import NativeWorkspaceExplorer, {
   NativeWorkspaceExplorerDialog,
@@ -139,6 +140,7 @@ import "./nativeCanvas.css";
 
 export type { NativeSurface } from "./nativeCommands";
 type NativeDialog = "new-project" | "import-data" | "recode-data" | "derive-variable" | "group-setup" | "higher-order" | "moderation" | "calculation" | "export" | "trust" | "settings" | "run-details" | "shortcuts" | "about" | null;
+type NativeNewProjectMode = "standard" | "general_sem_v1";
 
 export function completedRunNavigationTarget(
   status: RunMonitorStatus,
@@ -295,6 +297,8 @@ export function NativeDesktopApp() {
   const projectPath = useWorkspace((state) => state.projectPath);
   const dataset = useWorkspace((state) => state.dataset);
   const datasetDescriptorOnly = useWorkspace((state) => state.datasetDescriptorOnly);
+  const generalSemPublicationPending = useWorkspace((state) => state.generalSemPublicationPending);
+  const generalSemTransientWorkBlocker = useWorkspace((state) => state.generalSemTransientWorkBlocker);
   const projectWritable = useWorkspace((state) => state.projectWritable);
   const projectModels = useWorkspace((state) => state.projectModels);
   const strictAuthorities = useWorkspace((state) => state.standardSemModelV4Authorities);
@@ -441,6 +445,7 @@ export function NativeDesktopApp() {
     () => isNativeDesktop() ? "pending" : "browser",
   );
   const [newProjectName, setNewProjectName] = useState("Untitled project");
+  const [newProjectMode, setNewProjectMode] = useState<NativeNewProjectMode>("standard");
   const lastNavigatedCompletedRunId = useRef<string | null>(null);
   const [recentProjects, setRecentProjects] = useState<NativeRecentProject[]>(() => loadNativeRecentProjects(window.localStorage));
   const smokeSeeded = useRef(false);
@@ -555,13 +560,27 @@ export function NativeDesktopApp() {
     };
   }, [analysisSettings.groupColumn, canOpenContextModel, completedRuns.length, dataset.columns.length, dataset.kind, explorerSelection, future.length, modelReadiness.canRun, nodes, past.length, projectName, projectWritable, propertiesOpen, runMonitor.status, selectedColumn, selectedEdgeId, selectedNodeId, selectedResultSaved, selectedRun, strictAuthority, surface]);
 
-  const dataMutationsLocked = datasetDescriptorOnly || isNativeCalculationActive(runMonitor.status);
+  const dataMutationsLocked = datasetDescriptorOnly
+    || generalSemPublicationPending
+    || Boolean(generalSemTransientWorkBlocker)
+    || isNativeCalculationActive(runMonitor.status);
 
   const navigate = useCallback((next: NativeSurface) => {
+    if (generalSemTransientWorkBlocker && next !== surface) {
+      const temporaryResult = generalSemTransientWorkBlocker === "temporary_result_pending";
+      pushToast({
+        tone: "warning",
+        title: temporaryResult ? "General SEM result not yet secured" : "General SEM calculation in progress",
+        detail: temporaryResult
+          ? "Save and strictly reopen the result, or dismiss it explicitly, before leaving the General SEM workspace."
+          : "Finish or cancel the General SEM calculation before leaving its workspace.",
+      });
+      return;
+    }
     setSurface(next);
     setOpenMenu(null);
     setContextMenu(null);
-  }, []);
+  }, [generalSemTransientWorkBlocker, pushToast, surface]);
 
   useEffect(() => {
     const onNavigate = (event: Event) => {
@@ -929,7 +948,11 @@ export function NativeDesktopApp() {
 
   const createProject = () => {
     const name = newProjectName.trim() || "Untitled project";
-    commandEvent("new-project", { name });
+    const projectMode = uiPreferences.experimentalLabsEnabled && isNativeDesktop()
+      ? newProjectMode
+      : "standard";
+    commandEvent("new-project", { name, projectMode });
+    setNewProjectMode("standard");
     closeDialog();
   };
 
@@ -961,13 +984,27 @@ export function NativeDesktopApp() {
     return mutation;
   };
 
+  const rejectLockedDataMutation = (operation: string) => {
+    if (projectWritable && !dataMutationsLocked) return false;
+    const detail = generalSemPublicationPending
+      ? `${operation} is locked until General SEM archive publication finishes.`
+      : datasetDescriptorOnly
+        ? `${operation} is unavailable for an immutable, archive-bound General SEM dataset.`
+        : `${operation} requires a writable project and no active calculation.`;
+    pushToast({ tone: "warning", title: "Dataset change blocked", detail });
+    return true;
+  };
+
   const dispatchNativeAction = (action: NativeCommandAction, target?: NativeDataContextTarget) => {
     switch (action.id) {
       case "project.new": openDialog("new-project"); return;
       case "project.open": commandEvent("open-project"); return;
       case "project.open-demo": commandEvent("open-demo-project"); return;
-      case "project.import-data": openDialog("import-data"); return;
+      case "project.import-data":
+        if (!rejectLockedDataMutation("Import data")) openDialog("import-data");
+        return;
       case "data.recode": {
+        if (rejectLockedDataMutation("Recode data")) return;
         const column = target?.kind === "variable" ? target.column : selectedColumn;
         if (!column) return;
         setSelectedColumn(column);
@@ -1239,7 +1276,7 @@ export function NativeDesktopApp() {
         mutationsLocked={dataMutationsLocked}
         onNewModel={() => dispatchNativeAction({ id: "explorer.new-model" })}
         onAnalyze={() => dispatchNativeAction({ id: "calculation.open" })}
-        onDerive={() => openDialog("derive-variable")}
+        onDerive={() => { if (!rejectLockedDataMutation("Derive a variable")) openDialog("derive-variable"); }}
         onContextMenuRequest={onDataContextMenuRequest}
       /> : null}
       {surface === "model" ? <ModelSurface modelName={activeEditableModelName} propertiesOpen={propertiesOpen} readiness={modelReadiness} onContextMenuRequest={onModelCanvasContextMenuRequest} /> : null}
@@ -1249,7 +1286,16 @@ export function NativeDesktopApp() {
     <NativeToastStack toasts={toasts} dismiss={dismissToast} />
     <StatusBar surface={surface} projectName={projectName} datasetName={dataset.name} cases={dataset.rowCount ?? dataset.rows.length} constructs={nodes.length} runMonitor={runMonitor} />
     {dialog ? <DialogHost dialog={dialog} close={closeDialog} title={dialogTitle(dialog)} dismissible={dialog === "recode-data" ? !recodeBusy : dialog === "derive-variable" ? !deriveBusy : dialog !== "calculation" || !["queued", "validating", "running", "cancelling"].includes(runMonitor.status)}>
-      {dialog === "new-project" ? <NewProjectDialog value={newProjectName} setValue={setNewProjectName} close={closeDialog} create={createProject} /> : null}
+      {dialog === "new-project" ? <NewProjectDialog
+        value={newProjectName}
+        setValue={setNewProjectName}
+        projectMode={newProjectMode}
+        setProjectMode={setNewProjectMode}
+        close={closeDialog}
+        create={createProject}
+        experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled}
+        nativeDesktop={isNativeDesktop()}
+      /> : null}
       {dialog === "import-data" ? <NativeDataImportDialog close={closeDialog} importData={beginDataImport} /> : null}
       {dialog === "recode-data" ? <NativeRecodeDialog
         key={dialogScope}
@@ -1642,6 +1688,8 @@ export function Launcher({ projectName, projectPath, datasetName, runs, recentPr
 function ModelSurface({ modelName, propertiesOpen, readiness, onContextMenuRequest }: { modelName: string; propertiesOpen: boolean; readiness: NativePlsReadiness; onContextMenuRequest: (request: ModelCanvasContextMenuRequest) => void }) {
   const activeModelId = useWorkspace((state) => state.activeModelId);
   const experimentalSemAuthoringEnabled = useWorkspace((state) => state.uiPreferences.experimentalLabsEnabled);
+  const generalSemTransientWorkBlocker = useWorkspace((state) => state.generalSemTransientWorkBlocker);
+  const pushToast = useWorkspace((state) => state.pushToast);
   const dataset = useWorkspace((state) => state.dataset);
   const groupingVariable = useWorkspace((state) => state.analysisSettings.groupColumn?.trim() ?? "");
   const nodes = useWorkspace((state) => state.nodes);
@@ -1657,18 +1705,33 @@ function ModelSurface({ modelName, propertiesOpen, readiness, onContextMenuReque
   const selected = nodes.find((node) => node.id === selectedNodeId);
   const selectedAssignableConstruct = selected?.data.semantic === "interaction" || selected?.data.semantic === "higher_order" ? undefined : selected;
 
-  type ModelDocumentView = "canvas" | "parameters" | "cbsem_labs";
+  type ModelDocumentView = "canvas" | "parameters" | "general_sem_labs" | "cbsem_labs";
   const [documentView, setDocumentView] = useState<ModelDocumentView>("canvas");
-  useEffect(() => setDocumentView("canvas"), [activeModelId, experimentalSemAuthoringEnabled]);
+  useEffect(() => {
+    if (!useWorkspace.getState().generalSemTransientWorkBlocker) setDocumentView("canvas");
+  }, [activeModelId, experimentalSemAuthoringEnabled]);
   const selectDocumentView = (view: ModelDocumentView, moveFocus = false) => {
     if (view === "parameters" && !experimentalSemAuthoringEnabled) return;
+    if (documentView === "general_sem_labs" && generalSemTransientWorkBlocker && view !== "general_sem_labs") {
+      const temporaryResult = generalSemTransientWorkBlocker === "temporary_result_pending";
+      pushToast({
+        tone: "warning",
+        title: temporaryResult ? "General SEM result not yet secured" : "General SEM calculation in progress",
+        detail: temporaryResult
+          ? "Save and strictly reopen the result, or dismiss it explicitly, before changing model views."
+          : "Finish or cancel the General SEM calculation before changing model views.",
+      });
+      return;
+    }
     setDocumentView(view);
-    if (moveFocus) window.setTimeout(() => document.getElementById({ canvas: "nd-model-canvas-tab", parameters: "nd-model-parameter-tab", cbsem_labs: "nd-model-cbsem-labs-tab" }[view])?.focus(), 0);
+    if (moveFocus) window.setTimeout(() => document.getElementById({ canvas: "nd-model-canvas-tab", parameters: "nd-model-parameter-tab", general_sem_labs: "nd-model-general-sem-labs-tab", cbsem_labs: "nd-model-cbsem-labs-tab" }[view])?.focus(), 0);
   };
   const onDocumentTabKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
-    const views: ModelDocumentView[] = experimentalSemAuthoringEnabled ? ["canvas", "parameters", "cbsem_labs"] : ["canvas", "cbsem_labs"];
+    const views: ModelDocumentView[] = experimentalSemAuthoringEnabled
+      ? ["canvas", "parameters", "general_sem_labs", "cbsem_labs"]
+      : ["canvas", "cbsem_labs"];
     const currentIndex = Math.max(0, views.indexOf(documentView));
     const nextIndex = event.key === "Home"
       ? 0
@@ -1759,6 +1822,7 @@ function ModelSurface({ modelName, propertiesOpen, readiness, onContextMenuReque
           aria-selected={documentView === "canvas"}
           aria-controls="nd-model-canvas-panel"
           tabIndex={documentView === "canvas" ? 0 : -1}
+          disabled={documentView === "general_sem_labs" && Boolean(generalSemTransientWorkBlocker)}
           onClick={() => selectDocumentView("canvas")}
           onKeyDown={onDocumentTabKeyDown}
         ><GitBranch size={13} aria-hidden="true" />Canvas</button>
@@ -1769,9 +1833,20 @@ function ModelSurface({ modelName, propertiesOpen, readiness, onContextMenuReque
           aria-selected={documentView === "parameters"}
           aria-controls="nd-model-parameter-panel"
           tabIndex={documentView === "parameters" ? 0 : -1}
+          disabled={documentView === "general_sem_labs" && Boolean(generalSemTransientWorkBlocker)}
           onClick={() => selectDocumentView("parameters")}
          onKeyDown={onDocumentTabKeyDown}
         ><TableProperties size={13} aria-hidden="true" />Parameter Table <span className="nd-experimental-chip">Experimental</span></button> : null}
+        {experimentalSemAuthoringEnabled ? <button
+          id="nd-model-general-sem-labs-tab"
+          type="button"
+          role="tab"
+          aria-selected={documentView === "general_sem_labs"}
+          aria-controls="nd-model-general-sem-labs-panel"
+          tabIndex={documentView === "general_sem_labs" ? 0 : -1}
+          onClick={() => selectDocumentView("general_sem_labs")}
+          onKeyDown={onDocumentTabKeyDown}
+        ><Calculator size={13} aria-hidden="true" />General SEM <span className="nd-experimental-chip">Labs</span></button> : null}
         <button
           id="nd-model-cbsem-labs-tab"
           type="button"
@@ -1779,12 +1854,14 @@ function ModelSurface({ modelName, propertiesOpen, readiness, onContextMenuReque
           aria-selected={documentView === "cbsem_labs"}
           aria-controls="nd-model-cbsem-labs-panel"
           tabIndex={documentView === "cbsem_labs" ? 0 : -1}
+          disabled={documentView === "general_sem_labs" && Boolean(generalSemTransientWorkBlocker)}
           onClick={() => selectDocumentView("cbsem_labs")}
           onKeyDown={onDocumentTabKeyDown}
         ><Calculator size={13} aria-hidden="true" />Exact CB-SEM</button>
       </div>
       {documentView === "canvas" ? <div id="nd-model-canvas-panel" className="nd-canvas-host" role="tabpanel" aria-labelledby="nd-model-canvas-tab"><ModelCanvas onContextMenuRequest={onContextMenuRequest} /></div> : null}
       {experimentalSemAuthoringEnabled && documentView === "parameters" ? <NativeSemParameterTable modelName={modelName} onShowCanvas={() => selectDocumentView("canvas")} /> : null}
+      {experimentalSemAuthoringEnabled && documentView === "general_sem_labs" ? <NativeRecipeV4GeneralSemWorkspace modelName={modelName} experimentalLabsEnabled projectActivationConnected /> : null}
       {documentView === "cbsem_labs" ? <NativeRecipeV4CbsemWorkspace modelName={modelName} experimentalLabsEnabled={false} /> : null}
     </section>
     {propertiesOpen ? <NativeModelInspector readiness={readiness} /> : null}
@@ -1878,9 +1955,25 @@ function DialogHost({ dialog, close, title, children, dismissible = true }: { di
   </div>;
 }
 
-function NewProjectDialog({ value, setValue, close, create }: { value: string; setValue: (value: string) => void; close: () => void; create: () => void }) {
+export function NewProjectDialog({ value, setValue, projectMode, setProjectMode, close, create, experimentalLabsEnabled, nativeDesktop }: {
+  value: string;
+  setValue: (value: string) => void;
+  projectMode: NativeNewProjectMode;
+  setProjectMode: (mode: NativeNewProjectMode) => void;
+  close: () => void;
+  create: () => void;
+  experimentalLabsEnabled: boolean;
+  nativeDesktop: boolean;
+}) {
+  const generalSemAvailable = experimentalLabsEnabled && nativeDesktop;
   return <form className="nd-dialog-form" onSubmit={(event) => { event.preventDefault(); create(); }}>
     <label>Project name<input autoFocus value={value} onChange={(event) => setValue(event.target.value)} /></label>
+    {experimentalLabsEnabled ? <fieldset className="nd-project-mode-options" aria-describedby="nd-general-sem-project-mode-help">
+      <legend>Project type</legend>
+      <label><input type="radio" name="project-type" value="standard" checked={projectMode === "standard"} onChange={() => setProjectMode("standard")} />Standard QuickPLS project</label>
+      <label aria-disabled={!generalSemAvailable}><input type="radio" name="project-type" value="general_sem_v1" checked={projectMode === "general_sem_v1"} disabled={!generalSemAvailable} onChange={() => setProjectMode("general_sem_v1")} />General SEM project <span className="nd-experimental-chip">Labs</span></label>
+      <p id="nd-general-sem-project-mode-help">General SEM is a project mode in this QuickPLS app, not a separate app. It starts empty, accepts newly imported raw data and a newly authored canvas, then saves and activates a marked schema-6 project. Existing projects are never converted.{nativeDesktop ? "" : " Install and use the QuickPLS desktop app for this mode."}</p>
+    </fieldset> : null}
     <footer><button type="button" onClick={close}>Cancel</button><button className="primary" type="submit">Create</button></footer>
   </form>;
 }

@@ -307,9 +307,9 @@ const GENERAL_SEM_PLS_RECURSIVE_EFFECTS_CAPABILITY_CELL_V1: CapabilityCellRefere
 };
 const GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = {
   registry_schema_version: 2,
-  capability_id: "smartpls.pls_bootstrapping",
-  cell_id: "qpls3.inference.bootstrap",
-  capability_version: "indexed_resampling_v4",
+  capability_id: "smartpls.mediation",
+  cell_id: "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+  capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
 };
 
 function capabilityCellIdentity(reference: CapabilityCellReferenceV2): string {
@@ -783,7 +783,7 @@ function validateGeneralSemInferenceReceiptV1(
     wireFail(
       "document.invalid",
       `${path}.capability_cell`,
-      `${path}.capability_cell must equal the indexed PLS bootstrap v4 option cell.`,
+      `${path}.capability_cell must equal the General SEM multiple-mediation full-model case-bootstrap option cell.`,
     );
   }
   if (!context.capabilityIds.has(capabilityCellIdentity(capabilityCell))) {

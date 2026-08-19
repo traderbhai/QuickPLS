@@ -17,12 +17,38 @@ describe("Capability Registry V2 frontend adapter", () => {
       active_row_count: 43,
       coverage: { full: 0, partial: 32, absent: 11, intentionally_excluded: 2 },
       surfaces: { standard: 26, labs: 17, legacy: 2, internal: 0 },
-      option_cell_count: 48,
-      option_cell_coverage: { full: 0, partial: 35, absent: 11, intentionally_excluded: 2 },
-      option_cell_surfaces: { standard: 29, labs: 17, legacy: 2, internal: 0 },
+      option_cell_count: 49,
+      option_cell_coverage: { full: 0, partial: 36, absent: 11, intentionally_excluded: 2 },
+      option_cell_surfaces: { standard: 29, labs: 18, legacy: 2, internal: 0 },
     });
     expect(capabilityRegistryV2.visibleProductCapabilities(false)).toHaveLength(26);
     expect(capabilityRegistryV2.visibleProductCapabilities(true)).toHaveLength(29);
+  });
+
+  it("keeps the exact General SEM multiple-mediation bootstrap cell opt-in and engine-only", () => {
+    const capabilityId = "smartpls.mediation";
+    const cellId = "qpls3.pls.general_sem_multiple_mediation_bootstrap";
+    expect(capabilityRegistryV2.quickPlsCell(cellId)).toHaveLength(1);
+    expect(capabilityRegistryV2.quickPlsCell(cellId)[0]).toMatchObject({
+      row: { capability_id: capabilityId },
+      cell: {
+        capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
+        coverage_state: "partial",
+        evidence_state: "engine_only",
+        surface: "labs",
+      },
+    });
+    expect(capabilityRegistryV2.availability(capabilityId, cellId, false)).toMatchObject({
+      visibility: "hidden",
+      selectable: false,
+      reason: "labs_disabled",
+    });
+    expect(capabilityRegistryV2.availability(capabilityId, cellId, true)).toMatchObject({
+      visibility: "experimental",
+      selectable: true,
+      customer_label: "Experimental",
+      reason: "labs_ready",
+    });
   });
 
   it("keeps Blindfolding and GoF as the only explicit Legacy exclusions", () => {

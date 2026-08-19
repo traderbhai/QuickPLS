@@ -20,8 +20,8 @@ import {
 function recursivePlsModel(): SemModelV4 {
   return convertLegacyBasicModelV4({
     id: "model:compatibility-panel",
-    name: "Mediation model",
-    constructs: ["x", "m", "y"].map((id) => ({
+    name: "Parallel mediation model",
+    constructs: ["x", "m1", "m2", "y"].map((id) => ({
       id,
       name: id.toUpperCase(),
       short_name: id.toUpperCase(),
@@ -29,8 +29,10 @@ function recursivePlsModel(): SemModelV4 {
       indicators: [`${id}1`, `${id}2`],
     })),
     paths: [
-      { source: "x", target: "m" },
-      { source: "m", target: "y" },
+      { source: "x", target: "m1" },
+      { source: "m1", target: "y" },
+      { source: "x", target: "m2" },
+      { source: "m2", target: "y" },
       { source: "x", target: "y" },
     ],
   }, "pls_composite");
@@ -106,7 +108,7 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
     expect(html).toContain("PLS-SEM General v3: Experimental");
     expect(html).toContain("General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight.");
     expect(html).toContain("qpls3.pls.mediation (pls_mediation_v1)");
-    expect(html).toContain("qpls3.inference.bootstrap (indexed_resampling_v4)");
+    expect(html).toContain("qpls3.pls.general_sem_multiple_mediation_bootstrap (general_sem_pls_full_model_case_bootstrap_v1)");
     expect(html).toContain("Runtime inference must carry a matching complete-model re-estimation receipt before publication.");
     expect(html).toContain("Compile-qualification preview only: this panel does not run a calculation or invoke native General SEM execution.");
     expect(html.match(/<button[^>]*disabled=""[^>]*data-general-sem-estimator-select=/g)).toHaveLength(1);

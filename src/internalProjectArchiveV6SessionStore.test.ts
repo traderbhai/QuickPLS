@@ -181,6 +181,88 @@ describe("Internal/Labs schema-6 in-memory session store", () => {
     }).toEqual(standardBefore);
   });
 
+  it("reanchors an exact marked archive snapshot and then closes the clean project", async () => {
+    await openAndActivate();
+    const digest = "d".repeat(64);
+    useWorkspace.setState((state) => ({
+      standardSemModelV4Persistence: {
+        ...state.standardSemModelV4Persistence,
+        [semModel.id]: {
+          ...state.standardSemModelV4Persistence[semModel.id],
+          scientificSha256: digest,
+        },
+      },
+    }));
+    const current = useInternalProjectArchiveV6Session.getState().session;
+    if (!current?.standardActivation) throw new Error("Expected an activated schema-6 session.");
+    const recipeId = "00000000-0000-4000-8000-000000000699";
+    const executionAuthority = {
+      schemaVersion: 1 as const,
+      projectId: project.project_id,
+      datasetId: DATASET_ID,
+      datasetFingerprint: project.datasets[0].fingerprint,
+      modelId: semModel.id,
+      modelScientificSha256: digest,
+      recipeId,
+      recipeDocumentSha256: "e".repeat(64),
+      recipe: {} as never,
+    };
+    const markedProject = {
+      ...project,
+      sem_generation: "general_sem_v1" as const,
+    };
+    const markedSnapshot = {
+      ...snapshot,
+      project: markedProject,
+      generalSemExecutionAuthority: executionAuthority,
+    };
+    useInternalProjectArchiveV6Session.setState({
+      session: {
+        ...current,
+        snapshot: markedSnapshot,
+        project: markedProject,
+      },
+      dirty: false,
+      persistence: "persisted_validated_archive",
+    });
+    const next = {
+      ...markedSnapshot,
+      archiveSha256: "f".repeat(64),
+    };
+
+    expect(useInternalProjectArchiveV6Session.getState().reanchorGeneralSemSnapshot(next))
+      .toBe("reanchored");
+    expect(useInternalProjectArchiveV6Session.getState().session?.snapshot.archiveSha256)
+      .toBe("f".repeat(64));
+    expect(useInternalProjectArchiveV6Session.getState().closeStandardProject()).toBe("closed");
+    expect(useInternalProjectArchiveV6Session.getState().session).toBeNull();
+    expect(useWorkspace.getState().activeModelId).toBeNull();
+  });
+
+  it("revokes backend draft authority before resolving any marked Standard model", async () => {
+    const markedSnapshot = {
+      ...snapshot,
+      project: { ...project, sem_generation: "general_sem_v1" as const },
+    };
+    await useInternalProjectArchiveV6Session.getState().open(async () => ({
+      status: "ok",
+      value: markedSnapshot,
+    }));
+    const order: string[] = [];
+    const result = await useInternalProjectArchiveV6Session.getState().activateStandardAuthorities(
+      async () => {
+        order.push("resolve");
+        return resolvedAuthority();
+      },
+      async () => { order.push("revoke"); },
+    );
+
+    expect(result).toBe("activated");
+    expect(order).toEqual(["revoke", "resolve"]);
+    expect(useInternalProjectArchiveV6Session.getState().persistence).toBe("persisted_validated_archive");
+    expect(useWorkspace.getState().projectWritable).toBe(false);
+  });
+
   it("blocks detached mutation without invoking its executor or changing either authority", async () => {
     await useInternalProjectArchiveV6Session.getState().open(async () => ({
       status: "ok",
@@ -465,6 +547,46 @@ describe("Internal/Labs schema-6 in-memory session store", () => {
       session: bound,
       dirty: true,
       standardActivationFailure: { code: "schema6_standard_activation.source_session_required" },
+    });
+  });
+
+  it("blocks marked General SEM model fork and Save copy before any authority or native mutation", async () => {
+    await openAndActivate();
+    const current = useInternalProjectArchiveV6Session.getState().session;
+    if (!current?.standardActivation) throw new Error("Expected an activated schema-6 session.");
+    const markedProject = { ...current.project, sem_generation: "general_sem_v1" as const };
+    const markedSession = { ...current, project: markedProject };
+    useInternalProjectArchiveV6Session.setState({
+      session: markedSession,
+      dirty: false,
+      persistence: "persisted_validated_archive",
+    });
+    const workspaceBefore = useWorkspace.getState();
+    const projectBefore = structuredClone(markedProject);
+    const resolver = vi.fn(async () => resolvedAuthority());
+    const appender = vi.fn(async () => markedProject);
+    const saveExecutor = vi.fn();
+
+    await expect(useInternalProjectArchiveV6Session.getState().forkActiveRecipeBoundRevision({
+      revisionModelId: "model:must-not-exist",
+      resolver,
+      appender,
+    })).resolves.toBe("blocked");
+    await expect(useInternalProjectArchiveV6Session.getState().saveCopy(saveExecutor))
+      .resolves.toBe("blocked");
+
+    expect(resolver).not.toHaveBeenCalled();
+    expect(appender).not.toHaveBeenCalled();
+    expect(saveExecutor).not.toHaveBeenCalled();
+    expect(useWorkspace.getState()).toBe(workspaceBefore);
+    expect(useInternalProjectArchiveV6Session.getState().session?.project).toEqual(projectBefore);
+    expect(useInternalProjectArchiveV6Session.getState()).toMatchObject({
+      dirty: false,
+      persistence: "persisted_validated_archive",
+      revisionForkPending: false,
+      revisionForkFailure: { code: "schema6_model_revision.general_sem_execution_authority_revision_required" },
+      saveCopyPending: false,
+      saveCopyFailure: { code: "schema6_save_copy.general_sem_execution_authority_revision_required" },
     });
   });
 

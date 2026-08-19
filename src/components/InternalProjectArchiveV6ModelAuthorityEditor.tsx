@@ -158,7 +158,7 @@ export interface InternalProjectArchiveV6ModelAuthorityEditorViewProps {
   selectedDraftId: string;
   pending: boolean;
   dirty: boolean;
-  persistence: "not_persisted" | "persisted_new_copy" | null;
+  persistence: "not_persisted" | "persisted_new_copy" | "persisted_validated_archive" | null;
   statusMessage: string;
   failure: { code: string; message: string; correctiveAction?: string } | null;
   onModeChange: (mode: InternalProjectArchiveV6JsonMutationMode) => void;
@@ -206,7 +206,7 @@ export function InternalProjectArchiveV6ModelAuthorityEditorView({
     {dirty ? <InlineNotice tone="warning" title="Unsaved ephemeral changes">
       This session document is dirty and not_persisted. Save it only with the new-destination Save validated new copy action.
     </InlineNotice> : <InlineNotice tone="info" title="Archive document unchanged">
-      {persistence === "persisted_new_copy"
+      {persistence === "persisted_new_copy" || persistence === "persisted_validated_archive"
         ? "The current detached document is based on the validated new copy. Further model changes remain ephemeral until another Save copy."
         : "No ephemeral model change has been applied. Standard save, autosave, and recovery remain unavailable."}
     </InlineNotice>}

@@ -31,9 +31,9 @@ const PLS_CELL = {
 
 const PLS_BOOTSTRAP_CELL = {
   registry_schema_version: 2,
-  capability_id: "smartpls.pls_bootstrapping",
-  cell_id: "qpls3.inference.bootstrap",
-  capability_version: "indexed_resampling_v4",
+  capability_id: "smartpls.mediation",
+  cell_id: "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+  capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
 } as const;
 
 const CBSEM_CELL = {
@@ -55,8 +55,13 @@ const PLS_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
 ];
 
 const PLS_BOOTSTRAP_EVIDENCE: SemCapabilityEvidenceV1 = {
-  evidence_id: "capability_registry_v2:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
-  description: "Capability Registry V2 exposes the bounded indexed case-resampling primitive used by this General SEM compiler slice.",
+  evidence_id: "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_multiple_mediation_bootstrap:general_sem_pls_full_model_case_bootstrap_v1",
+  description: "Capability Registry V2 exposes this exact multiple-mediation, full-model percentile case-bootstrap combination in Experimental Labs.",
+};
+
+const PLS_BOOTSTRAP_MECHANISM_EVIDENCE: SemCapabilityEvidenceV1 = {
+  evidence_id: "capability_dependency:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
+  description: "The exact General SEM cell uses the separately governed indexed case-resampling mechanism without inheriting that mechanism cell's release maturity.",
 };
 
 const PLS_BOOTSTRAP_COMPILER_EVIDENCE: SemCapabilityEvidenceV1 = {
@@ -371,6 +376,51 @@ function requestedEffectDiagnostics(
   return diagnostics;
 }
 
+function plsDataScopeDiagnostics(model: SemModelV4): SemCapabilityDiagnosticV1[] {
+  const diagnostics: SemCapabilityDiagnosticV1[] = [];
+  if (model.data_binding.kind !== "raw") {
+    diagnostics.push(errorDiagnostic(
+      "sem.capability.pls.raw_data_required",
+      "The exact General SEM PLS cell requires raw case-level data.",
+      "Choose a raw resident dataset, or use a qualified matrix-input CB-SEM cell.",
+      model.id,
+    ));
+  } else {
+    if (model.data_binding.missing_data !== "listwise_deletion") diagnostics.push(errorDiagnostic(
+      "sem.capability.pls.listwise_deletion_required",
+      "The exact General SEM PLS cell requires listwise deletion; the authored missing-data policy is preserved but unsupported.",
+      "Select listwise deletion explicitly for this PLS request.",
+      model.id,
+    ));
+    if (model.data_binding.weight !== null
+      || model.data_binding.cluster_variable !== null
+      || model.data_binding.strata_variable !== null) diagnostics.push(errorDiagnostic(
+      "sem.capability.pls.complex_sampling_not_executable",
+      "Weights, cluster variables, and strata variables are not executable in this exact General SEM PLS cell.",
+      "Use an unweighted single-level request, or retain these semantics for a future qualified cell.",
+      model.id,
+    ));
+  }
+  if (model.group.kind !== "single_group") diagnostics.push(errorDiagnostic(
+    "sem.capability.pls.single_group_required",
+    "The exact General SEM PLS cell currently executes single-group models only.",
+    "Select the single-group definition, or retain the group semantics for a future qualified multi-group cell.",
+    model.id,
+  ));
+  for (const variable of model.variables) {
+    if (variable.kind !== "observed") continue;
+    if (variable.scale !== "continuous"
+      || variable.missing_markers.length > 0
+      || variable.transformation_lineage.length > 0) diagnostics.push(errorDiagnostic(
+      "sem.capability.pls.observed_semantics_not_executable",
+      "This observed variable carries scale, missing-marker, or transformation semantics outside the exact General SEM PLS cell.",
+      "Keep the authored semantics unchanged and use an explicit, lineage-recorded dataset transformation or a future qualified cell.",
+      variable.id,
+    ));
+  }
+  return diagnostics;
+}
+
 /**
  * Exact preflight for the General SEM PLS point-estimation and bounded
  * percentile case-bootstrap compiler slices. The inputs are never rewritten.
@@ -385,10 +435,16 @@ export function preflightGeneralSemPlsV1(
     ? [PLS_CELL, PLS_BOOTSTRAP_CELL]
     : [PLS_CELL];
   const evidence = bootstrapRequested
-    ? [...PLS_EVIDENCE, PLS_BOOTSTRAP_COMPILER_EVIDENCE, PLS_BOOTSTRAP_EVIDENCE]
+    ? [
+      ...PLS_EVIDENCE,
+      PLS_BOOTSTRAP_COMPILER_EVIDENCE,
+      PLS_BOOTSTRAP_EVIDENCE,
+      PLS_BOOTSTRAP_MECHANISM_EVIDENCE,
+    ]
     : PLS_EVIDENCE;
   const diagnostics = executionScopeDiagnostics(validatedConfig);
   diagnostics.push(...plsShapeDiagnostics(model));
+  diagnostics.push(...plsDataScopeDiagnostics(model));
 
   let modelIsValid = false;
   try {
@@ -444,6 +500,19 @@ export function preflightGeneralSemPlsV1(
         "Increase the explicit path limit within available resources, or simplify the structural graph before calculation.",
       ));
     } else {
+      if (!bootstrapRequested && enumeration.paths.length === 0) {
+        diagnostics.push(errorDiagnostic(
+          "sem.capability.pls.mediation_requires_indirect_path",
+          "The PLS mediation point cell requires at least one compiled specific indirect path; this graph has none.",
+          "Add a supported mediator path, or use the existing ordinary PLS workflow for a direct-only recursive model.",
+        ));
+      } else if (bootstrapRequested && enumeration.paths.length < 2) {
+        diagnostics.push(errorDiagnostic(
+          "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
+          `The exact multiple-mediation bootstrap cell requires at least two compiled specific indirect paths; this graph has ${enumeration.paths.length}.`,
+          "Add a second supported parallel or serial mediation path, or use point inference under the mediation cell until a single-mediation bootstrap cell is separately governed.",
+        ));
+      }
       diagnostics.push(...requestedEffectDiagnostics(model, validatedConfig, enumeration.paths));
     }
   }
@@ -476,7 +545,7 @@ export function preflightGeneralSemPlsV1(
     evidence,
     summary: "PLS-SEM can compile this exact request in Experimental Labs.",
     explanation: bootstrapRequested
-      ? "The compiler binds percentile, two-sided case resampling to both the mediation and indexed-resampling cells. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
+      ? "The compiler binds percentile, two-sided case resampling to the exact multiple-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
       : "The compiler binds the proven PLS scoring plan to stable relation-path identities. Runtime validation remains authoritative before a result can be published.",
   });
 }

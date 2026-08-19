@@ -18,6 +18,7 @@ use super::{
     },
     load_project_archive_v6_from_file, serialize_project_document_v6,
 };
+use qpls_data::{Dataset, DatasetDescriptor, write_arrow};
 use serde::{Deserialize, Deserializer, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
@@ -368,6 +369,30 @@ pub(crate) fn publish_new_project_archive_v6_document(
     #[cfg(not(windows))]
     {
         let _ = (destination, document);
+        Err(ProjectArchiveV6SaveCopyError::UnsupportedPlatform)
+    }
+}
+
+/// Publishes a newly authored schema-6 document together with its exact
+/// resident datasets. This is intentionally separate from the dataset-free
+/// new-document seam and the schema-6 model-only save-copy seam: neither
+/// existing contract is widened for General SEM project bootstrap.
+pub(crate) fn publish_new_project_archive_v6_document_with_resident_datasets(
+    destination: &Path,
+    document: &ProjectArchiveDocumentV6,
+    datasets: &[Dataset],
+) -> Result<ProjectArchiveV6NewDocumentPublication, ProjectArchiveV6SaveCopyError> {
+    #[cfg(windows)]
+    {
+        publish_new_project_archive_v6_document_with_resident_datasets_windows(
+            destination,
+            document,
+            datasets,
+        )
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (destination, document, datasets);
         Err(ProjectArchiveV6SaveCopyError::UnsupportedPlatform)
     }
 }
@@ -910,6 +935,92 @@ where
 
     // Final commit point: the no-replace link is the only publication. No
     // fallible validation occurs after it succeeds.
+    owned_temporary.publish(&parent, destination)?;
+    Ok(publication)
+}
+
+#[cfg(windows)]
+fn publish_new_project_archive_v6_document_with_resident_datasets_windows(
+    destination: &Path,
+    document: &ProjectArchiveDocumentV6,
+    datasets: &[Dataset],
+) -> Result<ProjectArchiveV6NewDocumentPublication, ProjectArchiveV6SaveCopyError> {
+    if !destination.is_absolute() {
+        return Err(ProjectArchiveV6SaveCopyError::AbsolutePathsRequired);
+    }
+    validate_destination_name(destination)?;
+    document.ensure_valid()?;
+    if datasets.is_empty() || datasets.len() != document.datasets.len() {
+        return Err(ProjectArchiveV6SaveCopyError::Project(
+            ProjectError::Invalid(
+                "new schema-6 resident dataset authorities differ from the project document".into(),
+            ),
+        ));
+    }
+
+    let mut encoded_datasets = Vec::with_capacity(datasets.len());
+    for (descriptor, dataset) in document.datasets.iter().zip(datasets) {
+        let resident_descriptor = DatasetDescriptor::from(dataset);
+        if descriptor.id != resident_descriptor.id
+            || descriptor.name != resident_descriptor.name
+            || descriptor.schema != resident_descriptor.schema
+            || descriptor.fingerprint != resident_descriptor.fingerprint
+        {
+            return Err(ProjectArchiveV6SaveCopyError::Project(
+                ProjectError::Invalid(format!(
+                    "resident dataset {} differs from its schema-6 descriptor authority",
+                    descriptor.id
+                )),
+            ));
+        }
+        let entry_name = format!("data/{}.arrow", descriptor.id);
+        if entry_name.len() > DEFAULT_ARCHIVE_LIMITS.max_entry_name_bytes {
+            return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
+                "entry name {entry_name} exceeds the {}-byte limit",
+                DEFAULT_ARCHIVE_LIMITS.max_entry_name_bytes
+            )));
+        }
+        let arrow_bytes = write_arrow(&dataset.batch)
+            .map_err(ProjectError::from)
+            .map_err(ProjectArchiveV6SaveCopyError::Project)?;
+        ensure_entry_size(
+            &entry_name,
+            arrow_bytes.len() as u64,
+            DEFAULT_ARCHIVE_LIMITS.max_entry_uncompressed_bytes,
+        )?;
+        encoded_datasets.push((entry_name, arrow_bytes));
+    }
+
+    let parent = open_and_validate_destination_parent(destination)?;
+    let mut owned_temporary = create_relative_temporary(&parent, destination)?;
+    let destination_identity = file_identity_from_file(&owned_temporary.file)?;
+    let mut cancelled = || false;
+    let written = write_project_archive_v6_to_temporary(
+        &mut owned_temporary,
+        &destination_identity,
+        document,
+        &mut cancelled,
+        |_| Ok(()),
+        move |output, options, checksums, total_uncompressed, cancelled| {
+            for (entry_name, arrow_bytes) in encoded_datasets {
+                ensure_not_cancelled(cancelled)?;
+                output.start_file(&entry_name, options)?;
+                output.write_all(&arrow_bytes)?;
+                add_total_uncompressed(total_uncompressed, arrow_bytes.len() as u64)?;
+                checksums.insert(entry_name, sha256_bytes(&arrow_bytes));
+            }
+            Ok(())
+        },
+        |_| Ok(()),
+        || Ok(()),
+    )?;
+    let publication = ProjectArchiveV6NewDocumentPublication {
+        destination_archive_sha256: written.destination_archive_sha256,
+        destination_archive_bytes: written.destination_archive_bytes,
+        strict_reopen_validated: true,
+    };
+
+    // No fallible work follows the no-replace publication point.
     owned_temporary.publish(&parent, destination)?;
     Ok(publication)
 }

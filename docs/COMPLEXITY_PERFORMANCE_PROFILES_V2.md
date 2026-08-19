@@ -25,11 +25,11 @@ does not qualify performance or product finalization.
   harness. It never chooses or starts a maximum-axis or compound workload by
   itself.
 
-The current Registry V2 binding contains 43 active catalogue rows and 46 active
+The current Registry V2 binding contains 43 active catalogue rows and 47 active
 option cells. Each cell resolves to 10 profile budgets: five profiles on each
-of the Standard and Workstation hardware classes, for 460 resolved budgets.
+of the Standard and Workstation hardware classes, for 470 resolved budgets.
 Because the maximum-axis profile contains four separate cases, a complete
-current evidence set contains 736 capability receipts plus eight UI receipts.
+current evidence set contains 752 capability receipts plus eight UI receipts.
 The four axes are measured separately; the contract does not imply one model
 that combines every maximum at once.
 

@@ -57,6 +57,7 @@ export interface CanonicalResultSemanticExportV2 {
   notices: CanonicalResultDocumentV2["notices"];
   exclusions: CanonicalResultDocumentV2["exclusions"];
   footnotes: CanonicalResultDocumentV2["footnotes"];
+  general_sem_results?: CanonicalResultDocumentV2["general_sem_results"];
   presentation: CanonicalResultDocumentV2["presentation"];
 }
 
@@ -277,6 +278,9 @@ function projectValidatedDocument(document: CanonicalResultDocumentV2): Canonica
       : {}),
     ordering: orderingFor(document),
     ...collections,
+    ...(document.general_sem_results !== undefined
+      ? { general_sem_results: structuredClone(document.general_sem_results) }
+      : {}),
     presentation: {
       default_section_id: document.presentation.default_section_id,
       default_table_id: document.presentation.default_table_id,
@@ -300,6 +304,9 @@ function documentFromProjection(projection: CanonicalResultSemanticExportV2): Ca
     notices: projection.notices,
     exclusions: projection.exclusions,
     footnotes: projection.footnotes,
+    ...(projection.general_sem_results !== undefined
+      ? { general_sem_results: structuredClone(projection.general_sem_results) }
+      : {}),
     presentation: projection.presentation,
   };
   const collections = copyDocumentCollections(projectedDocument);
@@ -313,6 +320,9 @@ function documentFromProjection(projection: CanonicalResultSemanticExportV2): Ca
       ? { capability_cells: projectedDocument.capability_cells.map(copyCapability) }
       : {}),
     ...collections,
+    ...(projectedDocument.general_sem_results !== undefined
+      ? { general_sem_results: structuredClone(projectedDocument.general_sem_results) }
+      : {}),
     presentation: {
       ...projectedDocument.presentation,
       chart_defaults: copyDisplay(projectedDocument.presentation.chart_defaults),

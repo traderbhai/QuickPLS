@@ -628,6 +628,12 @@ ul.nd-sem-editor-errors { padding-left: 30px; }
 .nd-dialog-form { display: grid; gap: 16px; padding: 18px; }
 .nd-dialog-form label { display: grid; gap: 4px; }
 .nd-dialog-form input, .nd-dialog-form select { height: 30px; padding: 4px 7px; border: 1px solid var(--nd-input-border); background: var(--nd-input-bg); color: var(--nd-color-text); }
+.nd-dialog-form .nd-project-mode-options { display: grid; gap: 9px; margin: 0; padding: 12px; border: 1px solid var(--nd-color-border); }
+.nd-dialog-form .nd-project-mode-options legend { padding: 0 5px; font-weight: 650; }
+.nd-dialog-form .nd-project-mode-options > label { display: flex; align-items: center; gap: 8px; min-height: 24px; cursor: pointer; }
+.nd-dialog-form .nd-project-mode-options > label[aria-disabled="true"] { cursor: not-allowed; opacity: 0.62; }
+.nd-dialog-form .nd-project-mode-options input[type="radio"] { flex: 0 0 auto; width: 16px; height: 16px; margin: 0; padding: 0; accent-color: var(--nd-color-selection-strong); }
+.nd-dialog-form .nd-project-mode-options > p { margin: 2px 0 0; color: var(--nd-color-text-muted); font-size: 11px; line-height: 1.45; }
 .nd-dialog footer { display: flex; justify-content: flex-end; gap: 7px; padding: 9px 12px; border-top: 1px solid var(--nd-color-border); background: var(--nd-gray-50); }
 .nd-dialog footer button,
 .nd-calculation-dialog button,

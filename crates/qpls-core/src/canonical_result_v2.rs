@@ -1138,7 +1138,7 @@ fn validate_general_sem_inference_receipt_v1(
     );
     if receipt.capability_cell != general_sem_pls_bootstrap_capability_cell_v1() {
         errors.push(format!(
-            "{context}.capability_cell must equal the indexed PLS bootstrap v4 option cell"
+            "{context}.capability_cell must equal the exact General SEM multiple-mediation full-model bootstrap option cell"
         ));
     }
     let capability_identity = capability_cell_reference_identity_v2(&receipt.capability_cell);
@@ -3251,8 +3251,8 @@ mod tests {
         });
         document.capability_cells = Some(vec![
             capability_reference(),
-            general_sem_effect_capability_reference(),
             secondary_capability_reference(),
+            general_sem_effect_capability_reference(),
         ]);
         document.general_sem_results = Some(results);
         document
@@ -3397,7 +3397,7 @@ mod tests {
             validate_canonical_result_document_v2(&wrong_cell)
                 .errors
                 .iter()
-                .any(|error| error.contains("must equal the indexed PLS bootstrap v4 option cell"))
+                .any(|error| error.contains("must equal the exact General SEM multiple-mediation full-model bootstrap option cell"))
         );
 
         let mut changed_effect_set = general_sem_inference_document_fixture();

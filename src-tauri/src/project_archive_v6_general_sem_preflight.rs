@@ -4,11 +4,13 @@
 //! exact Rust compiler contracts. It never mutates or persists project data.
 
 use qpls_core::{
-    GeneralSemConfigV1, SemCapabilityDecisionV1, SemModelV4, preflight_general_sem_cbsem_v1,
-    preflight_general_sem_pls_v1,
+    GeneralSemConfigV1, SemCapabilityDecisionV1, SemDataBindingV4, SemModelV4, SemVariableV4,
+    preflight_general_sem_cbsem_v1, preflight_general_sem_pls_v1,
 };
+use qpls_data::{ColumnType, DataKind, ScaleType};
 use qpls_project::{ProjectArchiveDocumentV6, ProjectModelPayloadV6, ProjectModelRecordV6};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 const INTERNAL_LABS_SURFACE: &str = "internal_labs";
 const GENERAL_SEM_PREFLIGHT_RESULT_SCHEMA_VERSION: u32 = 1;
@@ -128,6 +130,64 @@ fn preflight_general_sem_estimators(
             "Refresh the model from the strict project authority and rerun estimator preflight.",
         );
     }
+    if let SemDataBindingV4::Raw { dataset_id, .. } = &request.model.data_binding {
+        let Ok(dataset_id) = Uuid::parse_str(dataset_id) else {
+            return blocked(
+                "dataset_binding_invalid",
+                "The model raw-data binding does not contain a valid resident dataset identity.",
+                "Rebind the model to the exact resident raw dataset before preflight.",
+            );
+        };
+        let Some(dataset) = request
+            .project
+            .datasets
+            .iter()
+            .find(|candidate| candidate.id == dataset_id)
+        else {
+            return blocked(
+                "dataset_not_bound",
+                "The model dataset is not resident in the supplied schema-6 project authority.",
+                "Refresh the project and bind the model to a resident dataset.",
+            );
+        };
+        if dataset.schema.kind != DataKind::Raw {
+            return blocked(
+                "raw_dataset_required",
+                "The exact General SEM PLS slice requires a resident raw case-level dataset.",
+                "Choose a raw dataset; retain matrix input for a qualified CB-SEM cell.",
+            );
+        }
+        for variable in &request.model.variables {
+            let SemVariableV4::Observed { source_column, .. } = variable else {
+                continue;
+            };
+            let Some(column) = dataset
+                .schema
+                .columns
+                .iter()
+                .find(|column| column.name == *source_column)
+            else {
+                return blocked(
+                    "observed_column_missing",
+                    format!(
+                        "Observed source column {source_column} is absent from the resident dataset."
+                    ),
+                    "Restore the exact resident source column or correct the observed-variable binding.",
+                );
+            };
+            if column.column_type != ColumnType::Numeric
+                || column.scale_type != ScaleType::Continuous
+            {
+                return blocked(
+                    "continuous_numeric_columns_required",
+                    format!(
+                        "Observed source column {source_column} is not continuous numeric data."
+                    ),
+                    "Use continuous numeric indicators for this exact PLS cell, or retain the authored semantics for a future qualified cell.",
+                );
+            }
+        }
+    }
 
     let pls = match preflight_general_sem_pls_v1(&request.model, &request.config) {
         Ok(decision) => decision,
@@ -171,8 +231,10 @@ mod tests {
     use chrono::{TimeZone, Utc};
     use qpls_core::{
         Construct, LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec,
-        SemCapabilityDecisionStatusV1, StructuralPath, convert_legacy_basic_model_v4,
+        SemCapabilityDecisionStatusV1, SemDataBindingV4, StructuralPath,
+        convert_legacy_basic_model_v4,
     };
+    use qpls_data::{DatasetDescriptor, ImportOptions, import_delimited_bytes};
     use qpls_project::{
         ProjectArchiveDocumentV6, ProjectOriginV6, ProjectUpgradeLineageV6,
         SourcePreservationPolicyV6, UpgradeWritePolicyV6, insert_sem_model_v4_draft_v6,
@@ -193,6 +255,13 @@ mod tests {
                         indicators: vec!["x1".into(), "x2".into()],
                     },
                     Construct {
+                        id: "m".into(),
+                        name: "Mediator".into(),
+                        short_name: "M".into(),
+                        mode: MeasurementMode::Reflective,
+                        indicators: vec!["m1".into(), "m2".into()],
+                    },
+                    Construct {
                         id: "y".into(),
                         name: "Outcome".into(),
                         short_name: "Y".into(),
@@ -200,10 +269,13 @@ mod tests {
                         indicators: vec!["y1".into(), "y2".into()],
                     },
                 ],
-                paths: vec![StructuralPath {
-                    source: "x".into(),
-                    target: "y".into(),
-                }],
+                paths: [("x", "m"), ("m", "y"), ("x", "y")]
+                    .into_iter()
+                    .map(|(source, target)| StructuralPath {
+                        source: source.into(),
+                        target: target.into(),
+                    })
+                    .collect(),
                 controls: Vec::new(),
                 higher_order_constructs: Vec::new(),
                 interactions: Vec::new(),
@@ -215,12 +287,24 @@ mod tests {
     }
 
     fn marked_project_and_model() -> (ProjectArchiveDocumentV6, SemModelV4) {
-        let model = model();
-        let project = ProjectArchiveDocumentV6::new_general_sem_v1(
+        let dataset = import_delimited_bytes(
+            b"x1,x2,m1,m2,y1,y2\n1,2,2,1,3,2\n2,1,3,2,4,3\n3,4,4,3,5,4\n4,3,5,4,6,5\n",
+            "general-sem-preflight.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut model = model();
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut model.data_binding else {
+            unreachable!();
+        };
+        *dataset_id = dataset.id.to_string();
+        let mut project = ProjectArchiveDocumentV6::new_general_sem_v1(
             Uuid::from_u128(0x6002),
             "General SEM preflight",
             Utc.with_ymd_and_hms(2026, 8, 18, 12, 0, 0).unwrap(),
         );
+        project.datasets.push(DatasetDescriptor::from(&dataset));
         let project = insert_sem_model_v4_draft_v6(&project, model.clone()).unwrap();
         (project, model)
     }
@@ -310,6 +394,45 @@ mod tests {
             preflight_general_sem_estimators(tampered),
             GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic }
                 if diagnostic.code.ends_with("model_authority_mismatch")
+        ));
+    }
+
+    #[test]
+    fn missing_or_noncontinuous_resident_dataset_descriptors_fail_closed() {
+        let mut missing_dataset = request();
+        missing_dataset.project.datasets.clear();
+        assert!(matches!(
+            preflight_general_sem_estimators(missing_dataset),
+            GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code.ends_with("dataset_not_bound")
+                    && !diagnostic.corrective_action.is_empty()
+        ));
+
+        let mut missing_column = request();
+        missing_column.project.datasets[0]
+            .schema
+            .columns
+            .retain(|column| column.name != "x1");
+        assert!(matches!(
+            preflight_general_sem_estimators(missing_column),
+            GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code.ends_with("observed_column_missing")
+                    && diagnostic.message.contains("x1")
+        ));
+
+        let mut noncontinuous_column = request();
+        noncontinuous_column.project.datasets[0]
+            .schema
+            .columns
+            .iter_mut()
+            .find(|column| column.name == "x1")
+            .unwrap()
+            .scale_type = ScaleType::Ordinal;
+        assert!(matches!(
+            preflight_general_sem_estimators(noncontinuous_column),
+            GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code.ends_with("continuous_numeric_columns_required")
+                    && diagnostic.message.contains("x1")
         ));
     }
 }
