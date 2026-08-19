@@ -419,12 +419,12 @@ fn interaction_scope_diagnostics(
     let mut diagnostics = Vec::new();
     if plan.two_way_moderated_mediation_target().is_some() {
         diagnostics.push(SemCapabilityDiagnosticV1::new(
-            "sem.capability.pls.two_way_moderated_mediation_execution_not_connected",
+            "sem.capability.pls.two_way_moderated_mediation_supplemental_capability_not_admitted",
             SemCapabilityDiagnosticSeverityV1::Error,
             None,
-            "The exact two-way moderated-mediation target compiles, but the combined five-target bootstrap executor is not connected yet.",
+            "The exact combined five-target bootstrap runner is implemented, but its supplemental capability cell is not admitted through the product Registry yet.",
             vec![
-                "Keep the authored model and selected path unchanged; this capability remains unavailable until its indexed full-model bootstrap runner is connected and qualified.".into(),
+                "Keep the authored model and selected path unchanged; ordinary execution remains fail-closed until the exact supplemental cell is registered and qualified.".into(),
             ],
         )?);
         return Ok(diagnostics);
@@ -1190,7 +1190,7 @@ mod tests {
         }));
         assert!(decision.diagnostics().iter().any(|diagnostic| {
             diagnostic.code()
-                == "sem.capability.pls.two_way_moderated_mediation_execution_not_connected"
+                == "sem.capability.pls.two_way_moderated_mediation_supplemental_capability_not_admitted"
         }));
 
         config.inference = GeneralSemInferenceV1::None;

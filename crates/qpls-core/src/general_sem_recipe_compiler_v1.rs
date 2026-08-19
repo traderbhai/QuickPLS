@@ -85,6 +85,8 @@ pub struct CompiledGeneralSemPlsRecipeV1 {
     capability_cell: CapabilityCellReferenceV2,
     base_artifact: CompiledAnalysisRecipeV4,
     plan: CompiledPlsPlanV3,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    supplemental_capability_admission: Option<CapabilityCellReferenceV2>,
     recipe_analytical_sha256: String,
     general_sem_config_sha256: String,
     artifact_identity_sha256: String,
@@ -109,6 +111,10 @@ impl CompiledGeneralSemPlsRecipeV1 {
 
     pub fn plan(&self) -> &CompiledPlsPlanV3 {
         &self.plan
+    }
+
+    pub fn supplemental_capability_admission(&self) -> Option<&CapabilityCellReferenceV2> {
+        self.supplemental_capability_admission.as_ref()
     }
 
     pub fn general_sem_config_sha256(&self) -> &str {
@@ -139,9 +145,11 @@ pub enum GeneralSemPlsRecipeCompilationErrorV1 {
     )]
     ModeratedMediationNotYetExecutable,
     #[error(
-        "the exact two-way moderated-mediation target compiles, but its combined bootstrap executor is not connected yet"
+        "the exact two-way moderated-mediation supplemental capability cell was not explicitly admitted"
     )]
-    ModeratedMediationExecutionNotConnected,
+    ModeratedMediationSupplementalCapabilityNotAdmitted,
+    #[error("a supplemental capability admission is not valid for this General SEM PLS plan")]
+    UnexpectedSupplementalCapabilityAdmission,
     #[error("General SEM PLS case-bootstrap v1 executes percentile intervals only")]
     BootstrapIntervalNotYetExecutable,
     #[error("General SEM PLS case-bootstrap v1 executes two-sided inference only")]
@@ -206,6 +214,30 @@ pub fn compile_general_sem_pls_recipe_v1(
     recipe: &AnalysisRecipeV4,
     resolved_model: Option<&SemModelV4>,
 ) -> Result<CompiledGeneralSemPlsRecipeV1, GeneralSemPlsRecipeCompilationErrorV1> {
+    compile_general_sem_pls_recipe_with_admission_v1(recipe, resolved_model, None)
+}
+
+/// Internal runtime/test admission path for an exact supplemental cell that is
+/// intentionally not present in Registry V2 yet. The supplied identity is
+/// embedded into the compiled artifact and validated on every replay; no
+/// Registry, gamma-only, or inferred fallback can authorize this plan.
+pub fn compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
+    recipe: &AnalysisRecipeV4,
+    resolved_model: Option<&SemModelV4>,
+    supplemental_capability_admission: CapabilityCellReferenceV2,
+) -> Result<CompiledGeneralSemPlsRecipeV1, GeneralSemPlsRecipeCompilationErrorV1> {
+    compile_general_sem_pls_recipe_with_admission_v1(
+        recipe,
+        resolved_model,
+        Some(supplemental_capability_admission),
+    )
+}
+
+fn compile_general_sem_pls_recipe_with_admission_v1(
+    recipe: &AnalysisRecipeV4,
+    resolved_model: Option<&SemModelV4>,
+    supplemental_capability_admission: Option<CapabilityCellReferenceV2>,
+) -> Result<CompiledGeneralSemPlsRecipeV1, GeneralSemPlsRecipeCompilationErrorV1> {
     let config = recipe
         .general_sem_config
         .as_ref()
@@ -214,7 +246,7 @@ pub fn compile_general_sem_pls_recipe_v1(
     let model = resolved_model_from_recipe(recipe, resolved_model)?;
     let plan = compile_pls_plan_v3(model, config)?;
     ensure_interaction_compilation_scope(config, &plan)?;
-    ensure_capabilities_available(config, &plan)?;
+    ensure_capabilities_available(config, &plan, supplemental_capability_admission.as_ref())?;
 
     let target = RecipeV4CompilerTarget::PlsPlanV2;
     let (base_recipe, base_model) = project_general_sem_pls_stage_one_recipe_v1(recipe, model)?;
@@ -261,6 +293,7 @@ pub fn compile_general_sem_pls_recipe_v1(
         base_analytical_identity_sha256: base_artifact.receipt().analytical_identity_sha256(),
         plan_sha256: &plan.deterministic_sha256(),
         general_sem_config_sha256: &general_sem_config_sha256,
+        supplemental_capability_admission: supplemental_capability_admission.as_ref(),
     })?;
     Ok(CompiledGeneralSemPlsRecipeV1 {
         schema_version: GENERAL_SEM_PLS_RECIPE_ARTIFACT_SCHEMA_VERSION_V1,
@@ -268,6 +301,7 @@ pub fn compile_general_sem_pls_recipe_v1(
         capability_cell,
         base_artifact,
         plan,
+        supplemental_capability_admission,
         recipe_analytical_sha256,
         general_sem_config_sha256,
         artifact_identity_sha256,
@@ -306,7 +340,11 @@ pub fn validate_compiled_general_sem_pls_recipe_v1(
         &base_recipe,
         Some(&base_model),
     )?;
-    let expected = compile_general_sem_pls_recipe_v1(recipe, resolved_model)?;
+    let expected = compile_general_sem_pls_recipe_with_admission_v1(
+        recipe,
+        resolved_model,
+        artifact.supplemental_capability_admission.clone(),
+    )?;
     if *artifact != expected {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::ArtifactMismatch);
     }
@@ -479,17 +517,35 @@ fn compiler_version_for_plan(
 fn ensure_capabilities_available(
     config: &crate::GeneralSemConfigV1,
     plan: &CompiledPlsPlanV3,
+    supplemental_capability_admission: Option<&CapabilityCellReferenceV2>,
 ) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
     let mut expected_cells = vec![capability_cell_for_plan(plan)];
     if matches!(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
     ) {
-        expected_cells.push(if plan.two_way_interactions().is_empty() {
-            pls_general_bootstrap_capability_cell_v1()
+        if let Some(target) = plan.two_way_moderated_mediation_target() {
+            if supplemental_capability_admission != Some(target.bootstrap_capability_cell()) {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationSupplementalCapabilityNotAdmitted,
+                );
+            }
         } else {
-            pls_general_multiple_moderation_bootstrap_capability_cell_v1()
-        });
+            if supplemental_capability_admission.is_some() {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::UnexpectedSupplementalCapabilityAdmission,
+                );
+            }
+            expected_cells.push(if plan.two_way_interactions().is_empty() {
+                pls_general_bootstrap_capability_cell_v1()
+            } else {
+                pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+            });
+        }
+    } else if supplemental_capability_admission.is_some() {
+        return Err(
+            GeneralSemPlsRecipeCompilationErrorV1::UnexpectedSupplementalCapabilityAdmission,
+        );
     }
     let registry = CapabilityRegistryV2::embedded().map_err(|error| {
         GeneralSemPlsRecipeCompilationErrorV1::CapabilityRegistry(error.to_string())
@@ -524,7 +580,7 @@ fn ensure_interaction_compilation_scope(
         return Ok(());
     }
     if plan.two_way_moderated_mediation_target().is_some() {
-        return Err(GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationExecutionNotConnected);
+        return Ok(());
     }
     if !config.requested_effect_estimands.is_empty() {
         return Err(
@@ -561,6 +617,8 @@ struct GeneralSemArtifactIdentityV1<'a> {
     base_analytical_identity_sha256: &'a str,
     plan_sha256: &'a str,
     general_sem_config_sha256: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    supplemental_capability_admission: Option<&'a CapabilityCellReferenceV2>,
 }
 
 fn hash_serializable<T: Serialize>(
@@ -842,6 +900,12 @@ mod tests {
                 .artifact_identity_sha256(),
             artifact.artifact_identity_sha256()
         );
+        assert!(
+            serde_json::to_value(&artifact)
+                .unwrap()
+                .get("supplemental_capability_admission")
+                .is_none()
+        );
 
         let mut tampered = artifact;
         tampered.artifact_identity_sha256 = "0".repeat(64);
@@ -1027,7 +1091,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_moderated_mediation_recipe_stops_at_the_typed_execution_boundary() {
+    fn exact_moderated_mediation_recipe_requires_exact_internal_supplemental_admission() {
         let (mut recipe, mut model) = recipe_and_model();
         add_compiler_interaction(
             &mut model,
@@ -1070,8 +1134,33 @@ mod tests {
         assert!(plan.two_way_moderated_mediation_target().is_some());
         assert_eq!(
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
-            Err(GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationExecutionNotConnected)
+            Err(
+                GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationSupplementalCapabilityNotAdmitted
+            )
         );
+        assert_eq!(
+            compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
+                &recipe,
+                Some(&model),
+                pls_general_multiple_moderation_bootstrap_capability_cell_v1(),
+            ),
+            Err(
+                GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationSupplementalCapabilityNotAdmitted
+            )
+        );
+        let exact_cell =
+            crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+        let artifact = compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
+            &recipe,
+            Some(&model),
+            exact_cell.clone(),
+        )
+        .unwrap();
+        assert_eq!(
+            artifact.supplemental_capability_admission(),
+            Some(&exact_cell)
+        );
+        validate_compiled_general_sem_pls_recipe_v1(&artifact, &recipe, Some(&model)).unwrap();
     }
 
     #[test]
