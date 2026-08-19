@@ -1,6 +1,9 @@
 # PLS Mediation v1
 
-Status: validated for the documented QuickPLS v1.2.1 PLS mediation effect-decomposition scope.
+Status: implemented for the documented PLS mediation effect-decomposition
+scope, but currently retained as `engine_only` on the opt-in Labs surface.
+Current QualificationSpec V2 receipts are not complete, so
+`qualification_ready=false` and this identity is not Standard.
 
 Method version: `pls_mediation_v1`
 
@@ -50,6 +53,10 @@ The resampling engine serializes effect identities as JSON tuple keys:
 ```
 
 The saved-run mediation table reads the `indirect_effect` row for each source-target pair and displays the available normal-reference p-value plus percentile, BCa, and bootstrap-t confidence intervals. Missing intervals remain `N/A` and retain the source artifact's unavailable reason in the cell title.
+
+CSV, XLSX, HTML, PDF, SVG, and PNG publication are implemented from the same
+canonical result, but their release evidence is intentionally not claimed
+until the frozen cross-format and packaged receipts pass.
 
 ## Current Evidence
 

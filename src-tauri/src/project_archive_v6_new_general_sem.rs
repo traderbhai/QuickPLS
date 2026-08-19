@@ -1,4 +1,8 @@
-//! Internal/Labs bridge for creating a blank schema-6 General SEM project.
+//! Historical Internal/Labs bridge for creating a blank schema-6 General SEM
+//! project. The command remains registered for backward-compatible internal
+//! automation, but has no product TypeScript caller and intentionally cannot
+//! create Standard projects. The Standard product workflow is New Project plus
+//! the populated, Registry-authorized bootstrap command.
 //!
 //! The Labs gate and all wire-value parsing run before the core writer can
 //! inspect the destination filesystem. Persistence then delegates entirely to
@@ -245,7 +249,7 @@ mod tests {
     }
 
     #[test]
-    fn labs_gate_creates_nothing() {
+    fn registered_blank_creator_remains_historical_labs_only_and_creates_nothing_when_denied() {
         let directory = tempfile::tempdir().unwrap();
         for (index, (surface, enabled)) in [("standard", true), (INTERNAL_LABS_SURFACE, false)]
             .into_iter()

@@ -148,7 +148,7 @@
       "accessibility_rules": ["Every chart has a programmatic label, persisted-data summary/table association, point title, visible legend, and non-color-only series distinction.", "Every estimate, provenance field, unavailable reason, revision outcome, and recovery action remains understandable without color, canvas position, or pointer-only interaction.", "The immutable-authority revision action remains keyboard reachable, and each busy or unavailable state exposes the same corrective reason across toolbar, context-menu, and shortcut resolution."]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html", "svg", "png"],
+      "formats": ["csv", "xlsx", "html", "pdf", "svg", "png"],
       "tables": ["Joint stage-two coefficients", "Interaction effects and product-scale receipts", "Conditional effects", "Interaction plot points", "Run and revision provenance"],
       "same_run_required": true,
       "provenance_required": true

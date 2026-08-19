@@ -112,7 +112,8 @@ intervals, failure ledgers, source pins, or digests.
 
 The presence of native controls, canonical persistence, accessible readback,
 and deterministic engine tests does not promote the cell. Cross-surface golden
-equality, semantic export and report readback, packaged Windows acceptance,
+equality, semantic CSV/XLSX/HTML/PDF/SVG/PNG export and report readback,
+packaged Windows acceptance,
 performance/memory/soak evidence, and independent review remain required.
 
 ## Versioned provenance

@@ -61,7 +61,7 @@ const CBSEM_CELL = {
 const PLS_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
   {
     evidence_id: "capability_registry_v2:smartpls.mediation:qpls3.pls.mediation:pls_mediation_v1",
-    description: "Capability Registry V2 exposes the exact mediation option in Experimental Labs.",
+    description: "Capability Registry V2 exposes the exact bounded mediation option.",
   },
   {
     evidence_id: "compiler:recipe_v4_to_compiled_pls_plan_v3_v1",
@@ -71,7 +71,7 @@ const PLS_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
 
 const PLS_BOOTSTRAP_EVIDENCE: SemCapabilityEvidenceV1 = {
   evidence_id: "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_multiple_mediation_bootstrap:general_sem_pls_full_model_case_bootstrap_v1",
-  description: "Capability Registry V2 exposes this exact multiple-mediation, full-model percentile case-bootstrap combination in Experimental Labs.",
+  description: "Capability Registry V2 exposes this exact multiple-mediation, full-model percentile case-bootstrap combination.",
 };
 
 const PLS_BOOTSTRAP_MECHANISM_EVIDENCE: SemCapabilityEvidenceV1 = {
@@ -91,7 +91,7 @@ const PLS_MULTIPLE_MODERATION_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
   },
   {
     evidence_id: "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_point:general_sem_pls_multiple_two_way_moderation_point_v1",
-    description: "Capability Registry V2 exposes the exact simultaneous interaction_v2 point-estimation option in Experimental Labs.",
+    description: "Capability Registry V2 exposes the exact simultaneous interaction_v2 point-estimation option.",
   },
 ];
 
@@ -102,7 +102,7 @@ const PLS_MULTIPLE_MODERATION_BOOTSTRAP_EVIDENCE: readonly SemCapabilityEvidence
   },
   {
     evidence_id: "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap:general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
-    description: "Capability Registry V2 exposes the exact gamma-only simultaneous interaction_v2 full-model case-bootstrap option in Experimental Labs.",
+    description: "Capability Registry V2 exposes the exact gamma-only simultaneous interaction_v2 full-model case-bootstrap option.",
   },
 ];
 
@@ -886,18 +886,18 @@ export function preflightGeneralSemPlsV1(
       subject: null,
       message: hasInteractions
         ? bootstrapRequested
-          ? "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
-          : "General SEM simultaneous two-way moderation point estimation passes the Experimental Labs compiler preflight."
+          ? "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+          : "General SEM simultaneous two-way moderation point estimation passes the bounded exact-cell compiler preflight."
         : bootstrapRequested
-          ? "General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
-          : "General recursive PLS point estimation and path-specific effects pass the Experimental Labs compiler preflight.",
+          ? "General recursive PLS percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+          : "General recursive PLS point estimation and path-specific effects pass the bounded exact-cell compiler preflight.",
       corrections: [],
     }],
     evidence,
-    summary: "PLS-SEM can compile this exact request in Experimental Labs.",
+    summary: "PLS-SEM can compile this exact Registry-governed request.",
     explanation: hasInteractions
       ? bootstrapRequested
-        ? "The point moderation cell remains the primary artifact authority and the supplemental Labs cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
+        ? "The point moderation cell remains the primary artifact authority and the supplemental exact cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
         : "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
       : bootstrapRequested
       ? "The compiler binds percentile, two-sided case resampling to the exact multiple-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."

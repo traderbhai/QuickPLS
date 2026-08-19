@@ -4,7 +4,6 @@ import {
   Archive,
   CheckCircle2,
   CircleStop,
-  Download,
   FlaskConical,
   FolderOpen,
   Play,
@@ -19,10 +18,12 @@ import {
   generalSemConfigFromEngineV1,
   generalSemFailureV1,
   generalSemJobRequestFromReceiptV1,
+  generalSemPlsRequestedCapabilityCellV1,
   monitorGeneralSemPlsJobV1,
   preflightGeneralSemWorkspaceV1,
   rehydrateGeneralSemExecutionAuthorityV1,
   reopenGeneralSemResultV1,
+  selectGeneralSemExecutionAccessV1,
   selectGeneralSemPlsExecutionCapabilityV1,
   validateGeneralSemPlsCompletedExecutionV1,
   type GeneralSemPlsCompletedResultV1,
@@ -50,7 +51,6 @@ import {
   bootstrapInternalGeneralSemProjectArchiveV6,
   cancelInternalLabsGeneralSemPlsJobV1,
   dismissInternalLabsGeneralSemPlsJobV1,
-  exportNativeXlsxTables,
   getInternalLabsGeneralSemPlsJobResultV1,
   getInternalLabsGeneralSemPlsJobV1,
   getInternalSemModelV4ScientificSha256,
@@ -61,10 +61,10 @@ import {
 } from "../services/projectService";
 import { useWorkspace } from "../store";
 import { GeneralSemEstimatorCompatibilityPanel } from "./GeneralSemEstimatorCompatibilityPanel";
+import { CanonicalResultExportPanelV2 } from "./CanonicalResultExportPanelV2";
 import { observedSemanticsForParameterTable } from "./NativeSemParameterTable";
 import {
   CanonicalResultDocumentV2View,
-  canonicalResultDocumentV2ExportTables,
 } from "./NativeRecipeV4CbsemWorkspace";
 
 export interface NativeRecipeV4GeneralSemWorkspaceServices {
@@ -80,7 +80,6 @@ export interface NativeRecipeV4GeneralSemWorkspaceServices {
   append: typeof appendInternalProjectSchema6CanonicalResultV2;
   read: typeof readInternalProjectSchema6CanonicalResultsV2;
   invalidateDraft: typeof invalidateNativeGeneralSemFreshDraftAuthorityV1;
-  exportXlsx: typeof exportNativeXlsxTables;
   selectDestination: (suggestedName: string) => Promise<string | null>;
 }
 
@@ -97,7 +96,6 @@ const defaultServices: NativeRecipeV4GeneralSemWorkspaceServices = {
   append: appendInternalProjectSchema6CanonicalResultV2,
   read: readInternalProjectSchema6CanonicalResultsV2,
   invalidateDraft: invalidateNativeGeneralSemFreshDraftAuthorityV1,
-  exportXlsx: exportNativeXlsxTables,
   selectDestination: async (suggestedName) => {
     const selected = await save({
       defaultPath: suggestedName,
@@ -464,7 +462,6 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const [resultIntegrityInvalid, setResultIntegrityInvalid] = useState(false);
   const [jobRecoveryRequired, setJobRecoveryRequired] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [exportFeedback, setExportFeedback] = useState<string | null>(null);
   const activeJobIdRef = useRef<string | null>(null);
   const monitorAbortRef = useRef<AbortController | null>(null);
   const capturedAuthorityKeyRef = useRef<string | null>(null);
@@ -537,6 +534,17 @@ export function NativeRecipeV4GeneralSemWorkspace({
       subject: rehydratedExecution.failure.subject,
       message: rehydratedExecution.failure.message,
       correctiveAction: rehydratedExecution.failure.correctiveAction,
+    }],
+  } : markedGeneralSemProjectMode
+    && rehydratedExecution?.status === "ok"
+    && rehydratedExecution.value.legacyLabsRecipeOnStandardCell ? {
+    ready: false,
+    decision: null,
+    issues: [{
+      code: "general_sem.recipe.historical_labs_read_only",
+      subject: rehydratedExecution.value.receipt.residentRecipeId,
+      message: "This historical Labs RecipeV4 remains readable under its stored identity, but it is not relabelled as a Standard execution recipe.",
+      correctiveAction: "Keep the archive unchanged. Use a newly authored Registry-authorized Standard project or an explicit source-preserving revision for new calculations.",
     }],
   } : markedGeneralSemProjectMode && !strictAuthority ? {
     ready: false,
@@ -643,6 +651,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       project: generalSemSession.project,
       model,
       config,
+      experimentalLabsEnabled,
     }).then((outcome) => {
       if (!live || latestAuthorityKeyRef.current !== requestedAuthorityKey) return;
       if (outcome.status === "ok") {
@@ -671,7 +680,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       }
     });
     return () => { live = false; };
-  }, [authorityKey, config, generalSemSession, markedGeneralSemProjectMode, model, rehydratedExecution, services]);
+  }, [authorityKey, config, experimentalLabsEnabled, generalSemSession, markedGeneralSemProjectMode, model, rehydratedExecution, services]);
 
   useEffect(() => {
     if (!markedGeneralSemProjectMode
@@ -680,8 +689,8 @@ export function NativeRecipeV4GeneralSemWorkspace({
     let live = true;
     const currentReceipt = rehydratedExecution.value.receipt;
     void services.read({
-      surface: "internal_labs",
-      experimentalLabsEnabled: true,
+      ...rehydratedExecution.value.readAccess,
+      capabilityCell: rehydratedExecution.value.capabilityCell,
       archivePath: generalSemSession.snapshot.archivePath,
       expectedSourceSha256: generalSemSession.snapshot.archiveSha256,
     }).then((outcome) => {
@@ -769,7 +778,6 @@ export function NativeRecipeV4GeneralSemWorkspace({
     setPersistedArchiveSha256(null);
     setReopenedEntry(null);
     setResultIntegrityInvalid(false);
-    setExportFeedback(null);
     setJobRecoveryRequired(false);
     setGeneralSemTransientWorkBlocker(null);
   };
@@ -803,6 +811,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       const createdAt = new Date().toISOString();
       const nativeScientificSha256 = await services.scientificDigest(model);
       assertDraftPublicationCurrent();
+      const capabilityCell = generalSemPlsRequestedCapabilityCellV1(model, config);
       const recipe = buildGeneralSemRecipeV1({
         recipeId: globalThis.crypto.randomUUID(),
         createdAt,
@@ -811,10 +820,16 @@ export function NativeRecipeV4GeneralSemWorkspace({
         nativeScientificSha256,
         config,
         engine: effectiveEngine,
+        capabilityCell,
+        experimentalLabsEnabled,
+      });
+      const executionAccess = selectGeneralSemExecutionAccessV1({
+        capabilityCell,
+        experimentalLabsEnabled,
       });
       const outcome = await services.bootstrapArchive({
-        surface: "internal_labs",
-        experimentalLabsEnabled: true,
+        ...executionAccess,
+        capabilityCell,
         destinationPath: destination,
         projectId: globalThis.crypto.randomUUID(),
         name: `${projectName} — General SEM`,
@@ -840,7 +855,12 @@ export function NativeRecipeV4GeneralSemWorkspace({
         || inspected.value.project.sem_generation !== "general_sem_v1") {
         throw new Error("The saved QuickPLS project file could not be verified against its creation receipt.");
       }
-      const authoritative = await services.nativePreflight({ project: inspected.value.project, model, config });
+      const authoritative = await services.nativePreflight({
+        project: inspected.value.project,
+        model,
+        config,
+        experimentalLabsEnabled,
+      });
       if (authoritative.status === "blocked") {
         throw { schemaVersion: 1, stage: "capability", subject: "preflight", ...authoritative.diagnostic, issues: [] } satisfies GeneralSemPlsJobFailureV1;
       }
@@ -1006,6 +1026,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         config,
         nativePlsDecision,
         expectedArchiveSha256,
+        experimentalLabsEnabled,
       ));
       started = true;
       activeJobIdRef.current = initial.jobId;
@@ -1172,12 +1193,17 @@ export function NativeRecipeV4GeneralSemWorkspace({
       }
       return;
     }
-    if (!completed) return;
+    if (!completed || !nativePlsExecution) return;
     setBusy(true);
     setGeneralSemPublicationPending(true);
     setFailure(null);
     try {
-      const outcome = await appendGeneralSemResultV1(completed, services.append);
+      const outcome = await appendGeneralSemResultV1(
+        completed,
+        nativePlsExecution,
+        experimentalLabsEnabled,
+        services.append,
+      );
       if (outcome.status === "ok") {
         // Record the successful append before verification. A later inspect or
         // reanchor failure must retry verification, never append a duplicate.
@@ -1201,13 +1227,18 @@ export function NativeRecipeV4GeneralSemWorkspace({
   };
 
   const retryPersistedVerification = async () => {
-    if (!persistedArchiveSha256 || !completed || !resultAuthorityCurrent || generalSemPublicationPending) return;
+    if (!persistedArchiveSha256 || !completed || !nativePlsExecution || !resultAuthorityCurrent || generalSemPublicationPending) return;
     setBusy(true);
     setGeneralSemPublicationPending(true);
     setFailure(null);
     try {
       await verifyAndReanchorPersistedArchive(persistedArchiveSha256);
-      const reopened = await reopenGeneralSemResultV1(completed, persistedArchiveSha256, services.read);
+      const reopened = await reopenGeneralSemResultV1(
+        completed,
+        nativePlsExecution,
+        persistedArchiveSha256,
+        services.read,
+      );
       if (reopened.outcome.status === "blocked" || !reopened.entry) {
         throw reopened.outcome.status === "blocked"
           ? { schemaVersion: 1, stage: "archive_authority", subject: "archive", ...reopened.outcome.diagnostic, issues: [] } satisfies GeneralSemPlsJobFailureV1
@@ -1227,11 +1258,16 @@ export function NativeRecipeV4GeneralSemWorkspace({
   };
 
   const reopenResult = async () => {
-    if (!completed || !persistedArchiveSha256 || !resultAuthorityCurrent) return;
+    if (!completed || !nativePlsExecution || !persistedArchiveSha256 || !resultAuthorityCurrent) return;
     setBusy(true);
     setFailure(null);
     try {
-      const reopened = await reopenGeneralSemResultV1(completed, persistedArchiveSha256, services.read);
+      const reopened = await reopenGeneralSemResultV1(
+        completed,
+        nativePlsExecution,
+        persistedArchiveSha256,
+        services.read,
+      );
       if (reopened.outcome.status === "blocked") {
         setResultIntegrityInvalid(true);
         setReopenedEntry(null);
@@ -1259,15 +1295,6 @@ export function NativeRecipeV4GeneralSemWorkspace({
       setFailure(generalSemFailureV1(error));
     }
     finally { setBusy(false); }
-  };
-
-  const exportDisplayed = async () => {
-    if (!displayedDocument) return;
-    setExportFeedback(null);
-    try {
-      const path = await services.exportXlsx(canonicalResultDocumentV2ExportTables(displayedDocument));
-      setExportFeedback(path ? `Saved ${path}.` : "Export cancelled. No file was created.");
-    } catch (error) { setExportFeedback(`Export failed: ${generalSemFailureV1(error).message}`); }
   };
 
   const closeGeneralSemProject = async () => {
@@ -1321,7 +1348,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     || markedGeneralSemProjectMode;
 
   return <section id="nd-model-general-sem-labs-panel" className="nd-cbsem-v4-workspace nd-general-sem-workspace" role="tabpanel" aria-labelledby="nd-model-general-sem-labs-tab">
-    <header className="nd-cbsem-v4-header"><div><h2>General SEM in QuickPLS</h2><p>One QuickPLS canvas · explicit General SEM project authority · PLS-first Experimental Labs</p></div><FlaskConical size={24} aria-hidden="true" /></header>
+    <header className="nd-cbsem-v4-header"><div><h2>General SEM in QuickPLS</h2><p>One QuickPLS canvas · explicit General SEM project authority · Registry-authorized PLS-SEM estimation</p></div><FlaskConical size={24} aria-hidden="true" /></header>
     <p className="nd-inline-warning" role="note"><AlertTriangle size={16} aria-hidden="true" /><span>{freshGeneralSemDraftMode
       ? "This is a fresh General SEM draft inside QuickPLS. Only this newly created canvas may be adapted; ordinary projects are never converted. Standard Save is blocked until Save and activate creates the marked schema-6 authority."
       : markedGeneralSemProjectMode
@@ -1361,7 +1388,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         <ol className="nd-cbsem-v4-preflight-list">
           <li className={localPreflight.ready ? "ready" : "blocked"}><span aria-hidden="true">{localPreflight.ready ? "✓" : "!"}</span><div><strong>General SEM project and model authority</strong><small>{localPreflight.ready ? "Ready for QuickPLS engine verification" : `${localPreflight.issues.length} issue${localPreflight.issues.length === 1 ? "" : "s"}`}</small>{localPreflight.issues.map((item) => <p key={`${item.code}:${item.subject}`}><strong>{item.message}</strong> {item.correctiveAction} <code>{item.code}</code></p>)}</div></li>
           <li className={receipt ? "ready" : "blocked"}><span aria-hidden="true">{receipt ? "✓" : "2"}</span><div><strong>Safe QuickPLS project file</strong><small>{receipt ? `Verified ${receipt.destinationArchivePath}` : "Save the current dataset, canvas model, and analysis settings in one calculation file"}</small>{receipt && !archiveCurrent ? <p>The canvas or settings changed. Keep the saved file unchanged and create a fresh calculation project from the current canvas.</p> : null}</div></li>
-          <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? nativePlsExecution?.kind === "multiple_two_way_moderation_bootstrap" ? "Exact simultaneous two-way moderation gamma-bootstrap cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_point" ? "Exact simultaneous two-way moderation point cell verified" : "Experimental PLS support verified" : "Pending final engine verification"}</small></div></li>
+          <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? nativePlsExecution?.kind === "multiple_two_way_moderation_bootstrap" ? "Exact simultaneous two-way moderation gamma-bootstrap cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_point" ? "Exact simultaneous two-way moderation point cell verified" : "Exact Registry-authorized PLS capability verified" : "Pending final engine verification"}</small></div></li>
         </ol>
         <div className="nd-cbsem-v4-actions">
           <button ref={createButtonRef} type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !freshGeneralSemDraftMode || !localPreflight.ready} title={!freshGeneralSemDraftMode ? "Start a new General SEM project to create its marked authority; existing projects cannot enter this path." : !localPreflight.ready ? "Resolve every compatibility issue first." : "Save and activate this new General SEM project as the current QuickPLS canvas authority."} onClick={() => void createCalculationProject()}><Archive size={15} aria-hidden="true" />Save and activate project…</button>
@@ -1382,14 +1409,12 @@ export function NativeRecipeV4GeneralSemWorkspace({
       <div className="nd-cbsem-v4-actions">
         <button type="button" className="primary" disabled={operationBusy || appendOutcome?.status === "ok" || !resultAuthorityCurrent || generalSemSessionDirty} onClick={() => void appendResult()}><Archive size={15} aria-hidden="true" />Save result to project</button>
         <button type="button" disabled={operationBusy || !persistedArchiveSha256 || !resultAuthorityCurrent || generalSemSessionDirty} onClick={() => void (resultIntegrityInvalid ? retryPersistedVerification() : reopenResult())}><FolderOpen size={15} aria-hidden="true" />{resultIntegrityInvalid && appendOutcome?.status === "ok" ? "Verify and reanchor saved result" : "Reopen and verify"}</button>
-        <button type="button" disabled={!displayedDocument} onClick={() => void exportDisplayed()}><Download size={15} aria-hidden="true" />Export XLSX</button>
         {unpersistedCompletedResult ? <button type="button" className="danger" disabled={operationBusy} onClick={clearResults}>Dismiss temporary result</button> : null}
       </div>
       {appendOutcome?.status === "ok" ? <p className="nd-cbsem-v4-success" role="status"><CheckCircle2 size={15} aria-hidden="true" />Saved result {appendOutcome.value.canonical_document_id}.</p> : null}
       {reopenedEntry ? <p className="nd-cbsem-v4-success" role="status"><CheckCircle2 size={15} aria-hidden="true" />Reopened and verified result {reopenedEntry.documentId}.</p> : null}
-      {exportFeedback ? <p role="status" aria-live="polite">{exportFeedback}</p> : null}
     </section> : null}
-    {!completed && reopenedEntry ? <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-general-sem-reopened-result-heading"><h3 id="nd-general-sem-reopened-result-heading"><CheckCircle2 size={16} aria-hidden="true" />Verified project result</h3><p>QuickPLS restored the latest matching General SEM result from strict archive readback.</p><div className="nd-cbsem-v4-actions"><button type="button" disabled={!displayedDocument} onClick={() => void exportDisplayed()}><Download size={15} aria-hidden="true" />Export XLSX</button></div><p className="nd-cbsem-v4-success" role="status">Verified result {reopenedEntry.documentId}.</p>{exportFeedback ? <p role="status" aria-live="polite">{exportFeedback}</p> : null}</section> : null}
+    {!completed && reopenedEntry ? <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-general-sem-reopened-result-heading"><h3 id="nd-general-sem-reopened-result-heading"><CheckCircle2 size={16} aria-hidden="true" />Verified project result</h3><p>QuickPLS restored the latest matching General SEM result from strict archive readback.</p><p className="nd-cbsem-v4-success" role="status">Verified result {reopenedEntry.documentId}.</p></section> : null}
 
     {moderationInventory ? <p className="nd-cbsem-v4-success" role="status" aria-live="polite">
       Verified canonical moderation output: {moderationInventory.interactionEffectCount} interaction effect{moderationInventory.interactionEffectCount === 1 ? "" : "s"}, {moderationInventory.conditionalSlopeCount} conditional slope{moderationInventory.conditionalSlopeCount === 1 ? "" : "s"}, and {moderationInventory.interactionPlotCount} interaction plot{moderationInventory.interactionPlotCount === 1 ? "" : "s"} with {moderationInventory.interactionPlotPointCount} persisted point{moderationInventory.interactionPlotPointCount === 1 ? "" : "s"}. {moderationInventory.gammaInferenceCount > 0
@@ -1397,6 +1422,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         : "QuickPLS displays and exports the native canonical point values without adding inference."}
     </p> : null}
     {displayedDocument ? <CanonicalResultDocumentV2View document={displayedDocument} reopened={Boolean(reopenedEntry)} headingRef={resultHeadingRef} compilationReceipt={null} /> : null}
+    {displayedDocument ? <CanonicalResultExportPanelV2 document={displayedDocument} /> : null}
     {archiveSnapshot ? <details className="nd-cbsem-v4-run-details"><summary>Calculation project receipt</summary><dl><div><dt>Project</dt><dd>{archiveSnapshot.project.project_id}</dd></div><div><dt>File SHA-256</dt><dd>{currentArchiveSha256 ?? archiveSnapshot.archiveSha256}</dd></div><div><dt>Model</dt><dd>{receipt?.residentModelId}</dd></div><div><dt>Recipe</dt><dd>{receipt?.residentRecipeId}</dd></div></dl></details> : null}
   </section>;
 }

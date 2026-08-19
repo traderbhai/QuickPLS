@@ -165,6 +165,7 @@ export interface InternalProjectArchiveV6GeneralSemRevisionExecutorInputV1 {
   revision: GeneralSemExecutionAuthorityRevisionIdentityV1;
   intent: AddGeneralSemInteractionV2EditorIntentV1;
   revisionNumberHint: number;
+  experimentalLabsEnabled: boolean;
 }
 
 export type InternalProjectArchiveV6GeneralSemRevisionExecutorV1 = (
@@ -717,6 +718,7 @@ export const useInternalProjectArchiveV6Session =
           revision,
           intent: options.intent,
           revisionNumberHint,
+          experimentalLabsEnabled: workspace.uiPreferences.experimentalLabsEnabled,
         });
       } catch (error) {
         if (get().requestEpoch !== requestEpoch) return "stale";

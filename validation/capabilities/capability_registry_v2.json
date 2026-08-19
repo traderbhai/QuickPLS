@@ -5364,7 +5364,7 @@
           "cell_id": "qpls3.pls.mediation",
           "capability_version": "pls_mediation_v1",
           "coverage_state": "partial",
-          "evidence_state": "archive_qualified",
+          "evidence_state": "engine_only",
           "surface": "labs",
           "supported_model_predicate": {
             "official": [
@@ -5411,7 +5411,7 @@
             ]
           },
           "known_differences": [
-            "Create current method-scoped release evidence; causal identification, counterfactual mediation, moderated mediation, and cyclic paths remain excluded."
+            "This exact point cell remains engine-only and opt-in Labs while current QualificationSpec V2 scientific, archive, export, packaged-Windows, performance, and review receipts are absent. CSV, XLSX, HTML, PDF, SVG, and PNG publication paths are implemented but do not establish Standard qualification. Causal identification, counterfactual mediation, moderated mediation, and cyclic paths remain excluded."
           ]
         },
         {

@@ -1,4 +1,14 @@
 import type { CapabilityCellReferenceV2 } from "./canonicalResultDocumentV2";
+import {
+  GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1,
+  GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+} from "./internalRecipeV4GeneralSemWorkspace";
+export {
+  GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1 as GENERAL_SEM_PLS_LABS_REVISION_RECIPE_EXECUTION_SURFACE_V1,
+  GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1 as GENERAL_SEM_PLS_STANDARD_REVISION_RECIPE_EXECUTION_SURFACE_V1,
+} from "./internalRecipeV4GeneralSemWorkspace";
 import type { AddGeneralSemInteractionV2EditorIntentV1 } from "./standardSemModelV4Authority";
 import {
   standardSemGeneralSemInteractionV2OutputIdV1,
@@ -10,6 +20,7 @@ const CANONICAL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]
 type WireRecord = Record<string, unknown>;
 
 export const INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1 = "internal_labs" as const;
+export const STANDARD_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1 = "standard" as const;
 export const INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_COMMAND_V1 =
   "revise_internal_general_sem_execution_authority_v1" as const;
 
@@ -32,8 +43,10 @@ export interface GeneralSemExecutionAuthorityRevisionIdentityV1 {
 }
 
 export interface InternalGeneralSemExecutionAuthorityRevisionRequestV1 {
-  surface: typeof INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1;
-  experimentalLabsEnabled: true;
+  surface:
+    | typeof INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1
+    | typeof STANDARD_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1;
+  experimentalLabsEnabled: boolean;
   sourceArchivePath: string;
   expectedSourceArchiveSha256: string;
   destinationArchivePath: string;
@@ -41,6 +54,10 @@ export interface InternalGeneralSemExecutionAuthorityRevisionRequestV1 {
     source: GeneralSemExecutionAuthoritySourcePinV1;
     revision: GeneralSemExecutionAuthorityRevisionIdentityV1;
     intent: AddGeneralSemInteractionV2EditorIntentV1;
+    expectedCapabilityCell: CapabilityCellReferenceV2;
+    recipeExecutionSurface:
+      | typeof GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+      | typeof GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1;
   };
 }
 
@@ -196,11 +213,16 @@ export function parseInternalGeneralSemExecutionAuthorityRevisionRequestV1(
     "surface", "experimentalLabsEnabled", "sourceArchivePath",
     "expectedSourceArchiveSha256", "destinationArchivePath", "revision",
   ], "request");
-  if (request.surface !== INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1
-    || request.experimentalLabsEnabled !== true) {
-    fail("schema6_general_sem_revision.internal_labs_required", "request", "Revision requires the Experimental Labs boundary.");
+  const validAccess = (request.surface === INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1
+      && request.experimentalLabsEnabled === true)
+    || (request.surface === STANDARD_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1
+      && request.experimentalLabsEnabled === false);
+  if (!validAccess) {
+    fail("schema6_general_sem_revision.access_invalid", "request", "Revision requires one exact Standard or opted-in Labs access pair.");
   }
-  const revision = exactRecordAt(request.revision, ["source", "revision", "intent"], "request.revision");
+  const revision = exactRecordAt(request.revision, [
+    "source", "revision", "intent", "expectedCapabilityCell", "recipeExecutionSurface",
+  ], "request.revision");
   const source = exactRecordAt(revision.source, [
     "projectId", "modelId", "modelDocumentSha256", "modelScientificSha256",
     "recipeId", "recipeDocumentSha256",
@@ -209,8 +231,10 @@ export function parseInternalGeneralSemExecutionAuthorityRevisionRequestV1(
     "projectId", "projectName", "createdAt", "modelId", "modelName", "recipeId",
   ], "request.revision.revision");
   const parsed: InternalGeneralSemExecutionAuthorityRevisionRequestV1 = {
-    surface: INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1,
-    experimentalLabsEnabled: true,
+    surface: request.surface === STANDARD_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1
+      ? STANDARD_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1
+      : INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1,
+    experimentalLabsEnabled: request.experimentalLabsEnabled as boolean,
     sourceArchivePath: textAt(request.sourceArchivePath, "request.sourceArchivePath"),
     expectedSourceArchiveSha256: shaAt(request.expectedSourceArchiveSha256, "request.expectedSourceArchiveSha256"),
     destinationArchivePath: textAt(request.destinationArchivePath, "request.destinationArchivePath"),
@@ -232,8 +256,44 @@ export function parseInternalGeneralSemExecutionAuthorityRevisionRequestV1(
         recipeId: uuidAt(identity.recipeId, "request.revision.revision.recipeId"),
       },
       intent: parseIntent(revision.intent, "request.revision.intent"),
+      expectedCapabilityCell: parseCapabilityCell(
+        revision.expectedCapabilityCell,
+        "request.revision.expectedCapabilityCell",
+      ),
+      recipeExecutionSurface: revision.recipeExecutionSurface === GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+        ? GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+        : revision.recipeExecutionSurface === GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+          ? GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+          : fail(
+            "schema6_general_sem_revision.execution_surface_invalid",
+            "request.revision.recipeExecutionSurface",
+            "Revision recipeExecutionSurface must be one frozen General SEM v1 identity.",
+          ),
     },
   };
+  const expectedRecipeSurface = parsed.surface === STANDARD_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1
+    ? GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+    : GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1;
+  if (parsed.revision.recipeExecutionSurface !== expectedRecipeSurface) {
+    fail(
+      "schema6_general_sem_revision.execution_surface_mismatch",
+      "request.revision.recipeExecutionSurface",
+      "Revision recipe execution metadata must match its selected Registry surface.",
+    );
+  }
+  if (!sameCapabilityCell(
+    parsed.revision.expectedCapabilityCell,
+    GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+  ) && !sameCapabilityCell(
+    parsed.revision.expectedCapabilityCell,
+    GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  )) {
+    fail(
+      "schema6_general_sem_revision.capability_invalid",
+      "request.revision.expectedCapabilityCell",
+      "Interaction revision requires the exact moderation point or supplemental bootstrap execution cell.",
+    );
+  }
   if (parsed.sourceArchivePath.toLocaleLowerCase() === parsed.destinationArchivePath.toLocaleLowerCase()) {
     fail("schema6_general_sem_revision.new_destination_required", "request.destinationArchivePath", "Revision requires a new destination path.");
   }
@@ -256,6 +316,16 @@ function parseCapabilityCell(value: unknown, path: string): CapabilityCellRefere
     cell_id: textAt(cell.cell_id, `${path}.cell_id`),
     capability_version: textAt(cell.capability_version, `${path}.capability_version`),
   };
+}
+
+function sameCapabilityCell(
+  left: CapabilityCellReferenceV2,
+  right: CapabilityCellReferenceV2,
+): boolean {
+  return left.registry_schema_version === right.registry_schema_version
+    && left.capability_id === right.capability_id
+    && left.cell_id === right.cell_id
+    && left.capability_version === right.capability_version;
 }
 
 function parseReceipt(
@@ -333,6 +403,10 @@ function parseReceipt(
     || Date.parse(parsed.createdAt) !== Date.parse(revision.createdAt)
     || parsed.residentModelId !== revision.modelId
     || parsed.residentRecipeId !== revision.recipeId
+    // Compilation receipts retain the point-primary cell. A bootstrap
+    // revision is authorized by its supplemental execution cell in the
+    // request, without falsely relabelling the compiled point authority.
+    || !sameCapabilityCell(parsed.capabilityCell, GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1)
     || parsed.interactionTermId !== termId
     || parsed.interactionOutputId !== standardSemGeneralSemInteractionV2OutputIdV1(termId)) {
     fail("schema6_general_sem_revision.receipt_request_mismatch", path, "Native revision receipt differs from the exact pinned request.");

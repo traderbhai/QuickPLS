@@ -24,7 +24,10 @@ import {
   selectQuickPlsProjectArchivePath,
 } from "../services/internalProjectArchiveV6ReadService";
 import { supportsGeneralSemV1 } from "../domain/internalProjectArchiveV6Wire";
-import { rehydrateGeneralSemExecutionAuthorityV1 } from "../domain/internalRecipeV4GeneralSemWorkspace";
+import {
+  generalSemWorkspaceProductAccessV1,
+  rehydrateGeneralSemExecutionAuthorityV1,
+} from "../domain/internalRecipeV4GeneralSemWorkspace";
 import {
   hasUnsavedNativeProjectChanges,
   nativeLegacyProjectOperationBlocker,
@@ -534,9 +537,6 @@ export function NativeDesktopController() {
     if (!selectedPath) return;
     const inspected = await inspectInternalProjectArchiveV6At(selectedPath);
     if (inspected.status === "ok" && supportsGeneralSemV1(inspected.value.project)) {
-      if (!useWorkspace.getState().uiPreferences.experimentalLabsEnabled) {
-        throw new Error("Enable Experimental Labs before opening a general_sem_v1 project.");
-      }
       await invalidateNativeGeneralSemFreshDraftAuthorityV1();
       // Activation revokes any backend-only fresh-draft token before resolving
       // and installing Standard authority, so a previous draft cannot survive.
@@ -1361,7 +1361,9 @@ export function NativeDesktopController() {
       const detail = (event as CustomEvent<{ name?: string; projectMode?: NativeNewProjectMode }>).detail;
       const name = detail?.name?.trim() || "Untitled project";
       const projectMode = detail?.projectMode === "general_sem_v1"
-        && useWorkspace.getState().uiPreferences.experimentalLabsEnabled
+        && Boolean(generalSemWorkspaceProductAccessV1(
+          useWorkspace.getState().uiPreferences.experimentalLabsEnabled,
+        ))
         ? "general_sem_v1"
         : "standard";
       void createProject(name, projectMode).catch((error) => {

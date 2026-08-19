@@ -211,6 +211,7 @@
         "csv",
         "xlsx",
         "html",
+        "pdf",
         "svg",
         "png"
       ],
@@ -261,7 +262,7 @@
     }
   },
   "qualification": {
-    "declared_state": "archive_qualified",
+    "declared_state": "engine_only",
     "target_state": "release_qualified",
     "source_requirements": {
       "method_spec": [

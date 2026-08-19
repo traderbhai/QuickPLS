@@ -165,7 +165,7 @@
       "accessibility_rules": ["Every gamma estimate, interval, probability, usable/failure count, typed failure, and unavailable reason is available without relying on color, canvas position, or pointer-only interaction.", "Point-only slopes and plots remain explicitly distinguished from gamma inference in visible and programmatic labels."]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html", "svg", "pdf", "png"],
+      "formats": ["csv", "xlsx", "html", "pdf", "svg", "png"],
       "tables": ["Scientific gamma bootstrap inference", "Ordered replicate failures", "Run and target provenance", "Point-only interaction and conditional-effect companion tables"],
       "same_run_required": true,
       "provenance_required": true

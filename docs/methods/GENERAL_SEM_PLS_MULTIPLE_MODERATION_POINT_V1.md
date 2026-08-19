@@ -79,8 +79,9 @@ QuickPLS:
 4. QuickPLS renders persisted conditional-effect line charts with an
    accessible table/summary, non-color-only series styling, and stable source
    identities; and
-5. result append, strict reopen, close/reopen restoration, and XLSX table
-   projection all read the same canonical values without adding inference.
+5. result append, strict reopen, close/reopen restoration, and
+   CSV/XLSX/HTML/PDF/SVG/PNG publication all read the same canonical values
+   without adding inference.
 
 Cancellation is checked before execution, during interaction processing,
 before canonical publication, and after archive assembly but before result

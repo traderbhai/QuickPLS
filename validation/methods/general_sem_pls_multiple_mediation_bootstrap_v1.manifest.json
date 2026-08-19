@@ -219,8 +219,8 @@
         "csv",
         "xlsx",
         "html",
-        "svg",
         "pdf",
+        "svg",
         "png"
       ],
       "tables": [

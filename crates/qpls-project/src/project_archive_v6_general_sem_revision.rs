@@ -16,7 +16,9 @@ use qpls_core::{
     AnalysisRecipeModelBindingV4, CapabilityCellReferenceV2, GeneralSemPlsRecipeCompilationErrorV1,
     InteractionHierarchyPolicyV2, InteractionMethodV4, SemDerivedTermV4, SemModelV4,
     SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4, StructuralRelationRoleV4,
-    compile_general_sem_pls_recipe_v1, sha256_serialized,
+    compile_general_sem_pls_recipe_v1,
+    pls_general_multiple_moderation_bootstrap_capability_cell_v1,
+    pls_general_multiple_moderation_point_capability_cell_v1, sha256_serialized,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -30,6 +32,9 @@ use uuid::Uuid;
 pub const GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_V1_SCHEMA_VERSION: u32 = 1;
 pub const GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_V1_LAYOUT_KEY: &str =
     "general_sem_execution_authority_revision_v1";
+pub const GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1: &str = "native_general_sem_pls_labs_v1";
+pub const GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1: &str =
+    "native_general_sem_pls_standard_v1";
 const MAX_SAFE_REVISION_NUMBER: u64 = 9_007_199_254_740_991;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -94,6 +99,8 @@ pub struct GeneralSemExecutionAuthorityRevisionRequestV1 {
     pub source: GeneralSemExecutionAuthoritySourcePinV1,
     pub revision: GeneralSemExecutionAuthorityRevisionIdentityV1,
     pub intent: GeneralSemExecutionAuthorityRevisionIntentV1,
+    pub expected_capability_cell: CapabilityCellReferenceV2,
+    pub recipe_execution_surface: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -286,7 +293,42 @@ fn create_general_sem_execution_authority_revision_windows_v1(
         model_id: revised_model.id.clone(),
         scientific_sha256: revised_model_scientific_sha256.clone(),
     };
+    revised_recipe.metadata.insert(
+        "execution_surface".into(),
+        request.recipe_execution_surface.clone(),
+    );
+    revised_recipe
+        .metadata
+        .insert("general_sem_generation".into(), "general_sem_v1".into());
+    let selected_execution_cell = match revised_recipe
+        .general_sem_config
+        .as_ref()
+        .map(|config| config.inference)
+    {
+        Some(qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. }) => {
+            pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+        }
+        Some(qpls_core::GeneralSemInferenceV1::None) => {
+            pls_general_multiple_moderation_point_capability_cell_v1()
+        }
+        None => {
+            return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+                "revised RecipeV4 must retain one GeneralSemConfigV1 inference authority".into(),
+            ));
+        }
+    };
+    if selected_execution_cell != request.expected_capability_cell {
+        return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+            "expected execution cell differs from the exact revised RecipeV4 inference selection"
+                .into(),
+        ));
+    }
     let compiled = compile_general_sem_pls_recipe_v1(&revised_recipe, Some(&revised_model))?;
+    if compiled.capability_cell() != &pls_general_multiple_moderation_point_capability_cell_v1() {
+        return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+            "revised compilation primary capability is not the exact moderation point cell".into(),
+        ));
+    }
     let revised_recipe_document_sha256 = sha256_serialized(&revised_recipe);
     let compilation = GeneralSemRevisionCompilationIdentityV1 {
         compiler_version: compiled.compiler_version().to_owned(),
@@ -492,6 +534,14 @@ fn validate_new_identity(
     {
         return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
             "revision project, model, and recipe identities must all be new".into(),
+        ));
+    }
+    if request.recipe_execution_surface != GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+        && request.recipe_execution_surface != GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+    {
+        return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+            "recipe execution surface must be an exact General SEM Labs or Standard v1 identity"
+                .into(),
         ));
     }
     Ok(())
@@ -1014,10 +1064,11 @@ mod tests {
         use qpls_core::{
             ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe,
             AnalysisRecipeModelBindingV4, AnalysisRecipeV4, AnalysisSettings, Construct,
-            GeneralSemConfigV1, LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig,
-            ModelSpec, SemDataBindingV4, SemModelV4, SemRelationV4, StructuralPath,
-            confirm_legacy_recipe_estimand_v4, migrate_analysis_recipe_to_v4_pending,
-            sha256_serialized,
+            GeneralSemBootstrapIntervalV1, GeneralSemConfigV1, GeneralSemInferenceTailV1,
+            GeneralSemInferenceV1, LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig,
+            ModelSpec, PlsBootstrapTestTail, SemDataBindingV4, SemModelV4, SemRelationV4,
+            StructuralPath, confirm_legacy_recipe_estimand_v4,
+            migrate_analysis_recipe_to_v4_pending, sha256_serialized,
         };
         use qpls_data::{Dataset, ImportOptions, import_delimited_bytes};
         use sha2::{Digest, Sha256};
@@ -1123,10 +1174,26 @@ mod tests {
             format!("{:x}", Sha256::digest(bytes))
         }
 
-        fn write_source(directory: &Path) -> SourceFixture {
+        fn write_source_with_bootstrap(directory: &Path, bootstrap: bool) -> SourceFixture {
             let source = directory.join("general-sem-source.qpls");
             let destination = directory.join("general-sem-revision.qpls");
-            let (dataset, recipe, model) = fixture_recipe_and_model();
+            let (dataset, mut recipe, model) = fixture_recipe_and_model();
+            if bootstrap {
+                recipe.general_sem_config.as_mut().unwrap().inference =
+                    GeneralSemInferenceV1::CaseBootstrap {
+                        resamples: 500,
+                        seed: 7,
+                        confidence_level: 0.95,
+                        interval: GeneralSemBootstrapIntervalV1::Percentile,
+                        tail: GeneralSemInferenceTailV1::TwoSided,
+                    };
+                recipe.settings.bootstrap_samples = 500;
+                recipe.settings.bootstrap_test_tail = PlsBootstrapTestTail::TwoSided;
+                recipe.settings.studentized_inner_samples = 0;
+                recipe.settings.seed = 7;
+                recipe.settings.confidence_level = 0.95;
+                recipe.ensure_valid().unwrap();
+            }
             let source_project_id = Uuid::from_u128(0x7265_7669_7369_6f6e_5f70_726f_6a65_6301);
             create_populated_general_sem_project_archive_v6(
                 &source,
@@ -1177,6 +1244,12 @@ mod tests {
                     method: GeneralSemRevisionInteractionMethodV1::TwoStage,
                     hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
                 },
+                expected_capability_cell: if bootstrap {
+                    qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+                } else {
+                    qpls_core::pls_general_multiple_moderation_point_capability_cell_v1()
+                },
+                recipe_execution_surface: GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1.into(),
             };
             SourceFixture {
                 source,
@@ -1188,6 +1261,10 @@ mod tests {
                 recipe,
                 request,
             }
+        }
+
+        fn write_source(directory: &Path) -> SourceFixture {
+            write_source_with_bootstrap(directory, false)
         }
 
         fn assert_source_unchanged(fixture: &SourceFixture) {
@@ -1355,6 +1432,48 @@ mod tests {
             );
             assert_eq!(lineage.compilation.capability_cell, receipt.capability_cell);
             assert_eq!(lineage.intent, fixture.request.intent);
+        }
+
+        #[test]
+        fn bootstrap_revision_authorizes_supplemental_cell_but_preserves_point_primary_compilation()
+        {
+            let directory = tempfile::tempdir().unwrap();
+            let fixture = write_source_with_bootstrap(directory.path(), true);
+            assert_eq!(
+                fixture.request.expected_capability_cell,
+                qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+            );
+
+            let receipt = create_general_sem_execution_authority_revision_v1(
+                &fixture.source,
+                &fixture.source_sha256,
+                &fixture.destination,
+                fixture.request.clone(),
+            )
+            .unwrap();
+
+            assert_source_unchanged(&fixture);
+            assert_eq!(
+                receipt.capability_cell,
+                qpls_core::pls_general_multiple_moderation_point_capability_cell_v1()
+            );
+            let reopened = load_project_archive_v6(&fixture.destination).unwrap();
+            let revised_recipe = &reopened.document.recipes[0];
+            assert!(matches!(
+                revised_recipe
+                    .general_sem_config
+                    .as_ref()
+                    .map(|config| config.inference),
+                Some(GeneralSemInferenceV1::CaseBootstrap { .. })
+            ));
+            assert_eq!(revised_recipe.settings.bootstrap_samples, 500);
+            assert_eq!(
+                revised_recipe
+                    .metadata
+                    .get("execution_surface")
+                    .map(String::as_str),
+                Some(GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1)
+            );
         }
 
         #[test]
