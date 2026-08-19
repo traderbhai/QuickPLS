@@ -17,6 +17,8 @@ pub const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_RECIPE_COMPILER_VERSION_V1: 
     "recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1";
 pub const GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1: &str =
     "recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_bootstrap_v1";
+pub const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_RECIPE_COMPILER_VERSION_V1: &str =
+    "recipe_v4_to_compiled_pls_plan_v3_two_way_moderated_mediation_bootstrap_v1";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_ID_V1: &str = "smartpls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CELL_ID_V1: &str = "qpls3.pls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_VERSION_V1: &str = "pls_mediation_v1";
@@ -136,6 +138,10 @@ pub enum GeneralSemPlsRecipeCompilationErrorV1 {
         "General SEM PLS interaction_v2 moderation does not yet execute moderated mediation or other directed chains"
     )]
     ModeratedMediationNotYetExecutable,
+    #[error(
+        "the exact two-way moderated-mediation target compiles, but its combined bootstrap executor is not connected yet"
+    )]
+    ModeratedMediationExecutionNotConnected,
     #[error("General SEM PLS case-bootstrap v1 executes percentile intervals only")]
     BootstrapIntervalNotYetExecutable,
     #[error("General SEM PLS case-bootstrap v1 executes two-sided inference only")]
@@ -449,6 +455,9 @@ fn compiler_version_for_plan(
     config: &crate::GeneralSemConfigV1,
     plan: &CompiledPlsPlanV3,
 ) -> &'static str {
+    if plan.two_way_moderated_mediation_target().is_some() {
+        return GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_RECIPE_COMPILER_VERSION_V1;
+    }
     if !plan.two_way_interactions().is_empty() {
         return match config.inference {
             GeneralSemInferenceV1::None => {
@@ -513,6 +522,9 @@ fn ensure_interaction_compilation_scope(
 ) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
     if plan.two_way_interactions().is_empty() {
         return Ok(());
+    }
+    if plan.two_way_moderated_mediation_target().is_some() {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationExecutionNotConnected);
     }
     if !config.requested_effect_estimands.is_empty() {
         return Err(
@@ -975,7 +987,11 @@ mod tests {
         }];
         assert_eq!(
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
-            Err(GeneralSemPlsRecipeCompilationErrorV1::InteractionRequestedEffectsNotYetExecutable)
+            Err(GeneralSemPlsRecipeCompilationErrorV1::PlsPlanV3(
+                CompiledPlsPlanV3Error::ModeratedMediationTarget(
+                    crate::CompiledPlsTwoWayModeratedMediationTargetErrorV1::RequestedEffectMustBeSpecificPath
+                )
+            ))
         );
 
         let (mut recipe, mut model) = interaction_recipe_and_model();
@@ -1007,6 +1023,54 @@ mod tests {
         assert_eq!(
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
             Err(GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationNotYetExecutable)
+        );
+    }
+
+    #[test]
+    fn exact_moderated_mediation_recipe_stops_at_the_typed_execution_boundary() {
+        let (mut recipe, mut model) = recipe_and_model();
+        add_compiler_interaction(
+            &mut model,
+            "interaction:m1_by_m2",
+            "construct:m1",
+            "construct:m2",
+        );
+        let relation_id = |source: &str, target: &str| {
+            model
+                .relations
+                .iter()
+                .find_map(|relation| match relation {
+                    SemRelationV4::Structural {
+                        id,
+                        source: relation_source,
+                        target: relation_target,
+                        ..
+                    } if relation_source == source && relation_target == target => Some(id.clone()),
+                    _ => None,
+                })
+                .unwrap()
+        };
+        rebind_recipe_model(&mut recipe, &model);
+        recipe
+            .general_sem_config
+            .as_mut()
+            .unwrap()
+            .requested_effect_estimands = vec![GeneralSemEffectEstimandV1::SpecificPath {
+            estimand_id: "estimand:selected_x_m1_y".into(),
+            ordered_relation_ids: vec![
+                relation_id("construct:x", "construct:m1"),
+                relation_id("construct:m1", "construct:y"),
+            ],
+        }];
+        configure_percentile_bootstrap(&mut recipe);
+        recipe.ensure_valid().unwrap();
+
+        let plan =
+            compile_pls_plan_v3(&model, recipe.general_sem_config.as_ref().unwrap()).unwrap();
+        assert!(plan.two_way_moderated_mediation_target().is_some());
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationExecutionNotConnected)
         );
     }
 

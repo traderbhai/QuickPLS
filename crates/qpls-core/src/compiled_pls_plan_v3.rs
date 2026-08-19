@@ -1,11 +1,12 @@
 use crate::{
-    CompiledPlsPlanV2, CompiledPlsPlanV2Error, CompiledSemSpecificDirectedPathV1,
+    CompiledPlsPlanV2, CompiledPlsPlanV2Error, CompiledPlsTwoWayModeratedMediationTargetErrorV1,
+    CompiledPlsTwoWayModeratedMediationTargetV1, CompiledSemSpecificDirectedPathV1,
     CompiledSemTopologyV1, CompiledSemTopologyV1Error, GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
     GeneralSemConfigV1, GeneralSemConfigV1ValidationError, GeneralSemEffectEstimandV1,
     GeneralSemSpecificPathLimitBehaviorV1, InteractionHierarchyPolicyV2, InteractionMethodV4,
     SemConstraintV4, SemDerivedTermV4, SemModelV4, SemParameterTargetV4, SemParameterV4,
     SemPresentationV4, SemRelationV4, SemVariableV4, StructuralRelationRoleV4, compile_pls_plan_v2,
-    compile_sem_topology_v1,
+    compile_pls_two_way_moderated_mediation_target_v1, compile_sem_topology_v1,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -282,6 +283,8 @@ pub struct CompiledPlsPlanV3 {
     stage_one_projection_scientific_sha256: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     two_way_interactions: Vec<CompiledPlsTwoWayInteractionV3>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    two_way_moderated_mediation_target: Option<CompiledPlsTwoWayModeratedMediationTargetV1>,
     effect_estimands: Vec<CompiledPlsEffectEstimandV3>,
     auto_selected_effects: bool,
 }
@@ -319,6 +322,12 @@ impl CompiledPlsPlanV3 {
         &self.two_way_interactions
     }
 
+    pub fn two_way_moderated_mediation_target(
+        &self,
+    ) -> Option<&CompiledPlsTwoWayModeratedMediationTargetV1> {
+        self.two_way_moderated_mediation_target.as_ref()
+    }
+
     pub fn effect_estimands(&self) -> &[CompiledPlsEffectEstimandV3] {
         &self.effect_estimands
     }
@@ -342,6 +351,8 @@ pub enum CompiledPlsPlanV3Error {
     BasePlan(#[from] CompiledPlsPlanV2Error),
     #[error(transparent)]
     Interaction(#[from] CompiledPlsInteractionV3Error),
+    #[error(transparent)]
+    ModeratedMediationTarget(#[from] CompiledPlsTwoWayModeratedMediationTargetErrorV1),
     #[error("compiled PLS v3 does not yet implement lazy specific-path materialization")]
     LazySpecificPathMaterializationNotImplemented,
     #[error("PLS v3 requires an acyclic structural topology")]
@@ -408,7 +419,7 @@ pub fn compile_pls_plan_v3(
         .scientific_sha256()
         .map_err(CompiledPlsPlanV2Error::InvalidModel)?;
     debug_assert_eq!(topology.model_scientific_sha256(), scientific_hash);
-    Ok(CompiledPlsPlanV3 {
+    let mut plan = CompiledPlsPlanV3 {
         schema_version: COMPILED_PLS_PLAN_V3_SCHEMA_VERSION,
         model_id: model.id.clone(),
         scientific_hash,
@@ -417,9 +428,16 @@ pub fn compile_pls_plan_v3(
         topology,
         stage_one_projection_scientific_sha256,
         two_way_interactions,
+        two_way_moderated_mediation_target: None,
         effect_estimands,
         auto_selected_effects,
-    })
+    };
+    if !plan.two_way_interactions.is_empty() && !config.requested_effect_estimands.is_empty() {
+        plan.two_way_moderated_mediation_target = Some(
+            compile_pls_two_way_moderated_mediation_target_v1(&plan, config)?,
+        );
+    }
+    Ok(plan)
 }
 
 /// Compiles only the exact first interaction cell. Unsupported derived
@@ -1438,6 +1456,203 @@ mod tests {
                     interaction_id: "interaction:x_by_m1".into()
                 }
             )
+        );
+    }
+
+    fn moderated_mediation_config(relation_ids: Vec<String>) -> GeneralSemConfigV1 {
+        let mut config = GeneralSemConfigV1::default();
+        config.requested_effect_estimands = vec![GeneralSemEffectEstimandV1::SpecificPath {
+            estimand_id: "estimand:selected_path".into(),
+            ordered_relation_ids: relation_ids,
+        }];
+        config.inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 42,
+            confidence_level: 0.95,
+            interval: crate::GeneralSemBootstrapIntervalV1::Percentile,
+            tail: crate::GeneralSemInferenceTailV1::TwoSided,
+        };
+        config
+    }
+
+    #[test]
+    fn exact_first_stage_target_and_point_formulas_are_compiled_without_heuristics() {
+        let mut model = recursive_model();
+        let x_to_m2 = relation_id(&model, "construct:x", "construct:m2");
+        let m2_to_y = relation_id(&model, "construct:m2", "construct:y");
+        add_two_way_interaction_for_focal(
+            &mut model,
+            "interaction:x_by_m1_to_m2",
+            "construct:x",
+            "construct:m1",
+            &x_to_m2,
+        );
+        model.ensure_valid().unwrap();
+        let config = moderated_mediation_config(vec![x_to_m2.clone(), m2_to_y.clone()]);
+
+        let plan = compile_pls_plan_v3(&model, &config).unwrap();
+        let target = plan.two_way_moderated_mediation_target().unwrap();
+        assert_eq!(
+            target.moderated_stage(),
+            crate::CompiledPlsTwoWayModeratedMediationStageV1::FirstStage
+        );
+        assert_eq!(target.moderated_relation_id(), x_to_m2);
+        assert_eq!(target.other_stage_relation_id(), m2_to_y);
+        assert_eq!(target.x_id(), "construct:x");
+        assert_eq!(target.mediator_id(), "construct:m2");
+        assert_eq!(target.y_id(), "construct:y");
+        assert_eq!(target.moderator_id(), "construct:m1");
+        assert_eq!(
+            target.bootstrap_capability_cell(),
+            &crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1()
+        );
+        let inference_targets =
+            crate::general_sem_pls_two_way_moderated_mediation_inference_targets_v1(target);
+        assert_eq!(inference_targets.len(), 4);
+        assert_eq!(
+            inference_targets
+                .iter()
+                .filter(|target| matches!(
+                    target,
+                    crate::GeneralSemPlsTwoWayModeratedMediationInferenceTargetV1::ConditionalIndirect { .. }
+                ))
+                .count(),
+            3
+        );
+        assert!(matches!(
+            inference_targets.last(),
+            Some(
+                crate::GeneralSemPlsTwoWayModeratedMediationInferenceTargetV1::ModeratedMediationIndex { .. }
+            )
+        ));
+
+        let point = crate::calculate_general_sem_pls_two_way_moderated_mediation_point_v1(
+            target, 0.4, 0.5, 0.2,
+        )
+        .unwrap();
+        assert_eq!(
+            point
+                .conditional_indirect_effects
+                .iter()
+                .map(|effect| effect.moderator_value)
+                .collect::<Vec<_>>(),
+            vec![-1.0, 0.0, 1.0]
+        );
+        assert!((point.conditional_indirect_effects[0].estimate - 0.1).abs() < 1e-12);
+        assert!((point.conditional_indirect_effects[1].estimate - (0.4 * 0.5)).abs() < 1e-12);
+        assert!((point.conditional_indirect_effects[2].estimate - 0.3).abs() < 1e-12);
+        assert!((point.moderated_mediation_index.estimate - 0.1).abs() < 1e-12);
+
+        let wire = serde_json::to_value(&plan).unwrap();
+        assert!(wire.get("two_way_moderated_mediation_target").is_some());
+        assert_eq!(
+            serde_json::from_value::<CompiledPlsPlanV3>(wire).unwrap(),
+            plan
+        );
+    }
+
+    #[test]
+    fn exact_second_stage_target_is_classified_from_stable_relation_ids() {
+        let mut model = recursive_model();
+        let x_to_m1 = relation_id(&model, "construct:x", "construct:m1");
+        let m1_to_y = relation_id(&model, "construct:m1", "construct:y");
+        add_two_way_interaction_for_focal(
+            &mut model,
+            "interaction:m1_by_m2_to_y",
+            "construct:m1",
+            "construct:m2",
+            &m1_to_y,
+        );
+        model.ensure_valid().unwrap();
+        let config = moderated_mediation_config(vec![x_to_m1.clone(), m1_to_y.clone()]);
+
+        let plan = compile_pls_plan_v3(&model, &config).unwrap();
+        let target = plan.two_way_moderated_mediation_target().unwrap();
+        assert_eq!(
+            target.moderated_stage(),
+            crate::CompiledPlsTwoWayModeratedMediationStageV1::SecondStage
+        );
+        assert_eq!(target.moderated_relation_id(), m1_to_y);
+        assert_eq!(target.other_stage_relation_id(), x_to_m1);
+
+        let mut reordered = model;
+        reordered.variables.reverse();
+        reordered.relations.reverse();
+        reordered.parameters.reverse();
+        assert_eq!(compile_pls_plan_v3(&reordered, &config).unwrap(), plan);
+    }
+
+    #[test]
+    fn moderated_mediation_target_rejects_point_long_path_and_multiple_interactions() {
+        let mut model = recursive_model();
+        let x_to_m1 = relation_id(&model, "construct:x", "construct:m1");
+        let m1_to_y = relation_id(&model, "construct:m1", "construct:y");
+        add_two_way_interaction_for_focal(
+            &mut model,
+            "interaction:m1_by_m2_to_y",
+            "construct:m1",
+            "construct:m2",
+            &m1_to_y,
+        );
+        model.ensure_valid().unwrap();
+
+        let mut point = moderated_mediation_config(vec![x_to_m1.clone(), m1_to_y.clone()]);
+        point.inference = GeneralSemInferenceV1::None;
+        assert!(matches!(
+            compile_pls_plan_v3(&model, &point),
+            Err(CompiledPlsPlanV3Error::ModeratedMediationTarget(
+                crate::CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapRequired
+            ))
+        ));
+
+        let m1_to_m2 = relation_id(&model, "construct:m1", "construct:m2");
+        let m2_to_y = relation_id(&model, "construct:m2", "construct:y");
+        let long = moderated_mediation_config(vec![x_to_m1, m1_to_m2, m2_to_y]);
+        assert!(matches!(
+            compile_pls_plan_v3(&model, &long),
+            Err(CompiledPlsPlanV3Error::ModeratedMediationTarget(
+                crate::CompiledPlsTwoWayModeratedMediationTargetErrorV1::SpecificPathLength {
+                    found: 3
+                }
+            ))
+        ));
+
+        let x_to_y = relation_id(&model, "construct:x", "construct:y");
+        add_two_way_interaction_for_focal(
+            &mut model,
+            "interaction:x_by_m2_to_y",
+            "construct:x",
+            "construct:m2",
+            &x_to_y,
+        );
+        model.ensure_valid().unwrap();
+        let exact = moderated_mediation_config(vec![
+            relation_id(&model, "construct:x", "construct:m1"),
+            m1_to_y,
+        ]);
+        assert!(matches!(
+            compile_pls_plan_v3(&model, &exact),
+            Err(CompiledPlsPlanV3Error::ModeratedMediationTarget(
+                crate::CompiledPlsTwoWayModeratedMediationTargetErrorV1::InteractionCardinality {
+                    found: 2
+                }
+            ))
+        ));
+    }
+
+    #[test]
+    fn historical_interaction_plan_omits_empty_moderated_mediation_target() {
+        let mut model = recursive_model();
+        let x_to_y = relation_id(&model, "construct:x", "construct:y");
+        add_two_way_interaction(&mut model, "interaction:x_by_m1", "construct:m1", &x_to_y);
+        model.ensure_valid().unwrap();
+        let plan = compile_pls_plan_v3(&model, &GeneralSemConfigV1::default()).unwrap();
+        assert!(plan.two_way_moderated_mediation_target().is_none());
+        assert!(
+            serde_json::to_value(plan)
+                .unwrap()
+                .get("two_way_moderated_mediation_target")
+                .is_none()
         );
     }
 }

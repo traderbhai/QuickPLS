@@ -13,6 +13,8 @@ export const GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1 = "minimum_us
 export const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1 = "qpls.general-sem-pls.multiple-two-way.point.v1" as const;
 export const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1 = "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1" as const;
 export const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1 = "general_sem_pls_multiple_two_way_moderation_case_bootstrap_v1" as const;
+export const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1 = "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1" as const;
+export const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1 = "general_sem_pls_two_way_moderated_mediation_case_bootstrap_v1" as const;
 export const GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1 = "sampled_original_construct_score_covariance_v1" as const;
 export const GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1 = "compiled_interaction_scientific_rescaled_gamma_v1" as const;
 export const GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1 = "qpls.general-sem-pls.two-stage-product.sample-standardized.v1" as const;
@@ -63,12 +65,15 @@ export interface CanonicalGeneralSemFailedReplicateV1 {
 export interface CanonicalGeneralSemInferenceReceiptV1 {
   kind: CanonicalGeneralSemInferenceKindV1;
   capability_cell: CapabilityCellReferenceV2;
+  capability_dependencies?: CapabilityCellReferenceV2[];
   method_version:
     | typeof GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1
-    | typeof GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1;
+    | typeof GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+    | typeof GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1;
   resampling_operation_version:
     | typeof GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1
-    | typeof GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1;
+    | typeof GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+    | typeof GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1;
   resampling_stream_version: typeof GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1;
   quantile_method_version: typeof GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1;
   standard_error_method_version: typeof GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1;
@@ -162,6 +167,34 @@ export type CanonicalGeneralSemEffectIdentityV1 =
       stage_one_model_scientific_sha256: string;
       product_scale_version: string;
       method_version: string;
+    }
+  | {
+      kind: "conditional_indirect";
+      effect_id: string;
+      target_id: string;
+      estimand_id: string;
+      moderated_stage: CanonicalModeratedMediationStageV1;
+      interaction_id: string;
+      x_id: string;
+      mediator_id: string;
+      y_id: string;
+      moderator_id: string;
+      ordered_relation_ids: string[];
+      probe_value_index: number;
+      moderator_value_bits_hex: string;
+    }
+  | {
+      kind: "moderated_mediation_index";
+      effect_id: string;
+      target_id: string;
+      estimand_id: string;
+      moderated_stage: CanonicalModeratedMediationStageV1;
+      interaction_id: string;
+      x_id: string;
+      mediator_id: string;
+      y_id: string;
+      moderator_id: string;
+      ordered_relation_ids: string[];
     };
 
 export type CanonicalConditionalProbeValuesResultV1 =
@@ -229,6 +262,40 @@ export interface CanonicalConditionalEffectResultV1 {
   moderator_id: string;
   probe_value_index: number;
   moderator_value: number;
+  value: CanonicalGeneralSemEstimateV1;
+}
+
+export type CanonicalModeratedMediationStageV1 = "first_stage" | "second_stage";
+
+export interface CanonicalConditionalIndirectEffectResultV1 {
+  effect_id: string;
+  target_id: string;
+  estimand_id: string;
+  trace: CanonicalGeneralSemResultTraceV1;
+  moderated_stage: CanonicalModeratedMediationStageV1;
+  interaction_id: string;
+  x_id: string;
+  mediator_id: string;
+  y_id: string;
+  moderator_id: string;
+  ordered_relation_ids: string[];
+  probe_value_index: number;
+  moderator_value: number;
+  value: CanonicalGeneralSemEstimateV1;
+}
+
+export interface CanonicalModeratedMediationIndexResultV1 {
+  effect_id: string;
+  target_id: string;
+  estimand_id: string;
+  trace: CanonicalGeneralSemResultTraceV1;
+  moderated_stage: CanonicalModeratedMediationStageV1;
+  interaction_id: string;
+  x_id: string;
+  mediator_id: string;
+  y_id: string;
+  moderator_id: string;
+  ordered_relation_ids: string[];
   value: CanonicalGeneralSemEstimateV1;
 }
 
@@ -336,6 +403,8 @@ export interface CanonicalGeneralSemResultsV1 {
   interaction_effects?: CanonicalInteractionEffectResultV1[];
   conditional_effect_probes?: CanonicalConditionalEffectProbeResultV1[];
   conditional_effects?: CanonicalConditionalEffectResultV1[];
+  conditional_indirect_effects?: CanonicalConditionalIndirectEffectResultV1[];
+  moderated_mediation_indices?: CanonicalModeratedMediationIndexResultV1[];
   interaction_plots?: CanonicalInteractionPlotResultV1[];
   higher_order_stages?: CanonicalHocStageResultV1[];
   cbsem_fit?: CanonicalCbsemFitResultV1[];
@@ -403,6 +472,18 @@ const GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1: Capabili
   cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
   capability_version: "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
 };
+const GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = {
+  registry_schema_version: 2,
+  capability_id: "smartpls.pls_algorithm",
+  cell_id: "qpls3.pls.algorithm",
+  capability_version: "pls_pm_v1",
+};
+const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = {
+  registry_schema_version: 2,
+  capability_id: "smartpls.mediation",
+  cell_id: "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
+  capability_version: "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+};
 
 function capabilityCellIdentity(reference: CapabilityCellReferenceV2): string {
   return `${reference.registry_schema_version}:${reference.capability_id}:${reference.cell_id}:${reference.capability_version}`;
@@ -440,6 +521,21 @@ function generalSemSpecificDirectedPathIdentityV1(relationIds: readonly string[]
     offset += bytes.length;
   }
   return `sem_specific_path_v1_${sha256HexBytesV1(identityInput)}`;
+}
+
+function conditionalIndirectEffectIdentityV1(targetId: string, probeValueIndex: number): string {
+  return `sem_conditional_indirect_v1_${sha256HexUtf8V1(`${targetId}\0${probeValueIndex}`)}`;
+}
+
+function moderatedMediationIndexIdentityV1(targetId: string): string {
+  return `sem_moderated_mediation_index_v1_${sha256HexUtf8V1(targetId)}`;
+}
+
+function generalSemF64BitsHex(value: number): string {
+  const bytes = new ArrayBuffer(8);
+  const view = new DataView(bytes);
+  view.setFloat64(0, value, false);
+  return view.getBigUint64(0, false).toString(16).padStart(16, "0");
 }
 
 function wireFail(
@@ -706,6 +802,8 @@ function canonicalGeneralSemEffectIdentitiesV1(
   specific: readonly unknown[],
   aggregate: readonly unknown[],
   interactions: readonly unknown[],
+  conditionalIndirect: readonly unknown[],
+  moderatedMediationIndices: readonly unknown[],
 ): CanonicalGeneralSemEffectIdentityV1[] {
   const identities: CanonicalGeneralSemEffectIdentityV1[] = specific.map((value, index) => {
     const path = `general_sem_results.specific_indirect_effects[${index}]`;
@@ -788,6 +886,60 @@ function canonicalGeneralSemEffectIdentitiesV1(
       method_version: wireStableId(effect.method_version, `${path}.method_version`),
     });
   }
+  for (let index = 0; index < conditionalIndirect.length; index += 1) {
+    const path = `general_sem_results.conditional_indirect_effects[${index}]`;
+    const effect = strictWireRecord(conditionalIndirect[index], path);
+    identities.push({
+      kind: "conditional_indirect",
+      effect_id: wireStableId(effect.effect_id, `${path}.effect_id`),
+      target_id: wireStableId(effect.target_id, `${path}.target_id`),
+      estimand_id: wireStableId(effect.estimand_id, `${path}.estimand_id`),
+      moderated_stage: wireEnum(
+        effect.moderated_stage,
+        ["first_stage", "second_stage"] as const,
+        `${path}.moderated_stage`,
+      ),
+      interaction_id: wireStableId(effect.interaction_id, `${path}.interaction_id`),
+      x_id: wireStableId(effect.x_id, `${path}.x_id`),
+      mediator_id: wireStableId(effect.mediator_id, `${path}.mediator_id`),
+      y_id: wireStableId(effect.y_id, `${path}.y_id`),
+      moderator_id: wireStableId(effect.moderator_id, `${path}.moderator_id`),
+      ordered_relation_ids: validateStableIdArray(
+        effect.ordered_relation_ids,
+        `${path}.ordered_relation_ids`,
+        { minimum: 2 },
+      ),
+      probe_value_index: wireU32(effect.probe_value_index, `${path}.probe_value_index`),
+      moderator_value_bits_hex: generalSemF64BitsHex(
+        wireFinite(effect.moderator_value, `${path}.moderator_value`),
+      ),
+    });
+  }
+  for (let index = 0; index < moderatedMediationIndices.length; index += 1) {
+    const path = `general_sem_results.moderated_mediation_indices[${index}]`;
+    const effect = strictWireRecord(moderatedMediationIndices[index], path);
+    identities.push({
+      kind: "moderated_mediation_index",
+      effect_id: wireStableId(effect.effect_id, `${path}.effect_id`),
+      target_id: wireStableId(effect.target_id, `${path}.target_id`),
+      estimand_id: wireStableId(effect.estimand_id, `${path}.estimand_id`),
+      moderated_stage: wireEnum(
+        effect.moderated_stage,
+        ["first_stage", "second_stage"] as const,
+        `${path}.moderated_stage`,
+      ),
+      interaction_id: wireStableId(effect.interaction_id, `${path}.interaction_id`),
+      x_id: wireStableId(effect.x_id, `${path}.x_id`),
+      mediator_id: wireStableId(effect.mediator_id, `${path}.mediator_id`),
+      y_id: wireStableId(effect.y_id, `${path}.y_id`),
+      moderator_id: wireStableId(effect.moderator_id, `${path}.moderator_id`),
+      ordered_relation_ids: validateStableIdArray(
+        effect.ordered_relation_ids,
+        `${path}.ordered_relation_ids`,
+        { minimum: 2 },
+      ),
+    });
+  }
   identities.sort((left, right) => (
     left.effect_id < right.effect_id ? -1 : left.effect_id > right.effect_id ? 1 : 0
   ));
@@ -834,6 +986,8 @@ function validateGeneralSemInferenceReceiptV1(
   jointStage: readonly unknown[],
   interactions: readonly unknown[],
   conditional: readonly unknown[],
+  conditionalIndirect: readonly unknown[],
+  moderatedMediationIndices: readonly unknown[],
   plots: readonly unknown[],
   hocStages: readonly unknown[],
   context: GeneralSemWireContext,
@@ -852,8 +1006,26 @@ function validateGeneralSemInferenceReceiptV1(
     path: `general_sem_results.interaction_effects[${index}]`,
     effect: strictWireRecord(effect, `general_sem_results.interaction_effects[${index}]`),
   }));
+  const moderatedMediationDerivedEffects = [
+    ...conditionalIndirect.map((effect, index) => ({
+      path: `general_sem_results.conditional_indirect_effects[${index}]`,
+      effect: strictWireRecord(
+        effect,
+        `general_sem_results.conditional_indirect_effects[${index}]`,
+      ),
+    })),
+    ...moderatedMediationIndices.map((effect, index) => ({
+      path: `general_sem_results.moderated_mediation_indices[${index}]`,
+      effect: strictWireRecord(
+        effect,
+        `general_sem_results.moderated_mediation_indices[${index}]`,
+      ),
+    })),
+  ];
   const mediationEffectValues = mediationEffects.map(({ effect }) => effect.value);
   const moderationEffectValues = moderationEffects.map(({ effect }) => effect.scientific_rescaled_gamma);
+  const moderatedMediationDerivedEffectValues = moderatedMediationDerivedEffects
+    .map(({ effect }) => effect.value);
   const standardizedProductInference = interactions.some((effect, index) => {
     const record = strictWireRecord(effect, `general_sem_results.interaction_effects[${index}]`);
     return generalSemEstimateHasInference(record.standardized_product_coefficient);
@@ -896,6 +1068,7 @@ function validateGeneralSemInferenceReceiptV1(
   if (receiptValue == null) {
     if (mediationEffectValues.some(generalSemEstimateHasInference)
       || moderationEffectValues.some(generalSemEstimateHasInference)
+      || moderatedMediationDerivedEffectValues.some(generalSemEstimateHasInference)
       || standardizedProductInference
       || jointStageInference
       || conditionalInference
@@ -941,7 +1114,7 @@ function validateGeneralSemInferenceReceiptV1(
     "workers",
     "complete_model_reestimated_per_replicate",
     "failed_replicates",
-  ], [], path);
+  ], ["capability_dependencies"], path);
 
   wireEnum(receipt.kind, ["case_bootstrap"] as const, `${path}.kind`);
   const capabilityCell = validateWireCapabilityCell(receipt.capability_cell, `${path}.capability_cell`);
@@ -950,11 +1123,25 @@ function validateGeneralSemInferenceReceiptV1(
     === capabilityCellIdentity(GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1);
   const moderationBootstrap = capabilityIdentity
     === capabilityCellIdentity(GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1);
-  if (!mediationBootstrap && !moderationBootstrap) {
+  const moderatedMediationBootstrap = capabilityIdentity
+    === capabilityCellIdentity(
+      GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+    );
+  if (!mediationBootstrap && !moderationBootstrap && !moderatedMediationBootstrap) {
     wireFail(
       "document.invalid",
       `${path}.capability_cell`,
-      `${path}.capability_cell must equal the exact General SEM multiple-mediation or multiple two-way moderation full-model case-bootstrap option cell.`,
+      `${path}.capability_cell must equal an exact General SEM full-model case-bootstrap option cell.`,
+    );
+  }
+  if (moderatedMediationBootstrap
+    && (interactions.length !== 1
+      || conditionalIndirect.length !== 3
+      || moderatedMediationIndices.length !== 1)) {
+    wireFail(
+      "document.invalid",
+      path,
+      `${path} moderated-mediation bootstrap requires one gamma, three locked conditional indirect effects, and one index.`,
     );
   }
   if (!context.capabilityIds.has(capabilityIdentity)) {
@@ -971,21 +1158,93 @@ function validateGeneralSemInferenceReceiptV1(
       `${path} moderation bootstrap must not contain mediation effect rows.`,
     );
   }
-  const coveredEffects = moderationBootstrap ? moderationEffects : mediationEffects;
-  const coveredEffectValues = moderationBootstrap ? moderationEffectValues : mediationEffectValues;
+  if (moderatedMediationBootstrap && (specific.length > 0 || aggregate.length > 0)) {
+    wireFail(
+      "document.invalid",
+      path,
+      `${path} moderated-mediation bootstrap must not contain ordinary mediation effect rows.`,
+    );
+  }
+  const dependencies = optionalWireArray(receipt, "capability_dependencies", path)
+    .map((dependency, index) => validateWireCapabilityCell(
+      dependency,
+      `${path}.capability_dependencies[${index}]`,
+    ));
+  const dependencyIdentities = dependencies.map(capabilityCellIdentity);
+  if (new Set(dependencyIdentities).size !== dependencyIdentities.length
+    || dependencyIdentities.some((identity, index) => (
+      index > 0 && dependencyIdentities[index - 1]! >= identity
+    ))) {
+    wireFail(
+      "document.invalid",
+      `${path}.capability_dependencies`,
+      `${path}.capability_dependencies must be distinct and ordered by exact capability identity.`,
+    );
+  }
+  if (moderatedMediationBootstrap) {
+    const expectedDependencies = [
+      GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1,
+      GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CAPABILITY_CELL_V1,
+    ].map(capabilityCellIdentity).sort();
+    if (dependencyIdentities.length !== expectedDependencies.length
+      || dependencyIdentities.some((identity, index) => identity !== expectedDependencies[index])) {
+      wireFail(
+        "document.invalid",
+        `${path}.capability_dependencies`,
+        `${path}.capability_dependencies must exactly declare the base PLS and moderation-point cells.`,
+      );
+    }
+    for (const identity of dependencyIdentities) {
+      if (!context.capabilityIds.has(identity)) {
+        wireFail(
+          "document.invalid",
+          `${path}.capability_dependencies`,
+          `${path}.capability_dependencies references an undeclared option cell.`,
+        );
+      }
+    }
+  } else if (dependencies.length > 0) {
+    wireFail(
+      "document.invalid",
+      `${path}.capability_dependencies`,
+      `${path}.capability_dependencies must be empty for single-owner v1 bootstrap receipts.`,
+    );
+  }
+  const moderatedMediationEffects = [
+    ...moderationEffects,
+    ...moderatedMediationDerivedEffects,
+  ];
+  const moderatedMediationEffectValues = [
+    ...moderationEffectValues,
+    ...moderatedMediationDerivedEffectValues,
+  ];
+  const coveredEffects = moderatedMediationBootstrap
+    ? moderatedMediationEffects
+    : moderationBootstrap
+      ? moderationEffects
+      : mediationEffects;
+  const coveredEffectValues = moderatedMediationBootstrap
+    ? moderatedMediationEffectValues
+    : moderationBootstrap
+      ? moderationEffectValues
+      : mediationEffectValues;
 
   const versions = [
     [
       "method_version",
-      moderationBootstrap
-        ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
-        : GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+      moderatedMediationBootstrap
+        ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
+        : moderationBootstrap
+          ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+          : GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
     ],
     [
       "resampling_operation_version",
-      moderationBootstrap
-        ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
-        : GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+      moderatedMediationBootstrap
+        ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+        : moderationBootstrap
+          ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+          : GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
     ],
     ["resampling_stream_version", GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1],
     ["quantile_method_version", GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1],
@@ -1051,15 +1310,30 @@ function validateGeneralSemInferenceReceiptV1(
     wireFail(
       "document.invalid",
       `${path}.effect_ids`,
-      moderationBootstrap
-        ? `${path}.effect_ids must exactly cover scientific rescaled gamma interaction rows.`
-        : `${path}.effect_ids must exactly cover specific and aggregate effect rows.`,
+      moderatedMediationBootstrap
+        ? `${path}.effect_ids must exactly cover one scientific gamma, three conditional indirect effects, and one moderated-mediation index.`
+        : moderationBootstrap
+          ? `${path}.effect_ids must exactly cover scientific rescaled gamma interaction rows.`
+          : `${path}.effect_ids must exactly cover specific and aggregate effect rows.`,
     );
   }
-  const effectIdentities = canonicalGeneralSemEffectIdentitiesV1(specific, aggregate, interactions)
-    .filter((identity) => moderationBootstrap
-      ? identity.kind === "interaction_scientific_rescaled_gamma"
-      : identity.kind !== "interaction_scientific_rescaled_gamma");
+  const effectIdentities = canonicalGeneralSemEffectIdentitiesV1(
+    specific,
+    aggregate,
+    interactions,
+    conditionalIndirect,
+    moderatedMediationIndices,
+  ).filter((identity) => {
+    if (moderatedMediationBootstrap) {
+      return identity.kind === "interaction_scientific_rescaled_gamma"
+        || identity.kind === "conditional_indirect"
+        || identity.kind === "moderated_mediation_index";
+    }
+    if (moderationBootstrap) return identity.kind === "interaction_scientific_rescaled_gamma";
+    return identity.kind !== "interaction_scientific_rescaled_gamma"
+      && identity.kind !== "conditional_indirect"
+      && identity.kind !== "moderated_mediation_index";
+  });
   if (receipt.effect_identity_set_sha256 !== generalSemSerializedSha256(effectIdentities)) {
     wireFail(
       "document.invalid",
@@ -1203,9 +1477,11 @@ function validateGeneralSemInferenceReceiptV1(
     wireFail(
       "document.invalid",
       path,
-      moderationBootstrap
-        ? `${path} requires complete inference fields for every scientific rescaled gamma interaction effect.`
-        : `${path} requires complete inference fields for every covered effect.`,
+      moderatedMediationBootstrap
+        ? `${path} requires complete inference fields for gamma, all three conditional indirect effects, and the moderated-mediation index.`
+        : moderationBootstrap
+          ? `${path} requires complete inference fields for every scientific rescaled gamma interaction effect.`
+          : `${path} requires complete inference fields for every covered effect.`,
     );
   }
   const pointOnlyInference = standardizedProductInference
@@ -1213,26 +1489,36 @@ function validateGeneralSemInferenceReceiptV1(
     || conditionalInference
     || higherOrderInference;
   const uncoveredInference = pointOnlyInference
-    || (moderationBootstrap && interactionPlotIntervals)
-    || (moderationBootstrap
+    || ((moderationBootstrap || moderatedMediationBootstrap) && interactionPlotIntervals)
+    || (moderatedMediationBootstrap
       ? mediationEffectValues.some(generalSemEstimateHasInference)
-      : moderationEffectValues.some(generalSemEstimateHasInference));
+      : moderationBootstrap
+        ? mediationEffectValues.some(generalSemEstimateHasInference)
+          || moderatedMediationDerivedEffectValues.some(generalSemEstimateHasInference)
+        : moderationEffectValues.some(generalSemEstimateHasInference)
+          || moderatedMediationDerivedEffectValues.some(generalSemEstimateHasInference));
   if (uncoveredInference) {
     wireFail(
       "document.invalid",
       path,
-      moderationBootstrap
-        ? `${path} moderation v1 permits inference only for scientific_rescaled_gamma; standardized-product, joint-stage, conditional, plot, mediation, and higher-order estimates must remain point-only.`
-        : `${path} v1 does not cover interaction, conditional, or higher-order estimate inference.`,
+      moderatedMediationBootstrap
+        ? `${path} moderated-mediation v1 permits inference only for gamma, the three locked conditional indirect effects, and the index.`
+        : moderationBootstrap
+          ? `${path} moderation v1 permits inference only for scientific_rescaled_gamma; standardized-product, joint-stage, conditional, plot, mediation, and higher-order estimates must remain point-only.`
+          : `${path} v1 does not cover interaction, conditional, moderated-mediation, or higher-order estimate inference.`,
     );
   }
-  const expectedEffectCapability = capabilityCellIdentity(
-    moderationBootstrap
-      ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CAPABILITY_CELL_V1
-      : GENERAL_SEM_PLS_RECURSIVE_EFFECTS_CAPABILITY_CELL_V1,
-  );
   for (const { path: effectPath, effect } of coveredEffects) {
     const effectId = wireStableId(effect.effect_id, `${effectPath}.effect_id`);
+    const combinedDerived = moderatedMediationBootstrap
+      && !effectPath.startsWith("general_sem_results.interaction_effects[");
+    const expectedEffectCapability = capabilityCellIdentity(
+      combinedDerived
+        ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1
+        : moderationBootstrap || moderatedMediationBootstrap
+          ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CAPABILITY_CELL_V1
+          : GENERAL_SEM_PLS_RECURSIVE_EFFECTS_CAPABILITY_CELL_V1,
+    );
     const trace = strictWireRecord(effect.trace, `${effectPath}.trace`);
     const traceCapability = validateWireCapabilityCell(
       trace.capability_cell,
@@ -1242,16 +1528,19 @@ function validateGeneralSemInferenceReceiptV1(
       wireFail(
         "document.invalid",
         `${effectPath}.trace.capability_cell`,
-        moderationBootstrap
-          ? `${path} effect ${effectId} trace.capability_cell must equal the General SEM multiple two-way moderation point option cell.`
-          : `${path} effect ${effectId} trace.capability_cell must equal the PLS recursive-effects option cell.`,
+        combinedDerived
+          ? `${path} effect ${effectId} trace.capability_cell must equal the supplemental two-way moderated-mediation cell.`
+          : moderationBootstrap || moderatedMediationBootstrap
+            ? `${path} effect ${effectId} trace.capability_cell must equal the General SEM multiple two-way moderation point option cell.`
+            : `${path} effect ${effectId} trace.capability_cell must equal the PLS recursive-effects option cell.`,
       );
     }
-    const valuePath = moderationBootstrap
+    const gammaValue = (moderationBootstrap || moderatedMediationBootstrap) && !combinedDerived;
+    const valuePath = gammaValue
       ? `${effectPath}.scientific_rescaled_gamma`
       : `${effectPath}.value`;
     const value = strictWireRecord(
-      moderationBootstrap ? effect.scientific_rescaled_gamma : effect.value,
+      gammaValue ? effect.scientific_rescaled_gamma : effect.value,
       valuePath,
     );
     const usable = optionalWireU32(value, "bootstrap_usable_replicates", valuePath);
@@ -1325,6 +1614,8 @@ export function parseCanonicalGeneralSemResultsV1(
       "interaction_effects",
       "conditional_effect_probes",
       "conditional_effects",
+      "conditional_indirect_effects",
+      "moderated_mediation_indices",
       "interaction_plots",
       "higher_order_stages",
       "cbsem_fit",
@@ -1378,11 +1669,22 @@ export function parseCanonicalGeneralSemResultsV1(
   const interactionEffects = optionalWireArray(results, "interaction_effects", "general_sem_results");
   const probes = optionalWireArray(results, "conditional_effect_probes", "general_sem_results");
   const conditional = optionalWireArray(results, "conditional_effects", "general_sem_results");
+  const conditionalIndirect = optionalWireArray(
+    results,
+    "conditional_indirect_effects",
+    "general_sem_results",
+  );
+  const moderatedMediationIndices = optionalWireArray(
+    results,
+    "moderated_mediation_indices",
+    "general_sem_results",
+  );
   const plots = optionalWireArray(results, "interaction_plots", "general_sem_results");
   const hocStages = optionalWireArray(results, "higher_order_stages", "general_sem_results");
   const fits = optionalWireArray(results, "cbsem_fit", "general_sem_results");
   const identification = optionalWireArray(results, "identification_diagnostics", "general_sem_results");
-  if ([specific, aggregate, jointStageCoefficients, interactionEffects, probes, conditional, plots, hocStages, fits, identification]
+  if ([specific, aggregate, jointStageCoefficients, interactionEffects, probes, conditional,
+    conditionalIndirect, moderatedMediationIndices, plots, hocStages, fits, identification]
     .every((collection) => collection.length === 0)) {
     return wireFail("document.invalid", "general_sem_results", "general_sem_results must contain at least one typed result section.");
   }
@@ -1397,6 +1699,16 @@ export function parseCanonicalGeneralSemResultsV1(
   validateCanonicalWireIds(interactionEffects, "effect_id", "general_sem_results.interaction_effects");
   validateCanonicalWireIds(probes, "probe_id", "general_sem_results.conditional_effect_probes");
   validateCanonicalWireIds(conditional, "effect_id", "general_sem_results.conditional_effects");
+  validateCanonicalWireIds(
+    conditionalIndirect,
+    "effect_id",
+    "general_sem_results.conditional_indirect_effects",
+  );
+  validateCanonicalWireIds(
+    moderatedMediationIndices,
+    "effect_id",
+    "general_sem_results.moderated_mediation_indices",
+  );
   validateCanonicalWireIds(plots, "plot_id", "general_sem_results.interaction_plots");
   validateCanonicalWireIds(hocStages, "stage_id", "general_sem_results.higher_order_stages");
   validateCanonicalWireIds(fits, "fit_id", "general_sem_results.cbsem_fit");
@@ -1496,6 +1808,7 @@ export function parseCanonicalGeneralSemResultsV1(
     );
   }
   const jointStageParameterIds = new Set<string>();
+  const jointStageEstimatesByRelation = new Map<string, number>();
   jointStageCoefficients.forEach((item, index) => {
     const path = `general_sem_results.joint_stage_structural_coefficients[${index}]`;
     const coefficient = exactWireRecord(item, [
@@ -1509,7 +1822,7 @@ export function parseCanonicalGeneralSemResultsV1(
       "stage",
       "method_version",
     ], [], path);
-    wireStableId(coefficient.relation_id, `${path}.relation_id`);
+    const relationId = wireStableId(coefficient.relation_id, `${path}.relation_id`);
     const parameterId = wireStableId(coefficient.parameter_id, `${path}.parameter_id`);
     if (jointStageParameterIds.has(parameterId)) {
       wireFail("document.invalid", `${path}.parameter_id`, `${path}.parameter_id is duplicated.`);
@@ -1531,6 +1844,13 @@ export function parseCanonicalGeneralSemResultsV1(
     }
     wireEnum(coefficient.role, ["structural", "control"] as const, `${path}.role`);
     validateGeneralSemEstimate(coefficient.estimate, `${path}.estimate`);
+    jointStageEstimatesByRelation.set(
+      relationId,
+      wireFinite(
+        strictWireRecord(coefficient.estimate, `${path}.estimate`).estimate,
+        `${path}.estimate.estimate`,
+      ),
+    );
     if (generalSemEstimateHasInference(coefficient.estimate)) {
       wireFail(
         "document.invalid",
@@ -1733,6 +2053,329 @@ export function parseCanonicalGeneralSemResultsV1(
       "general_sem_results.interaction_effects",
       "general_sem_results.interaction_effects must share one stage-one model scientific digest.",
     );
+  }
+
+  if (conditionalIndirect.length > 0 || moderatedMediationIndices.length > 0) {
+    if (conditionalIndirect.length !== 3) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.conditional_indirect_effects",
+        "general_sem_results.conditional_indirect_effects must contain exactly the locked -1/0/+1 targets.",
+      );
+    }
+    if (moderatedMediationIndices.length !== 1) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.moderated_mediation_indices",
+        "general_sem_results.moderated_mediation_indices must contain exactly one index.",
+      );
+    }
+    if (interactionEffects.length !== 1) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.interaction_effects",
+        "general_sem_results two-way moderated mediation requires exactly one interaction effect.",
+      );
+    }
+    const receipt = strictWireRecord(
+      results.inference_receipt,
+      "general_sem_results.inference_receipt",
+    );
+    const receiptCell = validateWireCapabilityCell(
+      receipt.capability_cell,
+      "general_sem_results.inference_receipt.capability_cell",
+    );
+    if (capabilityCellIdentity(receiptCell)
+      !== capabilityCellIdentity(
+        GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+      )) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.inference_receipt.capability_cell",
+        "general_sem_results moderated-mediation rows require the exact combined bootstrap receipt.",
+      );
+    }
+
+    const lockedProbes = [-1, 0, 1] as const;
+    const probeIndices = new Set<number>();
+    const conditionalAuthorities = conditionalIndirect.map((item, index) => {
+      const path = `general_sem_results.conditional_indirect_effects[${index}]`;
+      const effect = exactWireRecord(item, [
+        "effect_id", "target_id", "estimand_id", "trace", "moderated_stage",
+        "interaction_id", "x_id", "mediator_id", "y_id", "moderator_id",
+        "ordered_relation_ids", "probe_value_index", "moderator_value", "value",
+      ], [], path);
+      const effectId = wireStableId(effect.effect_id, `${path}.effect_id`);
+      if (effectIds.has(effectId)) {
+        wireFail(
+          "document.invalid",
+          `${path}.effect_id`,
+          `${path}.effect_id is duplicated across effect sections.`,
+        );
+      }
+      effectIds.add(effectId);
+      const targetId = wireStableId(effect.target_id, `${path}.target_id`);
+      const estimandId = wireStableId(effect.estimand_id, `${path}.estimand_id`);
+      const traceCapability = validateGeneralSemTrace(effect.trace, `${path}.trace`, wireContext);
+      if (capabilityCellIdentity(traceCapability)
+        !== capabilityCellIdentity(
+          GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+        )) {
+        wireFail(
+          "document.invalid",
+          `${path}.trace.capability_cell`,
+          `${path}.trace.capability_cell must equal the supplemental two-way moderated-mediation cell.`,
+        );
+      }
+      const moderatedStage = wireEnum(
+        effect.moderated_stage,
+        ["first_stage", "second_stage"] as const,
+        `${path}.moderated_stage`,
+      );
+      const interactionId = wireStableId(effect.interaction_id, `${path}.interaction_id`);
+      const xId = wireStableId(effect.x_id, `${path}.x_id`);
+      const mediatorId = wireStableId(effect.mediator_id, `${path}.mediator_id`);
+      const yId = wireStableId(effect.y_id, `${path}.y_id`);
+      const moderatorId = wireStableId(effect.moderator_id, `${path}.moderator_id`);
+      const orderedRelationIds = validateStableIdArray(
+        effect.ordered_relation_ids,
+        `${path}.ordered_relation_ids`,
+        { minimum: 2 },
+      );
+      if (orderedRelationIds.length !== 2) {
+        wireFail(
+          "document.invalid",
+          `${path}.ordered_relation_ids`,
+          `${path}.ordered_relation_ids must contain exactly two relations.`,
+        );
+      }
+      const probeValueIndex = wireU32(effect.probe_value_index, `${path}.probe_value_index`);
+      if (probeValueIndex > 2 || probeIndices.has(probeValueIndex)) {
+        wireFail(
+          "document.invalid",
+          `${path}.probe_value_index`,
+          `${path}.probe_value_index must uniquely cover 0, 1, and 2.`,
+        );
+      }
+      probeIndices.add(probeValueIndex);
+      const moderatorValue = wireFinite(effect.moderator_value, `${path}.moderator_value`);
+      if (!approximatelyEqualGeneralSem(moderatorValue, lockedProbes[probeValueIndex]!)) {
+        wireFail(
+          "document.invalid",
+          `${path}.moderator_value`,
+          `${path}.moderator_value must equal the locked standardized probe.`,
+        );
+      }
+      if (effectId !== conditionalIndirectEffectIdentityV1(targetId, probeValueIndex)) {
+        wireFail(
+          "document.invalid",
+          `${path}.effect_id`,
+          `${path}.effect_id must equal the canonical target/probe identity.`,
+        );
+      }
+      validateGeneralSemEstimate(effect.value, `${path}.value`);
+      const valueEstimate = wireFinite(
+        strictWireRecord(effect.value, `${path}.value`).estimate,
+        `${path}.value.estimate`,
+      );
+      return {
+        effectId,
+        targetId,
+        estimandId,
+        moderatedStage,
+        interactionId,
+        xId,
+        mediatorId,
+        yId,
+        moderatorId,
+        orderedRelationIds,
+        probeValueIndex,
+        moderatorValue,
+        valueEstimate,
+      };
+    });
+    if (![0, 1, 2].every((index) => probeIndices.has(index))) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.conditional_indirect_effects",
+        "general_sem_results.conditional_indirect_effects must cover probe indices 0, 1, and 2 exactly.",
+      );
+    }
+
+    const indexPath = "general_sem_results.moderated_mediation_indices[0]";
+    const indexEffect = exactWireRecord(moderatedMediationIndices[0], [
+      "effect_id", "target_id", "estimand_id", "trace", "moderated_stage",
+      "interaction_id", "x_id", "mediator_id", "y_id", "moderator_id",
+      "ordered_relation_ids", "value",
+    ], [], indexPath);
+    const indexEffectId = wireStableId(indexEffect.effect_id, `${indexPath}.effect_id`);
+    if (effectIds.has(indexEffectId)) {
+      wireFail(
+        "document.invalid",
+        `${indexPath}.effect_id`,
+        `${indexPath}.effect_id is duplicated across effect sections.`,
+      );
+    }
+    effectIds.add(indexEffectId);
+    const indexTargetId = wireStableId(indexEffect.target_id, `${indexPath}.target_id`);
+    const indexEstimandId = wireStableId(indexEffect.estimand_id, `${indexPath}.estimand_id`);
+    const indexTraceCapability = validateGeneralSemTrace(
+      indexEffect.trace,
+      `${indexPath}.trace`,
+      wireContext,
+    );
+    if (capabilityCellIdentity(indexTraceCapability)
+      !== capabilityCellIdentity(
+        GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+      )) {
+      wireFail(
+        "document.invalid",
+        `${indexPath}.trace.capability_cell`,
+        `${indexPath}.trace.capability_cell must equal the supplemental two-way moderated-mediation cell.`,
+      );
+    }
+    const indexStage = wireEnum(
+      indexEffect.moderated_stage,
+      ["first_stage", "second_stage"] as const,
+      `${indexPath}.moderated_stage`,
+    );
+    const indexInteractionId = wireStableId(
+      indexEffect.interaction_id,
+      `${indexPath}.interaction_id`,
+    );
+    const indexXId = wireStableId(indexEffect.x_id, `${indexPath}.x_id`);
+    const indexMediatorId = wireStableId(indexEffect.mediator_id, `${indexPath}.mediator_id`);
+    const indexYId = wireStableId(indexEffect.y_id, `${indexPath}.y_id`);
+    const indexModeratorId = wireStableId(indexEffect.moderator_id, `${indexPath}.moderator_id`);
+    const indexRelationIds = validateStableIdArray(
+      indexEffect.ordered_relation_ids,
+      `${indexPath}.ordered_relation_ids`,
+      { minimum: 2 },
+    );
+    if (indexRelationIds.length !== 2) {
+      wireFail(
+        "document.invalid",
+        `${indexPath}.ordered_relation_ids`,
+        `${indexPath}.ordered_relation_ids must contain exactly two relations.`,
+      );
+    }
+    if (indexEffectId !== moderatedMediationIndexIdentityV1(indexTargetId)) {
+      wireFail(
+        "document.invalid",
+        `${indexPath}.effect_id`,
+        `${indexPath}.effect_id must equal the canonical target index identity.`,
+      );
+    }
+    validateGeneralSemEstimate(indexEffect.value, `${indexPath}.value`);
+    const indexEstimate = wireFinite(
+      strictWireRecord(indexEffect.value, `${indexPath}.value`).estimate,
+      `${indexPath}.value.estimate`,
+    );
+
+    const first = conditionalAuthorities[0]!;
+    const targetSignature = (authority: typeof first): string => JSON.stringify([
+      authority.targetId,
+      authority.estimandId,
+      authority.moderatedStage,
+      authority.interactionId,
+      authority.xId,
+      authority.mediatorId,
+      authority.yId,
+      authority.moderatorId,
+      authority.orderedRelationIds,
+    ]);
+    if (conditionalAuthorities.some((authority) => (
+      targetSignature(authority) !== targetSignature(first)
+    ))) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.conditional_indirect_effects",
+        "general_sem_results.conditional_indirect_effects must share one exact compiled target.",
+      );
+    }
+    if (JSON.stringify([
+      indexTargetId,
+      indexEstimandId,
+      indexStage,
+      indexInteractionId,
+      indexXId,
+      indexMediatorId,
+      indexYId,
+      indexModeratorId,
+      indexRelationIds,
+    ]) !== targetSignature(first)) {
+      wireFail(
+        "document.invalid",
+        indexPath,
+        "general_sem_results.moderated_mediation_indices must identify the same target as the conditional indirect effects.",
+      );
+    }
+    if (new Set([first.xId, first.mediatorId, first.yId, first.moderatorId]).size !== 4) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.conditional_indirect_effects",
+        "general_sem_results moderated mediation requires distinct X, M, Y, and W identities.",
+      );
+    }
+    const interaction = strictWireRecord(
+      interactionEffects[0],
+      "general_sem_results.interaction_effects[0]",
+    );
+    if (interaction.interaction_id !== first.interactionId
+      || interaction.moderator_id !== first.moderatorId) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.interaction_effects[0]",
+        "general_sem_results moderated-mediation target must bind the one published interaction effect.",
+      );
+    }
+    const firstStage = first.moderatedStage === "first_stage";
+    const moderatedRelationId = first.orderedRelationIds[firstStage ? 0 : 1]!;
+    const otherRelationId = first.orderedRelationIds[firstStage ? 1 : 0]!;
+    const expectedFocal = firstStage ? first.xId : first.mediatorId;
+    const expectedOutcome = firstStage ? first.mediatorId : first.yId;
+    if (interaction.focal_relation_id !== moderatedRelationId
+      || interaction.focal_predictor_id !== expectedFocal
+      || interaction.outcome_id !== expectedOutcome) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.interaction_effects[0]",
+        "general_sem_results interaction effect does not match the declared moderated path stage.",
+      );
+    }
+    const moderatedBeta = jointStageEstimatesByRelation.get(moderatedRelationId);
+    const otherBeta = jointStageEstimatesByRelation.get(otherRelationId);
+    if (moderatedBeta == null || otherBeta == null) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.joint_stage_structural_coefficients",
+        "general_sem_results moderated-mediation formulas require both selected path coefficients in the joint-stage ledger.",
+      );
+    }
+    const gamma = wireFinite(
+      strictWireRecord(
+        interaction.scientific_rescaled_gamma,
+        "general_sem_results.interaction_effects[0].scientific_rescaled_gamma",
+      ).estimate,
+      "general_sem_results.interaction_effects[0].scientific_rescaled_gamma.estimate",
+    );
+    for (const effect of conditionalAuthorities) {
+      const expected = (moderatedBeta + gamma * effect.moderatorValue) * otherBeta;
+      if (!approximatelyEqualGeneralSem(effect.valueEstimate, expected)) {
+        wireFail(
+          "document.invalid",
+          `general_sem_results.conditional_indirect_effects.${effect.effectId}`,
+          `general_sem_results conditional indirect effect ${effect.effectId} contradicts the bounded formula.`,
+        );
+      }
+    }
+    if (!approximatelyEqualGeneralSem(indexEstimate, gamma * otherBeta)) {
+      wireFail(
+        "document.invalid",
+        `${indexPath}.value.estimate`,
+        "general_sem_results moderated-mediation index contradicts scientific gamma times the other-stage coefficient.",
+      );
+    }
   }
 
   const probeValues = new Map<string, {
@@ -2061,6 +2704,8 @@ export function parseCanonicalGeneralSemResultsV1(
     jointStageCoefficients,
     interactionEffects,
     conditional,
+    conditionalIndirect,
+    moderatedMediationIndices,
     plots,
     hocStages,
     wireContext,

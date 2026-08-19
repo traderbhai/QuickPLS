@@ -378,6 +378,8 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
             interaction_effects,
             conditional_effect_probes,
             conditional_effects,
+            conditional_indirect_effects: Vec::new(),
+            moderated_mediation_indices: Vec::new(),
             interaction_plots,
             higher_order_stages: Vec::new(),
             cbsem_fit: Vec::new(),
@@ -893,6 +895,7 @@ fn canonical_inference_receipt(
     Ok(CanonicalGeneralSemInferenceReceiptV1 {
         kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
         capability_cell: pls_general_bootstrap_capability_cell_v1(),
+        capability_dependencies: Vec::new(),
         method_version: bootstrap.method_version.clone(),
         resampling_operation_version: bootstrap.resampling_operation_version.clone(),
         resampling_stream_version: bootstrap.resampling_stream_version.clone(),
@@ -1007,6 +1010,7 @@ fn canonical_moderation_inference_receipt(
     Ok(CanonicalGeneralSemInferenceReceiptV1 {
         kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
         capability_cell: pls_general_multiple_moderation_bootstrap_capability_cell_v1(),
+        capability_dependencies: Vec::new(),
         method_version:
             qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
                 .to_string(),

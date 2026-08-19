@@ -1,9 +1,10 @@
 use crate::{
     CompiledCbsemExecutionDispositionV3, CompiledCbsemStructuralFormV3,
     CompiledPlsInteractionV3Error, CompiledPlsPlanV3, CompiledPlsPlanV3Error,
-    GeneralSemBootstrapIntervalV1, GeneralSemConfigV1, GeneralSemInferenceTailV1,
-    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicyV4,
-    ObservedScaleV4, SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
+    CompiledPlsTwoWayModeratedMediationTargetErrorV1, GeneralSemBootstrapIntervalV1,
+    GeneralSemConfigV1, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
+    GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicyV4, ObservedScaleV4,
+    SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
     SemCapabilityDecisionV1ValidationError, SemCapabilityDiagnosticSeverityV1,
     SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1, SemDataBindingV4, SemDerivedTermV4,
     SemGroupV4, SemModelV4, SemVariableV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
@@ -23,6 +24,8 @@ pub fn preflight_general_sem_pls_v1(
         .derived_terms
         .iter()
         .any(|term| matches!(term, SemDerivedTermV4::InteractionV2 { .. }));
+    let requests_moderated_mediation =
+        has_interactions && !config.requested_effect_estimands.is_empty();
     let capability_cells = pls_cells(has_interactions, config)?;
     let mut evidence = vec![SemCapabilityEvidenceV1::new(
         "compiler:recipe_v4_to_compiled_pls_plan_v3_v1",
@@ -33,6 +36,12 @@ pub fn preflight_general_sem_pls_v1(
             "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1",
             "The bounded compiler projects one shared stage-one score model and jointly solves every qualified two-way interaction in each stage-two equation.",
         )?);
+        if requests_moderated_mediation {
+            evidence.push(SemCapabilityEvidenceV1::new(
+                "compiler:qpls.compiled-pls-two-way-moderated-mediation-target.v1",
+                "The bounded compiler requires one selected two-relation path and one matching strong-hierarchy two-stage interaction, and records base-PLS, moderation-point, and supplemental mediation ownership explicitly.",
+            )?);
+        }
         evidence.push(SemCapabilityEvidenceV1::new(
             "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_point:general_sem_pls_multiple_two_way_moderation_point_v1",
             "Capability Registry V2 exposes the exact simultaneous interaction_v2 point-estimation option in Experimental Labs.",
@@ -47,7 +56,12 @@ pub fn preflight_general_sem_pls_v1(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
     ) {
-        if has_interactions {
+        if requests_moderated_mediation {
+            evidence.push(SemCapabilityEvidenceV1::new(
+                "capability_contract:smartpls.mediation:qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap:general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+                "The supplemental conditional-indirect/index capability identity is frozen, but it is not advertised in Capability Registry V2 until its combined bootstrap executor is connected.",
+            )?);
+        } else if has_interactions {
             evidence.push(SemCapabilityEvidenceV1::new(
                 "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_bootstrap_v1",
                 "The supplemental moderation bootstrap compiler binds percentile, two-sided full-model case resampling while preserving the point cell as the compiled artifact's primary authority.",
@@ -403,6 +417,18 @@ fn interaction_scope_diagnostics(
         return Ok(Vec::new());
     }
     let mut diagnostics = Vec::new();
+    if plan.two_way_moderated_mediation_target().is_some() {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.pls.two_way_moderated_mediation_execution_not_connected",
+            SemCapabilityDiagnosticSeverityV1::Error,
+            None,
+            "The exact two-way moderated-mediation target compiles, but the combined five-target bootstrap executor is not connected yet.",
+            vec![
+                "Keep the authored model and selected path unchanged; this capability remains unavailable until its indexed full-model bootstrap runner is connected and qualified.".into(),
+            ],
+        )?);
+        return Ok(diagnostics);
+    }
     if !config.requested_effect_estimands.is_empty() {
         diagnostics.push(SemCapabilityDiagnosticV1::new(
             "sem.capability.pls.multiple_moderation_effect_requests_not_executable",
@@ -478,6 +504,44 @@ fn pls_compile_diagnostic(
                 "Review the interaction output, effect relation, parameter, and generated-column identities in the compatibility inspector.",
             ),
         },
+        CompiledPlsPlanV3Error::ModeratedMediationTarget(error) => match error {
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapRequired => (
+                "sem.capability.pls.two_way_moderated_mediation_bootstrap_required",
+                "Choose percentile, two-sided case bootstrap; point-only moderated mediation is outside this exact cell.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapIntervalUnsupported => (
+                "sem.capability.pls.two_way_moderated_mediation_percentile_required",
+                "Choose percentile case-bootstrap intervals; BCa and studentized inference remain separate future cells.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapTailUnsupported => (
+                "sem.capability.pls.two_way_moderated_mediation_two_sided_required",
+                "Choose two-sided case-bootstrap inference; one-sided inference remains outside this exact cell.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::AuthoredConditionalProbesUnsupported => (
+                "sem.capability.pls.two_way_moderated_mediation_authored_probes_blocked",
+                "Remove authored probes; this cell uses locked standardized moderator values -1, 0, and +1.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::RequestedEffectCardinality { .. }
+            | CompiledPlsTwoWayModeratedMediationTargetErrorV1::RequestedEffectMustBeSpecificPath
+            | CompiledPlsTwoWayModeratedMediationTargetErrorV1::SpecificPathLength { .. }
+            | CompiledPlsTwoWayModeratedMediationTargetErrorV1::RequestedPathNotCompiled { .. } => (
+                "sem.capability.pls.two_way_moderated_mediation_path_not_exact",
+                "Select exactly one compiled two-relation X-to-M-to-Y specific path; total, parallel, and longer-path requests remain separate cells.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::InteractionCardinality { .. }
+            | CompiledPlsTwoWayModeratedMediationTargetErrorV1::InteractionDoesNotModerateSelectedPath => (
+                "sem.capability.pls.two_way_moderated_mediation_interaction_not_exact",
+                "Keep exactly one strong-hierarchy two-stage interaction on either X-to-M or M-to-Y of the selected path.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::ModeratorOverlapsPath { .. } => (
+                "sem.capability.pls.two_way_moderated_mediation_moderator_overlap",
+                "Choose a moderator W that differs from X, M, and Y.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::MissingStageOneProjection => (
+                "sem.capability.pls.two_way_moderated_mediation_stage_one_missing",
+                "Review the interaction projection; the exact target requires an immutable interaction-free stage-one scoring digest.",
+            ),
+        },
         CompiledPlsPlanV3Error::Topology(_) => (
             "sem.capability.pls.topology_not_compilable",
             "Resolve the reported path-limit or topology issue without deleting unsupported semantics silently.",
@@ -534,6 +598,16 @@ fn pls_multiple_moderation_bootstrap_cell()
     )
 }
 
+fn pls_two_way_moderated_mediation_bootstrap_cell()
+-> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    SemCapabilityCellIdV1::new(
+        2,
+        "smartpls.mediation",
+        "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
+        "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+    )
+}
+
 fn pls_cells(
     has_interactions: bool,
     config: &GeneralSemConfigV1,
@@ -547,11 +621,15 @@ fn pls_cells(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
     ) {
-        cells.push(if has_interactions {
-            pls_multiple_moderation_bootstrap_cell()?
-        } else {
-            pls_bootstrap_cell()?
-        });
+        cells.push(
+            if has_interactions && !config.requested_effect_estimands.is_empty() {
+                pls_two_way_moderated_mediation_bootstrap_cell()?
+            } else if has_interactions {
+                pls_multiple_moderation_bootstrap_cell()?
+            } else {
+                pls_bootstrap_cell()?
+            },
+        );
     }
     Ok(cells)
 }
@@ -1043,8 +1121,7 @@ mod tests {
             diagnostic.code() == "sem.capability.pls.conditional_probes_not_executable"
         }));
         assert!(decision.diagnostics().iter().any(|diagnostic| {
-            diagnostic.code()
-                == "sem.capability.pls.multiple_moderation_effect_requests_not_executable"
+            diagnostic.code() == "sem.capability.pls.two_way_moderated_mediation_path_not_exact"
         }));
         assert!(
             decision
@@ -1055,6 +1132,72 @@ mod tests {
                 })
                 .all(|diagnostic| !diagnostic.corrections().is_empty())
         );
+    }
+
+    #[test]
+    fn exact_two_way_moderated_mediation_is_compiled_but_explicitly_not_connected() {
+        let mut model = multiple_mediation_model();
+        add_preflight_interaction(
+            &mut model,
+            "interaction:m1_by_m2",
+            "construct:m1",
+            "construct:m2",
+        );
+        let relation_id = |source: &str, target: &str| {
+            model
+                .relations
+                .iter()
+                .find_map(|relation| match relation {
+                    SemRelationV4::Structural {
+                        id,
+                        source: relation_source,
+                        target: relation_target,
+                        ..
+                    } if relation_source == source && relation_target == target => Some(id.clone()),
+                    _ => None,
+                })
+                .unwrap()
+        };
+        let mut config = GeneralSemConfigV1::default();
+        config.requested_effect_estimands = vec![GeneralSemEffectEstimandV1::SpecificPath {
+            estimand_id: "estimand:selected_x_m1_y".into(),
+            ordered_relation_ids: vec![
+                relation_id("construct:x", "construct:m1"),
+                relation_id("construct:m1", "construct:y"),
+            ],
+        }];
+        config.inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 17,
+            confidence_level: 0.95,
+            interval: crate::GeneralSemBootstrapIntervalV1::Percentile,
+            tail: crate::GeneralSemInferenceTailV1::TwoSided,
+        };
+        let scientific_before = model.scientific_sha256().unwrap();
+
+        let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert_eq!(model.scientific_sha256().unwrap(), scientific_before);
+        assert!(decision.capability_cells().iter().any(|cell| {
+            cell.capability_id() == "smartpls.moderation"
+                && cell.cell_id() == "qpls3.pls.general_sem_multiple_two_way_moderation_point"
+        }));
+        assert!(decision.capability_cells().iter().any(|cell| {
+            cell.capability_id() == "smartpls.mediation"
+                && cell.cell_id() == "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap"
+                && cell.capability_version()
+                    == "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1"
+        }));
+        assert!(decision.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code()
+                == "sem.capability.pls.two_way_moderated_mediation_execution_not_connected"
+        }));
+
+        config.inference = GeneralSemInferenceV1::None;
+        let point_only = preflight_general_sem_pls_v1(&model, &config).unwrap();
+        assert!(point_only.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code() == "sem.capability.pls.two_way_moderated_mediation_bootstrap_required"
+        }));
     }
 
     #[test]

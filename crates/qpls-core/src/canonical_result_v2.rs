@@ -25,6 +25,10 @@ pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V
     "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1";
 pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
     "general_sem_pls_multiple_two_way_moderation_case_bootstrap_v1";
+pub const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1: &str =
+    "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1";
+pub const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
+    "general_sem_pls_two_way_moderated_mediation_case_bootstrap_v1";
 pub const GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1: &str =
     "qpls.general-sem-pls.two-stage-product.sample-standardized.v1";
 pub const GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1: &str =
@@ -402,6 +406,10 @@ pub enum CanonicalGeneralSemFailedReplicateReasonV1 {
 pub struct CanonicalGeneralSemInferenceReceiptV1 {
     pub kind: CanonicalGeneralSemInferenceKindV1,
     pub capability_cell: CapabilityCellReferenceV2,
+    /// Cross-capability scientific dependencies of a combined operation.
+    /// Historical single-owner receipts omit this collection byte-for-byte.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capability_dependencies: Vec<CapabilityCellReferenceV2>,
     pub method_version: String,
     pub resampling_operation_version: String,
     pub resampling_stream_version: String,
@@ -508,6 +516,32 @@ pub enum CanonicalGeneralSemEffectIdentityV1 {
         product_scale_version: String,
         method_version: String,
     },
+    ConditionalIndirect {
+        effect_id: String,
+        target_id: String,
+        estimand_id: String,
+        moderated_stage: CanonicalModeratedMediationStageV1,
+        interaction_id: String,
+        x_id: String,
+        mediator_id: String,
+        y_id: String,
+        moderator_id: String,
+        ordered_relation_ids: Vec<String>,
+        probe_value_index: u32,
+        moderator_value_bits_hex: String,
+    },
+    ModeratedMediationIndex {
+        effect_id: String,
+        target_id: String,
+        estimand_id: String,
+        moderated_stage: CanonicalModeratedMediationStageV1,
+        interaction_id: String,
+        x_id: String,
+        mediator_id: String,
+        y_id: String,
+        moderator_id: String,
+        ordered_relation_ids: Vec<String>,
+    },
 }
 
 impl CanonicalGeneralSemEffectIdentityV1 {
@@ -516,7 +550,9 @@ impl CanonicalGeneralSemEffectIdentityV1 {
             Self::SpecificIndirect { effect_id, .. }
             | Self::TotalIndirect { effect_id, .. }
             | Self::TotalEffect { effect_id, .. }
-            | Self::InteractionScientificRescaledGamma { effect_id, .. } => effect_id,
+            | Self::InteractionScientificRescaledGamma { effect_id, .. }
+            | Self::ConditionalIndirect { effect_id, .. }
+            | Self::ModeratedMediationIndex { effect_id, .. } => effect_id,
         }
     }
 }
@@ -580,6 +616,36 @@ pub fn canonical_general_sem_effect_identities_v1(
                 stage_one_model_scientific_sha256: effect.stage_one_model_scientific_sha256.clone(),
                 product_scale_version: effect.product_scale_version.clone(),
                 method_version: effect.method_version.clone(),
+            }
+        }))
+        .chain(results.conditional_indirect_effects.iter().map(|effect| {
+            CanonicalGeneralSemEffectIdentityV1::ConditionalIndirect {
+                effect_id: effect.effect_id.clone(),
+                target_id: effect.target_id.clone(),
+                estimand_id: effect.estimand_id.clone(),
+                moderated_stage: effect.moderated_stage,
+                interaction_id: effect.interaction_id.clone(),
+                x_id: effect.x_id.clone(),
+                mediator_id: effect.mediator_id.clone(),
+                y_id: effect.y_id.clone(),
+                moderator_id: effect.moderator_id.clone(),
+                ordered_relation_ids: effect.ordered_relation_ids.clone(),
+                probe_value_index: effect.probe_value_index,
+                moderator_value_bits_hex: format!("{:016x}", effect.moderator_value.to_bits()),
+            }
+        }))
+        .chain(results.moderated_mediation_indices.iter().map(|effect| {
+            CanonicalGeneralSemEffectIdentityV1::ModeratedMediationIndex {
+                effect_id: effect.effect_id.clone(),
+                target_id: effect.target_id.clone(),
+                estimand_id: effect.estimand_id.clone(),
+                moderated_stage: effect.moderated_stage,
+                interaction_id: effect.interaction_id.clone(),
+                x_id: effect.x_id.clone(),
+                mediator_id: effect.mediator_id.clone(),
+                y_id: effect.y_id.clone(),
+                moderator_id: effect.moderator_id.clone(),
+                ordered_relation_ids: effect.ordered_relation_ids.clone(),
             }
         }))
         .collect::<Vec<_>>();
@@ -756,6 +822,53 @@ pub struct CanonicalConditionalEffectResultV1 {
     pub value: CanonicalGeneralSemEstimateV1,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalModeratedMediationStageV1 {
+    FirstStage,
+    SecondStage,
+}
+
+/// One of the three locked standardized-moderator conditional indirect
+/// effects owned by the combined moderated-mediation cell.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalConditionalIndirectEffectResultV1 {
+    pub effect_id: String,
+    pub target_id: String,
+    pub estimand_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub moderated_stage: CanonicalModeratedMediationStageV1,
+    pub interaction_id: String,
+    pub x_id: String,
+    pub mediator_id: String,
+    pub y_id: String,
+    pub moderator_id: String,
+    pub ordered_relation_ids: Vec<String>,
+    pub probe_value_index: u32,
+    pub moderator_value: f64,
+    pub value: CanonicalGeneralSemEstimateV1,
+}
+
+/// The Hayes-style index for the same exact target: scientific gamma times
+/// the unmoderated-stage coefficient.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalModeratedMediationIndexResultV1 {
+    pub effect_id: String,
+    pub target_id: String,
+    pub estimand_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub moderated_stage: CanonicalModeratedMediationStageV1,
+    pub interaction_id: String,
+    pub x_id: String,
+    pub mediator_id: String,
+    pub y_id: String,
+    pub moderator_id: String,
+    pub ordered_relation_ids: Vec<String>,
+    pub value: CanonicalGeneralSemEstimateV1,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct CanonicalInteractionPlotPointV1 {
@@ -912,6 +1025,10 @@ pub struct CanonicalGeneralSemResultsV1 {
     pub conditional_effect_probes: Vec<CanonicalConditionalEffectProbeResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conditional_effects: Vec<CanonicalConditionalEffectResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conditional_indirect_effects: Vec<CanonicalConditionalIndirectEffectResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub moderated_mediation_indices: Vec<CanonicalModeratedMediationIndexResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub interaction_plots: Vec<CanonicalInteractionPlotResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1284,6 +1401,26 @@ fn validate_general_sem_inference_receipt_v1(
             )
         })
         .collect::<Vec<_>>();
+    let moderated_mediation_derived_effect_values = results
+        .conditional_indirect_effects
+        .iter()
+        .map(|effect| (effect.effect_id.as_str(), &effect.value, &effect.trace))
+        .chain(
+            results
+                .moderated_mediation_indices
+                .iter()
+                .map(|effect| (effect.effect_id.as_str(), &effect.value, &effect.trace)),
+        )
+        .collect::<Vec<_>>();
+    let moderated_mediation_derived_effect_ids = moderated_mediation_derived_effect_values
+        .iter()
+        .map(|(effect_id, _, _)| *effect_id)
+        .collect::<BTreeSet<_>>();
+    let moderated_mediation_effect_values = moderation_effect_values
+        .iter()
+        .copied()
+        .chain(moderated_mediation_derived_effect_values.iter().copied())
+        .collect::<Vec<_>>();
     let point_only_inference = results
         .joint_stage_structural_coefficients
         .iter()
@@ -1317,6 +1454,9 @@ fn validate_general_sem_inference_receipt_v1(
             || moderation_effect_values
                 .iter()
                 .any(|(_, value, _)| general_sem_estimate_has_inference(value))
+            || moderated_mediation_derived_effect_values
+                .iter()
+                .any(|(_, value, _)| general_sem_estimate_has_inference(value))
             || point_only_inference
         {
             errors.push("general_sem_results inference fields require inference_receipt".into());
@@ -1333,12 +1473,16 @@ fn validate_general_sem_inference_receipt_v1(
         receipt.capability_cell == general_sem_pls_bootstrap_capability_cell_v1();
     let moderation_bootstrap = receipt.capability_cell
         == crate::pls_general_multiple_moderation_bootstrap_capability_cell_v1();
-    if !mediation_bootstrap && !moderation_bootstrap {
+    let moderated_mediation_bootstrap = receipt.capability_cell
+        == crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+    if !mediation_bootstrap && !moderation_bootstrap && !moderated_mediation_bootstrap {
         errors.push(format!(
-            "{context}.capability_cell must equal the exact General SEM multiple-mediation full-model bootstrap option cell or the exact General SEM multiple two-way moderation full-model bootstrap option cell"
+            "{context}.capability_cell must equal an exact General SEM mediation, moderation, or two-way moderated-mediation full-model bootstrap option cell"
         ));
     }
-    let effect_values = if moderation_bootstrap {
+    let effect_values = if moderated_mediation_bootstrap {
+        &moderated_mediation_effect_values
+    } else if moderation_bootstrap {
         &moderation_effect_values
     } else {
         &mediation_effect_values
@@ -1350,6 +1494,13 @@ fn validate_general_sem_inference_receipt_v1(
             "{context} moderation bootstrap must not contain mediation effect rows"
         ));
     }
+    if moderated_mediation_bootstrap
+        && (!results.specific_indirect_effects.is_empty() || !results.aggregate_effects.is_empty())
+    {
+        errors.push(format!(
+            "{context} moderated-mediation bootstrap must not contain ordinary mediation effect rows"
+        ));
+    }
     let capability_identity = capability_cell_reference_identity_v2(&receipt.capability_cell);
     match document_capability_ids {
         Some(identities) if !identities.contains(&capability_identity) => errors.push(format!(
@@ -1359,6 +1510,40 @@ fn validate_general_sem_inference_receipt_v1(
             "{context}.capability_cell requires document capability_cells"
         )),
         _ => {}
+    }
+    if moderated_mediation_bootstrap {
+        let dependency_identities = validate_capability_set(
+            errors,
+            &receipt.capability_dependencies,
+            &format!("{context}.capability_dependencies"),
+        );
+        let mut expected_dependencies = vec![
+            RecipeV4CompilerTarget::PlsPlanV2.capability_cell(),
+            crate::pls_general_multiple_moderation_point_capability_cell_v1(),
+        ];
+        expected_dependencies.sort_by_key(capability_cell_reference_identity_v2);
+        let expected_identities = expected_dependencies
+            .iter()
+            .map(capability_cell_reference_identity_v2)
+            .collect::<Vec<_>>();
+        if dependency_identities != expected_identities {
+            errors.push(format!(
+                "{context}.capability_dependencies must exactly declare the base PLS and moderation-point cells"
+            ));
+        }
+        if let Some(document_identities) = document_capability_ids {
+            for dependency_identity in dependency_identities {
+                if !document_identities.contains(&dependency_identity) {
+                    errors.push(format!(
+                        "{context}.capability_dependencies references undeclared option cell {dependency_identity}"
+                    ));
+                }
+            }
+        }
+    } else if !receipt.capability_dependencies.is_empty() {
+        errors.push(format!(
+            "{context}.capability_dependencies must be empty for single-owner v1 bootstrap receipts"
+        ));
     }
 
     for (name, value) in [
@@ -1394,12 +1579,16 @@ fn validate_general_sem_inference_receipt_v1(
     ] {
         require_stable_id(errors, value, &format!("{context}.{name}"));
     }
-    let expected_method_version = if moderation_bootstrap {
+    let expected_method_version = if moderated_mediation_bootstrap {
+        GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
+    } else if moderation_bootstrap {
         GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
     } else {
         GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1
     };
-    let expected_operation_version = if moderation_bootstrap {
+    let expected_operation_version = if moderated_mediation_bootstrap {
+        GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+    } else if moderation_bootstrap {
         GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
     } else {
         GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1
@@ -1504,7 +1693,11 @@ fn validate_general_sem_inference_receipt_v1(
         .collect::<Vec<_>>();
     expected_effect_ids.sort();
     if receipt.effect_ids != expected_effect_ids {
-        errors.push(if moderation_bootstrap {
+        errors.push(if moderated_mediation_bootstrap {
+            format!(
+                "{context}.effect_ids must exactly cover one scientific gamma, three conditional indirect effects, and one moderated-mediation index"
+            )
+        } else if moderation_bootstrap {
             format!(
                 "{context}.effect_ids must exactly cover scientific rescaled gamma interaction rows"
             )
@@ -1516,11 +1709,17 @@ fn validate_general_sem_inference_receipt_v1(
         .into_iter()
         .filter(|identity| match identity {
             CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma { .. } => {
-                moderation_bootstrap
+                moderation_bootstrap || moderated_mediation_bootstrap
+            }
+            CanonicalGeneralSemEffectIdentityV1::ConditionalIndirect { .. }
+            | CanonicalGeneralSemEffectIdentityV1::ModeratedMediationIndex { .. } => {
+                moderated_mediation_bootstrap
             }
             CanonicalGeneralSemEffectIdentityV1::SpecificIndirect { .. }
             | CanonicalGeneralSemEffectIdentityV1::TotalIndirect { .. }
-            | CanonicalGeneralSemEffectIdentityV1::TotalEffect { .. } => !moderation_bootstrap,
+            | CanonicalGeneralSemEffectIdentityV1::TotalEffect { .. } => {
+                !moderation_bootstrap && !moderated_mediation_bootstrap
+            }
         })
         .collect::<Vec<_>>();
     if receipt.effect_identity_set_sha256
@@ -1655,8 +1854,13 @@ fn validate_general_sem_inference_receipt_v1(
         });
     }
     let uncovered_inference = point_only_inference
-        || (moderation_bootstrap && interaction_plot_interval_fields)
-        || if moderation_bootstrap {
+        || ((moderation_bootstrap || moderated_mediation_bootstrap)
+            && interaction_plot_interval_fields)
+        || (!moderated_mediation_bootstrap
+            && moderated_mediation_derived_effect_values
+                .iter()
+                .any(|(_, value, _)| general_sem_estimate_has_inference(value)))
+        || if moderation_bootstrap || moderated_mediation_bootstrap {
             mediation_effect_values
                 .iter()
                 .any(|(_, value, _)| general_sem_estimate_has_inference(value))
@@ -1666,7 +1870,11 @@ fn validate_general_sem_inference_receipt_v1(
                 .any(|(_, value, _)| general_sem_estimate_has_inference(value))
         };
     if uncovered_inference {
-        errors.push(if moderation_bootstrap {
+        errors.push(if moderated_mediation_bootstrap {
+            format!(
+                "{context} moderated-mediation v1 permits inference only for scientific gamma, the three locked conditional indirect effects, and the index"
+            )
+        } else if moderation_bootstrap {
             format!(
                 "{context} moderation v1 permits inference only for scientific_rescaled_gamma; standardized-product, joint-stage, conditional, plot, mediation, and higher-order estimates must remain point-only"
             )
@@ -1676,14 +1884,25 @@ fn validate_general_sem_inference_receipt_v1(
             )
         });
     }
-    let expected_effect_capability = if moderation_bootstrap {
+    let expected_effect_capability = if moderation_bootstrap || moderated_mediation_bootstrap {
         crate::pls_general_multiple_moderation_point_capability_cell_v1()
     } else {
         crate::pls_general_recursive_effects_capability_cell_v1()
     };
     for (effect_id, value, trace) in effect_values {
+        let expected_effect_capability = if moderated_mediation_bootstrap
+            && moderated_mediation_derived_effect_ids.contains(effect_id)
+        {
+            crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1()
+        } else {
+            expected_effect_capability.clone()
+        };
         if trace.capability_cell != expected_effect_capability {
-            errors.push(if moderation_bootstrap {
+            errors.push(if moderated_mediation_bootstrap {
+                format!(
+                    "{context} effect {effect_id} trace.capability_cell does not match its moderation-point or supplemental moderated-mediation owner"
+                )
+            } else if moderation_bootstrap {
                 format!(
                     "{context} effect {effect_id} trace.capability_cell must equal the General SEM multiple two-way moderation point option cell"
                 )
@@ -1720,6 +1939,292 @@ fn validate_general_sem_inference_receipt_v1(
     }
 }
 
+fn validate_canonical_moderated_mediation_results_v1<'a>(
+    errors: &mut Vec<String>,
+    results: &'a CanonicalGeneralSemResultsV1,
+    document_model_id: &str,
+    document_capability_ids: Option<&HashSet<String>>,
+    effect_ids: &mut BTreeSet<&'a str>,
+) {
+    let context = "general_sem_results";
+    let supplemental_cell =
+        crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+    let combined_receipt = results
+        .inference_receipt
+        .as_ref()
+        .map(|receipt| &receipt.capability_cell)
+        == Some(&supplemental_cell);
+    if results.conditional_indirect_effects.is_empty()
+        && results.moderated_mediation_indices.is_empty()
+        && !combined_receipt
+    {
+        return;
+    }
+    if results.conditional_indirect_effects.len() != 3 {
+        errors.push(format!(
+            "{context}.conditional_indirect_effects must contain exactly the locked -1/0/+1 targets"
+        ));
+    }
+    if results.moderated_mediation_indices.len() != 1 {
+        errors.push(format!(
+            "{context}.moderated_mediation_indices must contain exactly one index"
+        ));
+    }
+    if results.interaction_effects.len() != 1 {
+        errors.push(format!(
+            "{context} two-way moderated mediation requires exactly one interaction effect"
+        ));
+    }
+    if results
+        .inference_receipt
+        .as_ref()
+        .map(|receipt| &receipt.capability_cell)
+        != Some(&supplemental_cell)
+    {
+        errors.push(format!(
+            "{context} moderated-mediation rows require the exact combined bootstrap receipt"
+        ));
+    }
+
+    let mut probe_indices = BTreeSet::new();
+    for (index, effect) in results.conditional_indirect_effects.iter().enumerate() {
+        let item_context = format!("{context}.conditional_indirect_effects[{index}]");
+        if !effect_ids.insert(effect.effect_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.effect_id is duplicated across effect sections"
+            ));
+        }
+        for (name, id) in [
+            ("target_id", effect.target_id.as_str()),
+            ("estimand_id", effect.estimand_id.as_str()),
+            ("interaction_id", effect.interaction_id.as_str()),
+            ("x_id", effect.x_id.as_str()),
+            ("mediator_id", effect.mediator_id.as_str()),
+            ("y_id", effect.y_id.as_str()),
+            ("moderator_id", effect.moderator_id.as_str()),
+        ] {
+            require_stable_id(errors, id, &format!("{item_context}.{name}"));
+        }
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        if effect.trace.capability_cell != supplemental_cell {
+            errors.push(format!(
+                "{item_context}.trace.capability_cell must equal the supplemental two-way moderated-mediation cell"
+            ));
+        }
+        if effect.ordered_relation_ids.len() != 2 {
+            errors.push(format!(
+                "{item_context}.ordered_relation_ids must contain exactly two relations"
+            ));
+        }
+        require_unique_ids(
+            errors,
+            effect.ordered_relation_ids.iter().map(String::as_str),
+            &format!("{item_context}.ordered_relation_ids"),
+        );
+        if effect.probe_value_index > 2 {
+            errors.push(format!(
+                "{item_context}.probe_value_index must be 0, 1, or 2"
+            ));
+        } else {
+            probe_indices.insert(effect.probe_value_index);
+            let expected_probe = crate::GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_PROBES_V1
+                [effect.probe_value_index as usize];
+            if !approximately_equal(effect.moderator_value, expected_probe) {
+                errors.push(format!(
+                    "{item_context}.moderator_value must equal the locked standardized probe"
+                ));
+            }
+        }
+        if effect.effect_id
+            != crate::conditional_indirect_effect_identity_v1(
+                &effect.target_id,
+                effect.probe_value_index,
+            )
+        {
+            errors.push(format!(
+                "{item_context}.effect_id must equal the canonical target/probe identity"
+            ));
+        }
+        validate_general_sem_estimate(errors, &effect.value, &format!("{item_context}.value"));
+    }
+    if probe_indices != BTreeSet::from([0, 1, 2]) {
+        errors.push(format!(
+            "{context}.conditional_indirect_effects must cover probe indices 0, 1, and 2 exactly"
+        ));
+    }
+
+    for (index, effect) in results.moderated_mediation_indices.iter().enumerate() {
+        let item_context = format!("{context}.moderated_mediation_indices[{index}]");
+        if !effect_ids.insert(effect.effect_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.effect_id is duplicated across effect sections"
+            ));
+        }
+        for (name, id) in [
+            ("target_id", effect.target_id.as_str()),
+            ("estimand_id", effect.estimand_id.as_str()),
+            ("interaction_id", effect.interaction_id.as_str()),
+            ("x_id", effect.x_id.as_str()),
+            ("mediator_id", effect.mediator_id.as_str()),
+            ("y_id", effect.y_id.as_str()),
+            ("moderator_id", effect.moderator_id.as_str()),
+        ] {
+            require_stable_id(errors, id, &format!("{item_context}.{name}"));
+        }
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        if effect.trace.capability_cell != supplemental_cell {
+            errors.push(format!(
+                "{item_context}.trace.capability_cell must equal the supplemental two-way moderated-mediation cell"
+            ));
+        }
+        if effect.ordered_relation_ids.len() != 2 {
+            errors.push(format!(
+                "{item_context}.ordered_relation_ids must contain exactly two relations"
+            ));
+        }
+        require_unique_ids(
+            errors,
+            effect.ordered_relation_ids.iter().map(String::as_str),
+            &format!("{item_context}.ordered_relation_ids"),
+        );
+        if effect.effect_id != crate::moderated_mediation_index_identity_v1(&effect.target_id) {
+            errors.push(format!(
+                "{item_context}.effect_id must equal the canonical target index identity"
+            ));
+        }
+        validate_general_sem_estimate(errors, &effect.value, &format!("{item_context}.value"));
+    }
+
+    let (Some(first), Some(index_effect), Some(interaction)) = (
+        results.conditional_indirect_effects.first(),
+        results.moderated_mediation_indices.first(),
+        results.interaction_effects.first(),
+    ) else {
+        return;
+    };
+    for effect in &results.conditional_indirect_effects {
+        if effect.target_id != first.target_id
+            || effect.estimand_id != first.estimand_id
+            || effect.moderated_stage != first.moderated_stage
+            || effect.interaction_id != first.interaction_id
+            || effect.x_id != first.x_id
+            || effect.mediator_id != first.mediator_id
+            || effect.y_id != first.y_id
+            || effect.moderator_id != first.moderator_id
+            || effect.ordered_relation_ids != first.ordered_relation_ids
+        {
+            errors.push(format!(
+                "{context}.conditional_indirect_effects must share one exact compiled target"
+            ));
+            break;
+        }
+    }
+    if index_effect.target_id != first.target_id
+        || index_effect.estimand_id != first.estimand_id
+        || index_effect.moderated_stage != first.moderated_stage
+        || index_effect.interaction_id != first.interaction_id
+        || index_effect.x_id != first.x_id
+        || index_effect.mediator_id != first.mediator_id
+        || index_effect.y_id != first.y_id
+        || index_effect.moderator_id != first.moderator_id
+        || index_effect.ordered_relation_ids != first.ordered_relation_ids
+    {
+        errors.push(format!(
+            "{context}.moderated_mediation_indices must identify the same target as the conditional indirect effects"
+        ));
+    }
+    let distinct_nodes = [
+        first.x_id.as_str(),
+        first.mediator_id.as_str(),
+        first.y_id.as_str(),
+        first.moderator_id.as_str(),
+    ]
+    .into_iter()
+    .collect::<BTreeSet<_>>();
+    if distinct_nodes.len() != 4 {
+        errors.push(format!(
+            "{context} moderated mediation requires distinct X, M, Y, and W identities"
+        ));
+    }
+    if interaction.interaction_id != first.interaction_id
+        || interaction.moderator_id != first.moderator_id
+    {
+        errors.push(format!(
+            "{context} moderated-mediation target must bind the one published interaction effect"
+        ));
+    }
+    if first.ordered_relation_ids.len() != 2 {
+        return;
+    }
+    let (moderated_relation_id, other_relation_id, expected_focal, expected_outcome) =
+        match first.moderated_stage {
+            CanonicalModeratedMediationStageV1::FirstStage => (
+                first.ordered_relation_ids[0].as_str(),
+                first.ordered_relation_ids[1].as_str(),
+                first.x_id.as_str(),
+                first.mediator_id.as_str(),
+            ),
+            CanonicalModeratedMediationStageV1::SecondStage => (
+                first.ordered_relation_ids[1].as_str(),
+                first.ordered_relation_ids[0].as_str(),
+                first.mediator_id.as_str(),
+                first.y_id.as_str(),
+            ),
+        };
+    if interaction.focal_relation_id != moderated_relation_id
+        || interaction.focal_predictor_id != expected_focal
+        || interaction.outcome_id != expected_outcome
+    {
+        errors.push(format!(
+            "{context} interaction effect does not match the declared moderated path stage"
+        ));
+    }
+    let moderated_beta = results
+        .joint_stage_structural_coefficients
+        .iter()
+        .find(|coefficient| coefficient.relation_id == moderated_relation_id)
+        .map(|coefficient| coefficient.estimate.estimate);
+    let other_beta = results
+        .joint_stage_structural_coefficients
+        .iter()
+        .find(|coefficient| coefficient.relation_id == other_relation_id)
+        .map(|coefficient| coefficient.estimate.estimate);
+    let (Some(moderated_beta), Some(other_beta)) = (moderated_beta, other_beta) else {
+        errors.push(format!(
+            "{context} moderated-mediation formulas require both selected path coefficients in the joint-stage ledger"
+        ));
+        return;
+    };
+    let gamma = interaction.scientific_rescaled_gamma.estimate;
+    for effect in &results.conditional_indirect_effects {
+        let expected = (moderated_beta + gamma * effect.moderator_value) * other_beta;
+        if !approximately_equal(effect.value.estimate, expected) {
+            errors.push(format!(
+                "{context} conditional indirect effect {} contradicts the bounded formula",
+                effect.effect_id
+            ));
+        }
+    }
+    let expected_index = gamma * other_beta;
+    if !approximately_equal(index_effect.value.estimate, expected_index) {
+        errors.push(format!(
+            "{context} moderated-mediation index contradicts scientific gamma times the other-stage coefficient"
+        ));
+    }
+}
+
 fn validate_general_sem_results_v1(
     errors: &mut Vec<String>,
     results: &CanonicalGeneralSemResultsV1,
@@ -1740,6 +2245,8 @@ fn validate_general_sem_results_v1(
         && results.interaction_effects.is_empty()
         && results.conditional_effect_probes.is_empty()
         && results.conditional_effects.is_empty()
+        && results.conditional_indirect_effects.is_empty()
+        && results.moderated_mediation_indices.is_empty()
         && results.interaction_plots.is_empty()
         && results.higher_order_stages.is_empty()
         && results.cbsem_fit.is_empty()
@@ -1797,6 +2304,22 @@ fn validate_general_sem_results_v1(
             .iter()
             .map(|item| item.effect_id.as_str()),
         &format!("{context}.conditional_effects"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .conditional_indirect_effects
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.conditional_indirect_effects"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .moderated_mediation_indices
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.moderated_mediation_indices"),
     );
     require_canonical_stable_ids(
         errors,
@@ -2226,6 +2749,14 @@ fn validate_general_sem_results_v1(
             "{context}.interaction_effects must share one stage-one model scientific digest"
         ));
     }
+
+    validate_canonical_moderated_mediation_results_v1(
+        errors,
+        results,
+        document_model_id,
+        document_capability_ids,
+        &mut effect_ids,
+    );
 
     for (index, probe) in results.conditional_effect_probes.iter().enumerate() {
         let item_context = format!("{context}.conditional_effect_probes[{index}]");
@@ -3734,6 +4265,8 @@ mod tests {
                 moderator_value: 1.0,
                 value: effect_value(0.42),
             }],
+            conditional_indirect_effects: Vec::new(),
+            moderated_mediation_indices: Vec::new(),
             interaction_plots: vec![CanonicalInteractionPlotResultV1 {
                 plot_id: "interaction_plot_1".to_string(),
                 trace: general_sem_trace(),
@@ -3996,6 +4529,7 @@ mod tests {
         results.inference_receipt = Some(CanonicalGeneralSemInferenceReceiptV1 {
             kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
             capability_cell: secondary_capability_reference(),
+            capability_dependencies: Vec::new(),
             method_version: GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1.to_string(),
             resampling_operation_version: GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1
                 .to_string(),
@@ -4072,6 +4606,7 @@ mod tests {
         results.inference_receipt = Some(CanonicalGeneralSemInferenceReceiptV1 {
             kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
             capability_cell: crate::pls_general_multiple_moderation_bootstrap_capability_cell_v1(),
+            capability_dependencies: Vec::new(),
             method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
                 .to_string(),
             resampling_operation_version:
@@ -4116,6 +4651,135 @@ mod tests {
         document
     }
 
+    fn general_sem_moderated_mediation_inference_document_fixture() -> CanonicalResultDocumentV2 {
+        let mut document = general_sem_moderation_inference_document_fixture();
+        let supplemental_cell =
+            crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+        let results = document.general_sem_results.as_mut().unwrap();
+        results.joint_stage_structural_coefficients.push(
+            CanonicalJointStageStructuralCoefficientResultV1 {
+                relation_id: "relation_m_y".into(),
+                parameter_id: "parameter_m_y".into(),
+                trace: results.interaction_effects[0].trace.clone(),
+                source_id: "construct_y".into(),
+                target_id: "construct_z".into(),
+                role: CanonicalStructuralRelationRoleV1::Structural,
+                estimate: effect_value(0.5),
+                stage: CanonicalStructuralEstimateStageV1::JointStageTwo,
+                method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1.into(),
+            },
+        );
+        results
+            .joint_stage_structural_coefficients
+            .sort_by(|left, right| left.relation_id.cmp(&right.relation_id));
+
+        let target_id = "sem_moderated_mediation_target_v1_fixture";
+        let estimand_id = "estimand:selected_x_m_y";
+        let ordered_relation_ids = vec!["relation_focal_1".into(), "relation_m_y".into()];
+        let derived_trace = CanonicalGeneralSemResultTraceV1 {
+            model_id: document.provenance.model_id.clone(),
+            capability_cell: supplemental_cell.clone(),
+        };
+        results.conditional_indirect_effects = [-1.0, 0.0, 1.0]
+            .into_iter()
+            .enumerate()
+            .map(|(probe_value_index, moderator_value)| {
+                CanonicalConditionalIndirectEffectResultV1 {
+                    effect_id: crate::conditional_indirect_effect_identity_v1(
+                        target_id,
+                        probe_value_index as u32,
+                    ),
+                    target_id: target_id.into(),
+                    estimand_id: estimand_id.into(),
+                    trace: derived_trace.clone(),
+                    moderated_stage: CanonicalModeratedMediationStageV1::FirstStage,
+                    interaction_id: "interaction_1".into(),
+                    x_id: "construct_x".into(),
+                    mediator_id: "construct_y".into(),
+                    y_id: "construct_z".into(),
+                    moderator_id: "moderator_m".into(),
+                    ordered_relation_ids: ordered_relation_ids.clone(),
+                    probe_value_index: probe_value_index as u32,
+                    moderator_value,
+                    value: inferred_effect_value((0.4 + 0.4 * moderator_value) * 0.5),
+                }
+            })
+            .collect();
+        results
+            .conditional_indirect_effects
+            .sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+        results.moderated_mediation_indices = vec![CanonicalModeratedMediationIndexResultV1 {
+            effect_id: crate::moderated_mediation_index_identity_v1(target_id),
+            target_id: target_id.into(),
+            estimand_id: estimand_id.into(),
+            trace: derived_trace,
+            moderated_stage: CanonicalModeratedMediationStageV1::FirstStage,
+            interaction_id: "interaction_1".into(),
+            x_id: "construct_x".into(),
+            mediator_id: "construct_y".into(),
+            y_id: "construct_z".into(),
+            moderator_id: "moderator_m".into(),
+            ordered_relation_ids,
+            value: inferred_effect_value(0.2),
+        }];
+
+        let mut effect_ids = results
+            .interaction_effects
+            .iter()
+            .map(|effect| effect.effect_id.clone())
+            .chain(
+                results
+                    .conditional_indirect_effects
+                    .iter()
+                    .map(|effect| effect.effect_id.clone()),
+            )
+            .chain(
+                results
+                    .moderated_mediation_indices
+                    .iter()
+                    .map(|effect| effect.effect_id.clone()),
+            )
+            .collect::<Vec<_>>();
+        effect_ids.sort();
+        let effect_identities = canonical_general_sem_effect_identities_v1(results)
+            .into_iter()
+            .filter(|identity| {
+                matches!(
+                    identity,
+                    CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma { .. }
+                        | CanonicalGeneralSemEffectIdentityV1::ConditionalIndirect { .. }
+                        | CanonicalGeneralSemEffectIdentityV1::ModeratedMediationIndex { .. }
+                )
+            })
+            .collect::<Vec<_>>();
+        let receipt = results.inference_receipt.as_mut().unwrap();
+        receipt.capability_cell = supplemental_cell.clone();
+        receipt.capability_dependencies = vec![
+            RecipeV4CompilerTarget::PlsPlanV2.capability_cell(),
+            crate::pls_general_multiple_moderation_point_capability_cell_v1(),
+        ];
+        receipt
+            .capability_dependencies
+            .sort_by_key(capability_cell_reference_identity_v2);
+        receipt.method_version =
+            GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1.into();
+        receipt.resampling_operation_version =
+            GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1.into();
+        receipt.effect_ids = effect_ids;
+        receipt.effect_identity_set_sha256 =
+            general_sem_effect_identity_set_sha256_v1(&effect_identities);
+
+        let cells = document.capability_cells.as_mut().unwrap();
+        cells.retain(|cell| {
+            cell != &crate::pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+        });
+        cells.push(RecipeV4CompilerTarget::PlsPlanV2.capability_cell());
+        cells.push(supplemental_cell);
+        cells.sort_by_key(capability_cell_reference_identity_v2);
+        cells.dedup();
+        document
+    }
+
     #[test]
     fn valid_microcase_passes() {
         let validation = validate_canonical_result_document_v2(&document_fixture());
@@ -4140,6 +4804,109 @@ mod tests {
         let decoded: CanonicalResultDocumentV2 = serde_json::from_value(value).unwrap();
         assert_eq!(decoded, document);
         assert!(decoded.general_sem_results.is_none());
+    }
+
+    #[test]
+    fn moderated_mediation_canonical_collections_are_additive_and_identity_bound() {
+        let historical = serde_json::to_value(general_sem_results_fixture()).unwrap();
+        assert!(historical.get("conditional_indirect_effects").is_none());
+        assert!(historical.get("moderated_mediation_indices").is_none());
+
+        let mut results = general_sem_results_fixture();
+        let target_id = "sem_moderated_mediation_target_v1_fixture";
+        let estimand_id = "estimand:selected_x_m_y";
+        let interaction_id = "interaction:m_by_w_to_y";
+        let relations = vec!["relation_x_m".to_string(), "relation_m_y".to_string()];
+        let trace = CanonicalGeneralSemResultTraceV1 {
+            model_id: "model-1".into(),
+            capability_cell:
+                crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1(),
+        };
+        results.conditional_indirect_effects = [-1.0, 0.0, 1.0]
+            .into_iter()
+            .enumerate()
+            .map(|(probe_value_index, moderator_value)| {
+                CanonicalConditionalIndirectEffectResultV1 {
+                    effect_id: crate::conditional_indirect_effect_identity_v1(
+                        target_id,
+                        probe_value_index as u32,
+                    ),
+                    target_id: target_id.into(),
+                    estimand_id: estimand_id.into(),
+                    trace: trace.clone(),
+                    moderated_stage: CanonicalModeratedMediationStageV1::SecondStage,
+                    interaction_id: interaction_id.into(),
+                    x_id: "construct:x".into(),
+                    mediator_id: "construct:m".into(),
+                    y_id: "construct:y".into(),
+                    moderator_id: "construct:w".into(),
+                    ordered_relation_ids: relations.clone(),
+                    probe_value_index: probe_value_index as u32,
+                    moderator_value,
+                    value: effect_value((0.4 + 0.2 * moderator_value) * 0.5),
+                }
+            })
+            .collect();
+        results
+            .conditional_indirect_effects
+            .sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+        results.moderated_mediation_indices = vec![CanonicalModeratedMediationIndexResultV1 {
+            effect_id: crate::moderated_mediation_index_identity_v1(target_id),
+            target_id: target_id.into(),
+            estimand_id: estimand_id.into(),
+            trace,
+            moderated_stage: CanonicalModeratedMediationStageV1::SecondStage,
+            interaction_id: interaction_id.into(),
+            x_id: "construct:x".into(),
+            mediator_id: "construct:m".into(),
+            y_id: "construct:y".into(),
+            moderator_id: "construct:w".into(),
+            ordered_relation_ids: relations,
+            value: effect_value(0.1),
+        }];
+
+        let encoded = serde_json::to_value(&results).unwrap();
+        assert_eq!(
+            encoded["conditional_indirect_effects"]
+                .as_array()
+                .unwrap()
+                .len(),
+            3
+        );
+        assert_eq!(
+            encoded["moderated_mediation_indices"]
+                .as_array()
+                .unwrap()
+                .len(),
+            1
+        );
+        assert_eq!(
+            serde_json::from_value::<CanonicalGeneralSemResultsV1>(encoded).unwrap(),
+            results
+        );
+        let identities = canonical_general_sem_effect_identities_v1(&results);
+        assert_eq!(
+            identities
+                .iter()
+                .filter(|identity| matches!(
+                    identity,
+                    CanonicalGeneralSemEffectIdentityV1::ConditionalIndirect { .. }
+                ))
+                .count(),
+            3
+        );
+        assert!(identities.iter().any(|identity| matches!(
+            identity,
+            CanonicalGeneralSemEffectIdentityV1::ModeratedMediationIndex { .. }
+        )));
+
+        let inference_wire =
+            serde_json::to_value(general_sem_inference_document_fixture()).unwrap();
+        assert!(
+            inference_wire["general_sem_results"]["inference_receipt"]
+                .get("capability_dependencies")
+                .is_none()
+        );
     }
 
     #[test]
@@ -4574,6 +5341,45 @@ mod tests {
     }
 
     #[test]
+    fn moderated_mediation_receipt_and_five_target_formulas_fail_closed() {
+        let document = general_sem_moderated_mediation_inference_document_fixture();
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(validation.passed, "{:?}", validation.errors);
+
+        let mut formula_tamper = document.clone();
+        formula_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .conditional_indirect_effects[0]
+            .value
+            .estimate += 0.01;
+        assert!(
+            validate_canonical_result_document_v2(&formula_tamper)
+                .errors
+                .iter()
+                .any(|error| error.contains("contradicts the bounded formula"))
+        );
+
+        let mut dependency_tamper = document;
+        dependency_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .capability_dependencies
+            .pop();
+        assert!(
+            validate_canonical_result_document_v2(&dependency_tamper)
+                .errors
+                .iter()
+                .any(|error| error.contains("must exactly declare the base PLS"))
+        );
+    }
+
+    #[test]
     fn point_only_general_sem_estimates_keep_the_legacy_extension_shape() {
         let mut document = document_fixture();
         document.general_sem_results = Some(general_sem_results_fixture());
@@ -4937,6 +5743,8 @@ mod tests {
             interaction_effects: Vec::new(),
             conditional_effect_probes: Vec::new(),
             conditional_effects: Vec::new(),
+            conditional_indirect_effects: Vec::new(),
+            moderated_mediation_indices: Vec::new(),
             interaction_plots: Vec::new(),
             higher_order_stages: Vec::new(),
             cbsem_fit: Vec::new(),

@@ -1213,6 +1213,8 @@ mod tests {
                 moderator_value: 0.0,
                 value: estimate(0.4),
             }],
+            conditional_indirect_effects: Vec::new(),
+            moderated_mediation_indices: Vec::new(),
             interaction_plots: vec![CanonicalInteractionPlotResultV1 {
                 plot_id: "plot_1".into(),
                 trace: trace(),
@@ -1354,6 +1356,7 @@ mod tests {
         results.inference_receipt = Some(CanonicalGeneralSemInferenceReceiptV1 {
             kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
             capability_cell: qpls_core::general_sem_pls_bootstrap_capability_cell_v1(),
+            capability_dependencies: Vec::new(),
             method_version: qpls_core::GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1.into(),
             resampling_operation_version:
                 qpls_core::GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1.into(),
