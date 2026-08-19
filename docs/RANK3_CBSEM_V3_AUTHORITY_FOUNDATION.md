@@ -1,8 +1,8 @@
 # Rank 3 CB-SEM V3 authority foundation
 
-Status: contract/compiler foundation plus an internal source-only point
-adapter. The two cells below are candidate identities and are not
-Registry-executable or release-qualified yet.
+Status: contract/compiler foundation plus internal source-only point and
+recursive-bootstrap adapters. The two cells below are candidate identities
+and are not Registry-executable or release-qualified yet.
 
 ## Frozen candidate identities
 
@@ -33,9 +33,19 @@ Unsupported parameter families and mismatched kernel inventories fail closed.
 
 The recursive bootstrap selector additionally requires a structural model,
 500–10,000 resamples, fixed 95% two-sided percentile Type-7 inference, and
-matching Recipe/General-SEM resampling settings. This branch currently creates
-bootstrap authority contracts only; no bootstrap runner, scheduler, native
-job, or Registry claim is added in this checkpoint.
+matching Recipe/General-SEM resampling settings. A private runner adapter now
+reuses the established indexed no-retry CFA schedule and exact V2 full-ML
+refit kernel over the validated listwise frame. It applies the frozen 90%
+usable gate, retains one ordered success/failure ledger, and projects eligible
+free loading, regression, covariance, and variance identities into the
+additive canonical bootstrap authority. Variance and bound-excluded zero-null
+tests remain explicitly unavailable rather than publishing nonregular
+probabilities. Cancellation returns no result payload.
+
+The adapter remains deliberately unregistered and unpublished: there is no
+native job, UI, schema-6/archive publication path, or Registry claim in this
+checkpoint. The established CFA v1 selector, method identities, source
+predicate, and release surface are unchanged.
 
 Canonical General SEM results now have additive typed CB parameter rows,
 existing fit/identification rows, and an optional CB-specific recursive

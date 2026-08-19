@@ -479,10 +479,11 @@ pub struct CbsemExactCaseBootstrapSourceWorkloadLimitsV1 {
     pub maximum_optimizer_dimension_count: usize,
 }
 
-/// Validated, immutable source for exact covariance-structure CFA bootstrap
-/// refits. Dataset bytes, compiler/model bindings, projection, listwise row
-/// eligibility, and numeric source values are checked once before scheduling;
-/// individual replicates only map preplanned sampling positions and refit.
+/// Validated, immutable source for exact covariance-structure CFA or bounded
+/// recursive-SEM bootstrap refits. Dataset bytes, compiler/model bindings,
+/// projection, listwise row eligibility, and numeric source values are checked
+/// once before scheduling; individual replicates only map preplanned sampling
+/// positions and refit.
 #[derive(Debug, Clone)]
 pub struct CbsemExactCaseBootstrapSourceV1 {
     source_dataset_id: String,
@@ -529,6 +530,13 @@ impl CbsemExactCaseBootstrapSourceV1 {
 
     pub fn complete_case_sample_size(&self) -> usize {
         self.complete_rows.len()
+    }
+
+    /// Exact, ordered listwise-complete source-row frame proven during source
+    /// preparation. Recursive-SEM adapters consume this authority directly
+    /// instead of reconstructing missingness eligibility independently.
+    pub fn complete_source_row_indices(&self) -> &[usize] {
+        &self.complete_source_row_indices
     }
 
     pub fn modeled_variable_count(&self) -> usize {
@@ -663,6 +671,30 @@ pub fn prepare_cbsem_ml_exact_case_bootstrap_source_v1_with_control(
         artifact,
         source_recipe,
         resolved_model,
+        CbsemExactCaseBootstrapSourceScopeV1::Cfa,
+        None,
+        &should_cancel,
+        &progress,
+    )
+}
+
+/// Prepare the same immutable exact-ML refit source for the bounded recursive
+/// SEM cell. This is additive: the established CFA preparers retain their
+/// no-structural-path predicate and identities.
+pub fn prepare_cbsem_ml_exact_recursive_sem_case_bootstrap_source_v1_with_control(
+    dataset: &Dataset,
+    artifact: &CompiledAnalysisRecipeV4,
+    source_recipe: &AnalysisRecipeV4,
+    resolved_model: &qpls_core::SemModelV4,
+    should_cancel: impl Fn() -> bool + Sync,
+    progress: impl Fn(CbsemCompiledMomentProgressV2) + Sync,
+) -> Result<CbsemExactCaseBootstrapSourceV1, CbsemCompiledMomentErrorV2> {
+    prepare_cbsem_ml_exact_case_bootstrap_source_v1_impl(
+        dataset,
+        artifact,
+        source_recipe,
+        resolved_model,
+        CbsemExactCaseBootstrapSourceScopeV1::RecursiveSem,
         None,
         &should_cancel,
         &progress,
@@ -683,10 +715,27 @@ pub fn prepare_cbsem_ml_exact_case_bootstrap_source_v1_with_workload_limits_and_
         artifact,
         source_recipe,
         resolved_model,
+        CbsemExactCaseBootstrapSourceScopeV1::Cfa,
         Some(workload_limits),
         &should_cancel,
         &progress,
     )
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CbsemExactCaseBootstrapSourceScopeV1 {
+    Cfa,
+    RecursiveSem,
+}
+
+fn exact_case_bootstrap_structural_scope_matches_v1(
+    scope: CbsemExactCaseBootstrapSourceScopeV1,
+    structural_path_count: usize,
+) -> bool {
+    match scope {
+        CbsemExactCaseBootstrapSourceScopeV1::Cfa => structural_path_count == 0,
+        CbsemExactCaseBootstrapSourceScopeV1::RecursiveSem => structural_path_count > 0,
+    }
 }
 
 fn exact_case_bootstrap_source_parameter_dimensions_v1(
@@ -713,6 +762,7 @@ fn prepare_cbsem_ml_exact_case_bootstrap_source_v1_impl(
     artifact: &CompiledAnalysisRecipeV4,
     source_recipe: &AnalysisRecipeV4,
     resolved_model: &qpls_core::SemModelV4,
+    scope: CbsemExactCaseBootstrapSourceScopeV1,
     workload_limits: Option<CbsemExactCaseBootstrapSourceWorkloadLimitsV1>,
     should_cancel: &(impl Fn() -> bool + Sync),
     progress: &(impl Fn(CbsemCompiledMomentProgressV2) + Sync),
@@ -794,7 +844,9 @@ fn prepare_cbsem_ml_exact_case_bootstrap_source_v1_impl(
         return Err(CbsemCompiledMomentErrorV2::ExactCaseBootstrapUnsupported);
     }
     let mut projection = build_exact_projection_v3(plan, source_recipe)?;
-    if projection.mean_structure || !projection.model.paths.is_empty() {
+    if projection.mean_structure
+        || !exact_case_bootstrap_structural_scope_matches_v1(scope, projection.model.paths.len())
+    {
         return Err(CbsemCompiledMomentErrorV2::ExactCaseBootstrapUnsupported);
     }
     let bounded_parameter_dimensions = if let Some(limits) = workload_limits {
@@ -909,8 +961,8 @@ fn prepare_cbsem_ml_exact_case_bootstrap_source_v1_impl(
     })
 }
 
-/// Refit the cached exact-v3 CFA source over ordered, with-replacement
-/// positions in its validated complete-case universe.
+/// Refit the cached exact-v3 source over ordered, with-replacement positions in
+/// its validated complete-case universe.
 pub fn estimate_cbsem_ml_exact_case_resample_v1(
     source: &CbsemExactCaseBootstrapSourceV1,
     sampling_positions: &[usize],
@@ -3725,6 +3777,26 @@ mod tests {
         assert_eq!(free_parameter_rows, 6);
         assert_eq!(source.optimizer_dimension_count(), 5);
         assert_eq!(source.optimizer_dimension_count() + 1, free_parameter_rows);
+    }
+
+    #[test]
+    fn exact_bootstrap_source_scopes_keep_cfa_and_recursive_sem_disjoint() {
+        assert!(exact_case_bootstrap_structural_scope_matches_v1(
+            CbsemExactCaseBootstrapSourceScopeV1::Cfa,
+            0,
+        ));
+        assert!(!exact_case_bootstrap_structural_scope_matches_v1(
+            CbsemExactCaseBootstrapSourceScopeV1::Cfa,
+            1,
+        ));
+        assert!(!exact_case_bootstrap_structural_scope_matches_v1(
+            CbsemExactCaseBootstrapSourceScopeV1::RecursiveSem,
+            0,
+        ));
+        assert!(exact_case_bootstrap_structural_scope_matches_v1(
+            CbsemExactCaseBootstrapSourceScopeV1::RecursiveSem,
+            1,
+        ));
     }
 
     #[test]

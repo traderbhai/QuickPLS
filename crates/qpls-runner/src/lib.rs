@@ -1,6 +1,8 @@
 mod pls_model_comparison_execution;
 mod recipe_v4_cbsem_execution;
 #[allow(dead_code)]
+mod recipe_v4_cbsem_general_sem_bootstrap_execution;
+#[allow(dead_code)]
 mod recipe_v4_cbsem_general_sem_point_execution;
 mod recipe_v4_cbsem_product_indicator_execution;
 mod recipe_v4_general_sem_pls_execution;

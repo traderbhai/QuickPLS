@@ -1356,6 +1356,39 @@ fn map_zero_null_unavailable_reason(
     }
 }
 
+/// Recompute the established two-sided percentile Type-7 summary over an
+/// already validated successful-refit ledger. The recursive-SEM adapter uses
+/// this additive seam because its frozen 90% usable gate deliberately omits
+/// the historical CFA scheduler's 1,000-refit publication floor.
+pub fn summarize_cbsem_exact_case_bootstrap_percentile_type7_v1(
+    original: &CbsemExactCaseBootstrapRefitV1,
+    successful_refits: &[CbsemExactCaseBootstrapWitnessV1],
+    confidence_level: f64,
+) -> Result<Vec<CbsemExactCaseBootstrapParameterIntervalV1>, CbsemExactCaseBootstrapSchedulerErrorV1>
+{
+    let parameter_ids = original
+        .free_parameters
+        .iter()
+        .map(|parameter| parameter.parameter_id.clone())
+        .collect::<Vec<_>>();
+    let original_estimates = original
+        .free_parameters
+        .iter()
+        .map(|parameter| parameter.estimate)
+        .collect::<Vec<_>>();
+    if parameter_ids.windows(2).any(|pair| pair[0] >= pair[1]) {
+        return Err(CbsemExactCaseBootstrapSchedulerErrorV1::InvalidSummary(
+            "point parameter identities are not strictly ordered and unique".into(),
+        ));
+    }
+    summarize_intervals(
+        &parameter_ids,
+        &original_estimates,
+        successful_refits,
+        confidence_level,
+    )
+}
+
 fn summarize_intervals(
     parameter_ids: &[String],
     original_estimates: &[f64],
@@ -2546,6 +2579,17 @@ mod tests {
         assert!((interval.percentile_lower - 1.4).abs() < 1e-12);
         assert!((interval.percentile_upper - 12.8).abs() < 1e-12);
         assert_eq!(interval.usable_replicates, 5);
+
+        let mut original = original_refit(&sampling_frame());
+        original.free_parameters = vec![CbsemExactCaseBootstrapParameterEstimateV1 {
+            parameter_id: "p".into(),
+            estimate: 5.0,
+        }];
+        assert_eq!(
+            summarize_cbsem_exact_case_bootstrap_percentile_type7_v1(&original, &successful, 0.80,)
+                .unwrap(),
+            intervals
+        );
     }
 
     #[test]
