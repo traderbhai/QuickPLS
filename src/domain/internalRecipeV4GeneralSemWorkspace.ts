@@ -981,9 +981,11 @@ export function validateGeneralSemPlsCompletedExecutionV1(
   const analyticalDatasetFingerprint = textAt(analytical.source_dataset_fingerprint, "completed.analyticalResult.source_dataset_fingerprint");
   if (!Array.isArray(analytical.requested_effects)) completedExecutionMismatchV1("completed.analyticalResult.requested_effects", "The analytical result requested-effect ledger is missing.");
 
-  if (!sameCapabilityCellV1(analyticalCell, execution.capabilityCell)
-    || !sameCapabilityCellV1(analyticalCell, expected.analyticalCell)) {
-    completedExecutionMismatchV1("completed.analyticalResult.capability_cell", "The analytical result capability cell differs from the exact compiled execution selection.");
+  if (!sameCapabilityCellV1(execution.capabilityCell, expected.requestCell)) {
+    completedExecutionMismatchV1("execution.capabilityCell", "The requested execution capability cell differs from the exact selected inference option.");
+  }
+  if (!sameCapabilityCellV1(analyticalCell, expected.analyticalCell)) {
+    completedExecutionMismatchV1("completed.analyticalResult.capability_cell", "The analytical result capability cell differs from the exact compiled point-estimation authority.");
   }
   if (adapterVersion !== expected.adapterVersion
     || document.provenance.engine_version !== expected.adapterVersion) {
@@ -1103,7 +1105,7 @@ function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKind
   const primaryDocumentCell = kind === "multiple_two_way_moderation_point"
     ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
     : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
-  const analyticalCell = kind === "mediation_bootstrap"
+  const requestCell = kind === "mediation_bootstrap"
     ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
     : primaryDocumentCell;
   const documentCells = [
@@ -1113,7 +1115,8 @@ function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKind
   ].sort(compareCapabilityCellsV1);
   return {
     primaryDocumentCell,
-    analyticalCell,
+    requestCell,
+    analyticalCell: primaryDocumentCell,
     documentCells,
     methodVersion: kind === "multiple_two_way_moderation_point"
       ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1

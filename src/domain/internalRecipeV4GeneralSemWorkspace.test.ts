@@ -547,7 +547,7 @@ function completedExecutionFixture(
   completed.analyticalResult = {
     schema_version: 1,
     adapter_version: adapterVersion,
-    capability_cell: execution.capabilityCell,
+    capability_cell: primaryCell,
     compilation_artifact_identity_sha256: "1".repeat(64),
     compiled_plan_sha256: "2".repeat(64),
     recipe_analytical_sha256: completed.canonicalDocument.provenance.recipe_digest,
@@ -672,6 +672,19 @@ describe("General SEM Recipe-v4 workspace contract", () => {
   ] as const)("reconciles a completed %s result with its exact native execution authority", (kind) => {
     const fixture = completedExecutionFixture(kind);
     expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution)).not.toThrow();
+  });
+
+  it("keeps the mediation-bootstrap request cell distinct from the compiled analytical point cell", () => {
+    const fixture = completedExecutionFixture("mediation_bootstrap");
+    expect(fixture.execution.capabilityCell).toStrictEqual(GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1);
+    expect((fixture.completed.analyticalResult as Record<string, unknown>).capability_cell)
+      .toStrictEqual(GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1);
+    expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution)).not.toThrow();
+
+    (fixture.completed.analyticalResult as Record<string, unknown>).capability_cell =
+      GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1;
+    expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution))
+      .toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
   });
 
   it("rejects completed-result capability, method, engine, digest, inventory, and payload-shape relabeling", () => {
