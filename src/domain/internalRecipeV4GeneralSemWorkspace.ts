@@ -7,10 +7,22 @@ import {
   type GeneralSemEffectEstimandV1,
 } from "./generalSemConfigV1";
 import {
+  GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1,
+  GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1,
+  GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1,
+  GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
   GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
+  GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1,
+  GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1,
 } from "./canonicalGeneralSemResultsV1";
 import {
+  GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1,
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
   preflightGeneralSemPlsV1,
 } from "./generalSemCapabilityPreflightV1";
@@ -35,6 +47,7 @@ import {
   validateSemModelV4,
   type SemModelV4,
 } from "./semModelV4";
+import { sha256HexUtf8V1 } from "./sha256V1";
 import type { Dataset } from "../types";
 
 export const GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1 = Object.freeze({
@@ -54,6 +67,9 @@ export const GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1 = Object.freeze({
 export const GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1 =
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1;
 
+export const GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1 =
+  GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1;
+
 const GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1 = Object.freeze({
   registry_schema_version: 2,
   capability_id: "smartpls.pls_algorithm",
@@ -65,6 +81,7 @@ const GENERAL_SEM_PLS_POINT_METHOD_VERSION_V1 = "general_sem_effects_v1" as cons
 const GENERAL_SEM_PLS_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_point_execution_v1" as const;
 const GENERAL_SEM_PLS_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1" as const;
 const GENERAL_SEM_PLS_MODERATION_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1" as const;
+const GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_percentile_bootstrap_execution_v1" as const;
 
 export interface GeneralSemPlsEngineOptionsV1 {
   tolerance: number;
@@ -752,6 +769,22 @@ export function parseGeneralSemPlsCompletedResultV1(value: unknown): GeneralSemP
     || canonicalDocument.provenance.recipe_id !== archiveIdentity.recipeId) throw new GeneralSemWorkspaceErrorV1(
       "general_sem.wire.result_authority_mismatch", "completed.canonicalDocument.provenance", "The canonical result differs from the archive authority returned by the job.", "Discard the job; do not append this result.",
     );
+  const analytical = recordAt(completed.analyticalResult, "completed.analyticalResult");
+  if (Object.prototype.hasOwnProperty.call(analytical, "moderation_bootstrap_inference")
+    && analytical.moderation_bootstrap_inference !== null) {
+    validateCompletedModerationBootstrapInferenceV1({
+      value: analytical.moderation_bootstrap_inference,
+      analytical,
+      interactionPoint: recordAt(
+        analytical.interaction_point_estimation,
+        "completed.analyticalResult.interaction_point_estimation",
+      ),
+      generalSemResults: recordAt(
+        canonicalDocument.general_sem_results,
+        "completed.canonicalDocument.general_sem_results",
+      ),
+    });
+  }
   return { schemaVersion: 1, archiveIdentity, analyticalResult: completed.analyticalResult, canonicalDocument };
 }
 
@@ -785,7 +818,8 @@ function compareCapabilityCellsV1(
 export type GeneralSemPlsExecutionKindV1 =
   | "mediation_point"
   | "mediation_bootstrap"
-  | "multiple_two_way_moderation_point";
+  | "multiple_two_way_moderation_point"
+  | "multiple_two_way_moderation_bootstrap";
 
 export interface GeneralSemPlsExecutionCapabilityV1 {
   readonly kind: GeneralSemPlsExecutionKindV1;
@@ -895,16 +929,10 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
     .slice()
     .sort((left, right) => compareUtf8StringsV1(left.id, right.id));
   const moderation = interactionTerms.length > 0;
-  if (moderation && input.config.inference.kind !== "none") {
-    throw new GeneralSemWorkspaceErrorV1(
-      "sem.capability.pls.multiple_moderation_bootstrap_not_executable",
-      "inference",
-      "Simultaneous interaction_v2 bootstrap inference is not qualified in the current point-only cell.",
-      "Turn off Full-model percentile case bootstrap and run point estimation, or keep the request in Labs until complete-model interaction resampling is qualified.",
-    );
-  }
   const capabilityCell = moderation
-    ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
+    ? input.config.inference.kind === "case_bootstrap"
+      ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
     : input.config.inference.kind === "case_bootstrap"
       ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
       : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
@@ -919,8 +947,10 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
   }
   const expectedCapabilityCells = [
     moderation ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1 : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
-    ...(!moderation && input.config.inference.kind === "case_bootstrap"
-      ? [GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1]
+    ...(input.config.inference.kind === "case_bootstrap"
+      ? [moderation
+        ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+        : GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1]
       : []),
   ].sort(compareCapabilityCellsV1);
   if (input.decision.capability_cells.length !== expectedCapabilityCells.length
@@ -936,7 +966,9 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
   }
   return {
     kind: moderation
-      ? "multiple_two_way_moderation_point"
+      ? input.config.inference.kind === "case_bootstrap"
+        ? "multiple_two_way_moderation_bootstrap"
+        : "multiple_two_way_moderation_point"
       : input.config.inference.kind === "case_bootstrap"
         ? "mediation_bootstrap"
         : "mediation_point",
@@ -945,6 +977,438 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
     focalRelationIds: [...new Set(interactionTerms.map((term) => term.focal_relation))]
       .sort(compareUtf8StringsV1),
   };
+}
+
+interface GeneralSemCompletedModerationGammaTargetV1 {
+  readonly kind: "interaction_scientific_rescaled_gamma";
+  readonly target_version: typeof GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1;
+  readonly target_id: string;
+  readonly interaction_id: string;
+  readonly focal_relation_id: string;
+  readonly interaction_effect_relation_id: string;
+  readonly interaction_effect_parameter_id: string;
+  readonly generated_product_column_id: string;
+  readonly focal_predictor_id: string;
+  readonly moderator_id: string;
+  readonly outcome_id: string;
+  readonly stage_one_model_scientific_sha256: string;
+  readonly product_scale_version: typeof GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1;
+  readonly method_version: typeof GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1;
+}
+
+function completedRecordAtV1(value: unknown, path: string): UnknownRecord {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    completedExecutionMismatchV1(path, `${path} must be an object.`);
+  }
+  return value as UnknownRecord;
+}
+
+function completedArrayAtV1(value: unknown, path: string): unknown[] {
+  if (!Array.isArray(value)) completedExecutionMismatchV1(path, `${path} must be an array.`);
+  return value;
+}
+
+function completedExactKeysAtV1(record: UnknownRecord, expected: readonly string[], path: string): void {
+  const actual = Object.keys(record).sort(compareUtf8StringsV1);
+  const canonicalExpected = [...expected].sort(compareUtf8StringsV1);
+  if (actual.length !== canonicalExpected.length
+    || actual.some((key, index) => key !== canonicalExpected[index])) {
+    completedExecutionMismatchV1(path, `${path} must contain exactly the moderation-bootstrap v1 fields.`);
+  }
+}
+
+function completedFiniteAtV1(value: unknown, path: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    completedExecutionMismatchV1(path, `${path} must be a finite number.`);
+  }
+  return value;
+}
+
+function completedCountAtV1(value: unknown, path: string): number {
+  if (!Number.isSafeInteger(value) || (value as number) < 0) {
+    completedExecutionMismatchV1(path, `${path} must be a nonnegative safe integer.`);
+  }
+  return value as number;
+}
+
+function completedTrueAtV1(value: unknown, path: string): void {
+  if (value !== true) completedExecutionMismatchV1(path, `${path} must be true.`);
+}
+
+function completedModerationGammaTargetAtV1(
+  value: unknown,
+  path: string,
+): GeneralSemCompletedModerationGammaTargetV1 {
+  const target = completedRecordAtV1(value, path);
+  completedExactKeysAtV1(target, [
+    "kind", "target_version", "target_id", "interaction_id", "focal_relation_id",
+    "interaction_effect_relation_id", "interaction_effect_parameter_id",
+    "generated_product_column_id", "focal_predictor_id", "moderator_id", "outcome_id",
+    "stage_one_model_scientific_sha256", "product_scale_version", "method_version",
+  ], path);
+  const parsed = {
+    kind: completedExecutionIdentityV1(target.kind, `${path}.kind`),
+    target_version: completedExecutionIdentityV1(target.target_version, `${path}.target_version`),
+    target_id: completedExecutionIdentityV1(target.target_id, `${path}.target_id`),
+    interaction_id: completedExecutionIdentityV1(target.interaction_id, `${path}.interaction_id`),
+    focal_relation_id: completedExecutionIdentityV1(target.focal_relation_id, `${path}.focal_relation_id`),
+    interaction_effect_relation_id: completedExecutionIdentityV1(
+      target.interaction_effect_relation_id,
+      `${path}.interaction_effect_relation_id`,
+    ),
+    interaction_effect_parameter_id: completedExecutionIdentityV1(
+      target.interaction_effect_parameter_id,
+      `${path}.interaction_effect_parameter_id`,
+    ),
+    generated_product_column_id: completedExecutionIdentityV1(
+      target.generated_product_column_id,
+      `${path}.generated_product_column_id`,
+    ),
+    focal_predictor_id: completedExecutionIdentityV1(target.focal_predictor_id, `${path}.focal_predictor_id`),
+    moderator_id: completedExecutionIdentityV1(target.moderator_id, `${path}.moderator_id`),
+    outcome_id: completedExecutionIdentityV1(target.outcome_id, `${path}.outcome_id`),
+    stage_one_model_scientific_sha256: digestAt(
+      target.stage_one_model_scientific_sha256,
+      `${path}.stage_one_model_scientific_sha256`,
+    ),
+    product_scale_version: completedExecutionIdentityV1(
+      target.product_scale_version,
+      `${path}.product_scale_version`,
+    ),
+    method_version: completedExecutionIdentityV1(target.method_version, `${path}.method_version`),
+  };
+  if (parsed.kind !== "interaction_scientific_rescaled_gamma"
+    || parsed.target_version !== GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1
+    || parsed.target_id !== parsed.interaction_effect_relation_id
+    || parsed.product_scale_version !== GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1
+    || parsed.method_version !== GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1) {
+    completedExecutionMismatchV1(path, `${path} is not the exact compiled scientific gamma target identity.`);
+  }
+  return parsed as GeneralSemCompletedModerationGammaTargetV1;
+}
+
+function canonicalModerationGammaIdentityV1(effect: UnknownRecord, path: string) {
+  return {
+    kind: "interaction_scientific_rescaled_gamma" as const,
+    effect_id: completedExecutionIdentityV1(effect.effect_id, `${path}.effect_id`),
+    interaction_id: completedExecutionIdentityV1(effect.interaction_id, `${path}.interaction_id`),
+    focal_relation_id: completedExecutionIdentityV1(effect.focal_relation_id, `${path}.focal_relation_id`),
+    interaction_effect_relation_id: completedExecutionIdentityV1(
+      effect.interaction_effect_relation_id,
+      `${path}.interaction_effect_relation_id`,
+    ),
+    interaction_effect_parameter_id: completedExecutionIdentityV1(
+      effect.interaction_effect_parameter_id,
+      `${path}.interaction_effect_parameter_id`,
+    ),
+    generated_product_column_id: completedExecutionIdentityV1(
+      effect.generated_product_column_id,
+      `${path}.generated_product_column_id`,
+    ),
+    focal_predictor_id: completedExecutionIdentityV1(effect.focal_predictor_id, `${path}.focal_predictor_id`),
+    moderator_id: completedExecutionIdentityV1(effect.moderator_id, `${path}.moderator_id`),
+    outcome_id: completedExecutionIdentityV1(effect.outcome_id, `${path}.outcome_id`),
+    stage_one_model_scientific_sha256: digestAt(
+      effect.stage_one_model_scientific_sha256,
+      `${path}.stage_one_model_scientific_sha256`,
+    ),
+    product_scale_version: completedExecutionIdentityV1(
+      effect.product_scale_version,
+      `${path}.product_scale_version`,
+    ),
+    method_version: completedExecutionIdentityV1(effect.method_version, `${path}.method_version`),
+  };
+}
+
+function validateCompletedModerationBootstrapInferenceV1(input: {
+  value: unknown;
+  analytical: UnknownRecord;
+  interactionPoint: UnknownRecord;
+  generalSemResults: UnknownRecord;
+}): void {
+  const path = "completed.analyticalResult.moderation_bootstrap_inference";
+  const bootstrap = completedRecordAtV1(input.value, path);
+  completedExactKeysAtV1(bootstrap, [
+    "schema_version", "method_version", "point_method_version", "resampling_operation_version",
+    "resampling_stream_version", "quantile_method_version", "standard_error_method_version",
+    "summation_method_version", "p_value_method_version", "failure_policy_version",
+    "sign_alignment_method_version", "product_scale_version", "gamma_target_version",
+    "general_sem_config_sha256", "compiled_plan_sha256", "model_scientific_sha256",
+    "stage_one_model_scientific_sha256", "source_dataset_fingerprint",
+    "complete_case_frame_sha256", "usable_replicate_indices_sha256",
+    "gamma_target_identity_set_sha256", "gamma_target_ids", "interval", "tail",
+    "confidence_level", "resamples_requested", "resamples_usable",
+    "minimum_usable_resamples", "seed", "workers",
+    "complete_model_reestimated_per_replicate",
+    "shared_stage_one_reestimated_per_replicate",
+    "score_vectors_sign_aligned_before_products",
+    "product_scaling_recomputed_per_replicate",
+    "joint_stage_two_reestimated_per_replicate",
+    "complete_joint_point_contract_validated_per_replicate",
+    "failed_replicates", "interaction_gammas",
+  ], path);
+  const exactVersions = {
+    method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+    point_method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+    resampling_operation_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+    resampling_stream_version: GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1,
+    quantile_method_version: GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1,
+    standard_error_method_version: GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1,
+    summation_method_version: GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1,
+    p_value_method_version: GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1,
+    failure_policy_version: GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1,
+    sign_alignment_method_version: GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1,
+    product_scale_version: GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
+    gamma_target_version: GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1,
+  } as const;
+  if (bootstrap.schema_version !== 1) {
+    completedExecutionMismatchV1(`${path}.schema_version`, `${path}.schema_version must equal 1.`);
+  }
+  for (const [field, expected] of Object.entries(exactVersions)) {
+    if (bootstrap[field] !== expected) {
+      completedExecutionMismatchV1(`${path}.${field}`, `${path}.${field} must equal ${expected}.`);
+    }
+  }
+  for (const field of [
+    "general_sem_config_sha256", "compiled_plan_sha256", "model_scientific_sha256",
+    "stage_one_model_scientific_sha256", "complete_case_frame_sha256",
+    "usable_replicate_indices_sha256", "gamma_target_identity_set_sha256",
+  ] as const) digestAt(bootstrap[field], `${path}.${field}`);
+  if (bootstrap.general_sem_config_sha256 !== input.analytical.general_sem_config_sha256
+    || bootstrap.compiled_plan_sha256 !== input.analytical.compiled_plan_sha256
+    || bootstrap.model_scientific_sha256 !== input.analytical.model_scientific_sha256
+    || bootstrap.stage_one_model_scientific_sha256 !== input.analytical.stage_one_model_scientific_sha256
+    || bootstrap.source_dataset_fingerprint !== input.analytical.source_dataset_fingerprint) {
+    completedExecutionMismatchV1(path, `${path} provenance differs from the compiled analytical result.`);
+  }
+  if (bootstrap.model_scientific_sha256 === bootstrap.stage_one_model_scientific_sha256) {
+    completedExecutionMismatchV1(
+      `${path}.stage_one_model_scientific_sha256`,
+      `${path} requires a distinct interaction-free stage-one model digest.`,
+    );
+  }
+  if (bootstrap.interval !== "percentile" || bootstrap.tail !== "two_sided") {
+    completedExecutionMismatchV1(path, `${path} must use percentile two-sided inference.`);
+  }
+  const confidenceLevel = completedFiniteAtV1(bootstrap.confidence_level, `${path}.confidence_level`);
+  if (confidenceLevel <= 0 || confidenceLevel >= 1) {
+    completedExecutionMismatchV1(`${path}.confidence_level`, `${path}.confidence_level is outside (0, 1).`);
+  }
+  const requested = completedCountAtV1(bootstrap.resamples_requested, `${path}.resamples_requested`);
+  const usable = completedCountAtV1(bootstrap.resamples_usable, `${path}.resamples_usable`);
+  const minimumUsable = completedCountAtV1(
+    bootstrap.minimum_usable_resamples,
+    `${path}.minimum_usable_resamples`,
+  );
+  if (requested < 2 || requested > 10_000
+    || minimumUsable !== Math.max(2, Math.ceil(requested * 0.9))
+    || usable < minimumUsable
+    || usable > requested) {
+    completedExecutionMismatchV1(path, `${path} violates the exact resample plan or 90 percent usable gate.`);
+  }
+  const seed = completedExecutionIdentityV1(bootstrap.seed, `${path}.seed`);
+  if (!/^(?:0|[1-9][0-9]*)$/u.test(seed) || BigInt(seed) > BigInt(Number.MAX_SAFE_INTEGER)) {
+    completedExecutionMismatchV1(`${path}.seed`, `${path}.seed must be a canonical JavaScript-safe decimal integer.`);
+  }
+  const workers = completedCountAtV1(bootstrap.workers, `${path}.workers`);
+  if (workers < 1 || workers > 64) {
+    completedExecutionMismatchV1(`${path}.workers`, `${path}.workers must be between 1 and 64.`);
+  }
+  for (const field of [
+    "complete_model_reestimated_per_replicate",
+    "shared_stage_one_reestimated_per_replicate",
+    "score_vectors_sign_aligned_before_products",
+    "product_scaling_recomputed_per_replicate",
+    "joint_stage_two_reestimated_per_replicate",
+    "complete_joint_point_contract_validated_per_replicate",
+  ] as const) completedTrueAtV1(bootstrap[field], `${path}.${field}`);
+
+  const failures = completedArrayAtV1(bootstrap.failed_replicates, `${path}.failed_replicates`);
+  const failureReasons = new Set([
+    "insufficient_observations", "constant_indicator", "stage_one_rank_deficient",
+    "isolated_construct", "stage_one_nonconvergence", "indeterminate_score_sign",
+    "constant_construct_score", "constant_interaction_product", "joint_stage_rank_deficient",
+    "numerical_failure",
+  ]);
+  const failedIndices = new Set<number>();
+  let previousFailureIndex = -1;
+  failures.forEach((value, index) => {
+    const failurePath = `${path}.failed_replicates[${index}]`;
+    const failure = completedRecordAtV1(value, failurePath);
+    completedExactKeysAtV1(failure, ["replicate_index", "reason_code", "message"], failurePath);
+    const replicateIndex = completedCountAtV1(failure.replicate_index, `${failurePath}.replicate_index`);
+    const reason = completedExecutionIdentityV1(failure.reason_code, `${failurePath}.reason_code`);
+    completedExecutionIdentityV1(failure.message, `${failurePath}.message`);
+    if (replicateIndex >= requested || replicateIndex <= previousFailureIndex || !failureReasons.has(reason)) {
+      completedExecutionMismatchV1(failurePath, `${failurePath} is not a canonical moderation failure entry.`);
+    }
+    previousFailureIndex = replicateIndex;
+    failedIndices.add(replicateIndex);
+  });
+  if (usable + failures.length !== requested) {
+    completedExecutionMismatchV1(path, `${path} usable and failed ledgers do not cover the requested plan.`);
+  }
+  const usableIndices = Array.from({ length: requested }, (_, index) => index)
+    .filter((index) => !failedIndices.has(index));
+  if (usableIndices.length !== usable
+    || bootstrap.usable_replicate_indices_sha256 !== sha256HexUtf8V1(JSON.stringify(usableIndices))) {
+    completedExecutionMismatchV1(
+      `${path}.usable_replicate_indices_sha256`,
+      `${path}.usable_replicate_indices_sha256 contradicts the failure ledger.`,
+    );
+  }
+
+  const targetIds = exactSortedDistinctExecutionInventoryV1(
+    completedArrayAtV1(bootstrap.gamma_target_ids, `${path}.gamma_target_ids`) as string[],
+    `${path}.gamma_target_ids`,
+  );
+  if (targetIds.length === 0) {
+    completedExecutionMismatchV1(`${path}.gamma_target_ids`, `${path}.gamma_target_ids must not be empty.`);
+  }
+  const canonicalEffects = completedArrayAtV1(
+    input.generalSemResults.interaction_effects,
+    "completed.canonicalDocument.general_sem_results.interaction_effects",
+  ).map((value, index) => completedRecordAtV1(
+    value,
+    `completed.canonicalDocument.general_sem_results.interaction_effects[${index}]`,
+  ));
+  const canonicalById = new Map(canonicalEffects.map((effect, index) => [
+    completedExecutionIdentityV1(
+      effect.effect_id,
+      `completed.canonicalDocument.general_sem_results.interaction_effects[${index}].effect_id`,
+    ),
+    { effect, index },
+  ]));
+  const pointCoefficients = completedArrayAtV1(
+    input.interactionPoint.interaction_coefficients,
+    "completed.analyticalResult.interaction_point_estimation.interaction_coefficients",
+  ).map((value, index) => completedRecordAtV1(
+    value,
+    `completed.analyticalResult.interaction_point_estimation.interaction_coefficients[${index}]`,
+  ));
+  const pointByTargetId = new Map(pointCoefficients.map((coefficient, index) => [
+    completedExecutionIdentityV1(
+      coefficient.interaction_effect_relation_id,
+      `completed.analyticalResult.interaction_point_estimation.interaction_coefficients[${index}].interaction_effect_relation_id`,
+    ),
+    { coefficient, index },
+  ]));
+  const gammaRows = completedArrayAtV1(bootstrap.interaction_gammas, `${path}.interaction_gammas`);
+  if (gammaRows.length !== targetIds.length || canonicalById.size !== targetIds.length) {
+    completedExecutionMismatchV1(path, `${path} must exactly cover the canonical interaction gamma inventory.`);
+  }
+  const rawTargets: GeneralSemCompletedModerationGammaTargetV1[] = [];
+  gammaRows.forEach((value, index) => {
+    const rowPath = `${path}.interaction_gammas[${index}]`;
+    const row = completedRecordAtV1(value, rowPath);
+    completedExactKeysAtV1(row, [
+      "target", "original", "bootstrap_mean", "bootstrap_bias", "standard_error",
+      "lower", "upper", "p_value_two_sided", "usable_replicates", "two_sided_exceedances",
+    ], rowPath);
+    const target = completedModerationGammaTargetAtV1(row.target, `${rowPath}.target`);
+    rawTargets.push(target);
+    if (target.target_id !== targetIds[index]) {
+      completedExecutionMismatchV1(`${rowPath}.target.target_id`, `${rowPath} is outside canonical target order.`);
+    }
+    const canonical = canonicalById.get(target.target_id);
+    const point = pointByTargetId.get(target.target_id);
+    if (!canonical || !point) {
+      completedExecutionMismatchV1(rowPath, `${rowPath} has no canonical and point-estimation authority.`);
+    }
+    const canonicalPath = `completed.canonicalDocument.general_sem_results.interaction_effects[${canonical.index}]`;
+    const canonicalIdentity = canonicalModerationGammaIdentityV1(canonical.effect, canonicalPath);
+    const pointPath = `completed.analyticalResult.interaction_point_estimation.interaction_coefficients[${point.index}]`;
+    const matchingFields = [
+      "interaction_id", "focal_relation_id", "interaction_effect_relation_id",
+      "interaction_effect_parameter_id", "focal_predictor_id", "moderator_id", "outcome_id",
+    ] as const;
+    if (canonicalIdentity.effect_id !== target.target_id
+      || canonicalIdentity.generated_product_column_id !== target.generated_product_column_id
+      || canonicalIdentity.stage_one_model_scientific_sha256 !== target.stage_one_model_scientific_sha256
+      || canonicalIdentity.product_scale_version !== target.product_scale_version
+      || canonicalIdentity.method_version !== target.method_version
+      || matchingFields.some((field) => canonicalIdentity[field] !== target[field])
+      || matchingFields.some((field) => completedExecutionIdentityV1(
+        point.coefficient[field],
+        `${pointPath}.${field}`,
+      ) !== target[field])) {
+      completedExecutionMismatchV1(rowPath, `${rowPath} target differs from its point and canonical interaction authority.`);
+    }
+    const original = completedFiniteAtV1(row.original, `${rowPath}.original`);
+    const bootstrapMean = completedFiniteAtV1(row.bootstrap_mean, `${rowPath}.bootstrap_mean`);
+    const bootstrapBias = completedFiniteAtV1(row.bootstrap_bias, `${rowPath}.bootstrap_bias`);
+    const standardError = completedFiniteAtV1(row.standard_error, `${rowPath}.standard_error`);
+    const lower = completedFiniteAtV1(row.lower, `${rowPath}.lower`);
+    const upper = completedFiniteAtV1(row.upper, `${rowPath}.upper`);
+    const pValue = completedFiniteAtV1(row.p_value_two_sided, `${rowPath}.p_value_two_sided`);
+    const rowUsable = completedCountAtV1(row.usable_replicates, `${rowPath}.usable_replicates`);
+    const exceedances = completedCountAtV1(row.two_sided_exceedances, `${rowPath}.two_sided_exceedances`);
+    const canonicalGamma = completedRecordAtV1(
+      canonical.effect.scientific_rescaled_gamma,
+      `${canonicalPath}.scientific_rescaled_gamma`,
+    );
+    const canonicalValues = [
+      ["estimate", original], ["bootstrap_mean", bootstrapMean], ["bootstrap_bias", bootstrapBias],
+      ["standard_error", standardError], ["lower", lower], ["upper", upper],
+      ["p_value", pValue], ["bootstrap_usable_replicates", rowUsable],
+      ["bootstrap_two_sided_exceedances", exceedances],
+    ] as const;
+    if (standardError < 0 || lower > upper || rowUsable !== usable || exceedances > rowUsable
+      || Math.abs(bootstrapBias - (bootstrapMean - original)) > Number.EPSILON * 8 * Math.max(1, Math.abs(bootstrapBias))
+      || Math.abs(pValue - ((exceedances + 1) / (rowUsable + 1))) > Number.EPSILON * 8
+      || completedFiniteAtV1(point.coefficient.raw_product_estimate, `${pointPath}.raw_product_estimate`) !== original
+      || canonicalValues.some(([field, expected]) => canonicalGamma[field] !== expected)) {
+      completedExecutionMismatchV1(rowPath, `${rowPath} inference differs from its point estimate, ledger, or canonical gamma row.`);
+    }
+  });
+  if (bootstrap.gamma_target_identity_set_sha256 !== sha256HexUtf8V1(JSON.stringify(rawTargets))) {
+    completedExecutionMismatchV1(
+      `${path}.gamma_target_identity_set_sha256`,
+      `${path}.gamma_target_identity_set_sha256 contradicts the typed raw target ledger.`,
+    );
+  }
+
+  const receiptPath = "completed.canonicalDocument.general_sem_results.inference_receipt";
+  const receipt = completedRecordAtV1(input.generalSemResults.inference_receipt, receiptPath);
+  const receiptCell = capabilityCellAtV1(receipt.capability_cell, `${receiptPath}.capability_cell`);
+  const canonicalIdentities = canonicalEffects
+    .map((effect, index) => canonicalModerationGammaIdentityV1(
+      effect,
+      `completed.canonicalDocument.general_sem_results.interaction_effects[${index}]`,
+    ))
+    .sort((left, right) => compareUtf8StringsV1(left.effect_id, right.effect_id));
+  const exactReceiptValues = [
+    ["method_version", bootstrap.method_version],
+    ["resampling_operation_version", bootstrap.resampling_operation_version],
+    ["resampling_stream_version", bootstrap.resampling_stream_version],
+    ["quantile_method_version", bootstrap.quantile_method_version],
+    ["standard_error_method_version", bootstrap.standard_error_method_version],
+    ["summation_method_version", bootstrap.summation_method_version],
+    ["p_value_method_version", bootstrap.p_value_method_version],
+    ["failure_policy_version", bootstrap.failure_policy_version],
+    ["compiled_plan_sha256", bootstrap.compiled_plan_sha256],
+    ["general_sem_config_sha256", bootstrap.general_sem_config_sha256],
+    ["model_scientific_sha256", bootstrap.model_scientific_sha256],
+    ["source_dataset_fingerprint", bootstrap.source_dataset_fingerprint],
+    ["complete_case_frame_sha256", bootstrap.complete_case_frame_sha256],
+    ["usable_replicate_indices_sha256", bootstrap.usable_replicate_indices_sha256],
+    ["confidence_level", confidenceLevel], ["resamples_requested", requested],
+    ["resamples_usable", usable], ["minimum_usable_resamples", minimumUsable],
+    ["seed", seed], ["workers", workers],
+  ] as const;
+  if (!sameCapabilityCellV1(receiptCell, GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1)
+    || receipt.kind !== "case_bootstrap"
+    || receipt.interval !== "percentile_type7"
+    || receipt.tail !== "two_sided"
+    || receipt.complete_model_reestimated_per_replicate !== true
+    || receipt.compilation_artifact_identity_sha256 !== input.analytical.compilation_artifact_identity_sha256
+    || receipt.recipe_analytical_sha256 !== input.analytical.recipe_analytical_sha256
+    || exactReceiptValues.some(([field, expected]) => receipt[field] !== expected)
+    || JSON.stringify(receipt.effect_ids) !== JSON.stringify(targetIds)
+    || receipt.effect_identity_set_sha256 !== sha256HexUtf8V1(JSON.stringify(canonicalIdentities))
+    || JSON.stringify(receipt.failed_replicates) !== JSON.stringify(failures)) {
+    completedExecutionMismatchV1(receiptPath, `${receiptPath} differs from the exact raw gamma bootstrap receipt.`);
+  }
 }
 
 /**
@@ -967,7 +1431,7 @@ export function validateGeneralSemPlsCompletedExecutionV1(
     "recipe_analytical_sha256", "model_scientific_sha256",
     "stage_one_model_scientific_sha256", "source_dataset_fingerprint",
     "general_sem_config_sha256", "point_estimation", "requested_effects",
-    "interaction_point_estimation", "bootstrap_inference",
+    "interaction_point_estimation", "bootstrap_inference", "moderation_bootstrap_inference",
   ], "completed.analyticalResult");
   if (analytical.schema_version !== 1) completedExecutionMismatchV1("completed.analyticalResult.schema_version", "The analytical result schema is not General SEM execution result v1.");
   const analyticalCell = capabilityCellAtV1(analytical.capability_cell, "completed.analyticalResult.capability_cell");
@@ -1013,9 +1477,17 @@ export function validateGeneralSemPlsCompletedExecutionV1(
     && analytical.interaction_point_estimation !== null;
   const hasBootstrapResult = Object.prototype.hasOwnProperty.call(analytical, "bootstrap_inference")
     && analytical.bootstrap_inference !== null;
-  const expectedInteractionResult = execution.kind === "multiple_two_way_moderation_point";
+  const hasModerationBootstrapResult = Object.prototype.hasOwnProperty.call(
+    analytical,
+    "moderation_bootstrap_inference",
+  ) && analytical.moderation_bootstrap_inference !== null;
+  const expectedInteractionResult = execution.kind === "multiple_two_way_moderation_point"
+    || execution.kind === "multiple_two_way_moderation_bootstrap";
   const expectedBootstrapResult = execution.kind === "mediation_bootstrap";
-  if (hasInteractionResult !== expectedInteractionResult || hasBootstrapResult !== expectedBootstrapResult) {
+  const expectedModerationBootstrapResult = execution.kind === "multiple_two_way_moderation_bootstrap";
+  if (hasInteractionResult !== expectedInteractionResult
+    || hasBootstrapResult !== expectedBootstrapResult
+    || hasModerationBootstrapResult !== expectedModerationBootstrapResult) {
     completedExecutionMismatchV1("completed.analyticalResult", "The analytical interaction/bootstrap payload shape contradicts the selected execution kind.");
   }
 
@@ -1099,32 +1571,52 @@ export function validateGeneralSemPlsCompletedExecutionV1(
     canonicalIdentities,
     "completed.interaction_identity_mapping",
   );
+  if (expectedModerationBootstrapResult) {
+    validateCompletedModerationBootstrapInferenceV1({
+      value: analytical.moderation_bootstrap_inference,
+      analytical,
+      interactionPoint: interactionPoint as UnknownRecord,
+      generalSemResults: generalSemResults!,
+    });
+  }
 }
 
 function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKindV1) {
-  const primaryDocumentCell = kind === "multiple_two_way_moderation_point"
+  const moderation = kind === "multiple_two_way_moderation_point"
+    || kind === "multiple_two_way_moderation_bootstrap";
+  const primaryDocumentCell = moderation
     ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
     : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
   const requestCell = kind === "mediation_bootstrap"
     ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
+    : kind === "multiple_two_way_moderation_bootstrap"
+      ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
     : primaryDocumentCell;
   const documentCells = [
     GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1,
     primaryDocumentCell,
-    ...(kind === "mediation_bootstrap" ? [GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1] : []),
+    ...(kind === "mediation_bootstrap"
+      ? [GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1]
+      : kind === "multiple_two_way_moderation_bootstrap"
+        ? [GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1]
+        : []),
   ].sort(compareCapabilityCellsV1);
   return {
     primaryDocumentCell,
     requestCell,
     analyticalCell: primaryDocumentCell,
     documentCells,
-    methodVersion: kind === "multiple_two_way_moderation_point"
-      ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+    methodVersion: kind === "multiple_two_way_moderation_bootstrap"
+      ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+      : kind === "multiple_two_way_moderation_point"
+        ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
       : kind === "mediation_bootstrap"
         ? GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1
         : GENERAL_SEM_PLS_POINT_METHOD_VERSION_V1,
-    adapterVersion: kind === "multiple_two_way_moderation_point"
-      ? GENERAL_SEM_PLS_MODERATION_POINT_ADAPTER_VERSION_V1
+    adapterVersion: kind === "multiple_two_way_moderation_bootstrap"
+      ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_ADAPTER_VERSION_V1
+      : kind === "multiple_two_way_moderation_point"
+        ? GENERAL_SEM_PLS_MODERATION_POINT_ADAPTER_VERSION_V1
       : kind === "mediation_bootstrap"
         ? GENERAL_SEM_PLS_BOOTSTRAP_ADAPTER_VERSION_V1
         : GENERAL_SEM_PLS_POINT_ADAPTER_VERSION_V1,

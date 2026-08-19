@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { defaultGeneralSemConfigV1, type GeneralSemConfigV1 } from "./generalSemConfigV1";
 import {
   GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
+  GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1,
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
   GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
   interactionProductColumnIdentityV1,
@@ -388,7 +389,74 @@ describe("General SEM capability preflight v1", () => {
     },
   );
 
-  it("keeps simultaneous interaction bootstrap blocked with the exact corrective cell decision", () => {
+  it.each(["same_focal", "different_focal"] as const)(
+    "admits simultaneous interaction bootstrap on %s paths to point plus supplemental cells",
+    (layout) => {
+      const config = defaultGeneralSemConfigV1();
+      config.inference = {
+        kind: "case_bootstrap",
+        resamples: 500,
+        seed: 7,
+        confidence_level: 0.95,
+        interval: "percentile",
+        tail: "two_sided",
+      };
+
+      const inputModel = multipleModerationModel(layout);
+      const before = structuredClone(inputModel);
+      const pointBefore = preflightGeneralSemPlsV1(inputModel, defaultGeneralSemConfigV1());
+      const decision = preflightGeneralSemPlsV1(inputModel, config);
+
+      expect(decision.status).toBe("experimental");
+      expect(decision.capability_cells).toEqual(expect.arrayContaining([
+        GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
+        GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1,
+      ]));
+      expect(decision.capability_cells).toHaveLength(2);
+      expect(codes(decision)).toEqual(["sem.capability.pls.experimental_labs"]);
+      expect(decision.evidence.map((item) => item.evidence_id)).toEqual(expect.arrayContaining([
+        "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_bootstrap_v1",
+        "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap:general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "capability_dependency:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
+      ]));
+      expect(decision.explanation).toContain("scientific rescaled gamma only");
+      expect(preflightGeneralSemPlsV1(inputModel, defaultGeneralSemConfigV1()))
+        .toStrictEqual(pointBefore);
+      expect(inputModel).toStrictEqual(before);
+    },
+  );
+
+  it("keeps moderation bootstrap interval, tail, probe, effect, and chain exclusions typed", () => {
+    const excludedInferenceCases: Array<[GeneralSemConfigV1["inference"], string]> = [
+      [{
+        kind: "case_bootstrap",
+        resamples: 500,
+        seed: 7,
+        confidence_level: 0.95,
+        interval: "bca",
+        tail: "two_sided",
+      }, "sem.capability.pls.general_bootstrap_bca_not_executable"],
+      [{
+        kind: "case_bootstrap",
+        resamples: 500,
+        seed: 7,
+        confidence_level: 0.95,
+        interval: "percentile",
+        tail: "one_sided_lower",
+      }, "sem.capability.pls.general_bootstrap_one_sided_not_executable"],
+    ];
+    for (const [inference, expectedCode] of excludedInferenceCases) {
+      const config = defaultGeneralSemConfigV1();
+      config.inference = inference;
+      const decision = preflightGeneralSemPlsV1(multipleModerationModel("same_focal"), config);
+      expect(decision.status).toBe("blocked");
+      expect(decision.capability_cells).toEqual(expect.arrayContaining([
+        GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
+        GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1,
+      ]));
+      expect(codes(decision)).toContain(expectedCode);
+    }
+
     const config = defaultGeneralSemConfigV1();
     config.inference = {
       kind: "case_bootstrap",
@@ -398,22 +466,84 @@ describe("General SEM capability preflight v1", () => {
       interval: "percentile",
       tail: "two_sided",
     };
-
-    const decision = preflightGeneralSemPlsV1(multipleModerationModel("same_focal"), config);
-
-    expect(decision.status).toBe("blocked");
-    expect(decision.capability_cells).toEqual(expect.arrayContaining([
-      GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
-      expect.objectContaining({
-        cell_id: "qpls3.pls.general_sem_multiple_mediation_bootstrap",
-      }),
+    config.conditional_effect_probes = [{
+      probe_id: "probe:w",
+      moderator_id: "construct:w",
+      values: { kind: "data_derived_mean_plus_minus_one_sd" },
+    }];
+    config.requested_effect_estimands = [{
+      kind: "total_effect",
+      estimand_id: "effect:x:y",
+      source_id: "construct:x",
+      target_id: "construct:y",
+    }];
+    const combined = preflightGeneralSemPlsV1(multipleModerationModel("same_focal"), config);
+    expect(combined.status).toBe("blocked");
+    expect(codes(combined)).toEqual(expect.arrayContaining([
+      "sem.capability.pls.conditional_probes_not_executable",
+      "sem.capability.pls.multiple_moderation_effect_requests_not_executable",
     ]));
-    expect(codes(decision)).toContain(
-      "sem.capability.pls.multiple_moderation_bootstrap_not_executable",
-    );
-    expect(decision.diagnostics.find((diagnostic) => (
-      diagnostic.code === "sem.capability.pls.multiple_moderation_bootstrap_not_executable"
-    ))?.corrections.join(" ")).toContain("inference to none");
+    expect(combined.diagnostics
+      .filter((diagnostic) => diagnostic.severity === "error")
+      .every((diagnostic) => diagnostic.corrections.length > 0)).toBe(true);
+
+    const chain = multipleModerationModel("same_focal");
+    chain.relations.push({
+      kind: "structural",
+      id: "relation:chain:x:w",
+      source: "construct:x",
+      target: "construct:w",
+      parameter: "parameter:chain:x:w",
+      intercept_parameter: null,
+    });
+    chain.parameters.push({
+      kind: "free",
+      id: "parameter:chain:x:w",
+      label: "X to W",
+      target: { kind: "regression", source: "construct:x", target: "construct:w" },
+      group_overrides: [],
+    });
+    const chainDecision = preflightGeneralSemPlsV1(chain, config);
+    expect(chainDecision.status).toBe("blocked");
+    expect(codes(chainDecision)).toContain("sem.capability.pls.moderated_mediation_not_executable");
+  });
+
+  it("keeps two-way, two-stage, strong-hierarchy interaction boundaries typed", () => {
+    const order = multipleModerationModel("same_focal");
+    const orderTerm = order.derived_terms.find((term) => term.kind === "interaction_v2");
+    if (!orderTerm || orderTerm.kind !== "interaction_v2") throw new Error("interaction fixture required");
+    orderTerm.operands.push("construct:z");
+
+    const method = multipleModerationModel("same_focal");
+    const methodTerm = method.derived_terms.find((term) => term.kind === "interaction_v2");
+    if (!methodTerm || methodTerm.kind !== "interaction_v2") throw new Error("interaction fixture required");
+    methodTerm.method = "orthogonalizing";
+
+    const hierarchy = multipleModerationModel("same_focal");
+    const hierarchyTerm = hierarchy.derived_terms.find((term) => term.kind === "interaction_v2");
+    if (!hierarchyTerm || hierarchyTerm.kind !== "interaction_v2") throw new Error("interaction fixture required");
+    hierarchyTerm.hierarchy_policy = "weak";
+
+    const derivedScope = multipleModerationModel("same_focal");
+    derivedScope.variables.push({ kind: "derived", id: "derived:x_squared", label: "X squared" });
+    derivedScope.derived_terms.push({
+      kind: "polynomial",
+      id: "polynomial:x_squared",
+      output: "derived:x_squared",
+      source: "construct:x",
+      degree: 2,
+    });
+
+    for (const [inputModel, expectedCode] of [
+      [order, "sem.capability.pls.interaction_order_not_executable"],
+      [method, "sem.capability.pls.interaction_method_not_executable"],
+      [hierarchy, "sem.capability.pls.interaction_hierarchy_not_executable"],
+      [derivedScope, "sem.capability.pls.interaction_shape_not_executable"],
+    ] as const) {
+      const decision = preflightGeneralSemPlsV1(inputModel, defaultGeneralSemConfigV1());
+      expect(decision.status).toBe("blocked");
+      expect(codes(decision)).toContain(expectedCode);
+    }
   });
 
   it("blocks a single indirect path from the exact multiple-mediation bootstrap cell", () => {

@@ -58,11 +58,11 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertEqual(report["capability_row_count"], 45)
         self.assertEqual(report["active_row_count"], 43)
         self.assertEqual(report["coverage_counts"], EXPECTED_COVERAGE_COUNTS)
-        self.assertEqual(report["qualification_link_count"], 50)
-        self.assertEqual(report["option_cell_count"], 50)
+        self.assertEqual(report["qualification_link_count"], 51)
+        self.assertEqual(report["option_cell_count"], 51)
         self.assertEqual(
             report["option_cell_coverage_counts"],
-            {"full": 0, "partial": 37, "absent": 11, "intentionally_excluded": 2},
+            {"full": 0, "partial": 38, "absent": 11, "intentionally_excluded": 2},
         )
         self.assertEqual(
             report["evidence_counts"],
@@ -78,20 +78,20 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
             report["option_cell_evidence_counts"],
             {
                 "absent": 16,
-                "engine_only": 3,
+                "engine_only": 4,
                 "archive_qualified": 2,
                 "native_qualified": 0,
                 "release_qualified": 29,
             },
         )
         self.assertTrue(report["manifest_evidence_check"]["passed"])
-        self.assertEqual(report["manifest_evidence_check"]["mapped_cell_count"], 47)
-        self.assertEqual(report["manifest_evidence_check"]["unique_manifest_count"], 41)
+        self.assertEqual(report["manifest_evidence_check"]["mapped_cell_count"], 48)
+        self.assertEqual(report["manifest_evidence_check"]["unique_manifest_count"], 42)
         self.assertEqual(
             report["manifest_evidence_check"]["derived_cell_evidence_counts"],
             {
                 "absent": 18,
-                "engine_only": 2,
+                "engine_only": 3,
                 "archive_qualified": 2,
                 "native_qualified": 0,
                 "release_qualified": 25,
@@ -103,7 +103,7 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         )
         self.assertEqual(
             report["option_cell_surface_counts"],
-            {"standard": 29, "labs": 19, "legacy": 2, "internal": 0},
+            {"standard": 29, "labs": 20, "legacy": 2, "internal": 0},
         )
 
     def test_general_sem_multiple_mediation_bootstrap_is_exact_labs_engine_cell(self):
@@ -221,6 +221,164 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
                 "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json",
             ],
         )
+
+        labs = resolve_customer_visibility(
+            self.registry,
+            "smartpls.moderation",
+            cell_id,
+        )
+        self.assertEqual(labs["channel"], "labs")
+        self.assertTrue(labs["requires_opt_in"])
+        self.assertTrue(labs["available"])
+
+    def test_general_sem_multiple_moderation_bootstrap_is_exact_supplemental_labs_cell(self):
+        cell_id = "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap"
+        cell = lookup_option_cell(self.registry, "smartpls.moderation", cell_id)
+        self.assertIsNotNone(cell)
+        self.assertEqual(
+            cell["capability_version"],
+            "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        )
+        self.assertEqual(cell["coverage_state"], "partial")
+        self.assertEqual(cell["evidence_state"], "engine_only")
+        self.assertEqual(cell["surface"], "labs")
+        self.assertEqual(
+            cell["supported_model_predicate"]["quickpls"],
+            [
+                "project_schema:6",
+                "sem_generation:general_sem_v1",
+                "estimator:qpls.pls_sem.v3",
+                "constructs:composite_only",
+                "derived_term:interaction_v2",
+                "interaction_order:two_way",
+                "construction:two_stage",
+                "hierarchy:strong",
+                "interaction_count:one_or_more",
+                "focal_path_layout:same_or_different_focal",
+                "structural_topology:direct_only_acyclic",
+                "derived_term_scope:interaction_v2_only",
+                "higher_order_constructs:none",
+                "requested_effect_estimands:none",
+                "authored_conditional_effect_probes:none",
+                "inference:full_model_case_bootstrap",
+                "resampling_unit:case",
+                "replacement:with_replacement",
+                "interval:percentile_type7",
+                "tail:two_sided",
+                "resamples:2..10000",
+                "seed:indexed_fixed",
+                "usable_replicates:min_max_2_ceil_0_9_b",
+                "estimand:scientific_rescaled_gamma_only",
+            ],
+        )
+        self.assertEqual(
+            cell["supported_data_predicate"]["quickpls"],
+            [
+                "input:raw_numeric",
+                "observed_scale:continuous",
+                "missing_data:listwise_deletion",
+                "weight:none",
+                "cluster_variable:none",
+                "strata_variable:none",
+                "observed_missing_markers:none",
+                "transformation_lineage:none",
+                "group:single",
+            ],
+        )
+
+        manifest_path = (
+            ROOT
+            / "validation/capabilities/"
+            "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1.cell.manifest.json"
+        )
+        manifest = load_json(manifest_path)
+        self.assertEqual(manifest["contract_kind"], "capability_cell_contract")
+        self.assertEqual(manifest["owner_capability_id"], "smartpls.moderation")
+        self.assertEqual(manifest["feature"]["id"], cell_id)
+        self.assertEqual(
+            manifest["feature"]["method_version"], cell["capability_version"]
+        )
+        self.assertEqual(
+            manifest["feature"]["analytical_method_version"],
+            "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        )
+        self.assertEqual(
+            manifest["primary_artifact_cell_id"],
+            "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+        )
+        self.assertFalse(manifest["qualification_ready"])
+        self.assertFalse(manifest["promotion_allowed"])
+        self.assertEqual(
+            manifest["exact_predicate"],
+            {
+                "project_schema": "6",
+                "sem_generation": "general_sem_v1",
+                "estimator": "qpls.pls_sem.v3",
+                "constructs": "composite_only",
+                "derived_term": "interaction_v2",
+                "interaction_order": "two_way",
+                "construction": "two_stage",
+                "hierarchy": "strong",
+                "interaction_count": "one_or_more",
+                "focal_path_layout": "same_or_different_focal",
+                "structural_topology": "direct_only_acyclic",
+                "derived_term_scope": "interaction_v2_only",
+                "higher_order_constructs": "none",
+                "requested_effect_estimands": "none",
+                "authored_conditional_effect_probes": "none",
+                "inference": "full_model_case_bootstrap",
+                "resampling_unit": "case",
+                "replacement": "with_replacement",
+                "interval": "percentile_type7",
+                "tail": "two_sided",
+                "resamples": "2..10000",
+                "seed": "indexed_fixed",
+                "usable_replicates": "min_max_2_ceil_0_9_b",
+                "estimand": "scientific_rescaled_gamma_only",
+                "input": "raw_numeric",
+                "observed_scale": "continuous",
+                "missing_data": "listwise_deletion",
+                "weight": "none",
+                "cluster_variable": "none",
+                "strata_variable": "none",
+                "observed_missing_markers": "none",
+                "transformation_lineage": "none",
+                "group": "single",
+            },
+        )
+        self.assertEqual(
+            cell["qualification_spec"]["references"],
+            [
+                "validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json",
+            ],
+        )
+        method_manifest = load_json(
+            ROOT
+            / "validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json"
+        )
+        self.assertEqual(method_manifest["feature"]["id"], cell_id)
+        self.assertEqual(
+            method_manifest["feature"]["method_version"], cell["capability_version"]
+        )
+        self.assertEqual(method_manifest["qualification"]["declared_state"], "engine_only")
+        self.assertIn(
+            "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_V1.md",
+            cell["settings_schema"]["references"],
+        )
+        self.assertIn(
+            "crates/qpls-core/src/canonical_result_v2.rs",
+            cell["result_schema"]["references"],
+        )
+        self.assertEqual(
+            cell["known_differences"],
+            [
+                "This connected partial engine-only Labs cell performs indexed full-model case resampling and publishes Type-7 two-sided inference only for each typed scientific rescaled gamma target. Every usable replicate reruns shared stage-one scoring, sign-aligns complete score vectors before product construction, recomputes product scaling, refits and validates the complete joint stage-two point contract, and remains subject to the exact 90 percent usable gate. Standardized-product beta, ordinary joint-stage coefficients, fixed minus-one/zero/plus-one slopes, and plots remain point-only. Standard availability remains blocked pending an independent full-PLS oracle, qualification-scale coverage and adversarial evidence, semantic export/readback, packaged Windows, performance/soak, and review; three-way moderation, moderated mediation, directed chains, authored probes, higher-order constructs, groups, weights, transformed inputs, and non-listwise missing data remain excluded."
+            ],
+        )
+        link = cell["qualification_spec"]["links"][0]
+        self.assertEqual(link["cell_id"], cell_id)
+        self.assertEqual(link["capability_version"], cell["capability_version"])
+        self.assertIsNotNone(lookup_qualification_link(self.registry, link))
 
         labs = resolve_customer_visibility(
             self.registry,

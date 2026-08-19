@@ -1159,6 +1159,7 @@ const GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1: &str =
     "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1";
 const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1: &str =
     "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1";
+const GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1: &str = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_percentile_bootstrap_execution_v1";
 
 fn project_capability_cell_v2(
     reference: &qpls_core::CapabilityCellReferenceV2,
@@ -1196,23 +1197,25 @@ fn validate_general_sem_result_authority_v1(
     let resident_config = recipe.general_sem_config.as_ref().ok_or_else(|| {
         invalid_general_sem_authority("the resident Recipe-v4 does not contain GeneralSemConfigV1")
     })?;
+    let has_interactions = !artifact.plan().two_way_interactions().is_empty();
     let (expected_method_version, expected_engine_version) =
-        if !artifact.plan().two_way_interactions().is_empty() {
-            (
+        match (has_interactions, resident_config.inference) {
+            (true, GeneralSemInferenceV1::None) => (
                 GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
                 GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
-            )
-        } else {
-            match resident_config.inference {
-                GeneralSemInferenceV1::None => (
-                    GENERAL_SEM_EFFECTS_V1_METHOD_VERSION,
-                    GENERAL_SEM_PLS_POINT_EXECUTION_ADAPTER_VERSION_V1,
-                ),
-                GeneralSemInferenceV1::CaseBootstrap { .. } => (
-                    GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
-                    GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
-                ),
-            }
+            ),
+            (true, GeneralSemInferenceV1::CaseBootstrap { .. }) => (
+                qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+                GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+            ),
+            (false, GeneralSemInferenceV1::None) => (
+                GENERAL_SEM_EFFECTS_V1_METHOD_VERSION,
+                GENERAL_SEM_PLS_POINT_EXECUTION_ADAPTER_VERSION_V1,
+            ),
+            (false, GeneralSemInferenceV1::CaseBootstrap { .. }) => (
+                GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+                GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+            ),
         };
 
     if document.provenance.recipe_id != recipe.id.to_string()
@@ -1320,16 +1323,23 @@ fn validate_general_sem_pls_interaction_authority_v1(
         return Ok(());
     }
 
-    if results.inference_receipt.is_some()
-        || !results.specific_indirect_effects.is_empty()
+    if !results.specific_indirect_effects.is_empty()
         || !results.aggregate_effects.is_empty()
         || !results.higher_order_stages.is_empty()
         || !results.cbsem_fit.is_empty()
         || !results.identification_diagnostics.is_empty()
     {
-        return Err(invalid_general_sem_authority(
-            "the point-only General SEM PLS interaction cell must not persist inference, mediation, higher-order, CB-SEM fit, or identification result sections",
-        ));
+        let message = if recipe.general_sem_config.as_ref().is_some_and(|config| {
+            matches!(
+                config.inference,
+                GeneralSemInferenceV1::CaseBootstrap { .. }
+            )
+        }) {
+            "the gamma-only General SEM PLS interaction-bootstrap cell must not persist mediation, higher-order, CB-SEM fit, or identification result sections"
+        } else {
+            "the point-only General SEM PLS interaction cell must not persist inference, mediation, higher-order, CB-SEM fit, or identification result sections"
+        };
+        return Err(invalid_general_sem_authority(message));
     }
 
     let expected_stage_one_digest = artifact
@@ -1396,8 +1406,18 @@ const GENERAL_SEM_MODERATION_SECTION_ID_V1: &str = "general_sem_moderation";
 const GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1: &str = "general_sem_interaction_effects";
 const GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1: &str = "general_sem_conditional_slopes";
 const GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1: &str = "general_sem_interaction_plots";
+const GENERAL_SEM_MODERATION_BOOTSTRAP_SECTION_ID_V1: &str = "general_sem_moderation_bootstrap";
+const GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1: &str =
+    "general_sem_moderation_gamma_inference";
+const GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1: &str =
+    "general_sem_moderation_bootstrap_receipt";
 const GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1: &[&str] = &[
     "moderation_point_estimation_only",
+    "joint_stage_two_effects_and_fit_not_available",
+];
+const GENERAL_SEM_MODERATION_BOOTSTRAP_EXCLUSION_IDS_V1: &[&str] = &[
+    "moderation_bootstrap_scientific_gamma_only",
+    "moderation_beta_joint_coefficients_slopes_plots_point_only",
     "joint_stage_two_effects_and_fit_not_available",
 ];
 const GENERAL_SEM_STRUCTURAL_PATH_COLUMNS_V1: &[&str] = &[
@@ -1467,6 +1487,71 @@ const GENERAL_SEM_INTERACTION_PLOT_COLUMNS_V1: &[&str] = &[
     "predicted_value",
     "lower",
     "upper",
+];
+const GENERAL_SEM_MODERATION_GAMMA_INFERENCE_COLUMNS_V1: &[&str] = &[
+    "effect_id",
+    "interaction_id",
+    "focal_relation_id",
+    "interaction_effect_relation_id",
+    "interaction_effect_parameter_id",
+    "generated_product_column_id",
+    "focal_predictor_id",
+    "moderator_id",
+    "outcome_id",
+    "stage_one_model_scientific_sha256",
+    "product_scale_version",
+    "point_method_version",
+    "estimate",
+    "bootstrap_mean",
+    "bootstrap_bias",
+    "standard_error",
+    "lower",
+    "upper",
+    "p_value",
+    "bootstrap_usable_replicates",
+    "bootstrap_two_sided_exceedances",
+];
+const GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_COLUMNS_V1: &[&str] = &[
+    "capability_id",
+    "cell_id",
+    "capability_version",
+    "method_version",
+    "point_method_version",
+    "resampling_operation_version",
+    "resampling_stream_version",
+    "quantile_method_version",
+    "standard_error_method_version",
+    "summation_method_version",
+    "p_value_method_version",
+    "failure_policy_version",
+    "sign_alignment_method_version",
+    "product_scale_version",
+    "gamma_target_version",
+    "compilation_artifact_identity_sha256",
+    "compiled_plan_sha256",
+    "general_sem_config_sha256",
+    "recipe_analytical_sha256",
+    "model_scientific_sha256",
+    "stage_one_model_scientific_sha256",
+    "source_dataset_fingerprint",
+    "complete_case_frame_sha256",
+    "usable_replicate_indices_sha256",
+    "gamma_target_identity_set_sha256",
+    "interval",
+    "tail",
+    "confidence_level",
+    "resamples_requested",
+    "resamples_usable",
+    "minimum_usable_resamples",
+    "seed",
+    "workers",
+    "complete_model_reestimated_per_replicate",
+    "shared_stage_one_reestimated_per_replicate",
+    "score_vectors_sign_aligned_before_products",
+    "product_scaling_recomputed_per_replicate",
+    "joint_stage_two_reestimated_per_replicate",
+    "complete_joint_point_contract_validated_per_replicate",
+    "failed_replicate_count",
 ];
 
 fn moderation_base_capability_cell_v1(
@@ -1597,6 +1682,87 @@ fn moderation_optional_number_cell_v1(
     }
 }
 
+fn moderation_boolean_cell_v1(
+    cell: &CanonicalResultCellV2,
+    expected: bool,
+    context: &str,
+) -> Result<(), ProjectArchiveV6Error> {
+    match cell {
+        CanonicalResultCellV2::Boolean { value } if *value == expected => Ok(()),
+        _ => Err(invalid_general_sem_authority(format!(
+            "{context} differs from its typed moderation authority"
+        ))),
+    }
+}
+
+fn moderation_estimate_has_inference_v1(value: &qpls_core::CanonicalGeneralSemEstimateV1) -> bool {
+    value.bootstrap_mean.is_some()
+        || value.bootstrap_bias.is_some()
+        || value.standard_error.is_some()
+        || value.lower.is_some()
+        || value.upper.is_some()
+        || value.p_value.is_some()
+        || value.bootstrap_usable_replicates.is_some()
+        || value.bootstrap_two_sided_exceedances.is_some()
+}
+
+fn moderation_estimate_has_complete_inference_v1(
+    value: &qpls_core::CanonicalGeneralSemEstimateV1,
+) -> bool {
+    value.bootstrap_mean.is_some()
+        && value.bootstrap_bias.is_some()
+        && value.standard_error.is_some()
+        && value.lower.is_some()
+        && value.upper.is_some()
+        && value.p_value.is_some()
+        && value.bootstrap_usable_replicates.is_some()
+        && value.bootstrap_two_sided_exceedances.is_some()
+}
+
+fn validate_general_sem_moderation_inference_surface_v1(
+    results: &qpls_core::CanonicalGeneralSemResultsV1,
+    is_bootstrap: bool,
+) -> Result<(), ProjectArchiveV6Error> {
+    let every_gamma_is_complete = results.interaction_effects.iter().all(|effect| {
+        moderation_estimate_has_complete_inference_v1(&effect.scientific_rescaled_gamma)
+    });
+    let any_gamma_inference = results
+        .interaction_effects
+        .iter()
+        .any(|effect| moderation_estimate_has_inference_v1(&effect.scientific_rescaled_gamma));
+    if (is_bootstrap && !every_gamma_is_complete) || (!is_bootstrap && any_gamma_inference) {
+        return Err(invalid_general_sem_authority(
+            "the exact moderation bootstrap inventory must infer every scientific gamma and point inference must infer none",
+        ));
+    }
+
+    let point_only_inference = results
+        .joint_stage_structural_coefficients
+        .iter()
+        .any(|coefficient| moderation_estimate_has_inference_v1(&coefficient.estimate))
+        || results.interaction_effects.iter().any(|effect| {
+            moderation_estimate_has_inference_v1(&effect.standardized_product_coefficient)
+        })
+        || results
+            .conditional_effects
+            .iter()
+            .any(|effect| moderation_estimate_has_inference_v1(&effect.value))
+        || results.interaction_plots.iter().any(|plot| {
+            plot.series.iter().any(|series| {
+                series
+                    .points
+                    .iter()
+                    .any(|point| point.lower.is_some() || point.upper.is_some())
+            })
+        });
+    if point_only_inference {
+        return Err(invalid_general_sem_authority(
+            "moderation beta, joint coefficients, conditional slopes, and plots must remain point-only",
+        ));
+    }
+    Ok(())
+}
+
 fn validate_general_sem_pls_moderation_document_v1(
     document: &CanonicalResultDocumentV2,
     results: &qpls_core::CanonicalGeneralSemResultsV1,
@@ -1606,19 +1772,50 @@ fn validate_general_sem_pls_moderation_document_v1(
     let plan = artifact.plan();
     let moderation = project_capability_cell_v2(artifact.capability_cell());
     let base = moderation_base_capability_cell_v1(recipe);
-    let mut expected_document_cells = vec![base.clone(), moderation.clone()];
-    sort_project_capability_cells_v1(&mut expected_document_cells);
-    if document.capability_cells.as_deref() != Some(expected_document_cells.as_slice()) {
+    let bootstrap = project_capability_cell_v2(
+        &qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1(),
+    );
+    let is_bootstrap = results.inference_receipt.is_some();
+    if results.inference_receipt.as_ref().is_some_and(|receipt| {
+        receipt.capability_cell
+            != qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+    }) {
         return Err(invalid_general_sem_authority(
-            "the exact moderation document capability set differs from [base PLS, moderation]",
+            "the exact moderation inference receipt must use the supplemental moderation-bootstrap cell",
         ));
     }
+    validate_general_sem_moderation_inference_surface_v1(results, is_bootstrap)?;
+    let mut expected_document_cells = vec![base.clone(), moderation.clone()];
+    if is_bootstrap {
+        expected_document_cells.push(bootstrap.clone());
+    }
+    sort_project_capability_cells_v1(&mut expected_document_cells);
+    if document.capability_cells.as_deref() != Some(expected_document_cells.as_slice()) {
+        return Err(invalid_general_sem_authority(if is_bootstrap {
+            "the exact moderation document capability set differs from [base PLS, point moderation, supplemental moderation bootstrap]"
+        } else {
+            "the exact moderation document capability set differs from [base PLS, moderation]"
+        }));
+    }
 
-    if document.title != "General SEM simultaneous two-way PLS moderation point estimates"
-        || document.presentation.default_section_id.as_deref()
-            != Some(GENERAL_SEM_MODERATION_SECTION_ID_V1)
-        || document.presentation.default_table_id.as_deref()
-            != Some(GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1)
+    let expected_title = if is_bootstrap {
+        "General SEM simultaneous two-way PLS moderation bootstrap inference"
+    } else {
+        "General SEM simultaneous two-way PLS moderation point estimates"
+    };
+    let expected_default_section = if is_bootstrap {
+        GENERAL_SEM_MODERATION_BOOTSTRAP_SECTION_ID_V1
+    } else {
+        GENERAL_SEM_MODERATION_SECTION_ID_V1
+    };
+    let expected_default_table = if is_bootstrap {
+        GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1
+    } else {
+        GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1
+    };
+    if document.title != expected_title
+        || document.presentation.default_section_id.as_deref() != Some(expected_default_section)
+        || document.presentation.default_table_id.as_deref() != Some(expected_default_table)
     {
         return Err(invalid_general_sem_authority(
             "the exact moderation title or default presentation target has drifted",
@@ -1630,14 +1827,16 @@ fn validate_general_sem_pls_moderation_document_v1(
         .iter()
         .map(|section| section.id.as_str())
         .collect::<Vec<_>>();
-    if section_ids
-        != [
-            "run_details",
-            "measurement_model",
-            "structural_model",
-            GENERAL_SEM_MODERATION_SECTION_ID_V1,
-        ]
-    {
+    let mut expected_section_ids = vec![
+        "run_details",
+        "measurement_model",
+        "structural_model",
+        GENERAL_SEM_MODERATION_SECTION_ID_V1,
+    ];
+    if is_bootstrap {
+        expected_section_ids.push(GENERAL_SEM_MODERATION_BOOTSTRAP_SECTION_ID_V1);
+    }
+    if section_ids != expected_section_ids {
         return Err(invalid_general_sem_authority(
             "the exact moderation section inventory or order has drifted",
         ));
@@ -1688,6 +1887,10 @@ fn validate_general_sem_pls_moderation_document_v1(
         GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1,
         GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1,
     ];
+    let expected_bootstrap_tables = [
+        GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1,
+        GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1,
+    ];
     let expected_chart_ids = (0..results.interaction_plots.len())
         .map(|index| format!("general_sem_interaction_chart_{index:04}"))
         .collect::<Vec<_>>();
@@ -1715,6 +1918,13 @@ fn validate_general_sem_pls_moderation_document_v1(
             .iter()
             .any(|section| !section.chart_ids.is_empty())
         || document.sections[3].chart_ids != expected_chart_ids
+        || (is_bootstrap
+            && (document.sections[4]
+                .table_ids
+                .iter()
+                .map(String::as_str)
+                .ne(expected_bootstrap_tables)
+                || !document.sections[4].chart_ids.is_empty()))
     {
         return Err(invalid_general_sem_authority(
             "the exact moderation section table/chart membership or order has drifted",
@@ -1727,12 +1937,20 @@ fn validate_general_sem_pls_moderation_document_v1(
             ));
         }
     }
-    for section in &document.sections[2..] {
+    for section in &document.sections[2..4] {
         if section.capability_cells.as_deref() != Some(std::slice::from_ref(&moderation)) {
             return Err(invalid_general_sem_authority(
                 "joint-stage moderation sections must be owned only by the moderation cell",
             ));
         }
+    }
+    if is_bootstrap
+        && document.sections[4].capability_cells.as_deref()
+            != Some(std::slice::from_ref(&bootstrap))
+    {
+        return Err(invalid_general_sem_authority(
+            "moderation-bootstrap sections must be owned only by the supplemental bootstrap cell",
+        ));
     }
 
     let mut expected_table_ids = vec!["estimation_summary", "outer_model", "structural_paths"];
@@ -1755,6 +1973,9 @@ fn validate_general_sem_pls_moderation_document_v1(
         expected_table_ids.push(crate::PLS_CONTROL_ESTIMATES_TABLE_ID_V2);
     }
     expected_table_ids.extend(expected_moderation_tables);
+    if is_bootstrap {
+        expected_table_ids.extend(expected_bootstrap_tables);
+    }
     if document
         .tables
         .iter()
@@ -1774,6 +1995,12 @@ fn validate_general_sem_pls_moderation_document_v1(
     for table in &document.tables {
         let expected_owner = if stage_one_table_ids.contains(table.id.as_str()) {
             &base
+        } else if matches!(
+            table.id.as_str(),
+            GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1
+                | GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1
+        ) {
+            &bootstrap
         } else {
             &moderation
         };
@@ -1801,15 +2028,24 @@ fn validate_general_sem_pls_moderation_document_v1(
         ));
     }
 
+    let expected_exclusions = if is_bootstrap {
+        GENERAL_SEM_MODERATION_BOOTSTRAP_EXCLUSION_IDS_V1
+    } else {
+        GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1
+    };
     if document
         .exclusions
         .iter()
         .map(|exclusion| exclusion.id.as_str())
-        .ne(GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1.iter().copied())
-        || document
-            .exclusions
-            .iter()
-            .any(|exclusion| exclusion.capability_cell.as_ref() != Some(&moderation))
+        .ne(expected_exclusions.iter().copied())
+        || document.exclusions.iter().any(|exclusion| {
+            exclusion.capability_cell.as_ref()
+                != Some(if is_bootstrap {
+                    &bootstrap
+                } else {
+                    &moderation
+                })
+        })
     {
         return Err(invalid_general_sem_authority(
             "the exact moderation exclusion inventory or capability owner has drifted",
@@ -1819,6 +2055,377 @@ fn validate_general_sem_pls_moderation_document_v1(
     validate_general_sem_joint_stage_structural_ledger_v1(document, results, artifact)?;
     validate_general_sem_moderation_result_tables_v1(document, results, &moderation)?;
     validate_general_sem_moderation_charts_v1(document, results)?;
+    if is_bootstrap {
+        validate_general_sem_moderation_bootstrap_tables_v1(
+            document, results, artifact, &bootstrap,
+        )?;
+    }
+    Ok(())
+}
+
+fn validate_general_sem_moderation_bootstrap_tables_v1(
+    document: &CanonicalResultDocumentV2,
+    results: &qpls_core::CanonicalGeneralSemResultsV1,
+    artifact: &qpls_core::CompiledGeneralSemPlsRecipeV1,
+    bootstrap_cell: &crate::CapabilityCellReferenceV2,
+) -> Result<(), ProjectArchiveV6Error> {
+    let receipt = results.inference_receipt.as_ref().ok_or_else(|| {
+        invalid_general_sem_authority(
+            "moderation-bootstrap tables require the typed moderation inference receipt",
+        )
+    })?;
+    let stage_one_digest = artifact
+        .plan()
+        .stage_one_projection_scientific_sha256()
+        .ok_or_else(|| {
+            invalid_general_sem_authority(
+                "moderation bootstrap requires the compiled interaction-free stage-one digest",
+            )
+        })?;
+    let mut expected_effect_ids = artifact
+        .plan()
+        .two_way_interactions()
+        .iter()
+        .map(|interaction| interaction.interaction_effect_relation_id().to_string())
+        .collect::<Vec<_>>();
+    expected_effect_ids.sort();
+    let expected_identity_digest = qpls_core::general_sem_effect_identity_set_sha256_v1(
+        &qpls_core::canonical_general_sem_effect_identities_v1(results),
+    );
+    if artifact.compiler_version()
+        != qpls_core::GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1
+        || receipt.capability_cell
+            != qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+        || receipt.method_version
+            != qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+        || receipt.resampling_operation_version
+            != qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+        || receipt.effect_ids != expected_effect_ids
+        || receipt.effect_identity_set_sha256 != expected_identity_digest
+        || !receipt.complete_model_reestimated_per_replicate
+    {
+        return Err(invalid_general_sem_authority(
+            "the moderation-bootstrap receipt differs from its recompiled cell, target inventory, identity digest, or full-model contract",
+        ));
+    }
+
+    let gamma_table =
+        moderation_table(document, GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1)?;
+    validate_moderation_table_columns_v1(
+        gamma_table,
+        GENERAL_SEM_MODERATION_GAMMA_INFERENCE_COLUMNS_V1,
+    )?;
+    if gamma_table.capability_cells.as_deref() != Some(std::slice::from_ref(bootstrap_cell))
+        || gamma_table.rows.len() != results.interaction_effects.len()
+    {
+        return Err(invalid_general_sem_authority(
+            "the moderation gamma-inference table has drifted ownership or row inventory",
+        ));
+    }
+    for (index, (row, effect)) in gamma_table
+        .rows
+        .iter()
+        .zip(results.interaction_effects.iter())
+        .enumerate()
+    {
+        if row.id != format!("moderation_gamma_inference_{index:04}") {
+            return Err(invalid_general_sem_authority(
+                "the moderation gamma-inference row identity has drifted",
+            ));
+        }
+        for (cell, expected, context) in [
+            (&row.cells[0], effect.effect_id.as_str(), "gamma effect id"),
+            (
+                &row.cells[1],
+                effect.interaction_id.as_str(),
+                "gamma interaction id",
+            ),
+            (
+                &row.cells[2],
+                effect.focal_relation_id.as_str(),
+                "gamma focal relation",
+            ),
+            (
+                &row.cells[3],
+                effect.interaction_effect_relation_id.as_str(),
+                "gamma interaction relation",
+            ),
+            (
+                &row.cells[4],
+                effect.interaction_effect_parameter_id.as_str(),
+                "gamma interaction parameter",
+            ),
+            (
+                &row.cells[5],
+                effect.generated_product_column_id.as_str(),
+                "gamma generated product",
+            ),
+            (
+                &row.cells[6],
+                effect.focal_predictor_id.as_str(),
+                "gamma focal predictor",
+            ),
+            (
+                &row.cells[7],
+                effect.moderator_id.as_str(),
+                "gamma moderator",
+            ),
+            (&row.cells[8], effect.outcome_id.as_str(), "gamma outcome"),
+            (
+                &row.cells[9],
+                effect.stage_one_model_scientific_sha256.as_str(),
+                "gamma stage-one digest",
+            ),
+            (
+                &row.cells[10],
+                effect.product_scale_version.as_str(),
+                "gamma product scale",
+            ),
+            (
+                &row.cells[11],
+                effect.method_version.as_str(),
+                "gamma point method",
+            ),
+        ] {
+            moderation_text_cell_v1(cell, expected, context)?;
+        }
+        let estimate = &effect.scientific_rescaled_gamma;
+        for (cell, expected, context) in [
+            (&row.cells[12], Some(estimate.estimate), "gamma estimate"),
+            (
+                &row.cells[13],
+                estimate.bootstrap_mean,
+                "gamma bootstrap mean",
+            ),
+            (
+                &row.cells[14],
+                estimate.bootstrap_bias,
+                "gamma bootstrap bias",
+            ),
+            (
+                &row.cells[15],
+                estimate.standard_error,
+                "gamma standard error",
+            ),
+            (&row.cells[16], estimate.lower, "gamma lower interval"),
+            (&row.cells[17], estimate.upper, "gamma upper interval"),
+            (&row.cells[18], estimate.p_value, "gamma p value"),
+            (
+                &row.cells[19],
+                estimate.bootstrap_usable_replicates.map(f64::from),
+                "gamma usable replicates",
+            ),
+            (
+                &row.cells[20],
+                estimate.bootstrap_two_sided_exceedances.map(f64::from),
+                "gamma two-sided exceedances",
+            ),
+        ] {
+            let Some(expected) = expected else {
+                return Err(invalid_general_sem_authority(format!(
+                    "{context} is missing from the typed gamma inference"
+                )));
+            };
+            moderation_number_cell_v1(cell, expected, context)?;
+        }
+    }
+
+    let receipt_table = moderation_table(
+        document,
+        GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1,
+    )?;
+    validate_moderation_table_columns_v1(
+        receipt_table,
+        GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_COLUMNS_V1,
+    )?;
+    if receipt_table.capability_cells.as_deref() != Some(std::slice::from_ref(bootstrap_cell))
+        || receipt_table.rows.len() != 1
+        || receipt_table.rows[0].id != "moderation_bootstrap_receipt"
+    {
+        return Err(invalid_general_sem_authority(
+            "the moderation-bootstrap receipt table has drifted ownership or row inventory",
+        ));
+    }
+    let row = &receipt_table.rows[0];
+    for (cell, expected, context) in [
+        (
+            &row.cells[0],
+            receipt.capability_cell.capability_id.as_str(),
+            "bootstrap capability id",
+        ),
+        (
+            &row.cells[1],
+            receipt.capability_cell.cell_id.as_str(),
+            "bootstrap cell id",
+        ),
+        (
+            &row.cells[2],
+            receipt.capability_cell.capability_version.as_str(),
+            "bootstrap capability version",
+        ),
+        (
+            &row.cells[3],
+            receipt.method_version.as_str(),
+            "bootstrap method version",
+        ),
+        (
+            &row.cells[4],
+            qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+            "bootstrap point method version",
+        ),
+        (
+            &row.cells[5],
+            receipt.resampling_operation_version.as_str(),
+            "bootstrap operation version",
+        ),
+        (
+            &row.cells[6],
+            receipt.resampling_stream_version.as_str(),
+            "bootstrap stream version",
+        ),
+        (
+            &row.cells[7],
+            receipt.quantile_method_version.as_str(),
+            "bootstrap quantile version",
+        ),
+        (
+            &row.cells[8],
+            receipt.standard_error_method_version.as_str(),
+            "bootstrap standard-error version",
+        ),
+        (
+            &row.cells[9],
+            receipt.summation_method_version.as_str(),
+            "bootstrap summation version",
+        ),
+        (
+            &row.cells[10],
+            receipt.p_value_method_version.as_str(),
+            "bootstrap p-value version",
+        ),
+        (
+            &row.cells[11],
+            receipt.failure_policy_version.as_str(),
+            "bootstrap failure-policy version",
+        ),
+        (
+            &row.cells[12],
+            qpls_resampling::GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1,
+            "bootstrap sign-alignment version",
+        ),
+        (
+            &row.cells[13],
+            qpls_core::GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
+            "bootstrap product-scale version",
+        ),
+        (
+            &row.cells[14],
+            qpls_resampling::GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1,
+            "bootstrap gamma-target version",
+        ),
+        (
+            &row.cells[15],
+            receipt.compilation_artifact_identity_sha256.as_str(),
+            "bootstrap artifact digest",
+        ),
+        (
+            &row.cells[16],
+            receipt.compiled_plan_sha256.as_str(),
+            "bootstrap plan digest",
+        ),
+        (
+            &row.cells[17],
+            receipt.general_sem_config_sha256.as_str(),
+            "bootstrap config digest",
+        ),
+        (
+            &row.cells[18],
+            receipt.recipe_analytical_sha256.as_str(),
+            "bootstrap recipe digest",
+        ),
+        (
+            &row.cells[19],
+            receipt.model_scientific_sha256.as_str(),
+            "bootstrap model digest",
+        ),
+        (
+            &row.cells[20],
+            stage_one_digest,
+            "bootstrap stage-one digest",
+        ),
+        (
+            &row.cells[21],
+            receipt.source_dataset_fingerprint.as_str(),
+            "bootstrap dataset fingerprint",
+        ),
+        (
+            &row.cells[22],
+            receipt.complete_case_frame_sha256.as_str(),
+            "bootstrap complete-case digest",
+        ),
+        (
+            &row.cells[23],
+            receipt.usable_replicate_indices_sha256.as_str(),
+            "bootstrap usable-index digest",
+        ),
+        (
+            &row.cells[24],
+            receipt.effect_identity_set_sha256.as_str(),
+            "bootstrap gamma-identity digest",
+        ),
+        (&row.cells[25], "percentile_type7", "bootstrap interval"),
+        (&row.cells[26], "two_sided", "bootstrap tail"),
+        (&row.cells[31], receipt.seed.as_str(), "bootstrap seed"),
+    ] {
+        moderation_text_cell_v1(cell, expected, context)?;
+    }
+    for (cell, expected, context) in [
+        (
+            &row.cells[27],
+            receipt.confidence_level,
+            "bootstrap confidence level",
+        ),
+        (
+            &row.cells[28],
+            f64::from(receipt.resamples_requested),
+            "bootstrap requested replicates",
+        ),
+        (
+            &row.cells[29],
+            f64::from(receipt.resamples_usable),
+            "bootstrap usable replicates",
+        ),
+        (
+            &row.cells[30],
+            f64::from(receipt.minimum_usable_resamples),
+            "bootstrap minimum usable replicates",
+        ),
+        (
+            &row.cells[32],
+            f64::from(receipt.workers),
+            "bootstrap workers",
+        ),
+        (
+            &row.cells[39],
+            receipt.failed_replicates.len() as f64,
+            "bootstrap failed-replicate count",
+        ),
+    ] {
+        moderation_number_cell_v1(cell, expected, context)?;
+    }
+    for (index, context) in [
+        "complete model reestimated",
+        "shared stage one reestimated",
+        "score vectors sign aligned",
+        "product scaling recomputed",
+        "joint stage two reestimated",
+        "complete joint point contract validated",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        moderation_boolean_cell_v1(&row.cells[33 + index], true, context)?;
+    }
     Ok(())
 }
 
@@ -9589,6 +10196,31 @@ mod tests {
             .collect()
     }
 
+    fn moderation_test_columns_with_booleans(
+        ids: &[&str],
+        number_ids: &[&str],
+        boolean_ids: &[&str],
+    ) -> Vec<CanonicalResultColumnV2> {
+        ids.iter()
+            .map(|id| {
+                nonlinear_test_column(
+                    id,
+                    if number_ids.contains(id) {
+                        CanonicalColumnTypeV2::Number
+                    } else if boolean_ids.contains(id) {
+                        CanonicalColumnTypeV2::Boolean
+                    } else {
+                        CanonicalColumnTypeV2::Text
+                    },
+                )
+            })
+            .collect()
+    }
+
+    fn moderation_test_boolean(value: bool) -> CanonicalResultCellV2 {
+        CanonicalResultCellV2::Boolean { value }
+    }
+
     fn moderation_test_missing() -> CanonicalResultCellV2 {
         CanonicalResultCellV2::Missing {
             reason: CanonicalMissingReasonV2::NotEstimated,
@@ -9675,6 +10307,7 @@ mod tests {
         results: &qpls_core::CanonicalGeneralSemResultsV1,
         base: &crate::CapabilityCellReferenceV2,
         moderation: &crate::CapabilityCellReferenceV2,
+        bootstrap: Option<&crate::CapabilityCellReferenceV2>,
     ) -> Vec<CanonicalResultTableV2> {
         let structural_rows = results
             .joint_stage_structural_coefficients
@@ -9847,7 +10480,7 @@ mod tests {
             moderation.clone(),
         );
 
-        vec![
+        let mut tables = vec![
             moderation_test_stage_one_table("estimation_summary", base),
             moderation_test_stage_one_table("outer_model", base),
             structural,
@@ -9859,7 +10492,150 @@ mod tests {
             interactions,
             conditional,
             plots,
-        ]
+        ];
+        if let Some(bootstrap) = bootstrap {
+            let receipt = results
+                .inference_receipt
+                .as_ref()
+                .expect("bootstrap tables require a typed receipt");
+            let gamma_rows = results
+                .interaction_effects
+                .iter()
+                .enumerate()
+                .map(|(index, effect)| {
+                    let gamma = &effect.scientific_rescaled_gamma;
+                    CanonicalResultRowV2 {
+                        id: format!("moderation_gamma_inference_{index:04}"),
+                        cells: vec![
+                            nonlinear_test_text(&effect.effect_id),
+                            nonlinear_test_text(&effect.interaction_id),
+                            nonlinear_test_text(&effect.focal_relation_id),
+                            nonlinear_test_text(&effect.interaction_effect_relation_id),
+                            nonlinear_test_text(&effect.interaction_effect_parameter_id),
+                            nonlinear_test_text(&effect.generated_product_column_id),
+                            nonlinear_test_text(&effect.focal_predictor_id),
+                            nonlinear_test_text(&effect.moderator_id),
+                            nonlinear_test_text(&effect.outcome_id),
+                            nonlinear_test_text(&effect.stage_one_model_scientific_sha256),
+                            nonlinear_test_text(&effect.product_scale_version),
+                            nonlinear_test_text(&effect.method_version),
+                            nonlinear_test_number(gamma.estimate),
+                            nonlinear_test_number(gamma.bootstrap_mean.unwrap()),
+                            nonlinear_test_number(gamma.bootstrap_bias.unwrap()),
+                            nonlinear_test_number(gamma.standard_error.unwrap()),
+                            nonlinear_test_number(gamma.lower.unwrap()),
+                            nonlinear_test_number(gamma.upper.unwrap()),
+                            nonlinear_test_number(gamma.p_value.unwrap()),
+                            nonlinear_test_number(f64::from(
+                                gamma.bootstrap_usable_replicates.unwrap(),
+                            )),
+                            nonlinear_test_number(f64::from(
+                                gamma.bootstrap_two_sided_exceedances.unwrap(),
+                            )),
+                        ],
+                    }
+                })
+                .collect();
+            tables.push(nonlinear_test_table(
+                GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1,
+                moderation_test_columns(
+                    GENERAL_SEM_MODERATION_GAMMA_INFERENCE_COLUMNS_V1,
+                    &[
+                        "estimate",
+                        "bootstrap_mean",
+                        "bootstrap_bias",
+                        "standard_error",
+                        "lower",
+                        "upper",
+                        "p_value",
+                        "bootstrap_usable_replicates",
+                        "bootstrap_two_sided_exceedances",
+                    ],
+                ),
+                gamma_rows,
+                bootstrap.clone(),
+            ));
+
+            let stage_one_digest = results.interaction_effects[0]
+                .stage_one_model_scientific_sha256
+                .clone();
+            let receipt_row = CanonicalResultRowV2 {
+                id: "moderation_bootstrap_receipt".into(),
+                cells: vec![
+                    nonlinear_test_text(&receipt.capability_cell.capability_id),
+                    nonlinear_test_text(&receipt.capability_cell.cell_id),
+                    nonlinear_test_text(&receipt.capability_cell.capability_version),
+                    nonlinear_test_text(&receipt.method_version),
+                    nonlinear_test_text(
+                        qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+                    ),
+                    nonlinear_test_text(&receipt.resampling_operation_version),
+                    nonlinear_test_text(&receipt.resampling_stream_version),
+                    nonlinear_test_text(&receipt.quantile_method_version),
+                    nonlinear_test_text(&receipt.standard_error_method_version),
+                    nonlinear_test_text(&receipt.summation_method_version),
+                    nonlinear_test_text(&receipt.p_value_method_version),
+                    nonlinear_test_text(&receipt.failure_policy_version),
+                    nonlinear_test_text(
+                        qpls_resampling::GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1,
+                    ),
+                    nonlinear_test_text(qpls_core::GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1),
+                    nonlinear_test_text(
+                        qpls_resampling::GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1,
+                    ),
+                    nonlinear_test_text(&receipt.compilation_artifact_identity_sha256),
+                    nonlinear_test_text(&receipt.compiled_plan_sha256),
+                    nonlinear_test_text(&receipt.general_sem_config_sha256),
+                    nonlinear_test_text(&receipt.recipe_analytical_sha256),
+                    nonlinear_test_text(&receipt.model_scientific_sha256),
+                    nonlinear_test_text(stage_one_digest),
+                    nonlinear_test_text(&receipt.source_dataset_fingerprint),
+                    nonlinear_test_text(&receipt.complete_case_frame_sha256),
+                    nonlinear_test_text(&receipt.usable_replicate_indices_sha256),
+                    nonlinear_test_text(&receipt.effect_identity_set_sha256),
+                    nonlinear_test_text("percentile_type7"),
+                    nonlinear_test_text("two_sided"),
+                    nonlinear_test_number(receipt.confidence_level),
+                    nonlinear_test_number(f64::from(receipt.resamples_requested)),
+                    nonlinear_test_number(f64::from(receipt.resamples_usable)),
+                    nonlinear_test_number(f64::from(receipt.minimum_usable_resamples)),
+                    nonlinear_test_text(&receipt.seed),
+                    nonlinear_test_number(f64::from(receipt.workers)),
+                    moderation_test_boolean(true),
+                    moderation_test_boolean(true),
+                    moderation_test_boolean(true),
+                    moderation_test_boolean(true),
+                    moderation_test_boolean(true),
+                    moderation_test_boolean(true),
+                    nonlinear_test_number(receipt.failed_replicates.len() as f64),
+                ],
+            };
+            tables.push(nonlinear_test_table(
+                GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1,
+                moderation_test_columns_with_booleans(
+                    GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_COLUMNS_V1,
+                    &[
+                        "confidence_level",
+                        "resamples_requested",
+                        "resamples_usable",
+                        "minimum_usable_resamples",
+                        "workers",
+                        "failed_replicate_count",
+                    ],
+                    &[
+                        "complete_model_reestimated_per_replicate",
+                        "shared_stage_one_reestimated_per_replicate",
+                        "score_vectors_sign_aligned_before_products",
+                        "product_scaling_recomputed_per_replicate",
+                        "joint_stage_two_reestimated_per_replicate",
+                        "complete_joint_point_contract_validated_per_replicate",
+                    ],
+                ),
+                vec![receipt_row],
+                bootstrap.clone(),
+            ));
+        }
+        tables
     }
 
     fn moderation_test_charts(
@@ -9906,8 +10682,9 @@ mod tests {
             .collect()
     }
 
-    fn general_sem_schema6_moderation_authority_fixture(
+    fn general_sem_schema6_moderation_authority_fixture_with_inference(
         same_focal: bool,
+        bootstrap: bool,
     ) -> (ProjectArchiveDocumentV6, CanonicalResultDocumentV2) {
         let source_model = ModelSpec {
             id: Uuid::from_u128(0x4d4f_4452_5343_4845_4d41_3601),
@@ -10011,7 +10788,26 @@ mod tests {
             model_id: model.id.clone(),
             scientific_sha256: model_scientific_sha256.clone(),
         };
-        recipe.general_sem_config = Some(GeneralSemConfigV1::default());
+        recipe.general_sem_config = Some(if bootstrap {
+            recipe.settings.bootstrap_samples = 20;
+            recipe.settings.bootstrap_test_tail = qpls_core::PlsBootstrapTestTail::TwoSided;
+            recipe.settings.studentized_inner_samples = 0;
+            recipe.settings.confidence_level = 0.95;
+            recipe.settings.seed = 42;
+            recipe.settings.workers = 2;
+            GeneralSemConfigV1 {
+                inference: GeneralSemInferenceV1::CaseBootstrap {
+                    resamples: 20,
+                    seed: 42,
+                    confidence_level: 0.95,
+                    interval: GeneralSemBootstrapIntervalV1::Percentile,
+                    tail: GeneralSemInferenceTailV1::TwoSided,
+                },
+                ..GeneralSemConfigV1::default()
+            }
+        } else {
+            GeneralSemConfigV1::default()
+        });
         recipe.ensure_valid().unwrap();
         let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
         let execution = qpls_runner::run_compiled_general_sem_pls_recipe_v1(
@@ -10065,16 +10861,123 @@ mod tests {
 
         let moderation_cell = project_capability_cell_v2(artifact.capability_cell());
         let base_cell = moderation_base_capability_cell_v1(&recipe);
+        let bootstrap_cell = bootstrap.then(|| {
+            project_capability_cell_v2(
+                &qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1(),
+            )
+        });
         let mut capability_cells = vec![base_cell.clone(), moderation_cell.clone()];
+        if let Some(bootstrap_cell) = &bootstrap_cell {
+            capability_cells.push(bootstrap_cell.clone());
+        }
         sort_project_capability_cells_v1(&mut capability_cells);
-        let tables =
-            moderation_test_result_tables(&general_sem_results, &base_cell, &moderation_cell);
+        let tables = moderation_test_result_tables(
+            &general_sem_results,
+            &base_cell,
+            &moderation_cell,
+            bootstrap_cell.as_ref(),
+        );
         let charts = moderation_test_charts(&general_sem_results);
         let chart_ids = charts.iter().map(|chart| chart.id.clone()).collect();
+        let mut sections = vec![
+            CanonicalResultSectionV2 {
+                id: "run_details".into(),
+                title: "Stage-one score estimation".into(),
+                description: Some("Stage-one fixture".into()),
+                table_ids: vec![
+                    "estimation_summary".into(),
+                    crate::PLS_ALGORITHM_CONVERGENCE_SUMMARY_TABLE_ID_V1.into(),
+                    crate::PLS_ALGORITHM_BLOCK_ORDER_TABLE_ID_V1.into(),
+                ],
+                chart_ids: Vec::new(),
+                capability_cells: Some(vec![base_cell.clone()]),
+            },
+            CanonicalResultSectionV2 {
+                id: "measurement_model".into(),
+                title: "Stage-one measurement model".into(),
+                description: Some("Stage-one measurement fixture".into()),
+                table_ids: vec!["outer_model".into()],
+                chart_ids: Vec::new(),
+                capability_cells: Some(vec![base_cell]),
+            },
+            CanonicalResultSectionV2 {
+                id: "structural_model".into(),
+                title: "Joint stage-two structural model".into(),
+                description: Some("Final joint-stage fixture".into()),
+                table_ids: vec!["structural_paths".into()],
+                chart_ids: Vec::new(),
+                capability_cells: Some(vec![moderation_cell.clone()]),
+            },
+            CanonicalResultSectionV2 {
+                id: GENERAL_SEM_MODERATION_SECTION_ID_V1.into(),
+                title: "Moderation effects".into(),
+                description: Some("Typed moderation fixture".into()),
+                table_ids: vec![
+                    GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1.into(),
+                    GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1.into(),
+                    GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1.into(),
+                ],
+                chart_ids,
+                capability_cells: Some(vec![moderation_cell.clone()]),
+            },
+        ];
+        if let Some(bootstrap_cell) = &bootstrap_cell {
+            sections.push(CanonicalResultSectionV2 {
+                id: GENERAL_SEM_MODERATION_BOOTSTRAP_SECTION_ID_V1.into(),
+                title: "Moderation bootstrap inference".into(),
+                description: Some("Scientific gamma inference and full-pipeline receipt".into()),
+                table_ids: vec![
+                    GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1.into(),
+                    GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1.into(),
+                ],
+                chart_ids: Vec::new(),
+                capability_cells: Some(vec![bootstrap_cell.clone()]),
+            });
+        }
+        let exclusions = if let Some(bootstrap_cell) = &bootstrap_cell {
+            GENERAL_SEM_MODERATION_BOOTSTRAP_EXCLUSION_IDS_V1
+                .iter()
+                .map(|id| crate::CanonicalResultExclusionV2 {
+                    id: (*id).into(),
+                    capability_cell: Some(bootstrap_cell.clone()),
+                    title: match *id {
+                        "moderation_bootstrap_scientific_gamma_only" => {
+                            "Only scientific gamma is bootstrap-inferred"
+                        }
+                        "moderation_beta_joint_coefficients_slopes_plots_point_only" => {
+                            "Other moderation surfaces remain point-only"
+                        }
+                        _ => "Joint-model effects and fit not estimated",
+                    }
+                    .into(),
+                    reason: "Parity-first moderation-bootstrap v1 boundary".into(),
+                })
+                .collect()
+        } else {
+            vec![
+                crate::CanonicalResultExclusionV2 {
+                    id: GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1[0].into(),
+                    capability_cell: Some(moderation_cell.clone()),
+                    title: "Moderation inference not qualified".into(),
+                    reason: "Point-only fixture".into(),
+                },
+                crate::CanonicalResultExclusionV2 {
+                    id: GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1[1].into(),
+                    capability_cell: Some(moderation_cell.clone()),
+                    title: "Joint-model effects and fit not estimated".into(),
+                    reason: "No qualified joint fit fixture".into(),
+                },
+            ]
+        };
         let canonical = CanonicalResultDocumentV2 {
             schema_version: 2,
             document_id: "general_sem_moderation_authority_document".into(),
-            title: "General SEM simultaneous two-way PLS moderation point estimates".into(),
+            title: if bootstrap {
+                "General SEM simultaneous two-way PLS moderation bootstrap inference"
+            } else {
+                "General SEM simultaneous two-way PLS moderation point estimates"
+            }
+            .into(),
             provenance: CanonicalResultProvenanceV2 {
                 run_id: "general_sem_moderation_authority_run".into(),
                 project_id: project.project_id.to_string(),
@@ -10085,7 +10988,12 @@ mod tests {
                 recipe_id: recipe.id.to_string(),
                 recipe_digest: artifact.recipe_analytical_sha256().into(),
                 capability_cell: moderation_cell.clone(),
-                method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1.into(),
+                method_version: if bootstrap {
+                    qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+                } else {
+                    GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+                }
+                .into(),
                 engine_version: execution.adapter_version().into(),
                 seed: Some(recipe.settings.seed),
                 workers: recipe.settings.workers as u32,
@@ -10094,69 +11002,25 @@ mod tests {
             },
             capability_cells: Some(capability_cells),
             general_sem_results: Some(general_sem_results),
-            sections: vec![
-                CanonicalResultSectionV2 {
-                    id: "run_details".into(),
-                    title: "Stage-one score estimation".into(),
-                    description: Some("Stage-one fixture".into()),
-                    table_ids: vec![
-                        "estimation_summary".into(),
-                        crate::PLS_ALGORITHM_CONVERGENCE_SUMMARY_TABLE_ID_V1.into(),
-                        crate::PLS_ALGORITHM_BLOCK_ORDER_TABLE_ID_V1.into(),
-                    ],
-                    chart_ids: Vec::new(),
-                    capability_cells: Some(vec![base_cell.clone()]),
-                },
-                CanonicalResultSectionV2 {
-                    id: "measurement_model".into(),
-                    title: "Stage-one measurement model".into(),
-                    description: Some("Stage-one measurement fixture".into()),
-                    table_ids: vec!["outer_model".into()],
-                    chart_ids: Vec::new(),
-                    capability_cells: Some(vec![base_cell]),
-                },
-                CanonicalResultSectionV2 {
-                    id: "structural_model".into(),
-                    title: "Joint stage-two structural model".into(),
-                    description: Some("Final joint-stage fixture".into()),
-                    table_ids: vec!["structural_paths".into()],
-                    chart_ids: Vec::new(),
-                    capability_cells: Some(vec![moderation_cell.clone()]),
-                },
-                CanonicalResultSectionV2 {
-                    id: GENERAL_SEM_MODERATION_SECTION_ID_V1.into(),
-                    title: "Moderation effects".into(),
-                    description: Some("Typed moderation fixture".into()),
-                    table_ids: vec![
-                        GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1.into(),
-                        GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1.into(),
-                        GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1.into(),
-                    ],
-                    chart_ids,
-                    capability_cells: Some(vec![moderation_cell.clone()]),
-                },
-            ],
+            sections,
             tables,
             charts,
             notices: Vec::new(),
-            exclusions: vec![
-                crate::CanonicalResultExclusionV2 {
-                    id: GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1[0].into(),
-                    capability_cell: Some(moderation_cell.clone()),
-                    title: "Moderation inference not qualified".into(),
-                    reason: "Point-only fixture".into(),
-                },
-                crate::CanonicalResultExclusionV2 {
-                    id: GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1[1].into(),
-                    capability_cell: Some(moderation_cell),
-                    title: "Joint-model effects and fit not estimated".into(),
-                    reason: "No qualified joint fit fixture".into(),
-                },
-            ],
+            exclusions,
             footnotes: Vec::new(),
             presentation: CanonicalResultPresentationV2 {
-                default_section_id: Some(GENERAL_SEM_MODERATION_SECTION_ID_V1.into()),
-                default_table_id: Some(GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1.into()),
+                default_section_id: Some(if bootstrap {
+                    GENERAL_SEM_MODERATION_BOOTSTRAP_SECTION_ID_V1
+                } else {
+                    GENERAL_SEM_MODERATION_SECTION_ID_V1
+                }
+                .into()),
+                default_table_id: Some(if bootstrap {
+                    GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1
+                } else {
+                    GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1
+                }
+                .into()),
                 precision: 4,
                 missing_value_label: "—".into(),
                 chart_defaults: CanonicalChartDisplayOptionsV2::default(),
@@ -10167,6 +11031,18 @@ mod tests {
             .canonical_result_documents
             .push(CanonicalResultDocumentAttachmentV2::from_document(canonical.clone()).unwrap());
         (project, canonical)
+    }
+
+    fn general_sem_schema6_moderation_authority_fixture(
+        same_focal: bool,
+    ) -> (ProjectArchiveDocumentV6, CanonicalResultDocumentV2) {
+        general_sem_schema6_moderation_authority_fixture_with_inference(same_focal, false)
+    }
+
+    fn general_sem_schema6_moderation_bootstrap_authority_fixture(
+        same_focal: bool,
+    ) -> (ProjectArchiveDocumentV6, CanonicalResultDocumentV2) {
+        general_sem_schema6_moderation_authority_fixture_with_inference(same_focal, true)
     }
 
     fn assert_moderation_authority_rejects(
@@ -10253,6 +11129,10 @@ mod tests {
         assert_eq!(
             GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
             qpls_runner::RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1
+        );
+        assert_eq!(
+            GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+            qpls_runner::RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
         );
         let (project, canonical) = general_sem_schema6_authority_fixture();
         project.ensure_valid().unwrap();
@@ -10354,6 +11234,175 @@ mod tests {
                 .collect::<BTreeSet<_>>();
             assert_eq!(focal_relation_ids.len(), if same_focal { 1 } else { 2 });
         }
+    }
+
+    #[test]
+    fn general_sem_moderation_bootstrap_archive_accepts_same_and_different_focal_models() {
+        for same_focal in [true, false] {
+            let (project, canonical) =
+                general_sem_schema6_moderation_bootstrap_authority_fixture(same_focal);
+            project.ensure_valid().unwrap();
+            let results = canonical.general_sem_results.as_ref().unwrap();
+            let receipt = results.inference_receipt.as_ref().unwrap();
+            assert_eq!(
+                receipt.capability_cell,
+                qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+            );
+            assert_eq!(
+                receipt.method_version,
+                qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+            );
+            assert_eq!(canonical.capability_cells.as_ref().unwrap().len(), 3);
+            assert_eq!(
+                canonical.sections.last().unwrap().id,
+                GENERAL_SEM_MODERATION_BOOTSTRAP_SECTION_ID_V1
+            );
+            assert_eq!(
+                canonical.tables[canonical.tables.len() - 2].id,
+                GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1
+            );
+            assert_eq!(
+                canonical.tables.last().unwrap().id,
+                GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1
+            );
+            assert!(results.interaction_effects.iter().all(|effect| {
+                moderation_estimate_has_complete_inference_v1(&effect.scientific_rescaled_gamma)
+                    && !moderation_estimate_has_inference_v1(
+                        &effect.standardized_product_coefficient,
+                    )
+            }));
+            assert!(
+                results
+                    .joint_stage_structural_coefficients
+                    .iter()
+                    .all(|coefficient| {
+                        !moderation_estimate_has_inference_v1(&coefficient.estimate)
+                    })
+            );
+            assert!(
+                results
+                    .conditional_effects
+                    .iter()
+                    .all(|effect| { !moderation_estimate_has_inference_v1(&effect.value) })
+            );
+            assert!(results.interaction_plots.iter().all(|plot| {
+                plot.series.iter().all(|series| {
+                    series
+                        .points
+                        .iter()
+                        .all(|point| point.lower.is_none() && point.upper.is_none())
+                })
+            }));
+            let focal_relation_ids = results
+                .interaction_effects
+                .iter()
+                .map(|effect| effect.focal_relation_id.as_str())
+                .collect::<BTreeSet<_>>();
+            assert_eq!(focal_relation_ids.len(), if same_focal { 1 } else { 2 });
+        }
+    }
+
+    #[test]
+    fn general_sem_moderation_bootstrap_archive_rejects_coherent_resident_binding_tamper() {
+        let (same_project, mut same_document) =
+            general_sem_schema6_moderation_bootstrap_authority_fixture(true);
+        same_document
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .compiled_plan_sha256 = "0".repeat(64);
+        moderation_test_table_mut(
+            &mut same_document,
+            GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1,
+        )
+        .rows[0]
+            .cells[16] = nonlinear_test_text("0".repeat(64));
+        assert_moderation_authority_rejects(
+            &same_project,
+            same_document,
+            "resident compiled artifact, plan, config, recipe, model, dataset, or bootstrap settings",
+        );
+
+        let (different_project, mut different_document) =
+            general_sem_schema6_moderation_bootstrap_authority_fixture(false);
+        let tampered_product_id = "derived:coherent_product_tamper";
+        different_document
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .interaction_effects[0]
+            .generated_product_column_id = tampered_product_id.into();
+        moderation_test_table_mut(
+            &mut different_document,
+            GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1,
+        )
+        .rows[0]
+            .cells[8] = nonlinear_test_text(tampered_product_id);
+        moderation_test_table_mut(
+            &mut different_document,
+            GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1,
+        )
+        .rows[0]
+            .cells[5] = nonlinear_test_text(tampered_product_id);
+        let identity_digest = {
+            let results = different_document.general_sem_results.as_ref().unwrap();
+            qpls_core::general_sem_effect_identity_set_sha256_v1(
+                &qpls_core::canonical_general_sem_effect_identities_v1(results),
+            )
+        };
+        different_document
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .effect_identity_set_sha256 = identity_digest.clone();
+        moderation_test_table_mut(
+            &mut different_document,
+            GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1,
+        )
+        .rows[0]
+            .cells[24] = nonlinear_test_text(identity_digest);
+        assert_moderation_authority_rejects(
+            &different_project,
+            different_document,
+            "compiled interaction contract",
+        );
+    }
+
+    #[test]
+    fn general_sem_moderation_bootstrap_archive_reconciles_gamma_and_pipeline_receipt_tables() {
+        let (project, canonical) = general_sem_schema6_moderation_bootstrap_authority_fixture(true);
+        project.ensure_valid().unwrap();
+
+        let mut gamma_table_tamper = canonical.clone();
+        let gamma_table = moderation_test_table_mut(
+            &mut gamma_table_tamper,
+            GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1,
+        );
+        *moderation_test_number_cell_mut(&mut gamma_table.rows[0].cells[13]) += 0.125;
+        assert_moderation_authority_rejects(
+            &project,
+            gamma_table_tamper,
+            "gamma bootstrap mean differs bitwise",
+        );
+
+        let mut pipeline_tamper = canonical;
+        moderation_test_table_mut(
+            &mut pipeline_tamper,
+            GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1,
+        )
+        .rows[0]
+            .cells[35] = moderation_test_boolean(false);
+        assert_moderation_authority_rejects(
+            &project,
+            pipeline_tamper,
+            "score vectors sign aligned differs",
+        );
     }
 
     #[test]

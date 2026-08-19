@@ -23,6 +23,7 @@ import {
   generalSemTemporaryResultBlocksCloseV1,
   activateGeneralSemProjectArchiveV1,
   closeGeneralSemProjectV1,
+  generalSemCalculationActionLabelV1,
   generalSemCanonicalModerationInventoryV1,
   NativeRecipeV4GeneralSemWorkspace,
   selectCurrentGeneralSemNativePlsDecisionV1,
@@ -458,9 +459,36 @@ describe("General SEM native workspace accessibility", () => {
 
     expect(generalSemCanonicalModerationInventoryV1(canonical)).toEqual({
       interactionEffectCount: 2,
+      gammaInferenceCount: 0,
       conditionalSlopeCount: 6,
       interactionPlotCount: 2,
       interactionPlotPointCount: 15,
+      bootstrapResamplesRequested: null,
+      bootstrapResamplesUsable: null,
+    });
+    const inferred = structuredClone(canonical) as unknown as CanonicalResultDocumentV2;
+    inferred.general_sem_results!.interaction_effects![0]!.scientific_rescaled_gamma = {
+      estimate: 0.4,
+      standard_error: 0.1,
+    };
+    inferred.general_sem_results!.interaction_effects![1]!.scientific_rescaled_gamma = {
+      estimate: -0.2,
+      standard_error: 0.08,
+    };
+    inferred.general_sem_results!.inference_receipt = {
+      capability_cell: {
+        registry_schema_version: 2,
+        capability_id: "smartpls.moderation",
+        cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        capability_version: "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+      },
+      resamples_requested: 500,
+      resamples_usable: 492,
+    } as never;
+    expect(generalSemCanonicalModerationInventoryV1(inferred)).toMatchObject({
+      gammaInferenceCount: 2,
+      bootstrapResamplesRequested: 500,
+      bootstrapResamplesUsable: 492,
     });
     expect(generalSemCanonicalModerationInventoryV1(null)).toBeNull();
     expect(selectGeneralSemDisplayedDocumentV1(canonical, null, false, true)).toBe(canonical);
@@ -640,7 +668,7 @@ describe("General SEM native workspace accessibility", () => {
     expect(Object.values(services).every((service) => !vi.isMockFunction(service) || service.mock.calls.length === 0)).toBe(true);
   });
 
-  it("renders simultaneous moderation as point-only with an accessible bootstrap correction", () => {
+  it("renders simultaneous moderation with an accessible optional gamma-bootstrap contract", () => {
     setReadyModerationWorkspace();
     const html = renderToStaticMarkup(<NativeRecipeV4GeneralSemWorkspace
       modelName="Same-path simultaneous moderation"
@@ -649,13 +677,25 @@ describe("General SEM native workspace accessibility", () => {
       services={services}
     />);
 
-    expect(html).toContain("Simultaneous two-way moderation is point-estimation only.");
-    expect(html).toContain("Bootstrap inference is not qualified for this exact capability cell.");
+    expect(html).toContain("Optional full-model case bootstrap is available for scientific rescaled interaction gamma.");
+    expect(html).toContain("fixed -1/0/+1 slopes, and interaction plots remain point-only.");
     expect(html).toContain('id="nd-general-sem-moderation-inference-note"');
-    expect(html).toMatch(/id="nd-general-sem-bootstrap"[^>]*disabled=""[^>]*aria-describedby="nd-general-sem-moderation-inference-note"/);
+    expect(html).toMatch(/id="nd-general-sem-bootstrap"(?=[^>]*disabled="")(?=[^>]*aria-describedby="nd-general-sem-moderation-inference-note")/);
     expect(html).toContain("Calculate moderation point estimates");
+    expect(generalSemCalculationActionLabelV1(true, true)).toBe("Calculate moderation bootstrap");
+    expect(generalSemCalculationActionLabelV1(true, false)).toBe("Calculate moderation point estimates");
+    expect(generalSemCalculationActionLabelV1(false, true)).toBe("Calculate PLS effects");
     expect(html).not.toContain("sem.capability.pls.derived_shape_not_executable");
     expect(html).toContain("Ready for QuickPLS engine verification");
+
+    const source = readFileSync("src/native/NativeRecipeV4GeneralSemWorkspace.tsx", "utf8");
+    const inputGuard = source.slice(
+      source.indexOf("const moderationBootstrapInputDisabled"),
+      source.indexOf("return <section", source.indexOf("const moderationBootstrapInputDisabled")),
+    );
+    expect(inputGuard).not.toContain("interactionPlan");
+    expect(source).not.toContain("moderationBootstrapTurnOffRequired");
+    expect(source).not.toContain("if (interactionPlan && event.target.checked) return;");
   });
 
   it("fails closed without adapting an ordinary project even when its legacy canvas is complete", () => {

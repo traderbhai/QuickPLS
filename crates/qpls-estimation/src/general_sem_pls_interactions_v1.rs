@@ -546,6 +546,8 @@ impl GeneralSemPlsMultipleInteractionPointResultV1 {
 
 #[derive(Debug, Clone, thiserror::Error, PartialEq, Eq)]
 pub enum GeneralSemPlsInteractionPointErrorV1 {
+    #[error("interaction point estimation was cancelled")]
+    Cancelled,
     #[error("compiled PLS v3 plan has no two-way interactions")]
     NoInteractions,
     #[error("stage-one construct score is missing for {variable_id}")]
@@ -626,6 +628,26 @@ pub fn estimate_general_sem_pls_multiple_two_way_interactions_v1(
     plan: &CompiledPlsPlanV3,
     stage_one_scores: &BTreeMap<String, Vec<f64>>,
 ) -> Result<GeneralSemPlsMultipleInteractionPointResultV1, GeneralSemPlsInteractionPointErrorV1> {
+    estimate_general_sem_pls_multiple_two_way_interactions_v1_with_control(
+        plan,
+        stage_one_scores,
+        || true,
+    )
+}
+
+/// Cancellation-aware form used by full-model resampling and native jobs.
+/// The continuation callback is checked throughout score validation, product
+/// construction, each joint outcome equation, QR factorization, and frozen
+/// simple-slope construction. The legacy entry point delegates here with an
+/// always-continue callback and therefore retains its exact point semantics.
+pub fn estimate_general_sem_pls_multiple_two_way_interactions_v1_with_control(
+    plan: &CompiledPlsPlanV3,
+    stage_one_scores: &BTreeMap<String, Vec<f64>>,
+    should_continue: impl Fn() -> bool,
+) -> Result<GeneralSemPlsMultipleInteractionPointResultV1, GeneralSemPlsInteractionPointErrorV1> {
+    if !should_continue() {
+        return Err(GeneralSemPlsInteractionPointErrorV1::Cancelled);
+    }
     if plan.two_way_interactions().is_empty() {
         return Err(GeneralSemPlsInteractionPointErrorV1::NoInteractions);
     }
@@ -656,6 +678,9 @@ pub fn estimate_general_sem_pls_multiple_two_way_interactions_v1(
 
     let mut standardized_scores = BTreeMap::<String, Vec<f64>>::new();
     for variable_id in required_score_ids {
+        if !should_continue() {
+            return Err(GeneralSemPlsInteractionPointErrorV1::Cancelled);
+        }
         let values = stage_one_scores.get(&variable_id).ok_or_else(|| {
             GeneralSemPlsInteractionPointErrorV1::MissingStageOneScore {
                 variable_id: variable_id.clone(),
@@ -677,6 +702,9 @@ pub fn estimate_general_sem_pls_multiple_two_way_interactions_v1(
     let mut product_columns = BTreeMap::<String, Vec<f64>>::new();
     let mut product_scale_receipts = Vec::new();
     for interaction in plan.two_way_interactions() {
+        if !should_continue() {
+            return Err(GeneralSemPlsInteractionPointErrorV1::Cancelled);
+        }
         let focal = standardized_scores
             .get(interaction.focal_predictor_id())
             .ok_or_else(
@@ -733,6 +761,9 @@ pub fn estimate_general_sem_pls_multiple_two_way_interactions_v1(
     let mut interaction_coefficients = Vec::new();
 
     for outcome_id in outcomes {
+        if !should_continue() {
+            return Err(GeneralSemPlsInteractionPointErrorV1::Cancelled);
+        }
         let outcome = standardized_scores.get(&outcome_id).ok_or_else(|| {
             GeneralSemPlsInteractionPointErrorV1::MissingStageOneScore {
                 variable_id: outcome_id.clone(),
@@ -797,7 +828,8 @@ pub fn estimate_general_sem_pls_multiple_two_way_interactions_v1(
                 },
             );
         }
-        let estimates = solve_least_squares_qr(&predictors, outcome, &outcome_id)?;
+        let estimates =
+            solve_least_squares_qr(&predictors, outcome, &outcome_id, &should_continue)?;
         for (predictor, estimate) in predictors.into_iter().zip(estimates) {
             match predictor.kind {
                 PredictorKind::Ordinary { source_id } => {
@@ -849,6 +881,9 @@ pub fn estimate_general_sem_pls_multiple_two_way_interactions_v1(
     };
     let mut simple_slopes = Vec::new();
     for interaction in &provisional.interaction_coefficients {
+        if !should_continue() {
+            return Err(GeneralSemPlsInteractionPointErrorV1::Cancelled);
+        }
         for moderator_value_standardized in [-1.0, 0.0, 1.0] {
             let moderator_values = BTreeMap::from([(
                 interaction.moderator_id.clone(),
@@ -934,6 +969,7 @@ fn solve_least_squares_qr(
     predictors: &[PredictorColumn<'_>],
     outcome: &[f64],
     outcome_id: &str,
+    should_continue: &impl Fn() -> bool,
 ) -> Result<Vec<f64>, GeneralSemPlsInteractionPointErrorV1> {
     let column_count = predictors.len();
     if column_count == 0 {
@@ -943,6 +979,9 @@ fn solve_least_squares_qr(
     let mut r = vec![vec![0.0; column_count]; column_count];
     let rank_tolerance = (outcome.len() as f64).sqrt() * 1.0e-11;
     for (column_index, predictor) in predictors.iter().enumerate() {
+        if !should_continue() {
+            return Err(GeneralSemPlsInteractionPointErrorV1::Cancelled);
+        }
         let mut residual = predictor.values.to_vec();
         for previous in 0..column_index {
             let projection = dot(&q_columns[previous], &residual);
@@ -975,6 +1014,9 @@ fn solve_least_squares_qr(
         .map(|column| dot(column, outcome))
         .collect::<Vec<_>>();
     for row in (0..column_count).rev() {
+        if !should_continue() {
+            return Err(GeneralSemPlsInteractionPointErrorV1::Cancelled);
+        }
         for column in row + 1..column_count {
             q_transpose_y[row] -= r[row][column] * q_transpose_y[column];
         }
@@ -1325,6 +1367,58 @@ mod tests {
                 expected: 6,
                 actual: 5,
             })
+        );
+    }
+
+    #[test]
+    fn cancellation_aware_entry_point_preserves_point_results_and_stops_terminally() {
+        let mut model = moderation_model();
+        add_interaction(
+            &mut model,
+            "interaction:x_by_w",
+            "construct:x",
+            "construct:w",
+        );
+        add_interaction(
+            &mut model,
+            "interaction:x_by_z",
+            "construct:x",
+            "construct:z",
+        );
+        let plan = compile_pls_plan_v3(&model, &GeneralSemConfigV1::default()).unwrap();
+        let (x, w, z) = deterministic_scores();
+        let xs = standardized(&x);
+        let ws = standardized(&w);
+        let zs = standardized(&z);
+        let y = xs
+            .iter()
+            .zip(&ws)
+            .zip(&zs)
+            .map(|((x, w), z)| 0.25 * x + 0.2 * w - 0.1 * z + 0.6 * x * w - 0.3 * x * z)
+            .collect::<Vec<_>>();
+        let scores = BTreeMap::from([
+            ("construct:x".into(), x),
+            ("construct:w".into(), w),
+            ("construct:z".into(), z),
+            ("construct:y".into(), y),
+        ]);
+
+        let legacy =
+            estimate_general_sem_pls_multiple_two_way_interactions_v1(&plan, &scores).unwrap();
+        let controlled = estimate_general_sem_pls_multiple_two_way_interactions_v1_with_control(
+            &plan,
+            &scores,
+            || true,
+        )
+        .unwrap();
+        assert_eq!(controlled, legacy);
+        assert_eq!(
+            estimate_general_sem_pls_multiple_two_way_interactions_v1_with_control(
+                &plan,
+                &scores,
+                || false,
+            ),
+            Err(GeneralSemPlsInteractionPointErrorV1::Cancelled)
         );
     }
 }

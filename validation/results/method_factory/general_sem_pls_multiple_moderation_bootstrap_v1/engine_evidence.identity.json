@@ -1,0 +1,472 @@
+{
+  "catalogue_snapshot_date": "2026-08-19",
+  "checks": {
+    "current_engine_native_and_test_sources_bound": true,
+    "different_focal_joint_case_bootstrap": true,
+    "full_independent_pls_oracle_complete": false,
+    "gamma_only_inference_inventory": true,
+    "independent_reference_executed": true,
+    "independent_reference_identity_matches": true,
+    "indexed_replay_and_evaluation_order_checked": true,
+    "observed_score_scope_disclosed": true,
+    "qualification_not_claimed": true,
+    "qualification_scale_coverage_and_null_calibration_complete": false,
+    "release_qualification_complete": false,
+    "same_focal_joint_case_bootstrap": true,
+    "score_sign_product_scale_and_joint_refit_checked": true,
+    "semantic_export_packaged_performance_and_review_complete": false,
+    "type7_b_minus_one_plus_one_and_gate_checked": true
+  },
+  "evidence_scope": "engine_only_independent_observed_score_gamma_only_smoke_and_source_binding",
+  "feature_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+  "generated_at_utc": "2026-08-19T13:35:59Z",
+  "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+  "passed": true,
+  "promotion_allowed": false,
+  "qualification_ready": false,
+  "reference_execution": {
+    "catalogue_snapshot_date": "2026-08-19",
+    "checks": {
+      "complete_joint_point_contract_reconciled_per_replicate": true,
+      "constant_product_rejected": true,
+      "different_focal_complete_joint_case_bootstrap": true,
+      "exact_ninety_percent_gate_accepts_18_of_20": true,
+      "exact_ninety_percent_gate_rejects_17_of_20": true,
+      "gamma_only_inference_inventory": true,
+      "indexed_replay_and_evaluation_order_invariant": true,
+      "null_centered_plus_one_p_microcase": true,
+      "product_scale_recomputed_per_replicate": true,
+      "same_focal_complete_joint_case_bootstrap": true,
+      "sample_standard_error_b_minus_one_microcase": true,
+      "score_vector_sign_alignment_precedes_products": true,
+      "singular_joint_equation_rejected": true,
+      "type7_percentile_microcase": true
+    },
+    "feature_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+    "gamma_inference": [
+      {
+        "bootstrap_bias": -6.957352130521066e-05,
+        "bootstrap_mean": 0.6400167709084554,
+        "lower": 0.5229514476382677,
+        "original": 0.6400863444297606,
+        "p_value_two_sided": 0.005,
+        "standard_error": 0.07021386637062016,
+        "target": {
+          "focal_predictor_id": "X",
+          "focal_relation_id": "rel_X_Y",
+          "interaction_id": "int_XW",
+          "kind": "interaction_scientific_rescaled_gamma",
+          "moderator_id": "W",
+          "outcome_id": "Y_SAME",
+          "target_id": "rel_XW_Y"
+        },
+        "two_sided_exceedances": 0,
+        "upper": 0.7785164555284799,
+        "usable_replicates": 199
+      },
+      {
+        "bootstrap_bias": -0.008290436050033267,
+        "bootstrap_mean": -0.49418043234279413,
+        "lower": -0.6182998021641818,
+        "original": -0.48588999629276086,
+        "p_value_two_sided": 0.005,
+        "standard_error": 0.06192734417343823,
+        "target": {
+          "focal_predictor_id": "X",
+          "focal_relation_id": "rel_X_Y",
+          "interaction_id": "int_XZ",
+          "kind": "interaction_scientific_rescaled_gamma",
+          "moderator_id": "Z",
+          "outcome_id": "Y_SAME",
+          "target_id": "rel_XZ_Y"
+        },
+        "two_sided_exceedances": 0,
+        "upper": -0.38252468949738255,
+        "usable_replicates": 199
+      },
+      {
+        "bootstrap_bias": -0.002737259119588553,
+        "bootstrap_mean": 0.5075220420009842,
+        "lower": 0.41748785437111624,
+        "original": 0.5102593011205727,
+        "p_value_two_sided": 0.005,
+        "standard_error": 0.05016749649673338,
+        "target": {
+          "focal_predictor_id": "X",
+          "focal_relation_id": "rel_X_Y2",
+          "interaction_id": "int_XW_2",
+          "kind": "interaction_scientific_rescaled_gamma",
+          "moderator_id": "W",
+          "outcome_id": "Y_DIFFERENT",
+          "target_id": "rel_XW_Y2"
+        },
+        "two_sided_exceedances": 0,
+        "upper": 0.6074261177686225,
+        "usable_replicates": 199
+      },
+      {
+        "bootstrap_bias": -0.002539408811973065,
+        "bootstrap_mean": -0.38296663964300615,
+        "lower": -0.4509382075027867,
+        "original": -0.3804272308310331,
+        "p_value_two_sided": 0.005,
+        "standard_error": 0.04070111680170912,
+        "target": {
+          "focal_predictor_id": "A",
+          "focal_relation_id": "rel_A_Y2",
+          "interaction_id": "int_AZ",
+          "kind": "interaction_scientific_rescaled_gamma",
+          "moderator_id": "Z",
+          "outcome_id": "Y_DIFFERENT",
+          "target_id": "rel_AZ_Y2"
+        },
+        "two_sided_exceedances": 0,
+        "upper": -0.3018475602578507,
+        "usable_replicates": 199
+      }
+    ],
+    "inferential_target_policy": "scientific_rescaled_gamma_only",
+    "limitations": [
+      "The reference never imports or invokes QuickPLS production Rust, TypeScript, native, resampling, or estimation code.",
+      "Observed construct-score proxies are resampled and restandardized; indicators, PLS weights, loadings, iterations, and full stage-one PLS score recovery are outside this reference.",
+      "Artificial sign flips verify independent score-vector orientation arithmetic but do not qualify the production PLS sign oracle.",
+      "The SHA-256 indexed stream is independently deterministic and makes no claim of random-stream identity with QuickPLS.",
+      "Only scientific rescaled gamma receives bootstrap inference. Standardized-product beta, ordinary coefficients, fixed probes, and plot points are recomputed for fit validation but remain point-only.",
+      "This bounded smoke reference does not establish nominal coverage, power, null calibration, SmartPLS numerical parity, archive/native/export/package behavior, or release qualification."
+    ],
+    "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+    "metrics": {
+      "corrected_score_vector_sign_count": 598,
+      "maximum_normal_equation_error": 2.1316282072803006e-14,
+      "maximum_replay_difference": 0.0,
+      "minimum_product_scale_range": 0.27921298905011016
+    },
+    "passed": true,
+    "promotion_allowed": false,
+    "qualification_ready": false,
+    "reference_kind": "independent_observed_score_moderation_bootstrap_reference",
+    "reference_scope": "independent_observed_score_gamma_only_smoke_v1",
+    "resampling": {
+      "confidence_level": 0.95,
+      "interval": "percentile_type7",
+      "minimum_usable": 180,
+      "p_value": "two_sided_null_centered_plus_one",
+      "replacement": "with_replacement",
+      "resamples": 199,
+      "standard_error": "sample_b_minus_one",
+      "stream_version": "independent_sha256_indexed_case_stream_v1",
+      "unit": "case"
+    },
+    "scenarios": [
+      {
+        "full_joint_point_contract_validated_per_replicate": true,
+        "gamma_targets": [
+          {
+            "gamma_inference": {
+              "bootstrap_bias": -6.957352130521066e-05,
+              "bootstrap_mean": 0.6400167709084554,
+              "lower": 0.5229514476382677,
+              "original": 0.6400863444297606,
+              "p_value_two_sided": 0.005,
+              "standard_error": 0.07021386637062016,
+              "target": {
+                "focal_predictor_id": "X",
+                "focal_relation_id": "rel_X_Y",
+                "interaction_id": "int_XW",
+                "kind": "interaction_scientific_rescaled_gamma",
+                "moderator_id": "W",
+                "outcome_id": "Y_SAME",
+                "target_id": "rel_XW_Y"
+              },
+              "two_sided_exceedances": 0,
+              "upper": 0.7785164555284799,
+              "usable_replicates": 199
+            },
+            "product_scale_maximum": 1.244253491368405,
+            "product_scale_minimum": 0.9244435854251756,
+            "product_scale_range": 0.31980990594322933,
+            "target": {
+              "focal_predictor_id": "X",
+              "focal_relation_id": "rel_X_Y",
+              "interaction_id": "int_XW",
+              "kind": "interaction_scientific_rescaled_gamma",
+              "moderator_id": "W",
+              "outcome_id": "Y_SAME",
+              "target_id": "rel_XW_Y"
+            }
+          },
+          {
+            "gamma_inference": {
+              "bootstrap_bias": -0.008290436050033267,
+              "bootstrap_mean": -0.49418043234279413,
+              "lower": -0.6182998021641818,
+              "original": -0.48588999629276086,
+              "p_value_two_sided": 0.005,
+              "standard_error": 0.06192734417343823,
+              "target": {
+                "focal_predictor_id": "X",
+                "focal_relation_id": "rel_X_Y",
+                "interaction_id": "int_XZ",
+                "kind": "interaction_scientific_rescaled_gamma",
+                "moderator_id": "Z",
+                "outcome_id": "Y_SAME",
+                "target_id": "rel_XZ_Y"
+              },
+              "two_sided_exceedances": 0,
+              "upper": -0.38252468949738255,
+              "usable_replicates": 199
+            },
+            "product_scale_maximum": 1.0459520696356026,
+            "product_scale_minimum": 0.7667390805854924,
+            "product_scale_range": 0.27921298905011016,
+            "target": {
+              "focal_predictor_id": "X",
+              "focal_relation_id": "rel_X_Y",
+              "interaction_id": "int_XZ",
+              "kind": "interaction_scientific_rescaled_gamma",
+              "moderator_id": "Z",
+              "outcome_id": "Y_SAME",
+              "target_id": "rel_XZ_Y"
+            }
+          }
+        ],
+        "joint_interaction_count": 2,
+        "layout": "same_focal",
+        "ordinary_coefficients_and_fixed_probe_slopes_point_only": true,
+        "resamples_requested": 199,
+        "resamples_usable": 199,
+        "scenario_id": "same_focal_joint_equation"
+      },
+      {
+        "full_joint_point_contract_validated_per_replicate": true,
+        "gamma_targets": [
+          {
+            "gamma_inference": {
+              "bootstrap_bias": -0.002737259119588553,
+              "bootstrap_mean": 0.5075220420009842,
+              "lower": 0.41748785437111624,
+              "original": 0.5102593011205727,
+              "p_value_two_sided": 0.005,
+              "standard_error": 0.05016749649673338,
+              "target": {
+                "focal_predictor_id": "X",
+                "focal_relation_id": "rel_X_Y2",
+                "interaction_id": "int_XW_2",
+                "kind": "interaction_scientific_rescaled_gamma",
+                "moderator_id": "W",
+                "outcome_id": "Y_DIFFERENT",
+                "target_id": "rel_XW_Y2"
+              },
+              "two_sided_exceedances": 0,
+              "upper": 0.6074261177686225,
+              "usable_replicates": 199
+            },
+            "product_scale_maximum": 1.2727142151342337,
+            "product_scale_minimum": 0.8874763385979235,
+            "product_scale_range": 0.38523787653631014,
+            "target": {
+              "focal_predictor_id": "X",
+              "focal_relation_id": "rel_X_Y2",
+              "interaction_id": "int_XW_2",
+              "kind": "interaction_scientific_rescaled_gamma",
+              "moderator_id": "W",
+              "outcome_id": "Y_DIFFERENT",
+              "target_id": "rel_XW_Y2"
+            }
+          },
+          {
+            "gamma_inference": {
+              "bootstrap_bias": -0.002539408811973065,
+              "bootstrap_mean": -0.38296663964300615,
+              "lower": -0.4509382075027867,
+              "original": -0.3804272308310331,
+              "p_value_two_sided": 0.005,
+              "standard_error": 0.04070111680170912,
+              "target": {
+                "focal_predictor_id": "A",
+                "focal_relation_id": "rel_A_Y2",
+                "interaction_id": "int_AZ",
+                "kind": "interaction_scientific_rescaled_gamma",
+                "moderator_id": "Z",
+                "outcome_id": "Y_DIFFERENT",
+                "target_id": "rel_AZ_Y2"
+              },
+              "two_sided_exceedances": 0,
+              "upper": -0.3018475602578507,
+              "usable_replicates": 199
+            },
+            "product_scale_maximum": 0.9867065543167047,
+            "product_scale_minimum": 0.6900860291608818,
+            "product_scale_range": 0.29662052515582293,
+            "target": {
+              "focal_predictor_id": "A",
+              "focal_relation_id": "rel_A_Y2",
+              "interaction_id": "int_AZ",
+              "kind": "interaction_scientific_rescaled_gamma",
+              "moderator_id": "Z",
+              "outcome_id": "Y_DIFFERENT",
+              "target_id": "rel_AZ_Y2"
+            }
+          }
+        ],
+        "joint_interaction_count": 2,
+        "layout": "different_focal",
+        "ordinary_coefficients_and_fixed_probe_slopes_point_only": true,
+        "resamples_requested": 199,
+        "resamples_usable": 199,
+        "scenario_id": "different_focal_joint_equation"
+      }
+    ],
+    "schema_version": 1
+  },
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-core/src/canonical_result_v2.rs",
+      "sha256": "910020fd4fba38fe24153c9280f8b71673f1a4b76130950cc9acb6345bd0898f",
+      "size": 209456
+    },
+    {
+      "path": "crates/qpls-core/src/compiled_pls_plan_v3.rs",
+      "sha256": "6edfb1849c361eaaf10847a664cbe42263d3465a3de368e2a9c7078154eb37c6",
+      "size": 53453
+    },
+    {
+      "path": "crates/qpls-core/src/general_sem_capability_preflight_v1.rs",
+      "sha256": "f109fbd802fbbcd71118c7cd7ff9e459cddee00cedf6fc2d6702b52d24211ef5",
+      "size": 60796
+    },
+    {
+      "path": "crates/qpls-core/src/general_sem_recipe_compiler_v1.rs",
+      "sha256": "7940c204d78c554b4a4c8d998ebdfc7ddaa2b9514cc80ecdecc8504063a078a0",
+      "size": 55284
+    },
+    {
+      "path": "crates/qpls-estimation/src/general_sem_pls_interactions_v1.rs",
+      "sha256": "7a5d4753f1aafc0cc3057a855f0671b5b1dc680034c1cda4f97e7c00579f418c",
+      "size": 54795
+    },
+    {
+      "path": "crates/qpls-project/src/canonical_result_document_v2.rs",
+      "sha256": "5a1e39a2c990c362a1c3e2721de713b2add8cf93982f914a9cc3ade335a50700",
+      "size": 65389
+    },
+    {
+      "path": "crates/qpls-project/src/project_schema_v6.rs",
+      "sha256": "290a93c0b1f467098623dcdf0be61b19c0c59863e3dcb8745dab952230ca2000",
+      "size": 541247
+    },
+    {
+      "path": "crates/qpls-resampling/src/general_sem_pls_bootstrap_v1.rs",
+      "sha256": "c65513904d2a301f15b5d48a06e33f664eefdc93c81248a533254b398ccc29ba",
+      "size": 147315
+    },
+    {
+      "path": "crates/qpls-runner/src/recipe_v4_general_sem_pls_execution.rs",
+      "sha256": "f1e25f234b97c9af3165856dc9af08797e65166ab5acf896fbdf7657ab7ac0df",
+      "size": 101554
+    },
+    {
+      "path": "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_V1.md",
+      "sha256": "7c1dd270221b7e6728dc03f42c8e656bbaf1578ab19ebced41177066b832951d",
+      "size": 7740
+    },
+    {
+      "path": "src-tauri/src/recipe_v4_general_sem_canonical_result.rs",
+      "sha256": "b2467e39a4094d49c65c1b706acc04ddb12e3a0092978a41f69a96114e60dcae",
+      "size": 97115
+    },
+    {
+      "path": "src-tauri/src/recipe_v4_general_sem_pls_jobs.rs",
+      "sha256": "9f4edaa2f26369c82fa55190b2e35f0eafc6a49338de652863227bcbead702b9",
+      "size": 125069
+    },
+    {
+      "path": "src/domain/canonicalGeneralSemResultsV1.ts",
+      "sha256": "7146504655f56d5ea81f57550c0e442ed8c366cd9970e83002a3417fda9618dd",
+      "size": 91785
+    },
+    {
+      "path": "src/domain/generalSemCapabilityPreflightV1.test.ts",
+      "sha256": "887fae9eb1c83f477dce46216cd64eeeb496ff7954b7b6dbcef713953b4ab805",
+      "size": 28196
+    },
+    {
+      "path": "src/domain/generalSemCapabilityPreflightV1.ts",
+      "sha256": "f17b096cf2d8925b71a1245185a527a9d1340e43c6978bde71aef0093a58b87b",
+      "size": 44553
+    },
+    {
+      "path": "src/domain/internalRecipeV4GeneralSemWorkspace.test.ts",
+      "sha256": "f9e07b1065612ca61ab21a56c0af0365874703c16efe48c1446c9e4b27a38b5c",
+      "size": 69841
+    },
+    {
+      "path": "src/domain/internalRecipeV4GeneralSemWorkspace.ts",
+      "sha256": "9b5a03f51703de185037a2fb833096df834f92b35dc491c2b1a190fcf48d626d",
+      "size": 87163
+    },
+    {
+      "path": "src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx",
+      "sha256": "2fb7f627bc9d62b4aae26e5bed5d8195666411dc84030609aeb6bed8e8d923ff",
+      "size": 36150
+    },
+    {
+      "path": "src/native/NativeRecipeV4GeneralSemWorkspace.tsx",
+      "sha256": "72998aff5bb3f7b90b0081c95216145e5e4bad5cc07e37042055371a1367ce61",
+      "size": 72760
+    },
+    {
+      "path": "src/native/nativeCanonicalResultDocumentV2.test.ts",
+      "sha256": "3903b1d8d3482fe94c2134e8a365165a2ccbebca1407d39e8fa4e2269d779804",
+      "size": 55770
+    },
+    {
+      "path": "validation/capabilities/general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1.cell.manifest.json",
+      "sha256": "70e2050584df437ef62f273b7610deb0bb3e15e7b79311bff62d64ab3093312b",
+      "size": 6279
+    },
+    {
+      "path": "validation/general_sem_pls_multiple_moderation_bootstrap_v1_factory.py",
+      "sha256": "405077566d6facb5851a525ece32b4c7c0cfa90744656be92f22054d33a7b4b8",
+      "size": 10267
+    },
+    {
+      "path": "validation/general_sem_pls_multiple_moderation_bootstrap_v1_reference.py",
+      "sha256": "e87347ad35952a4a4eb8faf820930b0e3e45ff92ac47856663bad99dec24f43d",
+      "size": 23325
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json",
+      "sha256": "7d1e4ffe387d2bab4d859be14087e6656911885796026dd74fed47b32e4700e5",
+      "size": 18771
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_general_sem_pls_multiple_moderation_bootstrap_v1_factory.py",
+      "sha256": "89e159c1d0ef72a5a2060a8007fcbcecb0804710b7830950febb064575f14b32",
+      "size": 4300
+    },
+    {
+      "path": "validation/test_general_sem_pls_multiple_moderation_bootstrap_v1_reference.py",
+      "sha256": "4b9cc8802069e0a8c3aefee28f2a4b5e3b51c0260ffd003f5b82e64157ffabf7",
+      "size": 4575
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926",
+      "size": 21368
+    }
+  ]
+}

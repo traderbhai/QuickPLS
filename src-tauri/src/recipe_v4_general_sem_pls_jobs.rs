@@ -5,6 +5,7 @@ use crate::{
     recipe_v4_general_sem_canonical_result::{
         build_recipe_v4_general_sem_pls_canonical_result_v1,
         general_sem_multiple_mediation_bootstrap_capability_cell_v1,
+        general_sem_multiple_moderation_bootstrap_capability_cell_v1,
         general_sem_multiple_moderation_point_capability_cell_v1,
     },
     recipe_v4_jobs::{DesktopRecipeV4Jobs, reserve_general_sem_pls_admission},
@@ -195,6 +196,8 @@ struct ResolvedGeneralSemArchiveV1 {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum GeneralSemPlsWorkerCheckpointV1 {
     DuringInteractionExecution,
+    DuringModerationBootstrapMid,
+    DuringModerationBootstrapLate,
     AfterExecutionBeforeCanonicalization,
     AfterCanonicalizationBeforePublication,
 }
@@ -666,7 +669,14 @@ fn validate_exact_capability_and_data(
         })?;
     let has_interactions = !artifact.plan().two_way_interactions().is_empty();
     let expected_cell = if has_interactions {
-        general_sem_multiple_moderation_point_capability_cell_v1()
+        match config.inference {
+            GeneralSemInferenceV1::None => {
+                general_sem_multiple_moderation_point_capability_cell_v1()
+            }
+            GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                general_sem_multiple_moderation_bootstrap_capability_cell_v1()
+            }
+        }
     } else {
         match config.inference {
             GeneralSemInferenceV1::None => pls_general_recursive_effects_capability_cell_v1(),
@@ -677,7 +687,7 @@ fn validate_exact_capability_and_data(
     };
     let compiled_primary_cell = artifact.capability_cell();
     let compiled_cell_matches = if has_interactions {
-        compiled_primary_cell == &expected_cell
+        compiled_primary_cell == &general_sem_multiple_moderation_point_capability_cell_v1()
     } else {
         compiled_primary_cell == &pls_general_recursive_effects_capability_cell_v1()
     };
@@ -696,7 +706,7 @@ fn validate_exact_capability_and_data(
             "capabilityCell",
             "general_sem_pls.capability_cell_mismatch",
             "The selected option cell differs from the resident compiled model and inference request.",
-            "Use the exact General SEM mediation point/bootstrap cell or the exact simultaneous two-way moderation point Labs cell selected by preflight.",
+            "Use the exact General SEM mediation point/bootstrap cell or simultaneous two-way moderation point/supplemental-bootstrap Labs cell selected by preflight.",
         ));
     }
     let registry = CapabilityRegistryV2::embedded().map_err(|error| {
@@ -1005,6 +1015,24 @@ fn run_worker_with_checkpoint_hook(
                     notify_worker_checkpoint(
                         &checkpoint_hook,
                         GeneralSemPlsWorkerCheckpointV1::DuringInteractionExecution,
+                    );
+                }
+                if progress.phase == "general_sem_moderation_bootstrap"
+                    && progress.total_units > 1
+                    && progress.completed_units == progress.total_units / 2
+                {
+                    notify_worker_checkpoint(
+                        &checkpoint_hook,
+                        GeneralSemPlsWorkerCheckpointV1::DuringModerationBootstrapMid,
+                    );
+                }
+                if progress.phase == "general_sem_moderation_bootstrap"
+                    && progress.total_units > 1
+                    && progress.completed_units == progress.total_units - 1
+                {
+                    notify_worker_checkpoint(
+                        &checkpoint_hook,
+                        GeneralSemPlsWorkerCheckpointV1::DuringModerationBootstrapLate,
                     );
                 }
                 set_running(
@@ -1382,9 +1410,10 @@ mod tests {
     };
     use chrono::TimeZone;
     use qpls_core::{
-        AnalysisRecipeModelBindingV4, InteractionHierarchyPolicyV2, InteractionMethodV4,
-        SemDerivedTermV4, SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
-        StructuralRelationRoleV4,
+        AnalysisRecipeModelBindingV4, GeneralSemBootstrapIntervalV1, GeneralSemConfigV1,
+        GeneralSemInferenceTailV1, GeneralSemInferenceV1, InteractionHierarchyPolicyV2,
+        InteractionMethodV4, PlsBootstrapTestTail, SemDerivedTermV4, SemParameterTargetV4,
+        SemParameterV4, SemRelationV4, SemVariableV4, StructuralRelationRoleV4,
     };
     use qpls_data::{ImportOptions, import_delimited_bytes};
     use qpls_project::{
@@ -1500,6 +1529,28 @@ mod tests {
         fixture
     }
 
+    fn moderation_bootstrap_fixture(same_focal: bool) -> GeneralSemNativeFixtureV1 {
+        let mut fixture = direct_only_moderation_fixture(same_focal);
+        fixture.recipe.settings.bootstrap_samples = 20;
+        fixture.recipe.settings.seed = qpls_core::GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1;
+        fixture.recipe.settings.confidence_level = 0.95;
+        fixture.recipe.settings.bootstrap_test_tail = PlsBootstrapTestTail::TwoSided;
+        fixture.recipe.settings.studentized_inner_samples = 0;
+        fixture.recipe.settings.workers = 1;
+        fixture.recipe.general_sem_config = Some(GeneralSemConfigV1 {
+            inference: GeneralSemInferenceV1::CaseBootstrap {
+                resamples: 20,
+                seed: qpls_core::GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1,
+                confidence_level: 0.95,
+                interval: GeneralSemBootstrapIntervalV1::Percentile,
+                tail: GeneralSemInferenceTailV1::TwoSided,
+            },
+            ..GeneralSemConfigV1::default()
+        });
+        fixture.recipe.ensure_valid().unwrap();
+        fixture
+    }
+
     fn structural_relation_id(model: &SemModelV4, source: &str, target: &str) -> String {
         model
             .relations
@@ -1612,6 +1663,41 @@ mod tests {
                 "general-sem-different-focal-moderation.qpls"
             },
             general_sem_multiple_moderation_point_capability_cell_v1(),
+        );
+        let resolved = resolve_archive_authority(&published.request).unwrap();
+        let cancellation = Arc::new(AtomicBool::new(false));
+        let state = job_state(
+            job_id,
+            cancellation.clone(),
+            resolved.archive_identity.clone(),
+        );
+        run_worker(
+            job_id,
+            published.request,
+            resolved,
+            cancellation,
+            state.0.clone(),
+            admission(job_id),
+        );
+        assert_eq!(
+            state.0.lock().unwrap().get(&job_id).unwrap().snapshot.state,
+            InternalLabsGeneralSemPlsJobStateV1::Completed
+        );
+        take_completed_result(job_id, &state).unwrap()
+    }
+
+    fn completed_moderation_bootstrap_job(
+        same_focal: bool,
+        job_id: Uuid,
+    ) -> InternalLabsGeneralSemPlsCompletedResultV1 {
+        let published = published_fixture_from(
+            moderation_bootstrap_fixture(same_focal),
+            if same_focal {
+                "general-sem-same-focal-moderation-bootstrap.qpls"
+            } else {
+                "general-sem-different-focal-moderation-bootstrap.qpls"
+            },
+            general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
         );
         let resolved = resolve_archive_authority(&published.request).unwrap();
         let cancellation = Arc::new(AtomicBool::new(false));
@@ -1842,6 +1928,179 @@ mod tests {
                 }
             }
         }
+    }
+
+    fn assert_moderation_bootstrap_surface_identity(
+        completed: &InternalLabsGeneralSemPlsCompletedResultV1,
+    ) {
+        let document = &completed.canonical_document;
+        assert_moderation_result_surface_identity(document);
+        let point_cell = general_sem_multiple_moderation_point_capability_cell_v1();
+        let bootstrap_cell = general_sem_multiple_moderation_bootstrap_capability_cell_v1();
+        assert_eq!(document.provenance.capability_cell, point_cell);
+        assert_eq!(
+            document.provenance.method_version,
+            qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+        );
+        assert_eq!(
+            completed.analytical_result.adapter_version(),
+            qpls_runner::RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+        );
+        assert_eq!(
+            document.title,
+            "General SEM simultaneous two-way PLS moderation bootstrap inference"
+        );
+        let cells = document.capability_cells.as_ref().unwrap();
+        assert_eq!(cells.len(), 3);
+        assert!(cells.contains(&point_cell));
+        assert!(cells.contains(&bootstrap_cell));
+
+        let results = document.general_sem_results.as_ref().unwrap();
+        let receipt = results.inference_receipt.as_ref().unwrap();
+        let raw = completed
+            .analytical_result
+            .moderation_bootstrap_inference()
+            .unwrap();
+        assert_eq!(receipt.capability_cell, bootstrap_cell);
+        assert_eq!(receipt.effect_ids, raw.gamma_target_ids);
+        assert_eq!(receipt.resamples_requested, raw.resamples_requested);
+        assert_eq!(receipt.resamples_usable, raw.resamples_usable);
+        assert_eq!(receipt.failed_replicates.len(), raw.failed_replicates.len());
+        assert_eq!(
+            results.interaction_effects.len(),
+            raw.interaction_gammas.len()
+        );
+        for (effect, gamma) in results
+            .interaction_effects
+            .iter()
+            .zip(&raw.interaction_gammas)
+        {
+            assert_eq!(effect.effect_id, gamma.target.target_id);
+            assert_eq!(effect.interaction_id, gamma.target.interaction_id);
+            assert_eq!(effect.focal_relation_id, gamma.target.focal_relation_id);
+            assert_eq!(
+                effect.interaction_effect_relation_id,
+                gamma.target.interaction_effect_relation_id
+            );
+            assert_eq!(
+                effect.interaction_effect_parameter_id,
+                gamma.target.interaction_effect_parameter_id
+            );
+            assert_eq!(
+                effect.generated_product_column_id,
+                gamma.target.generated_product_column_id
+            );
+            assert_eq!(effect.focal_predictor_id, gamma.target.focal_predictor_id);
+            assert_eq!(effect.moderator_id, gamma.target.moderator_id);
+            assert_eq!(effect.outcome_id, gamma.target.outcome_id);
+            assert_eq!(
+                effect.stage_one_model_scientific_sha256,
+                gamma.target.stage_one_model_scientific_sha256
+            );
+            assert_eq!(
+                effect.product_scale_version,
+                gamma.target.product_scale_version
+            );
+            assert_eq!(effect.method_version, gamma.target.method_version);
+            assert_eq!(
+                effect.scientific_rescaled_gamma.estimate.to_bits(),
+                gamma.original.to_bits()
+            );
+            assert_eq!(
+                effect
+                    .scientific_rescaled_gamma
+                    .standard_error
+                    .map(f64::to_bits),
+                Some(gamma.standard_error.to_bits())
+            );
+            assert!(
+                effect
+                    .standardized_product_coefficient
+                    .standard_error
+                    .is_none()
+            );
+        }
+        assert!(
+            results
+                .joint_stage_structural_coefficients
+                .iter()
+                .all(|coefficient| coefficient.estimate.standard_error.is_none())
+        );
+        assert!(
+            results
+                .conditional_effects
+                .iter()
+                .all(|effect| effect.value.standard_error.is_none())
+        );
+        assert!(
+            document
+                .charts
+                .iter()
+                .all(|chart| chart.series.iter().all(|series| {
+                    series
+                        .points
+                        .iter()
+                        .all(|point| point.lower.is_none() && point.upper.is_none())
+                }))
+        );
+
+        let point_table_ids = [
+            "general_sem_interaction_effects",
+            "general_sem_conditional_slopes",
+            "general_sem_interaction_plots",
+        ];
+        for table_id in point_table_ids {
+            let table = document
+                .tables
+                .iter()
+                .find(|table| table.id == table_id)
+                .unwrap();
+            assert_eq!(
+                table.capability_cells.as_deref(),
+                Some(&[point_cell.clone()][..])
+            );
+        }
+        let gamma_table = document
+            .tables
+            .iter()
+            .find(|table| table.id == "general_sem_moderation_gamma_inference")
+            .unwrap();
+        let receipt_table = document
+            .tables
+            .iter()
+            .find(|table| table.id == "general_sem_moderation_bootstrap_receipt")
+            .unwrap();
+        assert_eq!(gamma_table.rows.len(), results.interaction_effects.len());
+        assert_eq!(gamma_table.columns.len(), 21);
+        assert_eq!(receipt_table.rows.len(), 1);
+        assert_eq!(receipt_table.columns.len(), 40);
+        assert_eq!(
+            gamma_table.capability_cells.as_deref(),
+            Some(&[bootstrap_cell.clone()][..])
+        );
+        assert_eq!(
+            receipt_table.capability_cells.as_deref(),
+            Some(&[bootstrap_cell.clone()][..])
+        );
+        assert_eq!(
+            document
+                .sections
+                .iter()
+                .rev()
+                .take(2)
+                .map(|section| section.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["general_sem_moderation_bootstrap", "general_sem_moderation"]
+        );
+        let bootstrap_section = document.sections.last().unwrap();
+        assert!(bootstrap_section.chart_ids.is_empty());
+        assert_eq!(
+            bootstrap_section.table_ids,
+            [
+                "general_sem_moderation_gamma_inference",
+                "general_sem_moderation_bootstrap_receipt",
+            ]
+        );
     }
 
     #[test]
@@ -2130,6 +2389,59 @@ mod tests {
     }
 
     #[test]
+    fn same_and_different_focal_moderation_bootstrap_jobs_publish_exact_gamma_only_inference() {
+        for (same_focal, job_id) in [
+            (true, Uuid::from_u128(0x7350)),
+            (false, Uuid::from_u128(0x7351)),
+        ] {
+            let completed = completed_moderation_bootstrap_job(same_focal, job_id);
+            assert_moderation_bootstrap_surface_identity(&completed);
+            let effects = &completed
+                .canonical_document
+                .general_sem_results
+                .as_ref()
+                .unwrap()
+                .interaction_effects;
+            assert_eq!(effects.len(), 2);
+            assert_eq!(
+                effects
+                    .iter()
+                    .map(|effect| effect.focal_relation_id.as_str())
+                    .collect::<std::collections::BTreeSet<_>>()
+                    .len(),
+                if same_focal { 1 } else { 2 }
+            );
+        }
+    }
+
+    #[test]
+    fn moderation_bootstrap_admission_requires_the_supplemental_cell_while_compilation_stays_point_primary()
+     {
+        let published = published_fixture_from(
+            moderation_bootstrap_fixture(true),
+            "general-sem-moderation-bootstrap-admission.qpls",
+            general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+        );
+        let resolved = resolve_archive_authority(&published.request).unwrap();
+        let artifact = validate_exact_capability_and_data(&published.request, &resolved).unwrap();
+        assert_eq!(
+            artifact.capability_cell(),
+            &general_sem_multiple_moderation_point_capability_cell_v1()
+        );
+        assert_eq!(
+            artifact.compiler_version(),
+            qpls_core::GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1
+        );
+
+        let mut point_cell_tamper = published.request.clone();
+        point_cell_tamper.capability_cell =
+            general_sem_multiple_moderation_point_capability_cell_v1();
+        let failure =
+            validate_exact_capability_and_data(&point_cell_tamper, &resolved).unwrap_err();
+        assert_eq!(failure.code, "general_sem_pls.capability_cell_mismatch");
+    }
+
+    #[test]
     fn moderation_native_lifecycle_appends_reopens_and_preserves_exact_surfaces() {
         for (same_focal, fixture_index) in [(true, 0_u128), (false, 1_u128)] {
             let published = published_fixture_from(
@@ -2375,6 +2687,162 @@ mod tests {
     }
 
     #[test]
+    fn moderation_bootstrap_native_lifecycle_reconciles_appends_and_strictly_reopens() {
+        for (same_focal, fixture_index) in [(true, 0_u128), (false, 1_u128)] {
+            let published = published_fixture_from(
+                moderation_bootstrap_fixture(same_focal),
+                &format!("general-sem-moderation-bootstrap-lifecycle-{fixture_index}.qpls"),
+                general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+            );
+            let archive_path = PathBuf::from(&published.request.archive_path);
+            let before_bytes = fs::read(&archive_path).unwrap();
+            let resolved = resolve_archive_authority(&published.request).unwrap();
+            let job_id = Uuid::from_u128(0x7360 + fixture_index);
+            let cancellation = Arc::new(AtomicBool::new(false));
+            let state = job_state(
+                job_id,
+                cancellation.clone(),
+                resolved.archive_identity.clone(),
+            );
+            run_worker(
+                job_id,
+                published.request.clone(),
+                resolved,
+                cancellation,
+                state.0.clone(),
+                admission(job_id),
+            );
+            let completed = take_completed_result(job_id, &state).unwrap();
+            assert_moderation_bootstrap_surface_identity(&completed);
+            let archive_document =
+                serde_json::from_value::<qpls_project::CanonicalResultDocumentV2>(
+                    serde_json::to_value(&completed.canonical_document).unwrap(),
+                )
+                .unwrap();
+            let expected_document_json =
+                canonical_result_document_v2_json(&archive_document).unwrap();
+
+            let mut stale_method = archive_document.clone();
+            stale_method.provenance.method_version = "stale_moderation_bootstrap_method".into();
+            let stale_method_outcome = append_internal_project_schema6_canonical_result_v2(
+                ProjectSchema6ResultAppendRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                    recipe: None,
+                    canonical_document: stale_method,
+                },
+            );
+            assert!(matches!(
+                stale_method_outcome,
+                ProjectSchema6ResultAppendOutcomeV1::Blocked { .. }
+            ));
+            assert_eq!(fs::read(&archive_path).unwrap(), before_bytes);
+
+            let mut capability_tamper = archive_document.clone();
+            capability_tamper
+                .general_sem_results
+                .as_mut()
+                .unwrap()
+                .inference_receipt
+                .as_mut()
+                .unwrap()
+                .capability_cell = general_sem_multiple_moderation_point_capability_cell_v1();
+            let capability_outcome = append_internal_project_schema6_canonical_result_v2(
+                ProjectSchema6ResultAppendRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                    recipe: None,
+                    canonical_document: capability_tamper,
+                },
+            );
+            assert!(matches!(
+                capability_outcome,
+                ProjectSchema6ResultAppendOutcomeV1::Blocked { .. }
+            ));
+            assert_eq!(fs::read(&archive_path).unwrap(), before_bytes);
+
+            let mut table_tamper = serde_json::to_value(&archive_document).unwrap();
+            let gamma_row = table_tamper["tables"]
+                .as_array_mut()
+                .unwrap()
+                .iter_mut()
+                .find(|table| table["id"] == "general_sem_moderation_gamma_inference")
+                .unwrap()["rows"][0]["cells"]
+                .as_array_mut()
+                .unwrap();
+            let point_gamma = gamma_row[12]["value"].as_f64().unwrap();
+            gamma_row[12]["value"] = serde_json::json!(point_gamma + 0.125);
+            let table_tamper =
+                serde_json::from_value::<qpls_project::CanonicalResultDocumentV2>(table_tamper)
+                    .unwrap();
+            let table_outcome = append_internal_project_schema6_canonical_result_v2(
+                ProjectSchema6ResultAppendRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                    recipe: None,
+                    canonical_document: table_tamper,
+                },
+            );
+            assert!(matches!(
+                table_outcome,
+                ProjectSchema6ResultAppendOutcomeV1::Blocked { .. }
+            ));
+            assert_eq!(fs::read(&archive_path).unwrap(), before_bytes);
+
+            let append = append_internal_project_schema6_canonical_result_v2(
+                ProjectSchema6ResultAppendRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                    recipe: None,
+                    canonical_document: archive_document.clone(),
+                },
+            );
+            let append_receipt = match append {
+                ProjectSchema6ResultAppendOutcomeV1::Ok { value } => value,
+                ProjectSchema6ResultAppendOutcomeV1::Blocked { diagnostic } => {
+                    panic!("moderation bootstrap append blocked: {diagnostic:?}")
+                }
+            };
+            assert_eq!(append_receipt.canonical_result_document_count, 1);
+            assert!(append_receipt.post_write_validated);
+
+            let reopened = read_internal_project_schema6_canonical_results_v2(
+                ProjectSchema6ResultReadRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: append_receipt.updated_document_sha256.clone(),
+                },
+            );
+            let snapshot = match reopened {
+                ProjectSchema6ResultReadOutcomeV1::Ok { value } => value,
+                ProjectSchema6ResultReadOutcomeV1::Blocked { diagnostic } => {
+                    panic!("moderation bootstrap reopen blocked: {diagnostic:?}")
+                }
+            };
+            assert_eq!(snapshot.documents.len(), 1);
+            assert_eq!(
+                snapshot.documents[0].canonical_document_json.as_bytes(),
+                expected_document_json
+            );
+            assert_eq!(snapshot.documents[0].canonical_document, archive_document);
+            let reopened_core = serde_json::from_value::<qpls_core::CanonicalResultDocumentV2>(
+                serde_json::to_value(&snapshot.documents[0].canonical_document).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(reopened_core, completed.canonical_document);
+        }
+    }
+
+    #[test]
     fn moderation_capability_tamper_is_blocked_after_compiled_plan_classification() {
         let published = published_fixture_from(
             direct_only_moderation_fixture(true),
@@ -2492,6 +2960,78 @@ mod tests {
             let after_bytes = fs::read(&archive_path).unwrap();
             assert_eq!(after_bytes, before_bytes);
             assert_eq!(format!("{:x}", Sha256::digest(&after_bytes)), before_sha256);
+            assert_eq!(
+                load_project_archive_v6(&archive_path)
+                    .unwrap()
+                    .document
+                    .canonical_result_documents
+                    .len(),
+                before_result_count
+            );
+        }
+    }
+
+    #[test]
+    fn moderation_bootstrap_mid_and_late_cancellation_never_publish_or_mutate_the_archive() {
+        for (checkpoint, checkpoint_index) in [
+            (
+                GeneralSemPlsWorkerCheckpointV1::DuringModerationBootstrapMid,
+                0_u128,
+            ),
+            (
+                GeneralSemPlsWorkerCheckpointV1::DuringModerationBootstrapLate,
+                1_u128,
+            ),
+        ] {
+            let published = published_fixture_from(
+                moderation_bootstrap_fixture(false),
+                &format!("general-sem-bootstrap-cancel-{checkpoint_index}.qpls"),
+                general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+            );
+            let archive_path = PathBuf::from(&published.request.archive_path);
+            let before_bytes = fs::read(&archive_path).unwrap();
+            let before_result_count = load_project_archive_v6(&archive_path)
+                .unwrap()
+                .document
+                .canonical_result_documents
+                .len();
+            let resolved = resolve_archive_authority(&published.request).unwrap();
+            let job_id = Uuid::from_u128(0x7370 + checkpoint_index);
+            let cancellation = Arc::new(AtomicBool::new(false));
+            let checkpoint_seen = Arc::new(AtomicBool::new(false));
+            let cancellation_for_hook = cancellation.clone();
+            let checkpoint_seen_by_hook = checkpoint_seen.clone();
+            let hook: GeneralSemPlsWorkerCheckpointHookV1 = Arc::new(move |observed| {
+                if observed == checkpoint {
+                    checkpoint_seen_by_hook.store(true, Ordering::Release);
+                    cancellation_for_hook.store(true, Ordering::Release);
+                }
+            });
+            let state = job_state(
+                job_id,
+                cancellation.clone(),
+                resolved.archive_identity.clone(),
+            );
+            run_worker_with_checkpoint_hook(
+                job_id,
+                published.request,
+                resolved,
+                cancellation,
+                state.0.clone(),
+                admission(job_id),
+                Some(hook),
+            );
+
+            assert!(checkpoint_seen.load(Ordering::Acquire));
+            let jobs = state.0.lock().unwrap();
+            let job = jobs.get(&job_id).unwrap();
+            assert_eq!(
+                job.snapshot.state,
+                InternalLabsGeneralSemPlsJobStateV1::Cancelled
+            );
+            assert!(job.result.is_none());
+            drop(jobs);
+            assert_eq!(fs::read(&archive_path).unwrap(), before_bytes);
             assert_eq!(
                 load_project_archive_v6(&archive_path)
                     .unwrap()

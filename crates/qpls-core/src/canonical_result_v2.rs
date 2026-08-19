@@ -21,6 +21,10 @@ pub const GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1: &str =
     "minimum_usable_fraction_0_9_v1";
 pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1: &str =
     "qpls.general-sem-pls.multiple-two-way.point.v1";
+pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1: &str =
+    "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1";
+pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
+    "general_sem_pls_multiple_two_way_moderation_case_bootstrap_v1";
 pub const GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1: &str =
     "qpls.general-sem-pls.two-stage-product.sample-standardized.v1";
 pub const GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1: &str =
@@ -378,7 +382,13 @@ pub struct CanonicalGeneralSemFailedReplicateV1 {
 pub enum CanonicalGeneralSemFailedReplicateReasonV1 {
     InsufficientObservations,
     ConstantIndicator,
+    StageOneRankDeficient,
+    StageOneNonconvergence,
+    IndeterminateScoreSign,
+    ConstantConstructScore,
+    ConstantInteractionProduct,
     RankDeficient,
+    JointStageRankDeficient,
     IsolatedConstruct,
     EstimationNonconvergence,
     NumericalFailure,
@@ -484,6 +494,20 @@ pub enum CanonicalGeneralSemEffectIdentityV1 {
         direct_relation_ids: Vec<String>,
         contributing_path_identities: Vec<String>,
     },
+    InteractionScientificRescaledGamma {
+        effect_id: String,
+        interaction_id: String,
+        focal_relation_id: String,
+        interaction_effect_relation_id: String,
+        interaction_effect_parameter_id: String,
+        generated_product_column_id: String,
+        focal_predictor_id: String,
+        moderator_id: String,
+        outcome_id: String,
+        stage_one_model_scientific_sha256: String,
+        product_scale_version: String,
+        method_version: String,
+    },
 }
 
 impl CanonicalGeneralSemEffectIdentityV1 {
@@ -491,7 +515,8 @@ impl CanonicalGeneralSemEffectIdentityV1 {
         match self {
             Self::SpecificIndirect { effect_id, .. }
             | Self::TotalIndirect { effect_id, .. }
-            | Self::TotalEffect { effect_id, .. } => effect_id,
+            | Self::TotalEffect { effect_id, .. }
+            | Self::InteractionScientificRescaledGamma { effect_id, .. } => effect_id,
         }
     }
 }
@@ -541,6 +566,22 @@ pub fn canonical_general_sem_effect_identities_v1(
                     }
                 }),
         )
+        .chain(results.interaction_effects.iter().map(|effect| {
+            CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma {
+                effect_id: effect.effect_id.clone(),
+                interaction_id: effect.interaction_id.clone(),
+                focal_relation_id: effect.focal_relation_id.clone(),
+                interaction_effect_relation_id: effect.interaction_effect_relation_id.clone(),
+                interaction_effect_parameter_id: effect.interaction_effect_parameter_id.clone(),
+                generated_product_column_id: effect.generated_product_column_id.clone(),
+                focal_predictor_id: effect.focal_predictor_id.clone(),
+                moderator_id: effect.moderator_id.clone(),
+                outcome_id: effect.outcome_id.clone(),
+                stage_one_model_scientific_sha256: effect.stage_one_model_scientific_sha256.clone(),
+                product_scale_version: effect.product_scale_version.clone(),
+                method_version: effect.method_version.clone(),
+            }
+        }))
         .collect::<Vec<_>>();
     identities.sort_by(|left, right| left.effect_id().cmp(right.effect_id()));
     identities
@@ -1164,6 +1205,17 @@ fn general_sem_estimate_has_inference(value: &CanonicalGeneralSemEstimateV1) -> 
         || value.bootstrap_two_sided_exceedances.is_some()
 }
 
+fn general_sem_estimate_has_complete_inference(value: &CanonicalGeneralSemEstimateV1) -> bool {
+    value.bootstrap_mean.is_some()
+        && value.bootstrap_bias.is_some()
+        && value.standard_error.is_some()
+        && value.lower.is_some()
+        && value.upper.is_some()
+        && value.p_value.is_some()
+        && value.bootstrap_usable_replicates.is_some()
+        && value.bootstrap_two_sided_exceedances.is_some()
+}
+
 fn approximately_equal(left: f64, right: f64) -> bool {
     left == right
         || (left - right).abs() <= f64::EPSILON * 8.0 * left.abs().max(right.abs()).max(1.0)
@@ -1210,7 +1262,7 @@ fn validate_general_sem_inference_receipt_v1(
     document_capability_ids: Option<&HashSet<String>>,
 ) {
     let context = "general_sem_results.inference_receipt";
-    let effect_values = results
+    let mediation_effect_values = results
         .specific_indirect_effects
         .iter()
         .map(|effect| (effect.effect_id.as_str(), &effect.value, &effect.trace))
@@ -1221,13 +1273,23 @@ fn validate_general_sem_inference_receipt_v1(
                 .map(|effect| (effect.effect_id.as_str(), &effect.value, &effect.trace)),
         )
         .collect::<Vec<_>>();
-    let uncovered_inference = results
+    let moderation_effect_values = results
+        .interaction_effects
+        .iter()
+        .map(|effect| {
+            (
+                effect.effect_id.as_str(),
+                &effect.scientific_rescaled_gamma,
+                &effect.trace,
+            )
+        })
+        .collect::<Vec<_>>();
+    let point_only_inference = results
         .joint_stage_structural_coefficients
         .iter()
         .any(|coefficient| general_sem_estimate_has_inference(&coefficient.estimate))
         || results.interaction_effects.iter().any(|effect| {
             general_sem_estimate_has_inference(&effect.standardized_product_coefficient)
-                || general_sem_estimate_has_inference(&effect.scientific_rescaled_gamma)
         })
         || results
             .conditional_effects
@@ -1239,12 +1301,23 @@ fn validate_general_sem_inference_receipt_v1(
                 .iter()
                 .any(|relation| general_sem_estimate_has_inference(&relation.value))
         });
+    let interaction_plot_interval_fields = results.interaction_plots.iter().any(|plot| {
+        plot.series.iter().any(|series| {
+            series
+                .points
+                .iter()
+                .any(|point| point.lower.is_some() || point.upper.is_some())
+        })
+    });
 
     let Some(receipt) = &results.inference_receipt else {
-        if effect_values
+        if mediation_effect_values
             .iter()
             .any(|(_, value, _)| general_sem_estimate_has_inference(value))
-            || uncovered_inference
+            || moderation_effect_values
+                .iter()
+                .any(|(_, value, _)| general_sem_estimate_has_inference(value))
+            || point_only_inference
         {
             errors.push("general_sem_results inference fields require inference_receipt".into());
         }
@@ -1256,9 +1329,25 @@ fn validate_general_sem_inference_receipt_v1(
         &receipt.capability_cell,
         &format!("{context}.capability_cell"),
     );
-    if receipt.capability_cell != general_sem_pls_bootstrap_capability_cell_v1() {
+    let mediation_bootstrap =
+        receipt.capability_cell == general_sem_pls_bootstrap_capability_cell_v1();
+    let moderation_bootstrap = receipt.capability_cell
+        == crate::pls_general_multiple_moderation_bootstrap_capability_cell_v1();
+    if !mediation_bootstrap && !moderation_bootstrap {
         errors.push(format!(
-            "{context}.capability_cell must equal the exact General SEM multiple-mediation full-model bootstrap option cell"
+            "{context}.capability_cell must equal the exact General SEM multiple-mediation full-model bootstrap option cell or the exact General SEM multiple two-way moderation full-model bootstrap option cell"
+        ));
+    }
+    let effect_values = if moderation_bootstrap {
+        &moderation_effect_values
+    } else {
+        &mediation_effect_values
+    };
+    if moderation_bootstrap
+        && (!results.specific_indirect_effects.is_empty() || !results.aggregate_effects.is_empty())
+    {
+        errors.push(format!(
+            "{context} moderation bootstrap must not contain mediation effect rows"
         ));
     }
     let capability_identity = capability_cell_reference_identity_v2(&receipt.capability_cell);
@@ -1305,14 +1394,24 @@ fn validate_general_sem_inference_receipt_v1(
     ] {
         require_stable_id(errors, value, &format!("{context}.{name}"));
     }
-    if receipt.method_version != GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1 {
+    let expected_method_version = if moderation_bootstrap {
+        GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+    } else {
+        GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1
+    };
+    let expected_operation_version = if moderation_bootstrap {
+        GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+    } else {
+        GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+    };
+    if receipt.method_version != expected_method_version {
         errors.push(format!(
-            "{context}.method_version must equal {GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1}"
+            "{context}.method_version must equal {expected_method_version}"
         ));
     }
-    if receipt.resampling_operation_version != GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1 {
+    if receipt.resampling_operation_version != expected_operation_version {
         errors.push(format!(
-            "{context}.resampling_operation_version must equal {GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1}"
+            "{context}.resampling_operation_version must equal {expected_operation_version}"
         ));
     }
     if receipt.resampling_stream_version != GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1 {
@@ -1405,11 +1504,25 @@ fn validate_general_sem_inference_receipt_v1(
         .collect::<Vec<_>>();
     expected_effect_ids.sort();
     if receipt.effect_ids != expected_effect_ids {
-        errors.push(format!(
-            "{context}.effect_ids must exactly cover specific and aggregate effect rows"
-        ));
+        errors.push(if moderation_bootstrap {
+            format!(
+                "{context}.effect_ids must exactly cover scientific rescaled gamma interaction rows"
+            )
+        } else {
+            format!("{context}.effect_ids must exactly cover specific and aggregate effect rows")
+        });
     }
-    let effect_identities = canonical_general_sem_effect_identities_v1(results);
+    let effect_identities = canonical_general_sem_effect_identities_v1(results)
+        .into_iter()
+        .filter(|identity| match identity {
+            CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma { .. } => {
+                moderation_bootstrap
+            }
+            CanonicalGeneralSemEffectIdentityV1::SpecificIndirect { .. }
+            | CanonicalGeneralSemEffectIdentityV1::TotalIndirect { .. }
+            | CanonicalGeneralSemEffectIdentityV1::TotalEffect { .. } => !moderation_bootstrap,
+        })
+        .collect::<Vec<_>>();
     if receipt.effect_identity_set_sha256
         != general_sem_effect_identity_set_sha256_v1(&effect_identities)
     {
@@ -1531,23 +1644,54 @@ fn validate_general_sem_inference_receipt_v1(
     }
     if effect_values
         .iter()
-        .any(|(_, value, _)| !general_sem_estimate_has_inference(value))
+        .any(|(_, value, _)| !general_sem_estimate_has_complete_inference(value))
     {
-        errors.push(format!(
-            "{context} requires complete inference fields for every covered effect"
-        ));
+        errors.push(if moderation_bootstrap {
+            format!(
+                "{context} requires complete inference fields for every scientific rescaled gamma interaction effect"
+            )
+        } else {
+            format!("{context} requires complete inference fields for every covered effect")
+        });
     }
+    let uncovered_inference = point_only_inference
+        || (moderation_bootstrap && interaction_plot_interval_fields)
+        || if moderation_bootstrap {
+            mediation_effect_values
+                .iter()
+                .any(|(_, value, _)| general_sem_estimate_has_inference(value))
+        } else {
+            moderation_effect_values
+                .iter()
+                .any(|(_, value, _)| general_sem_estimate_has_inference(value))
+        };
     if uncovered_inference {
-        errors.push(format!(
-            "{context} v1 does not cover interaction, conditional, or higher-order estimate inference"
-        ));
+        errors.push(if moderation_bootstrap {
+            format!(
+                "{context} moderation v1 permits inference only for scientific_rescaled_gamma; standardized-product, joint-stage, conditional, plot, mediation, and higher-order estimates must remain point-only"
+            )
+        } else {
+            format!(
+                "{context} v1 does not cover interaction, conditional, or higher-order estimate inference"
+            )
+        });
     }
-    let expected_effect_capability = crate::pls_general_recursive_effects_capability_cell_v1();
+    let expected_effect_capability = if moderation_bootstrap {
+        crate::pls_general_multiple_moderation_point_capability_cell_v1()
+    } else {
+        crate::pls_general_recursive_effects_capability_cell_v1()
+    };
     for (effect_id, value, trace) in effect_values {
         if trace.capability_cell != expected_effect_capability {
-            errors.push(format!(
-                "{context} effect {effect_id} trace.capability_cell must equal the PLS recursive-effects option cell"
-            ));
+            errors.push(if moderation_bootstrap {
+                format!(
+                    "{context} effect {effect_id} trace.capability_cell must equal the General SEM multiple two-way moderation point option cell"
+                )
+            } else {
+                format!(
+                    "{context} effect {effect_id} trace.capability_cell must equal the PLS recursive-effects option cell"
+                )
+            });
         }
         let Some(usable) = value.bootstrap_usable_replicates else {
             continue;
@@ -3897,6 +4041,81 @@ mod tests {
         document
     }
 
+    fn general_sem_moderation_inference_document_fixture() -> CanonicalResultDocumentV2 {
+        let mut document = general_sem_interaction_document_fixture();
+        let results = document.general_sem_results.as_mut().unwrap();
+        results.specific_indirect_effects.clear();
+        results.aggregate_effects.clear();
+        results.interaction_effects[0].scientific_rescaled_gamma = inferred_effect_value(0.4);
+        let effect_ids = results
+            .interaction_effects
+            .iter()
+            .map(|effect| effect.effect_id.clone())
+            .collect::<Vec<_>>();
+        let effect_identities = canonical_general_sem_effect_identities_v1(results)
+            .into_iter()
+            .filter(|identity| {
+                matches!(
+                    identity,
+                    CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma { .. }
+                )
+            })
+            .collect::<Vec<_>>();
+        let failed_replicates = vec![CanonicalGeneralSemFailedReplicateV1 {
+            replicate_index: 7,
+            reason_code: CanonicalGeneralSemFailedReplicateReasonV1::ConstantInteractionProduct,
+            message: "One resampled interaction product was constant.".to_string(),
+        }];
+        let usable_replicate_indices = (0..10_u32)
+            .filter(|replicate_index| *replicate_index != 7)
+            .collect::<Vec<_>>();
+        results.inference_receipt = Some(CanonicalGeneralSemInferenceReceiptV1 {
+            kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
+            capability_cell: crate::pls_general_multiple_moderation_bootstrap_capability_cell_v1(),
+            method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+                .to_string(),
+            resampling_operation_version:
+                GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+                    .to_string(),
+            resampling_stream_version: GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1
+                .to_string(),
+            quantile_method_version: GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1.to_string(),
+            standard_error_method_version: GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1
+                .to_string(),
+            summation_method_version: GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1.to_string(),
+            p_value_method_version: GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1
+                .to_string(),
+            failure_policy_version: GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1
+                .to_string(),
+            compilation_artifact_identity_sha256: "d".repeat(64),
+            compiled_plan_sha256: "9".repeat(64),
+            general_sem_config_sha256: "e".repeat(64),
+            recipe_analytical_sha256: "c".repeat(64),
+            model_scientific_sha256: "a".repeat(64),
+            source_dataset_fingerprint: "b".repeat(64),
+            complete_case_frame_sha256: "f".repeat(64),
+            usable_replicate_indices_sha256: crate::sha256_serialized(&usable_replicate_indices),
+            effect_identity_set_sha256: general_sem_effect_identity_set_sha256_v1(
+                &effect_identities,
+            ),
+            effect_ids,
+            interval: CanonicalGeneralSemBootstrapIntervalV1::PercentileType7,
+            tail: CanonicalGeneralSemInferenceTailV1::TwoSided,
+            confidence_level: 0.95,
+            resamples_requested: 10,
+            resamples_usable: 9,
+            minimum_usable_resamples: 9,
+            seed: "42".to_string(),
+            workers: 4,
+            complete_model_reestimated_per_replicate: true,
+            failed_replicates,
+        });
+        let cells = document.capability_cells.as_mut().unwrap();
+        cells.push(crate::pls_general_multiple_moderation_bootstrap_capability_cell_v1());
+        cells.sort_by_key(capability_cell_reference_identity_v2);
+        document
+    }
+
     #[test]
     fn valid_microcase_passes() {
         let validation = validate_canonical_result_document_v2(&document_fixture());
@@ -4112,6 +4331,240 @@ mod tests {
             "replicate_index is outside the requested plan",
             "resamples_usable contradicts the failure ledger",
             "usable_replicate_indices_sha256 does not match",
+        ] {
+            assert!(
+                errors.iter().any(|error| error.contains(expected)),
+                "missing {expected:?} in {errors:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn moderation_bootstrap_covers_only_typed_scientific_gamma_targets() {
+        let document = general_sem_moderation_inference_document_fixture();
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(validation.passed, "{:?}", validation.errors);
+
+        let encoded = serde_json::to_value(&document).unwrap();
+        let gamma =
+            &encoded["general_sem_results"]["interaction_effects"][0]["scientific_rescaled_gamma"];
+        assert!(approximately_equal(
+            gamma["bootstrap_mean"].as_f64().unwrap(),
+            0.41
+        ));
+        assert!(encoded["general_sem_results"]["interaction_effects"][0]
+            ["standardized_product_coefficient"]
+            .get("bootstrap_mean")
+            .is_none());
+        let identities = canonical_general_sem_effect_identities_v1(
+            document.general_sem_results.as_ref().unwrap(),
+        );
+        assert!(identities.iter().any(|identity| matches!(
+            identity,
+            CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma { .. }
+        )));
+        let gamma_identity =
+            serde_json::to_value(
+                identities
+                    .iter()
+                    .find(|identity| {
+                        matches!(
+                    identity,
+                    CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma { .. }
+                )
+                    })
+                    .unwrap(),
+            )
+            .unwrap();
+        assert_eq!(
+            gamma_identity["kind"],
+            serde_json::json!("interaction_scientific_rescaled_gamma")
+        );
+        assert_eq!(
+            gamma_identity["generated_product_column_id"],
+            serde_json::json!("generated_interaction_1_product")
+        );
+        assert_eq!(
+            gamma_identity["stage_one_model_scientific_sha256"],
+            "d".repeat(64)
+        );
+        assert_eq!(
+            gamma_identity["product_scale_version"],
+            serde_json::json!(GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1)
+        );
+        assert_eq!(
+            gamma_identity["method_version"],
+            serde_json::json!(GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1)
+        );
+    }
+
+    #[test]
+    fn moderation_bootstrap_rejects_missing_extra_and_tampered_gamma_authority() {
+        let fixture = general_sem_moderation_inference_document_fixture();
+
+        let mut missing = fixture.clone();
+        missing
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .interaction_effects[0]
+            .scientific_rescaled_gamma
+            .upper = None;
+        let errors = validate_canonical_result_document_v2(&missing).errors;
+        assert!(errors.iter().any(|error| {
+            error.contains("bootstrap inference fields must be either all absent or all present")
+        }));
+        assert!(errors.iter().any(|error| {
+            error.contains("complete inference fields for every scientific rescaled gamma")
+        }));
+
+        let mut wrong_target = fixture.clone();
+        wrong_target
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .interaction_effects[0]
+            .moderator_id = "moderator_other".to_string();
+        assert!(
+            validate_canonical_result_document_v2(&wrong_target)
+                .errors
+                .iter()
+                .any(|error| error.contains("effect_identity_set_sha256 does not match"))
+        );
+
+        let locked_identity_mutations: [(&str, fn(&mut CanonicalInteractionEffectResultV1)); 4] = [
+            ("generated product", |effect| {
+                effect.generated_product_column_id = "generated_other_product".to_string();
+            }),
+            ("stage-one digest", |effect| {
+                effect.stage_one_model_scientific_sha256 = "1".repeat(64);
+            }),
+            ("product scale", |effect| {
+                effect.product_scale_version = "other_product_scale_v1".to_string();
+            }),
+            ("point method", |effect| {
+                effect.method_version = "other_point_method_v1".to_string();
+            }),
+        ];
+        for (label, mutate) in locked_identity_mutations {
+            let mut changed = fixture.clone();
+            mutate(
+                &mut changed
+                    .general_sem_results
+                    .as_mut()
+                    .unwrap()
+                    .interaction_effects[0],
+            );
+            let errors = validate_canonical_result_document_v2(&changed).errors;
+            assert!(
+                errors
+                    .iter()
+                    .any(|error| error.contains("effect_identity_set_sha256 does not match")),
+                "{label} was not bound by the typed gamma identity: {errors:?}"
+            );
+        }
+
+        let mut extra_target = fixture.clone();
+        extra_target
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .effect_ids
+            .push("relation_interaction_extra_effect".to_string());
+        assert!(
+            validate_canonical_result_document_v2(&extra_target)
+                .errors
+                .iter()
+                .any(|error| error.contains(
+                    "effect_ids must exactly cover scientific rescaled gamma interaction rows"
+                ))
+        );
+    }
+
+    #[test]
+    fn moderation_bootstrap_rejects_inference_on_every_point_only_surface() {
+        let fixture = general_sem_moderation_inference_document_fixture();
+        let assert_gamma_only_error =
+            |document: &CanonicalResultDocumentV2| {
+                let errors = validate_canonical_result_document_v2(document).errors;
+                assert!(
+                    errors.iter().any(|error| error
+                        .contains("permits inference only for scientific_rescaled_gamma")),
+                    "{errors:?}"
+                );
+            };
+
+        let mut standardized_product = fixture.clone();
+        standardized_product
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .interaction_effects[0]
+            .standardized_product_coefficient = inferred_effect_value(0.2);
+        assert_gamma_only_error(&standardized_product);
+
+        let mut joint_stage = fixture.clone();
+        joint_stage
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .joint_stage_structural_coefficients[0]
+            .estimate = inferred_effect_value(0.4);
+        assert_gamma_only_error(&joint_stage);
+
+        let mut conditional = fixture.clone();
+        conditional
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .conditional_effects[0]
+            .value = inferred_effect_value(0.3);
+        assert_gamma_only_error(&conditional);
+
+        let mut plot_band = fixture.clone();
+        let point = &mut plot_band
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .interaction_plots[0]
+            .series[0]
+            .points[0];
+        point.lower = Some(point.predicted_value - 0.1);
+        point.upper = Some(point.predicted_value + 0.1);
+        assert_gamma_only_error(&plot_band);
+
+        let mut higher_order = fixture;
+        higher_order
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .higher_order_stages[1]
+            .relation_estimates[0]
+            .value = inferred_effect_value(0.31);
+        assert_gamma_only_error(&higher_order);
+    }
+
+    #[test]
+    fn moderation_bootstrap_receipt_versions_and_point_trace_fail_closed() {
+        let mut document = general_sem_moderation_inference_document_fixture();
+        let results = document.general_sem_results.as_mut().unwrap();
+        results.inference_receipt.as_mut().unwrap().method_version =
+            GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1.to_string();
+        results
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .resampling_operation_version =
+            GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1.to_string();
+        results.interaction_effects[0].trace.capability_cell = capability_reference();
+        let errors = validate_canonical_result_document_v2(&document).errors;
+        for expected in [
+            GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+            GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+            "trace.capability_cell must equal the General SEM multiple two-way moderation point option cell",
         ] {
             assert!(
                 errors.iter().any(|error| error.contains(expected)),
