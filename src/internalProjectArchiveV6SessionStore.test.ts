@@ -4,6 +4,11 @@ import type { InternalProjectArchiveV6ReadSnapshotV1 } from "./domain/internalPr
 import { parseInternalProjectArchiveV6Wire, type InternalProjectArchiveV6Wire } from "./domain/internalProjectArchiveV6Wire";
 import { convertLegacyBasicModelV4, type LegacyBasicModelV4Input } from "./domain/semModelV4";
 import type { StandardSemModelV4AuthorityResolveOutcomeV1 } from "./domain/standardSemModelV4AuthorityCas";
+import {
+  reduceStandardSemModelV4AuthorityV1,
+  standardSemGeneralSemInteractionV2OutputIdV1,
+  standardSemGeneralSemInteractionV2TermIdV1,
+} from "./domain/standardSemModelV4Authority";
 import { useWorkspace } from "./store";
 import {
   INTERNAL_PROJECT_ARCHIVE_V6_SESSION_CAPABILITIES,
@@ -587,6 +592,270 @@ describe("Internal/Labs schema-6 in-memory session store", () => {
       revisionForkFailure: { code: "schema6_model_revision.general_sem_execution_authority_revision_required" },
       saveCopyPending: false,
       saveCopyFailure: { code: "schema6_save_copy.general_sem_execution_authority_revision_required" },
+    });
+  });
+
+  it("persists and atomically activates one interaction-v2 model-and-Recipe revision without changing the source", async () => {
+    const revisionModel = {
+      ...convertLegacyBasicModelV4({
+        ...semInput,
+        id: "model:general-sem-source",
+        name: "General SEM source",
+        constructs: [
+          ...semInput.constructs,
+          { id: "w", name: "Moderator", short_name: "W", mode: "reflective" as const, indicators: ["w1", "w2"] },
+        ],
+      }, "cbsem_common_factor"),
+      data_binding: { ...convertedSemModel.data_binding, dataset_id: DATASET_ID },
+    };
+    const focal = revisionModel.relations.find((relation) => relation.kind === "structural");
+    if (!focal) throw new Error("Expected the x-to-y focal relation.");
+    const predictorId = focal.source;
+    const outcomeId = focal.target;
+    const moderatorId = revisionModel.variables.find((variable) => variable.label === "Moderator")?.id;
+    if (!moderatorId) throw new Error("Expected the moderator construct.");
+    const sourceScientific = "d".repeat(64);
+    const sourceDocument = "e".repeat(64);
+    const sourceRecipeId = "00000000-0000-4000-8000-000000000610";
+    const sourceProject = {
+      ...project,
+      project_id: "00000000-0000-4000-8000-000000000611",
+      name: "General SEM source",
+      sem_generation: "general_sem_v1" as const,
+      datasets: [{
+        ...project.datasets[0],
+        schema: {
+          ...project.datasets[0].schema,
+          columns: [
+            ...project.datasets[0].schema.columns,
+            ...["w1", "w2"].map((name) => ({
+              name, label: null, column_type: "numeric" as const, scale_type: "continuous" as const,
+              missing_markers: [], theoretical_min: null, theoretical_max: null, value_labels: {},
+            })),
+          ],
+        },
+      }],
+      models: [{
+        model_id: revisionModel.id,
+        payload: { kind: "sem_model_v4" as const, model: revisionModel, scientific_sha256: sourceScientific },
+      }],
+      recipes: [{
+        schema_version: 4,
+        id: sourceRecipeId,
+        created_at: "2026-08-19T09:00:00Z",
+        dataset_fingerprint: project.datasets[0].fingerprint,
+        model_binding: { kind: "project_sem_model_v4_reference", model_id: revisionModel.id, scientific_sha256: sourceScientific },
+        estimand_confirmation: "not_legacy",
+        settings: {} as never,
+        general_sem_config: {} as never,
+        metadata: {},
+      }],
+    };
+    const sourceSnapshot = {
+      ...snapshot,
+      archivePath: "D:\\projects\\general-sem-source.qpls",
+      archiveSha256: "f".repeat(64),
+      archiveBytes: 44_000,
+      project: sourceProject,
+      generalSemExecutionAuthority: {
+        schemaVersion: 1 as const,
+        projectId: sourceProject.project_id,
+        datasetId: DATASET_ID,
+        datasetFingerprint: sourceProject.datasets[0].fingerprint,
+        modelId: revisionModel.id,
+        modelScientificSha256: sourceScientific,
+        recipeId: sourceRecipeId,
+        recipeDocumentSha256: "1".repeat(64),
+        recipe: sourceProject.recipes[0],
+      },
+    } as InternalProjectArchiveV6ReadSnapshotV1;
+    const sourceBytes = JSON.stringify(sourceSnapshot);
+    await useInternalProjectArchiveV6Session.getState().open(async () => ({ status: "ok", value: sourceSnapshot }));
+    await expect(useInternalProjectArchiveV6Session.getState().activateStandardAuthorities(async () => ({
+      status: "ok",
+      value: {
+        schemaVersion: 1,
+        canonicalModel: revisionModel,
+        modelDocumentSha256: sourceDocument,
+        scientificSha256: sourceScientific,
+        readiness: "ready",
+        authoringIssues: [],
+        readinessIssues: [],
+      },
+    }), async () => {})).resolves.toBe("activated");
+
+    const intent = {
+      kind: "add_general_sem_interaction_v2" as const,
+      intent_version: 1 as const,
+      sem_generation: "general_sem_v1" as const,
+      label: "X × W",
+      operands: [predictorId, moderatorId] as const,
+      focal_relation: focal.id,
+      outcome: outcomeId,
+      method: "two_stage" as const,
+      hierarchy_policy: "strong" as const,
+    };
+    const nextProjectId = "00000000-0000-4000-8000-000000000612";
+    const nextRecipeId = "00000000-0000-4000-8000-000000000613";
+    const nextModelId = "model:general-sem-revision:1";
+    const nextDocument = "2".repeat(64);
+    const nextScientific = "3".repeat(64);
+    const executor = vi.fn(async (input) => {
+      expect(input.source).toMatchObject({
+        projectId: sourceProject.project_id,
+        modelId: revisionModel.id,
+        modelDocumentSha256: sourceDocument,
+        modelScientificSha256: sourceScientific,
+        recipeId: sourceRecipeId,
+      });
+      const active = useWorkspace.getState().standardSemModelV4Authorities[revisionModel.id];
+      const revised = reduceStandardSemModelV4AuthorityV1(active, intent).model;
+      const revisedModel = { ...revised, id: nextModelId, name: "General SEM revision 1" };
+      const nextRecipe = {
+        ...sourceProject.recipes[0],
+        id: nextRecipeId,
+        model_binding: { kind: "project_sem_model_v4_reference" as const, model_id: nextModelId, scientific_sha256: nextScientific },
+      };
+      const nextProject = {
+        ...sourceProject,
+        project_id: nextProjectId,
+        name: "General SEM revision 1",
+        models: [{ model_id: nextModelId, payload: { kind: "sem_model_v4" as const, model: revisedModel, scientific_sha256: nextScientific } }],
+        recipes: [nextRecipe],
+        layouts: { general_sem_execution_authority_revision_v1: { schemaVersion: 1, revisionNumber: 1 } },
+      };
+      const termId = standardSemGeneralSemInteractionV2TermIdV1(focal.id, predictorId, moderatorId);
+      const destination = {
+        ...sourceSnapshot,
+        archivePath: "D:\\projects\\general-sem-revision-1.qpls",
+        archiveSha256: "4".repeat(64),
+        archiveBytes: 55_000,
+        project: nextProject,
+        generalSemExecutionAuthority: {
+          ...sourceSnapshot.generalSemExecutionAuthority!,
+          projectId: nextProjectId,
+          modelId: nextModelId,
+          modelScientificSha256: nextScientific,
+          recipeId: nextRecipeId,
+          recipeDocumentSha256: "5".repeat(64),
+          recipe: nextRecipe,
+        },
+      } as InternalProjectArchiveV6ReadSnapshotV1;
+      return {
+        status: "ok" as const,
+        value: {
+          schemaVersion: 1 as const,
+          persistence: "persisted_new_revision" as const,
+          receipt: {
+            schemaVersion: 1 as const, archiveSchemaVersion: 6 as const, revisionNumber: 1,
+            sourceArchivePath: sourceSnapshot.archivePath, sourceArchiveSha256: sourceSnapshot.archiveSha256,
+            sourceArchiveBytes: sourceSnapshot.archiveBytes, sourceVerifiedUnchanged: true as const,
+            sourceProjectId: sourceProject.project_id, sourceModelId: revisionModel.id,
+            sourceModelDocumentSha256: sourceDocument, sourceModelScientificSha256: sourceScientific,
+            sourceRecipeId, sourceRecipeDocumentSha256: "1".repeat(64),
+            destinationArchivePath: destination.archivePath, destinationArchiveSha256: destination.archiveSha256,
+            destinationArchiveBytes: destination.archiveBytes, strictReopenValidated: true as const,
+            projectId: nextProjectId, name: nextProject.name, createdAt: input.revision.createdAt,
+            residentDatasetId: DATASET_ID, residentDatasetFingerprint: sourceProject.datasets[0].fingerprint,
+            residentModelId: nextModelId, residentModelDocumentSha256: nextDocument,
+            residentModelScientificSha256: nextScientific, residentRecipeId: nextRecipeId,
+            residentRecipeDocumentSha256: "5".repeat(64), compilerVersion: "compiler-v1",
+            capabilityCell: { registry_schema_version: 2 as const, capability_id: "smartpls.moderation", cell_id: "pls-two-way", capability_version: "1" },
+            recipeAnalyticalSha256: "6".repeat(64), generalSemConfigSha256: "7".repeat(64),
+            compiledPlanSha256: "8".repeat(64), compiledArtifactIdentitySha256: "9".repeat(64),
+            interactionTermId: termId, interactionOutputId: standardSemGeneralSemInteractionV2OutputIdV1(termId),
+          },
+          snapshot: destination,
+        },
+      };
+    });
+
+    await expect(useInternalProjectArchiveV6Session.getState().reviseGeneralSemExecutionAuthority({
+      intent,
+      projectId: nextProjectId,
+      projectName: "General SEM revision 1",
+      modelId: nextModelId,
+      modelName: "General SEM revision 1",
+      recipeId: nextRecipeId,
+      createdAt: "2026-08-19T10:00:00Z",
+      executor,
+      resolver: async (model) => ({
+        status: "ok",
+        value: {
+          schemaVersion: 1, canonicalModel: model, modelDocumentSha256: nextDocument,
+          scientificSha256: nextScientific, readiness: "ready", authoringIssues: [], readinessIssues: [],
+        },
+      }),
+    })).resolves.toBe("saved");
+
+    expect(executor).toHaveBeenCalledOnce();
+    expect(JSON.stringify(sourceSnapshot)).toBe(sourceBytes);
+    expect(useWorkspace.getState()).toMatchObject({
+      activeModelId: nextModelId,
+      projectPath: "D:\\projects\\general-sem-revision-1.qpls",
+      projectId: nextProjectId,
+      projectWritable: false,
+    });
+    expect(useWorkspace.getState().nodes.some((node) => node.id === standardSemGeneralSemInteractionV2OutputIdV1(
+      standardSemGeneralSemInteractionV2TermIdV1(focal.id, predictorId, moderatorId),
+    ))).toBe(true);
+    expect(useInternalProjectArchiveV6Session.getState()).toMatchObject({
+      dirty: false,
+      persistence: "persisted_validated_archive",
+      revisionForkPending: false,
+      revisionForkFailure: null,
+      session: { snapshot: { archivePath: "D:\\projects\\general-sem-revision-1.qpls" } },
+    });
+
+    expect(useInternalProjectArchiveV6Session.getState().closeStandardProject()).toBe("closed");
+    await useInternalProjectArchiveV6Session.getState().open(async () => ({ status: "ok", value: sourceSnapshot }));
+    await expect(useInternalProjectArchiveV6Session.getState().activateStandardAuthorities(async () => ({
+      status: "ok",
+      value: {
+        schemaVersion: 1,
+        canonicalModel: revisionModel,
+        modelDocumentSha256: sourceDocument,
+        scientificSha256: sourceScientific,
+        readiness: "ready",
+        authoringIssues: [],
+        readinessIssues: [],
+      },
+    }), async () => {})).resolves.toBe("activated");
+    useWorkspace.getState().setProjectMeta(
+      sourceProject.name,
+      sourceSnapshot.archivePath,
+      sourceProject.project_id,
+    );
+
+    await expect(useInternalProjectArchiveV6Session.getState().reviseGeneralSemExecutionAuthority({
+      intent,
+      projectId: nextProjectId,
+      projectName: "General SEM revision 1",
+      modelId: nextModelId,
+      modelName: "General SEM revision 1",
+      recipeId: nextRecipeId,
+      createdAt: "2026-08-19T10:00:00Z",
+      executor,
+      resolver: async () => {
+        throw new Error("native authority transport unavailable");
+      },
+    })).resolves.toBe("blocked");
+
+    expect(executor).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(sourceSnapshot)).toBe(sourceBytes);
+    expect(useWorkspace.getState()).toMatchObject({
+      activeModelId: revisionModel.id,
+      projectPath: sourceSnapshot.archivePath,
+      projectId: sourceProject.project_id,
+      projectWritable: false,
+    });
+    expect(useInternalProjectArchiveV6Session.getState()).toMatchObject({
+      revisionForkPending: false,
+      revisionForkFailure: {
+        code: "schema6_general_sem_revision.native_resolution_failed_after_persist",
+      },
+      revisionForkStatusMessage: expect.stringContaining("general-sem-revision-1.qpls"),
+      session: { snapshot: { archivePath: sourceSnapshot.archivePath } },
     });
   });
 

@@ -276,6 +276,17 @@ function completeGeneralSemInteractionResultsFixture(
     : "e".repeat(64);
   return {
     schema_version: 1,
+    joint_stage_structural_coefficients: [{
+      relation_id: "relation_x_y",
+      parameter_id: "parameter_x_y",
+      trace: structuredClone(trace),
+      source_id: "construct_x",
+      target_id: "construct_y",
+      role: "structural",
+      estimate: { estimate: 0.3 },
+      stage: "joint_stage_two",
+      method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+    }],
     interaction_effects: [{
       effect_id: interactionEffectId,
       trace: structuredClone(trace),
@@ -781,6 +792,13 @@ describe("CanonicalResultDocumentV2 native runtime adapter", () => {
       scientific_rescaled_gamma: { estimate: 0.4 },
       construction_method: "two_stage",
     });
+    expect(readback.general_sem_results?.joint_stage_structural_coefficients?.[0]).toMatchObject({
+      relation_id: "relation_x_y",
+      parameter_id: "parameter_x_y",
+      role: "structural",
+      estimate: { estimate: 0.3 },
+      stage: "joint_stage_two",
+    });
     expect(readback.general_sem_results?.conditional_effects?.[0].interaction_effect_id)
       .toBe("relation_interaction_x_by_w_effect");
     expect(readback.general_sem_results?.interaction_plots?.[0].interaction_effect_id)
@@ -801,6 +819,27 @@ describe("CanonicalResultDocumentV2 native runtime adapter", () => {
       wrongProjection.provenance.model_digest;
     expect(() => parseNativeCanonicalResultDocumentV2(wrongProjection))
       .toThrow(/projected interaction-free scoring model/);
+
+    const omittedJointStageLedger = structuredClone(document);
+    delete omittedJointStageLedger.general_sem_results!.joint_stage_structural_coefficients;
+    expect(() => parseNativeCanonicalResultDocumentV2(omittedJointStageLedger))
+      .toThrow(/joint_stage_structural_coefficients and interaction_effects must both be present/);
+
+    const inferredJointStageCoefficient = structuredClone(document);
+    inferredJointStageCoefficient.general_sem_results!
+      .joint_stage_structural_coefficients![0]!.estimate = {
+        estimate: 0.3,
+        bootstrap_mean: 0.3,
+        bootstrap_bias: 0,
+        standard_error: 0.1,
+        lower: 0.1,
+        upper: 0.5,
+        p_value: 0.2,
+        bootstrap_usable_replicates: 9,
+        bootstrap_two_sided_exceedances: 1,
+      };
+    expect(() => parseNativeCanonicalResultDocumentV2(inferredJointStageCoefficient))
+      .toThrow(/must contain point estimation only/);
 
     const wrongProbePolicy = structuredClone(document);
     wrongProbePolicy.general_sem_results!.conditional_effect_probes![0]!.values = {

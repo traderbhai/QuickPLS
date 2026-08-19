@@ -23,6 +23,10 @@ describe("native command accessibility contracts", () => {
     expect(source).toContain('className="nd-context-menu"');
     expect(source).toContain('role="menu"');
     expect(source).toContain('role="menuitem"');
+    expect(source).toContain('Unavailable: ${item.disabledReason}');
+    expect(source).toContain('title={item.disabled ? item.disabledReason : undefined}');
+    expect(source).toContain('Unavailable: ${command.disabledReason}');
+    expect(source).toContain('title={command.disabled ? command.disabledReason ?? command.label : command.label}');
   });
 
   it("uses the native properties pane for model editing instead of browser prompts", () => {

@@ -1235,7 +1235,7 @@ fn validate_general_sem_result_authority_v1(
         ));
     }
 
-    validate_general_sem_pls_interaction_authority_v1(results, &artifact)?;
+    validate_general_sem_pls_interaction_authority_v1(document, results, &artifact, recipe)?;
 
     match (&recipe.general_sem_config, &results.inference_receipt) {
         (Some(config), None) if matches!(config.inference, GeneralSemInferenceV1::None) => Ok(()),
@@ -1303,14 +1303,18 @@ fn validate_general_sem_result_authority_v1(
 }
 
 fn validate_general_sem_pls_interaction_authority_v1(
+    document: &CanonicalResultDocumentV2,
     results: &qpls_core::CanonicalGeneralSemResultsV1,
     artifact: &qpls_core::CompiledGeneralSemPlsRecipeV1,
+    recipe: &AnalysisRecipeV4,
 ) -> Result<(), ProjectArchiveV6Error> {
     let compiled_interactions = artifact.plan().two_way_interactions();
     if compiled_interactions.is_empty() {
-        if !results.interaction_effects.is_empty() {
+        if !results.interaction_effects.is_empty()
+            || !results.joint_stage_structural_coefficients.is_empty()
+        {
             return Err(invalid_general_sem_authority(
-                "canonical interaction effects exist without compiled PLS interaction authority",
+                "canonical joint-stage or interaction effects exist without compiled PLS interaction authority",
             ));
         }
         return Ok(());
@@ -1385,7 +1389,991 @@ fn validate_general_sem_pls_interaction_authority_v1(
             )));
         }
     }
+    validate_general_sem_pls_moderation_document_v1(document, results, artifact, recipe)
+}
+
+const GENERAL_SEM_MODERATION_SECTION_ID_V1: &str = "general_sem_moderation";
+const GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1: &str = "general_sem_interaction_effects";
+const GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1: &str = "general_sem_conditional_slopes";
+const GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1: &str = "general_sem_interaction_plots";
+const GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1: &[&str] = &[
+    "moderation_point_estimation_only",
+    "joint_stage_two_effects_and_fit_not_available",
+];
+const GENERAL_SEM_STRUCTURAL_PATH_COLUMNS_V1: &[&str] = &[
+    "relation_id",
+    "parameter_id",
+    "source",
+    "target",
+    "coefficient",
+];
+const GENERAL_SEM_CONTROL_COLUMNS_V1: &[&str] = &[
+    "relation_id",
+    "parameter_id",
+    "source",
+    "target",
+    "label",
+    "coefficient",
+];
+const GENERAL_SEM_INTERACTION_EFFECT_COLUMNS_V1: &[&str] = &[
+    "effect_id",
+    "interaction_id",
+    "focal_relation_id",
+    "interaction_effect_relation_id",
+    "interaction_effect_parameter_id",
+    "focal_predictor_id",
+    "moderator_id",
+    "outcome_id",
+    "generated_product_column_id",
+    "stage_one_model_scientific_sha256",
+    "observation_count",
+    "standardized_product_coefficient",
+    "scientific_rescaled_gamma",
+    "product_mean",
+    "product_sample_sd",
+    "construction_method",
+    "product_scale_version",
+    "hierarchy_policy",
+    "hierarchy_policy_version",
+    "conditioning_policy_version",
+    "method_version",
+];
+const GENERAL_SEM_CONDITIONAL_SLOPE_COLUMNS_V1: &[&str] = &[
+    "effect_id",
+    "interaction_id",
+    "interaction_effect_id",
+    "focal_relation_id",
+    "probe_id",
+    "probe_value_index",
+    "moderator_id",
+    "outcome_id",
+    "moderator_value",
+    "estimate",
+    "conditioning_policy_version",
+];
+const GENERAL_SEM_INTERACTION_PLOT_COLUMNS_V1: &[&str] = &[
+    "plot_id",
+    "interaction_id",
+    "interaction_effect_id",
+    "focal_relation_id",
+    "focal_predictor_id",
+    "moderator_id",
+    "outcome_id",
+    "series_id",
+    "probe_id",
+    "probe_value_index",
+    "moderator_value",
+    "focal_value",
+    "predicted_value",
+    "lower",
+    "upper",
+];
+
+fn moderation_base_capability_cell_v1(
+    recipe: &AnalysisRecipeV4,
+) -> crate::CapabilityCellReferenceV2 {
+    project_capability_cell_v2(
+        &RecipeV4CompilerTarget::PlsPlanV2.capability_cell_for_method(recipe.settings.method),
+    )
+}
+
+fn sort_project_capability_cells_v1(cells: &mut [crate::CapabilityCellReferenceV2]) {
+    cells.sort_by(|left, right| {
+        (
+            left.capability_id.as_str(),
+            left.cell_id.as_str(),
+            left.capability_version.as_str(),
+        )
+            .cmp(&(
+                right.capability_id.as_str(),
+                right.cell_id.as_str(),
+                right.capability_version.as_str(),
+            ))
+    });
+}
+
+fn moderation_table<'a>(
+    document: &'a CanonicalResultDocumentV2,
+    id: &str,
+) -> Result<&'a CanonicalResultTableV2, ProjectArchiveV6Error> {
+    document
+        .tables
+        .iter()
+        .find(|table| table.id == id)
+        .ok_or_else(|| {
+            invalid_general_sem_authority(format!(
+                "the exact moderation canonical result omits table {id}"
+            ))
+        })
+}
+
+fn validate_moderation_table_columns_v1(
+    table: &CanonicalResultTableV2,
+    expected: &[&str],
+) -> Result<(), ProjectArchiveV6Error> {
+    if table
+        .columns
+        .iter()
+        .map(|column| column.id.as_str())
+        .eq(expected.iter().copied())
+        && table
+            .rows
+            .iter()
+            .all(|row| row.cells.len() == expected.len())
+    {
+        Ok(())
+    } else {
+        Err(invalid_general_sem_authority(format!(
+            "moderation table {} has drifted columns or row widths",
+            table.id
+        )))
+    }
+}
+
+fn moderation_text_cell_v1<'a>(
+    cell: &'a CanonicalResultCellV2,
+    expected: &str,
+    context: &str,
+) -> Result<&'a str, ProjectArchiveV6Error> {
+    match cell {
+        CanonicalResultCellV2::Text { value } if value == expected => Ok(value),
+        _ => Err(invalid_general_sem_authority(format!(
+            "{context} differs from its typed moderation authority"
+        ))),
+    }
+}
+
+fn moderation_nonempty_text_cell_v1(
+    cell: &CanonicalResultCellV2,
+    context: &str,
+) -> Result<(), ProjectArchiveV6Error> {
+    match cell {
+        CanonicalResultCellV2::Text { value } if !value.trim().is_empty() => Ok(()),
+        _ => Err(invalid_general_sem_authority(format!(
+            "{context} must be a nonempty text cell"
+        ))),
+    }
+}
+
+fn moderation_number_cell_v1(
+    cell: &CanonicalResultCellV2,
+    expected: f64,
+    context: &str,
+) -> Result<(), ProjectArchiveV6Error> {
+    match cell {
+        CanonicalResultCellV2::Number {
+            value,
+            display: None,
+        } if value.to_bits() == expected.to_bits() => Ok(()),
+        _ => Err(invalid_general_sem_authority(format!(
+            "{context} differs bitwise from its typed moderation authority"
+        ))),
+    }
+}
+
+fn moderation_optional_number_cell_v1(
+    cell: &CanonicalResultCellV2,
+    expected: Option<f64>,
+    context: &str,
+) -> Result<(), ProjectArchiveV6Error> {
+    match (cell, expected) {
+        (
+            CanonicalResultCellV2::Number {
+                value,
+                display: None,
+            },
+            Some(expected),
+        ) if value.to_bits() == expected.to_bits() => Ok(()),
+        (
+            CanonicalResultCellV2::Missing {
+                reason: CanonicalMissingReasonV2::NotEstimated,
+                display: None,
+            },
+            None,
+        ) => Ok(()),
+        _ => Err(invalid_general_sem_authority(format!(
+            "{context} differs from its typed moderation authority"
+        ))),
+    }
+}
+
+fn validate_general_sem_pls_moderation_document_v1(
+    document: &CanonicalResultDocumentV2,
+    results: &qpls_core::CanonicalGeneralSemResultsV1,
+    artifact: &qpls_core::CompiledGeneralSemPlsRecipeV1,
+    recipe: &AnalysisRecipeV4,
+) -> Result<(), ProjectArchiveV6Error> {
+    let plan = artifact.plan();
+    let moderation = project_capability_cell_v2(artifact.capability_cell());
+    let base = moderation_base_capability_cell_v1(recipe);
+    let mut expected_document_cells = vec![base.clone(), moderation.clone()];
+    sort_project_capability_cells_v1(&mut expected_document_cells);
+    if document.capability_cells.as_deref() != Some(expected_document_cells.as_slice()) {
+        return Err(invalid_general_sem_authority(
+            "the exact moderation document capability set differs from [base PLS, moderation]",
+        ));
+    }
+
+    if document.title != "General SEM simultaneous two-way PLS moderation point estimates"
+        || document.presentation.default_section_id.as_deref()
+            != Some(GENERAL_SEM_MODERATION_SECTION_ID_V1)
+        || document.presentation.default_table_id.as_deref()
+            != Some(GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1)
+    {
+        return Err(invalid_general_sem_authority(
+            "the exact moderation title or default presentation target has drifted",
+        ));
+    }
+
+    let section_ids = document
+        .sections
+        .iter()
+        .map(|section| section.id.as_str())
+        .collect::<Vec<_>>();
+    if section_ids
+        != [
+            "run_details",
+            "measurement_model",
+            "structural_model",
+            GENERAL_SEM_MODERATION_SECTION_ID_V1,
+        ]
+    {
+        return Err(invalid_general_sem_authority(
+            "the exact moderation section inventory or order has drifted",
+        ));
+    }
+
+    let has_algorithm_convergence = matches!(
+        recipe.settings.weighting_scheme,
+        qpls_core::WeightingScheme::Path | qpls_core::WeightingScheme::Factor
+    );
+    let has_fixed_scoring = plan
+        .base_plan()
+        .blocks()
+        .iter()
+        .any(|block| block.fixed_scoring().is_some());
+    let has_score_execution = matches!(
+        recipe.method_config.as_ref(),
+        Some(MethodConfig::PlsAlgorithmConfiguredV2(_))
+    ) || has_fixed_scoring;
+    let has_controls = plan
+        .base_plan()
+        .paths()
+        .iter()
+        .any(|path| path.role() == qpls_core::StructuralRelationRoleV4::Control);
+
+    let mut expected_run_details = vec!["estimation_summary"];
+    if has_algorithm_convergence {
+        expected_run_details.extend([
+            crate::PLS_ALGORITHM_CONVERGENCE_SUMMARY_TABLE_ID_V1,
+            crate::PLS_ALGORITHM_BLOCK_ORDER_TABLE_ID_V1,
+        ]);
+    }
+    if has_score_execution {
+        expected_run_details.push(PLS_SCORE_EXECUTION_SUMMARY_TABLE_ID_V2);
+    }
+    if has_fixed_scoring {
+        expected_run_details.push(crate::PLS_FIXED_SCORE_SCALE_RECEIPT_TABLE_ID_V1);
+    }
+    let mut expected_measurement = vec!["outer_model"];
+    if has_score_execution {
+        expected_measurement.push(PLS_SCORE_EXECUTION_WEIGHTS_TABLE_ID_V2);
+    }
+    let mut expected_structural = vec!["structural_paths"];
+    if has_controls {
+        expected_structural.push(crate::PLS_CONTROL_ESTIMATES_TABLE_ID_V2);
+    }
+    let expected_moderation_tables = [
+        GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1,
+        GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1,
+        GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1,
+    ];
+    let expected_chart_ids = (0..results.interaction_plots.len())
+        .map(|index| format!("general_sem_interaction_chart_{index:04}"))
+        .collect::<Vec<_>>();
+    if document.sections[0]
+        .table_ids
+        .iter()
+        .map(String::as_str)
+        .ne(expected_run_details.iter().copied())
+        || document.sections[1]
+            .table_ids
+            .iter()
+            .map(String::as_str)
+            .ne(expected_measurement.iter().copied())
+        || document.sections[2]
+            .table_ids
+            .iter()
+            .map(String::as_str)
+            .ne(expected_structural.iter().copied())
+        || document.sections[3]
+            .table_ids
+            .iter()
+            .map(String::as_str)
+            .ne(expected_moderation_tables)
+        || document.sections[..3]
+            .iter()
+            .any(|section| !section.chart_ids.is_empty())
+        || document.sections[3].chart_ids != expected_chart_ids
+    {
+        return Err(invalid_general_sem_authority(
+            "the exact moderation section table/chart membership or order has drifted",
+        ));
+    }
+    for section in &document.sections[..2] {
+        if section.capability_cells.as_deref() != Some(std::slice::from_ref(&base)) {
+            return Err(invalid_general_sem_authority(
+                "stage-one moderation sections must be owned only by the base PLS cell",
+            ));
+        }
+    }
+    for section in &document.sections[2..] {
+        if section.capability_cells.as_deref() != Some(std::slice::from_ref(&moderation)) {
+            return Err(invalid_general_sem_authority(
+                "joint-stage moderation sections must be owned only by the moderation cell",
+            ));
+        }
+    }
+
+    let mut expected_table_ids = vec!["estimation_summary", "outer_model", "structural_paths"];
+    if has_score_execution {
+        expected_table_ids.extend([
+            PLS_SCORE_EXECUTION_SUMMARY_TABLE_ID_V2,
+            PLS_SCORE_EXECUTION_WEIGHTS_TABLE_ID_V2,
+        ]);
+    }
+    if has_fixed_scoring {
+        expected_table_ids.push(crate::PLS_FIXED_SCORE_SCALE_RECEIPT_TABLE_ID_V1);
+    }
+    if has_algorithm_convergence {
+        expected_table_ids.extend([
+            crate::PLS_ALGORITHM_CONVERGENCE_SUMMARY_TABLE_ID_V1,
+            crate::PLS_ALGORITHM_BLOCK_ORDER_TABLE_ID_V1,
+        ]);
+    }
+    if has_controls {
+        expected_table_ids.push(crate::PLS_CONTROL_ESTIMATES_TABLE_ID_V2);
+    }
+    expected_table_ids.extend(expected_moderation_tables);
+    if document
+        .tables
+        .iter()
+        .map(|table| table.id.as_str())
+        .ne(expected_table_ids.iter().copied())
+    {
+        return Err(invalid_general_sem_authority(
+            "the exact moderation canonical table inventory or order has drifted",
+        ));
+    }
+
+    let stage_one_table_ids = expected_run_details
+        .iter()
+        .chain(expected_measurement.iter())
+        .copied()
+        .collect::<BTreeSet<_>>();
+    for table in &document.tables {
+        let expected_owner = if stage_one_table_ids.contains(table.id.as_str()) {
+            &base
+        } else {
+            &moderation
+        };
+        if table.capability_cells.as_deref() != Some(std::slice::from_ref(expected_owner)) {
+            return Err(invalid_general_sem_authority(format!(
+                "moderation table {} has a drifted capability owner",
+                table.id
+            )));
+        }
+    }
+    let table_reference_counts = document
+        .sections
+        .iter()
+        .flat_map(|section| section.table_ids.iter())
+        .fold(BTreeMap::<&str, usize>::new(), |mut counts, table_id| {
+            *counts.entry(table_id.as_str()).or_default() += 1;
+            counts
+        });
+    if expected_table_ids
+        .iter()
+        .any(|table_id| table_reference_counts.get(table_id).copied() != Some(1))
+    {
+        return Err(invalid_general_sem_authority(
+            "each exact moderation table must belong to exactly one section",
+        ));
+    }
+
+    if document
+        .exclusions
+        .iter()
+        .map(|exclusion| exclusion.id.as_str())
+        .ne(GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1.iter().copied())
+        || document
+            .exclusions
+            .iter()
+            .any(|exclusion| exclusion.capability_cell.as_ref() != Some(&moderation))
+    {
+        return Err(invalid_general_sem_authority(
+            "the exact moderation exclusion inventory or capability owner has drifted",
+        ));
+    }
+
+    validate_general_sem_joint_stage_structural_ledger_v1(document, results, artifact)?;
+    validate_general_sem_moderation_result_tables_v1(document, results, &moderation)?;
+    validate_general_sem_moderation_charts_v1(document, results)?;
     Ok(())
+}
+
+fn validate_general_sem_joint_stage_structural_ledger_v1(
+    document: &CanonicalResultDocumentV2,
+    results: &qpls_core::CanonicalGeneralSemResultsV1,
+    artifact: &qpls_core::CompiledGeneralSemPlsRecipeV1,
+) -> Result<(), ProjectArchiveV6Error> {
+    let interaction_relation_ids = artifact
+        .plan()
+        .two_way_interactions()
+        .iter()
+        .map(|interaction| interaction.interaction_effect_relation_id())
+        .collect::<BTreeSet<_>>();
+    let plan_paths = artifact
+        .plan()
+        .topology()
+        .structural_relations()
+        .iter()
+        .filter(|relation| !interaction_relation_ids.contains(relation.relation_id()))
+        .collect::<Vec<_>>();
+    let ledger = &results.joint_stage_structural_coefficients;
+    if ledger.len() != plan_paths.len() {
+        return Err(invalid_general_sem_authority(format!(
+            "joint-stage structural ledger count {} differs from compiled path count {}",
+            ledger.len(),
+            plan_paths.len()
+        )));
+    }
+    for (compiled, coefficient) in plan_paths.iter().zip(ledger) {
+        let expected_role = match compiled.role() {
+            qpls_core::StructuralRelationRoleV4::Structural => {
+                qpls_core::CanonicalStructuralRelationRoleV1::Structural
+            }
+            qpls_core::StructuralRelationRoleV4::Control => {
+                qpls_core::CanonicalStructuralRelationRoleV1::Control
+            }
+        };
+        if coefficient.relation_id != compiled.relation_id()
+            || coefficient.parameter_id != compiled.parameter_id()
+            || coefficient.trace.model_id != artifact.plan().model_id()
+            || coefficient.trace.capability_cell != *artifact.capability_cell()
+            || coefficient.source_id != compiled.source()
+            || coefficient.target_id != compiled.target()
+            || coefficient.role != expected_role
+            || coefficient.stage != qpls_core::CanonicalStructuralEstimateStageV1::JointStageTwo
+            || coefficient.method_version
+                != GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+        {
+            return Err(invalid_general_sem_authority(format!(
+                "joint-stage structural coefficient {} differs from its compiled relation/parameter contract",
+                compiled.relation_id()
+            )));
+        }
+    }
+
+    let structural_table = moderation_table(document, "structural_paths")?;
+    validate_moderation_table_columns_v1(structural_table, GENERAL_SEM_STRUCTURAL_PATH_COLUMNS_V1)?;
+    let structural_coefficients = ledger
+        .iter()
+        .filter(|coefficient| {
+            coefficient.role == qpls_core::CanonicalStructuralRelationRoleV1::Structural
+        })
+        .collect::<Vec<_>>();
+    if structural_table.rows.len() != structural_coefficients.len() {
+        return Err(invalid_general_sem_authority(
+            "structural_paths row count differs from the typed joint-stage structural ledger",
+        ));
+    }
+    for (index, (row, coefficient)) in structural_table
+        .rows
+        .iter()
+        .zip(structural_coefficients)
+        .enumerate()
+    {
+        if row.id != format!("joint_path_{index:04}") {
+            return Err(invalid_general_sem_authority(
+                "structural_paths row identities are not canonical joint-stage order",
+            ));
+        }
+        moderation_text_cell_v1(&row.cells[0], &coefficient.relation_id, "relation_id")?;
+        moderation_text_cell_v1(&row.cells[1], &coefficient.parameter_id, "parameter_id")?;
+        moderation_text_cell_v1(&row.cells[2], &coefficient.source_id, "source")?;
+        moderation_text_cell_v1(&row.cells[3], &coefficient.target_id, "target")?;
+        moderation_number_cell_v1(
+            &row.cells[4],
+            coefficient.estimate.estimate,
+            "structural coefficient",
+        )?;
+    }
+
+    let control_coefficients = ledger
+        .iter()
+        .filter(|coefficient| {
+            coefficient.role == qpls_core::CanonicalStructuralRelationRoleV1::Control
+        })
+        .collect::<Vec<_>>();
+    if control_coefficients.is_empty() {
+        if document
+            .tables
+            .iter()
+            .any(|table| table.id == crate::PLS_CONTROL_ESTIMATES_TABLE_ID_V2)
+        {
+            return Err(invalid_general_sem_authority(
+                "control table exists without typed joint-stage control coefficients",
+            ));
+        }
+    } else {
+        let control_table = moderation_table(document, crate::PLS_CONTROL_ESTIMATES_TABLE_ID_V2)?;
+        validate_moderation_table_columns_v1(control_table, GENERAL_SEM_CONTROL_COLUMNS_V1)?;
+        if control_table.rows.len() != control_coefficients.len() {
+            return Err(invalid_general_sem_authority(
+                "control table row count differs from the typed joint-stage control ledger",
+            ));
+        }
+        for (index, (row, coefficient)) in control_table
+            .rows
+            .iter()
+            .zip(control_coefficients)
+            .enumerate()
+        {
+            if row.id != format!("joint_control_{index:04}") {
+                return Err(invalid_general_sem_authority(
+                    "control table row identities are not canonical joint-stage order",
+                ));
+            }
+            moderation_text_cell_v1(&row.cells[0], &coefficient.relation_id, "control relation")?;
+            moderation_text_cell_v1(
+                &row.cells[1],
+                &coefficient.parameter_id,
+                "control parameter",
+            )?;
+            moderation_text_cell_v1(&row.cells[2], &coefficient.source_id, "control source")?;
+            moderation_text_cell_v1(&row.cells[3], &coefficient.target_id, "control target")?;
+            moderation_nonempty_text_cell_v1(&row.cells[4], "control label")?;
+            moderation_number_cell_v1(
+                &row.cells[5],
+                coefficient.estimate.estimate,
+                "control coefficient",
+            )?;
+        }
+    }
+
+    for interaction in &results.interaction_effects {
+        let focal_coefficient = ledger
+            .iter()
+            .find(|coefficient| coefficient.relation_id == interaction.focal_relation_id)
+            .ok_or_else(|| {
+                invalid_general_sem_authority(format!(
+                    "interaction {} has no joint-stage focal relation coefficient",
+                    interaction.interaction_id
+                ))
+            })?;
+        let zero_probe = results
+            .conditional_effects
+            .iter()
+            .find(|effect| {
+                effect.interaction_effect_id.as_deref() == Some(interaction.effect_id.as_str())
+                    && effect.probe_value_index == 1
+                    && effect.moderator_value.to_bits() == 0.0_f64.to_bits()
+            })
+            .ok_or_else(|| {
+                invalid_general_sem_authority(format!(
+                    "interaction {} omits its frozen zero-moderator slope",
+                    interaction.interaction_id
+                ))
+            })?;
+        if zero_probe.value.estimate.to_bits() != focal_coefficient.estimate.estimate.to_bits() {
+            return Err(invalid_general_sem_authority(format!(
+                "interaction {} zero-probe slope differs from its joint-stage focal coefficient",
+                interaction.interaction_id
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_general_sem_moderation_result_tables_v1(
+    document: &CanonicalResultDocumentV2,
+    results: &qpls_core::CanonicalGeneralSemResultsV1,
+    moderation: &crate::CapabilityCellReferenceV2,
+) -> Result<(), ProjectArchiveV6Error> {
+    let interactions = results
+        .interaction_effects
+        .iter()
+        .map(|effect| (effect.interaction_id.as_str(), effect))
+        .collect::<BTreeMap<_, _>>();
+    if interactions.len() != results.interaction_effects.len()
+        || results.conditional_effect_probes.len() != interactions.len()
+        || results.conditional_effects.len() != interactions.len() * 3
+        || results.interaction_plots.len() != interactions.len()
+    {
+        return Err(invalid_general_sem_authority(
+            "typed moderation effects, probes, conditional slopes, and plots are not one-to-one",
+        ));
+    }
+
+    let interaction_table =
+        moderation_table(document, GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1)?;
+    validate_moderation_table_columns_v1(
+        interaction_table,
+        GENERAL_SEM_INTERACTION_EFFECT_COLUMNS_V1,
+    )?;
+    if interaction_table.rows.len() != results.interaction_effects.len() {
+        return Err(invalid_general_sem_authority(
+            "interaction-effect table row count differs from the typed interaction ledger",
+        ));
+    }
+    for (index, (row, effect)) in interaction_table
+        .rows
+        .iter()
+        .zip(&results.interaction_effects)
+        .enumerate()
+    {
+        if row.id != format!("interaction_effect_{index:04}") {
+            return Err(invalid_general_sem_authority(
+                "interaction-effect rows are not in canonical typed order",
+            ));
+        }
+        for (cell, expected, context) in [
+            (
+                &row.cells[0],
+                effect.effect_id.as_str(),
+                "interaction effect ID",
+            ),
+            (
+                &row.cells[1],
+                effect.interaction_id.as_str(),
+                "interaction ID",
+            ),
+            (
+                &row.cells[2],
+                effect.focal_relation_id.as_str(),
+                "focal relation",
+            ),
+            (
+                &row.cells[3],
+                effect.interaction_effect_relation_id.as_str(),
+                "interaction relation",
+            ),
+            (
+                &row.cells[4],
+                effect.interaction_effect_parameter_id.as_str(),
+                "interaction parameter",
+            ),
+            (
+                &row.cells[5],
+                effect.focal_predictor_id.as_str(),
+                "focal predictor",
+            ),
+            (&row.cells[6], effect.moderator_id.as_str(), "moderator"),
+            (&row.cells[7], effect.outcome_id.as_str(), "outcome"),
+            (
+                &row.cells[8],
+                effect.generated_product_column_id.as_str(),
+                "generated product column",
+            ),
+            (
+                &row.cells[9],
+                effect.stage_one_model_scientific_sha256.as_str(),
+                "stage-one projection digest",
+            ),
+        ] {
+            moderation_text_cell_v1(cell, expected, context)?;
+        }
+        moderation_number_cell_v1(
+            &row.cells[10],
+            f64::from(effect.observation_count),
+            "interaction observation count",
+        )?;
+        moderation_number_cell_v1(
+            &row.cells[11],
+            effect.standardized_product_coefficient.estimate,
+            "standardized product coefficient",
+        )?;
+        moderation_number_cell_v1(
+            &row.cells[12],
+            effect.scientific_rescaled_gamma.estimate,
+            "scientific rescaled gamma",
+        )?;
+        moderation_number_cell_v1(
+            &row.cells[13],
+            effect.unstandardized_product_mean,
+            "product mean",
+        )?;
+        moderation_number_cell_v1(
+            &row.cells[14],
+            effect.unstandardized_product_sample_standard_deviation,
+            "product sample standard deviation",
+        )?;
+        moderation_text_cell_v1(&row.cells[15], "two_stage", "construction method")?;
+        moderation_text_cell_v1(
+            &row.cells[16],
+            &effect.product_scale_version,
+            "product-scale version",
+        )?;
+        moderation_text_cell_v1(&row.cells[17], "strong", "hierarchy policy")?;
+        moderation_text_cell_v1(
+            &row.cells[18],
+            &effect.hierarchy_policy_version,
+            "hierarchy-policy version",
+        )?;
+        moderation_text_cell_v1(
+            &row.cells[19],
+            &effect.conditioning_policy_version,
+            "conditioning-policy version",
+        )?;
+        moderation_text_cell_v1(&row.cells[20], &effect.method_version, "method version")?;
+    }
+
+    let conditional_table = moderation_table(document, GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1)?;
+    validate_moderation_table_columns_v1(
+        conditional_table,
+        GENERAL_SEM_CONDITIONAL_SLOPE_COLUMNS_V1,
+    )?;
+    if conditional_table.rows.len() != results.conditional_effects.len() {
+        return Err(invalid_general_sem_authority(
+            "conditional-slope table row count differs from typed conditional effects",
+        ));
+    }
+    for (index, (row, effect)) in conditional_table
+        .rows
+        .iter()
+        .zip(&results.conditional_effects)
+        .enumerate()
+    {
+        let interaction = interactions
+            .get(effect.interaction_id.as_str())
+            .ok_or_else(|| {
+                invalid_general_sem_authority("conditional effect has no interaction")
+            })?;
+        let interaction_effect_id = effect.interaction_effect_id.as_deref().ok_or_else(|| {
+            invalid_general_sem_authority("conditional effect omits interaction-effect identity")
+        })?;
+        if row.id != format!("conditional_slope_{index:04}") {
+            return Err(invalid_general_sem_authority(
+                "conditional-slope rows are not in canonical typed order",
+            ));
+        }
+        for (cell, expected, context) in [
+            (
+                &row.cells[0],
+                effect.effect_id.as_str(),
+                "conditional effect ID",
+            ),
+            (
+                &row.cells[1],
+                effect.interaction_id.as_str(),
+                "conditional interaction",
+            ),
+            (
+                &row.cells[2],
+                interaction_effect_id,
+                "conditional interaction effect",
+            ),
+            (
+                &row.cells[3],
+                effect.focal_relation_id.as_str(),
+                "conditional focal relation",
+            ),
+            (&row.cells[4], effect.probe_id.as_str(), "conditional probe"),
+        ] {
+            moderation_text_cell_v1(cell, expected, context)?;
+        }
+        moderation_number_cell_v1(
+            &row.cells[5],
+            f64::from(effect.probe_value_index),
+            "conditional probe index",
+        )?;
+        moderation_text_cell_v1(&row.cells[6], &effect.moderator_id, "conditional moderator")?;
+        moderation_text_cell_v1(
+            &row.cells[7],
+            &interaction.outcome_id,
+            "conditional outcome",
+        )?;
+        moderation_number_cell_v1(
+            &row.cells[8],
+            effect.moderator_value,
+            "conditional moderator value",
+        )?;
+        moderation_number_cell_v1(
+            &row.cells[9],
+            effect.value.estimate,
+            "conditional slope estimate",
+        )?;
+        moderation_text_cell_v1(
+            &row.cells[10],
+            &interaction.conditioning_policy_version,
+            "conditional policy version",
+        )?;
+    }
+
+    let plot_table = moderation_table(document, GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1)?;
+    validate_moderation_table_columns_v1(plot_table, GENERAL_SEM_INTERACTION_PLOT_COLUMNS_V1)?;
+    let plot_points = results
+        .interaction_plots
+        .iter()
+        .flat_map(|plot| {
+            plot.series.iter().flat_map(move |series| {
+                series.points.iter().map(move |point| (plot, series, point))
+            })
+        })
+        .collect::<Vec<_>>();
+    if plot_table.rows.len() != plot_points.len() {
+        return Err(invalid_general_sem_authority(
+            "interaction plot table row count differs from typed plot points",
+        ));
+    }
+    for (index, (row, (plot, series, point))) in plot_table.rows.iter().zip(plot_points).enumerate()
+    {
+        let interaction_effect_id = plot.interaction_effect_id.as_deref().ok_or_else(|| {
+            invalid_general_sem_authority("interaction plot omits interaction-effect identity")
+        })?;
+        if row.id != format!("interaction_plot_point_{index:04}") {
+            return Err(invalid_general_sem_authority(
+                "interaction plot rows are not in canonical typed order",
+            ));
+        }
+        for (cell, expected, context) in [
+            (&row.cells[0], plot.plot_id.as_str(), "plot ID"),
+            (
+                &row.cells[1],
+                plot.interaction_id.as_str(),
+                "plot interaction",
+            ),
+            (
+                &row.cells[2],
+                interaction_effect_id,
+                "plot interaction effect",
+            ),
+            (
+                &row.cells[3],
+                plot.focal_relation_id.as_str(),
+                "plot focal relation",
+            ),
+            (
+                &row.cells[4],
+                plot.focal_predictor_id.as_str(),
+                "plot focal predictor",
+            ),
+            (&row.cells[5], plot.moderator_id.as_str(), "plot moderator"),
+            (&row.cells[6], plot.outcome_id.as_str(), "plot outcome"),
+            (&row.cells[7], series.series_id.as_str(), "plot series"),
+            (&row.cells[8], series.probe_id.as_str(), "plot probe"),
+        ] {
+            moderation_text_cell_v1(cell, expected, context)?;
+        }
+        moderation_number_cell_v1(
+            &row.cells[9],
+            f64::from(series.probe_value_index),
+            "plot probe index",
+        )?;
+        moderation_number_cell_v1(
+            &row.cells[10],
+            series.moderator_value,
+            "plot moderator value",
+        )?;
+        moderation_number_cell_v1(&row.cells[11], point.focal_value, "plot focal value")?;
+        moderation_number_cell_v1(
+            &row.cells[12],
+            point.predicted_value,
+            "plot predicted value",
+        )?;
+        moderation_optional_number_cell_v1(&row.cells[13], point.lower, "plot lower bound")?;
+        moderation_optional_number_cell_v1(&row.cells[14], point.upper, "plot upper bound")?;
+    }
+
+    for table in [interaction_table, conditional_table, plot_table] {
+        if table.capability_cells.as_deref() != Some(std::slice::from_ref(moderation)) {
+            return Err(invalid_general_sem_authority(
+                "typed moderation tables must be owned only by the exact moderation cell",
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validate_general_sem_moderation_charts_v1(
+    document: &CanonicalResultDocumentV2,
+    results: &qpls_core::CanonicalGeneralSemResultsV1,
+) -> Result<(), ProjectArchiveV6Error> {
+    if document.charts.len() != results.interaction_plots.len() {
+        return Err(invalid_general_sem_authority(
+            "moderation chart count differs from typed interaction plot count",
+        ));
+    }
+    for (plot_index, (chart, plot)) in document
+        .charts
+        .iter()
+        .zip(&results.interaction_plots)
+        .enumerate()
+    {
+        let expected_x_axis_label = format!("{} (standardized)", plot.focal_predictor_id);
+        let expected_y_axis_label = format!("{} (predicted standardized)", plot.outcome_id);
+        if chart.id != format!("general_sem_interaction_chart_{plot_index:04}")
+            || chart.title != format!("Interaction {}", plot.interaction_id)
+            || chart.kind != crate::CanonicalChartKindV2::Line
+            || chart.source_table_id.as_deref() != Some(GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1)
+            || chart.series.len() != plot.series.len()
+            || chart.display.palette.is_some()
+            || chart.display.show_legend != Some(true)
+            || chart.display.show_values != Some(false)
+            || chart.display.x_axis_label.as_deref() != Some(expected_x_axis_label.as_str())
+            || chart.display.y_axis_label.as_deref() != Some(expected_y_axis_label.as_str())
+        {
+            return Err(invalid_general_sem_authority(format!(
+                "chart {} differs from its typed interaction plot inventory",
+                chart.id
+            )));
+        }
+        for (series, typed_series) in chart.series.iter().zip(&plot.series) {
+            if series.id != typed_series.series_id
+                || series.label
+                    != format!(
+                        "{} = {:.4}",
+                        plot.moderator_id, typed_series.moderator_value
+                    )
+                || series.group.as_deref() != Some(plot.interaction_id.as_str())
+                || series.points.len() != typed_series.points.len()
+            {
+                return Err(invalid_general_sem_authority(format!(
+                    "chart {} series {} differs from its typed plot series",
+                    chart.id, series.id
+                )));
+            }
+            for (point, typed_point) in series.points.iter().zip(&typed_series.points) {
+                let crate::CanonicalChartXValueV2::Number(x) = &point.x else {
+                    return Err(invalid_general_sem_authority(format!(
+                        "chart {} contains a nonnumeric focal coordinate",
+                        chart.id
+                    )));
+                };
+                if x.to_bits() != typed_point.focal_value.to_bits()
+                    || point.y.to_bits() != typed_point.predicted_value.to_bits()
+                    || !same_optional_f64_bits_v1(point.lower, typed_point.lower)
+                    || !same_optional_f64_bits_v1(point.upper, typed_point.upper)
+                    || point.label.is_some()
+                {
+                    return Err(invalid_general_sem_authority(format!(
+                        "chart {} point differs bitwise from its typed interaction plot",
+                        chart.id
+                    )));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn same_optional_f64_bits_v1(left: Option<f64>, right: Option<f64>) -> bool {
+    match (left, right) {
+        (Some(left), Some(right)) => left.to_bits() == right.to_bits(),
+        (None, None) => true,
+        _ => false,
+    }
 }
 
 fn is_exact_recipe_v4_pls_result(document: &CanonicalResultDocumentV2) -> bool {
@@ -8586,8 +9574,341 @@ mod tests {
         model.ensure_valid().unwrap();
     }
 
-    fn general_sem_schema6_moderation_authority_fixture()
-    -> (ProjectArchiveDocumentV6, CanonicalResultDocumentV2) {
+    fn moderation_test_columns(ids: &[&str], number_ids: &[&str]) -> Vec<CanonicalResultColumnV2> {
+        ids.iter()
+            .map(|id| {
+                nonlinear_test_column(
+                    id,
+                    if number_ids.contains(id) {
+                        CanonicalColumnTypeV2::Number
+                    } else {
+                        CanonicalColumnTypeV2::Text
+                    },
+                )
+            })
+            .collect()
+    }
+
+    fn moderation_test_missing() -> CanonicalResultCellV2 {
+        CanonicalResultCellV2::Missing {
+            reason: CanonicalMissingReasonV2::NotEstimated,
+            display: None,
+        }
+    }
+
+    fn moderation_test_stage_one_table(
+        id: &str,
+        owner: &crate::CapabilityCellReferenceV2,
+    ) -> CanonicalResultTableV2 {
+        nonlinear_test_table(
+            id,
+            vec![nonlinear_test_column("value", CanonicalColumnTypeV2::Text)],
+            vec![CanonicalResultRowV2 {
+                id: format!("{id}_row"),
+                cells: vec![nonlinear_test_text("stage_one")],
+            }],
+            owner.clone(),
+        )
+    }
+
+    fn moderation_test_point_estimate(value: f64) -> qpls_core::CanonicalGeneralSemEstimateV1 {
+        qpls_core::CanonicalGeneralSemEstimateV1 {
+            estimate: value,
+            bootstrap_mean: None,
+            bootstrap_bias: None,
+            standard_error: None,
+            lower: None,
+            upper: None,
+            p_value: None,
+            bootstrap_usable_replicates: None,
+            bootstrap_two_sided_exceedances: None,
+        }
+    }
+
+    fn populate_moderation_test_joint_stage_ledger(
+        results: &mut qpls_core::CanonicalGeneralSemResultsV1,
+        execution: &qpls_runner::RecipeV4GeneralSemPlsExecutionResultV1,
+        artifact: &qpls_core::CompiledGeneralSemPlsRecipeV1,
+        model_id: &str,
+    ) {
+        let interactions = execution
+            .interaction_point_estimation()
+            .expect("the moderation fixture executed the joint stage");
+        let trace = qpls_core::CanonicalGeneralSemResultTraceV1 {
+            model_id: model_id.to_string(),
+            capability_cell: artifact.capability_cell().clone(),
+        };
+        results.joint_stage_structural_coefficients = interactions
+            .structural_coefficients()
+            .iter()
+            .map(|coefficient| {
+                let relation = artifact
+                    .plan()
+                    .base_plan()
+                    .paths()
+                    .iter()
+                    .find(|relation| relation.relation_id() == coefficient.relation_id())
+                    .expect("joint-stage coefficient belongs to the compiled base plan");
+                qpls_core::CanonicalJointStageStructuralCoefficientResultV1 {
+                    relation_id: coefficient.relation_id().to_string(),
+                    parameter_id: relation.parameter_id().to_string(),
+                    trace: trace.clone(),
+                    source_id: coefficient.source_id().to_string(),
+                    target_id: coefficient.target_id().to_string(),
+                    role: match relation.role() {
+                        StructuralRelationRoleV4::Structural => {
+                            qpls_core::CanonicalStructuralRelationRoleV1::Structural
+                        }
+                        StructuralRelationRoleV4::Control => {
+                            qpls_core::CanonicalStructuralRelationRoleV1::Control
+                        }
+                    },
+                    estimate: moderation_test_point_estimate(coefficient.estimate()),
+                    stage: qpls_core::CanonicalStructuralEstimateStageV1::JointStageTwo,
+                    method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1.into(),
+                }
+            })
+            .collect();
+    }
+
+    fn moderation_test_result_tables(
+        results: &qpls_core::CanonicalGeneralSemResultsV1,
+        base: &crate::CapabilityCellReferenceV2,
+        moderation: &crate::CapabilityCellReferenceV2,
+    ) -> Vec<CanonicalResultTableV2> {
+        let structural_rows = results
+            .joint_stage_structural_coefficients
+            .iter()
+            .filter(|coefficient| {
+                coefficient.role == qpls_core::CanonicalStructuralRelationRoleV1::Structural
+            })
+            .enumerate()
+            .map(|(index, coefficient)| CanonicalResultRowV2 {
+                id: format!("joint_path_{index:04}"),
+                cells: vec![
+                    nonlinear_test_text(&coefficient.relation_id),
+                    nonlinear_test_text(&coefficient.parameter_id),
+                    nonlinear_test_text(&coefficient.source_id),
+                    nonlinear_test_text(&coefficient.target_id),
+                    nonlinear_test_number(coefficient.estimate.estimate),
+                ],
+            })
+            .collect();
+        let structural = nonlinear_test_table(
+            "structural_paths",
+            moderation_test_columns(GENERAL_SEM_STRUCTURAL_PATH_COLUMNS_V1, &["coefficient"]),
+            structural_rows,
+            moderation.clone(),
+        );
+
+        let interaction_rows = results
+            .interaction_effects
+            .iter()
+            .enumerate()
+            .map(|(index, effect)| CanonicalResultRowV2 {
+                id: format!("interaction_effect_{index:04}"),
+                cells: vec![
+                    nonlinear_test_text(&effect.effect_id),
+                    nonlinear_test_text(&effect.interaction_id),
+                    nonlinear_test_text(&effect.focal_relation_id),
+                    nonlinear_test_text(&effect.interaction_effect_relation_id),
+                    nonlinear_test_text(&effect.interaction_effect_parameter_id),
+                    nonlinear_test_text(&effect.focal_predictor_id),
+                    nonlinear_test_text(&effect.moderator_id),
+                    nonlinear_test_text(&effect.outcome_id),
+                    nonlinear_test_text(&effect.generated_product_column_id),
+                    nonlinear_test_text(&effect.stage_one_model_scientific_sha256),
+                    nonlinear_test_number(f64::from(effect.observation_count)),
+                    nonlinear_test_number(effect.standardized_product_coefficient.estimate),
+                    nonlinear_test_number(effect.scientific_rescaled_gamma.estimate),
+                    nonlinear_test_number(effect.unstandardized_product_mean),
+                    nonlinear_test_number(effect.unstandardized_product_sample_standard_deviation),
+                    nonlinear_test_text("two_stage"),
+                    nonlinear_test_text(&effect.product_scale_version),
+                    nonlinear_test_text("strong"),
+                    nonlinear_test_text(&effect.hierarchy_policy_version),
+                    nonlinear_test_text(&effect.conditioning_policy_version),
+                    nonlinear_test_text(&effect.method_version),
+                ],
+            })
+            .collect();
+        let interactions = nonlinear_test_table(
+            GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1,
+            moderation_test_columns(
+                GENERAL_SEM_INTERACTION_EFFECT_COLUMNS_V1,
+                &[
+                    "observation_count",
+                    "standardized_product_coefficient",
+                    "scientific_rescaled_gamma",
+                    "product_mean",
+                    "product_sample_sd",
+                ],
+            ),
+            interaction_rows,
+            moderation.clone(),
+        );
+
+        let interactions_by_id = results
+            .interaction_effects
+            .iter()
+            .map(|effect| (effect.interaction_id.as_str(), effect))
+            .collect::<BTreeMap<_, _>>();
+        let conditional_rows = results
+            .conditional_effects
+            .iter()
+            .enumerate()
+            .map(|(index, effect)| {
+                let interaction = interactions_by_id[effect.interaction_id.as_str()];
+                CanonicalResultRowV2 {
+                    id: format!("conditional_slope_{index:04}"),
+                    cells: vec![
+                        nonlinear_test_text(&effect.effect_id),
+                        nonlinear_test_text(&effect.interaction_id),
+                        nonlinear_test_text(
+                            effect
+                                .interaction_effect_id
+                                .as_deref()
+                                .expect("typed conditional effect is interaction-bound"),
+                        ),
+                        nonlinear_test_text(&effect.focal_relation_id),
+                        nonlinear_test_text(&effect.probe_id),
+                        nonlinear_test_number(f64::from(effect.probe_value_index)),
+                        nonlinear_test_text(&effect.moderator_id),
+                        nonlinear_test_text(&interaction.outcome_id),
+                        nonlinear_test_number(effect.moderator_value),
+                        nonlinear_test_number(effect.value.estimate),
+                        nonlinear_test_text(&interaction.conditioning_policy_version),
+                    ],
+                }
+            })
+            .collect();
+        let conditional = nonlinear_test_table(
+            GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1,
+            moderation_test_columns(
+                GENERAL_SEM_CONDITIONAL_SLOPE_COLUMNS_V1,
+                &["probe_value_index", "moderator_value", "estimate"],
+            ),
+            conditional_rows,
+            moderation.clone(),
+        );
+
+        let plot_rows = results
+            .interaction_plots
+            .iter()
+            .flat_map(|plot| {
+                plot.series.iter().flat_map(move |series| {
+                    series.points.iter().map(move |point| (plot, series, point))
+                })
+            })
+            .enumerate()
+            .map(|(index, (plot, series, point))| CanonicalResultRowV2 {
+                id: format!("interaction_plot_point_{index:04}"),
+                cells: vec![
+                    nonlinear_test_text(&plot.plot_id),
+                    nonlinear_test_text(&plot.interaction_id),
+                    nonlinear_test_text(
+                        plot.interaction_effect_id
+                            .as_deref()
+                            .expect("typed plot is interaction-bound"),
+                    ),
+                    nonlinear_test_text(&plot.focal_relation_id),
+                    nonlinear_test_text(&plot.focal_predictor_id),
+                    nonlinear_test_text(&plot.moderator_id),
+                    nonlinear_test_text(&plot.outcome_id),
+                    nonlinear_test_text(&series.series_id),
+                    nonlinear_test_text(&series.probe_id),
+                    nonlinear_test_number(f64::from(series.probe_value_index)),
+                    nonlinear_test_number(series.moderator_value),
+                    nonlinear_test_number(point.focal_value),
+                    nonlinear_test_number(point.predicted_value),
+                    point
+                        .lower
+                        .map_or_else(moderation_test_missing, nonlinear_test_number),
+                    point
+                        .upper
+                        .map_or_else(moderation_test_missing, nonlinear_test_number),
+                ],
+            })
+            .collect();
+        let plots = nonlinear_test_table(
+            GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1,
+            moderation_test_columns(
+                GENERAL_SEM_INTERACTION_PLOT_COLUMNS_V1,
+                &[
+                    "probe_value_index",
+                    "moderator_value",
+                    "focal_value",
+                    "predicted_value",
+                    "lower",
+                    "upper",
+                ],
+            ),
+            plot_rows,
+            moderation.clone(),
+        );
+
+        vec![
+            moderation_test_stage_one_table("estimation_summary", base),
+            moderation_test_stage_one_table("outer_model", base),
+            structural,
+            moderation_test_stage_one_table(
+                crate::PLS_ALGORITHM_CONVERGENCE_SUMMARY_TABLE_ID_V1,
+                base,
+            ),
+            moderation_test_stage_one_table(crate::PLS_ALGORITHM_BLOCK_ORDER_TABLE_ID_V1, base),
+            interactions,
+            conditional,
+            plots,
+        ]
+    }
+
+    fn moderation_test_charts(
+        results: &qpls_core::CanonicalGeneralSemResultsV1,
+    ) -> Vec<CanonicalResultChartV2> {
+        results
+            .interaction_plots
+            .iter()
+            .enumerate()
+            .map(|(plot_index, plot)| CanonicalResultChartV2 {
+                id: format!("general_sem_interaction_chart_{plot_index:04}"),
+                title: format!("Interaction {}", plot.interaction_id),
+                description: "Exact typed interaction plot fixture".into(),
+                kind: CanonicalChartKindV2::Line,
+                series: plot
+                    .series
+                    .iter()
+                    .map(|series| CanonicalChartSeriesV2 {
+                        id: series.series_id.clone(),
+                        label: format!("{} = {:.4}", plot.moderator_id, series.moderator_value),
+                        group: Some(plot.interaction_id.clone()),
+                        points: series
+                            .points
+                            .iter()
+                            .map(|point| CanonicalChartPointV2 {
+                                x: CanonicalChartXValueV2::Number(point.focal_value),
+                                y: point.predicted_value,
+                                lower: point.lower,
+                                upper: point.upper,
+                                label: None,
+                            })
+                            .collect(),
+                    })
+                    .collect(),
+                source_table_id: Some(GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1.into()),
+                display: CanonicalChartDisplayOptionsV2 {
+                    palette: None,
+                    show_legend: Some(true),
+                    show_values: Some(false),
+                    x_axis_label: Some(format!("{} (standardized)", plot.focal_predictor_id)),
+                    y_axis_label: Some(format!("{} (predicted standardized)", plot.outcome_id)),
+                },
+            })
+            .collect()
+    }
+
+    fn general_sem_schema6_moderation_authority_fixture(
+        same_focal: bool,
+    ) -> (ProjectArchiveDocumentV6, CanonicalResultDocumentV2) {
         let source_model = ModelSpec {
             id: Uuid::from_u128(0x4d4f_4452_5343_4845_4d41_3601),
             name: "Schema-6 simultaneous moderation authority".into(),
@@ -8670,12 +9991,21 @@ mod tests {
             "construct:x",
             "construct:w",
         );
-        add_schema6_two_way_interaction(
-            &mut model,
-            "interaction:x_by_z",
-            "construct:x",
-            "construct:z",
-        );
+        if same_focal {
+            add_schema6_two_way_interaction(
+                &mut model,
+                "interaction:x_by_z",
+                "construct:x",
+                "construct:z",
+            );
+        } else {
+            add_schema6_two_way_interaction(
+                &mut model,
+                "interaction:w_by_z",
+                "construct:w",
+                "construct:z",
+            );
+        }
         let model_scientific_sha256 = model.scientific_sha256().unwrap();
         recipe.model_binding = AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
             model_id: model.id.clone(),
@@ -8693,7 +10023,13 @@ mod tests {
             |_| {},
         )
         .unwrap();
-        let general_sem_results = execution.canonical_general_sem_results_v1().unwrap();
+        let mut general_sem_results = execution.canonical_general_sem_results_v1().unwrap();
+        populate_moderation_test_joint_stage_ledger(
+            &mut general_sem_results,
+            &execution,
+            &artifact,
+            &model.id,
+        );
 
         let mut project = ProjectArchiveDocumentV6::new_general_sem_v1(
             Uuid::from_u128(0x4d4f_4452_5343_4845_4d41_3603),
@@ -8727,10 +10063,18 @@ mod tests {
         )
         .unwrap();
 
+        let moderation_cell = project_capability_cell_v2(artifact.capability_cell());
+        let base_cell = moderation_base_capability_cell_v1(&recipe);
+        let mut capability_cells = vec![base_cell.clone(), moderation_cell.clone()];
+        sort_project_capability_cells_v1(&mut capability_cells);
+        let tables =
+            moderation_test_result_tables(&general_sem_results, &base_cell, &moderation_cell);
+        let charts = moderation_test_charts(&general_sem_results);
+        let chart_ids = charts.iter().map(|chart| chart.id.clone()).collect();
         let canonical = CanonicalResultDocumentV2 {
             schema_version: 2,
             document_id: "general_sem_moderation_authority_document".into(),
-            title: "General SEM simultaneous moderation results".into(),
+            title: "General SEM simultaneous two-way PLS moderation point estimates".into(),
             provenance: CanonicalResultProvenanceV2 {
                 run_id: "general_sem_moderation_authority_run".into(),
                 project_id: project.project_id.to_string(),
@@ -8740,7 +10084,7 @@ mod tests {
                 dataset_fingerprint: dataset.fingerprint.0,
                 recipe_id: recipe.id.to_string(),
                 recipe_digest: artifact.recipe_analytical_sha256().into(),
-                capability_cell: project_capability_cell_v2(artifact.capability_cell()),
+                capability_cell: moderation_cell.clone(),
                 method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1.into(),
                 engine_version: execution.adapter_version().into(),
                 seed: Some(recipe.settings.seed),
@@ -8748,17 +10092,71 @@ mod tests {
                 started_at: "2026-08-19T00:00:00Z".into(),
                 completed_at: "2026-08-19T00:00:01Z".into(),
             },
-            capability_cells: Some(vec![project_capability_cell_v2(artifact.capability_cell())]),
+            capability_cells: Some(capability_cells),
             general_sem_results: Some(general_sem_results),
-            sections: Vec::new(),
-            tables: Vec::new(),
-            charts: Vec::new(),
+            sections: vec![
+                CanonicalResultSectionV2 {
+                    id: "run_details".into(),
+                    title: "Stage-one score estimation".into(),
+                    description: Some("Stage-one fixture".into()),
+                    table_ids: vec![
+                        "estimation_summary".into(),
+                        crate::PLS_ALGORITHM_CONVERGENCE_SUMMARY_TABLE_ID_V1.into(),
+                        crate::PLS_ALGORITHM_BLOCK_ORDER_TABLE_ID_V1.into(),
+                    ],
+                    chart_ids: Vec::new(),
+                    capability_cells: Some(vec![base_cell.clone()]),
+                },
+                CanonicalResultSectionV2 {
+                    id: "measurement_model".into(),
+                    title: "Stage-one measurement model".into(),
+                    description: Some("Stage-one measurement fixture".into()),
+                    table_ids: vec!["outer_model".into()],
+                    chart_ids: Vec::new(),
+                    capability_cells: Some(vec![base_cell]),
+                },
+                CanonicalResultSectionV2 {
+                    id: "structural_model".into(),
+                    title: "Joint stage-two structural model".into(),
+                    description: Some("Final joint-stage fixture".into()),
+                    table_ids: vec!["structural_paths".into()],
+                    chart_ids: Vec::new(),
+                    capability_cells: Some(vec![moderation_cell.clone()]),
+                },
+                CanonicalResultSectionV2 {
+                    id: GENERAL_SEM_MODERATION_SECTION_ID_V1.into(),
+                    title: "Moderation effects".into(),
+                    description: Some("Typed moderation fixture".into()),
+                    table_ids: vec![
+                        GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1.into(),
+                        GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1.into(),
+                        GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1.into(),
+                    ],
+                    chart_ids,
+                    capability_cells: Some(vec![moderation_cell.clone()]),
+                },
+            ],
+            tables,
+            charts,
             notices: Vec::new(),
-            exclusions: Vec::new(),
+            exclusions: vec![
+                crate::CanonicalResultExclusionV2 {
+                    id: GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1[0].into(),
+                    capability_cell: Some(moderation_cell.clone()),
+                    title: "Moderation inference not qualified".into(),
+                    reason: "Point-only fixture".into(),
+                },
+                crate::CanonicalResultExclusionV2 {
+                    id: GENERAL_SEM_MODERATION_EXCLUSION_IDS_V1[1].into(),
+                    capability_cell: Some(moderation_cell),
+                    title: "Joint-model effects and fit not estimated".into(),
+                    reason: "No qualified joint fit fixture".into(),
+                },
+            ],
             footnotes: Vec::new(),
             presentation: CanonicalResultPresentationV2 {
-                default_section_id: None,
-                default_table_id: None,
+                default_section_id: Some(GENERAL_SEM_MODERATION_SECTION_ID_V1.into()),
+                default_table_id: Some(GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1.into()),
                 precision: 4,
                 missing_value_label: "—".into(),
                 chart_defaults: CanonicalChartDisplayOptionsV2::default(),
@@ -8769,6 +10167,77 @@ mod tests {
             .canonical_result_documents
             .push(CanonicalResultDocumentAttachmentV2::from_document(canonical.clone()).unwrap());
         (project, canonical)
+    }
+
+    fn assert_moderation_authority_rejects(
+        project: &ProjectArchiveDocumentV6,
+        document: CanonicalResultDocumentV2,
+        expected: &str,
+    ) {
+        document
+            .ensure_valid()
+            .expect("tamper fixture must remain generically canonical");
+        let mut tampered = project.clone();
+        tampered.canonical_result_documents =
+            vec![CanonicalResultDocumentAttachmentV2::from_document(document).unwrap()];
+        assert!(
+            matches!(
+                tampered.ensure_valid(),
+                Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
+                    if message.contains(expected)
+            ),
+            "expected schema-6 moderation authority error containing {expected:?}"
+        );
+    }
+
+    fn moderation_test_table_mut<'a>(
+        document: &'a mut CanonicalResultDocumentV2,
+        table_id: &str,
+    ) -> &'a mut CanonicalResultTableV2 {
+        document
+            .tables
+            .iter_mut()
+            .find(|table| table.id == table_id)
+            .unwrap_or_else(|| panic!("missing moderation fixture table {table_id}"))
+    }
+
+    fn moderation_test_number_cell_mut(cell: &mut CanonicalResultCellV2) -> &mut f64 {
+        let CanonicalResultCellV2::Number {
+            value,
+            display: None,
+        } = cell
+        else {
+            panic!("expected an undisplayed numeric moderation fixture cell")
+        };
+        value
+    }
+
+    fn coherently_tamper_joint_stage_coefficient(
+        document: &mut CanonicalResultDocumentV2,
+        relation_id: &str,
+        delta: f64,
+    ) {
+        let coefficient = document
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .joint_stage_structural_coefficients
+            .iter_mut()
+            .find(|coefficient| coefficient.relation_id == relation_id)
+            .expect("focal relation exists in the joint-stage ledger");
+        coefficient.estimate.estimate += delta;
+        let table = moderation_test_table_mut(document, "structural_paths");
+        let row = table
+            .rows
+            .iter_mut()
+            .find(|row| {
+                matches!(
+                    row.cells.first(),
+                    Some(CanonicalResultCellV2::Text { value }) if value == relation_id
+                )
+            })
+            .expect("focal relation exists in structural_paths");
+        *moderation_test_number_cell_mut(&mut row.cells[4]) += delta;
     }
 
     #[test]
@@ -8868,8 +10337,246 @@ mod tests {
     }
 
     #[test]
+    fn general_sem_moderation_archive_accepts_same_and_different_focal_models() {
+        for same_focal in [true, false] {
+            let (project, canonical) = general_sem_schema6_moderation_authority_fixture(same_focal);
+            project.ensure_valid().unwrap();
+            let results = canonical.general_sem_results.as_ref().unwrap();
+            assert_eq!(results.interaction_effects.len(), 2);
+            assert_eq!(results.conditional_effect_probes.len(), 2);
+            assert_eq!(results.conditional_effects.len(), 6);
+            assert_eq!(results.interaction_plots.len(), 2);
+            assert_eq!(results.joint_stage_structural_coefficients.len(), 3);
+            let focal_relation_ids = results
+                .interaction_effects
+                .iter()
+                .map(|effect| effect.focal_relation_id.as_str())
+                .collect::<BTreeSet<_>>();
+            assert_eq!(focal_relation_ids.len(), if same_focal { 1 } else { 2 });
+        }
+    }
+
+    #[test]
+    fn general_sem_moderation_archive_rejects_extra_inventory_and_drifted_ownership() {
+        let (project, canonical) = general_sem_schema6_moderation_authority_fixture(true);
+        project.ensure_valid().unwrap();
+
+        let mut extra_capability = canonical.clone();
+        extra_capability
+            .capability_cells
+            .as_mut()
+            .unwrap()
+            .push(project_capability_cell_v2(
+                &qpls_core::general_sem_pls_bootstrap_capability_cell_v1(),
+            ));
+        sort_project_capability_cells_v1(extra_capability.capability_cells.as_mut().unwrap());
+        assert_moderation_authority_rejects(
+            &project,
+            extra_capability,
+            "exact moderation document capability set",
+        );
+
+        let moderation_cell = canonical.provenance.capability_cell.clone();
+        let mut extra_section = canonical.clone();
+        extra_section.sections.push(CanonicalResultSectionV2 {
+            id: "unexpected_moderation_section".into(),
+            title: "Unexpected moderation section".into(),
+            description: None,
+            table_ids: Vec::new(),
+            chart_ids: Vec::new(),
+            capability_cells: Some(vec![moderation_cell.clone()]),
+        });
+        assert_moderation_authority_rejects(&project, extra_section, "section inventory or order");
+
+        let base_cell = canonical.sections[0].capability_cells.as_ref().unwrap()[0].clone();
+        let mut extra_table = canonical.clone();
+        extra_table.tables.push(moderation_test_stage_one_table(
+            "unexpected_stage_one_table",
+            &base_cell,
+        ));
+        extra_table.sections[0]
+            .table_ids
+            .push("unexpected_stage_one_table".into());
+        assert_moderation_authority_rejects(
+            &project,
+            extra_table,
+            "section table/chart membership or order",
+        );
+
+        let mut extra_chart = canonical.clone();
+        let mut chart = extra_chart.charts[0].clone();
+        chart.id = "unexpected_moderation_chart".into();
+        extra_chart.charts.push(chart);
+        extra_chart.sections[3]
+            .chart_ids
+            .push("unexpected_moderation_chart".into());
+        assert_moderation_authority_rejects(
+            &project,
+            extra_chart,
+            "section table/chart membership or order",
+        );
+
+        let mut extra_exclusion = canonical.clone();
+        let mut exclusion = extra_exclusion.exclusions[0].clone();
+        exclusion.id = "unexpected_moderation_exclusion".into();
+        extra_exclusion.exclusions.push(exclusion);
+        assert_moderation_authority_rejects(&project, extra_exclusion, "exclusion inventory");
+
+        let mut drifted_owner = canonical;
+        let table = moderation_test_table_mut(&mut drifted_owner, "estimation_summary");
+        table.capability_cells = Some(vec![moderation_cell.clone()]);
+        let mut section_cells = vec![base_cell, moderation_cell];
+        sort_project_capability_cells_v1(&mut section_cells);
+        drifted_owner.sections[0].capability_cells = Some(section_cells);
+        assert_moderation_authority_rejects(
+            &project,
+            drifted_owner,
+            "stage-one moderation sections",
+        );
+    }
+
+    #[test]
+    fn general_sem_moderation_archive_reconciles_every_typed_table_and_chart_value() {
+        let (project, canonical) = general_sem_schema6_moderation_authority_fixture(true);
+        project.ensure_valid().unwrap();
+
+        let mut structural_number = canonical.clone();
+        let table = moderation_test_table_mut(&mut structural_number, "structural_paths");
+        *moderation_test_number_cell_mut(&mut table.rows[0].cells[4]) += 0.125;
+        assert_moderation_authority_rejects(&project, structural_number, "structural coefficient");
+
+        let mut coherent_parameter_identity = canonical.clone();
+        let relation_id = coherent_parameter_identity
+            .general_sem_results
+            .as_ref()
+            .unwrap()
+            .joint_stage_structural_coefficients[0]
+            .relation_id
+            .clone();
+        coherent_parameter_identity
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .joint_stage_structural_coefficients[0]
+            .parameter_id = "parameter:coherent_tamper".into();
+        let structural_table =
+            moderation_test_table_mut(&mut coherent_parameter_identity, "structural_paths");
+        let structural_row = structural_table
+            .rows
+            .iter_mut()
+            .find(|row| {
+                matches!(
+                    row.cells.first(),
+                    Some(CanonicalResultCellV2::Text { value }) if value == &relation_id
+                )
+            })
+            .unwrap();
+        structural_row.cells[1] = nonlinear_test_text("parameter:coherent_tamper");
+        assert_moderation_authority_rejects(
+            &project,
+            coherent_parameter_identity,
+            "compiled relation/parameter contract",
+        );
+
+        let mut product_scale_number = canonical.clone();
+        let table = moderation_test_table_mut(
+            &mut product_scale_number,
+            GENERAL_SEM_INTERACTION_EFFECTS_TABLE_ID_V1,
+        );
+        *moderation_test_number_cell_mut(&mut table.rows[0].cells[12]) += 0.25;
+        assert_moderation_authority_rejects(
+            &project,
+            product_scale_number,
+            "scientific rescaled gamma",
+        );
+
+        let mut conditional_cross_reference = canonical.clone();
+        let table = moderation_test_table_mut(
+            &mut conditional_cross_reference,
+            GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1,
+        );
+        table.rows[0].cells[2] = nonlinear_test_text("relation:foreign_interaction_effect");
+        assert_moderation_authority_rejects(
+            &project,
+            conditional_cross_reference,
+            "conditional interaction effect",
+        );
+
+        let mut plot_number = canonical.clone();
+        let table =
+            moderation_test_table_mut(&mut plot_number, GENERAL_SEM_INTERACTION_PLOTS_TABLE_ID_V1);
+        *moderation_test_number_cell_mut(&mut table.rows[0].cells[12]) += 0.375;
+        assert_moderation_authority_rejects(&project, plot_number, "plot predicted value");
+
+        let mut chart_number = canonical;
+        chart_number.charts[0].series[0].points[0].y += 0.5;
+        assert_moderation_authority_rejects(&project, chart_number, "point differs bitwise");
+    }
+
+    #[test]
+    fn general_sem_moderation_archive_rejects_same_and_different_focal_coherent_tampering() {
+        let (same_project, mut same_document) =
+            general_sem_schema6_moderation_authority_fixture(true);
+        let first_effect_id = same_document
+            .general_sem_results
+            .as_ref()
+            .unwrap()
+            .interaction_effects[0]
+            .effect_id
+            .clone();
+        let zero_index = same_document
+            .general_sem_results
+            .as_ref()
+            .unwrap()
+            .conditional_effects
+            .iter()
+            .position(|effect| {
+                effect.interaction_effect_id.as_deref() == Some(first_effect_id.as_str())
+                    && effect.probe_value_index == 1
+            })
+            .unwrap();
+        same_document
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .conditional_effects[zero_index]
+            .value
+            .estimate += 0.2;
+        let conditional_table = moderation_test_table_mut(
+            &mut same_document,
+            GENERAL_SEM_CONDITIONAL_SLOPES_TABLE_ID_V1,
+        );
+        *moderation_test_number_cell_mut(&mut conditional_table.rows[zero_index].cells[9]) += 0.2;
+        assert_moderation_authority_rejects(
+            &same_project,
+            same_document,
+            "zero-probe slope differs",
+        );
+
+        let (different_project, mut different_document) =
+            general_sem_schema6_moderation_authority_fixture(false);
+        let second_focal_relation_id = different_document
+            .general_sem_results
+            .as_ref()
+            .unwrap()
+            .interaction_effects[1]
+            .focal_relation_id
+            .clone();
+        coherently_tamper_joint_stage_coefficient(
+            &mut different_document,
+            &second_focal_relation_id,
+            0.3,
+        );
+        assert_moderation_authority_rejects(
+            &different_project,
+            different_document,
+            "zero-probe slope differs",
+        );
+    }
+
+    #[test]
     fn general_sem_moderation_archive_rejects_coherent_plan_digest_and_section_tampering() {
-        let (project, canonical) = general_sem_schema6_moderation_authority_fixture();
+        let (project, canonical) = general_sem_schema6_moderation_authority_fixture(true);
         project.ensure_valid().unwrap();
         assert_eq!(
             canonical
@@ -8938,11 +10645,61 @@ mod tests {
             .interaction_effects[0]
             .trace
             .clone();
+        let relation_ids = non_interaction_section
+            .general_sem_results
+            .as_ref()
+            .unwrap()
+            .joint_stage_structural_coefficients
+            .iter()
+            .take(2)
+            .map(|coefficient| coefficient.relation_id.clone())
+            .collect::<Vec<_>>();
+        let path_identity = qpls_core::specific_directed_path_identity_v1(&relation_ids);
         let model_id = non_interaction_section.provenance.model_id.clone();
-        non_interaction_section
+        let results = non_interaction_section
             .general_sem_results
             .as_mut()
-            .unwrap()
+            .unwrap();
+        results.specific_indirect_effects.push(
+            qpls_core::CanonicalSpecificIndirectEffectResultV1 {
+                effect_id: path_identity,
+                estimand_id: "estimand:foreign_mediation".into(),
+                trace: trace.clone(),
+                source_id: "construct:x".into(),
+                target_id: "construct:y".into(),
+                ordered_relation_ids: relation_ids,
+                value: moderation_test_point_estimate(0.1),
+            },
+        );
+        results
+            .higher_order_stages
+            .push(qpls_core::CanonicalHocStageResultV1 {
+                stage_id: "hoc_stage:foreign_lower_order".into(),
+                trace: trace.clone(),
+                higher_order_construct_id: "hoc:foreign".into(),
+                stage_number: 1,
+                kind: qpls_core::CanonicalHocStageKindV1::LowerOrderScoreEstimation,
+                input_construct_ids: vec!["construct:x".into()],
+                output_variable_ids: vec!["score:foreign_x".into()],
+                relation_estimates: Vec::new(),
+            });
+        results
+            .cbsem_fit
+            .push(qpls_core::CanonicalCbsemFitResultV1 {
+                fit_id: "cbsem_fit:foreign".into(),
+                trace: trace.clone(),
+                chi_square: 1.0,
+                degrees_of_freedom: 1,
+                chi_square_p_value: Some(0.5),
+                rmsea: Some(0.01),
+                rmsea_interval: None,
+                cfi: Some(0.99),
+                tli: Some(0.98),
+                srmr: Some(0.02),
+                aic: Some(10.0),
+                bic: Some(12.0),
+            });
+        results
             .identification_diagnostics
             .push(qpls_core::CanonicalIdentificationDiagnosticV1 {
                 diagnostic_id: "identification:unexpected_model_section".into(),

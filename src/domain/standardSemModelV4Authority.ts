@@ -22,6 +22,7 @@ import {
 } from "./semModelV4";
 
 export const STANDARD_SEM_MODEL_V4_AUTHORITY_VERSION = 1 as const;
+export const GENERAL_SEM_INTERACTION_V2_EDITOR_INTENT_VERSION_V1 = 1 as const;
 
 const LOWER_SHA256 = /^[0-9a-f]{64}$/;
 
@@ -58,6 +59,25 @@ export type StandardSemParameterSpecificationV1 =
     equality_label: string | null;
   }
   | { kind: "fixed"; value: number };
+
+/**
+ * General-SEM-only two-way moderation authoring contract.
+ *
+ * The locked method and hierarchy fields are deliberately carried on the
+ * wire. A future authority revision must reject unsupported bytes rather than
+ * silently reinterpret this intent as the legacy interaction shape.
+ */
+export interface AddGeneralSemInteractionV2EditorIntentV1 {
+  readonly kind: "add_general_sem_interaction_v2";
+  readonly intent_version: typeof GENERAL_SEM_INTERACTION_V2_EDITOR_INTENT_VERSION_V1;
+  readonly sem_generation: "general_sem_v1";
+  readonly label: string;
+  readonly operands: readonly [predictor: string, moderator: string];
+  readonly focal_relation: string;
+  readonly outcome: string;
+  readonly method: "two_stage";
+  readonly hierarchy_policy: "strong";
+}
 
 export type StandardSemModelV4EditorIntentV1 =
   | { kind: "set_model_name"; name: string }
@@ -105,6 +125,7 @@ export type StandardSemModelV4EditorIntentV1 =
     method: InteractionMethodV4;
     product_indicator?: ProductIndicatorSpecificationV4 | null;
   }
+  | AddGeneralSemInteractionV2EditorIntentV1
   | { kind: "add_polynomial"; term_id: string; output_id: string; label: string; source: string; degree: number }
   | { kind: "replace_polynomial"; term_id: string; source: string; degree: number }
   | {
@@ -252,6 +273,17 @@ export const standardSemObservedInterceptParameterIdV1 = (observedId: string) =>
   `standard:v1:observed-intercept:${encodeURIComponent(observedId)}`;
 export const standardSemObservedThresholdParameterIdV1 = (observedId: string, index: number) =>
   `standard:v1:observed-threshold:${encodeURIComponent(observedId)}:${index}`;
+export const standardSemGeneralSemInteractionV2TermIdV1 = (
+  focalRelationId: string,
+  predictorId: string,
+  moderatorId: string,
+) => `general-sem:v1:interaction:${encodeURIComponent(focalRelationId)}:${encodeURIComponent(predictorId)}:${encodeURIComponent(moderatorId)}`;
+export const standardSemGeneralSemInteractionV2OutputIdV1 = (termId: string) =>
+  `general-sem:v1:interaction-output:${encodeURIComponent(termId)}`;
+export const standardSemGeneralSemInteractionV2ModeratorMainRelationIdV1 = (termId: string) =>
+  `general-sem:v1:interaction-moderator-main:${encodeURIComponent(termId)}`;
+export const standardSemGeneralSemInteractionV2EffectRelationIdV1 = (termId: string) =>
+  `general-sem:v1:interaction-effect:${encodeURIComponent(termId)}`;
 
 function applyIntent(model: MutableModel, intent: StandardSemModelV4EditorIntentV1) {
   switch (intent.kind) {
@@ -326,6 +358,9 @@ function applyIntent(model: MutableModel, intent: StandardSemModelV4EditorIntent
       return;
     case "add_interaction":
       addInteraction(model, intent);
+      return;
+    case "add_general_sem_interaction_v2":
+      addGeneralSemInteractionV2(model, intent);
       return;
     case "add_polynomial":
       addPolynomial(model, intent);
@@ -677,6 +712,135 @@ function setOrdinalThresholds(model: MutableModel, variableId: string, estimated
     const id = standardSemObservedThresholdParameterIdV1(variableId, index);
     model.parameters.push(defaultParameter(id, `Threshold ${index}(${variable.label})`, { kind: "threshold", variable: variableId, index }, index - variable.categories.length / 2));
   }
+}
+
+function addGeneralSemInteractionV2(
+  model: MutableModel,
+  intent: AddGeneralSemInteractionV2EditorIntentV1,
+) {
+  if (intent.sem_generation !== "general_sem_v1") {
+    fail(
+      "standard_sem_authority.general_sem_interaction_v2_generation_required",
+      "intent.sem_generation",
+      "The interaction_v2 intent is available only to a general_sem_v1 project authority.",
+      "Create or activate a newly marked General SEM project; do not convert or relabel an ordinary project.",
+    );
+  }
+  if (intent.intent_version !== GENERAL_SEM_INTERACTION_V2_EDITOR_INTENT_VERSION_V1) {
+    fail(
+      "standard_sem_authority.general_sem_interaction_v2_intent_version_unsupported",
+      "intent.intent_version",
+      "The General SEM interaction authoring intent version is unsupported.",
+      "Refresh the editor and submit the exact version-1 General SEM interaction intent.",
+    );
+  }
+  if (intent.method !== "two_stage") {
+    fail(
+      "standard_sem_authority.general_sem_interaction_v2_method_invalid",
+      "intent.method",
+      "This General SEM interaction intent supports only the qualified two-stage construction method.",
+      "Choose the two-stage method or use a separately versioned and qualified interaction workflow.",
+    );
+  }
+  if (intent.hierarchy_policy !== "strong") {
+    fail(
+      "standard_sem_authority.general_sem_interaction_v2_hierarchy_invalid",
+      "intent.hierarchy_policy",
+      "This General SEM interaction intent requires strong hierarchy.",
+      "Use strong hierarchy so every required lower-order main-effect path remains explicit.",
+    );
+  }
+  if (!Array.isArray(intent.operands) || intent.operands.length !== 2) {
+    fail(
+      "standard_sem_authority.general_sem_interaction_v2_operands_invalid",
+      "intent.operands",
+      "A two-way General SEM interaction requires exactly two operands in focal-predictor, moderator order.",
+      "Provide exactly the focal predictor followed by one moderator.",
+    );
+  }
+
+  const predictor = stableId(intent.operands[0], "intent.operands[0]");
+  const moderator = stableId(intent.operands[1], "intent.operands[1]");
+  const outcome = stableId(intent.outcome, "intent.outcome");
+  const focalRelationId = stableId(intent.focal_relation, "intent.focal_relation");
+  structuralVariable(model, predictor, "source");
+  structuralVariable(model, moderator, "source");
+  structuralVariable(model, outcome, "target");
+  if (new Set([predictor, moderator, outcome]).size !== 3) {
+    fail(
+      "standard_sem_authority.interaction_variables_distinct",
+      focalRelationId,
+      "Predictor, moderator, and outcome must be distinct.",
+      "Choose three distinct variables.",
+    );
+  }
+
+  const focal = model.relations.find((relation): relation is Extract<SemRelationV4, { kind: "structural" }> =>
+    relation.id === focalRelationId && relation.kind === "structural");
+  if (!focal || focal.role === "control" || focal.source !== predictor || focal.target !== outcome) {
+    fail(
+      "standard_sem_authority.focal_relation_invalid",
+      focalRelationId,
+      "The interaction focal relation must be the predictor-to-outcome structural-effect path.",
+      "Select the exact current non-control focal relation.",
+    );
+  }
+
+  const termId = standardSemGeneralSemInteractionV2TermIdV1(focalRelationId, predictor, moderator);
+  const outputId = standardSemGeneralSemInteractionV2OutputIdV1(termId);
+  if (model.derived_terms.some((term) => term.id === termId)) duplicate("interaction", termId);
+  if (model.variables.some((variable) => variable.id === outputId)) duplicate("interaction output", outputId);
+  const semanticDuplicate = model.derived_terms.find((term) => {
+    if (term.kind !== "interaction" && term.kind !== "interaction_v2") return false;
+    if (term.focal_relation !== focalRelationId) return false;
+    if (term.kind === "interaction") return term.predictor === predictor && term.moderator === moderator;
+    return term.kind === "interaction_v2"
+      && term.operands.length === 2
+      && term.operands[0] === predictor
+      && term.operands[1] === moderator;
+  });
+  if (semanticDuplicate) {
+    fail(
+      "standard_sem_authority.interaction_duplicate",
+      termId,
+      `Moderating effect ${semanticDuplicate.id} already uses predictor ${predictor}, moderator ${moderator}, and focal relation ${focalRelationId}.`,
+      "Choose a different moderator or focal relationship, or remove the existing moderating effect before retrying.",
+    );
+  }
+
+  const existingModeratorMain = model.relations.find((relation): relation is Extract<SemRelationV4, { kind: "structural" }> =>
+    relation.kind === "structural" && relation.source === moderator && relation.target === outcome);
+  if (existingModeratorMain?.role === "control") {
+    fail(
+      "standard_sem_authority.general_sem_interaction_v2_main_effect_conflicts_control",
+      existingModeratorMain.id,
+      "The moderator-to-outcome relationship is a control path, not the required main-effect path.",
+      "Convert the relationship to a structural-effect path before authoring the interaction.",
+    );
+  }
+
+  model.variables.push({ kind: "derived", id: outputId, label: requiredText(intent.label, "intent.label") });
+  model.derived_terms.push({
+    kind: "interaction_v2",
+    id: termId,
+    output: outputId,
+    operands: [predictor, moderator],
+    focal_relation: focalRelationId,
+    method: "two_stage",
+    hierarchy_policy: "strong",
+  });
+  if (!existingModeratorMain) {
+    addRelationship(
+      model,
+      standardSemGeneralSemInteractionV2ModeratorMainRelationIdV1(termId),
+      { kind: "structural", source: moderator, target: outcome, label: "Moderator main effect" },
+    );
+  }
+  addRelationship(
+    model,
+    standardSemGeneralSemInteractionV2EffectRelationIdV1(termId),
+    { kind: "structural", source: outputId, target: outcome, label: "Interaction effect" },
+  );
 }
 
 function addInteraction(model: MutableModel, intent: Extract<StandardSemModelV4EditorIntentV1, { kind: "add_interaction" }>) {

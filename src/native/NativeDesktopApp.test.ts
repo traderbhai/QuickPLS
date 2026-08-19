@@ -3,12 +3,18 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
+import {
+  standardSemGeneralSemInteractionV2OutputIdV1,
+  standardSemGeneralSemInteractionV2TermIdV1,
+} from "../domain/standardSemModelV4Authority";
 import { useWorkspace } from "../store";
 import type { AnalysisRun } from "../types";
 import {
   aboutVisibleAnalysisLabelsV2,
+  buildStrictDesktopModerationIntentV1,
   completedRunNavigationTarget,
   Launcher,
+  nativeGeneralSemRevisionCommandDisabledReasonV1,
   NATIVE_BUNDLED_SAMPLE_PROJECTS,
   NewProjectDialog,
   openNativeSampleProject,
@@ -93,6 +99,113 @@ describe("native desktop multi-model shell contracts", () => {
     expect(markup).not.toMatch(/value="general_sem_v1"[^>]*disabled/);
     expect(markup).toContain("It starts empty");
     expect(markup).toContain("Existing projects are never converted.");
+  });
+
+  it("routes only strict General SEM moderation through the versioned interaction_v2 intent", () => {
+    const common = {
+      label: "X × W",
+      predictor: "construct:x",
+      moderator: "construct:w",
+      focalRelation: "relation:x-y",
+      outcome: "construct:y",
+    } as const;
+    const standard = buildStrictDesktopModerationIntentV1({
+      projectMode: "standard",
+      legacyTermId: "legacy:term",
+      legacyOutputId: "legacy:output",
+      ...common,
+    });
+    expect(standard).toEqual({
+      intent: {
+        kind: "add_interaction",
+        term_id: "legacy:term",
+        output_id: "legacy:output",
+        label: common.label,
+        predictor: common.predictor,
+        moderator: common.moderator,
+        focal_relation: common.focalRelation,
+        outcome: common.outcome,
+        method: "two_stage",
+      },
+      interactionId: "legacy:output",
+    });
+
+    const termId = standardSemGeneralSemInteractionV2TermIdV1(
+      common.focalRelation,
+      common.predictor,
+      common.moderator,
+    );
+    const interactionId = standardSemGeneralSemInteractionV2OutputIdV1(termId);
+    const generalSem = buildStrictDesktopModerationIntentV1({
+      projectMode: "general_sem_v1",
+      ...common,
+    });
+    expect(generalSem).toEqual({
+      intent: {
+        kind: "add_general_sem_interaction_v2",
+        intent_version: 1,
+        sem_generation: "general_sem_v1",
+        label: common.label,
+        operands: [common.predictor, common.moderator],
+        focal_relation: common.focalRelation,
+        outcome: common.outcome,
+        method: "two_stage",
+        hierarchy_policy: "strong",
+      },
+      interactionId,
+    });
+    expect(buildStrictDesktopModerationIntentV1({ projectMode: "general_sem_v1", ...common })).toEqual(generalSem);
+    expect(generalSem.intent).not.toHaveProperty("term_id");
+    expect(generalSem.intent).not.toHaveProperty("predictor");
+    expect(generalSem.intent.kind).not.toBe("add_interaction");
+  });
+
+  it("routes post-activation General SEM moderation through the versioned model-and-Recipe revision transaction", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+    const moderationCase = source.indexOf('case "model.add-moderating-effect"');
+    const dialogOpen = source.indexOf('openDialog("moderation")', moderationCase);
+
+    expect(source).toContain("supportsGeneralSemV1(schema6Session.project)");
+    expect(source).toContain("schema6Session?.standardActivation?.modelIds.includes(activeModelId)");
+    expect(source).toContain("strictScientificEditLocks[activeModelId] || !projectWritable");
+    expect(source).toContain("General SEM revision required");
+    expect(source).toContain("model and RecipeV4 are immutable");
+    expect(source).toContain("reviseGeneralSemExecutionAuthority({ intent: built.intent })");
+    expect(source).toContain("save an independently compiled schema-6 revision to a new file");
+    expect(source).toContain('data-testid="general-sem-scientific-revision-required"');
+    expect(source).toContain('kind: "general_sem_revision"');
+    expect(source).toContain("available: generalSemRevisionDisabledReason === null");
+    expect(source).toContain("const currentGeneralSemRevisionDisabledReason = () =>");
+    expect(source).toContain("const authorityState = useInternalProjectArchiveV6Session.getState()");
+    expect(source).toContain("const workspaceState = useWorkspace.getState()");
+    expect(dialogOpen).toBeGreaterThan(moderationCase);
+  });
+
+  it("reports every General SEM revision operation lock and allows only an exact clean idle authority", () => {
+    const clean = {
+      standardActivationPending: false,
+      revisionForkPending: false,
+      saveCopyPending: false,
+      sessionDirty: false,
+      publicationPending: false,
+      transientWorkBlocker: null,
+      calculationStatus: "idle",
+    } as const;
+    expect(nativeGeneralSemRevisionCommandDisabledReasonV1(clean)).toBeNull();
+
+    const cases = [
+      [{ revisionForkPending: true }, "Wait for the current General SEM Save As Revision transaction to finish."],
+      [{ standardActivationPending: true }, "Wait for the current schema-6 authority operation to finish."],
+      [{ saveCopyPending: true }, "Wait for the current schema-6 authority operation to finish."],
+      [{ publicationPending: true }, "Wait for General SEM archive publication to finish."],
+      [{ transientWorkBlocker: "job_active" }, "Finish or cancel the active General SEM calculation before creating a revision."],
+      [{ transientWorkBlocker: "temporary_result_pending" }, "Save and strictly reopen the completed General SEM result, or dismiss it, before creating a revision."],
+      [{ calculationStatus: "running" }, "Finish or cancel the active calculation before creating a revision."],
+      [{ sessionDirty: true }, "Restore or reopen the exact clean General SEM archive authority before creating a revision."],
+    ] as const;
+    for (const [override, expected] of cases) {
+      expect(nativeGeneralSemRevisionCommandDisabledReasonV1({ ...clean, ...override })).toBe(expected);
+    }
   });
 
   it("mounts exactly the three genuine sample choices in the production launcher", () => {

@@ -4926,7 +4926,7 @@
       "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
       "qualification_references": [
         "validation/methods/moderation_v1.manifest.json",
-        "validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json"
+        "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json"
       ],
       "qualification_links": [
         {
@@ -4945,7 +4945,7 @@
       "qualification_spec": {
         "references": [
           "validation/methods/moderation_v1.manifest.json",
-          "validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json"
+          "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json"
         ],
         "links": [
           {
@@ -4963,7 +4963,7 @@
         ]
       },
       "known_differences": [
-        "The General SEM simultaneous cell is point-only and engine-only in Labs; bootstrap inference, three-way interactions, authored arbitrary probe policies, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
+        "The General SEM simultaneous cell is connected end to end in the existing QuickPLS desktop application but remains point-only and engine-only in Labs; bootstrap inference, three-way interactions, authored arbitrary probe policies, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
       ],
       "legacy_row": {
         "id": "smartpls.moderation",
@@ -4984,7 +4984,7 @@
           "smartpls.pls_algorithm",
           "smartpls.pls_bootstrapping"
         ],
-        "remaining_gap": "The General SEM simultaneous cell is point-only and engine-only in Labs; bootstrap inference, three-way interactions, authored arbitrary probe policies, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
+        "remaining_gap": "The General SEM simultaneous cell is connected end to end in the existing QuickPLS desktop application but remains point-only and engine-only in Labs; bootstrap inference, three-way interactions, authored arbitrary probe policies, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
       },
       "option_cells": [
         {
@@ -5062,6 +5062,10 @@
               "hierarchy:strong",
               "interaction_count:one_or_more",
               "structural_topology:direct_only_acyclic",
+              "derived_term_scope:interaction_v2_only",
+              "higher_order_constructs:none",
+              "requested_effect_estimands:none",
+              "authored_conditional_effect_probes:none",
               "inference:point_only"
             ]
           },
@@ -5093,7 +5097,7 @@
           "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
           "qualification_spec": {
             "references": [
-              "validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json"
+              "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json"
             ],
             "links": [
               {
@@ -5105,7 +5109,7 @@
             ]
           },
           "known_differences": [
-            "This engine-only Labs cell publishes descriptive point estimates only; bootstrap inference, three-way moderation, moderated mediation, directed chains, and authored arbitrary probe values are blocked."
+            "This connected engine-only Labs cell publishes descriptive point estimates and accessible persisted-data charts only; bootstrap inference, three-way moderation, moderated mediation, directed chains, and authored arbitrary probe values are blocked."
           ]
         }
       ]

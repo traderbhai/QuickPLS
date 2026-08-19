@@ -1,10 +1,11 @@
-//! Archive-bound job lifecycle for the General SEM PLS multiple-mediation Labs slice.
+//! Archive-bound job lifecycle for the General SEM PLS mediation and moderation Labs slices.
 
 use crate::{
     DesktopJobs, InternalRecipeV4ExecutionFailureV1,
     recipe_v4_general_sem_canonical_result::{
         build_recipe_v4_general_sem_pls_canonical_result_v1,
         general_sem_multiple_mediation_bootstrap_capability_cell_v1,
+        general_sem_multiple_moderation_point_capability_cell_v1,
     },
     recipe_v4_jobs::{DesktopRecipeV4Jobs, reserve_general_sem_pls_admission},
 };
@@ -189,6 +190,25 @@ struct ResolvedGeneralSemArchiveV1 {
     dataset: Dataset,
     model: SemModelV4,
     recipe: AnalysisRecipeV4,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GeneralSemPlsWorkerCheckpointV1 {
+    DuringInteractionExecution,
+    AfterExecutionBeforeCanonicalization,
+    AfterCanonicalizationBeforePublication,
+}
+
+type GeneralSemPlsWorkerCheckpointHookV1 =
+    Arc<dyn Fn(GeneralSemPlsWorkerCheckpointV1) + Send + Sync>;
+
+fn notify_worker_checkpoint(
+    hook: &Option<GeneralSemPlsWorkerCheckpointHookV1>,
+    checkpoint: GeneralSemPlsWorkerCheckpointV1,
+) {
+    if let Some(hook) = hook {
+        hook(checkpoint);
+    }
 }
 
 fn failure(
@@ -633,19 +653,50 @@ fn validate_exact_capability_and_data(
         });
     }
 
-    let expected_cell = match config.inference {
-        GeneralSemInferenceV1::None => pls_general_recursive_effects_capability_cell_v1(),
-        GeneralSemInferenceV1::CaseBootstrap { .. } => {
-            general_sem_multiple_mediation_bootstrap_capability_cell_v1()
+    validate_dataset_predicate(&resolved.dataset, &resolved.model)?;
+    let artifact = compile_general_sem_pls_recipe_v1(&resolved.recipe, Some(&resolved.model))
+        .map_err(|error| {
+            failure(
+                InternalLabsGeneralSemPlsFailureStageV1::Compilation,
+                "recipeId",
+                "general_sem_pls.compilation_failed",
+                format!("The resident General SEM recipe could not compile: {error}"),
+                "Correct the resident model/config and create a new General SEM project archive.",
+            )
+        })?;
+    let has_interactions = !artifact.plan().two_way_interactions().is_empty();
+    let expected_cell = if has_interactions {
+        general_sem_multiple_moderation_point_capability_cell_v1()
+    } else {
+        match config.inference {
+            GeneralSemInferenceV1::None => pls_general_recursive_effects_capability_cell_v1(),
+            GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                general_sem_multiple_mediation_bootstrap_capability_cell_v1()
+            }
         }
     };
+    let compiled_primary_cell = artifact.capability_cell();
+    let compiled_cell_matches = if has_interactions {
+        compiled_primary_cell == &expected_cell
+    } else {
+        compiled_primary_cell == &pls_general_recursive_effects_capability_cell_v1()
+    };
+    if !compiled_cell_matches {
+        return Err(failure(
+            InternalLabsGeneralSemPlsFailureStageV1::Capability,
+            "capabilityCell",
+            "general_sem_pls.compiled_capability_cell_mismatch",
+            "The exact option cell does not match the authoritative compiled PLS v3 plan.",
+            "Keep the archive unchanged and report this compiler/capability identity mismatch.",
+        ));
+    }
     if request.capability_cell != expected_cell {
         return Err(failure(
             InternalLabsGeneralSemPlsFailureStageV1::Capability,
             "capabilityCell",
             "general_sem_pls.capability_cell_mismatch",
-            "The selected option cell differs from the resident point/bootstrap inference request.",
-            "Use the exact General SEM point cell or the exact multiple-mediation full-model bootstrap Labs cell.",
+            "The selected option cell differs from the resident compiled model and inference request.",
+            "Use the exact General SEM mediation point/bootstrap cell or the exact simultaneous two-way moderation point Labs cell selected by preflight.",
         ));
     }
     let registry = CapabilityRegistryV2::embedded().map_err(|error| {
@@ -676,20 +727,9 @@ fn validate_exact_capability_and_data(
         ));
     }
 
-    validate_dataset_predicate(&resolved.dataset, &resolved.model)?;
-    let artifact = compile_general_sem_pls_recipe_v1(&resolved.recipe, Some(&resolved.model))
-        .map_err(|error| {
-            failure(
-                InternalLabsGeneralSemPlsFailureStageV1::Compilation,
-                "recipeId",
-                "general_sem_pls.compilation_failed",
-                format!("The resident General SEM recipe could not compile: {error}"),
-                "Correct the resident model/config and create a new General SEM project archive.",
-            )
-        })?;
     let found = artifact.plan().topology().specific_directed_paths().len();
     match config.inference {
-        GeneralSemInferenceV1::None if found == 0 => {
+        GeneralSemInferenceV1::None if !has_interactions && found == 0 => {
             return Err(failure(
                 InternalLabsGeneralSemPlsFailureStageV1::Capability,
                 "modelId",
@@ -698,7 +738,7 @@ fn validate_exact_capability_and_data(
                 "Author a supported mediator path, or use the existing ordinary PLS workflow for a direct-only recursive model.",
             ));
         }
-        GeneralSemInferenceV1::CaseBootstrap { .. } if found < 2 => {
+        GeneralSemInferenceV1::CaseBootstrap { .. } if !has_interactions && found < 2 => {
             return Err(failure(
                 InternalLabsGeneralSemPlsFailureStageV1::Capability,
                 "modelId",
@@ -725,7 +765,7 @@ fn validate_dataset_predicate(
     } = &model.data_binding
     else {
         return Err(data_predicate_failure(
-            "General SEM PLS multiple mediation requires raw resident data.",
+            "General SEM PLS mediation/moderation execution requires raw resident data.",
         ));
     };
     if dataset_id != &dataset.id.to_string()
@@ -748,9 +788,12 @@ fn validate_dataset_predicate(
             ..
         } = variable
         else {
-            if !matches!(variable, SemVariableV4::Composite { .. }) {
+            if !matches!(
+                variable,
+                SemVariableV4::Composite { .. } | SemVariableV4::Derived { .. }
+            ) {
                 return Err(data_predicate_failure(
-                    "The exact Labs cell accepts observed indicators and composite constructs only.",
+                    "The exact Labs cell accepts observed indicators, composite constructs, and compiler-bound derived interaction outputs only.",
                 ));
             }
             continue;
@@ -892,6 +935,26 @@ fn run_worker(
     jobs: Arc<Mutex<HashMap<Uuid, InternalLabsGeneralSemPlsJobV1>>>,
     _admission: crate::recipe_v4_jobs::PlsModelComparisonAdmissionReservationV1,
 ) {
+    run_worker_with_checkpoint_hook(
+        job_id,
+        request,
+        resolved,
+        cancellation,
+        jobs,
+        _admission,
+        None,
+    );
+}
+
+fn run_worker_with_checkpoint_hook(
+    job_id: Uuid,
+    request: InternalLabsGeneralSemPlsJobRequestV1,
+    resolved: ResolvedGeneralSemArchiveV1,
+    cancellation: Arc<AtomicBool>,
+    jobs: Arc<Mutex<HashMap<Uuid, InternalLabsGeneralSemPlsJobV1>>>,
+    _admission: crate::recipe_v4_jobs::PlsModelComparisonAdmissionReservationV1,
+    checkpoint_hook: Option<GeneralSemPlsWorkerCheckpointHookV1>,
+) {
     set_running(&jobs, job_id, "capability_preflight", 0, 1);
     if cancellation.load(Ordering::Acquire) {
         finish_cancelled(&jobs, job_id);
@@ -936,6 +999,14 @@ fn run_worker(
             &artifact,
             || cancellation.load(Ordering::Acquire),
             |progress| {
+                if progress.phase == "general_sem_interaction_point"
+                    && progress.completed_units == 0
+                {
+                    notify_worker_checkpoint(
+                        &checkpoint_hook,
+                        GeneralSemPlsWorkerCheckpointV1::DuringInteractionExecution,
+                    );
+                }
                 set_running(
                     &jobs,
                     job_id,
@@ -981,6 +1052,10 @@ fn run_worker(
             return;
         }
     };
+    notify_worker_checkpoint(
+        &checkpoint_hook,
+        GeneralSemPlsWorkerCheckpointV1::AfterExecutionBeforeCanonicalization,
+    );
     if cancellation.load(Ordering::Acquire) {
         finish_cancelled(&jobs, job_id);
         return;
@@ -1057,6 +1132,10 @@ fn run_worker(
         finish_failed(&jobs, job_id, error);
         return;
     }
+    notify_worker_checkpoint(
+        &checkpoint_hook,
+        GeneralSemPlsWorkerCheckpointV1::AfterCanonicalizationBeforePublication,
+    );
     if cancellation.load(Ordering::Acquire) {
         finish_cancelled(&jobs, job_id);
         return;
@@ -1288,21 +1367,43 @@ fn unknown_job(job_id: Uuid) -> InternalLabsGeneralSemPlsFailureV1 {
 #[cfg(all(test, windows))]
 mod tests {
     use super::*;
-    use crate::project_archive_v6_general_sem_bootstrap::tests::general_sem_native_fixture_v1;
+    use crate::{
+        project_archive_v6_general_sem_bootstrap::tests::{
+            GeneralSemNativeFixtureV1, general_sem_native_fixture_v1,
+        },
+        project_schema6_result_append::{
+            ProjectSchema6ResultAppendOutcomeV1, ProjectSchema6ResultAppendRequestV1,
+            append_internal_project_schema6_canonical_result_v2,
+        },
+        project_schema6_result_read::{
+            ProjectSchema6ResultReadOutcomeV1, ProjectSchema6ResultReadRequestV1,
+            read_internal_project_schema6_canonical_results_v2,
+        },
+    };
     use chrono::TimeZone;
-    use qpls_core::{AnalysisRecipeModelBindingV4, SemRelationV4};
+    use qpls_core::{
+        AnalysisRecipeModelBindingV4, InteractionHierarchyPolicyV2, InteractionMethodV4,
+        SemDerivedTermV4, SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
+        StructuralRelationRoleV4,
+    };
     use qpls_data::{ImportOptions, import_delimited_bytes};
-    use qpls_project::create_populated_general_sem_project_archive_v6;
+    use qpls_project::{
+        canonical_result_document_v2_json, create_populated_general_sem_project_archive_v6,
+        load_project_archive_v6,
+    };
 
     struct PublishedFixtureV1 {
         _directory: tempfile::TempDir,
         request: InternalLabsGeneralSemPlsJobRequestV1,
     }
 
-    fn published_fixture() -> PublishedFixtureV1 {
-        let fixture = general_sem_native_fixture_v1();
+    fn published_fixture_from(
+        fixture: GeneralSemNativeFixtureV1,
+        file_name: &str,
+        capability_cell: CapabilityCellReferenceV2,
+    ) -> PublishedFixtureV1 {
         let directory = tempfile::tempdir().unwrap();
-        let destination = directory.path().join("general-sem-point.qpls");
+        let destination = directory.path().join(file_name);
         let receipt = create_populated_general_sem_project_archive_v6(
             &destination,
             Uuid::from_u128(0x7201),
@@ -1327,9 +1428,148 @@ mod tests {
                 model_scientific_sha256: receipt.resident_model_scientific_sha256,
                 recipe_id: receipt.resident_recipe_id.to_string(),
                 recipe_document_sha256: receipt.resident_recipe_document_sha256,
-                capability_cell: pls_general_recursive_effects_capability_cell_v1(),
+                capability_cell,
             },
         }
+    }
+
+    fn published_fixture() -> PublishedFixtureV1 {
+        published_fixture_from(
+            general_sem_native_fixture_v1(),
+            "general-sem-point.qpls",
+            pls_general_recursive_effects_capability_cell_v1(),
+        )
+    }
+
+    fn direct_only_moderation_fixture(same_focal: bool) -> GeneralSemNativeFixtureV1 {
+        let mut fixture = general_sem_native_fixture_v1();
+        let retained_pairs = [
+            ("construct:x", "construct:y"),
+            ("construct:m1", "construct:y"),
+            ("construct:m2", "construct:y"),
+        ];
+        let mut removed_parameter_ids = std::collections::BTreeSet::new();
+        fixture.model.relations.retain(|relation| match relation {
+            SemRelationV4::Structural {
+                source,
+                target,
+                parameter,
+                ..
+            } if !retained_pairs.contains(&(source.as_str(), target.as_str())) => {
+                removed_parameter_ids.insert(parameter.clone());
+                false
+            }
+            _ => true,
+        });
+        fixture
+            .model
+            .parameters
+            .retain(|parameter| !removed_parameter_ids.contains(parameter.id()));
+
+        let x_to_y = structural_relation_id(&fixture.model, "construct:x", "construct:y");
+        add_two_way_interaction(
+            &mut fixture.model,
+            "interaction:x_by_m1",
+            "construct:x",
+            "construct:m1",
+            &x_to_y,
+        );
+        if same_focal {
+            add_two_way_interaction(
+                &mut fixture.model,
+                "interaction:x_by_m2",
+                "construct:x",
+                "construct:m2",
+                &x_to_y,
+            );
+        } else {
+            let m1_to_y = structural_relation_id(&fixture.model, "construct:m1", "construct:y");
+            add_two_way_interaction(
+                &mut fixture.model,
+                "interaction:m1_by_m2",
+                "construct:m1",
+                "construct:m2",
+                &m1_to_y,
+            );
+        }
+        fixture.model.ensure_valid().unwrap();
+        fixture.recipe.model_binding = AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+            model_id: fixture.model.id.clone(),
+            scientific_sha256: fixture.model.scientific_sha256().unwrap(),
+        };
+        fixture
+    }
+
+    fn structural_relation_id(model: &SemModelV4, source: &str, target: &str) -> String {
+        model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                SemRelationV4::Structural {
+                    id,
+                    source: relation_source,
+                    target: relation_target,
+                    ..
+                } if relation_source == source && relation_target == target => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap()
+    }
+
+    fn add_two_way_interaction(
+        model: &mut SemModelV4,
+        interaction_id: &str,
+        focal_predictor_id: &str,
+        moderator_id: &str,
+        focal_relation_id: &str,
+    ) {
+        let outcome_id = model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                SemRelationV4::Structural { id, target, .. } if id == focal_relation_id => {
+                    Some(target.clone())
+                }
+                _ => None,
+            })
+            .unwrap();
+        let output_id = format!("derived:{interaction_id}");
+        let effect_relation_id = format!("relation:{interaction_id}:effect");
+        let effect_parameter_id = format!("parameter:{interaction_id}:effect");
+        model.variables.push(SemVariableV4::Derived {
+            id: output_id.clone(),
+            label: interaction_id.into(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: effect_relation_id,
+            source: output_id.clone(),
+            target: outcome_id.clone(),
+            parameter: effect_parameter_id.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: effect_parameter_id,
+            label: format!("{interaction_id} -> {outcome_id}"),
+            target: SemParameterTargetV4::Regression {
+                source: output_id.clone(),
+                target: outcome_id,
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+            id: interaction_id.into(),
+            output: output_id,
+            operands: vec![focal_predictor_id.into(), moderator_id.into()],
+            focal_relation: focal_relation_id.into(),
+            method: InteractionMethodV4::TwoStage,
+            hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+            product_indicator: None,
+        });
     }
 
     fn job_state(
@@ -1358,6 +1598,250 @@ mod tests {
             DesktopRecipeV4Jobs::default(),
         )
         .unwrap()
+    }
+
+    fn completed_moderation_job(
+        same_focal: bool,
+        job_id: Uuid,
+    ) -> InternalLabsGeneralSemPlsCompletedResultV1 {
+        let published = published_fixture_from(
+            direct_only_moderation_fixture(same_focal),
+            if same_focal {
+                "general-sem-same-focal-moderation.qpls"
+            } else {
+                "general-sem-different-focal-moderation.qpls"
+            },
+            general_sem_multiple_moderation_point_capability_cell_v1(),
+        );
+        let resolved = resolve_archive_authority(&published.request).unwrap();
+        let cancellation = Arc::new(AtomicBool::new(false));
+        let state = job_state(
+            job_id,
+            cancellation.clone(),
+            resolved.archive_identity.clone(),
+        );
+        run_worker(
+            job_id,
+            published.request,
+            resolved,
+            cancellation,
+            state.0.clone(),
+            admission(job_id),
+        );
+        assert_eq!(
+            state.0.lock().unwrap().get(&job_id).unwrap().snapshot.state,
+            InternalLabsGeneralSemPlsJobStateV1::Completed
+        );
+        take_completed_result(job_id, &state).unwrap()
+    }
+
+    fn assert_moderation_result_surface_identity(document: &qpls_core::CanonicalResultDocumentV2) {
+        let results = document.general_sem_results.as_ref().unwrap();
+        let structural_table = document
+            .tables
+            .iter()
+            .find(|table| table.id == "structural_paths")
+            .unwrap();
+        let structural_ledger = results
+            .joint_stage_structural_coefficients
+            .iter()
+            .filter(|coefficient| {
+                coefficient.role == qpls_core::CanonicalStructuralRelationRoleV1::Structural
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(structural_table.rows.len(), structural_ledger.len());
+        for coefficient in structural_ledger {
+            let row = structural_table
+                .rows
+                .iter()
+                .find(|row| {
+                    matches!(
+                        row.cells.first(),
+                        Some(qpls_core::CanonicalResultCell::Text { value })
+                            if value == &coefficient.relation_id
+                    )
+                })
+                .unwrap();
+            assert!(matches!(
+                row.cells.as_slice(),
+                [
+                    qpls_core::CanonicalResultCell::Text { value: relation_id },
+                    qpls_core::CanonicalResultCell::Text { value: parameter_id },
+                    qpls_core::CanonicalResultCell::Text { value: source_id },
+                    qpls_core::CanonicalResultCell::Text { value: target_id },
+                    qpls_core::CanonicalResultCell::Number { value: estimate, .. },
+                ] if relation_id == &coefficient.relation_id
+                    && parameter_id == &coefficient.parameter_id
+                    && source_id == &coefficient.source_id
+                    && target_id == &coefficient.target_id
+                    && estimate.to_bits() == coefficient.estimate.estimate.to_bits()
+            ));
+        }
+        let control_ledger = results
+            .joint_stage_structural_coefficients
+            .iter()
+            .filter(|coefficient| {
+                coefficient.role == qpls_core::CanonicalStructuralRelationRoleV1::Control
+            })
+            .collect::<Vec<_>>();
+        let control_table = document
+            .tables
+            .iter()
+            .find(|table| table.id == qpls_project::PLS_CONTROL_ESTIMATES_TABLE_ID_V2);
+        if control_ledger.is_empty() {
+            assert!(control_table.is_none());
+        } else {
+            let control_table = control_table.unwrap();
+            assert_eq!(control_table.rows.len(), control_ledger.len());
+            for coefficient in control_ledger {
+                let row = control_table
+                    .rows
+                    .iter()
+                    .find(|row| {
+                        matches!(
+                            row.cells.first(),
+                            Some(qpls_core::CanonicalResultCell::Text { value })
+                                if value == &coefficient.relation_id
+                        )
+                    })
+                    .unwrap();
+                assert!(matches!(
+                    row.cells.as_slice(),
+                    [
+                        qpls_core::CanonicalResultCell::Text { value: relation_id },
+                        qpls_core::CanonicalResultCell::Text { value: parameter_id },
+                        qpls_core::CanonicalResultCell::Text { value: source_id },
+                        qpls_core::CanonicalResultCell::Text { value: target_id },
+                        _,
+                        qpls_core::CanonicalResultCell::Number { value: estimate, .. },
+                    ] if relation_id == &coefficient.relation_id
+                        && parameter_id == &coefficient.parameter_id
+                        && source_id == &coefficient.source_id
+                        && target_id == &coefficient.target_id
+                        && estimate.to_bits() == coefficient.estimate.estimate.to_bits()
+                ));
+            }
+        }
+        let interaction_table = document
+            .tables
+            .iter()
+            .find(|table| table.id == "general_sem_interaction_effects")
+            .unwrap();
+        assert_eq!(
+            interaction_table.rows.len(),
+            results.interaction_effects.len()
+        );
+        for (row, effect) in interaction_table
+            .rows
+            .iter()
+            .zip(&results.interaction_effects)
+        {
+            assert!(matches!(
+                row.cells.as_slice(),
+                [
+                    qpls_core::CanonicalResultCell::Text { value: effect_id },
+                    qpls_core::CanonicalResultCell::Text { value: interaction_id },
+                    qpls_core::CanonicalResultCell::Text { value: focal_relation_id },
+                    ..
+                ] if effect_id == &effect.effect_id
+                    && interaction_id == &effect.interaction_id
+                    && focal_relation_id == &effect.focal_relation_id
+            ));
+        }
+
+        let slope_table = document
+            .tables
+            .iter()
+            .find(|table| table.id == "general_sem_conditional_slopes")
+            .unwrap();
+        assert_eq!(slope_table.rows.len(), results.conditional_effects.len());
+        for (row, effect) in slope_table.rows.iter().zip(&results.conditional_effects) {
+            assert!(matches!(
+                row.cells.as_slice(),
+                [
+                    qpls_core::CanonicalResultCell::Text { value: effect_id },
+                    qpls_core::CanonicalResultCell::Text { value: interaction_id },
+                    qpls_core::CanonicalResultCell::Text { value: interaction_effect_id },
+                    qpls_core::CanonicalResultCell::Text { value: focal_relation_id },
+                    qpls_core::CanonicalResultCell::Text { value: probe_id },
+                    qpls_core::CanonicalResultCell::Number { value: probe_index, .. },
+                    _,
+                    _,
+                    qpls_core::CanonicalResultCell::Number { value: moderator_value, .. },
+                    qpls_core::CanonicalResultCell::Number { value: estimate, .. },
+                    _,
+                ] if effect_id == &effect.effect_id
+                    && interaction_id == &effect.interaction_id
+                    && Some(interaction_effect_id.as_str()) == effect.interaction_effect_id.as_deref()
+                    && focal_relation_id == &effect.focal_relation_id
+                    && probe_id == &effect.probe_id
+                    && probe_index.to_bits() == f64::from(effect.probe_value_index).to_bits()
+                    && moderator_value.to_bits() == effect.moderator_value.to_bits()
+                    && estimate.to_bits() == effect.value.estimate.to_bits()
+            ));
+        }
+
+        let plot_table = document
+            .tables
+            .iter()
+            .find(|table| table.id == "general_sem_interaction_plots")
+            .unwrap();
+        let expected_plot_rows = results
+            .interaction_plots
+            .iter()
+            .map(|plot| {
+                plot.series
+                    .iter()
+                    .map(|series| series.points.len())
+                    .sum::<usize>()
+            })
+            .sum::<usize>();
+        assert_eq!(plot_table.rows.len(), expected_plot_rows);
+        assert_eq!(document.charts.len(), results.interaction_plots.len());
+        for (index, (chart, plot)) in document
+            .charts
+            .iter()
+            .zip(&results.interaction_plots)
+            .enumerate()
+        {
+            assert_eq!(
+                chart.id,
+                format!("general_sem_interaction_chart_{index:04}")
+            );
+            assert_eq!(
+                chart.source_table_id.as_deref(),
+                Some("general_sem_interaction_plots")
+            );
+            assert_eq!(chart.series.len(), plot.series.len());
+            for (chart_series, plot_series) in chart.series.iter().zip(&plot.series) {
+                assert_eq!(chart_series.id, plot_series.series_id);
+                assert_eq!(
+                    chart_series.group.as_deref(),
+                    Some(plot.interaction_id.as_str())
+                );
+                assert_eq!(chart_series.points.len(), plot_series.points.len());
+                for (chart_point, plot_point) in chart_series.points.iter().zip(&plot_series.points)
+                {
+                    assert!(matches!(
+                        chart_point.x,
+                        qpls_core::CanonicalChartX::Number(value)
+                            if value.to_bits() == plot_point.focal_value.to_bits()
+                    ));
+                    assert_eq!(
+                        chart_point.y.to_bits(),
+                        plot_point.predicted_value.to_bits()
+                    );
+                    assert_eq!(
+                        chart_point.lower.map(f64::to_bits),
+                        plot_point.lower.map(f64::to_bits)
+                    );
+                    assert_eq!(
+                        chart_point.upper.map(f64::to_bits),
+                        plot_point.upper.map(f64::to_bits)
+                    );
+                }
+            }
+        }
     }
 
     #[test]
@@ -1476,6 +1960,547 @@ mod tests {
             artifact.plan().topology().specific_directed_paths().len(),
             1
         );
+    }
+
+    #[test]
+    fn same_focal_moderation_job_publishes_joint_stage_two_authority() {
+        let completed = completed_moderation_job(true, Uuid::from_u128(0x7310));
+        let moderation_cell = general_sem_multiple_moderation_point_capability_cell_v1();
+        assert_eq!(
+            completed.canonical_document.provenance.capability_cell,
+            moderation_cell
+        );
+        assert_eq!(
+            completed.canonical_document.title,
+            "General SEM simultaneous two-way PLS moderation point estimates"
+        );
+        let interactions = completed
+            .analytical_result
+            .interaction_point_estimation()
+            .unwrap();
+        assert_eq!(interactions.interaction_coefficients().len(), 2);
+        assert_eq!(
+            interactions
+                .interaction_coefficients()
+                .iter()
+                .map(|coefficient| coefficient.focal_relation_id())
+                .collect::<std::collections::BTreeSet<_>>()
+                .len(),
+            1
+        );
+        let final_coefficients = interactions
+            .structural_coefficients()
+            .iter()
+            .map(|coefficient| {
+                (
+                    coefficient.relation_id().to_string(),
+                    (
+                        coefficient.source_id().to_string(),
+                        coefficient.target_id().to_string(),
+                        coefficient.estimate(),
+                    ),
+                )
+            })
+            .collect::<std::collections::BTreeMap<_, _>>();
+        let published_coefficients = completed
+            .canonical_document
+            .tables
+            .iter()
+            .find(|table| table.id == "structural_paths")
+            .unwrap()
+            .rows
+            .iter()
+            .map(|row| match row.cells.as_slice() {
+                [
+                    qpls_core::CanonicalResultCell::Text { value: relation_id },
+                    qpls_core::CanonicalResultCell::Text {
+                        value: _parameter_id,
+                    },
+                    qpls_core::CanonicalResultCell::Text { value: source },
+                    qpls_core::CanonicalResultCell::Text { value: target },
+                    qpls_core::CanonicalResultCell::Number { value, .. },
+                ] => (
+                    relation_id.clone(),
+                    (source.clone(), target.clone(), *value),
+                ),
+                _ => panic!("unexpected joint structural row"),
+            })
+            .collect::<std::collections::BTreeMap<_, _>>();
+        assert_eq!(published_coefficients, final_coefficients);
+        let stage_one_coefficients = completed
+            .analytical_result
+            .point_estimation()
+            .estimation()
+            .paths
+            .iter()
+            .map(|path| ((path.source.clone(), path.target.clone()), path.coefficient))
+            .collect::<std::collections::BTreeMap<_, _>>();
+        assert!(
+            final_coefficients
+                .values()
+                .any(|(source, target, coefficient)| {
+                    stage_one_coefficients
+                        .get(&(source.clone(), target.clone()))
+                        .is_some_and(|stage_one| stage_one.to_bits() != coefficient.to_bits())
+                })
+        );
+        for stale_table in [
+            "effects",
+            "r_squared",
+            qpls_project::PLS_CONTROL_ESTIMATES_TABLE_ID_V2,
+            qpls_project::PLS_POINT_ESTIMATE_ATTRIBUTION_TABLE_ID_V1,
+        ] {
+            assert!(
+                completed
+                    .canonical_document
+                    .tables
+                    .iter()
+                    .all(|table| table.id != stale_table)
+            );
+        }
+        let canonical = completed
+            .canonical_document
+            .general_sem_results
+            .as_ref()
+            .unwrap();
+        assert!(canonical.specific_indirect_effects.is_empty());
+        assert!(canonical.aggregate_effects.is_empty());
+        assert_eq!(canonical.interaction_effects.len(), 2);
+        assert_eq!(canonical.conditional_effects.len(), 6);
+        assert_eq!(canonical.interaction_plots.len(), 2);
+        assert!(completed.canonical_document.tables.iter().any(|table| {
+            table.id == "general_sem_interaction_effects" && table.rows.len() == 2
+        }));
+        assert_eq!(completed.canonical_document.charts.len(), 2);
+        assert!(completed.canonical_document.tables.iter().any(|table| {
+            table.id == "general_sem_interaction_plots" && table.rows.len() == 18
+        }));
+        let measurement_section = completed
+            .canonical_document
+            .sections
+            .iter()
+            .find(|section| section.id == "measurement_model")
+            .unwrap();
+        assert_eq!(measurement_section.title, "Stage-one measurement model");
+        assert!(measurement_section.table_ids.iter().all(|table_id| {
+            completed
+                .canonical_document
+                .tables
+                .iter()
+                .find(|table| table.id.as_str() == table_id.as_str())
+                .is_some_and(|table| table.title.starts_with("Stage-one "))
+        }));
+        let plot_table = completed
+            .canonical_document
+            .tables
+            .iter()
+            .find(|table| table.id == "general_sem_interaction_plots")
+            .unwrap();
+        assert!(completed.canonical_document.charts.iter().all(|chart| {
+            chart.source_table_id.as_deref() == Some(plot_table.id.as_str())
+                && chart.series.len() == 3
+                && chart.series.iter().all(|series| series.points.len() == 3)
+        }));
+    }
+
+    #[test]
+    fn different_focal_moderation_job_publishes_both_joint_equations() {
+        let completed = completed_moderation_job(false, Uuid::from_u128(0x7311));
+        let canonical = completed
+            .canonical_document
+            .general_sem_results
+            .as_ref()
+            .unwrap();
+        assert_eq!(canonical.interaction_effects.len(), 2);
+        assert_eq!(
+            canonical
+                .interaction_effects
+                .iter()
+                .map(|effect| effect.focal_relation_id.as_str())
+                .collect::<std::collections::BTreeSet<_>>()
+                .len(),
+            2
+        );
+        assert_eq!(canonical.conditional_effect_probes.len(), 2);
+        assert_eq!(canonical.conditional_effects.len(), 6);
+        assert_eq!(canonical.interaction_plots.len(), 2);
+        assert!(canonical.interaction_plots.iter().all(|plot| {
+            plot.series.len() == 3 && plot.series.iter().all(|series| series.points.len() == 3)
+        }));
+    }
+
+    #[test]
+    fn moderation_native_lifecycle_appends_reopens_and_preserves_exact_surfaces() {
+        for (same_focal, fixture_index) in [(true, 0_u128), (false, 1_u128)] {
+            let published = published_fixture_from(
+                direct_only_moderation_fixture(same_focal),
+                if same_focal {
+                    "general-sem-lifecycle-same-focal.qpls"
+                } else {
+                    "general-sem-lifecycle-different-focal.qpls"
+                },
+                general_sem_multiple_moderation_point_capability_cell_v1(),
+            );
+            let archive_path = PathBuf::from(&published.request.archive_path);
+            let before_bytes = fs::read(&archive_path).unwrap();
+            assert_eq!(
+                format!("{:x}", Sha256::digest(&before_bytes)),
+                published.request.expected_archive_sha256
+            );
+            assert_eq!(
+                load_project_archive_v6(&archive_path)
+                    .unwrap()
+                    .document
+                    .canonical_result_documents
+                    .len(),
+                0
+            );
+
+            let resolved = resolve_archive_authority(&published.request).unwrap();
+            let job_id = Uuid::from_u128(0x7330 + fixture_index);
+            let cancellation = Arc::new(AtomicBool::new(false));
+            let state = job_state(
+                job_id,
+                cancellation.clone(),
+                resolved.archive_identity.clone(),
+            );
+            run_worker(
+                job_id,
+                published.request.clone(),
+                resolved,
+                cancellation,
+                state.0.clone(),
+                admission(job_id),
+            );
+            let completed = take_completed_result(job_id, &state).unwrap();
+            assert_eq!(
+                completed.archive_identity.archive_sha256,
+                published.request.expected_archive_sha256
+            );
+            assert_moderation_result_surface_identity(&completed.canonical_document);
+            let archive_document =
+                serde_json::from_value::<qpls_project::CanonicalResultDocumentV2>(
+                    serde_json::to_value(&completed.canonical_document).unwrap(),
+                )
+                .unwrap();
+            let expected_document_json =
+                canonical_result_document_v2_json(&archive_document).unwrap();
+            let expected_document_sha256 = format!("{:x}", Sha256::digest(&expected_document_json));
+
+            let mut stale_method = archive_document.clone();
+            stale_method.provenance.method_version = "stale_moderation_method".into();
+            let stale_method_append = append_internal_project_schema6_canonical_result_v2(
+                ProjectSchema6ResultAppendRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                    recipe: None,
+                    canonical_document: stale_method,
+                },
+            );
+            assert!(matches!(
+                stale_method_append,
+                ProjectSchema6ResultAppendOutcomeV1::Blocked { diagnostic }
+                    if diagnostic.code
+                        == "schema6_result_append.general_sem_method_identity_mismatch"
+            ));
+            assert_eq!(fs::read(&archive_path).unwrap(), before_bytes);
+
+            let mut mismatched_value = serde_json::to_value(&archive_document).unwrap();
+            let structural_rows = mismatched_value["tables"]
+                .as_array_mut()
+                .unwrap()
+                .iter_mut()
+                .find(|table| table["id"] == "structural_paths")
+                .unwrap()["rows"]
+                .as_array_mut()
+                .unwrap();
+            let estimate = structural_rows[0]["cells"][4]["value"].as_f64().unwrap();
+            structural_rows[0]["cells"][4]["value"] = serde_json::json!(estimate + 0.125);
+            let mismatched_document =
+                serde_json::from_value::<qpls_project::CanonicalResultDocumentV2>(mismatched_value)
+                    .unwrap();
+            let mismatched_append = append_internal_project_schema6_canonical_result_v2(
+                ProjectSchema6ResultAppendRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                    recipe: None,
+                    canonical_document: mismatched_document,
+                },
+            );
+            assert!(matches!(
+                mismatched_append,
+                ProjectSchema6ResultAppendOutcomeV1::Blocked { .. }
+            ));
+            assert_eq!(fs::read(&archive_path).unwrap(), before_bytes);
+
+            let focal_relation_id = archive_document
+                .general_sem_results
+                .as_ref()
+                .unwrap()
+                .interaction_effects[0]
+                .focal_relation_id
+                .clone();
+            let mut coherent_focal_tamper = serde_json::to_value(&archive_document).unwrap();
+            let ledger =
+                coherent_focal_tamper["general_sem_results"]["joint_stage_structural_coefficients"]
+                    .as_array_mut()
+                    .unwrap();
+            let focal_ledger_entry = ledger
+                .iter_mut()
+                .find(|entry| entry["relation_id"] == focal_relation_id)
+                .unwrap();
+            let focal_estimate = focal_ledger_entry["estimate"]["estimate"].as_f64().unwrap();
+            focal_ledger_entry["estimate"]["estimate"] = serde_json::json!(focal_estimate + 0.125);
+            let focal_structural_rows = coherent_focal_tamper["tables"]
+                .as_array_mut()
+                .unwrap()
+                .iter_mut()
+                .find(|table| table["id"] == "structural_paths")
+                .unwrap()["rows"]
+                .as_array_mut()
+                .unwrap();
+            let focal_row = focal_structural_rows
+                .iter_mut()
+                .find(|row| row["cells"][0]["value"] == focal_relation_id)
+                .unwrap();
+            focal_row["cells"][4]["value"] = serde_json::json!(focal_estimate + 0.125);
+            let coherent_focal_document = serde_json::from_value::<
+                qpls_project::CanonicalResultDocumentV2,
+            >(coherent_focal_tamper)
+            .unwrap();
+            let coherent_focal_append = append_internal_project_schema6_canonical_result_v2(
+                ProjectSchema6ResultAppendRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                    recipe: None,
+                    canonical_document: coherent_focal_document,
+                },
+            );
+            assert!(matches!(
+                coherent_focal_append,
+                ProjectSchema6ResultAppendOutcomeV1::Blocked { .. }
+            ));
+            assert_eq!(fs::read(&archive_path).unwrap(), before_bytes);
+
+            let append = append_internal_project_schema6_canonical_result_v2(
+                ProjectSchema6ResultAppendRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                    recipe: None,
+                    canonical_document: archive_document.clone(),
+                },
+            );
+            let receipt = match append {
+                ProjectSchema6ResultAppendOutcomeV1::Ok { value } => value,
+                ProjectSchema6ResultAppendOutcomeV1::Blocked { diagnostic } => {
+                    panic!("moderation append blocked: {diagnostic:?}")
+                }
+            };
+            assert_eq!(
+                receipt.source_document_sha256,
+                published.request.expected_archive_sha256
+            );
+            assert_ne!(
+                receipt.updated_document_sha256,
+                receipt.source_document_sha256
+            );
+            assert_eq!(receipt.canonical_result_document_count, 1);
+            assert!(receipt.source_verified_at_commit);
+            assert!(receipt.post_write_validated);
+            assert!(receipt.rollback_copy_removed);
+            let after_bytes = fs::read(&archive_path).unwrap();
+            assert_ne!(after_bytes, before_bytes);
+            assert_eq!(
+                format!("{:x}", Sha256::digest(&after_bytes)),
+                receipt.updated_document_sha256
+            );
+
+            let reopened = read_internal_project_schema6_canonical_results_v2(
+                ProjectSchema6ResultReadRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: receipt.updated_document_sha256.clone(),
+                },
+            );
+            let snapshot = match reopened {
+                ProjectSchema6ResultReadOutcomeV1::Ok { value } => value,
+                ProjectSchema6ResultReadOutcomeV1::Blocked { diagnostic } => {
+                    panic!("moderation reopen blocked: {diagnostic:?}")
+                }
+            };
+            assert_eq!(
+                snapshot.source_document_sha256,
+                receipt.updated_document_sha256
+            );
+            assert_eq!(snapshot.canonical_result_document_count, 1);
+            assert!(snapshot.source_rechecked_unchanged);
+            assert_eq!(snapshot.documents.len(), 1);
+            let reopened_result = &snapshot.documents[0];
+            assert!(reopened_result.immutable);
+            assert_eq!(reopened_result.document_id, receipt.canonical_document_id);
+            assert_eq!(reopened_result.run_id, receipt.run_id);
+            assert_eq!(
+                reopened_result.canonical_document_sha256,
+                expected_document_sha256
+            );
+            assert_eq!(
+                reopened_result.canonical_document_json.as_bytes(),
+                expected_document_json
+            );
+            assert_eq!(reopened_result.canonical_document, archive_document);
+            let reopened_core = serde_json::from_value::<qpls_core::CanonicalResultDocumentV2>(
+                serde_json::to_value(&reopened_result.canonical_document).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(reopened_core, completed.canonical_document);
+            assert_moderation_result_surface_identity(&reopened_core);
+            assert_eq!(
+                load_project_archive_v6(&archive_path)
+                    .unwrap()
+                    .document
+                    .canonical_result_documents
+                    .len(),
+                1
+            );
+        }
+    }
+
+    #[test]
+    fn moderation_capability_tamper_is_blocked_after_compiled_plan_classification() {
+        let published = published_fixture_from(
+            direct_only_moderation_fixture(true),
+            "general-sem-moderation-capability-tamper.qpls",
+            pls_general_recursive_effects_capability_cell_v1(),
+        );
+        let resolved = resolve_archive_authority(&published.request).unwrap();
+        let failure =
+            validate_exact_capability_and_data(&published.request, &resolved).unwrap_err();
+        assert_eq!(failure.code, "general_sem_pls.capability_cell_mismatch");
+        assert_eq!(failure.subject, "capabilityCell");
+    }
+
+    #[test]
+    fn cancelled_moderation_job_never_publishes_a_partial_result() {
+        let published = published_fixture_from(
+            direct_only_moderation_fixture(false),
+            "general-sem-cancelled-moderation.qpls",
+            general_sem_multiple_moderation_point_capability_cell_v1(),
+        );
+        let resolved = resolve_archive_authority(&published.request).unwrap();
+        let job_id = Uuid::from_u128(0x7312);
+        let cancellation = Arc::new(AtomicBool::new(true));
+        let state = job_state(
+            job_id,
+            cancellation.clone(),
+            resolved.archive_identity.clone(),
+        );
+        run_worker(
+            job_id,
+            published.request,
+            resolved,
+            cancellation,
+            state.0.clone(),
+            admission(job_id),
+        );
+        let jobs = state.0.lock().unwrap();
+        let job = jobs.get(&job_id).unwrap();
+        assert_eq!(
+            job.snapshot.state,
+            InternalLabsGeneralSemPlsJobStateV1::Cancelled
+        );
+        assert!(job.result.is_none());
+    }
+
+    #[test]
+    fn moderation_cancellation_checkpoints_never_publish_or_mutate_the_archive() {
+        for (checkpoint, checkpoint_index) in [
+            (
+                GeneralSemPlsWorkerCheckpointV1::DuringInteractionExecution,
+                0_u128,
+            ),
+            (
+                GeneralSemPlsWorkerCheckpointV1::AfterExecutionBeforeCanonicalization,
+                1_u128,
+            ),
+            (
+                GeneralSemPlsWorkerCheckpointV1::AfterCanonicalizationBeforePublication,
+                2_u128,
+            ),
+        ] {
+            let published = published_fixture_from(
+                direct_only_moderation_fixture(false),
+                &format!("general-sem-cancel-checkpoint-{checkpoint_index}.qpls"),
+                general_sem_multiple_moderation_point_capability_cell_v1(),
+            );
+            let archive_path = PathBuf::from(&published.request.archive_path);
+            let before_bytes = fs::read(&archive_path).unwrap();
+            let before_sha256 = format!("{:x}", Sha256::digest(&before_bytes));
+            let before_result_count = load_project_archive_v6(&archive_path)
+                .unwrap()
+                .document
+                .canonical_result_documents
+                .len();
+            let resolved = resolve_archive_authority(&published.request).unwrap();
+            let job_id = Uuid::from_u128(0x7340 + checkpoint_index);
+            let cancellation = Arc::new(AtomicBool::new(false));
+            let checkpoint_seen = Arc::new(AtomicBool::new(false));
+            let cancellation_for_hook = cancellation.clone();
+            let checkpoint_seen_by_hook = checkpoint_seen.clone();
+            let hook: GeneralSemPlsWorkerCheckpointHookV1 = Arc::new(move |observed| {
+                if observed == checkpoint {
+                    checkpoint_seen_by_hook.store(true, Ordering::Release);
+                    cancellation_for_hook.store(true, Ordering::Release);
+                }
+            });
+            let state = job_state(
+                job_id,
+                cancellation.clone(),
+                resolved.archive_identity.clone(),
+            );
+            run_worker_with_checkpoint_hook(
+                job_id,
+                published.request,
+                resolved,
+                cancellation,
+                state.0.clone(),
+                admission(job_id),
+                Some(hook),
+            );
+
+            assert!(checkpoint_seen.load(Ordering::Acquire));
+            let jobs = state.0.lock().unwrap();
+            let job = jobs.get(&job_id).unwrap();
+            assert_eq!(
+                job.snapshot.state,
+                InternalLabsGeneralSemPlsJobStateV1::Cancelled
+            );
+            assert!(job.snapshot.completed_at.is_some());
+            assert!(job.result.is_none());
+            drop(jobs);
+            let unavailable = take_completed_result(job_id, &state).unwrap_err();
+            assert_eq!(unavailable.code, "general_sem_pls.result_not_available");
+
+            let after_bytes = fs::read(&archive_path).unwrap();
+            assert_eq!(after_bytes, before_bytes);
+            assert_eq!(format!("{:x}", Sha256::digest(&after_bytes)), before_sha256);
+            assert_eq!(
+                load_project_archive_v6(&archive_path)
+                    .unwrap()
+                    .document
+                    .canonical_result_documents
+                    .len(),
+                before_result_count
+            );
+        }
     }
 
     #[test]

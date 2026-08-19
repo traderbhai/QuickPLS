@@ -88,6 +88,51 @@ describe("General SEM fresh-project draft authority", () => {
     expect(useWorkspace.getState().generalSemPublicationPending).toBe(false);
   });
 
+  it("authors explicit interaction_v2 terms only inside a fresh General SEM project", () => {
+    expect(useWorkspace.getState().beginGeneralSemProjectDraftMode(PROJECT_ID)).toBe(true);
+    useWorkspace.setState({
+      nodes: [
+        { id: "x", type: "construct", position: { x: 0, y: 0 }, data: { label: "Predictor", shortName: "X", mode: "reflective", indicators: ["x1"] } },
+        { id: "w", type: "construct", position: { x: 0, y: 120 }, data: { label: "Moderator", shortName: "W", mode: "reflective", indicators: ["w1"] } },
+        { id: "z", type: "construct", position: { x: 0, y: 240 }, data: { label: "Second moderator", shortName: "Z", mode: "reflective", indicators: ["z1"] } },
+        { id: "y", type: "construct", position: { x: 360, y: 100 }, data: { label: "Outcome", shortName: "Y", mode: "reflective", indicators: ["y1"] } },
+      ],
+      edges: [
+        { id: "focal-x-y", source: "x", target: "y" },
+        { id: "focal-w-y", source: "w", target: "y" },
+      ],
+      past: [],
+      future: [],
+    });
+
+    const first = useWorkspace.getState().addTwoStageInteraction("x", "w", "y");
+    const second = useWorkspace.getState().addTwoStageInteraction("x", "z", "y");
+    const differentFocal = useWorkspace.getState().addTwoStageInteraction("w", "z", "y");
+    expect([first, second, differentFocal]).toEqual([
+      expect.objectContaining({ status: "created" }),
+      expect.objectContaining({ status: "created" }),
+      expect.objectContaining({ status: "created" }),
+    ]);
+
+    const interactions = useWorkspace.getState().nodes
+      .filter((node) => node.data.semantic === "interaction")
+      .map((node) => node.data.interaction);
+    expect(interactions).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        kind: "interaction_v2",
+        operands: ["x", "w"],
+        outcome: "y",
+        focalRelationId: "focal-x-y",
+        canonicalMethod: "two_stage",
+        hierarchyPolicy: "strong",
+        productIndicator: null,
+      }),
+      expect.objectContaining({ kind: "interaction_v2", operands: ["x", "z"], focalRelationId: "focal-x-y" }),
+      expect.objectContaining({ kind: "interaction_v2", operands: ["w", "z"], focalRelationId: "focal-w-y" }),
+    ]));
+    expect(interactions.every((interaction) => interaction?.termId?.startsWith("interaction-term:"))).toBe(true);
+  });
+
   it("keeps active General SEM work globally visible and prevents Labs from disappearing", () => {
     useWorkspace.getState().setUiPreferences({ experimentalLabsEnabled: true });
     useWorkspace.getState().setGeneralSemTransientWorkBlocker("job_active");

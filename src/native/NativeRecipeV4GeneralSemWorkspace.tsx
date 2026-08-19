@@ -23,6 +23,8 @@ import {
   preflightGeneralSemWorkspaceV1,
   rehydrateGeneralSemExecutionAuthorityV1,
   reopenGeneralSemResultV1,
+  selectGeneralSemPlsExecutionCapabilityV1,
+  validateGeneralSemPlsCompletedExecutionV1,
   type GeneralSemPlsCompletedResultV1,
   type GeneralSemPlsEngineOptionsV1,
   type GeneralSemPlsJobFailureV1,
@@ -30,6 +32,8 @@ import {
   type GeneralSemPlsMonitorOutcomeV1,
   type GeneralSemProjectBootstrapReceiptV1,
 } from "../domain/internalRecipeV4GeneralSemWorkspace";
+import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
+import type { SemCapabilityDecisionV1 } from "../domain/semCapabilityDecisionV1";
 import { supportsGeneralSemV1 } from "../domain/internalProjectArchiveV6Wire";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "../domain/internalProjectArchiveV6Read";
 import type { InternalProjectSchema6CanonicalResultEntryV1 } from "../domain/internalProjectSchema6ResultRead";
@@ -131,6 +135,41 @@ export function selectGeneralSemDisplayedDocumentV1<T>(
 ): T | null {
   if (resultIntegrityInvalid || !authorityCurrent) return null;
   return reopenedDocument ?? completedDocument;
+}
+
+export interface GeneralSemNativePlsPreflightAuthorityV1 {
+  readonly authorityKey: string;
+  readonly decision: SemCapabilityDecisionV1;
+}
+
+export function selectCurrentGeneralSemNativePlsDecisionV1(
+  preflight: GeneralSemNativePlsPreflightAuthorityV1 | null,
+  authorityKey: string,
+): SemCapabilityDecisionV1 | null {
+  return preflight?.authorityKey === authorityKey ? preflight.decision : null;
+}
+
+export interface GeneralSemCanonicalModerationInventoryV1 {
+  readonly interactionEffectCount: number;
+  readonly conditionalSlopeCount: number;
+  readonly interactionPlotCount: number;
+  readonly interactionPlotPointCount: number;
+}
+
+export function generalSemCanonicalModerationInventoryV1(
+  document: CanonicalResultDocumentV2 | null,
+): GeneralSemCanonicalModerationInventoryV1 | null {
+  const results = document?.general_sem_results;
+  const interactionEffectCount = results?.interaction_effects?.length ?? 0;
+  if (interactionEffectCount === 0) return null;
+  return {
+    interactionEffectCount,
+    conditionalSlopeCount: results?.conditional_effects?.length ?? 0,
+    interactionPlotCount: results?.interaction_plots?.length ?? 0,
+    interactionPlotPointCount: results?.interaction_plots?.reduce((plotTotal, plot) => (
+      plotTotal + plot.series.reduce((seriesTotal, series) => seriesTotal + series.points.length, 0)
+    ), 0) ?? 0,
+  };
 }
 
 export function selectLatestGeneralSemReopenedEntryV1(
@@ -392,7 +431,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const [archiveSnapshot, setArchiveSnapshot] = useState<InternalProjectArchiveV6ReadSnapshotV1 | null>(
     markedGeneralSemProjectMode ? generalSemSession?.snapshot ?? null : null,
   );
-  const [nativePreflightReady, setNativePreflightReady] = useState(false);
+  const [nativePlsPreflight, setNativePlsPreflight] = useState<GeneralSemNativePlsPreflightAuthorityV1 | null>(null);
   const [snapshot, setSnapshot] = useState<GeneralSemPlsJobSnapshotV1 | null>(null);
   const [completed, setCompleted] = useState<GeneralSemPlsCompletedResultV1 | null>(null);
   const [failure, setFailure] = useState<GeneralSemPlsJobFailureV1 | null>(null);
@@ -518,6 +557,23 @@ export function NativeRecipeV4GeneralSemWorkspace({
     engine: effectiveEngine,
   }), [config, dataset.fingerprint, dataset.id, effectiveEngine, modelScientificInput, sourceProjectId]);
   latestAuthorityKeyRef.current = authorityKey;
+  const nativePlsDecision = selectCurrentGeneralSemNativePlsDecisionV1(
+    nativePlsPreflight,
+    authorityKey,
+  );
+  const nativePlsExecution = useMemo(() => {
+    if (!nativePlsDecision || !model || !config) return null;
+    try {
+      return selectGeneralSemPlsExecutionCapabilityV1({
+        model,
+        config,
+        decision: nativePlsDecision,
+      });
+    } catch {
+      return null;
+    }
+  }, [config, model, nativePlsDecision]);
+  const nativePreflightReady = nativePlsExecution !== null;
   const archiveCurrent = Boolean(receipt && currentArchiveSha256 && capturedAuthorityKeyRef.current === authorityKey);
   const resultAuthorityCurrent = Boolean(
     archiveCurrent
@@ -535,6 +591,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     resultIntegrityInvalid,
     !completed && !reopenedEntry ? true : resultAuthorityCurrent,
   );
+  const moderationInventory = generalSemCanonicalModerationInventoryV1(displayedDocument);
   const unpersistedCompletedResult = generalSemTemporaryResultBlocksCloseV1({
     completed: Boolean(completed),
     appendSucceeded: appendOutcome?.status === "ok",
@@ -544,9 +601,12 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const operationBusy = busy || generalSemPublicationPending;
 
   useEffect(() => {
-    if (!markedGeneralSemProjectMode || !generalSemSession) return;
+    if (!markedGeneralSemProjectMode || !generalSemSession) {
+      setNativePlsPreflight(null);
+      return;
+    }
     if (rehydratedExecution?.status !== "ok" || !model || !config) {
-      setNativePreflightReady(false);
+      setNativePlsPreflight(null);
       if (rehydratedExecution?.status === "blocked") setFailure(rehydratedExecution.failure);
       return;
     }
@@ -556,31 +616,39 @@ export function NativeRecipeV4GeneralSemWorkspace({
     setCurrentArchiveSha256(generalSemSession.snapshot.archiveSha256);
     capturedAuthorityKeyRef.current = authorityKey;
     latestAuthorityKeyRef.current = authorityKey;
-    setNativePreflightReady(false);
+    setNativePlsPreflight(null);
+    const requestedAuthorityKey = authorityKey;
     let live = true;
     void services.nativePreflight({
       project: generalSemSession.project,
       model,
       config,
     }).then((outcome) => {
-      if (!live) return;
-      if (outcome.status === "ok" && outcome.value.pls.status === "experimental") {
-        setNativePreflightReady(true);
+      if (!live || latestAuthorityKeyRef.current !== requestedAuthorityKey) return;
+      if (outcome.status === "ok") {
+        try {
+          selectGeneralSemPlsExecutionCapabilityV1({
+            model,
+            config,
+            decision: outcome.value.pls,
+          });
+          setNativePlsPreflight({
+            authorityKey: requestedAuthorityKey,
+            decision: outcome.value.pls,
+          });
+        } catch (error) {
+          setNativePlsPreflight(null);
+          setFailure(generalSemFailureV1(error));
+        }
         return;
       }
-      setFailure(outcome.status === "blocked"
-        ? { schemaVersion: 1, stage: "capability", subject: "preflight", ...outcome.diagnostic, issues: [] }
-        : {
-            schemaVersion: 1,
-            stage: "capability",
-            subject: "preflight",
-            code: "general_sem.rehydrate.capability_not_experimental",
-            message: "The reopened project is not supported by the exact Experimental PLS capability cell.",
-            correctiveAction: "Keep the project unchanged and review estimator compatibility.",
-            issues: [],
-          });
+      setNativePlsPreflight(null);
+      setFailure({ schemaVersion: 1, stage: "capability", subject: "preflight", ...outcome.diagnostic, issues: [] });
     }).catch((error) => {
-      if (live) setFailure(generalSemFailureV1(error));
+      if (live && latestAuthorityKeyRef.current === requestedAuthorityKey) {
+        setNativePlsPreflight(null);
+        setFailure(generalSemFailureV1(error));
+      }
     });
     return () => { live = false; };
   }, [authorityKey, config, generalSemSession, markedGeneralSemProjectMode, model, rehydratedExecution, services]);
@@ -757,9 +825,11 @@ export function NativeRecipeV4GeneralSemWorkspace({
         throw { schemaVersion: 1, stage: "capability", subject: "preflight", ...authoritative.diagnostic, issues: [] } satisfies GeneralSemPlsJobFailureV1;
       }
       assertDraftPublicationCurrent();
-      if (authoritative.value.pls.status !== "experimental") {
-        throw new Error("Native General SEM PLS preflight did not return the Experimental capability state.");
-      }
+      selectGeneralSemPlsExecutionCapabilityV1({
+        model,
+        config,
+        decision: authoritative.value.pls,
+      });
       const createdReceipt = outcome.value.receipt;
       await activateGeneralSemProjectArchiveV1(inspected.value, createdReceipt, {
         openSnapshot: (snapshot) => useInternalProjectArchiveV6Session.getState().open(async () => ({ status: "ok", value: snapshot })),
@@ -785,7 +855,10 @@ export function NativeRecipeV4GeneralSemWorkspace({
       setReceipt(createdReceipt);
       setCurrentArchiveSha256(createdReceipt.destinationArchiveSha256);
       setArchiveSnapshot(inspected.value);
-      setNativePreflightReady(true);
+      setNativePlsPreflight({
+        authorityKey: activatedAuthorityKey,
+        decision: authoritative.value.pls,
+      });
       setSnapshot(null);
     } catch (error) {
       const failure = generalSemFailureV1(error);
@@ -819,6 +892,29 @@ export function NativeRecipeV4GeneralSemWorkspace({
       capturedAuthorityKeyRef.current,
       latestAuthorityKeyRef.current ?? "",
     )) {
+      if (!nativePlsExecution) {
+        setGeneralSemTransientWorkBlocker(null);
+        setResultIntegrityInvalid(true);
+        setFailure({
+          schemaVersion: 1,
+          stage: "integrity",
+          subject: "native_preflight",
+          code: "general_sem.completed_execution_authority_missing",
+          message: "The exact native execution capability is no longer available for the completed result.",
+          correctiveAction: "The result was not displayed or persisted. Rerun estimator preflight from the unchanged marked project and calculate again.",
+          issues: [],
+        });
+        return true;
+      }
+      try {
+        validateGeneralSemPlsCompletedExecutionV1(outcome.completed, nativePlsExecution);
+      } catch (error) {
+        setGeneralSemTransientWorkBlocker(null);
+        setResultIntegrityInvalid(true);
+        setCompleted(null);
+        setFailure(generalSemFailureV1(error));
+        return true;
+      }
       setCompleted(outcome.completed);
       setGeneralSemTransientWorkBlocker("temporary_result_pending");
       setResultIntegrityInvalid(false);
@@ -872,7 +968,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
   };
 
   const start = async () => {
-    if (!receipt || !currentArchiveSha256 || !config || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty || running || generalSemTransientWorkBlocker) return;
+    if (!receipt || !currentArchiveSha256 || !model || !config || !nativePlsDecision || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty || running || generalSemTransientWorkBlocker) return;
     const expectedArchiveSha256 = currentArchiveSha256;
     let started = false;
     let terminalKnown = false;
@@ -884,7 +980,13 @@ export function NativeRecipeV4GeneralSemWorkspace({
     monitorAbortRef.current?.abort();
     monitorAbortRef.current = controller;
     try {
-      const initial = await services.start(generalSemJobRequestFromReceiptV1(receipt, config, expectedArchiveSha256));
+      const initial = await services.start(generalSemJobRequestFromReceiptV1(
+        receipt,
+        model,
+        config,
+        nativePlsDecision,
+        expectedArchiveSha256,
+      ));
       started = true;
       activeJobIdRef.current = initial.jobId;
       setSnapshot(initial);
@@ -1178,7 +1280,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       setReceipt(null);
       setArchiveSnapshot(null);
       setCurrentArchiveSha256(null);
-      setNativePreflightReady(false);
+      setNativePlsPreflight(null);
       setSnapshot(null);
       setFailure(null);
       clearResults();
@@ -1193,6 +1295,12 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const progressMaximum = Math.max(snapshot?.totalUnits ?? 1, 1);
   const progressValue = Math.min(snapshot?.completedUnits ?? 0, progressMaximum);
   const bootstrap = effectiveEngine.inference === "percentile_case_bootstrap";
+  const interactionPlan = Boolean(model?.derived_terms.some((term) => term.kind === "interaction_v2"));
+  const moderationBootstrapTurnOffRequired = interactionPlan && bootstrap && !markedGeneralSemProjectMode;
+  const moderationBootstrapInputDisabled = running
+    || operationBusy
+    || markedGeneralSemProjectMode
+    || (interactionPlan && !bootstrap);
 
   return <section id="nd-model-general-sem-labs-panel" className="nd-cbsem-v4-workspace nd-general-sem-workspace" role="tabpanel" aria-labelledby="nd-model-general-sem-labs-tab">
     <header className="nd-cbsem-v4-header"><div><h2>General SEM in QuickPLS</h2><p>One QuickPLS canvas · explicit General SEM project authority · PLS-first Experimental Labs</p></div><FlaskConical size={24} aria-hidden="true" /></header>
@@ -1209,11 +1317,15 @@ export function NativeRecipeV4GeneralSemWorkspace({
         <p className="nd-cbsem-v4-summary"><strong>Model</strong><span>{model ? `${modelName} (${model.id})` : freshGeneralSemDraftMode ? "Resolve this new canvas model first" : "Create or activate a General SEM project first"}</span></p>
         <p className="nd-cbsem-v4-summary"><strong>Dataset</strong><span>{dataset.name} · {dataset.rowCount ?? dataset.rows.length} cases</span></p>
         <fieldset className="nd-cbsem-v4-scales"><legend>Inference</legend>
-          <label className="nd-checkbox-row" htmlFor="nd-general-sem-bootstrap"><input id="nd-general-sem-bootstrap" type="checkbox" checked={bootstrap} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => {
+          <label className="nd-checkbox-row" htmlFor="nd-general-sem-bootstrap"><input id="nd-general-sem-bootstrap" type="checkbox" checked={bootstrap} disabled={moderationBootstrapInputDisabled} aria-describedby={interactionPlan ? "nd-general-sem-moderation-inference-note" : undefined} onChange={(event) => {
             if (markedGeneralSemProjectMode) return;
+            if (interactionPlan && event.target.checked) return;
             setEngine((current) => ({ ...current, inference: event.target.checked ? "percentile_case_bootstrap" : "none" }));
-            setReceipt(null); setArchiveSnapshot(null); setNativePreflightReady(false); clearResults();
+            setReceipt(null); setArchiveSnapshot(null); setNativePlsPreflight(null); clearResults();
           }} />Full-model percentile case bootstrap</label>
+          {interactionPlan ? <p id="nd-general-sem-moderation-inference-note" className="nd-inline-warning" role="status">
+            Simultaneous two-way moderation is point-estimation only. Bootstrap inference is not qualified for this exact capability cell.{moderationBootstrapTurnOffRequired ? " Turn off Full-model percentile case bootstrap to continue." : " The bootstrap option remains unavailable for this model."}
+          </p> : null}
           {bootstrap ? <>
             <label htmlFor="nd-general-sem-bootstrap-samples">Replicates<input id="nd-general-sem-bootstrap-samples" type="number" min={2} max={10_000} step={100} value={effectiveEngine.bootstrapSamples} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => setEngine((current) => ({ ...current, bootstrapSamples: Number(event.target.value) }))} /></label>
             <label htmlFor="nd-general-sem-confidence">Confidence level<input id="nd-general-sem-confidence" type="number" min={0.8} max={0.999} step={0.01} value={effectiveEngine.confidenceLevel} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => setEngine((current) => ({ ...current, confidenceLevel: Number(event.target.value) }))} /></label>
@@ -1230,11 +1342,11 @@ export function NativeRecipeV4GeneralSemWorkspace({
         <ol className="nd-cbsem-v4-preflight-list">
           <li className={localPreflight.ready ? "ready" : "blocked"}><span aria-hidden="true">{localPreflight.ready ? "✓" : "!"}</span><div><strong>General SEM project and model authority</strong><small>{localPreflight.ready ? "Ready for QuickPLS engine verification" : `${localPreflight.issues.length} issue${localPreflight.issues.length === 1 ? "" : "s"}`}</small>{localPreflight.issues.map((item) => <p key={`${item.code}:${item.subject}`}><strong>{item.message}</strong> {item.correctiveAction} <code>{item.code}</code></p>)}</div></li>
           <li className={receipt ? "ready" : "blocked"}><span aria-hidden="true">{receipt ? "✓" : "2"}</span><div><strong>Safe QuickPLS project file</strong><small>{receipt ? `Verified ${receipt.destinationArchivePath}` : "Save the current dataset, canvas model, and analysis settings in one calculation file"}</small>{receipt && !archiveCurrent ? <p>The canvas or settings changed. Keep the saved file unchanged and create a fresh calculation project from the current canvas.</p> : null}</div></li>
-          <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? "Experimental PLS support verified" : "Pending final engine verification"}</small></div></li>
+          <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? nativePlsExecution?.kind === "multiple_two_way_moderation_point" ? "Exact simultaneous two-way moderation point cell verified" : "Experimental PLS support verified" : "Pending final engine verification"}</small></div></li>
         </ol>
         <div className="nd-cbsem-v4-actions">
           <button ref={createButtonRef} type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !freshGeneralSemDraftMode || !localPreflight.ready} title={!freshGeneralSemDraftMode ? "Start a new General SEM project to create its marked authority; existing projects cannot enter this path." : !localPreflight.ready ? "Resolve every compatibility issue first." : "Save and activate this new General SEM project as the current QuickPLS canvas authority."} onClick={() => void createCalculationProject()}><Archive size={15} aria-hidden="true" />Save and activate project…</button>
-          <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />Calculate PLS effects</button>
+          <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />{interactionPlan ? "Calculate moderation point estimates" : "Calculate PLS effects"}</button>
           <button type="button" className="danger" disabled={!activeJobIdRef.current || snapshot?.state === "cancelling" || snapshot?.state === "completed"} onClick={() => void cancel()}><CircleStop size={15} aria-hidden="true" />Cancel</button>
           {markedGeneralSemProjectMode ? <button type="button" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || unpersistedCompletedResult} title={unpersistedCompletedResult ? "Save and strictly reopen the completed result, or dismiss it explicitly, before closing." : undefined} onClick={() => void closeGeneralSemProject()}><FolderOpen size={15} aria-hidden="true" />Close General SEM project</button> : null}
         </div>
@@ -1260,6 +1372,9 @@ export function NativeRecipeV4GeneralSemWorkspace({
     </section> : null}
     {!completed && reopenedEntry ? <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-general-sem-reopened-result-heading"><h3 id="nd-general-sem-reopened-result-heading"><CheckCircle2 size={16} aria-hidden="true" />Verified project result</h3><p>QuickPLS restored the latest matching General SEM result from strict archive readback.</p><div className="nd-cbsem-v4-actions"><button type="button" disabled={!displayedDocument} onClick={() => void exportDisplayed()}><Download size={15} aria-hidden="true" />Export XLSX</button></div><p className="nd-cbsem-v4-success" role="status">Verified result {reopenedEntry.documentId}.</p>{exportFeedback ? <p role="status" aria-live="polite">{exportFeedback}</p> : null}</section> : null}
 
+    {moderationInventory ? <p className="nd-cbsem-v4-success" role="status" aria-live="polite">
+      Verified canonical moderation output: {moderationInventory.interactionEffectCount} interaction effect{moderationInventory.interactionEffectCount === 1 ? "" : "s"}, {moderationInventory.conditionalSlopeCount} conditional slope{moderationInventory.conditionalSlopeCount === 1 ? "" : "s"}, and {moderationInventory.interactionPlotCount} interaction plot{moderationInventory.interactionPlotCount === 1 ? "" : "s"} with {moderationInventory.interactionPlotPointCount} persisted point{moderationInventory.interactionPlotPointCount === 1 ? "" : "s"}. QuickPLS displays and exports the native canonical values without adding inference.
+    </p> : null}
     {displayedDocument ? <CanonicalResultDocumentV2View document={displayedDocument} reopened={Boolean(reopenedEntry)} headingRef={resultHeadingRef} compilationReceipt={null} /> : null}
     {archiveSnapshot ? <details className="nd-cbsem-v4-run-details"><summary>Calculation project receipt</summary><dl><div><dt>Project</dt><dd>{archiveSnapshot.project.project_id}</dd></div><div><dt>File SHA-256</dt><dd>{currentArchiveSha256 ?? archiveSnapshot.archiveSha256}</dd></div><div><dt>Model</dt><dd>{receipt?.residentModelId}</dd></div><div><dt>Recipe</dt><dd>{receipt?.residentRecipeId}</dd></div></dl></details> : null}
   </section>;

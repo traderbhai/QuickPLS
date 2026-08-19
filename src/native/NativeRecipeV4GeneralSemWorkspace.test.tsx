@@ -2,6 +2,7 @@ import type { Edge, Node } from "@xyflow/react";
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
 import {
   bindGeneralSemPlsModelToDatasetV1,
   buildGeneralSemRecipeV1,
@@ -9,8 +10,9 @@ import {
   generalSemConfigFromEngineV1,
   type GeneralSemProjectBootstrapReceiptV1,
 } from "../domain/internalRecipeV4GeneralSemWorkspace";
+import { preflightGeneralSemPlsV1 } from "../domain/generalSemCapabilityPreflightV1";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "../domain/internalProjectArchiveV6Read";
-import { convertLegacyBasicModelV4 } from "../domain/semModelV4";
+import { convertLegacyBasicModelV4, type SemModelV4 } from "../domain/semModelV4";
 import type { InternalProjectArchiveV6ReadOnlySession } from "../internalProjectArchiveV6SessionStore";
 import type { ConstructData, Dataset } from "../types";
 import {
@@ -21,11 +23,17 @@ import {
   generalSemTemporaryResultBlocksCloseV1,
   activateGeneralSemProjectArchiveV1,
   closeGeneralSemProjectV1,
+  generalSemCanonicalModerationInventoryV1,
   NativeRecipeV4GeneralSemWorkspace,
+  selectCurrentGeneralSemNativePlsDecisionV1,
   selectGeneralSemDisplayedDocumentV1,
   selectLatestGeneralSemReopenedEntryV1,
   type NativeRecipeV4GeneralSemWorkspaceServices,
 } from "./NativeRecipeV4GeneralSemWorkspace";
+import {
+  CanonicalResultDocumentV2View,
+  canonicalResultDocumentV2ExportTables,
+} from "./NativeRecipeV4CbsemWorkspace";
 
 const workspaceHarness = vi.hoisted(() => ({
   current: {} as Record<string, unknown>,
@@ -72,6 +80,88 @@ function dataset(): Dataset {
       value_labels: {},
     })),
   };
+}
+
+function tableBackedModerationDocument(): CanonicalResultDocumentV2 {
+  const cell = {
+    registry_schema_version: 2 as const,
+    capability_id: "smartpls.moderation",
+    cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+    capability_version: "general_sem_pls_multiple_two_way_moderation_point_v1",
+  };
+  return {
+    schema_version: 2,
+    document_id: "result:moderation:reopened",
+    title: "Reopened moderation point result",
+    provenance: {
+      run_id: "run:moderation:reopened",
+      project_id: "00000000-0000-4000-8000-000000000001",
+      model_id: "model:general-sem-ui",
+      model_digest: "e".repeat(64),
+      dataset_id: "dataset:general-sem-ui",
+      dataset_fingerprint: "a".repeat(64),
+      recipe_id: "00000000-0000-4000-8000-000000000020",
+      recipe_digest: "d".repeat(64),
+      capability_cell: cell,
+      method_version: "qpls.general-sem-pls.multiple-two-way.point.v1",
+      engine_version: "test",
+      seed: 42,
+      workers: 1,
+      started_at: "2026-08-19T00:00:00Z",
+      completed_at: "2026-08-19T00:00:01Z",
+    },
+    capability_cells: [cell],
+    sections: [{
+      id: "general_sem_moderation",
+      title: "Moderation effects",
+      description: "Persisted native canonical plot points.",
+      table_ids: ["general_sem_interaction_plots"],
+      chart_ids: [],
+      capability_cells: [cell],
+    }],
+    tables: [{
+      id: "general_sem_interaction_plots",
+      title: "Interaction plot points",
+      description: "Every point from the typed canonical interaction plots.",
+      columns: [
+        { id: "interaction_id", label: "Interaction", description: "Interaction identity.", data_type: "text", role: "label" },
+        { id: "moderator_value", label: "Moderator value", description: "Standardized moderator value.", data_type: "number" },
+        { id: "focal_value", label: "Focal value", description: "Standardized focal value.", data_type: "number" },
+        { id: "predicted_value", label: "Predicted outcome", description: "Canonical prediction.", data_type: "number" },
+      ],
+      rows: [{
+        id: "interaction_plot_point_0000",
+        cells: [
+          { kind: "text", value: "interaction:x:m1" },
+          { kind: "number", value: -1, display: "-1.0000" },
+          { kind: "number", value: 0.5, display: "0.5000" },
+          { kind: "number", value: 0.625, display: "0.6250" },
+        ],
+      }],
+      footnote_ids: [],
+      capability_cells: [cell],
+    }],
+    charts: [],
+    notices: [],
+    exclusions: [],
+    footnotes: [],
+    presentation: {
+      default_section_id: "general_sem_moderation",
+      default_table_id: "general_sem_interaction_plots",
+      precision: 4,
+      missing_value_label: "—",
+      chart_defaults: {},
+    },
+    general_sem_results: {
+      schema_version: 1,
+      interaction_effects: [{ interaction_id: "interaction:x:m1" }],
+      conditional_effects: [{ effect_id: "conditional:x:m1:0" }],
+      interaction_plots: [{
+        interaction_id: "interaction:x:m1",
+        series: [{ points: [{ focal_value: 0.5, predicted_value: 0.625 }] }],
+      }],
+    },
+  } as unknown as CanonicalResultDocumentV2;
 }
 
 function node(id: "x" | "m1" | "m2" | "y", indicators: string[]): Node<ConstructData> {
@@ -201,6 +291,79 @@ function setReadyDraftWorkspace(): void {
   schema6Harness.current = { session: null };
 }
 
+function addTwoWayInteraction(
+  value: SemModelV4,
+  id: string,
+  focalPredictor: string,
+  moderator: string,
+): void {
+  const focal = value.relations.find((relation) => relation.kind === "structural"
+    && relation.source === focalPredictor
+    && relation.target === "construct:y");
+  if (!focal) throw new Error(`Missing focal relation for ${id}`);
+  const output = `derived:${id}`;
+  const relationId = `relation:${id}:effect`;
+  const parameterId = `parameter:${id}:effect`;
+  value.variables.push({ kind: "derived", id: output, label: id });
+  value.relations.push({
+    kind: "structural",
+    id: relationId,
+    source: output,
+    target: "construct:y",
+    parameter: parameterId,
+    intercept_parameter: null,
+  });
+  value.parameters.push({
+    kind: "free",
+    id: parameterId,
+    label: `${id} effect`,
+    target: { kind: "regression", source: output, target: "construct:y" },
+    group_overrides: [],
+  });
+  value.derived_terms.push({
+    kind: "interaction_v2",
+    id,
+    output,
+    operands: [focalPredictor, moderator],
+    focal_relation: focal.id,
+    method: "two_stage",
+    hierarchy_policy: "strong",
+  });
+}
+
+function setReadyModerationWorkspace(): SemModelV4 {
+  const resident = dataset();
+  const strictModel = bindGeneralSemPlsModelToDatasetV1(convertLegacyBasicModelV4({
+    id: "model:general-sem-ui",
+    name: "Same-path simultaneous moderation",
+    constructs: [
+      { id: "x", name: "X", short_name: "X", mode: "reflective", indicators: ["x1", "x2"] },
+      { id: "m1", name: "W", short_name: "W", mode: "reflective", indicators: ["m11", "m12"] },
+      { id: "m2", name: "Z", short_name: "Z", mode: "reflective", indicators: ["m21", "m22"] },
+      { id: "y", name: "Y", short_name: "Y", mode: "reflective", indicators: ["y1", "y2"] },
+    ],
+    paths: [
+      { source: "x", target: "y" },
+      { source: "m1", target: "y" },
+      { source: "m2", target: "y" },
+    ],
+  }, "pls_composite"), resident);
+  addTwoWayInteraction(strictModel, "interaction:x:m1", "construct:x", "construct:m1");
+  addTwoWayInteraction(strictModel, "interaction:x:m2", "construct:x", "construct:m2");
+  workspaceHarness.current = {
+    ...workspaceState(resident),
+    standardSemModelV4Authorities: {
+      "model:general-sem-ui": {
+        schema_version: 1,
+        model_document_sha256: "c".repeat(64),
+        model: strictModel,
+      },
+    },
+  };
+  setMarkedGeneralSemSession("model:general-sem-ui");
+  return strictModel;
+}
+
 function setMarkedGeneralSemSession(modelId: string): void {
   const resident = workspaceHarness.current.dataset as Dataset;
   const authority = (workspaceHarness.current.standardSemModelV4Authorities as Record<string, { model: ReturnType<typeof convertLegacyBasicModelV4> }>)[modelId];
@@ -266,6 +429,63 @@ describe("General SEM native workspace accessibility", () => {
     expect(generalSemCompletionMatchesLatestAuthorityV1(null, "authority:current")).toBe(false);
   });
 
+  it("drops an exact native moderation decision as soon as its authority key becomes stale", () => {
+    const model = setReadyModerationWorkspace();
+    const config = generalSemConfigFromEngineV1(defaultGeneralSemPlsEngineOptionsV1());
+    const decision = preflightGeneralSemPlsV1(model, config);
+    const preflight = { authorityKey: "authority:current", decision };
+
+    expect(selectCurrentGeneralSemNativePlsDecisionV1(preflight, "authority:current"))
+      .toBe(decision);
+    expect(selectCurrentGeneralSemNativePlsDecisionV1(preflight, "authority:changed"))
+      .toBeNull();
+    expect(selectCurrentGeneralSemNativePlsDecisionV1(null, "authority:current"))
+      .toBeNull();
+  });
+
+  it("counts only persisted canonical moderation effects, slopes, plots, and plot points", () => {
+    const canonical = {
+      general_sem_results: {
+        schema_version: 1,
+        interaction_effects: [{ interaction_id: "interaction:x:m1" }, { interaction_id: "interaction:x:m2" }],
+        conditional_effects: Array.from({ length: 6 }, (_, index) => ({ effect_id: `slope:${index}` })),
+        interaction_plots: [
+          { series: [{ points: [{}, {}, {}] }, { points: [{}, {}, {}] }, { points: [{}, {}, {}] }] },
+          { series: [{ points: [{}, {}] }, { points: [{}, {}] }, { points: [{}, {}] }] },
+        ],
+      },
+    } as never;
+
+    expect(generalSemCanonicalModerationInventoryV1(canonical)).toEqual({
+      interactionEffectCount: 2,
+      conditionalSlopeCount: 6,
+      interactionPlotCount: 2,
+      interactionPlotPointCount: 15,
+    });
+    expect(generalSemCanonicalModerationInventoryV1(null)).toBeNull();
+    expect(selectGeneralSemDisplayedDocumentV1(canonical, null, false, true)).toBe(canonical);
+    expect(selectGeneralSemDisplayedDocumentV1(canonical, null, false, false)).toBeNull();
+  });
+
+  it("renders and exports reopened table-backed interaction plot points without recomputation", () => {
+    const document = tableBackedModerationDocument();
+    const reopened = selectGeneralSemDisplayedDocumentV1(document, null, false, true);
+    if (!reopened) throw new Error("Expected reopened moderation document");
+
+    const html = renderToStaticMarkup(<CanonicalResultDocumentV2View
+      document={reopened}
+      reopened
+      compilationReceipt={null}
+    />);
+    expect(html).toContain('data-canonical-table-id="general_sem_interaction_plots"');
+    expect(html).toContain("Interaction plot points");
+    expect(html).toContain("0.6250");
+
+    const exported = canonicalResultDocumentV2ExportTables(reopened)
+      .find((table) => table.id === "general_sem_interaction_plots");
+    expect(exported?.rows).toStrictEqual([["interaction:x:m1", "-1.0000", "0.5000", "0.6250"]]);
+  });
+
   it("retains a started native job and global blocker until terminal recovery is known", () => {
     expect(generalSemStartedJobRetentionV1({
       started: true,
@@ -285,6 +505,7 @@ describe("General SEM native workspace accessibility", () => {
 
     const source = readFileSync("src/native/NativeRecipeV4GeneralSemWorkspace.tsx", "utf8");
     const start = source.slice(source.indexOf("const start = async"), source.indexOf("const cancel = async"));
+    expect(source).toContain("validateGeneralSemPlsCompletedExecutionV1(outcome.completed, nativePlsExecution)");
     expect(start).toContain("retainRecoverableJobFailure(error)");
     expect(start).toContain('=== "release") activeJobIdRef.current = null');
     expect(source).toContain("Retry job recovery");
@@ -417,6 +638,24 @@ describe("General SEM native workspace accessibility", () => {
     expect(html).toMatch(/<button(?=[^>]*class="danger")(?=[^>]*disabled="")[^>]*>[\s\S]*?Cancel<\/button>/);
     expect(html).not.toContain('role="alert"');
     expect(Object.values(services).every((service) => !vi.isMockFunction(service) || service.mock.calls.length === 0)).toBe(true);
+  });
+
+  it("renders simultaneous moderation as point-only with an accessible bootstrap correction", () => {
+    setReadyModerationWorkspace();
+    const html = renderToStaticMarkup(<NativeRecipeV4GeneralSemWorkspace
+      modelName="Same-path simultaneous moderation"
+      experimentalLabsEnabled
+      projectActivationConnected
+      services={services}
+    />);
+
+    expect(html).toContain("Simultaneous two-way moderation is point-estimation only.");
+    expect(html).toContain("Bootstrap inference is not qualified for this exact capability cell.");
+    expect(html).toContain('id="nd-general-sem-moderation-inference-note"');
+    expect(html).toMatch(/id="nd-general-sem-bootstrap"[^>]*disabled=""[^>]*aria-describedby="nd-general-sem-moderation-inference-note"/);
+    expect(html).toContain("Calculate moderation point estimates");
+    expect(html).not.toContain("sem.capability.pls.derived_shape_not_executable");
+    expect(html).toContain("Ready for QuickPLS engine verification");
   });
 
   it("fails closed without adapting an ordinary project even when its legacy canvas is complete", () => {

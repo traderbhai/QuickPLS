@@ -1,0 +1,421 @@
+{
+  "schema_version": 1,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec+independent_reference+simulation_report+boundary_report",
+  "feature_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+  "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+  "catalogue_snapshot_date": "2026-08-19",
+  "generated_at_utc": "2026-08-19T11:30:39.5424034Z",
+  "passed": true,
+  "qualification_ready": false,
+  "promotion_allowed": false,
+  "evidence_scope": "source_bound_engine_only_contract_micro_reference_and_connected_native_workflow",
+  "checks": {
+    "independent_contract_micro_reference_executed": true,
+    "same_focal_joint_equation_microcase": true,
+    "different_focal_joint_equation_microcase": true,
+    "product_sample_standardization_microcase": true,
+    "scientific_gamma_rescaling_microcase": true,
+    "fixed_probe_simple_slopes_microcase": true,
+    "row_order_metamorphic_microcase": true,
+    "constant_product_failure_microcase": true,
+    "singular_equation_failure_microcase": true,
+    "exact_point_labs_capability_identity_wired": true,
+    "shared_stage_one_and_joint_stage_two_implementation_bound": true,
+    "typed_joint_stage_ledger_and_canonical_charts_bound": true,
+    "native_preflight_job_cancellation_append_and_reopen_bound": true,
+    "versioned_source_preserving_revision_workflow_bound": true,
+    "full_independent_pls_scoring_oracle_complete": false,
+    "qualification_scale_simulation_complete": false,
+    "full_model_moderation_bootstrap_complete": false,
+    "three_way_moderation_complete": false,
+    "moderated_mediation_complete": false,
+    "cross_surface_semantic_export_qualification_complete": false,
+    "packaged_windows_acceptance_complete": false,
+    "release_qualification_complete": false,
+    "completed_execution_raw_canonical_inventory_reconciliation_bound": true,
+    "revision_command_reachability_and_recovery_bound": true
+  },
+  "limitations": [
+    "The independent reference operates on deterministic standardized score columns, covers constant-product and singular-design rejection, and never calls production QuickPLS code.",
+    "It does not independently reproduce indicator-level PLS scoring or establish full-model PLS recovery.",
+    "The recorded same-app native lifecycle remains engine-only evidence and is not a native-qualified or release-qualified promotion receipt.",
+    "Bootstrap inference, three-way moderation, moderated mediation, higher-order combinations, general CB-SEM, semantic export qualification, and packaged Windows acceptance remain outside this report.",
+    "No packaged Windows workflow or semantic acceptance receipt is claimed by this engine-only report."
+  ],
+  "reference_execution": {
+    "command": [
+      "python",
+      "validation/general_sem_pls_multiple_moderation_point_v1_reference.py"
+    ],
+    "exit_code": 0,
+    "report": {
+      "checks": {
+        "constant_product_rejected": true,
+        "different_focal_joint_coefficients": true,
+        "fixed_probe_simple_slopes": true,
+        "joint_fit_not_isolated_fit": true,
+        "product_sample_standardization": true,
+        "row_order_metamorphic": true,
+        "same_focal_joint_coefficients": true,
+        "scientific_gamma_rescaling": true,
+        "singular_equation_rejected": true
+      },
+      "feature_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+      "limitations": [
+        "The reference never imports or invokes production QuickPLS code.",
+        "Inputs are deterministic standardized score columns, not indicator-level PLS score recovery.",
+        "The scenarios verify joint OLS, product scaling, scientific gamma, fixed probes, row order, constant-product rejection, and singular failure only.",
+        "This is not qualification-scale simulation, interval coverage, SmartPLS numerical parity, or release evidence."
+      ],
+      "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+      "metrics": {
+        "az_product_mean": 0.44645801901672477,
+        "az_product_sample_sd": 0.8394387080002988,
+        "different_focal_max_absolute_coefficient_error": 8.326672684688674e-17,
+        "row_order_max_absolute_error": 0,
+        "same_focal_max_absolute_coefficient_error": 4.08006961549745e-15,
+        "xw_product_mean": 0.32678167342093184,
+        "xw_product_sample_sd": 0.5314258681338349,
+        "xz_product_mean": -0.0786720708015589,
+        "xz_product_sample_sd": 0.9470256171877253
+      },
+      "passed": true,
+      "qualification_ready": false,
+      "reference_kind": "independent_contract_micro_reference",
+      "schema_version": 1
+    }
+  },
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-core/src/canonical_result_v2.rs",
+      "size": 190120,
+      "sha256": "aef934d4f9be7aab8e1106ed601fde39b94ce6e3c6ee94f5070259a23f5062aa"
+    },
+    {
+      "path": "crates/qpls-core/src/compiled_pls_plan_v3.rs",
+      "size": 53453,
+      "sha256": "6edfb1849c361eaaf10847a664cbe42263d3465a3de368e2a9c7078154eb37c6"
+    },
+    {
+      "path": "crates/qpls-core/src/general_sem_capability_preflight_v1.rs",
+      "size": 50058,
+      "sha256": "9b4d7251c42b1a768481d61113f95d8f97f5f63b0e77e494b3a34ad7956b2c16"
+    },
+    {
+      "path": "crates/qpls-core/src/general_sem_recipe_compiler_v1.rs",
+      "size": 45957,
+      "sha256": "f6274d7716a7d46e4723d24e6f07df779e1b154eefc820a0f60ad5143378718b"
+    },
+    {
+      "path": "crates/qpls-estimation/src/general_sem_pls_interactions_v1.rs",
+      "size": 51318,
+      "sha256": "de635392de5b90d060618b0d491fbd49964d766989b1502f2dd7b45bee5d8906"
+    },
+    {
+      "path": "crates/qpls-runner/src/recipe_v4_general_sem_pls_execution.rs",
+      "size": 73908,
+      "sha256": "170d250da664150010233cae61a1b31486fd3acec1e5d9790e6cda2a58dcc75c"
+    },
+    {
+      "path": "crates/qpls-project/src/canonical_result_document_v2.rs",
+      "size": 63491,
+      "sha256": "7808268ebd52150ff75ebf8d42938224501a115c8c6b684b376d55722578b9be"
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "size": 854912,
+      "sha256": "be89b304d77579373d8b2de940ec717da1b4e1550d43dd98f6a701e58b4a25e6"
+    },
+    {
+      "path": "crates/qpls-project/src/project_archive_v6_new_general_sem.rs",
+      "size": 15277,
+      "sha256": "d017908a24879ab59e7f1d9947b87c9e0e2bc59566ba7d76c649074339a188c0"
+    },
+    {
+      "path": "crates/qpls-project/src/project_archive_v6_save_copy.rs",
+      "size": 75760,
+      "sha256": "b942f2787002188c3343e15a71071748f6c29d5a72b1238dd6b9538a73f28d65"
+    },
+    {
+      "path": "crates/qpls-project/src/project_schema_v6.rs",
+      "size": 499438,
+      "sha256": "fc2fcd367df77789c2aa29d975317c208bdc98fb7021a872e3403fb4130e76ac"
+    },
+    {
+      "path": "crates/qpls-project/src/project_archive_v6_general_sem_revision.rs",
+      "size": 57746,
+      "sha256": "4c543bd82f2953d4a84455c47bac6b694da6cb9f23409192120fa12f86e8dfeb"
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "size": 278690,
+      "sha256": "c21ffd1a2328c648d9d07eb8bb3e6a4d3393794dcc779309203defcc0f800959"
+    },
+    {
+      "path": "src-tauri/src/project_archive_v6_general_sem_bootstrap.rs",
+      "size": 50711,
+      "sha256": "499202ebe3b0319c7d212ddd3b90b8a8d8e62296b85863a6953d527de009f0c1"
+    },
+    {
+      "path": "src-tauri/src/project_archive_v6_general_sem_preflight.rs",
+      "size": 17275,
+      "sha256": "ee3cb3b1a4290310d0db079d4b69966cd162b603eb96792de4c2750970858e69"
+    },
+    {
+      "path": "src-tauri/src/project_archive_v6_general_sem_revision.rs",
+      "size": 13421,
+      "sha256": "d7556eb3a6e24d8453641e2822ce09f8aa203711f9b5d2014fd7634a970457b5"
+    },
+    {
+      "path": "src-tauri/src/project_archive_v6_new_general_sem.rs",
+      "size": 16476,
+      "sha256": "a0146dc08841b5e9be5964795fee9c005c31778370ccb2b2f86ea5b84e225bbd"
+    },
+    {
+      "path": "src-tauri/src/project_schema6_result_append.rs",
+      "size": 11909,
+      "sha256": "1158585fa43a33f6c1a6f82dd29bafee0bdd7b7ad9f33e53f1bf78655e8415ca"
+    },
+    {
+      "path": "src-tauri/src/project_schema6_result_read.rs",
+      "size": 35718,
+      "sha256": "921c57d8624d9cf92929117cf43872c411a75a0698efc95f62ec8232f8cf2dad"
+    },
+    {
+      "path": "src-tauri/src/recipe_v4_general_sem_canonical_result.rs",
+      "size": 64152,
+      "sha256": "dbaa8a87b59f63fe7dbf635990e5d1d29f07149a3215a5bca8f9b14e445d50bf"
+    },
+    {
+      "path": "src-tauri/src/recipe_v4_general_sem_pls_jobs.rs",
+      "size": 101760,
+      "sha256": "9cafdec6362da2e868512c2d88a81ef9395c68d52efa34460e3d6b6d5b73ae1b"
+    },
+    {
+      "path": "src/domain/canonicalGeneralSemResultsV1.ts",
+      "size": 84228,
+      "sha256": "dde6be9ab6ba244942170d99a106b7f1fde502e4c45184920995242d8e809f36"
+    },
+    {
+      "path": "src/domain/generalSemCapabilityPreflightV1.ts",
+      "size": 42571,
+      "sha256": "1ae4133479d27090457c03c84993c22bfccdf0213ed44c067e03d0045de959e6"
+    },
+    {
+      "path": "src/domain/generalSemCapabilityPreflightV1.test.ts",
+      "size": 22345,
+      "sha256": "6539e7957875019524bff84a0a845fdfc0a1c1edf55647cc06a6e2c55a610dc3"
+    },
+    {
+      "path": "src/domain/internalRecipeV4GeneralSemWorkspace.ts",
+      "size": 59881,
+      "sha256": "bb9e82f92f19bc8d462b2adbe3159ef2b19d99503a3faa4ded814349165236ab"
+    },
+    {
+      "path": "src/domain/internalRecipeV4GeneralSemWorkspace.test.ts",
+      "size": 50946,
+      "sha256": "6f394024028664581eae60bcdf184c31c33de2ec72a6a71400c5ceae557dce62"
+    },
+    {
+      "path": "src/domain/nativeWorkbenchSemModelV4Adapter.ts",
+      "size": 47671,
+      "sha256": "c427f743114a4e30b6c2359f77cf4d559db12eb471461bb16658c32af891b4fc"
+    },
+    {
+      "path": "src/domain/nativeWorkbenchSemModelV4Adapter.test.ts",
+      "size": 23636,
+      "sha256": "ce35baa852357b81d8636fcd4daa11e8460caf9d408da96430f4d48c50444909"
+    },
+    {
+      "path": "src/domain/standardSemModelV4Authority.ts",
+      "size": 73650,
+      "sha256": "24eccc64ee367e88f28526033e3c44061c30abd44cda9f1aad8879eb98de33ae"
+    },
+    {
+      "path": "src/domain/standardSemModelV4Authority.test.ts",
+      "size": 27714,
+      "sha256": "4641bd161e88835d5075afa629d35f694c455e44d1e0beb9be8c7155e12b00ea"
+    },
+    {
+      "path": "src/domain/internalGeneralSemExecutionAuthorityRevisionV1.ts",
+      "size": 18785,
+      "sha256": "a9b98faa5005d5b8773a830a665db61d8ce5f4f0fb38be682767a117a1bd52bf"
+    },
+    {
+      "path": "src/domain/internalGeneralSemExecutionAuthorityRevisionV1.test.ts",
+      "size": 4805,
+      "sha256": "1a42d7474b844dbf107d370f180fd6574f9aecb3f0b4179a196355e31f0fa211"
+    },
+    {
+      "path": "src/services/internalGeneralSemExecutionAuthorityRevisionService.ts",
+      "size": 7075,
+      "sha256": "a3f5a9f27ecf4915d83d1dc08d1ef4b9f9201cb169071650a7334d19dd558333"
+    },
+    {
+      "path": "src/services/internalGeneralSemExecutionAuthorityRevisionService.test.ts",
+      "size": 6424,
+      "sha256": "d4be0ffd644b9dcd3db254bc0bbcba99d58dd9c7cbb38534ddd9463b60e90695"
+    },
+    {
+      "path": "src/services/projectService.ts",
+      "size": 26181,
+      "sha256": "bd0a0aaac5810b2780d8aa39f4b6f3e4868abc48393f0dc708d5c02f850310ec"
+    },
+    {
+      "path": "src/internalProjectArchiveV6SessionStore.ts",
+      "size": 62849,
+      "sha256": "dbe6942f8658e10186a892354cbd16b12f4e363fae20bb9d29122c341b5aeafd"
+    },
+    {
+      "path": "src/internalProjectArchiveV6SessionStore.test.ts",
+      "size": 41019,
+      "sha256": "c9379005f258749564a4b42162d56ef77ce8916dfd22d19b42b9f456f2446325"
+    },
+    {
+      "path": "src/store.ts",
+      "size": 129868,
+      "sha256": "205c0f589b68f244a5516fb05e0dfaf5bb8aba8e70440ed7c73276115a1bee8c"
+    },
+    {
+      "path": "src/store.generalSemProjectDraftMode.test.ts",
+      "size": 7453,
+      "sha256": "0a53817cbc9f36857b262c8069a638a3e0bbbaebfce07b96e0842effce86374d"
+    },
+    {
+      "path": "src/native/NativeDesktopApp.tsx",
+      "size": 120498,
+      "sha256": "97f46ac0be1d73ea35c0b3a84f25f373412028cb2cd887463f05c55b0f19bcce"
+    },
+    {
+      "path": "src/native/NativeDesktopApp.test.ts",
+      "size": 18576,
+      "sha256": "9cd9f5c4bdc52ee79f85f7fe8bc324f65f0608bc4daa499cfe96333d7907d7fc"
+    },
+    {
+      "path": "src/native/nativeCommands.ts",
+      "size": 27849,
+      "sha256": "cb24d47311cb6039fd619997de6b31da23dddd970f3924c3282f7439938bcd33"
+    },
+    {
+      "path": "src/native/nativeCommands.test.ts",
+      "size": 22396,
+      "sha256": "5cc482e243bb0749a6e6cb715f5922b36b27eb893f3b902f2ca4b3a5c59fd4f4"
+    },
+    {
+      "path": "src/native/nativeCommandAccessibilityContracts.test.ts",
+      "size": 4821,
+      "sha256": "f3c1d9065bf228624d210125b124c4616be84f35528acc782c561b4bb1ff6600"
+    },
+    {
+      "path": "src/native/NativeRecipeV4GeneralSemWorkspace.tsx",
+      "size": 71148,
+      "sha256": "5fd6d00a081ea9bf8d45d7b5148af4a8f0e02f5c6594e9e8579e8de3ac315539"
+    },
+    {
+      "path": "src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx",
+      "size": 34147,
+      "sha256": "14f75909e80cda05b0cd0f1f110c046c46b4c59d91a285909f172afd5c15c7d9"
+    },
+    {
+      "path": "src/native/NativeRecipeV4CbsemWorkspace.tsx",
+      "size": 54231,
+      "sha256": "a55705ce524fa81de6678c23a354138652ee9f5b6f5f188853e70d5455c89423"
+    },
+    {
+      "path": "src/native/NativeRecipeV4CbsemWorkspace.test.tsx",
+      "size": 14488,
+      "sha256": "9015c5f11da1e23ad85690351e1b6bfdc287d8734c834cb27301abd88a05e358"
+    },
+    {
+      "path": "src/native/nativeCanonicalResultDocumentV2.test.ts",
+      "size": 55770,
+      "sha256": "3903b1d8d3482fe94c2134e8a365165a2ccbebca1407d39e8fa4e2269d779804"
+    },
+    {
+      "path": "src/native/nativeDesktop.css",
+      "size": 102661,
+      "sha256": "405ed65f5eeed01b1e390dcc0901e5176e07785e6904abd774ef9da1b07aac69"
+    },
+    {
+      "path": "docs/GENERAL_SEM_UPGRADE_EXECUTION.md",
+      "size": 25459,
+      "sha256": "ec91de28ff791867674f30b40ad6bd4eb3ce08241fdf17059c61bee961e0dac0"
+    },
+    {
+      "path": "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_V1.md",
+      "size": 7495,
+      "sha256": "00c7b6e30b435ad7ef2dcd68cf853e1e72c16f2ececa03fa2ec130bd722eaa0f"
+    },
+    {
+      "path": "validation/general_sem_pls_multiple_moderation_point_v1_reference.py",
+      "size": 8239,
+      "sha256": "8e391c8f315caaaf35ed55718fcae7c630a5ee1825a91e96a6a010fdd3e6c5ed"
+    },
+    {
+      "path": "validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json",
+      "size": 4130,
+      "sha256": "02a952eace5efdcd1f71e19a6802bb19a181f99f4b3c6d50a612c107b86eb457"
+    },
+    {
+      "path": "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json",
+      "size": 15547,
+      "sha256": "1c667e8b45d1e2982c18eae8fb7e83a4ed85f96898fc3c825f852465f90ec668"
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "size": 15836,
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743"
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "size": 34283,
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865"
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "size": 21368,
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926"
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.json",
+      "size": 326895,
+      "sha256": "871926c6bd8bbc40a345e841fb7bc94f8ca00030d6a16baa30dc55a04b060675"
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.schema.json",
+      "size": 23521,
+      "sha256": "51063ea220a33ecf14bcf129258c00030c80a1c777ea3a5b1de259ab172b5949"
+    },
+    {
+      "path": "validation/test_capability_registry_v2.py",
+      "size": 40589,
+      "sha256": "ff254b343f9f43395c82bc4c949bc4cca118ae3bb941fddfb2010abf2faef7a6"
+    },
+    {
+      "path": "validation/quickpls_3_competitor_catalogue.json",
+      "size": 44279,
+      "sha256": "8d3cecae8c164ec9f0ffd8a95fdc04bc97f0c2d0134309e5a72d013948d8471c"
+    },
+    {
+      "path": "validation/capabilities/complexity_performance_profiles_v2.manifest.json",
+      "size": 15803,
+      "sha256": "3f92932c39acc66895bcba04ae0a70ffd7fc773ed76857cc21ed41ce34d9aee5"
+    },
+    {
+      "path": "validation/capabilities/complexity_performance_profiles_v2.schema.json",
+      "size": 11360,
+      "sha256": "095386e27e1fb632f17d3060e20b09af9a733a1fa8f81c3c0dc8610a53ae11c4"
+    },
+    {
+      "path": "validation/complexity_performance_v2.py",
+      "size": 66723,
+      "sha256": "0592659a8ec7bb680c9bcb8848b53ff236f083713119cdc4ed77cf22416286e6"
+    },
+    {
+      "path": "validation/test_complexity_performance_v2.py",
+      "size": 10892,
+      "sha256": "b8bd7a688615e14d84551d3eb67369fb33eba5ad55c3ba6be148f519dd7ae3cc"
+    }
+  ]
+}

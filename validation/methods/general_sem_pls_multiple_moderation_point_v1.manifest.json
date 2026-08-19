@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-19T00:00:00Z",
+    "manifest_path": "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+    "label": "General SEM Simultaneous Two-Way PLS Moderation Point Estimates",
+    "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-19",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/"
+  },
+  "claim": {
+    "supported_scope": "Opt-in Experimental Labs point estimation for one or more jointly estimated two-operand interaction_v2 terms in a newly created single-group recursive general_sem_v1 PLS composite model, using two-stage construction, strong hierarchy, raw continuous listwise-complete data, and fixed standardized minus-one, zero, and plus-one probes.",
+    "estimand": "Every interaction's coefficient on its sample-standardized two-stage product, the corresponding scientific gamma per one standardized moderator unit, and focal simple slopes with other same-focal moderators held at standardized zero, all reconciled to the complete joint stage-two structural coefficient ledger.",
+    "assumptions": [
+      "The schema-6 project is newly created with general_sem_v1 authority and the structural graph is direct-only and acyclic.",
+      "Every interaction has exactly two stable operands, two-stage construction, strong hierarchy, an exact focal relation, and all required lower-order paths.",
+      "The model contains no derived terms other than the interaction_v2 terms compiled by this cell, no higher-order constructs, no requested mediation estimands, and no authored conditional-probe policy.",
+      "The raw input is continuous, unweighted, single-group, and processed by the frozen listwise-complete PLS scoring boundary."
+    ],
+    "exclusions": [
+      "Bootstrap or other inference, authored arbitrary probes, three-way or higher interactions, moderated mediation, directed structural chains, HOC interaction systems, groups, weights, and feedback are excluded.",
+      "Product-indicator, orthogonalizing, weak-hierarchy, and no-hierarchy constructions are excluded.",
+      "The point result does not establish causal moderation and the fixed score-stage interaction does not account for score uncertainty."
+    ],
+    "warnings": [
+      "The connected desktop workflow, archive lifecycle, and bounded independent contract micro-reference do not establish a full independent PLS scoring oracle, qualification-scale recovery, interval coverage, semantic export equality, packaged Windows acceptance, or release qualification.",
+      "SmartPLS public documentation is used only as a terminology and observable-workflow benchmark; QuickPLS remains an independent implementation."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "sample_standardized_two_stage_product",
+        "expression": "p_i = z(x_i) z(w_i); z(p_i) = (p_i - mean(p)) / sd_sample(p)",
+        "variables": ["p_i", "x_i", "w_i", "z(p_i)", "mean(p)", "sd_sample(p)"],
+        "source_reference_id": "henseler_chin_2010"
+      },
+      {
+        "id": "joint_stage_two_equation",
+        "expression": "eta_y = sum_r beta_r eta_r + sum_j beta_product_j z(p_j) + epsilon_y",
+        "variables": ["eta_y", "beta_r", "eta_r", "beta_product_j", "z(p_j)", "epsilon_y"],
+        "source_reference_id": "henseler_chin_2010"
+      },
+      {
+        "id": "scientific_gamma_and_simple_slope",
+        "expression": "gamma_j = beta_product_j / sd_sample(p_j); slope_x(w_j) = beta_x + gamma_j w_j",
+        "variables": ["gamma_j", "beta_product_j", "sd_sample(p_j)", "slope_x(w_j)", "beta_x", "w_j"],
+        "source_reference_id": "independent_contract_reference"
+      }
+    ],
+    "references": [
+      {
+        "id": "henseler_chin_2010",
+        "kind": "primary_paper",
+        "citation": "Henseler and Chin (2010), A Comparison of Approaches for the Analysis of Interaction Effects Between Latent Variables Using Partial Least Squares Path Modeling",
+        "locator": "https://doi.org/10.1080/10705510903439003",
+        "independence_group": "published_pls_moderation_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_contract_reference",
+        "kind": "independent_python",
+        "citation": "Validation-only independent joint-equation, product-scale, gamma, fixed-probe, row-order, and singularity micro-reference",
+        "locator": "validation/general_sem_pls_multiple_moderation_point_v1_reference.py",
+        "independence_group": "python_contract_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "deterministic_joint_equation_micro_reference_v1",
+        "purpose": "recovery",
+        "design": "Deterministic standardized-score same-focal and different-focal synthetic equations with known joint OLS coefficients, correlated interaction products, fixed probes, a row-order replay, constant-product rejection, and singular-design rejection. Production QuickPLS code is never called.",
+        "seed_policy": "No random generator is used; all score columns and coefficients are frozen in the validation-only Python reference.",
+        "metrics": ["coefficient_error", "product_standardization_error", "gamma_rescaling_error", "simple_slope_error", "row_order_error", "constant_product_rejection", "singular_rejection"],
+        "acceptance_rule": "Every frozen check passes within 1e-10. This is a contract micro-reference only, not indicator-level PLS recovery, qualification-scale simulation, coverage evidence, or SmartPLS numerical parity."
+      },
+      {
+        "id": "full_pls_moderation_qualification_pending",
+        "purpose": "coverage",
+        "design": "Same-focal and different-focal simultaneous interactions across loading, path, moderator correlation, sample-size, reliability, nonnormality, missingness, collinearity, and null/signal axes with a fully independent PLS score and joint-stage implementation.",
+        "seed_policy": "Pending frozen scenario-indexed data and resampling streams with failed fits retained in the denominator.",
+        "metrics": ["interaction_bias", "simple_slope_bias", "interval_coverage", "null_rejection", "failure_rate"],
+        "acceptance_rule": "Pending independent qualification; the current engine-only evidence makes no claim that this gate has run."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "constant_or_collinear_product",
+        "category": "data_pathology",
+        "case": "A construct score or generated product is constant, nonfinite, or makes a joint stage-two equation singular.",
+        "expected_behavior": "Fail with an interaction/equation-specific diagnostic and publish no completed result."
+      },
+      {
+        "id": "unsupported_interaction_semantics",
+        "category": "unsupported_scope",
+        "case": "The model requests bootstrap inference, a three-way term, a structural chain, moderated mediation, authored probes, non-two-stage construction, or non-strong hierarchy.",
+        "expected_behavior": "Preserve the authored model and return a corrective blocked capability decision without silently simplifying it."
+      },
+      {
+        "id": "row_declaration_and_scale_relations",
+        "category": "metamorphic",
+        "case": "Rows or eligible declarations are consistently reordered, or permitted positive affine indicator transformations are applied.",
+        "expected_behavior": "Mapped interaction, ordinary-path, conditional, and plot identities remain stable and scientific values remain equivalent within the frozen contract."
+      },
+      {
+        "id": "point_replay",
+        "category": "determinism",
+        "case": "The same resident recipe, model, data, compiler plan, and capability identity are executed repeatedly.",
+        "expected_behavior": "The scientific canonical result is identical apart from operational identifiers and timestamps."
+      },
+      {
+        "id": "resident_authority_or_result_tamper",
+        "category": "tamper",
+        "case": "A source pin, model/recipe/plan identity, joint coefficient, interaction receipt, gamma, conditional row, plot point, capability cell, or revision lineage is altered.",
+        "expected_behavior": "Strict native/schema-6 validation rejects the revision or result and exposes no partial active output. A pre-commit failure leaves no destination; after a native persisted receipt, a later activation failure retains the strictly reopened destination, keeps or restores the unchanged source authority, and reports its exact recovery path without claiming rollback."
+      }
+    ],
+    "numerical_tolerance": 1e-10
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 4,
+      "result_schema_version": 2,
+      "payload_kind": "canonical_result_document_v2_general_sem_results_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result or revision whose exact moderation capability differs from its resident compiled authority."},
+        {"category": "method_version", "expected_behavior": "Reject a result relabeled with another interaction method, product scale, hierarchy, conditioning, compiler, or runner version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose resident dataset identity or fingerprint differs."},
+        {"category": "checksum", "expected_behavior": "Reject a changed archive member, stale source pin, or canonical attachment digest."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, nonfinite values, unordered identities, incomplete joint ledgers, or incoherent conditional/plot references."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never attach this identity to an ordinary or historical project without newly created general_sem_v1 authority."}
+      ],
+      "legacy_policy": "This exact capability applies only to newly created schema-6 general_sem_v1 projects. Scientific edits to an activated authority create a separately compiled no-replace revision; the source archive is never rewritten."
+    },
+    "native": {
+      "setup_controls": ["Two-operand moderator-on-path intent", "Required strong-hierarchy paths", "Exact point-only estimator compatibility", "Fixed minus-one, zero, and plus-one probe policy", "Revision-aware toolbar, eligible-path context-menu, and keyboard command for immutable activated authorities"],
+      "applicability_blockers": ["Missing general_sem_v1 authority", "Unsupported interaction order, method, hierarchy, topology, data, group, or inference", "Stale archive, model, recipe, dataset, compiled plan, or revision source pin", "Pending authority operation, calculation, temporary result, dirty session, or another revision transaction", "Singular or inadmissible joint stage-two equation"],
+      "result_surfaces": ["Joint structural/control coefficients", "Interaction product and scientific-gamma estimates", "Fixed-probe conditional slopes", "Accessible interaction plots and source tables", "Run, archive, and method provenance"],
+      "gui_cli_parity_rule": "All surfaces must read the same canonical result for identical resident recipe, model, data, compiled plan, and exact capability identity. The same-app native workflow is connected through preflight, execution/cancellation, chart/table readback, append, close, and strict reopen, but independent cross-surface qualification remains pending.",
+      "accessibility_rules": ["Every chart has a programmatic label, persisted-data summary/table association, point title, visible legend, and non-color-only series distinction.", "Every estimate, provenance field, unavailable reason, revision outcome, and recovery action remains understandable without color, canvas position, or pointer-only interaction.", "The immutable-authority revision action remains keyboard reachable, and each busy or unavailable state exposes the same corrective reason across toolbar, context-menu, and shortcut resolution."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html", "svg", "png"],
+      "tables": ["Joint stage-two coefficients", "Interaction effects and product-scale receipts", "Conditional effects", "Interaction plot points", "Run and revision provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "engine_only",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_V1.md"],
+      "independent_reference": ["validation/general_sem_pls_multiple_moderation_point_v1_reference.py"],
+      "simulation_report": ["validation/general_sem_pls_multiple_moderation_point_v1_reference.py"],
+      "boundary_report": ["validation/general_sem_pls_multiple_moderation_point_v1_reference.py", "validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json"],
+      "persistence_report": ["validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json"],
+      "frontend_report": ["src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx", "src/native/nativeCanonicalResultDocumentV2.test.ts"],
+      "export_report": ["src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx"],
+      "method_audit": ["validation/moderation_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_general_sem_pls_multiple_moderation_point_v1_native_acceptance.ps1"]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/engine_evidence.identity.json",
+          "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [],
+      "native_qualified": [],
+      "release_qualified": []
+    }
+  }
+}

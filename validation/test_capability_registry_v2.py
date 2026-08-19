@@ -85,13 +85,13 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
             },
         )
         self.assertTrue(report["manifest_evidence_check"]["passed"])
-        self.assertEqual(report["manifest_evidence_check"]["mapped_cell_count"], 46)
-        self.assertEqual(report["manifest_evidence_check"]["unique_manifest_count"], 40)
+        self.assertEqual(report["manifest_evidence_check"]["mapped_cell_count"], 47)
+        self.assertEqual(report["manifest_evidence_check"]["unique_manifest_count"], 41)
         self.assertEqual(
             report["manifest_evidence_check"]["derived_cell_evidence_counts"],
             {
                 "absent": 18,
-                "engine_only": 1,
+                "engine_only": 2,
                 "archive_qualified": 2,
                 "native_qualified": 0,
                 "release_qualified": 25,
@@ -151,6 +151,32 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertEqual(cell["coverage_state"], "partial")
         self.assertEqual(cell["evidence_state"], "engine_only")
         self.assertEqual(cell["surface"], "labs")
+        self.assertEqual(
+            cell["supported_model_predicate"]["quickpls"],
+            [
+                "schema_generation:general_sem_v1",
+                "derived_term:interaction_v2",
+                "interaction_order:two_way",
+                "construction:two_stage",
+                "hierarchy:strong",
+                "interaction_count:one_or_more",
+                "structural_topology:direct_only_acyclic",
+                "derived_term_scope:interaction_v2_only",
+                "higher_order_constructs:none",
+                "requested_effect_estimands:none",
+                "authored_conditional_effect_probes:none",
+                "inference:point_only",
+            ],
+        )
+        self.assertEqual(
+            cell["supported_data_predicate"]["quickpls"],
+            [
+                "input:raw_continuous",
+                "missing_data:listwise",
+                "weights:none",
+                "groups:single",
+            ],
+        )
 
         manifest = load_json(
             ROOT
@@ -168,6 +194,33 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         )
         self.assertFalse(manifest["qualification_ready"])
         self.assertFalse(manifest["promotion_allowed"])
+        self.assertEqual(
+            manifest["exact_predicate"],
+            {
+                "schema_generation": "general_sem_v1",
+                "derived_term": "interaction_v2",
+                "interaction_order": "two_way",
+                "construction": "two_stage",
+                "hierarchy": "strong",
+                "interaction_count": "one_or_more",
+                "structural_topology": "direct_only_acyclic",
+                "derived_term_scope": "interaction_v2_only",
+                "higher_order_constructs": "none",
+                "requested_effect_estimands": "none",
+                "authored_conditional_effect_probes": "none",
+                "inference": "point_only",
+                "input": "raw_continuous",
+                "missing_data": "listwise",
+                "weights": "none",
+                "groups": "single",
+            },
+        )
+        self.assertEqual(
+            cell["qualification_spec"]["references"],
+            [
+                "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json",
+            ],
+        )
 
         labs = resolve_customer_visibility(
             self.registry,

@@ -12,7 +12,12 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { CanonicalResultCell, CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
+import type {
+  CanonicalChartPoint,
+  CanonicalResultCell,
+  CanonicalResultChart,
+  CanonicalResultDocumentV2,
+} from "../domain/canonicalResultDocumentV2";
 import {
   appendInternalLabsRecipeV4CbsemResultV1,
   bindInternalRecipeV4CbsemDatasetV1,
@@ -715,16 +720,199 @@ export function CanonicalResultDocumentV2View({
   compilationReceipt?: InternalRecipeV4CbsemCompletedResultV1["analyticalResult"]["provenance"]["compilation_receipt"] | null;
 }) {
   const tables = new Map(document.tables.map((table) => [table.id, table]));
+  const charts = new Map(document.charts.map((chart) => [chart.id, chart]));
   return <section className="nd-cbsem-v4-results" aria-labelledby="nd-cbsem-v4-results-heading">
     <header><div><h2 id="nd-cbsem-v4-results-heading" ref={headingRef} tabIndex={-1}>{document.title}</h2><p>{reopened ? "Reopened immutable schema-6 document" : "Native CanonicalResultDocumentV2"}</p></div><Database size={22} aria-hidden="true" /></header>
     {document.notices.length ? <div className="nd-cbsem-v4-notices">{document.notices.map((notice) => <p key={notice.id} role={notice.severity === "error" ? "alert" : "note"}><strong>{humanToken(notice.severity)}</strong> {notice.message}</p>)}</div> : null}
-    {document.sections.map((section) => <section key={section.id} aria-labelledby={`nd-cbsem-section-${section.id}`}><h3 id={`nd-cbsem-section-${section.id}`}>{section.title}</h3>{section.description ? <p>{section.description}</p> : null}{section.table_ids.map((tableId) => {
-      const table = tables.get(tableId);
-      if (!table) return null;
-      return <div className="nd-cbsem-v4-table-wrap" data-canonical-table-id={table.id} key={table.id}><table><caption><strong>{table.title}</strong>{table.description ? <span>{table.description}</span> : null}</caption><thead><tr>{table.columns.map((column) => <th key={column.id} scope="col" title={column.description}>{column.label}</th>)}</tr></thead><tbody>{table.rows.map((row) => <tr key={row.id}>{row.cells.map((cell, index) => <td key={`${row.id}:${table.columns[index]?.id ?? index}`}>{canonicalCellText(cell, table.columns[index]?.default_precision ?? document.presentation.precision, document.presentation.missing_value_label)}</td>)}</tr>)}</tbody></table></div>;
-    })}</section>)}
+    {document.sections.map((section) => <section key={section.id} aria-labelledby={`nd-cbsem-section-${canonicalDomToken(section.id)}`}>
+      <h3 id={`nd-cbsem-section-${canonicalDomToken(section.id)}`}>{section.title}</h3>
+      {section.description ? <p>{section.description}</p> : null}
+      {section.table_ids.map((tableId) => {
+        const table = tables.get(tableId);
+        if (!table) return null;
+        return <div
+          className="nd-cbsem-v4-table-wrap"
+          data-canonical-table-id={table.id}
+          id={`nd-canonical-table-${canonicalDomToken(table.id)}`}
+          key={table.id}
+        ><table><caption><strong>{table.title}</strong>{table.description ? <span>{table.description}</span> : null}</caption><thead><tr>{table.columns.map((column) => <th key={column.id} scope="col" title={column.description}>{column.label}</th>)}</tr></thead><tbody>{table.rows.map((row) => <tr key={row.id}>{row.cells.map((cell, index) => <td key={`${row.id}:${table.columns[index]?.id ?? index}`}>{canonicalCellText(cell, table.columns[index]?.default_precision ?? document.presentation.precision, document.presentation.missing_value_label)}</td>)}</tr>)}</tbody></table></div>;
+      })}
+      {section.chart_ids.map((chartId) => {
+        const chart = charts.get(chartId);
+        if (!chart) return null;
+        return <CanonicalResultChartView chart={chart} sourceTableTitle={chart.source_table_id ? tables.get(chart.source_table_id)?.title : undefined} key={chart.id} />;
+      })}
+    </section>)}
     <details className="nd-cbsem-v4-run-details"><summary>Run and compilation details</summary><dl><div><dt>Run</dt><dd>{document.provenance.run_id}</dd></div><div><dt>Project</dt><dd>{document.provenance.project_id}</dd></div><div><dt>Model</dt><dd>{document.provenance.model_id}</dd></div><div><dt>Dataset</dt><dd>{document.provenance.dataset_id}</dd></div><div><dt>Method</dt><dd>{document.provenance.method_version}</dd></div>{compilationReceipt ? <><div><dt>Compiler</dt><dd>{compilationReceipt.compiler_version}</dd></div><div><dt>Plan digest</dt><dd>{compilationReceipt.plan_sha256}</dd></div><div><dt>Scientific model digest</dt><dd>{compilationReceipt.model_scientific_sha256}</dd></div></> : null}</dl></details>
   </section>;
+}
+
+const CANONICAL_CHART_WIDTH = 640;
+const CANONICAL_CHART_HEIGHT = 300;
+const CANONICAL_CHART_MARGIN = { top: 18, right: 20, bottom: 48, left: 58 } as const;
+const CANONICAL_CHART_DASHES = ["", "10 5", "3 4", "12 4 3 4", "2 3 8 3"] as const;
+const CANONICAL_CHART_LINE_NAMES = ["solid", "long dashed", "dotted", "dash-dot", "dot-dash"] as const;
+
+function CanonicalResultChartView({
+  chart,
+  sourceTableTitle,
+}: {
+  chart: CanonicalResultChart;
+  sourceTableTitle?: string;
+}) {
+  const domId = `nd-canonical-chart-${canonicalDomToken(chart.id)}`;
+  const sourceTableHref = chart.source_table_id
+    ? `#nd-canonical-table-${canonicalDomToken(chart.source_table_id)}`
+    : null;
+  const pointCount = chart.series.reduce((total, series) => total + series.points.length, 0);
+  const summary = `${humanToken(chart.kind)} chart with ${chart.series.length} series and ${pointCount} persisted ${pointCount === 1 ? "point" : "points"}. Exact values remain available in the canonical source table.`;
+  const supported = chart.kind === "line" || chart.kind === "scatter" || chart.kind === "interval";
+  const projection = supported ? projectCanonicalChart(chart) : null;
+
+  return <figure
+    className="nd-canonical-chart"
+    data-canonical-chart-id={chart.id}
+    aria-labelledby={`${domId}-title`}
+    aria-describedby={`${domId}-description ${domId}-summary`}
+  >
+    <figcaption>
+      <h4 id={`${domId}-title`}>{chart.title}</h4>
+      {chart.description ? <p id={`${domId}-description`}>{chart.description}</p> : <span id={`${domId}-description`} className="nd-sr-only">Canonical result chart.</span>}
+    </figcaption>
+    <p id={`${domId}-summary`} className="nd-canonical-chart__summary">{summary}</p>
+    {projection ? <div className="nd-canonical-chart__plot-wrap">
+      <svg
+        className="nd-canonical-chart__plot"
+        viewBox={`0 0 ${CANONICAL_CHART_WIDTH} ${CANONICAL_CHART_HEIGHT}`}
+        role="img"
+        aria-label={`${chart.title}. ${summary}`}
+      >
+        {projection.yTicks.map((tick) => <g key={`y:${tick.value}`} aria-hidden="true">
+          <line className="nd-canonical-chart__grid" x1={CANONICAL_CHART_MARGIN.left} x2={CANONICAL_CHART_WIDTH - CANONICAL_CHART_MARGIN.right} y1={tick.coordinate} y2={tick.coordinate} />
+          <text className="nd-canonical-chart__tick" x={CANONICAL_CHART_MARGIN.left - 8} y={tick.coordinate + 4} textAnchor="end">{tick.label}</text>
+        </g>)}
+        <line className="nd-canonical-chart__axis" x1={CANONICAL_CHART_MARGIN.left} x2={CANONICAL_CHART_MARGIN.left} y1={CANONICAL_CHART_MARGIN.top} y2={CANONICAL_CHART_HEIGHT - CANONICAL_CHART_MARGIN.bottom} aria-hidden="true" />
+        <line className="nd-canonical-chart__axis" x1={CANONICAL_CHART_MARGIN.left} x2={CANONICAL_CHART_WIDTH - CANONICAL_CHART_MARGIN.right} y1={CANONICAL_CHART_HEIGHT - CANONICAL_CHART_MARGIN.bottom} y2={CANONICAL_CHART_HEIGHT - CANONICAL_CHART_MARGIN.bottom} aria-hidden="true" />
+        {projection.xTicks.map((tick) => <g key={`x:${String(tick.value)}`} aria-hidden="true">
+          <line className="nd-canonical-chart__axis-tick" x1={tick.coordinate} x2={tick.coordinate} y1={CANONICAL_CHART_HEIGHT - CANONICAL_CHART_MARGIN.bottom} y2={CANONICAL_CHART_HEIGHT - CANONICAL_CHART_MARGIN.bottom + 5} />
+          <text className="nd-canonical-chart__tick" x={tick.coordinate} y={CANONICAL_CHART_HEIGHT - CANONICAL_CHART_MARGIN.bottom + 19} textAnchor="middle">{tick.label}</text>
+        </g>)}
+        {chart.display.x_axis_label ? <text className="nd-canonical-chart__axis-label" x={(CANONICAL_CHART_MARGIN.left + CANONICAL_CHART_WIDTH - CANONICAL_CHART_MARGIN.right) / 2} y={CANONICAL_CHART_HEIGHT - 8} textAnchor="middle">{chart.display.x_axis_label}</text> : null}
+        {chart.display.y_axis_label ? <text className="nd-canonical-chart__axis-label" x={15} y={CANONICAL_CHART_HEIGHT / 2} textAnchor="middle" transform={`rotate(-90 15 ${CANONICAL_CHART_HEIGHT / 2})`}>{chart.display.y_axis_label}</text> : null}
+        {chart.series.map((series, seriesIndex) => {
+          const projectedPoints = series.points.map((point) => ({
+            point,
+            x: projection.x(point.x),
+            y: projection.y(point.y),
+          }));
+          const dash = CANONICAL_CHART_DASHES[seriesIndex % CANONICAL_CHART_DASHES.length];
+          const seriesClass = `nd-canonical-chart__series nd-canonical-chart__series--${seriesIndex % CANONICAL_CHART_DASHES.length}`;
+          const path = projectedPoints.map(({ x, y }, index) => `${index === 0 ? "M" : "L"} ${x} ${y}`).join(" ");
+          return <g className={seriesClass} key={series.id}>
+            {chart.kind !== "scatter" && projectedPoints.length > 1 ? <path className="nd-canonical-chart__line" d={path} strokeDasharray={dash || undefined} aria-hidden="true" /> : null}
+            {projectedPoints.map(({ point, x, y }, pointIndex) => {
+              const lower = typeof point.lower === "number" ? projection.y(point.lower) : null;
+              const upper = typeof point.upper === "number" ? projection.y(point.upper) : null;
+              const pointText = canonicalChartPointText(series.label, point);
+              return <g key={`${series.id}:${pointIndex}`}>
+                {lower !== null || upper !== null ? <line className="nd-canonical-chart__interval" x1={x} x2={x} y1={lower ?? y} y2={upper ?? y} aria-hidden="true" /> : null}
+                <circle className="nd-canonical-chart__point" cx={x} cy={y} r={4}><title>{pointText}</title></circle>
+                {chart.display.show_values ? <text className="nd-canonical-chart__value" x={x} y={y - 8} textAnchor="middle">{formatCanonicalChartNumber(point.y)}</text> : null}
+              </g>;
+            })}
+          </g>;
+        })}
+      </svg>
+    </div> : <p className="nd-canonical-chart__fallback" role="note">QuickPLS preserves this {humanToken(chart.kind).toLowerCase()} chart and its exact source data, but this chart kind does not yet have a visual renderer. Use the canonical source table in this section.</p>}
+    {chart.display.show_legend !== false && chart.series.length ? <ul className="nd-canonical-chart__legend" aria-label={`${chart.title} series key`}>
+      {chart.series.map((series, index) => <li key={series.id} className={`nd-canonical-chart__series--${index % CANONICAL_CHART_DASHES.length}`}>
+        <svg viewBox="0 0 34 10" width="34" height="10" aria-hidden="true"><line className="nd-canonical-chart__legend-line" x1="1" x2="33" y1="5" y2="5" strokeDasharray={CANONICAL_CHART_DASHES[index % CANONICAL_CHART_DASHES.length] || undefined} /></svg>
+        <span>{series.label} ({CANONICAL_CHART_LINE_NAMES[index % CANONICAL_CHART_LINE_NAMES.length]})</span>
+      </li>)}
+    </ul> : null}
+    {sourceTableHref ? <p className="nd-canonical-chart__source"><a href={sourceTableHref}>Exact plot data: {sourceTableTitle ?? chart.source_table_id}</a></p> : null}
+  </figure>;
+}
+
+function projectCanonicalChart(chart: CanonicalResultChart) {
+  const points = chart.series.flatMap((series) => series.points);
+  if (!points.length) return null;
+  const yValues = points.flatMap((point) => [point.y, point.lower, point.upper]).filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  if (!yValues.length) return null;
+  const yExtent = paddedCanonicalChartExtent(Math.min(...yValues), Math.max(...yValues));
+  const y = (value: number) => scaleCanonicalChartValue(value, yExtent[0], yExtent[1], CANONICAL_CHART_HEIGHT - CANONICAL_CHART_MARGIN.bottom, CANONICAL_CHART_MARGIN.top);
+  const yTicks = Array.from({ length: 5 }, (_, index) => {
+    const value = yExtent[0] + ((yExtent[1] - yExtent[0]) * index) / 4;
+    return { value, label: formatCanonicalChartNumber(value), coordinate: y(value) };
+  });
+
+  const allNumericX = points.every((point) => typeof point.x === "number" && Number.isFinite(point.x));
+  if (allNumericX) {
+    const xValues = points.map((point) => point.x as number);
+    const xExtent = paddedCanonicalChartExtent(Math.min(...xValues), Math.max(...xValues), false);
+    const x = (value: number | string) => scaleCanonicalChartValue(Number(value), xExtent[0], xExtent[1], CANONICAL_CHART_MARGIN.left, CANONICAL_CHART_WIDTH - CANONICAL_CHART_MARGIN.right);
+    const uniqueValues = [...new Set(xValues)].sort((left, right) => left - right);
+    const tickValues = uniqueValues.length <= 7
+      ? uniqueValues
+      : Array.from({ length: 5 }, (_, index) => xExtent[0] + ((xExtent[1] - xExtent[0]) * index) / 4);
+    return {
+      x,
+      y,
+      xTicks: tickValues.map((value) => ({ value, label: formatCanonicalChartNumber(value), coordinate: x(value) })),
+      yTicks,
+    };
+  }
+
+  const categories: string[] = [];
+  for (const point of points) {
+    const value = String(point.x);
+    if (!categories.includes(value)) categories.push(value);
+  }
+  const x = (value: number | string) => {
+    const index = Math.max(0, categories.indexOf(String(value)));
+    if (categories.length === 1) return (CANONICAL_CHART_MARGIN.left + CANONICAL_CHART_WIDTH - CANONICAL_CHART_MARGIN.right) / 2;
+    return scaleCanonicalChartValue(index, 0, categories.length - 1, CANONICAL_CHART_MARGIN.left, CANONICAL_CHART_WIDTH - CANONICAL_CHART_MARGIN.right);
+  };
+  return {
+    x,
+    y,
+    xTicks: categories.map((value) => ({ value, label: value, coordinate: x(value) })),
+    yTicks,
+  };
+}
+
+function paddedCanonicalChartExtent(minimum: number, maximum: number, addPadding = true): readonly [number, number] {
+  if (minimum === maximum) {
+    const radius = Math.max(1, Math.abs(minimum) * 0.1);
+    return [minimum - radius, maximum + radius];
+  }
+  if (!addPadding) return [minimum, maximum];
+  const padding = (maximum - minimum) * 0.08;
+  return [minimum - padding, maximum + padding];
+}
+
+function scaleCanonicalChartValue(value: number, sourceMin: number, sourceMax: number, targetMin: number, targetMax: number): number {
+  return targetMin + ((value - sourceMin) / (sourceMax - sourceMin)) * (targetMax - targetMin);
+}
+
+function canonicalChartPointText(seriesLabel: string, point: CanonicalChartPoint): string {
+  const interval = typeof point.lower === "number" || typeof point.upper === "number"
+    ? `, interval ${typeof point.lower === "number" ? formatCanonicalChartNumber(point.lower) : "not reported"} to ${typeof point.upper === "number" ? formatCanonicalChartNumber(point.upper) : "not reported"}`
+    : "";
+  const label = point.label ? `${point.label}, ` : "";
+  return `${seriesLabel}: ${label}x ${String(point.x)}, y ${formatCanonicalChartNumber(point.y)}${interval}`;
+}
+
+function formatCanonicalChartNumber(value: number): string {
+  if (Object.is(value, -0)) return "0";
+  if (value === 0) return "0";
+  const absolute = Math.abs(value);
+  if (absolute >= 1_000_000 || absolute < 0.0001) return value.toExponential(3);
+  return value.toFixed(4).replace(/\.?0+$/u, "");
+}
+
+function canonicalDomToken(value: string): string {
+  return Array.from(new TextEncoder().encode(value), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function canonicalCellText(cell: CanonicalResultCell, precision: number | null, missingLabel: string): string {
