@@ -1024,6 +1024,7 @@ pub enum CanonicalIdentificationScopeV1 {
 #[serde(rename_all = "snake_case")]
 pub enum CanonicalIdentificationStatusV1 {
     Identified,
+    Provisional,
     Underidentified,
     LocallyUnderidentified,
     BoundaryCondition,

@@ -393,6 +393,7 @@ export type CanonicalIdentificationScopeV1 =
 
 export type CanonicalIdentificationStatusV1 =
   | "identified"
+  | "provisional"
   | "underidentified"
   | "locally_underidentified"
   | "boundary_condition";
@@ -2344,7 +2345,7 @@ export function parseCanonicalGeneralSemResultsV1(
     validateGeneralSemTrace(diagnostic.trace, `${path}.trace`, wireContext);
     const scope = wireEnum(diagnostic.scope, ["model", "variable", "relation", "interaction", "higher_order_construct"] as const, `${path}.scope`);
     const subjectId = wireStableId(diagnostic.subject_id, `${path}.subject_id`);
-    const status = wireEnum(diagnostic.status, ["identified", "underidentified", "locally_underidentified", "boundary_condition"] as const, `${path}.status`);
+    const status = wireEnum(diagnostic.status, ["identified", "provisional", "underidentified", "locally_underidentified", "boundary_condition"] as const, `${path}.status`);
     wireStableId(diagnostic.code, `${path}.code`);
     wireText(diagnostic.message, `${path}.message`);
     const degreesOfFreedom = optionalWireSafeInteger(diagnostic, "degrees_of_freedom", path);

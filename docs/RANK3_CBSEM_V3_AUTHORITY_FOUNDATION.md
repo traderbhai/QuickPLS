@@ -1,7 +1,8 @@
 # Rank 3 CB-SEM V3 authority foundation
 
-Status: contract/compiler foundation only. The two cells below are candidate
-identities and are not Registry-executable or release-qualified yet.
+Status: contract/compiler foundation plus an internal source-only point
+adapter. The two cells below are candidate identities and are not
+Registry-executable or release-qualified yet.
 
 ## Frozen candidate identities
 
@@ -22,11 +23,19 @@ fixed/free status, finite row bounds, and equality labels are preserved.
 Unsupported explicit constraint objects block compilation and are never
 discarded.
 
+The internal point adapter deterministically recompiles the V2 artifact,
+requires it to equal the V3 embedded base plan and bound model/recipe/dataset
+identities, invokes the existing qualified V2 point kernel once, and maps its
+stable parameter IDs to the additive canonical CB parameter, fit, and
+provisional-identification rows. It is a private runner module with no public
+re-export, Registry/native dispatch, schema-6 publication, or archive path.
+Unsupported parameter families and mismatched kernel inventories fail closed.
+
 The recursive bootstrap selector additionally requires a structural model,
 500–10,000 resamples, fixed 95% two-sided percentile Type-7 inference, and
 matching Recipe/General-SEM resampling settings. This branch currently creates
-authority contracts only; no runner, scheduler, native job, or Registry claim
-is added in this checkpoint.
+bootstrap authority contracts only; no bootstrap runner, scheduler, native
+job, or Registry claim is added in this checkpoint.
 
 Canonical General SEM results now have additive typed CB parameter rows,
 existing fit/identification rows, and an optional CB-specific recursive
