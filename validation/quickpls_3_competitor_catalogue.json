@@ -585,7 +585,7 @@
         "smartpls.pls_algorithm",
         "smartpls.pls_bootstrapping"
       ],
-      "remaining_gap": "The General SEM simultaneous cell is point-only and engine-only in Labs; bootstrap inference, three-way interactions, authored arbitrary probe policies, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
+      "remaining_gap": "The General SEM simultaneous cell is connected end to end in the existing QuickPLS desktop application but remains point-only and engine-only in Labs; bootstrap inference, three-way interactions, authored arbitrary probe policies, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
     },
     {
       "id": "smartpls.mediation",

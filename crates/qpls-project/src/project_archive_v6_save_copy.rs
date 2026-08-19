@@ -382,17 +382,41 @@ pub(crate) fn publish_new_project_archive_v6_document_with_resident_datasets(
     document: &ProjectArchiveDocumentV6,
     datasets: &[Dataset],
 ) -> Result<ProjectArchiveV6NewDocumentPublication, ProjectArchiveV6SaveCopyError> {
+    publish_new_project_archive_v6_document_with_resident_datasets_before_publish(
+        destination,
+        document,
+        datasets,
+        || Ok(()),
+    )
+}
+
+/// Resident-dataset publication with one fail-closed callback after strict
+/// reopen validation and immediately before the final no-replace link. This is
+/// crate-private so authority-revision writers can recheck a pinned source
+/// handle without widening the existing public save-copy contract.
+pub(crate) fn publish_new_project_archive_v6_document_with_resident_datasets_before_publish<
+    BeforePublish,
+>(
+    destination: &Path,
+    document: &ProjectArchiveDocumentV6,
+    datasets: &[Dataset],
+    before_publish: BeforePublish,
+) -> Result<ProjectArchiveV6NewDocumentPublication, ProjectArchiveV6SaveCopyError>
+where
+    BeforePublish: FnOnce() -> Result<(), ProjectArchiveV6SaveCopyError>,
+{
     #[cfg(windows)]
     {
         publish_new_project_archive_v6_document_with_resident_datasets_windows(
             destination,
             document,
             datasets,
+            before_publish,
         )
     }
     #[cfg(not(windows))]
     {
-        let _ = (destination, document, datasets);
+        let _ = (destination, document, datasets, before_publish);
         Err(ProjectArchiveV6SaveCopyError::UnsupportedPlatform)
     }
 }
@@ -940,11 +964,15 @@ where
 }
 
 #[cfg(windows)]
-fn publish_new_project_archive_v6_document_with_resident_datasets_windows(
+fn publish_new_project_archive_v6_document_with_resident_datasets_windows<BeforePublish>(
     destination: &Path,
     document: &ProjectArchiveDocumentV6,
     datasets: &[Dataset],
-) -> Result<ProjectArchiveV6NewDocumentPublication, ProjectArchiveV6SaveCopyError> {
+    before_publish: BeforePublish,
+) -> Result<ProjectArchiveV6NewDocumentPublication, ProjectArchiveV6SaveCopyError>
+where
+    BeforePublish: FnOnce() -> Result<(), ProjectArchiveV6SaveCopyError>,
+{
     if !destination.is_absolute() {
         return Err(ProjectArchiveV6SaveCopyError::AbsolutePathsRequired);
     }
@@ -1020,7 +1048,11 @@ fn publish_new_project_archive_v6_document_with_resident_datasets_windows(
         strict_reopen_validated: true,
     };
 
-    // No fallible work follows the no-replace publication point.
+    // The callback is deliberately after strict reopen and before publication;
+    // failure drops the delete-on-close temporary without exposing a final
+    // destination link.
+    before_publish()?;
+    // No fallible validation follows the no-replace publication point.
     owned_temporary.publish(&parent, destination)?;
     Ok(publication)
 }
@@ -1514,7 +1546,7 @@ mod tests {
     use super::*;
     use crate::{
         Project, ProjectArchiveUpgradeRequestV6, insert_sem_model_v4_draft_v6,
-        plan_project_upgrade_to_v6,
+        load_project_archive_v6, plan_project_upgrade_to_v6,
     };
     use chrono::{TimeZone, Utc};
     use qpls_core::{
@@ -1729,6 +1761,45 @@ mod tests {
             fs::metadata(&destination).unwrap().len()
         );
         assert!(temporary_links(directory.path()).is_empty());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn resident_precommit_callback_runs_after_strict_reopen_and_failure_publishes_nothing() {
+        let directory = tempfile::tempdir().unwrap();
+        let source = directory.path().join("resident-source-v6.qpls");
+        let destination = directory.path().join("resident-revision-v6.qpls");
+        let (source_document, _, source_sha256) = write_schema6_fixture(&source);
+        let source_bytes = fs::read(&source).unwrap();
+        let loaded = load_project_archive_v6(&source).unwrap();
+        let callback_seen = Cell::new(false);
+
+        let result = publish_new_project_archive_v6_document_with_resident_datasets_before_publish(
+            &destination,
+            &source_document,
+            &loaded.datasets,
+            || {
+                callback_seen.set(true);
+                // The validated temporary exists, but its final no-replace link
+                // is not visible until this callback succeeds.
+                assert!(!destination.exists());
+                assert_eq!(temporary_links(directory.path()).len(), 1);
+                Err(ProjectArchiveV6SaveCopyError::PublicationFailed(
+                    "injected post-reopen precommit failure".into(),
+                ))
+            },
+        );
+
+        assert!(callback_seen.get());
+        assert!(matches!(
+            result,
+            Err(ProjectArchiveV6SaveCopyError::PublicationFailed(message))
+                if message == "injected post-reopen precommit failure"
+        ));
+        assert!(!destination.exists());
+        assert!(temporary_links(directory.path()).is_empty());
+        assert_eq!(fs::read(&source).unwrap(), source_bytes);
+        assert_eq!(sha256_bytes(&source_bytes), source_sha256);
     }
 
     #[cfg(windows)]

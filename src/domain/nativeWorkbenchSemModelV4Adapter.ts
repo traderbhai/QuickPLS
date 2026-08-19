@@ -1,5 +1,5 @@
 import type { Edge, Node } from "@xyflow/react";
-import type { ConstructData, DiagramLayoutState } from "../types";
+import type { ConstructData, DiagramLayoutState, InteractionV2Data } from "../types";
 import {
   inspectNativeConstructAuthoringV4,
   inspectNativeCovarianceAuthoringV4,
@@ -15,6 +15,7 @@ import {
   type ObservedTransformationStepV4,
   type SemAnnotationV4,
   type SemDataBindingV4,
+  type SemDerivedTermV4,
   type SemEndpointV4,
   type SemGroupV4,
   type SemModelV4,
@@ -25,7 +26,7 @@ import {
   type SemVariableV4,
 } from "./semModelV4";
 
-export const NATIVE_WORKBENCH_SEM_MODEL_V4_ADAPTER_VERSION = 1 as const;
+export const NATIVE_WORKBENCH_SEM_MODEL_V4_ADAPTER_VERSION = 2 as const;
 
 export type NativeWorkbenchConstructEstimandV4 =
   | { kind: "composite" }
@@ -123,7 +124,16 @@ export class NativeWorkbenchSemModelV4AdapterError extends Error {
 }
 
 export const nativeWorkbenchConstructVariableIdV4 = (constructId: string) => `construct:${constructId}`;
+export const nativeWorkbenchDerivedVariableIdV4 = (nodeId: string) => `derived:${nodeId}`;
 export const nativeWorkbenchObservedVariableIdV4 = (sourceColumn: string) => `observed:${sourceColumn}`;
+
+type ExplicitInteractionV2Node = Node<ConstructData & {
+  semantic: "interaction";
+  interaction: InteractionV2Data;
+}>;
+
+const isExplicitInteractionV2Node = (node: Node<ConstructData>): node is ExplicitInteractionV2Node =>
+  node.data?.semantic === "interaction" && node.data.interaction?.kind === "interaction_v2";
 
 /**
  * Converts the live editable graph without passing through NativeRecipeModel, whose
@@ -156,6 +166,7 @@ export function adaptAuthoredNativeWorkbenchToSemModelV4(
   const diagnostics: NativeWorkbenchSemModelV4Diagnostic[] = [];
   const construct_estimands: Record<string, NativeWorkbenchConstructEstimandV4> = {};
   for (const node of input.nodes) {
+    if (isExplicitInteractionV2Node(node)) continue;
     const inspection = inspectNativeConstructAuthoringV4(node);
     if (inspection.state === "invalid") {
       diagnostics.push(diagnostic(
@@ -246,6 +257,7 @@ function buildNativeWorkbenchSemModelV4(
   ));
 
   const nodesById = new Map<string, Node<ConstructData>>();
+  const explicitInteractionNodesById = new Map<string, ExplicitInteractionV2Node>();
   const indicatorOwner = new Map<string, string>();
   const nodeIds = new Set(input.nodes.map((node) => node.id));
   for (const node of input.nodes) {
@@ -264,7 +276,8 @@ function buildNativeWorkbenchSemModelV4(
     if (!requiredText(node.data?.label) || !requiredText(node.data?.shortName)) {
       diagnostics.push(diagnostic("native_workbench.construct_label_required", "schema", node.id, `Construct ${node.id} needs a name and short name.`, "Enter both construct labels before conversion."));
     }
-    if (node.data?.semantic === "interaction" || node.data?.semantic === "higher_order") {
+    const explicitInteractionV2 = isExplicitInteractionV2Node(node);
+    if ((node.data?.semantic === "interaction" || node.data?.semantic === "higher_order") && !explicitInteractionV2) {
       diagnostics.push(diagnostic(
         "native_workbench.derived_construct_requires_explicit_v4_definition",
         "semantics",
@@ -272,6 +285,19 @@ function buildNativeWorkbenchSemModelV4(
         `Derived construct ${node.id} cannot be inferred from the legacy node shape without changing its scientific meaning.`,
         "Author its interaction or higher-order SemModelV4 term explicitly before conversion.",
       ));
+    }
+    if (explicitInteractionV2) {
+      explicitInteractionNodesById.set(node.id, node);
+      if (!Array.isArray(node.data.indicators) || node.data.indicators.length !== 0) {
+        diagnostics.push(diagnostic(
+          "native_workbench.interaction_v2_indicators_forbidden",
+          "semantics",
+          node.id,
+          `Explicit interaction ${node.id} cannot own measurement indicators.`,
+          "Remove indicators from the generated interaction while preserving its operands and focal path.",
+        ));
+      }
+      continue;
     }
     if (!Array.isArray(node.data?.indicators) || !node.data.indicators.length) {
       diagnostics.push(diagnostic("native_workbench.indicators_required", "semantics", node.id, `Construct ${node.id} has no indicators.`, "Assign at least one indicator; common factors require at least two."));
@@ -304,8 +330,16 @@ function buildNativeWorkbenchSemModelV4(
       `An estimand decision references unknown construct ${configuredId}.`,
       "Remove the stale decision or restore the referenced construct.",
     ));
+    else if (explicitInteractionNodesById.has(configuredId)) diagnostics.push(diagnostic(
+      "native_workbench.derived_estimand_forbidden",
+      "semantics",
+      configuredId,
+      `Derived interaction ${configuredId} cannot have a factor-versus-composite estimand.`,
+      "Remove the construct estimand from the generated interaction.",
+    ));
   }
   for (const node of nodesById.values()) {
+    if (explicitInteractionNodesById.has(node.id)) continue;
     const estimand = input.construct_estimands[node.id];
     if (!estimand || estimand.kind === "legacy_estimand_unspecified") {
       diagnostics.push(diagnostic(
@@ -395,9 +429,124 @@ function buildNativeWorkbenchSemModelV4(
     ));
   }
 
+  const interactionTermIds = new Set<string>();
+  for (const node of explicitInteractionNodesById.values()) {
+    const interaction = node.data.interaction!;
+    const termId = requiredText(interaction.termId);
+    if (!termId || interactionTermIds.has(termId)) {
+      diagnostics.push(diagnostic(
+        "native_workbench.interaction_v2_term_id_invalid",
+        "schema",
+        node.id,
+        `Explicit interaction ${node.id} needs a unique non-empty scientific term id.`,
+        "Recreate the interaction so it receives a stable unique term identity.",
+      ));
+    } else interactionTermIds.add(termId);
+
+    const operands = Array.isArray(interaction.operands) ? interaction.operands : [];
+    if (operands.length < 2
+      || new Set(operands).size !== operands.length
+      || operands.some((operand) => !requiredText(operand) || operand === node.id || !nodesById.has(operand) || explicitInteractionNodesById.has(operand))) {
+      diagnostics.push(diagnostic(
+        "native_workbench.interaction_v2_operands_invalid",
+        "semantics",
+        node.id,
+        `Explicit interaction ${node.id} must reference at least two unique ordinary construct operands in authored order.`,
+        "Choose existing non-derived constructs as the focal predictor and moderators.",
+      ));
+    }
+    if (!requiredText(interaction.outcome)
+      || interaction.outcome === node.id
+      || !nodesById.has(interaction.outcome)
+      || explicitInteractionNodesById.has(interaction.outcome)) {
+      diagnostics.push(diagnostic(
+        "native_workbench.interaction_v2_outcome_invalid",
+        "semantics",
+        node.id,
+        `Explicit interaction ${node.id} must reference one existing ordinary outcome construct.`,
+        "Reconnect the interaction to an existing non-derived outcome.",
+      ));
+    }
+    if (!["two_stage", "product_indicator", "orthogonalizing"].includes(interaction.canonicalMethod)) {
+      diagnostics.push(diagnostic(
+        "native_workbench.interaction_v2_method_invalid",
+        "semantics",
+        node.id,
+        `Explicit interaction ${node.id} has an unsupported construction method.`,
+        "Choose two-stage, product-indicator, or orthogonalizing construction explicitly.",
+      ));
+    }
+    if (!["strong", "weak", "none"].includes(interaction.hierarchyPolicy)) {
+      diagnostics.push(diagnostic(
+        "native_workbench.interaction_v2_hierarchy_invalid",
+        "semantics",
+        node.id,
+        `Explicit interaction ${node.id} has an unsupported hierarchy policy.`,
+        "Choose strong, weak, or no hierarchy explicitly.",
+      ));
+    }
+    const productIndicator = (interaction as { productIndicator?: unknown }).productIndicator;
+    const hasProductIndicator = productIndicator !== undefined && productIndicator !== null;
+    if (interaction.canonicalMethod === "product_indicator") {
+      if (!hasProductIndicator || !isExactProductIndicatorSpecificationV4(productIndicator)) {
+        diagnostics.push(diagnostic(
+          "native_workbench.interaction_v2_product_indicator_invalid",
+          "semantics",
+          node.id,
+          `Product-indicator interaction ${node.id} needs one exact construction specification.`,
+          "Choose centering, sample standardization, and all-pairs construction explicitly.",
+        ));
+      }
+    } else if (hasProductIndicator) {
+      diagnostics.push(diagnostic(
+        "native_workbench.interaction_v2_product_indicator_forbidden",
+        "semantics",
+        node.id,
+        `Interaction ${node.id} carries product-indicator settings for a different construction method.`,
+        "Remove the product-indicator settings or choose the product-indicator method explicitly.",
+      ));
+    }
+
+    const focalEdge = edgesById.get(interaction.focalRelationId);
+    if (!focalEdge
+      || isMeasurementEdge(focalEdge)
+      || edgeRole(focalEdge) === "control"
+      || edgeRole(focalEdge) === "covariance"
+      || focalEdge.source !== operands[0]
+      || focalEdge.target !== interaction.outcome) {
+      diagnostics.push(diagnostic(
+        "native_workbench.interaction_v2_focal_relation_invalid",
+        "semantics",
+        node.id,
+        `Explicit interaction ${node.id} does not reference its exact focal structural path.`,
+        "Reconnect the focal predictor to the outcome and recreate or retarget the interaction.",
+      ));
+    }
+    const effectEdges = [...edgesById.values()].filter((edge) =>
+      !isMeasurementEdge(edge)
+      && edgeRole(edge) !== "control"
+      && edgeRole(edge) !== "covariance"
+      && edge.source === node.id
+      && edge.target === interaction.outcome);
+    if (effectEdges.length !== 1) {
+      diagnostics.push(diagnostic(
+        "native_workbench.interaction_v2_effect_relation_invalid",
+        "semantics",
+        node.id,
+        `Explicit interaction ${node.id} needs exactly one interaction-effect path to its outcome.`,
+        "Restore the generated interaction path or remove duplicate effect paths.",
+      ));
+    }
+  }
+
   if (diagnostics.length) return sortDiagnostics(diagnostics);
 
-  const constructVariables = sortedRecord([...nodesById.keys()].map((id) => [id, nativeWorkbenchConstructVariableIdV4(id)]));
+  const constructVariables = sortedRecord([...nodesById.keys()].map((id) => [
+    id,
+    explicitInteractionNodesById.has(id)
+      ? nativeWorkbenchDerivedVariableIdV4(id)
+      : nativeWorkbenchConstructVariableIdV4(id),
+  ]));
   const indicatorVariables = sortedRecord([...indicatorOwner.keys()].map((indicator) => [indicator, nativeWorkbenchObservedVariableIdV4(indicator)]));
   const trace: NativeWorkbenchSemModelV4Trace = {
     construct_variables: constructVariables,
@@ -432,6 +581,10 @@ function buildNativeWorkbenchSemModelV4(
 
   for (const node of [...nodesById.values()].sort((left, right) => left.id.localeCompare(right.id))) {
     const constructId = constructVariables[node.id];
+    if (explicitInteractionNodesById.has(node.id)) {
+      variables.push({ kind: "derived", id: constructId, label: node.data.label });
+      continue;
+    }
     const estimand = input.construct_estimands[node.id] as Exclude<NativeWorkbenchConstructEstimandV4, { kind: "legacy_estimand_unspecified" }>;
     const varianceParameterId = stableAdapterId("factor_variance", [node.id]);
     if (estimand.kind === "composite") {
@@ -578,6 +731,25 @@ function buildNativeWorkbenchSemModelV4(
 
   if (diagnostics.length) return sortDiagnostics(diagnostics);
 
+  const derivedTerms: SemDerivedTermV4[] = [...explicitInteractionNodesById.values()]
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map((node) => {
+      const interaction = node.data.interaction!;
+      const term: Extract<SemDerivedTermV4, { kind: "interaction_v2" }> = {
+        kind: "interaction_v2",
+        id: interaction.termId,
+        output: constructVariables[node.id],
+        operands: interaction.operands.map((operand) => constructVariables[operand]),
+        focal_relation: stableAdapterId("structural_relation", [interaction.focalRelationId]),
+        method: interaction.canonicalMethod,
+        hierarchy_policy: interaction.hierarchyPolicy,
+      };
+      if (interaction.productIndicator !== undefined && interaction.productIndicator !== null) {
+        term.product_indicator = serializableClone(interaction.productIndicator);
+      }
+      return term;
+    });
+
   const authoredParameters = applyNativeSemModelParameterAuthoringV4({
     nodes: [...nodesById.values()],
     edges: [...edgesById.values()],
@@ -603,7 +775,7 @@ function buildNativeWorkbenchSemModelV4(
     relations,
     parameters: authoredParameters.parameters,
     constraints: authoredParameters.constraints,
-    derived_terms: [],
+    derived_terms: derivedTerms,
     group: serializableClone(input.group ?? { kind: "single_group" }),
     data_binding: serializableClone(input.data_binding),
     annotations,
@@ -800,6 +972,21 @@ function sortDiagnostics(diagnostics: NativeWorkbenchSemModelV4Diagnostic[]) {
 
 function requiredText(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function isExactProductIndicatorSpecificationV4(
+  value: unknown,
+): value is NonNullable<InteractionV2Data["productIndicator"]> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record).sort();
+  return keys.length === 3
+    && keys[0] === "centering"
+    && keys[1] === "pairing"
+    && keys[2] === "standardization"
+    && ["none", "mean_center", "double_mean_center"].includes(record.centering as string)
+    && ["none", "sample_standard_deviation"].includes(record.standardization as string)
+    && record.pairing === "all_pairs";
 }
 
 function stableAdapterId(prefix: string, parts: readonly string[]) {

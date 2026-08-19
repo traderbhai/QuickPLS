@@ -1,7 +1,8 @@
 # General SEM upgrade execution
 
-This document tracks the work that began on `codx/sem-platform-upgrade` and the
-current `codx/sem-native-mediation-workflow-v1` integration branch. It is a
+This document tracks the work that began on `codx/sem-platform-upgrade`, the
+stable `codx/sem-native-mediation-workflow-v1` integration branch, and the
+current `codx/sem-native-moderation-workflow-v1` child checkpoint. It is a
 checkpoint record, not a claim that the General SEM roadmap or a Standard-tier
 method is complete.
 
@@ -228,13 +229,102 @@ promote the cell to Standard.
 | Frontend production build | Passed | Repository command `npm run build`; this is not a packaged-Windows acceptance run |
 | `quickpls-desktop` full suite | 168 passed; 1 intentionally ignored | Green for native archive authority, project-mode lifecycle, strict paging, cancellation, one-shot result, and canonical point/bootstrap behavior |
 | Exact multiple-mediation evidence manifest | Passed; 29/29 source descriptors current | Derived `engine_only`; deterministic simulation replay, 14/14 micro-reference checks, focused registry, and complexity gates passed |
-| Exact simultaneous two-way moderation Registry cell | Passed | Registered as `partial / engine_only / labs` with `qualification_ready = false`; native calculation publication remains blocked |
+| Exact simultaneous two-way moderation Registry cell | Passed | At this historical Checkpoint D boundary it was registered as `partial / engine_only / labs` with native publication still blocked; Checkpoint E closes that workflow gap without promoting the cell |
 
 These checks establish bounded engine and workflow-plumbing evidence only. The
 same-app new-project authoring and authority-activation journey is connected,
 but it remains an Experimental Labs path and does not replace an independent
 scientific oracle, cross-runtime qualification fixture, packaged Windows
 verification, or Capability Registry promotion audit.
+
+## Checkpoint E: simultaneous two-way moderation and safe scientific revision
+
+The exact simultaneous two-way PLS moderation point cell is now connected end
+to end in the existing QuickPLS General SEM project mode. This remains an
+upgrade of QuickPLS, not a new application, and it remains Experimental Labs.
+
+Within the frozen point-only predicate, the connected slice:
+
+- accepts one or more two-operand `interaction_v2` terms using `two_stage`
+  construction and `strong` hierarchy on same-focal or different-focal direct
+  paths;
+- shares one stage-one score model and estimates every ordinary predecessor and
+  interaction targeting an outcome in the same joint stage-two equation;
+- publishes product-scale receipts, standardized-product coefficients,
+  scientific gamma values, the complete structural/control coefficient ledger,
+  fixed `-1`, `0`, and `+1` conditional slopes, and persisted plot points under
+  stable compiled identities;
+- renders canonical line charts from those persisted points with accessible
+  labels, a text/table association, point titles, visible legends, and
+  non-color-only series distinctions;
+- uses the same archive-bound preflight, start, progress, cancel, completed-only
+  publication, atomic append, strict reopen, close/reopen restoration, and XLSX
+  table-projection lifecycle as the connected General SEM workspace; and
+- checks cancellation during interaction processing, before canonical
+  publication, and after archive assembly but before publication, leaving the
+  archive unchanged and exposing no partial result.
+
+Activated schema-6 scientific authorities are immutable. Editing an activated
+General SEM model therefore uses a versioned save-as revision rather than an
+in-place mutation. **Create Moderating Effect** dispatches the same typed
+`add_general_sem_interaction_v2` intent used by fresh-canvas editing. The
+revision transaction pins the exact source archive, model, Recipe V4, and
+scientific digests; adds exactly one qualified interaction and its missing
+lower-order paths atomically; recompiles the resident recipe; publishes to a
+new destination with no-replace semantics; strictly reopens it; and only then
+activates the new authority. The source archive, its historical results, and
+its bytes remain unchanged. Cancellation before native commit, a stale source,
+a conflicting destination, failed compilation, or failed native strict reopen
+publishes no revision.
+
+Publication and frontend activation are separate recovery boundaries. Once
+the native transaction returns a persisted receipt, a later resolver, compare-
+and-swap, or workspace-installation failure never pretends that the destination
+was rolled back. QuickPLS keeps or restores the unchanged source authority when
+possible, retains the strictly reopened revision file, identifies its exact
+path, and directs the user to inspect/reopen it explicitly; if source recovery
+also fails, it directs a restart and reopen of either validated archive.
+
+The immutable authority does not make that revision action unreachable.
+Toolbar, eligible-path context-menu, and keyboard-command resolution expose it
+as **Moderating Effect (Save As Revision)…** while keeping ordinary direct
+mutations locked. A dirty archive, active calculation, pending result,
+publication, activation, save-copy, or revision transaction disables every
+entry point with the same corrective reason; the shortcut also fails closed.
+
+The native connection does not change the evidence tier. The exact cell remains
+`partial / engine_only / labs`, with `qualification_ready = false` and
+`promotion_allowed = false`. It has a source-bound engine evidence identity and
+a deterministic independent contract micro-reference for joint OLS, product
+scaling, scientific gamma, fixed probes, row-order replay, constant-product
+rejection, and singularity.
+That bounded reference is not an independent full PLS scoring oracle or a
+qualification-scale simulation.
+
+### Verified evidence for checkpoint E
+
+| Scope | Verified result | Qualification |
+| --- | ---: | --- |
+| Focused canonical joint-stage ledger | 1/1 passed | Exact point-only moderation ledger contract |
+| Focused schema-6 moderation archive | 5/5 passed | Same/different-focal reconciliation and coherent-tamper rejection |
+| Focused runner interaction execution | 2/2 passed | Joint same/different-focal point execution |
+| Focused native moderation lifecycle | 6/6 passed | Admission, canonical publication, append/reopen, and cancellation checkpoints |
+| `qpls-core` full suite before revision-only changes | 255/255 passed | General SEM compiler, preflight, canonical, and existing regressions |
+| `qpls-estimation` full suite before revision-only changes | 166 passed; 1 intentionally ignored | Joint point estimator and existing estimation regressions |
+| `qpls-runner` full suite before revision-only changes | 62 passed; 2 intentionally ignored | General SEM mediation and moderation runners |
+| `qpls-project` focused revision and publication callback | 6/6 + 1/1 passed | Source pins, compilation, no-replace publication, strict reopen, rollback, and source-byte preservation |
+| `qpls-project` final full suite | 183/183 unit + 2/2 integration passed | Final schema-6 and revision authority state |
+| `quickpls-desktop` focused revision bridge | 1/1 passed | Exact native request/receipt and fail-closed bridge |
+| `quickpls-desktop` final full suite | 175 passed; 1 intentionally ignored | Final native lifecycle and revision integration |
+| Frontend focused revision group | 5 files; 60 tests passed | Typed service/store/dialog revision workflow and recovery |
+| Frontend revision command reachability | 4 files; 64 tests passed | Toolbar, eligible-path context, shortcut, mutation-authority isolation, and corrective busy-state reasons |
+| Frontend full Vitest suite | 179 files; 1,434 tests passed | Combined General SEM, native result, accessibility, command-authority, recovery, and existing UI regressions |
+| Frontend full typecheck | Passed | Repository command `npm run typecheck:full` |
+| Frontend production build | Passed | Repository command `npm run build`; this is not packaged-Windows acceptance |
+
+No packaged-Windows acceptance or Standard-promotion claim is made by this
+checkpoint unless a separately recorded packaged receipt and exact promotion
+audit are present.
 
 ## Remaining Labs blockers
 
@@ -246,13 +336,10 @@ is implemented and rerun:
   including BCa, one-sided and studentized inference, conditional probes, lazy
   materialization, and any unfrozen interval or tail semantics;
 - conditional-effect probes and moderated-mediation execution;
-- native-workflow integration of the simultaneous two-way moderation point
-  slice. Its compiler, joint same- and different-focal point estimator,
-  canonical-result contracts, TypeScript readback, and exact Registry cell are
-  integrated into this branch, but the same-app native calculation workspace
-  does not yet execute or publish that moderation cell. Moderation bootstrap,
-  three-way execution, authored probes, and moderated mediation also remain
-  blocked;
+- full-model bootstrap inference for simultaneous moderation, three-way and
+  higher-order moderation, authored arbitrary probes, directed-chain
+  combinations, and moderated mediation. The Checkpoint E cell is descriptive
+  point estimation only;
 - release hardening for the now-connected same-app General SEM project flow,
   including packaged-Windows roundtrip, crash recovery during draft promotion,
   accessibility verification, and cross-runtime acceptance evidence;
@@ -278,7 +365,8 @@ is implemented and rerun:
   crash-recovery, and packaged offline Windows evidence for the complete
   workflow;
 - exact Registry promotion audit after the broader legacy evidence registry's
-  56 stale or source-bound failures are resolved or explicitly dispositioned;
+  58 stale or source-bound manifest-evidence failures are resolved or
+  explicitly dispositioned;
   the exact new-cell manifest passing does not make the overall registry green;
   and
 - Standard-quality runtime and workflow slices for simultaneous two-way

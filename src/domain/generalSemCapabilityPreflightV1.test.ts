@@ -1,8 +1,11 @@
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { defaultGeneralSemConfigV1, type GeneralSemConfigV1 } from "./generalSemConfigV1";
 import {
   GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
+  GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
   GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
+  interactionProductColumnIdentityV1,
   preflightGeneralSemCbsemV1,
   preflightGeneralSemPlsV1,
 } from "./generalSemCapabilityPreflightV1";
@@ -40,6 +43,65 @@ function multipleMediationModel(): SemModelV4 {
     ["m1", "y"],
     ["m2", "y"],
   ]);
+}
+
+function addTwoWayInteraction(
+  value: SemModelV4,
+  id: string,
+  focalPredictor: string,
+  moderator: string,
+  outcome = "construct:y",
+): void {
+  const focalRelation = value.relations.find((relation) => (
+    relation.kind === "structural"
+    && relation.source === focalPredictor
+    && relation.target === outcome
+  ));
+  if (!focalRelation) throw new Error(`Missing focal relation ${focalPredictor} -> ${outcome}`);
+  const output = `derived:${id}`;
+  const relationId = `relation:${id}:effect`;
+  const parameterId = `parameter:${id}:effect`;
+  value.variables.push({ kind: "derived", id: output, label: `${focalPredictor} × ${moderator}` });
+  value.relations.push({
+    kind: "structural",
+    id: relationId,
+    source: output,
+    target: outcome,
+    parameter: parameterId,
+    intercept_parameter: null,
+  });
+  value.parameters.push({
+    kind: "free",
+    id: parameterId,
+    label: `${id} effect`,
+    target: { kind: "regression", source: output, target: outcome },
+    group_overrides: [],
+  });
+  value.derived_terms.push({
+    kind: "interaction_v2",
+    id,
+    output,
+    operands: [focalPredictor, moderator],
+    focal_relation: focalRelation.id,
+    method: "two_stage",
+    hierarchy_policy: "strong",
+  });
+}
+
+function multipleModerationModel(layout: "same_focal" | "different_focal"): SemModelV4 {
+  const value = model([
+    ["w", "y"],
+    ["x", "y"],
+    ["z", "y"],
+  ]);
+  addTwoWayInteraction(value, "interaction:x:w", "construct:x", "construct:w");
+  addTwoWayInteraction(
+    value,
+    layout === "same_focal" ? "interaction:x:z" : "interaction:z:w",
+    layout === "same_focal" ? "construct:x" : "construct:z",
+    layout === "same_focal" ? "construct:z" : "construct:w",
+  );
+  return value;
 }
 
 function modelWithSamplingControl(): SemModelV4 {
@@ -98,6 +160,35 @@ function codes(decision: ReturnType<typeof preflightGeneralSemPlsV1>): string[] 
 }
 
 describe("General SEM capability preflight v1", () => {
+  it("uses UTF-8 byte lengths for deterministic non-ASCII product-column identities", () => {
+    const input = {
+      interactionId: "interaction:prévision:w",
+      outputId: "derived:交互",
+      operands: ["construct:prévision", "construct:w"] as const,
+      focalRelationId: "relation:prévision:y",
+      effectRelationId: "relation:交互:y",
+    };
+    const digest = createHash("sha256");
+    digest.update(Buffer.from("qpls.compiled-pls-plan-v3.two-stage-product\0", "utf8"));
+    for (const value of [
+      input.interactionId,
+      input.outputId,
+      ...input.operands,
+      input.focalRelationId,
+      input.effectRelationId,
+    ]) {
+      const encoded = Buffer.from(value, "utf8");
+      const length = Buffer.alloc(8);
+      length.writeBigUInt64BE(BigInt(encoded.byteLength));
+      digest.update(length);
+      digest.update(encoded);
+    }
+
+    expect(Buffer.byteLength(input.outputId, "utf8")).toBeGreaterThan(input.outputId.length);
+    expect(interactionProductColumnIdentityV1(input))
+      .toBe(`qpls_pls_product_v1_${digest.digest("hex")}`);
+  });
+
   it("admits only the recursive composite PLS point-estimation slice to the exact Labs cell", () => {
     const inputModel = model();
     const config = defaultGeneralSemConfigV1();
@@ -277,6 +368,52 @@ describe("General SEM capability preflight v1", () => {
       "capability_dependency:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
     ]));
     expect(decision.explanation).toContain("matching complete-model");
+  });
+
+  it.each(["same_focal", "different_focal"] as const)(
+    "admits simultaneous two-way moderation on %s paths only to the exact point cell",
+    (layout) => {
+      const inputModel = multipleModerationModel(layout);
+      const before = structuredClone(inputModel);
+      const decision = preflightGeneralSemPlsV1(inputModel, defaultGeneralSemConfigV1());
+
+      expect(decision.status).toBe("experimental");
+      expect(decision.capability_cells).toStrictEqual([
+        GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
+      ]);
+      expect(codes(decision)).toEqual(["sem.capability.pls.experimental_labs"]);
+      expect(decision.summary).toContain("Experimental Labs");
+      expect(decision.explanation).toContain("joint stage-two solve");
+      expect(inputModel).toStrictEqual(before);
+    },
+  );
+
+  it("keeps simultaneous interaction bootstrap blocked with the exact corrective cell decision", () => {
+    const config = defaultGeneralSemConfigV1();
+    config.inference = {
+      kind: "case_bootstrap",
+      resamples: 500,
+      seed: 7,
+      confidence_level: 0.95,
+      interval: "percentile",
+      tail: "two_sided",
+    };
+
+    const decision = preflightGeneralSemPlsV1(multipleModerationModel("same_focal"), config);
+
+    expect(decision.status).toBe("blocked");
+    expect(decision.capability_cells).toEqual(expect.arrayContaining([
+      GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
+      expect.objectContaining({
+        cell_id: "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+      }),
+    ]));
+    expect(codes(decision)).toContain(
+      "sem.capability.pls.multiple_moderation_bootstrap_not_executable",
+    );
+    expect(decision.diagnostics.find((diagnostic) => (
+      diagnostic.code === "sem.capability.pls.multiple_moderation_bootstrap_not_executable"
+    ))?.corrections.join(" ")).toContain("inference to none");
   });
 
   it("blocks a single indirect path from the exact multiple-mediation bootstrap cell", () => {

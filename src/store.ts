@@ -1336,14 +1336,14 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       result = { status: "blocked", reason: "control_paths_unsupported" };
       return state;
     }
-    const hasPredictorRelationship = state.edges.some((edge) =>
+    const focalEdge = state.edges.find((edge) =>
       !edge.id.startsWith("measurement::")
       && edge.source === predictor
       && edge.target === outcome
       && edge.data?.role !== "control"
       && edge.data?.role !== "covariance",
     );
-    if (!hasPredictorRelationship) {
+    if (!focalEdge) {
       result = { status: "blocked", reason: "focal_path_missing" };
       return state;
     }
@@ -1384,6 +1384,18 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       }, state.edges);
     for (const edge of withModeratorMainEffect) occupiedIds.add(edge.id);
     const interactionEdgeId = uniqueStableGraphId(`path-${id}-${outcome}`, occupiedIds);
+    const interaction: NonNullable<ConstructData["interaction"]> = state.generalSemProjectDraftMode?.semGeneration === "general_sem_v1"
+      ? {
+          kind: "interaction_v2",
+          termId: `interaction-term:${id}`,
+          operands: [predictor, moderator],
+          outcome,
+          focalRelationId: focalEdge.id,
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+          productIndicator: null,
+        }
+      : { predictor, moderator, outcome, method: "two_stage_product_score" };
     result = { status: "created", interactionId: id };
     return {
       ...historyPatch(state),
@@ -1402,7 +1414,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
           mode: "formative",
           indicators: [],
           semantic: "interaction",
-          interaction: { predictor, moderator, outcome, method: "two_stage_product_score" },
+          interaction,
         },
       }],
       edges: withModeratorMainEffect.some((edge) => edge.source === id && edge.target === outcome)

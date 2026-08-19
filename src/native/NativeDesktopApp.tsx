@@ -82,6 +82,7 @@ import {
   type NativeCommandAction,
   type NativeCommandContext,
   type NativeMenuId,
+  type NativeModerationMutationAuthorityV1,
   type NativeSurface,
 } from "./nativeCommands";
 import {
@@ -119,9 +120,17 @@ import {
   recodeNativeDatasetColumn,
 } from "../services/projectService";
 import type { DatasetTransformationSpecV2 } from "../domain/datasetTransformationsV2";
+import { supportsGeneralSemV1 } from "../domain/internalProjectArchiveV6Wire";
 import { methodCapabilityAvailabilityV2 } from "../domain/methodCapabilityRegistryV2";
-import type { StandardSemModelV4AuthorityRecordV1, StandardSemModelV4EditorIntentV1 } from "../domain/standardSemModelV4Authority";
+import {
+  GENERAL_SEM_INTERACTION_V2_EDITOR_INTENT_VERSION_V1,
+  standardSemGeneralSemInteractionV2OutputIdV1,
+  standardSemGeneralSemInteractionV2TermIdV1,
+  type StandardSemModelV4AuthorityRecordV1,
+  type StandardSemModelV4EditorIntentV1,
+} from "../domain/standardSemModelV4Authority";
 import { compareUtf8StringsV1, type SemVariableV4 } from "../domain/semModelV4";
+import { useInternalProjectArchiveV6Session } from "../internalProjectArchiveV6SessionStore";
 import { useWorkspace, type StandardSemModelV4AuthorityCommitResult } from "../store";
 import type {
   AnalysisRun,
@@ -141,6 +150,8 @@ import "./nativeCanvas.css";
 export type { NativeSurface } from "./nativeCommands";
 type NativeDialog = "new-project" | "import-data" | "recode-data" | "derive-variable" | "group-setup" | "higher-order" | "moderation" | "calculation" | "export" | "trust" | "settings" | "run-details" | "shortcuts" | "about" | null;
 type NativeNewProjectMode = "standard" | "general_sem_v1";
+const GENERAL_SEM_SCIENTIFIC_REVISION_REQUIRED_TITLE = "General SEM revision required";
+const GENERAL_SEM_SCIENTIFIC_REVISION_REQUIRED_DETAIL = "This activated general_sem_v1 model and RecipeV4 are immutable. Creating a moderating effect will save an independently compiled schema-6 revision to a new file; the current project remains unchanged.";
 
 export function completedRunNavigationTarget(
   status: RunMonitorStatus,
@@ -151,6 +162,102 @@ export function completedRunNavigationTarget(
     ? lastRunId
     : null;
 }
+
+interface StrictDesktopModerationIntentCommonV1 {
+  readonly label: string;
+  readonly predictor: string;
+  readonly moderator: string;
+  readonly focalRelation: string;
+  readonly outcome: string;
+}
+
+export type StrictDesktopModerationIntentInputV1 = StrictDesktopModerationIntentCommonV1 & (
+  | {
+    readonly projectMode: "standard";
+    readonly legacyTermId: string;
+    readonly legacyOutputId: string;
+  }
+  | { readonly projectMode: "general_sem_v1" }
+);
+
+export function buildStrictDesktopModerationIntentV1(
+  input: StrictDesktopModerationIntentInputV1,
+): { intent: StandardSemModelV4EditorIntentV1; interactionId: string } {
+  if (input.projectMode === "general_sem_v1") {
+    const termId = standardSemGeneralSemInteractionV2TermIdV1(
+      input.focalRelation,
+      input.predictor,
+      input.moderator,
+    );
+    const interactionId = standardSemGeneralSemInteractionV2OutputIdV1(termId);
+    return {
+      intent: {
+        kind: "add_general_sem_interaction_v2",
+        intent_version: GENERAL_SEM_INTERACTION_V2_EDITOR_INTENT_VERSION_V1,
+        sem_generation: "general_sem_v1",
+        label: input.label,
+        operands: [input.predictor, input.moderator],
+        focal_relation: input.focalRelation,
+        outcome: input.outcome,
+        method: "two_stage",
+        hierarchy_policy: "strong",
+      },
+      interactionId,
+    };
+  }
+  return {
+    intent: {
+      kind: "add_interaction",
+      term_id: input.legacyTermId,
+      output_id: input.legacyOutputId,
+      label: input.label,
+      predictor: input.predictor,
+      moderator: input.moderator,
+      focal_relation: input.focalRelation,
+      outcome: input.outcome,
+      method: "two_stage",
+    },
+    interactionId: input.legacyOutputId,
+  };
+}
+
+export interface NativeGeneralSemRevisionCommandStateV1 {
+  readonly standardActivationPending: boolean;
+  readonly revisionForkPending: boolean;
+  readonly saveCopyPending: boolean;
+  readonly sessionDirty: boolean;
+  readonly publicationPending: boolean;
+  readonly transientWorkBlocker: "job_active" | "temporary_result_pending" | null;
+  readonly calculationStatus: RunMonitorStatus;
+}
+
+export function nativeGeneralSemRevisionCommandDisabledReasonV1(
+  state: NativeGeneralSemRevisionCommandStateV1,
+): string | null {
+  if (state.revisionForkPending) {
+    return "Wait for the current General SEM Save As Revision transaction to finish.";
+  }
+  if (state.standardActivationPending || state.saveCopyPending) {
+    return "Wait for the current schema-6 authority operation to finish.";
+  }
+  if (state.publicationPending) {
+    return "Wait for General SEM archive publication to finish.";
+  }
+  if (state.transientWorkBlocker === "job_active") {
+    return "Finish or cancel the active General SEM calculation before creating a revision.";
+  }
+  if (state.transientWorkBlocker === "temporary_result_pending") {
+    return "Save and strictly reopen the completed General SEM result, or dismiss it, before creating a revision.";
+  }
+  if (isNativeCalculationActive(state.calculationStatus)) {
+    return "Finish or cancel the active calculation before creating a revision.";
+  }
+  if (state.sessionDirty) {
+    return "Restore or reopen the exact clean General SEM archive authority before creating a revision.";
+  }
+  return null;
+}
+
 declare global {
   interface Window {
     __QUICKPLS_SMOKE__?: {
@@ -174,6 +281,7 @@ interface DesktopCommand {
   icon?: typeof Save;
   shortcut?: string;
   disabled?: boolean;
+  disabledReason?: string;
   pressed?: boolean;
   primary?: boolean;
   action: () => void;
@@ -184,6 +292,7 @@ interface MenuItem {
   label: string;
   shortcut?: string;
   disabled?: boolean;
+  disabledReason?: string;
   separator?: boolean;
   action: () => void;
 }
@@ -302,7 +411,13 @@ export function NativeDesktopApp() {
   const projectWritable = useWorkspace((state) => state.projectWritable);
   const projectModels = useWorkspace((state) => state.projectModels);
   const strictAuthorities = useWorkspace((state) => state.standardSemModelV4Authorities);
+  const strictScientificEditLocks = useWorkspace((state) => state.standardSemModelV4ScientificEditLocks);
   const activeModelId = useWorkspace((state) => state.activeModelId);
+  const schema6Session = useInternalProjectArchiveV6Session((state) => state.session);
+  const generalSemStandardActivationPending = useInternalProjectArchiveV6Session((state) => state.standardActivationPending);
+  const generalSemRevisionPending = useInternalProjectArchiveV6Session((state) => state.revisionForkPending);
+  const generalSemSaveCopyPending = useInternalProjectArchiveV6Session((state) => state.saveCopyPending);
+  const generalSemSessionDirty = useInternalProjectArchiveV6Session((state) => state.dirty);
   const savedReports = useWorkspace((state) => state.savedReports);
   const explorerSelection = useWorkspace((state) => state.explorerSelection);
   const setExplorerSelection = useWorkspace((state) => state.setExplorerSelection);
@@ -329,6 +444,28 @@ export function NativeDesktopApp() {
   const strictAuthority = useWorkspace((state) => state.activeModelId
     ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
     : null);
+  const strictGeneralSemAuthority = Boolean(
+    strictAuthority
+    && activeModelId
+    && schema6Session?.standardActivation?.modelIds.includes(activeModelId)
+    && supportsGeneralSemV1(schema6Session.project),
+  );
+  const strictGeneralSemRevisionRequired = Boolean(
+    strictGeneralSemAuthority
+    && activeModelId
+    && (strictScientificEditLocks[activeModelId] || !projectWritable),
+  );
+  const generalSemRevisionDisabledReason = strictGeneralSemRevisionRequired
+    ? nativeGeneralSemRevisionCommandDisabledReasonV1({
+      standardActivationPending: generalSemStandardActivationPending,
+      revisionForkPending: generalSemRevisionPending,
+      saveCopyPending: generalSemSaveCopyPending,
+      sessionDirty: generalSemSessionDirty,
+      publicationPending: generalSemPublicationPending,
+      transientWorkBlocker: generalSemTransientWorkBlocker,
+      calculationStatus: runMonitor.status,
+    })
+    : null;
   const commitStandardIntent = useWorkspace((state) => state.commitStandardSemModelV4Intent);
   const loadProject = useWorkspace((state) => state.loadProject);
   const setProjectMeta = useWorkspace((state) => state.setProjectMeta);
@@ -536,6 +673,18 @@ export function NativeDesktopApp() {
         : surface === "results" && selectedRun
           ? { kind: "result" as const, count: 1 }
           : { kind: "none" as const, count: 0 };
+    const moderationMutationAuthority: NativeModerationMutationAuthorityV1 = strictGeneralSemRevisionRequired
+      ? {
+        kind: "general_sem_revision",
+        available: generalSemRevisionDisabledReason === null,
+        ...(generalSemRevisionDisabledReason ? { disabledReason: generalSemRevisionDisabledReason } : {}),
+      }
+      : projectWritable
+        ? { kind: "direct" }
+        : {
+          kind: "blocked",
+          disabledReason: "This project does not permit direct model mutations.",
+        };
     return {
       surface,
       projectOpen: projectName !== "No project open",
@@ -552,13 +701,15 @@ export function NativeDesktopApp() {
         && (dataset.kind ?? "raw") === "raw"
         && !nodes.some((node) => node.data.indicators.includes(selectedColumn)),
       selectedVariableIsGrouping: Boolean(selectedColumn && selectedColumn === analysisSettings.groupColumn?.trim()),
-      canAddModeration: Boolean(selectedEdgeId) && canAddNativeModeration(nodes, edges, selectedEdgeId),
+      canAddModeration: Boolean(selectedEdgeId)
+        && canAddNativeModeration(nodes, edges, selectedEdgeId),
+      moderationMutationAuthority,
       canAddHigherOrder: canCreateNativeHigherOrder(nodes, edges),
       propertiesOpen,
       selection,
       calculationStatus: runMonitor.status,
     };
-  }, [analysisSettings.groupColumn, canOpenContextModel, completedRuns.length, dataset.columns.length, dataset.kind, explorerSelection, future.length, modelReadiness.canRun, nodes, past.length, projectName, projectWritable, propertiesOpen, runMonitor.status, selectedColumn, selectedEdgeId, selectedNodeId, selectedResultSaved, selectedRun, strictAuthority, surface]);
+  }, [analysisSettings.groupColumn, canOpenContextModel, completedRuns.length, dataset.columns.length, dataset.kind, explorerSelection, future.length, generalSemRevisionDisabledReason, modelReadiness.canRun, nodes, past.length, projectName, projectWritable, propertiesOpen, runMonitor.status, selectedColumn, selectedEdgeId, selectedNodeId, selectedResultSaved, selectedRun, strictAuthority, strictGeneralSemRevisionRequired, surface]);
 
   const dataMutationsLocked = datasetDescriptorOnly
     || generalSemPublicationPending
@@ -995,6 +1146,20 @@ export function NativeDesktopApp() {
     return true;
   };
 
+  const currentGeneralSemRevisionDisabledReason = () => {
+    const authorityState = useInternalProjectArchiveV6Session.getState();
+    const workspaceState = useWorkspace.getState();
+    return nativeGeneralSemRevisionCommandDisabledReasonV1({
+      standardActivationPending: authorityState.standardActivationPending,
+      revisionForkPending: authorityState.revisionForkPending,
+      saveCopyPending: authorityState.saveCopyPending,
+      sessionDirty: authorityState.dirty,
+      publicationPending: workspaceState.generalSemPublicationPending,
+      transientWorkBlocker: workspaceState.generalSemTransientWorkBlocker,
+      calculationStatus: workspaceState.runMonitor.status,
+    });
+  };
+
   const dispatchNativeAction = (action: NativeCommandAction, target?: NativeDataContextTarget) => {
     switch (action.id) {
       case "project.new": openDialog("new-project"); return;
@@ -1073,7 +1238,22 @@ export function NativeDesktopApp() {
       case "model.set-tool": commandEvent("model-tool", { tool: action.tool }); return;
       case "model.add-construct": commandEvent("model-add-construct"); return;
       case "model.add-higher-order": openDialog("higher-order"); return;
-      case "model.add-moderating-effect": openDialog("moderation"); return;
+      case "model.add-moderating-effect":
+        if (strictGeneralSemRevisionRequired) {
+          const disabledReason = currentGeneralSemRevisionDisabledReason();
+          if (!disabledReason) {
+            openDialog("moderation");
+            return;
+          }
+          pushToast({
+            tone: "warning",
+            title: "General SEM revision unavailable",
+            detail: disabledReason,
+          });
+          return;
+        }
+        openDialog("moderation");
+        return;
       case "model.edit-selection": {
         window.dispatchEvent(new CustomEvent("quickpls:model-inspector-show-editor"));
         const focusModelSelectionEditor = () => {
@@ -1111,6 +1291,7 @@ export function NativeDesktopApp() {
     label: command.label,
     icon: nativeCommandIcons[command.id],
     disabled: !command.enabled,
+    disabledReason: command.disabledReason,
     pressed: command.action.id === "model.set-tool" ? diagramTool === command.action.tool : undefined,
     primary: command.toolbar?.some((placement) => placement.surface === surface && placement.primary),
     action: () => dispatchNativeAction(command.action),
@@ -1123,6 +1304,7 @@ export function NativeDesktopApp() {
       label: command.label,
       shortcut: formatNativeShortcut(command.shortcut),
       disabled: !command.enabled,
+      disabledReason: command.disabledReason,
       separator: command.menu?.separatorBefore,
       action: () => dispatchNativeAction(command.action),
     }));
@@ -1137,6 +1319,7 @@ export function NativeDesktopApp() {
       label: command.label,
       shortcut: formatNativeShortcut(command.shortcut),
       disabled: !command.enabled,
+      disabledReason: command.disabledReason,
       separator: index > 0 && Boolean(command.contextMenu?.find((placement) => placement.surface === surface)?.separatorBefore),
       action: () => dispatchNativeAction(command.action, contextMenu?.target),
     }));
@@ -1279,7 +1462,7 @@ export function NativeDesktopApp() {
         onDerive={() => { if (!rejectLockedDataMutation("Derive a variable")) openDialog("derive-variable"); }}
         onContextMenuRequest={onDataContextMenuRequest}
       /> : null}
-      {surface === "model" ? <ModelSurface modelName={activeEditableModelName} propertiesOpen={propertiesOpen} readiness={modelReadiness} onContextMenuRequest={onModelCanvasContextMenuRequest} /> : null}
+      {surface === "model" ? <ModelSurface modelName={activeEditableModelName} propertiesOpen={propertiesOpen} readiness={modelReadiness} generalSemRevisionRequired={strictGeneralSemRevisionRequired} onContextMenuRequest={onModelCanvasContextMenuRequest} /> : null}
       {surface === "results" ? <Suspense fallback={<ResultsSurfaceLoading propertiesOpen={propertiesOpen} />}><NativeResultsSurface runs={completedRuns} selectedRun={selectedRun} selectedRunId={selectedRunId} setSelectedRunId={setSelectedResultRun} navigation={resultNavigation} selectedItem={selectedResultItem} selectedTable={selectedTable} setSelectedTableId={setSelectedTableId} propertiesOpen={propertiesOpen} openMethodDetails={() => openDialog("trust")} /></Suspense> : null}
     </div>
     {contextMenu ? <ContextCommandMenu items={contextMenuItems} state={contextMenu} close={closeContextMenu} /> : null}
@@ -1397,20 +1580,58 @@ export function NativeDesktopApp() {
         selectedEdgeId={selectedEdgeId}
         create={(predictor, moderator, outcome) => {
           if (strictAuthority && selectedEdgeId) {
-            const termId = nextStrictIntentId("interaction-term");
-            const outputId = nextStrictIntentId("interaction-output");
-            commitStrictDesktopIntent({
-              kind: "add_interaction",
-              term_id: termId,
-              output_id: outputId,
+            const common = {
               label: `${predictor} × ${moderator}`,
               predictor,
               moderator,
-              focal_relation: selectedEdgeId,
+              focalRelation: selectedEdgeId,
               outcome,
-              method: "two_stage",
-            }, "Moderating effect");
-            return { status: "created", interactionId: outputId };
+            };
+            const built = strictGeneralSemAuthority
+              ? buildStrictDesktopModerationIntentV1({ projectMode: "general_sem_v1", ...common })
+              : buildStrictDesktopModerationIntentV1({
+                projectMode: "standard",
+                legacyTermId: nextStrictIntentId("interaction-term"),
+                legacyOutputId: nextStrictIntentId("interaction-output"),
+                ...common,
+              });
+            if (strictGeneralSemRevisionRequired && built.intent.kind === "add_general_sem_interaction_v2") {
+              pushToast({
+                tone: "info",
+                title: "Save General SEM revision",
+                detail: "Choose a new .qpls filename. QuickPLS will preserve the current archive and revise the model and RecipeV4 together.",
+              });
+              void useInternalProjectArchiveV6Session.getState()
+                .reviseGeneralSemExecutionAuthority({ intent: built.intent })
+                .then((result) => {
+                  const state = useInternalProjectArchiveV6Session.getState();
+                  if (result === "saved") pushToast({
+                    tone: "success",
+                    title: "General SEM revision activated",
+                    detail: state.revisionForkStatusMessage,
+                  });
+                  else if (result === "cancelled") pushToast({
+                    tone: "info",
+                    title: "General SEM revision cancelled",
+                    detail: state.revisionForkStatusMessage,
+                  });
+                  else if (result === "stale") pushToast({
+                    tone: "warning",
+                    title: "General SEM revision saved but not activated",
+                    detail: state.revisionForkStatusMessage,
+                  });
+                  else pushToast({
+                    tone: "error",
+                    title: "General SEM revision blocked",
+                    detail: state.revisionForkFailure
+                      ? `${state.revisionForkFailure.message} ${state.revisionForkFailure.correctiveAction}`
+                      : state.revisionForkStatusMessage,
+                  });
+                });
+              return { status: "created", interactionId: built.interactionId };
+            }
+            commitStrictDesktopIntent(built.intent, "Moderating effect");
+            return { status: "created", interactionId: built.interactionId };
           }
           const result = addTwoStageInteraction(predictor, moderator, outcome);
           if (result.status === "created") {
@@ -1563,7 +1784,7 @@ function MenuBar({ menus, openMenu, setOpenMenu, projectName }: { menus: Record<
           }}
         >{name}</button>
         {openMenu === name ? <div id={popupId(index)} className="nd-menu-popup" role="menu" aria-labelledby={triggerId(index)} onKeyDown={(event) => onPopupKeyDown(event, index)}>
-          {items.map((item) => <button key={item.id} role="menuitem" tabIndex={-1} type="button" className={item.separator ? "separator" : ""} disabled={item.disabled} onClick={() => { setOpenMenu(null); triggerRefs.current[index]?.focus(); item.action(); }}><span>{item.label}</span>{item.shortcut ? <kbd>{item.shortcut}</kbd> : null}</button>)}
+          {items.map((item) => <button key={item.id} role="menuitem" tabIndex={-1} type="button" className={item.separator ? "separator" : ""} disabled={item.disabled} title={item.disabled ? item.disabledReason : undefined} aria-label={item.disabledReason ? `${item.label}. Unavailable: ${item.disabledReason}` : item.label} onClick={() => { setOpenMenu(null); triggerRefs.current[index]?.focus(); item.action(); }}><span>{item.label}</span>{item.shortcut ? <kbd>{item.shortcut}</kbd> : null}</button>)}
         </div> : null}
       </div>)}
     </nav>
@@ -1619,7 +1840,7 @@ function ContextCommandMenu({ items, state, close }: { items: MenuItem[]; state:
     style={{ left: state.x, top: state.y }}
     onKeyDown={onKeyDown}
   >
-    {items.map((item) => <button key={item.id} role="menuitem" tabIndex={-1} type="button" className={item.separator ? "separator" : ""} disabled={item.disabled} onClick={() => { focusReturnTarget(); close(); item.action(); }}><span>{item.label}</span>{item.shortcut ? <kbd>{item.shortcut}</kbd> : null}</button>)}
+    {items.map((item) => <button key={item.id} role="menuitem" tabIndex={-1} type="button" className={item.separator ? "separator" : ""} disabled={item.disabled} title={item.disabled ? item.disabledReason : undefined} aria-label={item.disabledReason ? `${item.label}. Unavailable: ${item.disabledReason}` : item.label} onClick={() => { focusReturnTarget(); close(); item.action(); }}><span>{item.label}</span>{item.shortcut ? <kbd>{item.shortcut}</kbd> : null}</button>)}
   </div>;
 }
 
@@ -1629,7 +1850,7 @@ function CommandBar({ commands, surface, projectName, projectPath, modelName, pr
     <div className="nd-command-list">
       {commands.map((command) => {
         const Icon = command.icon;
-        return <button type="button" key={command.id} className={command.primary ? "primary" : ""} disabled={command.disabled} aria-pressed={command.pressed} title={command.label} onClick={command.action}>{Icon ? <Icon size={15} aria-hidden="true" /> : null}<span>{command.label}</span></button>;
+        return <button type="button" key={command.id} className={command.primary ? "primary" : ""} disabled={command.disabled} aria-pressed={command.pressed} aria-label={command.disabledReason ? `${command.label}. Unavailable: ${command.disabledReason}` : command.label} title={command.disabled ? command.disabledReason ?? command.label : command.label} onClick={command.action}>{Icon ? <Icon size={15} aria-hidden="true" /> : null}<span>{command.label}</span></button>;
       })}
     </div>
     {surface !== "launcher" ? <button className="nd-pane-toggle" type="button" aria-pressed={propertiesOpen} title={propertiesOpen ? "Hide Properties" : "Show Properties"} onClick={() => setPropertiesOpen(!propertiesOpen)}>{propertiesOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />} Properties</button> : null}
@@ -1685,7 +1906,7 @@ export function Launcher({ projectName, projectPath, datasetName, runs, recentPr
   </div>;
 }
 
-function ModelSurface({ modelName, propertiesOpen, readiness, onContextMenuRequest }: { modelName: string; propertiesOpen: boolean; readiness: NativePlsReadiness; onContextMenuRequest: (request: ModelCanvasContextMenuRequest) => void }) {
+function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevisionRequired, onContextMenuRequest }: { modelName: string; propertiesOpen: boolean; readiness: NativePlsReadiness; generalSemRevisionRequired: boolean; onContextMenuRequest: (request: ModelCanvasContextMenuRequest) => void }) {
   const activeModelId = useWorkspace((state) => state.activeModelId);
   const experimentalSemAuthoringEnabled = useWorkspace((state) => state.uiPreferences.experimentalLabsEnabled);
   const generalSemTransientWorkBlocker = useWorkspace((state) => state.generalSemTransientWorkBlocker);
@@ -1859,6 +2080,9 @@ function ModelSurface({ modelName, propertiesOpen, readiness, onContextMenuReque
           onKeyDown={onDocumentTabKeyDown}
         ><Calculator size={13} aria-hidden="true" />Exact CB-SEM</button>
       </div>
+      {generalSemRevisionRequired ? <p className="nd-inline-warning" role="note" data-testid="general-sem-scientific-revision-required">
+        <strong>{GENERAL_SEM_SCIENTIFIC_REVISION_REQUIRED_TITLE}.</strong> {GENERAL_SEM_SCIENTIFIC_REVISION_REQUIRED_DETAIL}
+      </p> : null}
       {documentView === "canvas" ? <div id="nd-model-canvas-panel" className="nd-canvas-host" role="tabpanel" aria-labelledby="nd-model-canvas-tab"><ModelCanvas onContextMenuRequest={onContextMenuRequest} /></div> : null}
       {experimentalSemAuthoringEnabled && documentView === "parameters" ? <NativeSemParameterTable modelName={modelName} onShowCanvas={() => selectDocumentView("canvas")} /> : null}
       {experimentalSemAuthoringEnabled && documentView === "general_sem_labs" ? <NativeRecipeV4GeneralSemWorkspace modelName={modelName} experimentalLabsEnabled projectActivationConnected /> : null}

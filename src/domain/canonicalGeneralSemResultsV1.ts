@@ -174,6 +174,21 @@ export interface CanonicalInteractionEffectResultV1 {
   scientific_rescaled_gamma: CanonicalGeneralSemEstimateV1;
 }
 
+export type CanonicalStructuralRelationRoleV1 = "structural" | "control";
+export type CanonicalStructuralEstimateStageV1 = "joint_stage_two";
+
+export interface CanonicalJointStageStructuralCoefficientResultV1 {
+  relation_id: string;
+  parameter_id: string;
+  trace: CanonicalGeneralSemResultTraceV1;
+  source_id: string;
+  target_id: string;
+  role: CanonicalStructuralRelationRoleV1;
+  estimate: CanonicalGeneralSemEstimateV1;
+  stage: CanonicalStructuralEstimateStageV1;
+  method_version: typeof GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1;
+}
+
 export interface CanonicalConditionalEffectResultV1 {
   effect_id: string;
   estimand_id: string;
@@ -288,6 +303,7 @@ export interface CanonicalGeneralSemResultsV1 {
   inference_receipt?: CanonicalGeneralSemInferenceReceiptV1 | null;
   specific_indirect_effects?: CanonicalSpecificIndirectEffectResultV1[];
   aggregate_effects?: CanonicalAggregateEffectResultV1[];
+  joint_stage_structural_coefficients?: CanonicalJointStageStructuralCoefficientResultV1[];
   interaction_effects?: CanonicalInteractionEffectResultV1[];
   conditional_effect_probes?: CanonicalConditionalEffectProbeResultV1[];
   conditional_effects?: CanonicalConditionalEffectResultV1[];
@@ -1149,6 +1165,7 @@ export function parseCanonicalGeneralSemResultsV1(
       "inference_receipt",
       "specific_indirect_effects",
       "aggregate_effects",
+      "joint_stage_structural_coefficients",
       "interaction_effects",
       "conditional_effect_probes",
       "conditional_effects",
@@ -1197,6 +1214,11 @@ export function parseCanonicalGeneralSemResultsV1(
 
   const specific = optionalWireArray(results, "specific_indirect_effects", "general_sem_results");
   const aggregate = optionalWireArray(results, "aggregate_effects", "general_sem_results");
+  const jointStageCoefficients = optionalWireArray(
+    results,
+    "joint_stage_structural_coefficients",
+    "general_sem_results",
+  );
   const interactionEffects = optionalWireArray(results, "interaction_effects", "general_sem_results");
   const probes = optionalWireArray(results, "conditional_effect_probes", "general_sem_results");
   const conditional = optionalWireArray(results, "conditional_effects", "general_sem_results");
@@ -1204,13 +1226,18 @@ export function parseCanonicalGeneralSemResultsV1(
   const hocStages = optionalWireArray(results, "higher_order_stages", "general_sem_results");
   const fits = optionalWireArray(results, "cbsem_fit", "general_sem_results");
   const identification = optionalWireArray(results, "identification_diagnostics", "general_sem_results");
-  if ([specific, aggregate, interactionEffects, probes, conditional, plots, hocStages, fits, identification]
+  if ([specific, aggregate, jointStageCoefficients, interactionEffects, probes, conditional, plots, hocStages, fits, identification]
     .every((collection) => collection.length === 0)) {
     return wireFail("document.invalid", "general_sem_results", "general_sem_results must contain at least one typed result section.");
   }
 
   validateCanonicalWireIds(specific, "effect_id", "general_sem_results.specific_indirect_effects");
   validateCanonicalWireIds(aggregate, "effect_id", "general_sem_results.aggregate_effects");
+  validateCanonicalWireIds(
+    jointStageCoefficients,
+    "relation_id",
+    "general_sem_results.joint_stage_structural_coefficients",
+  );
   validateCanonicalWireIds(interactionEffects, "effect_id", "general_sem_results.interaction_effects");
   validateCanonicalWireIds(probes, "probe_id", "general_sem_results.conditional_effect_probes");
   validateCanonicalWireIds(conditional, "effect_id", "general_sem_results.conditional_effects");
@@ -1303,6 +1330,67 @@ export function parseCanonicalGeneralSemResultsV1(
     if (aggregateSignatures.has(signature)) wireFail("document.invalid", path, `${path} duplicates another aggregate scientific effect.`);
     aggregateSignatures.add(signature);
     validateGeneralSemEstimate(effect.value, `${path}.value`);
+  });
+
+  if ((jointStageCoefficients.length === 0) !== (interactionEffects.length === 0)) {
+    wireFail(
+      "document.invalid",
+      "general_sem_results.joint_stage_structural_coefficients",
+      "general_sem_results.joint_stage_structural_coefficients and interaction_effects must both be present for the exact joint-stage moderation cell.",
+    );
+  }
+  const jointStageParameterIds = new Set<string>();
+  jointStageCoefficients.forEach((item, index) => {
+    const path = `general_sem_results.joint_stage_structural_coefficients[${index}]`;
+    const coefficient = exactWireRecord(item, [
+      "relation_id",
+      "parameter_id",
+      "trace",
+      "source_id",
+      "target_id",
+      "role",
+      "estimate",
+      "stage",
+      "method_version",
+    ], [], path);
+    wireStableId(coefficient.relation_id, `${path}.relation_id`);
+    const parameterId = wireStableId(coefficient.parameter_id, `${path}.parameter_id`);
+    if (jointStageParameterIds.has(parameterId)) {
+      wireFail("document.invalid", `${path}.parameter_id`, `${path}.parameter_id is duplicated.`);
+    }
+    jointStageParameterIds.add(parameterId);
+    const traceCapability = validateGeneralSemTrace(coefficient.trace, `${path}.trace`, wireContext);
+    if (capabilityCellIdentity(traceCapability)
+      !== capabilityCellIdentity(GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CAPABILITY_CELL_V1)) {
+      wireFail(
+        "document.invalid",
+        `${path}.trace.capability_cell`,
+        `${path}.trace.capability_cell must equal the General SEM multiple two-way moderation point option cell.`,
+      );
+    }
+    const sourceId = wireStableId(coefficient.source_id, `${path}.source_id`);
+    const targetId = wireStableId(coefficient.target_id, `${path}.target_id`);
+    if (sourceId === targetId) {
+      wireFail("document.invalid", path, `${path} requires distinct source_id and target_id.`);
+    }
+    wireEnum(coefficient.role, ["structural", "control"] as const, `${path}.role`);
+    validateGeneralSemEstimate(coefficient.estimate, `${path}.estimate`);
+    if (generalSemEstimateHasInference(coefficient.estimate)) {
+      wireFail(
+        "document.invalid",
+        `${path}.estimate`,
+        `${path}.estimate must contain point estimation only.`,
+      );
+    }
+    wireEnum(coefficient.stage, ["joint_stage_two"] as const, `${path}.stage`);
+    const methodVersion = wireStableId(coefficient.method_version, `${path}.method_version`);
+    if (methodVersion !== GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1) {
+      wireFail(
+        "document.invalid",
+        `${path}.method_version`,
+        `${path}.method_version must equal ${GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1}.`,
+      );
+    }
   });
 
   const interactionAuthorities = new Map<string, {

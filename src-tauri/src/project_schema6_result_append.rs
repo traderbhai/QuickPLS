@@ -1,4 +1,6 @@
+use crate::recipe_v4_canonical_result::validate_archived_recipe_v4_pls_method_identity;
 use crate::recipe_v4_cbsem_canonical_result::validate_archived_recipe_v4_cbsem_method_identity;
+use crate::recipe_v4_general_sem_canonical_result::validate_archived_general_sem_pls_method_identity_v1;
 use qpls_core::AnalysisRecipeV4;
 use qpls_project::{
     CanonicalResultDocumentV2, ProjectArchiveCanonicalAppendReceiptV6, ProjectArchiveV6Error,
@@ -14,21 +16,21 @@ const STANDARD_EXACT_CBSEM_SURFACE: &str = "standard_exact_cbsem";
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ProjectSchema6ResultAppendRequestV1 {
-    surface: String,
-    experimental_labs_enabled: bool,
-    archive_path: String,
-    expected_source_sha256: String,
+    pub(crate) surface: String,
+    pub(crate) experimental_labs_enabled: bool,
+    pub(crate) archive_path: String,
+    pub(crate) expected_source_sha256: String,
     #[serde(default)]
-    recipe: Option<AnalysisRecipeV4>,
-    canonical_document: CanonicalResultDocumentV2,
+    pub(crate) recipe: Option<AnalysisRecipeV4>,
+    pub(crate) canonical_document: CanonicalResultDocumentV2,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct ProjectSchema6ResultAppendDiagnosticV1 {
-    code: String,
-    message: String,
-    corrective_action: String,
+    pub(crate) code: String,
+    pub(crate) message: String,
+    pub(crate) corrective_action: String,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -148,6 +150,23 @@ pub(crate) fn append_internal_project_schema6_canonical_result_v2(
             "schema6_result_append.cbsem_method_identity_mismatch",
             error,
             "Rebuild the CB-SEM canonical result from the exact matching Recipe-v4 execution before attaching it.",
+        );
+    }
+    if let Err(error) =
+        validate_archived_general_sem_pls_method_identity_v1(&request.canonical_document)
+    {
+        return blocked(
+            "schema6_result_append.general_sem_method_identity_mismatch",
+            error,
+            "Rebuild the General SEM canonical result from the exact resident compiled plan and native execution before attaching it.",
+        );
+    }
+    if let Err(error) = validate_archived_recipe_v4_pls_method_identity(&request.canonical_document)
+    {
+        return blocked(
+            "schema6_result_append.pls_method_identity_mismatch",
+            error,
+            "Rebuild the PLS canonical result from the exact matching Recipe-v4 execution before attaching it.",
         );
     }
     let appended = match request.recipe {

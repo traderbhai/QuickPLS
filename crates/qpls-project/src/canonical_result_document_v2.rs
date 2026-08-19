@@ -13,7 +13,8 @@ pub use qpls_core::{
     CanonicalInteractionConstructionMethodV1, CanonicalInteractionEffectResultV1,
     CanonicalInteractionHierarchyPolicyV1, CanonicalInteractionPlotPointV1,
     CanonicalInteractionPlotResultV1, CanonicalInteractionPlotSeriesV1,
-    CanonicalSpecificIndirectEffectResultV1,
+    CanonicalJointStageStructuralCoefficientResultV1, CanonicalSpecificIndirectEffectResultV1,
+    CanonicalStructuralEstimateStageV1, CanonicalStructuralRelationRoleV1,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -638,6 +639,16 @@ fn ensure_general_sem_results_finite(
             &format!("general_sem_results.aggregate_effects[{index}].value"),
         )?;
     }
+    for (index, coefficient) in results
+        .joint_stage_structural_coefficients
+        .iter()
+        .enumerate()
+    {
+        ensure_general_sem_estimate_finite(
+            &coefficient.estimate,
+            &format!("general_sem_results.joint_stage_structural_coefficients[{index}].estimate"),
+        )?;
+    }
     for (index, effect) in results.interaction_effects.iter().enumerate() {
         let context = format!("general_sem_results.interaction_effects[{index}]");
         require_finite(
@@ -1166,6 +1177,7 @@ mod tests {
                     value: estimate(0.2),
                 },
             ],
+            joint_stage_structural_coefficients: Vec::new(),
             interaction_effects: Vec::new(),
             conditional_effect_probes: vec![
                 CanonicalConditionalEffectProbeResultV1 {

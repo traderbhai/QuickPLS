@@ -9,6 +9,7 @@ import {
   type SemCapabilityEvidenceV1,
 } from "./semCapabilityDecisionV1";
 import {
+  canonicalizeSemModelV4,
   compareUtf8StringsV1,
   compileCbsemPlanV2,
   compilePlsPlanV2,
@@ -35,6 +36,13 @@ const PLS_BOOTSTRAP_CELL = {
   cell_id: "qpls3.pls.general_sem_multiple_mediation_bootstrap",
   capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
 } as const;
+
+export const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.moderation",
+  cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+  capability_version: "general_sem_pls_multiple_two_way_moderation_point_v1",
+} as const);
 
 const CBSEM_CELL = {
   registry_schema_version: 2,
@@ -68,6 +76,17 @@ const PLS_BOOTSTRAP_COMPILER_EVIDENCE: SemCapabilityEvidenceV1 = {
   evidence_id: "compiler:recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1",
   description: "The bootstrap compiler binds exact Recipe V4 inference settings to the General SEM config while retaining the proven point-scoring plan.",
 };
+
+const PLS_MULTIPLE_MODERATION_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
+  {
+    evidence_id: "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1",
+    description: "The bounded compiler projects one shared stage-one score model and jointly solves every qualified two-way interaction in each stage-two equation.",
+  },
+  {
+    evidence_id: "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_point:general_sem_pls_multiple_two_way_moderation_point_v1",
+    description: "Capability Registry V2 exposes the exact simultaneous interaction_v2 point-estimation option in Experimental Labs.",
+  },
+];
 
 const CBSEM_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
   {
@@ -269,12 +288,17 @@ function specificDirectedPathIdentityV1(relationIds: readonly string[]): string 
   return `sem_specific_path_v1_${sha256HexBytesV1(identityInput)}`;
 }
 
-function executionScopeDiagnostics(config: GeneralSemConfigV1): SemCapabilityDiagnosticV1[] {
+function executionScopeDiagnostics(
+  config: GeneralSemConfigV1,
+  hasInteractions: boolean,
+): SemCapabilityDiagnosticV1[] {
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
   if (config.conditional_effect_probes.length > 0) {
     diagnostics.push(errorDiagnostic(
       "sem.capability.pls.conditional_probes_not_executable",
-      "Conditional-effect probes are authored but are not executable in the current PLS v3 point-estimation slice.",
+      hasInteractions
+        ? "Authored probe policies are preserved, but the first interaction_v2 point cell uses the frozen standardized -1/0/+1 policy only."
+        : "Conditional-effect probes are authored but are not executable in the current PLS v3 point-estimation slice.",
       "Remove the probe request for point estimation, or wait for the qualified moderation execution cell.",
     ));
   }
@@ -305,7 +329,7 @@ function executionScopeDiagnostics(config: GeneralSemConfigV1): SemCapabilityDia
   return diagnostics;
 }
 
-function plsShapeDiagnostics(model: SemModelV4): SemCapabilityDiagnosticV1[] {
+function plsShapeDiagnostics(model: SemModelV4, hasInteractions: boolean): SemCapabilityDiagnosticV1[] {
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
   if (model.variables.some((variable) => variable.kind === "common_factor")) {
     diagnostics.push(errorDiagnostic(
@@ -314,15 +338,288 @@ function plsShapeDiagnostics(model: SemModelV4): SemCapabilityDiagnosticV1[] {
       "Use composite constructs for this PLS request, or retain the factor model for a qualified CB-SEM capability cell.",
     ));
   }
-  if (model.variables.some((variable) => variable.kind === "derived")
+  if (!hasInteractions && (
+    model.variables.some((variable) => variable.kind === "derived")
     || model.derived_terms.length > 0
-    || model.parameters.some((parameter) => parameter.kind === "derived")) {
+    || model.parameters.some((parameter) => parameter.kind === "derived")
+  )) {
     diagnostics.push(errorDiagnostic(
       "sem.capability.pls.derived_shape_not_executable",
       "The authored model contains derived variables, terms, or parameters that the current PLS v3 executor does not calculate.",
       "Keep the derived semantics on the canvas, but remove them from this calculation or wait for their exact qualified execution cell.",
     ));
   }
+  return diagnostics;
+}
+
+interface CompiledInteractionProjectionV1 {
+  readonly projectedModel: SemModelV4;
+  readonly outputIds: ReadonlySet<string>;
+}
+
+function constraintReferencesParameter(model: SemModelV4, parameterId: string): boolean {
+  return model.constraints.some((constraint) => constraint.kind === "equality"
+    ? constraint.parameters.includes(parameterId)
+    : constraint.kind === "bound"
+      ? constraint.parameter === parameterId
+      : constraint.terms.some((term) => term.parameter === parameterId));
+}
+
+function relationReferencesVariable(relation: SemRelationV4, variableId: string): boolean {
+  if (relation.kind === "measurement_effect") {
+    return relation.construct === variableId || relation.indicator === variableId;
+  }
+  if (relation.kind === "measurement_causal") {
+    return relation.composite === variableId || relation.indicator === variableId;
+  }
+  if (relation.kind === "structural") {
+    return relation.source === variableId || relation.target === variableId;
+  }
+  return relation.left.id === variableId || relation.right.id === variableId;
+}
+
+export function interactionProductColumnIdentityV1(input: {
+  interactionId: string;
+  outputId: string;
+  operands: readonly [string, string];
+  focalRelationId: string;
+  effectRelationId: string;
+}): string {
+  const encoder = new TextEncoder();
+  const domain = encoder.encode("qpls.compiled-pls-plan-v3.two-stage-product\0");
+  const values = [
+    input.interactionId,
+    input.outputId,
+    input.operands[0],
+    input.operands[1],
+    input.focalRelationId,
+    input.effectRelationId,
+  ].map((value) => encoder.encode(value));
+  const bytes = new Uint8Array(domain.length + values.reduce((total, value) => total + 8 + value.length, 0));
+  bytes.set(domain);
+  let offset = domain.length;
+  for (const value of values) {
+    const length = BigInt(value.length);
+    const view = new DataView(bytes.buffer, offset, 8);
+    view.setUint32(0, Number(length >> 32n), false);
+    view.setUint32(4, Number(length & 0xffff_ffffn), false);
+    offset += 8;
+    bytes.set(value, offset);
+    offset += value.length;
+  }
+  return `qpls_pls_product_v1_${sha256HexBytesV1(bytes)}`;
+}
+
+function compileInteractionProjectionV1(
+  model: SemModelV4,
+): { value: CompiledInteractionProjectionV1 | null; diagnostics: SemCapabilityDiagnosticV1[] } {
+  const diagnostics: SemCapabilityDiagnosticV1[] = [];
+  const interactionTerms = model.derived_terms
+    .filter((term): term is Extract<typeof term, { kind: "interaction_v2" }> => term.kind === "interaction_v2")
+    .slice()
+    .sort((left, right) => compareUtf8StringsV1(left.id, right.id));
+  const unsupported = model.derived_terms.find((term) => term.kind !== "interaction_v2");
+  if (unsupported) {
+    diagnostics.push(errorDiagnostic(
+      "sem.capability.pls.interaction_shape_not_executable",
+      `PLS v3 interaction point estimation does not support derived term ${unsupported.id} (${unsupported.kind}).`,
+      "Keep only qualified interaction_v2 terms in this exact moderation point request; other derived semantics remain saved for future cells.",
+      unsupported.id,
+    ));
+    return { value: null, diagnostics };
+  }
+
+  const outputIds = new Set(interactionTerms.map((term) => term.output));
+  const extraDerivedVariable = model.variables.find((variable) => (
+    variable.kind === "derived" && !outputIds.has(variable.id)
+  ));
+  const derivedParameter = model.parameters.find((parameter) => parameter.kind === "derived");
+  if (extraDerivedVariable || derivedParameter) {
+    const subject = extraDerivedVariable?.id ?? derivedParameter!.id;
+    diagnostics.push(errorDiagnostic(
+      "sem.capability.pls.interaction_shape_not_executable",
+      "The moderation point graph contains derived scientific objects outside its compiled interaction_v2 outputs.",
+      "Keep only the interaction_v2 outputs and their exact free effect paths in this point request.",
+      subject,
+    ));
+    return { value: null, diagnostics };
+  }
+
+  const effectRelationIds = new Set<string>();
+  const effectParameterIds = new Set<string>();
+  const productDesigns = new Map<string, string>();
+  const generatedColumns = new Set<string>();
+  const sourceColumns = new Set(model.variables.flatMap((variable) => (
+    variable.kind === "observed" ? [variable.source_column] : []
+  )));
+
+  for (const term of interactionTerms) {
+    if (term.operands.length !== 2) {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.interaction_order_not_executable",
+        `Interaction ${term.id} requires exactly two operands; received ${term.operands.length}.`,
+        "Use exactly two operands per interaction_v2 term; three-way and higher-order moderation remain blocked.",
+        term.id,
+      ));
+      continue;
+    }
+    if (term.method !== "two_stage") {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.interaction_method_not_executable",
+        `Interaction ${term.id} requires the two-stage construction method.`,
+        "Choose the two-stage interaction construction method for this bounded point cell.",
+        term.id,
+      ));
+      continue;
+    }
+    if (term.hierarchy_policy !== "strong") {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.interaction_hierarchy_not_executable",
+        `Interaction ${term.id} requires strong hierarchy.`,
+        "Use strong hierarchy and retain every required lower-order path.",
+        term.id,
+      ));
+      continue;
+    }
+    if (term.product_indicator != null) {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.interaction_shape_not_executable",
+        `Interaction ${term.id} carries product-indicator settings outside the fixed two-stage point cell.`,
+        "Remove product-indicator settings and use the fixed two-stage construction policy.",
+        term.id,
+      ));
+      continue;
+    }
+    const focal = model.relations.find((relation): relation is StructuralRelation => (
+      relation.kind === "structural"
+      && (relation.role ?? "structural") === "structural"
+      && relation.id === term.focal_relation
+    ));
+    if (!focal || focal.source !== term.operands[0]) {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.interaction_shape_not_executable",
+        `Interaction ${term.id} does not bind operands[0] to an exact focal structural path.`,
+        "Retarget the interaction to the exact authored focal path and preserve focal-predictor order.",
+        term.id,
+      ));
+      continue;
+    }
+    const effectRelations = model.relations.filter((relation): relation is StructuralRelation => (
+      relation.kind === "structural"
+      && (relation.role ?? "structural") === "structural"
+      && relation.source === term.output
+      && relation.target === focal.target
+    ));
+    if (effectRelations.length !== 1) {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.interaction_shape_not_executable",
+        `Interaction ${term.id} must have exactly one structural-effect path from ${term.output} to ${focal.target}; received ${effectRelations.length}.`,
+        "Keep one exact interaction-effect path to the focal outcome.",
+        term.id,
+      ));
+      continue;
+    }
+    const effectRelation = effectRelations[0]!;
+    const unsupportedOutputRelation = model.relations.find((relation) => (
+      relation.id !== effectRelation.id && relationReferencesVariable(relation, term.output)
+    ));
+    if (unsupportedOutputRelation) {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.interaction_shape_not_executable",
+        `Interaction output ${term.output} participates in unsupported relation ${unsupportedOutputRelation.id}.`,
+        "Use the interaction output only as the source of its single effect path.",
+        term.output,
+      ));
+      continue;
+    }
+    const parameter = model.parameters.find((candidate) => candidate.id === effectRelation.parameter);
+    const parameterIsExact = parameter?.kind === "free"
+      && parameter.target.kind === "regression"
+      && parameter.target.source === term.output
+      && parameter.target.target === focal.target
+      && parameter.start == null
+      && parameter.lower == null
+      && parameter.upper == null
+      && parameter.equality_label == null
+      && (parameter.group_overrides?.length ?? 0) === 0
+      && effectRelation.intercept_parameter == null;
+    if (!parameterIsExact || constraintReferencesParameter(model, effectRelation.parameter)) {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.interaction_shape_not_executable",
+        `Interaction ${term.id} effect parameter ${effectRelation.parameter} must be an unconstrained free regression parameter.`,
+        "Remove starts, bounds, equality labels, group overrides, intercepts, and constraints from the interaction-effect parameter.",
+        effectRelation.parameter,
+      ));
+      continue;
+    }
+
+    const sortedOperands = [...term.operands].sort(compareUtf8StringsV1);
+    const productDesign = `${sortedOperands[0]}\0${sortedOperands[1]}\0${focal.target}`;
+    const duplicate = productDesigns.get(productDesign);
+    if (duplicate) {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.duplicate_interaction_product_design",
+        `Interactions ${duplicate} and ${term.id} compile to the same fixed product design for outcome ${focal.target}.`,
+        "Keep one two-way product per operand pair and outcome; operand order still defines focal and moderator roles.",
+        term.id,
+      ));
+      continue;
+    }
+    productDesigns.set(productDesign, term.id);
+    const generatedColumn = interactionProductColumnIdentityV1({
+      interactionId: term.id,
+      outputId: term.output,
+      operands: [term.operands[0]!, term.operands[1]!],
+      focalRelationId: term.focal_relation,
+      effectRelationId: effectRelation.id,
+    });
+    if (sourceColumns.has(generatedColumn) || generatedColumns.has(generatedColumn)) {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.interaction_shape_not_executable",
+        `Generated interaction product column id collides: ${generatedColumn}.`,
+        "Rename the colliding source column or interaction identity before calculation.",
+        term.id,
+      ));
+      continue;
+    }
+    generatedColumns.add(generatedColumn);
+    effectRelationIds.add(effectRelation.id);
+    effectParameterIds.add(effectRelation.parameter);
+  }
+
+  if (diagnostics.length > 0) return { value: null, diagnostics };
+  const projectedModel = canonicalizeSemModelV4({
+    ...structuredClone(model),
+    variables: model.variables.filter((variable) => !outputIds.has(variable.id)),
+    relations: model.relations.filter((relation) => !effectRelationIds.has(relation.id)),
+    parameters: model.parameters.filter((parameter) => !effectParameterIds.has(parameter.id)),
+    derived_terms: [],
+    annotations: [],
+    presentation: { kind: "none" },
+  });
+  return { value: { projectedModel, outputIds }, diagnostics };
+}
+
+function interactionScopeDiagnostics(
+  config: GeneralSemConfigV1,
+  paths: readonly SpecificDirectedPath[],
+): SemCapabilityDiagnosticV1[] {
+  const diagnostics: SemCapabilityDiagnosticV1[] = [];
+  if (config.inference.kind !== "none") diagnostics.push(errorDiagnostic(
+    "sem.capability.pls.multiple_moderation_bootstrap_not_executable",
+    "Simultaneous interaction_v2 bootstrap inference is not qualified in the current point-only cell.",
+    "Set General SEM inference to none for descriptive point estimation, or keep the request in Labs until complete-model interaction resampling is qualified.",
+  ));
+  if (config.requested_effect_estimands.length > 0) diagnostics.push(errorDiagnostic(
+    "sem.capability.pls.multiple_moderation_effect_requests_not_executable",
+    "Mediation-effect requests cannot be combined with the first simultaneous interaction_v2 point cell.",
+    "Clear requested indirect/total effects and calculate moderation point estimates only, or retain the model until the combined estimand cell is qualified.",
+  ));
+  if (paths.length > 0) diagnostics.push(errorDiagnostic(
+    "sem.capability.pls.moderated_mediation_not_executable",
+    "A directed chain is present, so this graph may imply moderated mediation outside the bounded moderation-only point cell.",
+    "Use a direct-only structural graph for this point cell, or retain the authored chain until moderated-mediation execution is qualified.",
+  ));
   return diagnostics;
 }
 
@@ -430,20 +727,25 @@ export function preflightGeneralSemPlsV1(
   config: GeneralSemConfigV1,
 ): SemCapabilityDecisionV1 {
   const validatedConfig = parseGeneralSemConfigV1(config);
+  const hasInteractions = model.derived_terms.some((term) => term.kind === "interaction_v2");
   const bootstrapRequested = validatedConfig.inference.kind === "case_bootstrap";
-  const capabilityCells = bootstrapRequested
-    ? [PLS_CELL, PLS_BOOTSTRAP_CELL]
-    : [PLS_CELL];
-  const evidence = bootstrapRequested
-    ? [
-      ...PLS_EVIDENCE,
+  const capabilityCells = [
+    hasInteractions ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1 : PLS_CELL,
+    ...(bootstrapRequested ? [PLS_BOOTSTRAP_CELL] : []),
+  ];
+  const evidence = [
+    PLS_EVIDENCE.find((item) => item.evidence_id === "compiler:recipe_v4_to_compiled_pls_plan_v3_v1")!,
+    ...(hasInteractions ? PLS_MULTIPLE_MODERATION_EVIDENCE : PLS_EVIDENCE.filter((item) => (
+      item.evidence_id !== "compiler:recipe_v4_to_compiled_pls_plan_v3_v1"
+    ))),
+    ...(bootstrapRequested ? [
       PLS_BOOTSTRAP_COMPILER_EVIDENCE,
       PLS_BOOTSTRAP_EVIDENCE,
       PLS_BOOTSTRAP_MECHANISM_EVIDENCE,
-    ]
-    : PLS_EVIDENCE;
-  const diagnostics = executionScopeDiagnostics(validatedConfig);
-  diagnostics.push(...plsShapeDiagnostics(model));
+    ] : []),
+  ];
+  const diagnostics = executionScopeDiagnostics(validatedConfig, hasInteractions);
+  diagnostics.push(...plsShapeDiagnostics(model, hasInteractions));
   diagnostics.push(...plsDataScopeDiagnostics(model));
 
   let modelIsValid = false;
@@ -471,13 +773,24 @@ export function preflightGeneralSemPlsV1(
   }
 
   let basePlanCompiles = false;
+  let interactionOutputIds: ReadonlySet<string> = new Set();
   if (modelIsValid && !hasFeedback && diagnostics.every((item) => (
     item.code !== "sem.capability.pls.common_factor_not_executable"
     && item.code !== "sem.capability.pls.derived_shape_not_executable"
   ))) {
     try {
-      compilePlsPlanV2(model);
-      basePlanCompiles = true;
+      if (hasInteractions) {
+        const compiled = compileInteractionProjectionV1(model);
+        diagnostics.push(...compiled.diagnostics);
+        if (compiled.value) {
+          compilePlsPlanV2(compiled.value.projectedModel);
+          interactionOutputIds = compiled.value.outputIds;
+          basePlanCompiles = true;
+        }
+      } else {
+        compilePlsPlanV2(model);
+        basePlanCompiles = true;
+      }
     } catch (error) {
       const reason = error instanceof SemModelV4OperationError ? error.code : "unknown_compile_failure";
       diagnostics.push(errorDiagnostic(
@@ -500,20 +813,24 @@ export function preflightGeneralSemPlsV1(
         "Increase the explicit path limit within available resources, or simplify the structural graph before calculation.",
       ));
     } else {
-      if (!bootstrapRequested && enumeration.paths.length === 0) {
+      const eligiblePaths = enumeration.paths.filter((path) => !interactionOutputIds.has(path.source));
+      if (hasInteractions) {
+        diagnostics.push(...interactionScopeDiagnostics(validatedConfig, eligiblePaths));
+        diagnostics.push(...requestedEffectDiagnostics(model, validatedConfig, eligiblePaths));
+      } else if (!bootstrapRequested && eligiblePaths.length === 0) {
         diagnostics.push(errorDiagnostic(
           "sem.capability.pls.mediation_requires_indirect_path",
           "The PLS mediation point cell requires at least one compiled specific indirect path; this graph has none.",
           "Add a supported mediator path, or use the existing ordinary PLS workflow for a direct-only recursive model.",
         ));
-      } else if (bootstrapRequested && enumeration.paths.length < 2) {
+      } else if (bootstrapRequested && eligiblePaths.length < 2) {
         diagnostics.push(errorDiagnostic(
           "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
-          `The exact multiple-mediation bootstrap cell requires at least two compiled specific indirect paths; this graph has ${enumeration.paths.length}.`,
+          `The exact multiple-mediation bootstrap cell requires at least two compiled specific indirect paths; this graph has ${eligiblePaths.length}.`,
           "Add a second supported parallel or serial mediation path, or use point inference under the mediation cell until a single-mediation bootstrap cell is separately governed.",
         ));
       }
-      diagnostics.push(...requestedEffectDiagnostics(model, validatedConfig, enumeration.paths));
+      if (!hasInteractions) diagnostics.push(...requestedEffectDiagnostics(model, validatedConfig, eligiblePaths));
     }
   }
 
@@ -539,12 +856,16 @@ export function preflightGeneralSemPlsV1(
       subject: null,
       message: bootstrapRequested
         ? "General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
-        : "General recursive PLS point estimation and path-specific effects pass the Experimental Labs compiler preflight.",
+        : hasInteractions
+          ? "General SEM simultaneous two-way moderation point estimation passes the Experimental Labs compiler preflight."
+          : "General recursive PLS point estimation and path-specific effects pass the Experimental Labs compiler preflight.",
       corrections: [],
     }],
     evidence,
     summary: "PLS-SEM can compile this exact request in Experimental Labs.",
-    explanation: bootstrapRequested
+    explanation: hasInteractions
+      ? "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
+      : bootstrapRequested
       ? "The compiler binds percentile, two-sided case resampling to the exact multiple-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
       : "The compiler binds the proven PLS scoring plan to stable relation-path identities. Runtime validation remains authoritative before a result can be published.",
   });

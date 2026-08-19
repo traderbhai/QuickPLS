@@ -1,5 +1,6 @@
 use crate::recipe_v4_canonical_result::validate_archived_recipe_v4_pls_method_identity;
 use crate::recipe_v4_cbsem_canonical_result::validate_archived_recipe_v4_cbsem_method_identity;
+use crate::recipe_v4_general_sem_canonical_result::validate_archived_general_sem_pls_method_identity_v1;
 use qpls_project::{
     CanonicalResultDocumentAttachmentV2, CanonicalResultDocumentV2,
     canonical_result_document_v2_json, deserialize_project_document_v6, load_project_archive_v6,
@@ -15,41 +16,41 @@ const RESULT_READ_SCHEMA_VERSION: u32 = 1;
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ProjectSchema6ResultReadRequestV1 {
-    surface: String,
-    experimental_labs_enabled: bool,
-    archive_path: String,
-    expected_source_sha256: String,
+    pub(crate) surface: String,
+    pub(crate) experimental_labs_enabled: bool,
+    pub(crate) archive_path: String,
+    pub(crate) expected_source_sha256: String,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ProjectSchema6CanonicalResultEntryV1 {
-    document_id: String,
-    run_id: String,
-    canonical_document_sha256: String,
-    immutable: bool,
-    canonical_document_json: String,
-    canonical_document: CanonicalResultDocumentV2,
+    pub(crate) document_id: String,
+    pub(crate) run_id: String,
+    pub(crate) canonical_document_sha256: String,
+    pub(crate) immutable: bool,
+    pub(crate) canonical_document_json: String,
+    pub(crate) canonical_document: CanonicalResultDocumentV2,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ProjectSchema6ResultReadSnapshotV1 {
-    schema_version: u32,
-    project_id: String,
-    archive_path: String,
-    source_document_sha256: String,
-    canonical_result_document_count: usize,
-    documents: Vec<ProjectSchema6CanonicalResultEntryV1>,
-    source_rechecked_unchanged: bool,
+    pub(crate) schema_version: u32,
+    pub(crate) project_id: String,
+    pub(crate) archive_path: String,
+    pub(crate) source_document_sha256: String,
+    pub(crate) canonical_result_document_count: usize,
+    pub(crate) documents: Vec<ProjectSchema6CanonicalResultEntryV1>,
+    pub(crate) source_rechecked_unchanged: bool,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ProjectSchema6ResultReadDiagnosticV1 {
-    code: String,
-    message: String,
-    corrective_action: String,
+    pub(crate) code: String,
+    pub(crate) message: String,
+    pub(crate) corrective_action: String,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -90,6 +91,7 @@ fn canonical_result_entry(
 ) -> Result<ProjectSchema6CanonicalResultEntryV1, String> {
     validate_archived_recipe_v4_cbsem_method_identity(attachment.canonical_document())?;
     validate_archived_recipe_v4_pls_method_identity(attachment.canonical_document())?;
+    validate_archived_general_sem_pls_method_identity_v1(attachment.canonical_document())?;
     let canonical_json = canonical_result_document_v2_json(attachment.canonical_document())
         .map_err(|error| error.to_string())?;
     let observed_sha256 = sha256(&canonical_json);

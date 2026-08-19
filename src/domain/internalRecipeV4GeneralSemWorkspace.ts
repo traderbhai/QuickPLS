@@ -6,7 +6,14 @@ import {
   type GeneralSemConfigV1,
   type GeneralSemEffectEstimandV1,
 } from "./generalSemConfigV1";
-import { preflightGeneralSemPlsV1 } from "./generalSemCapabilityPreflightV1";
+import {
+  GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+} from "./canonicalGeneralSemResultsV1";
+import {
+  GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
+  preflightGeneralSemPlsV1,
+} from "./generalSemCapabilityPreflightV1";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "./internalProjectArchiveV6Read";
 import type {
   InternalProjectSchema6CanonicalResultEntryV1,
@@ -24,6 +31,7 @@ import type {
 import { parseSemCapabilityDecisionV1, type SemCapabilityDecisionV1 } from "./semCapabilityDecisionV1";
 import {
   canonicalizeSemModelV4,
+  compareUtf8StringsV1,
   validateSemModelV4,
   type SemModelV4,
 } from "./semModelV4";
@@ -42,6 +50,21 @@ export const GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1 = Object.freeze({
   cell_id: "qpls3.pls.general_sem_multiple_mediation_bootstrap",
   capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
 } as const satisfies CapabilityCellReferenceV2);
+
+export const GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1 =
+  GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1;
+
+const GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.pls_algorithm",
+  cell_id: "qpls3.pls.algorithm",
+  capability_version: "pls_pm_v1",
+} as const satisfies CapabilityCellReferenceV2);
+
+const GENERAL_SEM_PLS_POINT_METHOD_VERSION_V1 = "general_sem_effects_v1" as const;
+const GENERAL_SEM_PLS_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_point_execution_v1" as const;
+const GENERAL_SEM_PLS_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1" as const;
+const GENERAL_SEM_PLS_MODERATION_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1" as const;
 
 export interface GeneralSemPlsEngineOptionsV1 {
   tolerance: number;
@@ -732,11 +755,408 @@ export function parseGeneralSemPlsCompletedResultV1(value: unknown): GeneralSemP
   return { schemaVersion: 1, archiveIdentity, analyticalResult: completed.analyticalResult, canonicalDocument };
 }
 
+type GeneralSemCapabilityCellIdentityV1 = {
+  readonly registry_schema_version: number;
+  readonly capability_id: string;
+  readonly cell_id: string;
+  readonly capability_version: string;
+};
+
+function sameCapabilityCellV1(
+  left: GeneralSemCapabilityCellIdentityV1,
+  right: GeneralSemCapabilityCellIdentityV1,
+): boolean {
+  return left.registry_schema_version === right.registry_schema_version
+    && left.capability_id === right.capability_id
+    && left.cell_id === right.cell_id
+    && left.capability_version === right.capability_version;
+}
+
+function compareCapabilityCellsV1(
+  left: GeneralSemCapabilityCellIdentityV1,
+  right: GeneralSemCapabilityCellIdentityV1,
+): number {
+  return left.registry_schema_version - right.registry_schema_version
+    || compareUtf8StringsV1(left.capability_id, right.capability_id)
+    || compareUtf8StringsV1(left.cell_id, right.cell_id)
+    || compareUtf8StringsV1(left.capability_version, right.capability_version);
+}
+
+export type GeneralSemPlsExecutionKindV1 =
+  | "mediation_point"
+  | "mediation_bootstrap"
+  | "multiple_two_way_moderation_point";
+
+export interface GeneralSemPlsExecutionCapabilityV1 {
+  readonly kind: GeneralSemPlsExecutionKindV1;
+  readonly capabilityCell: CapabilityCellReferenceV2;
+  readonly interactionIds: readonly string[];
+  readonly focalRelationIds: readonly string[];
+}
+
+interface GeneralSemCompletedInteractionIdentityV1 {
+  readonly interactionId: string;
+  readonly focalRelationId: string;
+}
+
+function completedExecutionIdentityV1(value: unknown, path: string): string {
+  if (typeof value !== "string" || !value.trim() || value.trim() !== value) {
+    completedExecutionMismatchV1(path, `${path} must be a nonempty identity without surrounding whitespace.`);
+  }
+  return value;
+}
+
+function exactSortedDistinctExecutionInventoryV1(
+  values: readonly string[],
+  path: string,
+): readonly string[] {
+  if (!Array.isArray(values)) {
+    completedExecutionMismatchV1(path, `${path} must be an identity array.`);
+  }
+  const parsed = values.map((value, index) => completedExecutionIdentityV1(value, `${path}[${index}]`));
+  const sorted = [...parsed].sort(compareUtf8StringsV1);
+  if (new Set(sorted).size !== sorted.length
+    || sorted.some((value, index) => value !== parsed[index])) {
+    completedExecutionMismatchV1(path, `${path} must be canonically sorted and distinct.`);
+  }
+  return sorted;
+}
+
+function completedInteractionIdentitiesV1(
+  value: unknown,
+  path: string,
+): readonly GeneralSemCompletedInteractionIdentityV1[] {
+  if (!Array.isArray(value)) {
+    completedExecutionMismatchV1(path, `${path} must be an interaction identity array.`);
+  }
+  const identities = value.map((entry, index) => {
+    const entryPath = `${path}[${index}]`;
+    const record = entry && typeof entry === "object" && !Array.isArray(entry)
+      ? entry as UnknownRecord
+      : completedExecutionMismatchV1(entryPath, `${entryPath} must be an interaction identity object.`);
+    return {
+      interactionId: completedExecutionIdentityV1(record.interaction_id, `${entryPath}.interaction_id`),
+      focalRelationId: completedExecutionIdentityV1(record.focal_relation_id, `${entryPath}.focal_relation_id`),
+    };
+  });
+  const interactionIds = identities.map((identity) => identity.interactionId);
+  if (new Set(interactionIds).size !== interactionIds.length) {
+    completedExecutionMismatchV1(path, `${path} contains a duplicated interaction identity.`);
+  }
+  return identities;
+}
+
+function sortedDistinctIdentityInventoryV1(values: readonly string[]): readonly string[] {
+  return [...new Set(values)].sort(compareUtf8StringsV1);
+}
+
+function requireSameCompletedInventoryV1(
+  observed: readonly string[],
+  expected: readonly string[],
+  path: string,
+): void {
+  const canonicalObserved = sortedDistinctIdentityInventoryV1(observed);
+  if (canonicalObserved.length !== expected.length
+    || canonicalObserved.some((value, index) => value !== expected[index])) {
+    completedExecutionMismatchV1(path, `${path} differs from the exact current compiled execution inventory.`);
+  }
+}
+
+function requireSameCompletedInteractionMappingV1(
+  left: readonly GeneralSemCompletedInteractionIdentityV1[],
+  right: readonly GeneralSemCompletedInteractionIdentityV1[],
+  path: string,
+): void {
+  const canonical = (values: readonly GeneralSemCompletedInteractionIdentityV1[]) => values
+    .map((identity) => `${identity.interactionId}\u0000${identity.focalRelationId}`)
+    .sort(compareUtf8StringsV1);
+  const canonicalLeft = canonical(left);
+  const canonicalRight = canonical(right);
+  if (canonicalLeft.length !== canonicalRight.length
+    || canonicalLeft.some((value, index) => value !== canonicalRight[index])) {
+    completedExecutionMismatchV1(path, "The analytical and canonical interaction-to-focal identities differ.");
+  }
+}
+
+/**
+ * Chooses a runnable cell only from the exact native estimator decision and the
+ * unchanged compiled-graph shape. A config toggle alone can never promote a
+ * capability, and a stale/mismatched native preflight fails closed.
+ */
+export function selectGeneralSemPlsExecutionCapabilityV1(input: {
+  model: SemModelV4;
+  config: GeneralSemConfigV1;
+  decision: SemCapabilityDecisionV1;
+}): GeneralSemPlsExecutionCapabilityV1 {
+  const interactionTerms = input.model.derived_terms
+    .filter((term): term is Extract<SemModelV4["derived_terms"][number], { kind: "interaction_v2" }> => (
+      term.kind === "interaction_v2"
+    ))
+    .slice()
+    .sort((left, right) => compareUtf8StringsV1(left.id, right.id));
+  const moderation = interactionTerms.length > 0;
+  if (moderation && input.config.inference.kind !== "none") {
+    throw new GeneralSemWorkspaceErrorV1(
+      "sem.capability.pls.multiple_moderation_bootstrap_not_executable",
+      "inference",
+      "Simultaneous interaction_v2 bootstrap inference is not qualified in the current point-only cell.",
+      "Turn off Full-model percentile case bootstrap and run point estimation, or keep the request in Labs until complete-model interaction resampling is qualified.",
+    );
+  }
+  const capabilityCell = moderation
+    ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
+    : input.config.inference.kind === "case_bootstrap"
+      ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
+  if (input.decision.estimator_id !== "qpls.pls_sem.v3"
+    || input.decision.status !== "experimental") {
+    throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.capability.native_preflight_not_runnable",
+      input.decision.estimator_id,
+      "The exact native PLS estimator preflight is not runnable for the current model and resident RecipeV4.",
+      "Keep the project unchanged, apply the native corrective diagnostics, and rerun preflight before calculation.",
+    );
+  }
+  const expectedCapabilityCells = [
+    moderation ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1 : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
+    ...(!moderation && input.config.inference.kind === "case_bootstrap"
+      ? [GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1]
+      : []),
+  ].sort(compareCapabilityCellsV1);
+  if (input.decision.capability_cells.length !== expectedCapabilityCells.length
+    || input.decision.capability_cells.some((cell, index) => (
+      !sameCapabilityCellV1(cell, expectedCapabilityCells[index]!)
+    ))) {
+    throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.capability.native_preflight_cell_mismatch",
+      capabilityCell.cell_id,
+      "The native PLS preflight capability-cell set or canonical UTF-8 order differs from the current compiled graph and inference config.",
+      "Do not calculate from this stale authority. Reopen the exact marked project and rerun native estimator preflight.",
+    );
+  }
+  return {
+    kind: moderation
+      ? "multiple_two_way_moderation_point"
+      : input.config.inference.kind === "case_bootstrap"
+        ? "mediation_bootstrap"
+        : "mediation_point",
+    capabilityCell,
+    interactionIds: interactionTerms.map((term) => term.id),
+    focalRelationIds: [...new Set(interactionTerms.map((term) => term.focal_relation))]
+      .sort(compareUtf8StringsV1),
+  };
+}
+
+/**
+ * Reconciles the one-shot native result with the exact execution cell selected
+ * from the current compiled graph. Archive identity guards alone are
+ * insufficient because method/capability relabeling can leave those IDs
+ * unchanged. The analytical payload remains the authority for its own adapter
+ * identity while the canonical document remains the report authority.
+ */
+export function validateGeneralSemPlsCompletedExecutionV1(
+  completed: GeneralSemPlsCompletedResultV1,
+  execution: GeneralSemPlsExecutionCapabilityV1,
+): void {
+  const expected = expectedGeneralSemExecutionAuthorityV1(execution.kind);
+  const document = completed.canonicalDocument;
+  const analytical = recordAt(completed.analyticalResult, "completed.analyticalResult");
+  exactKeysAt(analytical, [
+    "schema_version", "adapter_version", "capability_cell",
+    "compilation_artifact_identity_sha256", "compiled_plan_sha256",
+    "recipe_analytical_sha256", "model_scientific_sha256",
+    "stage_one_model_scientific_sha256", "source_dataset_fingerprint",
+    "general_sem_config_sha256", "point_estimation", "requested_effects",
+    "interaction_point_estimation", "bootstrap_inference",
+  ], "completed.analyticalResult");
+  if (analytical.schema_version !== 1) completedExecutionMismatchV1("completed.analyticalResult.schema_version", "The analytical result schema is not General SEM execution result v1.");
+  const analyticalCell = capabilityCellAtV1(analytical.capability_cell, "completed.analyticalResult.capability_cell");
+  const adapterVersion = textAt(analytical.adapter_version, "completed.analyticalResult.adapter_version");
+  const analyticalRecipeDigest = digestAt(analytical.recipe_analytical_sha256, "completed.analyticalResult.recipe_analytical_sha256");
+  const analyticalModelDigest = digestAt(analytical.model_scientific_sha256, "completed.analyticalResult.model_scientific_sha256");
+  digestAt(analytical.stage_one_model_scientific_sha256, "completed.analyticalResult.stage_one_model_scientific_sha256");
+  digestAt(analytical.compilation_artifact_identity_sha256, "completed.analyticalResult.compilation_artifact_identity_sha256");
+  digestAt(analytical.compiled_plan_sha256, "completed.analyticalResult.compiled_plan_sha256");
+  digestAt(analytical.general_sem_config_sha256, "completed.analyticalResult.general_sem_config_sha256");
+  const analyticalDatasetFingerprint = textAt(analytical.source_dataset_fingerprint, "completed.analyticalResult.source_dataset_fingerprint");
+  if (!Array.isArray(analytical.requested_effects)) completedExecutionMismatchV1("completed.analyticalResult.requested_effects", "The analytical result requested-effect ledger is missing.");
+
+  if (!sameCapabilityCellV1(analyticalCell, execution.capabilityCell)
+    || !sameCapabilityCellV1(analyticalCell, expected.analyticalCell)) {
+    completedExecutionMismatchV1("completed.analyticalResult.capability_cell", "The analytical result capability cell differs from the exact compiled execution selection.");
+  }
+  if (adapterVersion !== expected.adapterVersion
+    || document.provenance.engine_version !== expected.adapterVersion) {
+    completedExecutionMismatchV1("completed.canonicalDocument.provenance.engine_version", "The result adapter or canonical engine version differs from the exact execution kind.");
+  }
+  if (!sameCapabilityCellV1(document.provenance.capability_cell, expected.primaryDocumentCell)
+    || document.provenance.method_version !== expected.methodVersion) {
+    completedExecutionMismatchV1("completed.canonicalDocument.provenance", "The canonical primary capability or analytical method differs from the exact execution kind.");
+  }
+
+  const documentCells = document.capability_cells ?? [];
+  if (documentCells.length !== expected.documentCells.length
+    || documentCells.some((cell, index) => !sameCapabilityCellV1(cell, expected.documentCells[index]!))) {
+    completedExecutionMismatchV1("completed.canonicalDocument.capability_cells", "The canonical document capability inventory differs from the exact execution cell and its declared dependencies.");
+  }
+  if (analyticalRecipeDigest !== document.provenance.recipe_digest
+    || analyticalModelDigest !== completed.archiveIdentity.modelScientificSha256
+    || analyticalModelDigest !== document.provenance.model_digest
+    || analyticalDatasetFingerprint !== completed.archiveIdentity.datasetFingerprint
+    || analyticalDatasetFingerprint !== document.provenance.dataset_fingerprint) {
+    completedExecutionMismatchV1("completed.analyticalResult", "The analytical result digests differ from the returned archive and canonical authorities.");
+  }
+
+  const hasInteractionResult = Object.prototype.hasOwnProperty.call(analytical, "interaction_point_estimation")
+    && analytical.interaction_point_estimation !== null;
+  const hasBootstrapResult = Object.prototype.hasOwnProperty.call(analytical, "bootstrap_inference")
+    && analytical.bootstrap_inference !== null;
+  const expectedInteractionResult = execution.kind === "multiple_two_way_moderation_point";
+  const expectedBootstrapResult = execution.kind === "mediation_bootstrap";
+  if (hasInteractionResult !== expectedInteractionResult || hasBootstrapResult !== expectedBootstrapResult) {
+    completedExecutionMismatchV1("completed.analyticalResult", "The analytical interaction/bootstrap payload shape contradicts the selected execution kind.");
+  }
+
+  const expectedInteractionIds = exactSortedDistinctExecutionInventoryV1(
+    execution.interactionIds,
+    "execution.interactionIds",
+  );
+  const expectedFocalRelationIds = exactSortedDistinctExecutionInventoryV1(
+    execution.focalRelationIds,
+    "execution.focalRelationIds",
+  );
+  const generalSemResults = document.general_sem_results as UnknownRecord | undefined;
+  const hasCanonicalInteractionPayload = Boolean(
+    generalSemResults
+    && Object.prototype.hasOwnProperty.call(generalSemResults, "interaction_effects")
+    && generalSemResults.interaction_effects !== undefined
+    && generalSemResults.interaction_effects !== null,
+  );
+
+  if (!expectedInteractionResult) {
+    if (expectedInteractionIds.length > 0 || expectedFocalRelationIds.length > 0) {
+      completedExecutionMismatchV1(
+        "execution",
+        "A mediation execution must not carry interaction or focal-relation identities.",
+      );
+    }
+    if (hasCanonicalInteractionPayload) {
+      completedExecutionMismatchV1(
+        "completed.canonicalDocument.general_sem_results.interaction_effects",
+        "A mediation result must not carry a canonical interaction-effect payload.",
+      );
+    }
+    return;
+  }
+
+  if (expectedInteractionIds.length === 0 || expectedFocalRelationIds.length === 0) {
+    completedExecutionMismatchV1(
+      "execution",
+      "A moderation execution requires nonempty interaction and focal-relation identity inventories.",
+    );
+  }
+  if (!hasCanonicalInteractionPayload) {
+    completedExecutionMismatchV1(
+      "completed.canonicalDocument.general_sem_results.interaction_effects",
+      "The moderation result is missing its canonical interaction-effect inventory.",
+    );
+  }
+
+  const interactionPoint = analytical.interaction_point_estimation;
+  if (!interactionPoint || typeof interactionPoint !== "object" || Array.isArray(interactionPoint)) {
+    completedExecutionMismatchV1(
+      "completed.analyticalResult.interaction_point_estimation",
+      "The moderation analytical payload must be an object.",
+    );
+  }
+  const analyticalIdentities = completedInteractionIdentitiesV1(
+    (interactionPoint as UnknownRecord).interaction_coefficients,
+    "completed.analyticalResult.interaction_point_estimation.interaction_coefficients",
+  );
+  const canonicalIdentities = completedInteractionIdentitiesV1(
+    generalSemResults!.interaction_effects,
+    "completed.canonicalDocument.general_sem_results.interaction_effects",
+  );
+  for (const [path, identities] of [
+    ["completed.analyticalResult.interaction_point_estimation.interaction_coefficients", analyticalIdentities],
+    ["completed.canonicalDocument.general_sem_results.interaction_effects", canonicalIdentities],
+  ] as const) {
+    requireSameCompletedInventoryV1(
+      identities.map((identity) => identity.interactionId),
+      expectedInteractionIds,
+      `${path}.interaction_id`,
+    );
+    requireSameCompletedInventoryV1(
+      identities.map((identity) => identity.focalRelationId),
+      expectedFocalRelationIds,
+      `${path}.focal_relation_id`,
+    );
+  }
+  requireSameCompletedInteractionMappingV1(
+    analyticalIdentities,
+    canonicalIdentities,
+    "completed.interaction_identity_mapping",
+  );
+}
+
+function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKindV1) {
+  const primaryDocumentCell = kind === "multiple_two_way_moderation_point"
+    ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
+    : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
+  const analyticalCell = kind === "mediation_bootstrap"
+    ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
+    : primaryDocumentCell;
+  const documentCells = [
+    GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1,
+    primaryDocumentCell,
+    ...(kind === "mediation_bootstrap" ? [GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1] : []),
+  ].sort(compareCapabilityCellsV1);
+  return {
+    primaryDocumentCell,
+    analyticalCell,
+    documentCells,
+    methodVersion: kind === "multiple_two_way_moderation_point"
+      ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+      : kind === "mediation_bootstrap"
+        ? GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1
+        : GENERAL_SEM_PLS_POINT_METHOD_VERSION_V1,
+    adapterVersion: kind === "multiple_two_way_moderation_point"
+      ? GENERAL_SEM_PLS_MODERATION_POINT_ADAPTER_VERSION_V1
+      : kind === "mediation_bootstrap"
+        ? GENERAL_SEM_PLS_BOOTSTRAP_ADAPTER_VERSION_V1
+        : GENERAL_SEM_PLS_POINT_ADAPTER_VERSION_V1,
+  } as const;
+}
+
+function capabilityCellAtV1(value: unknown, path: string): CapabilityCellReferenceV2 {
+  const cell = recordAt(value, path);
+  exactKeysAt(cell, ["registry_schema_version", "capability_id", "cell_id", "capability_version"], path);
+  if (cell.registry_schema_version !== 2) completedExecutionMismatchV1(`${path}.registry_schema_version`, "The result capability registry schema must be version 2.");
+  return {
+    registry_schema_version: 2,
+    capability_id: textAt(cell.capability_id, `${path}.capability_id`),
+    cell_id: textAt(cell.cell_id, `${path}.cell_id`),
+    capability_version: textAt(cell.capability_version, `${path}.capability_version`),
+  };
+}
+
+function completedExecutionMismatchV1(subject: string, message: string): never {
+  throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.wire.completed_execution_mismatch",
+    subject,
+    message,
+    "Discard the completed job and rerun native preflight from the unchanged marked General SEM archive before calculating again.",
+  );
+}
+
 export function generalSemJobRequestFromReceiptV1(
   receipt: GeneralSemProjectBootstrapReceiptV1,
+  model: SemModelV4,
   config: GeneralSemConfigV1,
+  decision: SemCapabilityDecisionV1,
   expectedArchiveSha256 = receipt.destinationArchiveSha256,
 ): GeneralSemPlsJobRequestV1 {
+  const execution = selectGeneralSemPlsExecutionCapabilityV1({ model, config, decision });
   return {
     surface: "internal_labs",
     experimentalLabsEnabled: true,
@@ -749,9 +1169,7 @@ export function generalSemJobRequestFromReceiptV1(
     modelScientificSha256: receipt.residentModelScientificSha256,
     recipeId: receipt.residentRecipeId,
     recipeDocumentSha256: receipt.residentRecipeDocumentSha256,
-    capabilityCell: config.inference.kind === "case_bootstrap"
-      ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
-      : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
+    capabilityCell: execution.capabilityCell,
   };
 }
 

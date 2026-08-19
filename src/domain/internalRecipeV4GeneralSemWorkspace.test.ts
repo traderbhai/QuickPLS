@@ -1,11 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 import type { CanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
-import { validateCanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
+import { canonicalResultDocumentJson, validateCanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
+import {
+  GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
+  GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1,
+  GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1,
+} from "./canonicalGeneralSemResultsV1";
 import {
   bindGeneralSemPlsModelToDatasetV1,
   buildGeneralSemRecipeV1,
   defaultGeneralSemPlsEngineOptionsV1,
   GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
   generalSemConfigFromEngineV1,
   generalSemJobRequestFromReceiptV1,
@@ -15,10 +22,15 @@ import {
   parseGeneralSemProjectBootstrapOutcomeV1,
   preflightGeneralSemWorkspaceV1,
   rehydrateGeneralSemExecutionAuthorityV1,
+  reopenGeneralSemResultV1,
+  selectGeneralSemPlsExecutionCapabilityV1,
+  validateGeneralSemPlsCompletedExecutionV1,
   type GeneralSemPlsCompletedResultV1,
+  type GeneralSemPlsExecutionCapabilityV1,
   type GeneralSemPlsJobSnapshotV1,
   type GeneralSemProjectBootstrapReceiptV1,
 } from "./internalRecipeV4GeneralSemWorkspace";
+import { preflightGeneralSemPlsV1 } from "./generalSemCapabilityPreflightV1";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "./internalProjectArchiveV6Read";
 import { convertLegacyBasicModelV4, type SemModelV4 } from "./semModelV4";
 import { sha256HexBytesV1, sha256HexUtf8V1 } from "./sha256V1";
@@ -76,6 +88,70 @@ function multipleMediationModel(): SemModelV4 {
       { source: "x", target: "y" },
     ],
   }, "pls_composite");
+}
+
+function addTwoWayInteraction(
+  value: SemModelV4,
+  id: string,
+  focalPredictor: string,
+  moderator: string,
+  outcome = "construct:y",
+): void {
+  const focal = value.relations.find((relation) => relation.kind === "structural"
+    && relation.source === focalPredictor
+    && relation.target === outcome);
+  if (!focal) throw new Error(`Missing focal relation ${focalPredictor} -> ${outcome}`);
+  const output = `derived:${id}`;
+  const relationId = `relation:${id}:effect`;
+  const parameterId = `parameter:${id}:effect`;
+  value.variables.push({ kind: "derived", id: output, label: `${focalPredictor} × ${moderator}` });
+  value.relations.push({
+    kind: "structural",
+    id: relationId,
+    source: output,
+    target: outcome,
+    parameter: parameterId,
+    intercept_parameter: null,
+  });
+  value.parameters.push({
+    kind: "free",
+    id: parameterId,
+    label: `${id} effect`,
+    target: { kind: "regression", source: output, target: outcome },
+    group_overrides: [],
+  });
+  value.derived_terms.push({
+    kind: "interaction_v2",
+    id,
+    output,
+    operands: [focalPredictor, moderator],
+    focal_relation: focal.id,
+    method: "two_stage",
+    hierarchy_policy: "strong",
+  });
+}
+
+function multipleModerationModel(layout: "same_focal" | "different_focal"): SemModelV4 {
+  const value = convertLegacyBasicModelV4({
+    id: "model:general-sem",
+    name: "Multiple moderation",
+    constructs: ["w", "x", "z", "y"].map((id) => ({
+      id,
+      name: id.toUpperCase(),
+      short_name: id.toUpperCase(),
+      mode: "reflective" as const,
+      indicators: [`${id}1`, `${id}2`],
+    })),
+    paths: ["w", "x", "z"].map((source) => ({ source, target: "y" })),
+  }, "pls_composite");
+  addTwoWayInteraction(value, "interaction:x:w", "construct:x", "construct:w");
+  addTwoWayInteraction(
+    value,
+    layout === "same_focal" ? "interaction:x:z" : "interaction:z:w",
+    layout === "same_focal" ? "construct:x" : "construct:z",
+    layout === "same_focal" ? "construct:z" : "construct:w",
+  );
+  return value;
 }
 
 function receipt(): GeneralSemProjectBootstrapReceiptV1 {
@@ -180,6 +256,97 @@ function canonicalDocument(projectId = PROJECT_ID): CanonicalResultDocumentV2 {
       }],
     },
   };
+}
+
+function moderationCanonicalDocument(): CanonicalResultDocumentV2 {
+  const document = canonicalDocument();
+  const cell = GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
+  const interactionId = "interaction:x:w";
+  const interactionEffectId = "relation:interaction:x:w:effect";
+  const probeId = "probe:interaction:x:w";
+  const trace = { model_id: document.provenance.model_id, capability_cell: cell };
+  document.title = "PLS-SEM simultaneous two-way moderation point estimates";
+  document.provenance.capability_cell = cell;
+  document.provenance.method_version = GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1;
+  document.capability_cells = [cell];
+  document.general_sem_results = {
+    schema_version: 1,
+    joint_stage_structural_coefficients: [{
+      relation_id: "relation.x.y",
+      parameter_id: "parameter:relation.x.y",
+      trace: structuredClone(trace),
+      source_id: "construct:x",
+      target_id: "construct:y",
+      role: "structural",
+      estimate: { estimate: 0.3 },
+      stage: "joint_stage_two",
+      method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+    }],
+    interaction_effects: [{
+      effect_id: interactionEffectId,
+      trace: structuredClone(trace),
+      interaction_id: interactionId,
+      focal_relation_id: "relation.x.y",
+      interaction_effect_relation_id: interactionEffectId,
+      interaction_effect_parameter_id: "parameter:interaction:x:w:effect",
+      focal_predictor_id: "construct:x",
+      moderator_id: "construct:w",
+      outcome_id: "construct:y",
+      generated_product_column_id: "qpls_pls_product_v1_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      stage_one_model_scientific_sha256: "f".repeat(64),
+      method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+      construction_method: "two_stage",
+      product_scale_version: GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
+      hierarchy_policy: "strong",
+      hierarchy_policy_version: GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1,
+      conditioning_policy_version: GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1,
+      observation_count: 24,
+      unstandardized_product_mean: 0.125,
+      unstandardized_product_sample_standard_deviation: 0.5,
+      standardized_product_coefficient: { estimate: 0.2 },
+      scientific_rescaled_gamma: { estimate: 0.4 },
+    }],
+    conditional_effect_probes: [{
+      probe_id: probeId,
+      trace: structuredClone(trace),
+      moderator_id: "construct:w",
+      values: { kind: "explicit", values: [-1, 0, 1] },
+    }],
+    conditional_effects: [-1, 0, 1].map((moderatorValue, probeValueIndex) => ({
+      effect_id: `conditional:interaction:x:w:${probeValueIndex}`,
+      estimand_id: "conditional-slope:interaction:x:w",
+      trace: structuredClone(trace),
+      interaction_id: interactionId,
+      interaction_effect_id: interactionEffectId,
+      focal_relation_id: "relation.x.y",
+      probe_id: probeId,
+      moderator_id: "construct:w",
+      probe_value_index: probeValueIndex,
+      moderator_value: moderatorValue,
+      value: { estimate: 0.3 + 0.2 * moderatorValue },
+    })),
+    interaction_plots: [{
+      plot_id: "plot:interaction:x:w",
+      trace,
+      interaction_id: interactionId,
+      interaction_effect_id: interactionEffectId,
+      focal_relation_id: "relation.x.y",
+      focal_predictor_id: "construct:x",
+      moderator_id: "construct:w",
+      outcome_id: "construct:y",
+      series: [-1, 0, 1].map((moderatorValue, probeValueIndex) => ({
+        series_id: `series:interaction:x:w:${probeValueIndex}`,
+        probe_id: probeId,
+        probe_value_index: probeValueIndex,
+        moderator_value: moderatorValue,
+        points: [-1, 0, 1].map((focalValue) => ({
+          focal_value: focalValue,
+          predicted_value: focalValue * (0.3 + 0.2 * moderatorValue),
+        })),
+      })),
+    }],
+  };
+  return document;
 }
 
 function rustSpecificPathIdentityV1(relationIds: readonly string[]): string {
@@ -311,8 +478,112 @@ function completedResult(projectId = PROJECT_ID): GeneralSemPlsCompletedResultV1
   };
 }
 
+function completedExecutionFixture(
+  kind: GeneralSemPlsExecutionCapabilityV1["kind"],
+): { completed: GeneralSemPlsCompletedResultV1; execution: GeneralSemPlsExecutionCapabilityV1 } {
+  const model = kind === "multiple_two_way_moderation_point"
+    ? multipleModerationModel("same_focal")
+    : multipleMediationModel();
+  const config = generalSemConfigFromEngineV1({
+    ...defaultGeneralSemPlsEngineOptionsV1(),
+    inference: kind === "mediation_bootstrap" ? "percentile_case_bootstrap" : "none",
+    bootstrapSamples: 500,
+  });
+  const execution = selectGeneralSemPlsExecutionCapabilityV1({
+    model,
+    config,
+    decision: preflightGeneralSemPlsV1(model, config),
+  });
+  expect(execution.kind).toBe(kind);
+  const completed = completedResult();
+  const baseCell = {
+    registry_schema_version: 2 as const,
+    capability_id: "smartpls.pls_algorithm",
+    cell_id: "qpls3.pls.algorithm",
+    capability_version: "pls_pm_v1",
+  };
+  const primaryCell = kind === "multiple_two_way_moderation_point"
+    ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
+    : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
+  const methodVersion = kind === "multiple_two_way_moderation_point"
+    ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+    : kind === "mediation_bootstrap"
+      ? "general_sem_pls_full_model_case_bootstrap_v1"
+      : "general_sem_effects_v1";
+  const adapterVersion = kind === "multiple_two_way_moderation_point"
+    ? "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1"
+    : kind === "mediation_bootstrap"
+      ? "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1"
+      : "compiled_general_sem_pls_recipe_v1_point_execution_v1";
+  completed.canonicalDocument.provenance.capability_cell = primaryCell;
+  completed.canonicalDocument.provenance.method_version = methodVersion;
+  completed.canonicalDocument.provenance.engine_version = adapterVersion;
+  completed.canonicalDocument.capability_cells = kind === "mediation_bootstrap"
+    ? [GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1, GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1, baseCell]
+    : [primaryCell, baseCell];
+  const moderationIdentities = model.derived_terms
+    .filter((term): term is Extract<SemModelV4["derived_terms"][number], { kind: "interaction_v2" }> => (
+      term.kind === "interaction_v2"
+    ))
+    .map((term) => ({ interaction_id: term.id, focal_relation_id: term.focal_relation }))
+    .sort((left, right) => left.interaction_id.localeCompare(right.interaction_id));
+  if (kind === "multiple_two_way_moderation_point") {
+    const interactionEffectTemplate = moderationCanonicalDocument()
+      .general_sem_results?.interaction_effects?.[0];
+    if (!interactionEffectTemplate) throw new Error("Expected the moderation canonical effect template.");
+    completed.canonicalDocument.general_sem_results = {
+      schema_version: 1,
+      interaction_effects: moderationIdentities.map((identity, index) => ({
+        ...structuredClone(interactionEffectTemplate),
+        effect_id: `effect:completed:${index}`,
+        trace: { model_id: completed.canonicalDocument.provenance.model_id, capability_cell: primaryCell },
+        interaction_id: identity.interaction_id,
+        focal_relation_id: identity.focal_relation_id,
+        interaction_effect_relation_id: `relation:completed:interaction:${index}`,
+        interaction_effect_parameter_id: `parameter:completed:interaction:${index}`,
+      })),
+    };
+  }
+  completed.analyticalResult = {
+    schema_version: 1,
+    adapter_version: adapterVersion,
+    capability_cell: execution.capabilityCell,
+    compilation_artifact_identity_sha256: "1".repeat(64),
+    compiled_plan_sha256: "2".repeat(64),
+    recipe_analytical_sha256: completed.canonicalDocument.provenance.recipe_digest,
+    model_scientific_sha256: completed.archiveIdentity.modelScientificSha256,
+    stage_one_model_scientific_sha256: kind === "multiple_two_way_moderation_point" ? "f".repeat(64) : completed.archiveIdentity.modelScientificSha256,
+    source_dataset_fingerprint: completed.archiveIdentity.datasetFingerprint,
+    general_sem_config_sha256: "3".repeat(64),
+    point_estimation: {},
+    requested_effects: [],
+    ...(kind === "multiple_two_way_moderation_point" ? {
+      interaction_point_estimation: {
+        interaction_coefficients: moderationIdentities.map((identity) => ({ ...identity })),
+      },
+    } : {}),
+    ...(kind === "mediation_bootstrap" ? { bootstrap_inference: {} } : {}),
+  };
+  return { completed, execution };
+}
+
+function rawCompletedInteractionCoefficients(
+  completed: GeneralSemPlsCompletedResultV1,
+): Array<Record<string, unknown>> {
+  const analytical = completed.analyticalResult as Record<string, unknown>;
+  const interactionPoint = analytical.interaction_point_estimation as Record<string, unknown>;
+  return interactionPoint.interaction_coefficients as Array<Record<string, unknown>>;
+}
+
+function canonicalCompletedInteractionEffects(
+  completed: GeneralSemPlsCompletedResultV1,
+): Array<Record<string, unknown>> {
+  return completed.canonicalDocument.general_sem_results?.interaction_effects as unknown as Array<Record<string, unknown>>;
+}
+
 describe("General SEM Recipe-v4 workspace contract", () => {
   it("selects the exact point and multiple-mediation bootstrap cells from the frozen inference config", () => {
+    const mediationModel = multipleMediationModel();
     const point = generalSemConfigFromEngineV1(defaultGeneralSemPlsEngineOptionsV1());
     const bootstrapEngine = {
       ...defaultGeneralSemPlsEngineOptionsV1(),
@@ -323,9 +594,13 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       confidenceLevel: 0.9,
     };
     const bootstrap = generalSemConfigFromEngineV1(bootstrapEngine);
+    const pointDecision = preflightGeneralSemPlsV1(mediationModel, point);
+    const bootstrapDecision = preflightGeneralSemPlsV1(mediationModel, bootstrap);
 
     expect(point.inference).toEqual({ kind: "none" });
-    expect(generalSemJobRequestFromReceiptV1(receipt(), point).capabilityCell)
+    expect(generalSemJobRequestFromReceiptV1(
+      receipt(), mediationModel, point, pointDecision,
+    ).capabilityCell)
       .toStrictEqual(GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1);
     expect(bootstrap.inference).toStrictEqual({
       kind: "case_bootstrap",
@@ -335,10 +610,227 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       interval: "percentile",
       tail: "two_sided",
     });
-    expect(generalSemJobRequestFromReceiptV1(receipt(), bootstrap).capabilityCell)
+    expect(generalSemJobRequestFromReceiptV1(
+      receipt(), mediationModel, bootstrap, bootstrapDecision,
+    ).capabilityCell)
       .toStrictEqual(GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1);
-    expect(generalSemJobRequestFromReceiptV1(receipt(), bootstrap, "f".repeat(64)).expectedArchiveSha256)
+    expect(generalSemJobRequestFromReceiptV1(
+      receipt(), mediationModel, bootstrap, bootstrapDecision, "f".repeat(64),
+    ).expectedArchiveSha256)
       .toBe("f".repeat(64));
+  });
+
+  it.each(["same_focal", "different_focal"] as const)(
+    "routes simultaneous two-way moderation with %s paths through its exact native point cell",
+    (layout) => {
+      const model = multipleModerationModel(layout);
+      const config = generalSemConfigFromEngineV1(defaultGeneralSemPlsEngineOptionsV1());
+      const decision = preflightGeneralSemPlsV1(model, config);
+      const selected = selectGeneralSemPlsExecutionCapabilityV1({ model, config, decision });
+
+      expect(selected).toMatchObject({
+        kind: "multiple_two_way_moderation_point",
+        capabilityCell: GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+        interactionIds: layout === "same_focal"
+          ? ["interaction:x:w", "interaction:x:z"]
+          : ["interaction:x:w", "interaction:z:w"],
+      });
+      expect(selected.focalRelationIds).toHaveLength(layout === "same_focal" ? 1 : 2);
+      expect(generalSemJobRequestFromReceiptV1(
+        receipt(), model, config, decision,
+      ).capabilityCell).toStrictEqual(GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1);
+    },
+  );
+
+  it("blocks interaction bootstrap and stale native capability authority before job start", () => {
+    const model = multipleModerationModel("same_focal");
+    const point = generalSemConfigFromEngineV1(defaultGeneralSemPlsEngineOptionsV1());
+    const staleMediationDecision = preflightGeneralSemPlsV1(multipleMediationModel(), point);
+    expect(() => generalSemJobRequestFromReceiptV1(
+      receipt(), model, point, staleMediationDecision,
+    )).toThrowError(expect.objectContaining({
+      code: "general_sem.capability.native_preflight_cell_mismatch",
+    }));
+
+    const bootstrap = generalSemConfigFromEngineV1({
+      ...defaultGeneralSemPlsEngineOptionsV1(),
+      inference: "percentile_case_bootstrap",
+    });
+    const blockedDecision = preflightGeneralSemPlsV1(model, bootstrap);
+    expect(() => generalSemJobRequestFromReceiptV1(
+      receipt(), model, bootstrap, blockedDecision,
+    )).toThrowError(expect.objectContaining({
+      code: "sem.capability.pls.multiple_moderation_bootstrap_not_executable",
+      correctiveAction: expect.stringContaining("Turn off"),
+    }));
+  });
+
+  it.each([
+    "mediation_point",
+    "mediation_bootstrap",
+    "multiple_two_way_moderation_point",
+  ] as const)("reconciles a completed %s result with its exact native execution authority", (kind) => {
+    const fixture = completedExecutionFixture(kind);
+    expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution)).not.toThrow();
+  });
+
+  it("rejects completed-result capability, method, engine, digest, inventory, and payload-shape relabeling", () => {
+    const scenarios: Array<(completed: GeneralSemPlsCompletedResultV1) => void> = [
+      (completed) => { completed.canonicalDocument.provenance.method_version = "general_sem_effects_v1"; },
+      (completed) => { completed.canonicalDocument.provenance.engine_version = "wrong_adapter_v1"; },
+      (completed) => { (completed.analyticalResult as Record<string, unknown>).capability_cell = GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1; },
+      (completed) => { (completed.analyticalResult as Record<string, unknown>).recipe_analytical_sha256 = "9".repeat(64); },
+      (completed) => { completed.canonicalDocument.capability_cells = [...(completed.canonicalDocument.capability_cells ?? []), GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1]; },
+      (completed) => { delete (completed.analyticalResult as Record<string, unknown>).interaction_point_estimation; },
+      (completed) => { (completed.analyticalResult as Record<string, unknown>).bootstrap_inference = {}; },
+    ];
+    for (const mutate of scenarios) {
+      const fixture = completedExecutionFixture("multiple_two_way_moderation_point");
+      mutate(fixture.completed);
+      expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution))
+        .toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+    }
+  });
+
+  it.each([
+    {
+      name: "missing analytical interaction",
+      mutate: (completed: GeneralSemPlsCompletedResultV1) => { rawCompletedInteractionCoefficients(completed).pop(); },
+    },
+    {
+      name: "extra analytical interaction",
+      mutate: (completed: GeneralSemPlsCompletedResultV1) => {
+        const coefficients = rawCompletedInteractionCoefficients(completed);
+        coefficients.push({ ...coefficients[0]!, interaction_id: "interaction:extra" });
+      },
+    },
+    {
+      name: "swapped analytical interaction inventory",
+      mutate: (completed: GeneralSemPlsCompletedResultV1) => {
+        const coefficient = rawCompletedInteractionCoefficients(completed)[0]!;
+        coefficient.interaction_id = coefficient.focal_relation_id;
+      },
+    },
+    {
+      name: "analytical focal-relation substitution",
+      mutate: (completed: GeneralSemPlsCompletedResultV1) => {
+        rawCompletedInteractionCoefficients(completed)[0]!.focal_relation_id = "relation:foreign";
+      },
+    },
+    {
+      name: "missing canonical interaction",
+      mutate: (completed: GeneralSemPlsCompletedResultV1) => { canonicalCompletedInteractionEffects(completed).shift(); },
+    },
+    {
+      name: "extra canonical interaction",
+      mutate: (completed: GeneralSemPlsCompletedResultV1) => {
+        const effects = canonicalCompletedInteractionEffects(completed);
+        effects.push({ ...structuredClone(effects[0]!), interaction_id: "interaction:extra" });
+      },
+    },
+    {
+      name: "swapped canonical interaction inventory",
+      mutate: (completed: GeneralSemPlsCompletedResultV1) => {
+        const effect = canonicalCompletedInteractionEffects(completed)[0]!;
+        effect.interaction_id = effect.focal_relation_id;
+      },
+    },
+    {
+      name: "canonical focal-relation substitution",
+      mutate: (completed: GeneralSemPlsCompletedResultV1) => {
+        canonicalCompletedInteractionEffects(completed)[0]!.focal_relation_id = "relation:foreign";
+      },
+    },
+  ])("rejects $name against the current moderation execution inventory", ({ mutate }) => {
+    const fixture = completedExecutionFixture("multiple_two_way_moderation_point");
+    mutate(fixture.completed);
+    expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution))
+      .toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+  });
+
+  it("rejects noncanonical or duplicated current moderation execution inventories", () => {
+    const fixture = completedExecutionFixture("multiple_two_way_moderation_point");
+    const reversed = {
+      ...fixture.execution,
+      interactionIds: [...fixture.execution.interactionIds].reverse(),
+    };
+    expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, reversed))
+      .toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+
+    const duplicated = {
+      ...fixture.execution,
+      focalRelationIds: [...fixture.execution.focalRelationIds, fixture.execution.focalRelationIds[0]!],
+    };
+    expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, duplicated))
+      .toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+  });
+
+  it.each(["mediation_point", "mediation_bootstrap"] as const)(
+    "keeps %s free of execution and completed interaction payloads",
+    (kind) => {
+      const executionFixture = completedExecutionFixture(kind);
+      const contaminatedExecution = {
+        ...executionFixture.execution,
+        interactionIds: ["interaction:foreign"],
+        focalRelationIds: ["relation:foreign"],
+      };
+      expect(() => validateGeneralSemPlsCompletedExecutionV1(
+        executionFixture.completed,
+        contaminatedExecution,
+      )).toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+
+      const analyticalFixture = completedExecutionFixture(kind);
+      (analyticalFixture.completed.analyticalResult as Record<string, unknown>).interaction_point_estimation = {
+        interaction_coefficients: [],
+      };
+      expect(() => validateGeneralSemPlsCompletedExecutionV1(
+        analyticalFixture.completed,
+        analyticalFixture.execution,
+      )).toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+
+      const canonicalFixture = completedExecutionFixture(kind);
+      canonicalFixture.completed.canonicalDocument.general_sem_results = {
+        schema_version: 1,
+        interaction_effects: moderationCanonicalDocument().general_sem_results!.interaction_effects!,
+      };
+      expect(() => validateGeneralSemPlsCompletedExecutionV1(
+        canonicalFixture.completed,
+        canonicalFixture.execution,
+      )).toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+    },
+  );
+
+  it("rejects extra or non-canonically ordered native capability cells", () => {
+    const model = multipleMediationModel();
+    const point = generalSemConfigFromEngineV1(defaultGeneralSemPlsEngineOptionsV1());
+    const basePointDecision = preflightGeneralSemPlsV1(model, point);
+    const pointDecision = {
+      ...basePointDecision,
+      capability_cells: [
+        ...basePointDecision.capability_cells,
+        GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1,
+      ],
+    };
+    expect(() => generalSemJobRequestFromReceiptV1(
+      receipt(), model, point, pointDecision,
+    )).toThrowError(expect.objectContaining({
+      code: "general_sem.capability.native_preflight_cell_mismatch",
+    }));
+
+    const bootstrap = generalSemConfigFromEngineV1({
+      ...defaultGeneralSemPlsEngineOptionsV1(),
+      inference: "percentile_case_bootstrap",
+    });
+    const baseBootstrapDecision = preflightGeneralSemPlsV1(model, bootstrap);
+    const bootstrapDecision = {
+      ...baseBootstrapDecision,
+      capability_cells: [...baseBootstrapDecision.capability_cells].reverse(),
+    };
+    expect(() => generalSemJobRequestFromReceiptV1(
+      receipt(), model, bootstrap, bootstrapDecision,
+    )).toThrowError(expect.objectContaining({
+      code: "general_sem.capability.native_preflight_cell_mismatch",
+    }));
   });
 
   it("binds one resident raw dataset and emits a project-model Recipe-v4 authority without case rows", () => {
@@ -606,6 +1098,55 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       ...completedResult(),
       canonicalDocument: genericCellTamper,
     })).toThrowError(expect.objectContaining({ code: "general_sem.wire.canonical_invalid" }));
+  });
+
+  it("preserves canonical interaction effects, conditional slopes, and plot points through strict reopen", async () => {
+    const canonical = moderationCanonicalDocument();
+    expect(validateCanonicalResultDocumentV2(canonical)).toEqual({ passed: true, errors: [] });
+    const completed = parseGeneralSemPlsCompletedResultV1({
+      ...completedResult(),
+      canonicalDocument: canonical,
+    });
+    const canonicalJson = canonicalResultDocumentJson(canonical);
+    const entry = {
+      documentId: canonical.document_id,
+      runId: canonical.provenance.run_id,
+      canonicalDocumentSha256: "9".repeat(64),
+      immutable: true as const,
+      canonicalDocumentJson: canonicalJson,
+      canonicalDocument: structuredClone(canonical),
+    };
+    const read = vi.fn().mockResolvedValue({
+      status: "ok" as const,
+      value: {
+        schemaVersion: 1 as const,
+        projectId: PROJECT_ID,
+        archivePath: completed.archiveIdentity.archivePath,
+        sourceDocumentSha256: "8".repeat(64),
+        canonicalResultDocumentCount: 1,
+        documents: [entry],
+        sourceRecheckedUnchanged: true as const,
+      },
+    });
+
+    const reopened = await reopenGeneralSemResultV1(completed, "8".repeat(64), read);
+
+    expect(reopened.entry?.canonicalDocument).toStrictEqual(canonical);
+    expect(reopened.entry?.canonicalDocument.general_sem_results).toMatchObject({
+      interaction_effects: [{ interaction_id: "interaction:x:w" }],
+      conditional_effects: [{ probe_value_index: 0 }, { probe_value_index: 1 }, { probe_value_index: 2 }],
+      interaction_plots: [{
+        interaction_id: "interaction:x:w",
+        series: [
+          { points: [{ focal_value: -1 }, { focal_value: 0 }, { focal_value: 1 }] },
+          { points: [{ focal_value: -1 }, { focal_value: 0 }, { focal_value: 1 }] },
+          { points: [{ focal_value: -1 }, { focal_value: 0 }, { focal_value: 1 }] },
+        ],
+      }],
+    });
+    expect(read).toHaveBeenCalledWith(expect.objectContaining({
+      expectedSourceSha256: "8".repeat(64),
+    }));
   });
 
   it("stops immediately when monitoring is cancelled and never requests a result", async () => {

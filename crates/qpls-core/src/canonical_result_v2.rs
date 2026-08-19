@@ -662,6 +662,42 @@ pub struct CanonicalInteractionEffectResultV1 {
     pub scientific_rescaled_gamma: CanonicalGeneralSemEstimateV1,
 }
 
+/// Scientific role of an ordinary coefficient in the final simultaneous
+/// moderation equation. Interaction-product coefficients remain represented
+/// by `CanonicalInteractionEffectResultV1`; this ledger covers the authored
+/// structural and control relations that were re-estimated alongside them.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalStructuralRelationRoleV1 {
+    Structural,
+    Control,
+}
+
+/// The ledger is deliberately stage-qualified so a stage-one score-model
+/// coefficient can never be presented as the final moderation estimate.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalStructuralEstimateStageV1 {
+    JointStageTwo,
+}
+
+/// One final ordinary coefficient from the simultaneous joint stage-two solve.
+/// Stable relation and parameter identities bind the numeric value back to the
+/// authored SemModelV4 and deterministically recompiled PLS plan.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalJointStageStructuralCoefficientResultV1 {
+    pub relation_id: String,
+    pub parameter_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub source_id: String,
+    pub target_id: String,
+    pub role: CanonicalStructuralRelationRoleV1,
+    pub estimate: CanonicalGeneralSemEstimateV1,
+    pub stage: CanonicalStructuralEstimateStageV1,
+    pub method_version: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct CanonicalConditionalEffectResultV1 {
@@ -824,6 +860,11 @@ pub struct CanonicalGeneralSemResultsV1 {
     pub specific_indirect_effects: Vec<CanonicalSpecificIndirectEffectResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub aggregate_effects: Vec<CanonicalAggregateEffectResultV1>,
+    /// Final ordinary structural/control coefficients for exact joint-stage
+    /// moderation cells. Omitted for historical documents and estimator cells
+    /// that do not execute a joint derived-term stage.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub joint_stage_structural_coefficients: Vec<CanonicalJointStageStructuralCoefficientResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub interaction_effects: Vec<CanonicalInteractionEffectResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1180,13 +1221,18 @@ fn validate_general_sem_inference_receipt_v1(
                 .map(|effect| (effect.effect_id.as_str(), &effect.value, &effect.trace)),
         )
         .collect::<Vec<_>>();
-    let uncovered_inference = results.interaction_effects.iter().any(|effect| {
-        general_sem_estimate_has_inference(&effect.standardized_product_coefficient)
-            || general_sem_estimate_has_inference(&effect.scientific_rescaled_gamma)
-    }) || results
-        .conditional_effects
+    let uncovered_inference = results
+        .joint_stage_structural_coefficients
         .iter()
-        .any(|effect| general_sem_estimate_has_inference(&effect.value))
+        .any(|coefficient| general_sem_estimate_has_inference(&coefficient.estimate))
+        || results.interaction_effects.iter().any(|effect| {
+            general_sem_estimate_has_inference(&effect.standardized_product_coefficient)
+                || general_sem_estimate_has_inference(&effect.scientific_rescaled_gamma)
+        })
+        || results
+            .conditional_effects
+            .iter()
+            .any(|effect| general_sem_estimate_has_inference(&effect.value))
         || results.higher_order_stages.iter().any(|stage| {
             stage
                 .relation_estimates
@@ -1546,6 +1592,7 @@ fn validate_general_sem_results_v1(
     validate_general_sem_inference_receipt_v1(errors, results, provenance, document_capability_ids);
     if results.specific_indirect_effects.is_empty()
         && results.aggregate_effects.is_empty()
+        && results.joint_stage_structural_coefficients.is_empty()
         && results.interaction_effects.is_empty()
         && results.conditional_effect_probes.is_empty()
         && results.conditional_effects.is_empty()
@@ -1559,6 +1606,14 @@ fn validate_general_sem_results_v1(
         ));
     }
 
+    require_canonical_stable_ids(
+        errors,
+        results
+            .joint_stage_structural_coefficients
+            .iter()
+            .map(|item| item.relation_id.as_str()),
+        &format!("{context}.joint_stage_structural_coefficients"),
+    );
     require_canonical_stable_ids(
         errors,
         results
@@ -1790,6 +1845,72 @@ fn validate_general_sem_results_v1(
         validate_general_sem_estimate(errors, &effect.value, &format!("{item_context}.value"));
     }
 
+    if results.interaction_effects.is_empty()
+        != results.joint_stage_structural_coefficients.is_empty()
+    {
+        errors.push(format!(
+            "{context}.joint_stage_structural_coefficients and interaction_effects must both be present for the exact joint-stage moderation cell"
+        ));
+    }
+
+    let moderation_cell = crate::pls_general_multiple_moderation_point_capability_cell_v1();
+    let mut joint_stage_parameter_ids = BTreeSet::new();
+    let mut joint_stage_relation_ids = BTreeSet::new();
+    for (index, coefficient) in results
+        .joint_stage_structural_coefficients
+        .iter()
+        .enumerate()
+    {
+        let item_context = format!("{context}.joint_stage_structural_coefficients[{index}]");
+        for (name, id) in [
+            ("relation_id", coefficient.relation_id.as_str()),
+            ("parameter_id", coefficient.parameter_id.as_str()),
+            ("source_id", coefficient.source_id.as_str()),
+            ("target_id", coefficient.target_id.as_str()),
+            ("method_version", coefficient.method_version.as_str()),
+        ] {
+            require_stable_id(errors, id, &format!("{item_context}.{name}"));
+        }
+        validate_general_sem_trace(
+            errors,
+            &coefficient.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        if coefficient.trace.capability_cell != moderation_cell {
+            errors.push(format!(
+                "{item_context}.trace.capability_cell must equal the General SEM multiple two-way moderation point option cell"
+            ));
+        }
+        if coefficient.source_id == coefficient.target_id {
+            errors.push(format!(
+                "{item_context} requires distinct source_id and target_id"
+            ));
+        }
+        if !joint_stage_relation_ids.insert(coefficient.relation_id.as_str()) {
+            errors.push(format!("{item_context}.relation_id is duplicated"));
+        }
+        if !joint_stage_parameter_ids.insert(coefficient.parameter_id.as_str()) {
+            errors.push(format!("{item_context}.parameter_id is duplicated"));
+        }
+        if coefficient.method_version != GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1 {
+            errors.push(format!(
+                "{item_context}.method_version must equal {GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1}"
+            ));
+        }
+        validate_general_sem_estimate(
+            errors,
+            &coefficient.estimate,
+            &format!("{item_context}.estimate"),
+        );
+        if general_sem_estimate_has_inference(&coefficient.estimate) {
+            errors.push(format!(
+                "{item_context}.estimate must contain point estimation only"
+            ));
+        }
+    }
+
     let mut interaction_effects_by_id = BTreeMap::new();
     let mut interaction_ids = BTreeSet::new();
     let mut interaction_relation_ids = BTreeSet::new();
@@ -1873,6 +1994,11 @@ fn validate_general_sem_results_v1(
         if !interaction_relation_ids.insert(effect.interaction_effect_relation_id.as_str()) {
             errors.push(format!(
                 "{item_context}.interaction_effect_relation_id is duplicated"
+            ));
+        }
+        if joint_stage_relation_ids.contains(effect.interaction_effect_relation_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.interaction_effect_relation_id must not appear in the ordinary joint-stage structural ledger"
             ));
         }
         if !interaction_parameter_ids.insert(effect.interaction_effect_parameter_id.as_str()) {
@@ -3429,6 +3555,7 @@ mod tests {
                     value: effect_value(0.60),
                 },
             ],
+            joint_stage_structural_coefficients: Vec::new(),
             interaction_effects: Vec::new(),
             conditional_effect_probes: vec![
                 CanonicalConditionalEffectProbeResultV1 {
@@ -3591,6 +3718,19 @@ mod tests {
             model_id: document.provenance.model_id.clone(),
             capability_cell: moderation_cell,
         };
+        results.joint_stage_structural_coefficients =
+            vec![CanonicalJointStageStructuralCoefficientResultV1 {
+                relation_id: "relation_focal_1".to_string(),
+                parameter_id: "parameter_focal_1".to_string(),
+                trace: interaction_trace.clone(),
+                source_id: "construct_x".to_string(),
+                target_id: "construct_y".to_string(),
+                role: CanonicalStructuralRelationRoleV1::Structural,
+                estimate: effect_value(0.4),
+                stage: CanonicalStructuralEstimateStageV1::JointStageTwo,
+                method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+                    .to_string(),
+            }];
         results.interaction_effects = vec![CanonicalInteractionEffectResultV1 {
             effect_id: interaction_effect_id.clone(),
             trace: interaction_trace.clone(),
@@ -4114,6 +4254,86 @@ mod tests {
     }
 
     #[test]
+    fn joint_stage_structural_ledger_is_exact_sorted_point_only_moderation_authority() {
+        let document = general_sem_interaction_document_fixture();
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(validation.passed, "{:?}", validation.errors);
+
+        let mut omitted = document.clone();
+        omitted
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .joint_stage_structural_coefficients
+            .clear();
+        assert!(
+            validate_canonical_result_document_v2(&omitted)
+                .errors
+                .iter()
+                .any(|error| error.contains(
+                    "joint_stage_structural_coefficients and interaction_effects must both be present"
+                ))
+        );
+
+        let mut wrong_trace_and_method = document.clone();
+        let coefficient = &mut wrong_trace_and_method
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .joint_stage_structural_coefficients[0];
+        coefficient.trace.capability_cell = capability_reference();
+        coefficient.method_version = "other_joint_stage_method_v1".into();
+        coefficient.estimate.standard_error = Some(0.1);
+        let errors = validate_canonical_result_document_v2(&wrong_trace_and_method).errors;
+        for expected in [
+            "must equal the General SEM multiple two-way moderation point option cell",
+            "method_version must equal",
+            "estimate must contain point estimation only",
+        ] {
+            assert!(
+                errors.iter().any(|error| error.contains(expected)),
+                "missing {expected:?} in {errors:?}"
+            );
+        }
+
+        let mut duplicate_parameter = document.clone();
+        let mut duplicate = duplicate_parameter
+            .general_sem_results
+            .as_ref()
+            .unwrap()
+            .joint_stage_structural_coefficients[0]
+            .clone();
+        duplicate.relation_id = "relation_focal_2".into();
+        duplicate_parameter
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .joint_stage_structural_coefficients
+            .push(duplicate);
+        assert!(
+            validate_canonical_result_document_v2(&duplicate_parameter)
+                .errors
+                .iter()
+                .any(|error| error.contains("parameter_id is duplicated"))
+        );
+
+        let mut unsorted = duplicate_parameter;
+        let ledger = &mut unsorted
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .joint_stage_structural_coefficients;
+        ledger[1].parameter_id = "parameter_focal_2".into();
+        ledger.swap(0, 1);
+        assert!(
+            validate_canonical_result_document_v2(&unsorted)
+                .errors
+                .iter()
+                .any(|error| error.contains("must be ordered by exact stable identifier"))
+        );
+    }
+
+    #[test]
     fn general_sem_identity_path_and_aggregate_contradictions_fail_closed() {
         let mut document = document_fixture();
         let mut results = general_sem_results_fixture();
@@ -4260,6 +4480,7 @@ mod tests {
             inference_receipt: None,
             specific_indirect_effects: Vec::new(),
             aggregate_effects: Vec::new(),
+            joint_stage_structural_coefficients: Vec::new(),
             interaction_effects: Vec::new(),
             conditional_effect_probes: Vec::new(),
             conditional_effects: Vec::new(),

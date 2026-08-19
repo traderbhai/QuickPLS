@@ -343,6 +343,7 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
                 .transpose()?,
             specific_indirect_effects,
             aggregate_effects,
+            joint_stage_structural_coefficients: Vec::new(),
             interaction_effects,
             conditional_effect_probes,
             conditional_effects,

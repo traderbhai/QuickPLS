@@ -26,6 +26,10 @@
     "hierarchy": "strong",
     "interaction_count": "one_or_more",
     "structural_topology": "direct_only_acyclic",
+    "derived_term_scope": "interaction_v2_only",
+    "higher_order_constructs": "none",
+    "requested_effect_estimands": "none",
+    "authored_conditional_effect_probes": "none",
     "inference": "point_only",
     "input": "raw_continuous",
     "missing_data": "listwise",
@@ -36,20 +40,26 @@
     "deterministic CompiledPlsPlanV3 interaction identities and one shared stage-one score model",
     "joint stage-two estimation for simultaneous same-focal and different-focal two-way interactions",
     "typed canonical interaction effects with standardized-product coefficients, scientific rescaled gamma values, and product mean and sample-standard-deviation receipts",
+    "complete typed joint-stage structural/control coefficient ledger reconciled to the compiled plan",
     "stable conditional-effect and interaction-plot rows cross-referenced to the authoritative interaction-effect identity",
-    "typed cancellation and fail-closed raw-result tamper validation"
+    "same-app native preflight, job lifecycle, accessible canonical charts and tables, atomic result append, strict close/reopen readback, and typed cancellation with no partial result",
+    "versioned add_general_sem_interaction_v2 save-as revision with pinned source authority, no-replace publication, strict reopen, and source-preserving activation",
+    "revision-aware toolbar, eligible-path context-menu, and keyboard command authority that preserves direct-edit locks and exposes one corrective disabled reason across every entry point",
+    "post-persist recovery that retains the strictly reopened revision, keeps or restores the unchanged source authority, and reports the exact reopen or restart action without claiming rollback",
+    "fail-closed raw-result, archive, compiled-plan, revision-lineage, and readback tamper validation"
   ],
   "blocked_contracts": [
     "bootstrap or other resampling inference",
     "three-way and higher-order interactions",
     "moderated mediation and directed structural chains",
     "authored arbitrary probe policies",
+    "higher-order constructs and HOC interaction systems",
     "groups, weights, non-listwise missing-data handling, and non-continuous inputs"
   ],
   "remaining_qualification": [
-    "Independent simultaneous-interaction numerical oracle evidence is not yet recorded.",
-    "Simulation recovery, interval coverage, adversarial boundaries, worker invariance, and resampling-stage evidence are not yet recorded.",
-    "GUI, CLI, native persistence, semantic export, packaged Windows, accessibility, performance, soak, and independent scientific-review evidence are not yet recorded.",
+    "A bounded independent contract micro-reference is recorded, but an independent full simultaneous-interaction PLS numerical oracle is not yet recorded.",
+    "Qualification-scale simulation recovery, interval coverage, adversarial boundaries, worker invariance, and full-model resampling-stage evidence are not yet recorded.",
+    "Cross-surface golden equality, semantic export/readback, packaged Windows, formal accessibility, performance, memory, soak, and independent scientific-review evidence are not yet recorded.",
     "The cell must remain Labs and must not be promoted to Standard while qualification_ready is false."
   ]
 }
