@@ -1,12 +1,15 @@
 use crate::{
     CompiledCbsemExecutionDispositionV3, CompiledCbsemStructuralFormV3,
-    CompiledPlsInteractionV3Error, CompiledPlsPlanV3, CompiledPlsPlanV3Error,
-    GeneralSemBootstrapIntervalV1, GeneralSemConfigV1, GeneralSemInferenceTailV1,
-    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicyV4,
-    ObservedScaleV4, SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
-    SemCapabilityDecisionV1ValidationError, SemCapabilityDiagnosticSeverityV1,
-    SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1, SemDataBindingV4, SemDerivedTermV4,
-    SemGroupV4, SemModelV4, SemVariableV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
+    CompiledPlsHigherOrderV1Error, CompiledPlsInteractionV3Error, CompiledPlsPlanV3,
+    CompiledPlsPlanV3Error, GeneralSemBootstrapIntervalV1, GeneralSemConfigV1,
+    GeneralSemInferenceTailV1, GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1,
+    MissingDataPolicyV4, ObservedScaleV4, SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1,
+    SemCapabilityDecisionV1, SemCapabilityDecisionV1ValidationError,
+    SemCapabilityDiagnosticSeverityV1, SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1,
+    SemDataBindingV4, SemDerivedTermV4, SemGroupV4, SemModelV4, SemVariableV4,
+    compile_cbsem_plan_v3, compile_pls_plan_v3,
+    pls_general_higher_order_bootstrap_capability_cell_v1,
+    pls_general_higher_order_point_capability_cell_v1,
 };
 
 pub const GENERAL_SEM_PLS_ESTIMATOR_ID_V1: &str = "qpls.pls_sem.v3";
@@ -23,12 +26,25 @@ pub fn preflight_general_sem_pls_v1(
         .derived_terms
         .iter()
         .any(|term| matches!(term, SemDerivedTermV4::InteractionV2 { .. }));
-    let capability_cells = pls_cells(has_interactions, config)?;
+    let has_higher_order = model
+        .derived_terms
+        .iter()
+        .any(|term| matches!(term, SemDerivedTermV4::HigherOrder { .. }));
+    let capability_cells = pls_cells(has_interactions, has_higher_order, config)?;
     let mut evidence = vec![SemCapabilityEvidenceV1::new(
         "compiler:recipe_v4_to_compiled_pls_plan_v3_v1",
         "The versioned PLS v3 compiler preserves the proven v2 scoring plan and adds stable topology and effect identities.",
     )?];
-    if has_interactions {
+    if has_higher_order {
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "compiler:recipe_v4_to_compiled_pls_plan_v3_higher_order_point_v1",
+            "The bounded compiler binds one SemModelV4 HOC to explicit Mode A/B semantics, stable generated identities, and ordered approach-specific stages.",
+        )?);
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_point:general_sem_pls_higher_order_point_v1",
+            "The compiler reserves the exact bounded General SEM HOC point identity; Registry activation remains pending until a native runner is connected.",
+        )?);
+    } else if has_interactions {
         evidence.push(SemCapabilityEvidenceV1::new(
             "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1",
             "The bounded compiler projects one shared stage-one score model and jointly solves every qualified two-way interaction in each stage-two equation.",
@@ -47,7 +63,16 @@ pub fn preflight_general_sem_pls_v1(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
     ) {
-        if has_interactions {
+        if has_higher_order {
+            evidence.push(SemCapabilityEvidenceV1::new(
+                "compiler:recipe_v4_to_compiled_pls_plan_v3_higher_order_full_model_case_bootstrap_v1",
+                "The supplemental HOC bootstrap compiler binds indexed raw-case resampling to complete approach-specific stage refitting.",
+            )?);
+            evidence.push(SemCapabilityEvidenceV1::new(
+                "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_full_model_case_bootstrap:general_sem_pls_higher_order_full_model_case_bootstrap_v1",
+                "The compiler reserves the exact bounded HOC bootstrap identity; Registry activation remains pending until staged refitting is connected.",
+            )?);
+        } else if has_interactions {
             evidence.push(SemCapabilityEvidenceV1::new(
                 "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_bootstrap_v1",
                 "The supplemental moderation bootstrap compiler binds percentile, two-sided full-model case resampling while preserving the point cell as the compiled artifact's primary authority.",
@@ -74,7 +99,18 @@ pub fn preflight_general_sem_pls_v1(
     let mut diagnostics = execution_scope_diagnostics(model, config, has_interactions)?;
     match compile_pls_plan_v3(model, config) {
         Ok(plan) => {
-            if has_interactions {
+            if has_higher_order {
+                debug_assert_eq!(plan.higher_order_stage_plans().len(), 1);
+                diagnostics.push(SemCapabilityDiagnosticV1::new(
+                    "sem.capability.pls.higher_order_runtime_not_connected",
+                    SemCapabilityDiagnosticSeverityV1::Error,
+                    None,
+                    "The exact HOC plan compiles, but its staged native estimator is not connected yet.",
+                    vec![
+                        "Keep the request saved until the matching point/bootstrap runner and Registry cell are connected and qualified.".into(),
+                    ],
+                )?);
+            } else if has_interactions {
                 diagnostics.extend(interaction_scope_diagnostics(config, &plan)?);
             } else {
                 let found = plan.topology().specific_directed_paths().len();
@@ -128,7 +164,16 @@ pub fn preflight_general_sem_pls_v1(
             "sem.capability.pls.experimental_labs",
             SemCapabilityDiagnosticSeverityV1::Info,
             None,
-            if has_interactions {
+            if has_higher_order {
+                match config.inference {
+                    GeneralSemInferenceV1::None => {
+                        "General SEM higher-order point estimation passes the bounded Experimental Labs compiler preflight."
+                    }
+                    GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                        "General SEM higher-order full-model percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                    }
+                }
+            } else if has_interactions {
                 match config.inference {
                     GeneralSemInferenceV1::None => {
                         "General SEM simultaneous two-way moderation point estimation passes the Experimental Labs compiler preflight."
@@ -151,7 +196,16 @@ pub fn preflight_general_sem_pls_v1(
         )?],
         evidence,
         "PLS-SEM can compile this exact request in Experimental Labs.",
-        if has_interactions {
+        if has_higher_order {
+            match config.inference {
+                GeneralSemInferenceV1::None => {
+                    "The compiler binds one exact HOC approach/type predicate to stable generated mappings and ordered stage projections. Runtime qualification remains required before Standard promotion."
+                }
+                GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                    "The point HOC cell remains primary authority and the supplemental Labs cell requires every raw-case replicate to rerun all compiled stages under one usable/failure ledger."
+                }
+            }
+        } else if has_interactions {
             match config.inference {
                 GeneralSemInferenceV1::None => {
                     "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
@@ -478,6 +532,37 @@ fn pls_compile_diagnostic(
                 "Review the interaction output, effect relation, parameter, and generated-column identities in the compatibility inspector.",
             ),
         },
+        CompiledPlsPlanV3Error::HigherOrder(error) => match error {
+            CompiledPlsHigherOrderV1Error::HigherOrderCardinality { .. } => (
+                "sem.capability.pls.higher_order_cardinality_not_executable",
+                "Keep exactly one non-nested second-order HOC in this bounded General SEM request.",
+            ),
+            CompiledPlsHigherOrderV1Error::DerivedTermCombination { .. } => (
+                "sem.capability.pls.higher_order_derived_combination_not_executable",
+                "Remove interaction, polynomial, nested, or additional HOC terms from this exact HOC calculation; the authored model remains saved.",
+            ),
+            CompiledPlsHigherOrderV1Error::HybridCompatibilityOnly { .. } => (
+                "sem.capability.pls.higher_order_hybrid_compatibility_only",
+                "Choose repeated indicators, extended repeated indicators, embedded two-stage, or disjoint two-stage; Hybrid remains compatibility-only.",
+            ),
+            CompiledPlsHigherOrderV1Error::UnsupportedApproachTypeTopology { .. } => (
+                "sem.capability.pls.higher_order_approach_type_topology_not_executable",
+                "Use the exact approach/HCM matrix: repeated RR/FR or exogenous RF/FF; endogenous extended RF/FF; embedded/disjoint with any HCM type.",
+            ),
+            CompiledPlsHigherOrderV1Error::NestedOrNonCompositeComponent { .. } => (
+                "sem.capability.pls.higher_order_component_not_executable",
+                "Select at least two ordinary non-nested composite lower-order components.",
+            ),
+            CompiledPlsHigherOrderV1Error::ComponentModeMismatch { .. }
+            | CompiledPlsHigherOrderV1Error::FixedOrCustomScoring { .. } => (
+                "sem.capability.pls.higher_order_measurement_mode_not_executable",
+                "Use Mode A LOCs for reflective-first HCM types and Mode B LOCs for formative-first HCM types; fixed/custom scoring is outside this cell.",
+            ),
+            _ => (
+                "sem.capability.pls.higher_order_shape_not_executable",
+                "Review the HOC output, components, authored structural paths, parameters, and generated-identity diagnostics in the compatibility inspector.",
+            ),
+        },
         CompiledPlsPlanV3Error::Topology(_) => (
             "sem.capability.pls.topology_not_compilable",
             "Resolve the reported path-limit or topology issue without deleting unsupported semantics silently.",
@@ -534,11 +619,36 @@ fn pls_multiple_moderation_bootstrap_cell()
     )
 }
 
+fn pls_higher_order_point_cell()
+-> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    let cell = pls_general_higher_order_point_capability_cell_v1();
+    SemCapabilityCellIdV1::new(
+        cell.registry_schema_version,
+        cell.capability_id,
+        cell.cell_id,
+        cell.capability_version,
+    )
+}
+
+fn pls_higher_order_bootstrap_cell()
+-> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    let cell = pls_general_higher_order_bootstrap_capability_cell_v1();
+    SemCapabilityCellIdV1::new(
+        cell.registry_schema_version,
+        cell.capability_id,
+        cell.cell_id,
+        cell.capability_version,
+    )
+}
+
 fn pls_cells(
     has_interactions: bool,
+    has_higher_order: bool,
     config: &GeneralSemConfigV1,
 ) -> Result<Vec<SemCapabilityCellIdV1>, SemCapabilityDecisionV1ValidationError> {
-    let mut cells = if has_interactions {
+    let mut cells = if has_higher_order {
+        vec![pls_higher_order_point_cell()?]
+    } else if has_interactions {
         vec![pls_multiple_moderation_point_cell()?]
     } else {
         vec![pls_cell()?]
@@ -547,7 +657,9 @@ fn pls_cells(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
     ) {
-        cells.push(if has_interactions {
+        cells.push(if has_higher_order {
+            pls_higher_order_bootstrap_cell()?
+        } else if has_interactions {
             pls_multiple_moderation_bootstrap_cell()?
         } else {
             pls_bootstrap_cell()?
@@ -565,7 +677,8 @@ mod tests {
     use super::*;
     use crate::{
         Construct, GeneralSemConditionalEffectProbeV1, GeneralSemConditionalProbeValuesV1,
-        GeneralSemEffectEstimandV1, InteractionHierarchyPolicyV2, InteractionMethodV4,
+        GeneralSemEffectEstimandV1, HigherOrderConstructionApproachV4,
+        HigherOrderMeasurementTypeV4, InteractionHierarchyPolicyV2, InteractionMethodV4,
         LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec, ObservedRoleV4,
         ObservedTransformationOperationV4, ObservedTransformationStepV4, SemParameterTargetV4,
         SemParameterV4, SemRelationV4, SemWeightBindingV4, StructuralPath,
@@ -676,6 +789,47 @@ mod tests {
             &[],
         )
         .unwrap()
+    }
+
+    fn disjoint_higher_order_model() -> SemModelV4 {
+        let mut model = recursive_model();
+        let output = "derived:hoc".to_string();
+        let relation = "relation:hoc_y".to_string();
+        let parameter = "parameter:hoc_y".to_string();
+        model.variables.push(SemVariableV4::Derived {
+            id: output.clone(),
+            label: "Higher order".into(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: relation,
+            source: output.clone(),
+            target: "construct:y".into(),
+            parameter: parameter.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: parameter,
+            label: "HOC -> Y".into(),
+            target: SemParameterTargetV4::Regression {
+                source: output.clone(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::HigherOrder {
+            id: "term:hoc".into(),
+            output,
+            components: vec!["construct:x".into(), "construct:m".into()],
+            approach: HigherOrderConstructionApproachV4::DisjointTwoStage,
+            measurement_type: HigherOrderMeasurementTypeV4::ReflectiveReflective,
+        });
+        model.ensure_valid().unwrap();
+        model
     }
 
     fn add_sampling_control(model: &mut SemModelV4) {
@@ -1376,5 +1530,64 @@ mod tests {
                     .all(|diagnostic| !diagnostic.corrections().is_empty())
             );
         }
+    }
+
+    #[test]
+    fn hoc_preflight_binds_exact_future_cells_but_blocks_until_runner_activation() {
+        let model = disjoint_higher_order_model();
+        let point = preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
+        assert_eq!(point.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert_eq!(point.capability_cells().len(), 1);
+        assert_eq!(
+            point.capability_cells()[0].cell_id(),
+            "qpls3.pls.general_sem_higher_order_point"
+        );
+        assert!(point.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code() == "sem.capability.pls.higher_order_runtime_not_connected"
+        }));
+        assert!(point.evidence().iter().any(|evidence| {
+            evidence.evidence_id()
+                == "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_point:general_sem_pls_higher_order_point_v1"
+        }));
+
+        let mut config = GeneralSemConfigV1::default();
+        config.inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 11,
+            confidence_level: 0.95,
+            interval: GeneralSemBootstrapIntervalV1::Percentile,
+            tail: GeneralSemInferenceTailV1::TwoSided,
+        };
+        let bootstrap = preflight_general_sem_pls_v1(&model, &config).unwrap();
+        assert_eq!(bootstrap.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert_eq!(bootstrap.capability_cells().len(), 2);
+        assert_eq!(
+            bootstrap.capability_cells()[1].cell_id(),
+            "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap"
+        );
+    }
+
+    #[test]
+    fn unsupported_hoc_matrix_returns_a_stable_corrective_diagnostic() {
+        let mut model = disjoint_higher_order_model();
+        let SemDerivedTermV4::HigherOrder {
+            approach,
+            measurement_type,
+            ..
+        } = &mut model.derived_terms[0]
+        else {
+            unreachable!()
+        };
+        *approach = HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators;
+        *measurement_type = HigherOrderMeasurementTypeV4::ReflectiveReflective;
+        model.ensure_valid().unwrap();
+        let decision =
+            preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert!(decision.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code()
+                == "sem.capability.pls.higher_order_approach_type_topology_not_executable"
+                && !diagnostic.corrections().is_empty()
+        }));
     }
 }

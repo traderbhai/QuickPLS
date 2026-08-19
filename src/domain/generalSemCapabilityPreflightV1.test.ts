@@ -46,6 +46,38 @@ function multipleMediationModel(): SemModelV4 {
   ]);
 }
 
+function disjointHigherOrderModel(): SemModelV4 {
+  const value = multipleMediationModel();
+  const output = "derived:hoc";
+  const parameter = "parameter:hoc_y";
+  value.variables.push({ kind: "derived", id: output, label: "Higher order" });
+  value.relations.push({
+    kind: "structural",
+    id: "relation:hoc_y",
+    source: output,
+    target: "construct:y",
+    parameter,
+    role: "structural",
+    intercept_parameter: null,
+  });
+  value.parameters.push({
+    kind: "free",
+    id: parameter,
+    label: "HOC -> Y",
+    target: { kind: "regression", source: output, target: "construct:y" },
+    group_overrides: [],
+  });
+  value.derived_terms.push({
+    kind: "higher_order",
+    id: "term:hoc",
+    output,
+    components: ["construct:m1", "construct:m2"],
+    approach: "disjoint_two_stage",
+    measurement_type: "reflective_reflective",
+  });
+  return value;
+}
+
 function addTwoWayInteraction(
   value: SemModelV4,
   id: string,
@@ -691,6 +723,28 @@ describe("General SEM capability preflight v1", () => {
 
     expect(decision.status).toBe("blocked");
     expect(codes(decision)).toContain("sem.capability.pls.effect_identity_collision");
+  });
+
+  it("binds exact HOC identities while keeping execution blocked until the native runner exists", () => {
+    const config = defaultGeneralSemConfigV1();
+    config.inference = {
+      kind: "case_bootstrap",
+      resamples: 500,
+      seed: 7,
+      confidence_level: 0.95,
+      interval: "percentile",
+      tail: "two_sided",
+    };
+    const decision = preflightGeneralSemPlsV1(disjointHigherOrderModel(), config);
+    expect(decision.status).toBe("blocked");
+    expect(decision.capability_cells.map((cell) => cell.cell_id)).toEqual([
+      "qpls3.pls.general_sem_higher_order_point",
+      "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+    ]);
+    expect(codes(decision)).toContain("sem.capability.pls.higher_order_runtime_not_connected");
+    expect(decision.evidence.map((item) => item.evidence_id)).toContain(
+      "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_point:general_sem_pls_higher_order_point_v1",
+    );
   });
 
   it("keeps CB-SEM General v3 blocked and gives feedback-specific recovery", () => {

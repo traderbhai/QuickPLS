@@ -19,6 +19,7 @@ import {
   type SemRelationV4,
 } from "./semModelV4";
 import { sha256HexBytesV1 } from "./sha256V1";
+import { preflightGeneralSemHocContractV1 } from "./generalSemHigherOrderContractV1";
 
 export const GENERAL_SEM_PLS_ESTIMATOR_ID_V1 = "qpls.pls_sem.v3" as const;
 export const GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1 = "qpls.cbsem.v3" as const;
@@ -347,7 +348,11 @@ function executionScopeDiagnostics(
   return diagnostics;
 }
 
-function plsShapeDiagnostics(model: SemModelV4, hasInteractions: boolean): SemCapabilityDiagnosticV1[] {
+function plsShapeDiagnostics(
+  model: SemModelV4,
+  hasInteractions: boolean,
+  hasHigherOrder: boolean,
+): SemCapabilityDiagnosticV1[] {
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
   if (hasInteractions) {
     for (const term of model.derived_terms) {
@@ -368,7 +373,7 @@ function plsShapeDiagnostics(model: SemModelV4, hasInteractions: boolean): SemCa
       "Use composite constructs for this PLS request, or retain the factor model for a qualified CB-SEM capability cell.",
     ));
   }
-  if (!hasInteractions && (
+  if (!hasInteractions && !hasHigherOrder && (
     model.variables.some((variable) => variable.kind === "derived")
     || model.derived_terms.length > 0
     || model.parameters.some((parameter) => parameter.kind === "derived")
@@ -385,6 +390,25 @@ function plsShapeDiagnostics(model: SemModelV4, hasInteractions: boolean): SemCa
 interface CompiledInteractionProjectionV1 {
   readonly projectedModel: SemModelV4;
   readonly outputIds: ReadonlySet<string>;
+}
+
+function compileHocLowerOrderProjectionV1(model: SemModelV4, outputId: string): SemModelV4 {
+  const removedRelations = model.relations.filter((relation) => relationReferencesVariable(relation, outputId));
+  const removedRelationIds = new Set(removedRelations.map((relation) => relation.id));
+  const removedParameterIds = new Set(removedRelations.flatMap((relation) => (
+    relation.kind === "structural" && relation.intercept_parameter
+      ? [relation.parameter, relation.intercept_parameter]
+      : [relation.parameter]
+  )));
+  return canonicalizeSemModelV4({
+    ...structuredClone(model),
+    variables: model.variables.filter((variable) => variable.id !== outputId),
+    relations: model.relations.filter((relation) => !removedRelationIds.has(relation.id)),
+    parameters: model.parameters.filter((parameter) => !removedParameterIds.has(parameter.id)),
+    derived_terms: [],
+    annotations: [],
+    presentation: { kind: "none" },
+  });
 }
 
 function constraintReferencesParameter(model: SemModelV4, parameterId: string): boolean {
@@ -753,29 +777,36 @@ export function preflightGeneralSemPlsV1(
 ): SemCapabilityDecisionV1 {
   const validatedConfig = parseGeneralSemConfigV1(config);
   const hasInteractions = model.derived_terms.some((term) => term.kind === "interaction_v2");
+  const hasHigherOrder = model.derived_terms.some((term) => term.kind === "higher_order");
   const bootstrapRequested = validatedConfig.inference.kind === "case_bootstrap";
-  const capabilityCells = [
-    hasInteractions ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1 : PLS_CELL,
-    ...(bootstrapRequested
-      ? [hasInteractions
-        ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1
-        : PLS_BOOTSTRAP_CELL]
-      : []),
-  ];
+  const hocContract = preflightGeneralSemHocContractV1(model, bootstrapRequested);
+  const capabilityCells = hasHigherOrder
+    ? hocContract.capabilityCells
+    : [
+      hasInteractions ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1 : PLS_CELL,
+      ...(bootstrapRequested
+        ? [hasInteractions
+          ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1
+          : PLS_BOOTSTRAP_CELL]
+        : []),
+    ];
   const evidence = [
     PLS_EVIDENCE.find((item) => item.evidence_id === "compiler:recipe_v4_to_compiled_pls_plan_v3_v1")!,
-    ...(hasInteractions ? PLS_MULTIPLE_MODERATION_EVIDENCE : PLS_EVIDENCE.filter((item) => (
+    ...(hasHigherOrder ? hocContract.evidence : hasInteractions ? PLS_MULTIPLE_MODERATION_EVIDENCE : PLS_EVIDENCE.filter((item) => (
       item.evidence_id !== "compiler:recipe_v4_to_compiled_pls_plan_v3_v1"
     ))),
     ...(bootstrapRequested ? [
-      ...(hasInteractions
+      ...(hasHigherOrder
+        ? []
+        : hasInteractions
         ? PLS_MULTIPLE_MODERATION_BOOTSTRAP_EVIDENCE
         : [PLS_BOOTSTRAP_COMPILER_EVIDENCE, PLS_BOOTSTRAP_EVIDENCE]),
       PLS_BOOTSTRAP_MECHANISM_EVIDENCE,
     ] : []),
   ];
   const diagnostics = executionScopeDiagnostics(validatedConfig, hasInteractions);
-  diagnostics.push(...plsShapeDiagnostics(model, hasInteractions));
+  diagnostics.push(...plsShapeDiagnostics(model, hasInteractions, hasHigherOrder));
+  if (hasHigherOrder) diagnostics.push(...hocContract.diagnostics);
   diagnostics.push(...plsDataScopeDiagnostics(model));
 
   let modelIsValid = false;
@@ -809,7 +840,12 @@ export function preflightGeneralSemPlsV1(
     && item.code !== "sem.capability.pls.derived_shape_not_executable"
   ))) {
     try {
-      if (hasInteractions) {
+      if (hasHigherOrder) {
+        if (hocContract.contractCompiles && hocContract.outputId) {
+          compilePlsPlanV2(compileHocLowerOrderProjectionV1(model, hocContract.outputId));
+          basePlanCompiles = true;
+        }
+      } else if (hasInteractions) {
         const compiled = compileInteractionProjectionV1(model);
         diagnostics.push(...compiled.diagnostics);
         if (compiled.value) {
@@ -847,13 +883,13 @@ export function preflightGeneralSemPlsV1(
       if (hasInteractions) {
         diagnostics.push(...interactionScopeDiagnostics(validatedConfig, eligiblePaths));
         diagnostics.push(...requestedEffectDiagnostics(model, validatedConfig, eligiblePaths));
-      } else if (!bootstrapRequested && eligiblePaths.length === 0) {
+      } else if (!hasHigherOrder && !bootstrapRequested && eligiblePaths.length === 0) {
         diagnostics.push(errorDiagnostic(
           "sem.capability.pls.mediation_requires_indirect_path",
           "The PLS mediation point cell requires at least one compiled specific indirect path; this graph has none.",
           "Add a supported mediator path, or use the existing ordinary PLS workflow for a direct-only recursive model.",
         ));
-      } else if (bootstrapRequested && eligiblePaths.length < 2) {
+      } else if (!hasHigherOrder && bootstrapRequested && eligiblePaths.length < 2) {
         diagnostics.push(errorDiagnostic(
           "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
           `The exact multiple-mediation bootstrap cell requires at least two compiled specific indirect paths; this graph has ${eligiblePaths.length}.`,

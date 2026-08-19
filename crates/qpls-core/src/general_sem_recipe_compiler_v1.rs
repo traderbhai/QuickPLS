@@ -1,10 +1,13 @@
 use crate::{
-    AnalysisRecipeModelBindingV4, AnalysisRecipeV4, CapabilityCellReferenceV2,
+    AnalysisMethod, AnalysisRecipeModelBindingV4, AnalysisRecipeV4, CapabilityCellReferenceV2,
     CapabilityRegistryV2, CompiledAnalysisRecipeV4, CompiledPlsPlanV3, CompiledPlsPlanV3Error,
     CompiledRecipePlanV4, GeneralSemBootstrapIntervalV1, GeneralSemInferenceTailV1,
-    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, PlsBootstrapTestTail,
-    RecipeV4CompilationError, RecipeV4CompilerTarget, SemModelV4, compile_analysis_recipe_v4,
-    compile_pls_plan_v3, compile_pls_stage_one_projection_v3, validate_compiled_analysis_recipe_v4,
+    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicy,
+    PlsBootstrapTestTail, Preprocessing, RecipeV4CompilationError, RecipeV4CompilerTarget,
+    SemModelV4, WeightingScheme, compile_analysis_recipe_v4,
+    compile_pls_higher_order_lower_order_projection_v1, compile_pls_plan_v3,
+    compile_pls_stage_one_projection_v3, pls_general_higher_order_bootstrap_capability_cell_v1,
+    pls_general_higher_order_point_capability_cell_v1, validate_compiled_analysis_recipe_v4,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -17,6 +20,10 @@ pub const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_RECIPE_COMPILER_VERSION_V1: 
     "recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1";
 pub const GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1: &str =
     "recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_bootstrap_v1";
+pub const GENERAL_SEM_PLS_HIGHER_ORDER_POINT_RECIPE_COMPILER_VERSION_V1: &str =
+    "recipe_v4_to_compiled_pls_plan_v3_higher_order_point_v1";
+pub const GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1: &str =
+    "recipe_v4_to_compiled_pls_plan_v3_higher_order_full_model_case_bootstrap_v1";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_ID_V1: &str = "smartpls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CELL_ID_V1: &str = "qpls3.pls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_VERSION_V1: &str = "pls_mediation_v1";
@@ -170,6 +177,18 @@ pub enum GeneralSemPlsRecipeCompilationErrorV1 {
     BootstrapStudentizedSamplesMismatch { found: u32 },
     #[error("General SEM PLS v1 does not yet implement lazy specific-path materialization")]
     LazySpecificPathMaterializationNotYetExecutable,
+    #[error("General SEM HOC v1 requires PLS-PM estimation")]
+    HigherOrderRequiresPlsPm,
+    #[error("General SEM HOC v1 requires path weighting")]
+    HigherOrderRequiresPathWeighting,
+    #[error("General SEM HOC v1 requires standardized preprocessing")]
+    HigherOrderRequiresStandardizedPreprocessing,
+    #[error("General SEM HOC v1 requires recipe-level listwise deletion")]
+    HigherOrderRequiresListwiseDeletion,
+    #[error("General SEM HOC v1 does not support recipe-level case weighting")]
+    HigherOrderCaseWeightsNotExecutable,
+    #[error("General SEM HOC v1 does not support permutation requests")]
+    HigherOrderPermutationNotExecutable,
     #[error("Capability Registry V2 cannot authorize the required General SEM PLS cells: {0}")]
     CapabilityRegistry(String),
     #[error("a required General SEM PLS capability cell is not available in Labs or Standard")]
@@ -206,6 +225,7 @@ pub fn compile_general_sem_pls_recipe_v1(
         .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
     ensure_compilation_scope(recipe, config)?;
     let model = resolved_model_from_recipe(recipe, resolved_model)?;
+    ensure_higher_order_recipe_scope(recipe, model)?;
     let plan = compile_pls_plan_v3(model, config)?;
     ensure_interaction_compilation_scope(config, &plan)?;
     ensure_capabilities_available(config, &plan)?;
@@ -218,7 +238,7 @@ pub fn compile_general_sem_pls_recipe_v1(
         target,
         target.capability_cell_for_method(recipe.settings.method),
     )?;
-    if plan.two_way_interactions().is_empty() {
+    if plan.two_way_interactions().is_empty() && plan.higher_order_stage_plans().is_empty() {
         let found = plan.topology().specific_directed_paths().len();
         match config.inference {
             GeneralSemInferenceV1::None if found == 0 => {
@@ -279,6 +299,7 @@ pub fn validate_compiled_general_sem_pls_recipe_v1(
         .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
     ensure_compilation_scope(recipe, config)?;
     let model = resolved_model_from_recipe(recipe, resolved_model)?;
+    ensure_higher_order_recipe_scope(recipe, model)?;
     let expected_plan = compile_pls_plan_v3(model, config)?;
     ensure_interaction_compilation_scope(config, &expected_plan)?;
     if artifact.schema_version != GENERAL_SEM_PLS_RECIPE_ARTIFACT_SCHEMA_VERSION_V1
@@ -398,6 +419,40 @@ fn ensure_compilation_scope(
     Ok(())
 }
 
+fn ensure_higher_order_recipe_scope(
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
+    let has_higher_order = model
+        .derived_terms
+        .iter()
+        .any(|term| matches!(term, crate::SemDerivedTermV4::HigherOrder { .. }));
+    if !has_higher_order {
+        return Ok(());
+    }
+    if recipe.settings.method != AnalysisMethod::PlsPm {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::HigherOrderRequiresPlsPm);
+    }
+    if recipe.settings.weighting_scheme != WeightingScheme::Path {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::HigherOrderRequiresPathWeighting);
+    }
+    if recipe.settings.preprocessing != Preprocessing::Standardized {
+        return Err(
+            GeneralSemPlsRecipeCompilationErrorV1::HigherOrderRequiresStandardizedPreprocessing,
+        );
+    }
+    if recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::HigherOrderRequiresListwiseDeletion);
+    }
+    if recipe.settings.case_weight_column.is_some() {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::HigherOrderCaseWeightsNotExecutable);
+    }
+    if recipe.settings.permutation_samples != 0 {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::HigherOrderPermutationNotExecutable);
+    }
+    Ok(())
+}
+
 /// Produces the exact point-scoring recipe that corresponds to a validated
 /// General SEM request. The returned recipe is the only recipe that may be
 /// paired with `CompiledGeneralSemPlsRecipeV1::base_artifact()`; the outer
@@ -421,16 +476,24 @@ pub fn project_general_sem_pls_base_recipe_v1(
     Ok(base_recipe)
 }
 
-/// Projects an interaction-bearing General SEM recipe to the exact ordinary
-/// PLS model used only for shared stage-one construct scoring. The source
-/// recipe/model remain authoritative in the outer compiled artifact.
+/// Projects an interaction- or HOC-bearing General SEM recipe to the exact
+/// ordinary PLS model used only for shared lower-order construct scoring. The
+/// source recipe/model remain authoritative in the outer compiled artifact.
 pub fn project_general_sem_pls_stage_one_recipe_v1(
     recipe: &AnalysisRecipeV4,
     source_model: &SemModelV4,
 ) -> Result<(AnalysisRecipeV4, SemModelV4), GeneralSemPlsRecipeCompilationErrorV1> {
     let mut stage_one_recipe = project_general_sem_pls_base_recipe_v1(recipe)?;
-    let projection =
-        compile_pls_stage_one_projection_v3(source_model).map_err(CompiledPlsPlanV3Error::from)?;
+    let has_higher_order = source_model
+        .derived_terms
+        .iter()
+        .any(|term| matches!(term, crate::SemDerivedTermV4::HigherOrder { .. }));
+    let projection = if has_higher_order {
+        compile_pls_higher_order_lower_order_projection_v1(source_model)
+            .map_err(CompiledPlsPlanV3Error::from)?
+    } else {
+        compile_pls_stage_one_projection_v3(source_model).map_err(CompiledPlsPlanV3Error::from)?
+    };
     if projection.source_scientific_sha256() == projection.projected_scientific_sha256() {
         return Ok((stage_one_recipe, source_model.clone()));
     }
@@ -449,6 +512,16 @@ fn compiler_version_for_plan(
     config: &crate::GeneralSemConfigV1,
     plan: &CompiledPlsPlanV3,
 ) -> &'static str {
+    if !plan.higher_order_stage_plans().is_empty() {
+        return match config.inference {
+            GeneralSemInferenceV1::None => {
+                GENERAL_SEM_PLS_HIGHER_ORDER_POINT_RECIPE_COMPILER_VERSION_V1
+            }
+            GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1
+            }
+        };
+    }
     if !plan.two_way_interactions().is_empty() {
         return match config.inference {
             GeneralSemInferenceV1::None => {
@@ -476,7 +549,9 @@ fn ensure_capabilities_available(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
     ) {
-        expected_cells.push(if plan.two_way_interactions().is_empty() {
+        expected_cells.push(if !plan.higher_order_stage_plans().is_empty() {
+            pls_general_higher_order_bootstrap_capability_cell_v1()
+        } else if plan.two_way_interactions().is_empty() {
             pls_general_bootstrap_capability_cell_v1()
         } else {
             pls_general_multiple_moderation_bootstrap_capability_cell_v1()
@@ -500,7 +575,9 @@ fn ensure_capabilities_available(
 }
 
 fn capability_cell_for_plan(plan: &CompiledPlsPlanV3) -> CapabilityCellReferenceV2 {
-    if plan.two_way_interactions().is_empty() {
+    if !plan.higher_order_stage_plans().is_empty() {
+        pls_general_higher_order_point_capability_cell_v1()
+    } else if plan.two_way_interactions().is_empty() {
         pls_general_recursive_effects_capability_cell_v1()
     } else {
         pls_general_multiple_moderation_point_capability_cell_v1()
