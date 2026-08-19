@@ -96,7 +96,8 @@ use qpls_estimation::{
     CbsemExactCaseBootstrapStudentizedParameterIntervalOutcomeV1,
     CbsemExactCaseBootstrapStudentizedRefitStandardErrorOutcomeV1,
     CbsemExactCaseBootstrapStudentizedSidecarV1, CbsemExactCaseBootstrapWitnessV1,
-    NONLINEAR_EFFECTS_METHOD_VERSION, PLS_METHOD_VERSION, PLS_SCORE_EXECUTION_METHOD_VERSION_V2,
+    GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1, NONLINEAR_EFFECTS_METHOD_VERSION,
+    PLS_METHOD_VERSION, PLS_SCORE_EXECUTION_METHOD_VERSION_V2,
     cbsem_exact_case_bootstrap_base_point_sha256_v1, cbsem_exact_case_bootstrap_index_digest_v1,
     cbsem_exact_case_bootstrap_sampling_positions_digest_v1,
     cbsem_exact_rmsea_90_percent_interval_v1,
@@ -1156,6 +1157,8 @@ const GENERAL_SEM_PLS_POINT_EXECUTION_ADAPTER_VERSION_V1: &str =
     "compiled_general_sem_pls_recipe_v1_point_execution_v1";
 const GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1: &str =
     "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1";
+const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1: &str =
+    "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1";
 
 fn project_capability_cell_v2(
     reference: &qpls_core::CapabilityCellReferenceV2,
@@ -1193,16 +1196,24 @@ fn validate_general_sem_result_authority_v1(
     let resident_config = recipe.general_sem_config.as_ref().ok_or_else(|| {
         invalid_general_sem_authority("the resident Recipe-v4 does not contain GeneralSemConfigV1")
     })?;
-    let (expected_method_version, expected_engine_version) = match resident_config.inference {
-        GeneralSemInferenceV1::None => (
-            GENERAL_SEM_EFFECTS_V1_METHOD_VERSION,
-            GENERAL_SEM_PLS_POINT_EXECUTION_ADAPTER_VERSION_V1,
-        ),
-        GeneralSemInferenceV1::CaseBootstrap { .. } => (
-            GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
-            GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
-        ),
-    };
+    let (expected_method_version, expected_engine_version) =
+        if !artifact.plan().two_way_interactions().is_empty() {
+            (
+                GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+                GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
+            )
+        } else {
+            match resident_config.inference {
+                GeneralSemInferenceV1::None => (
+                    GENERAL_SEM_EFFECTS_V1_METHOD_VERSION,
+                    GENERAL_SEM_PLS_POINT_EXECUTION_ADAPTER_VERSION_V1,
+                ),
+                GeneralSemInferenceV1::CaseBootstrap { .. } => (
+                    GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+                    GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+                ),
+            }
+        };
 
     if document.provenance.recipe_id != recipe.id.to_string()
         || document.provenance.recipe_digest != artifact.recipe_analytical_sha256()
@@ -1223,6 +1234,8 @@ fn validate_general_sem_result_authority_v1(
             "canonical provenance differs from the resident General SEM recipe, model, dataset, method/engine, or deterministic compilation",
         ));
     }
+
+    validate_general_sem_pls_interaction_authority_v1(results, &artifact)?;
 
     match (&recipe.general_sem_config, &results.inference_receipt) {
         (Some(config), None) if matches!(config.inference, GeneralSemInferenceV1::None) => Ok(()),
@@ -1287,6 +1300,92 @@ fn validate_general_sem_result_authority_v1(
             "the resident Recipe-v4 does not contain GeneralSemConfigV1",
         )),
     }
+}
+
+fn validate_general_sem_pls_interaction_authority_v1(
+    results: &qpls_core::CanonicalGeneralSemResultsV1,
+    artifact: &qpls_core::CompiledGeneralSemPlsRecipeV1,
+) -> Result<(), ProjectArchiveV6Error> {
+    let compiled_interactions = artifact.plan().two_way_interactions();
+    if compiled_interactions.is_empty() {
+        if !results.interaction_effects.is_empty() {
+            return Err(invalid_general_sem_authority(
+                "canonical interaction effects exist without compiled PLS interaction authority",
+            ));
+        }
+        return Ok(());
+    }
+
+    if results.inference_receipt.is_some()
+        || !results.specific_indirect_effects.is_empty()
+        || !results.aggregate_effects.is_empty()
+        || !results.higher_order_stages.is_empty()
+        || !results.cbsem_fit.is_empty()
+        || !results.identification_diagnostics.is_empty()
+    {
+        return Err(invalid_general_sem_authority(
+            "the point-only General SEM PLS interaction cell must not persist inference, mediation, higher-order, CB-SEM fit, or identification result sections",
+        ));
+    }
+
+    let expected_stage_one_digest = artifact
+        .plan()
+        .stage_one_projection_scientific_sha256()
+        .ok_or_else(|| {
+            invalid_general_sem_authority(
+                "compiled PLS interactions require an exact stage-one projection digest",
+            )
+        })?;
+    if results.interaction_effects.len() != compiled_interactions.len() {
+        return Err(invalid_general_sem_authority(format!(
+            "canonical interaction-effect count {} differs from compiled interaction count {}",
+            results.interaction_effects.len(),
+            compiled_interactions.len()
+        )));
+    }
+    let persisted_by_interaction_id = results
+        .interaction_effects
+        .iter()
+        .map(|effect| (effect.interaction_id.as_str(), effect))
+        .collect::<BTreeMap<_, _>>();
+    if persisted_by_interaction_id.len() != results.interaction_effects.len() {
+        return Err(invalid_general_sem_authority(
+            "canonical interaction effects do not have unique interaction identities",
+        ));
+    }
+
+    for compiled in compiled_interactions {
+        let persisted = persisted_by_interaction_id
+            .get(compiled.interaction_id())
+            .ok_or_else(|| {
+                invalid_general_sem_authority(format!(
+                    "compiled interaction {} has no canonical interaction effect",
+                    compiled.interaction_id()
+                ))
+            })?;
+        if persisted.effect_id != compiled.interaction_effect_relation_id()
+            || persisted.focal_relation_id != compiled.focal_relation_id()
+            || persisted.interaction_effect_relation_id != compiled.interaction_effect_relation_id()
+            || persisted.interaction_effect_parameter_id
+                != compiled.interaction_effect_parameter_id()
+            || persisted.focal_predictor_id != compiled.focal_predictor_id()
+            || persisted.moderator_id != compiled.moderator_id()
+            || persisted.outcome_id != compiled.outcome_id()
+            || persisted.generated_product_column_id != compiled.generated_product_column_id()
+        {
+            return Err(invalid_general_sem_authority(format!(
+                "canonical interaction effect {} differs from its compiled interaction contract",
+                compiled.interaction_id()
+            )));
+        }
+        if persisted.stage_one_model_scientific_sha256 != expected_stage_one_digest {
+            return Err(invalid_general_sem_authority(format!(
+                "canonical interaction effect {} carries a stage-one projection digest that differs from the compiled plan",
+                compiled.interaction_id()
+            )));
+        }
+    }
+    Ok(())
 }
 
 fn is_exact_recipe_v4_pls_result(document: &CanonicalResultDocumentV2) -> bool {
@@ -6761,10 +6860,12 @@ mod tests {
     use chrono::TimeZone;
     use qpls_core::{
         ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisPayload, AnalysisRecipe, AnalysisSettings,
-        Construct, FactorIdentificationV4, GeneralSemConfigV1, MeasurementMode, MethodConfig,
-        ObservedRoleV4, ObservedScaleV4, RESULT_SCHEMA_VERSION, RunProvenance, RunStatus,
-        SamplingWeightNormalizationV4, SemDataBindingV4, SemVariableV4, SemWeightBindingV4,
-        StructuralPath, migrate_analysis_recipe_to_v4_pending, resolve_weight_declaration_v1,
+        Construct, FactorIdentificationV4, GeneralSemConfigV1, InteractionHierarchyPolicyV2,
+        InteractionMethodV4, MeasurementMode, MethodConfig, ObservedRoleV4, ObservedScaleV4,
+        RESULT_SCHEMA_VERSION, RunProvenance, RunStatus, SamplingWeightNormalizationV4,
+        SemDataBindingV4, SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
+        SemWeightBindingV4, StructuralPath, StructuralRelationRoleV4,
+        migrate_analysis_recipe_to_v4_pending, resolve_weight_declaration_v1,
     };
 
     #[test]
@@ -8429,6 +8530,247 @@ mod tests {
         (project, canonical)
     }
 
+    fn add_schema6_two_way_interaction(
+        model: &mut SemModelV4,
+        interaction_id: &str,
+        focal_predictor_id: &str,
+        moderator_id: &str,
+    ) {
+        let focal_relation = model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                SemRelationV4::Structural {
+                    id, source, target, ..
+                } if source == focal_predictor_id && target == "construct:y" => Some(id.clone()),
+                _ => None,
+            })
+            .expect("the moderation fixture has the requested focal path");
+        let output = format!("derived:{interaction_id}");
+        let effect_relation = format!("relation:{interaction_id}:effect");
+        let effect_parameter = format!("parameter:{interaction_id}:effect");
+        model.variables.push(SemVariableV4::Derived {
+            id: output.clone(),
+            label: interaction_id.to_string(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: effect_relation,
+            source: output.clone(),
+            target: "construct:y".into(),
+            parameter: effect_parameter.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: effect_parameter,
+            label: format!("{interaction_id} -> Y"),
+            target: SemParameterTargetV4::Regression {
+                source: output.clone(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+            id: interaction_id.to_string(),
+            output,
+            operands: vec![focal_predictor_id.to_string(), moderator_id.to_string()],
+            focal_relation,
+            method: InteractionMethodV4::TwoStage,
+            hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+            product_indicator: None,
+        });
+        model.ensure_valid().unwrap();
+    }
+
+    fn general_sem_schema6_moderation_authority_fixture()
+    -> (ProjectArchiveDocumentV6, CanonicalResultDocumentV2) {
+        let source_model = ModelSpec {
+            id: Uuid::from_u128(0x4d4f_4452_5343_4845_4d41_3601),
+            name: "Schema-6 simultaneous moderation authority".into(),
+            constructs: ["x", "w", "z", "y"]
+                .into_iter()
+                .map(|id| Construct {
+                    id: id.into(),
+                    name: id.to_uppercase(),
+                    short_name: id.to_uppercase(),
+                    mode: MeasurementMode::Reflective,
+                    indicators: vec![format!("{id}1"), format!("{id}2")],
+                })
+                .collect(),
+            paths: [("x", "y"), ("w", "y"), ("z", "y")]
+                .into_iter()
+                .map(|(source, target)| StructuralPath {
+                    source: source.into(),
+                    target: target.into(),
+                })
+                .collect(),
+            controls: Vec::new(),
+            higher_order_constructs: Vec::new(),
+            interactions: Vec::new(),
+        };
+        let mut csv = String::from("x1,x2,w1,w2,z1,z2,y1,y2\n");
+        for row in 0..81 {
+            let row = f64::from(row);
+            let x = (row - 40.0) / 13.0;
+            let w = (row * 0.71).sin() + 0.2 * (row * 0.13).cos();
+            let z = (row * 0.37).cos() - 0.3 * (row * 0.19).sin();
+            let y = 0.25 * x + 0.20 * w - 0.15 * z + 0.65 * x * w - 0.40 * x * z;
+            csv.push_str(&format!(
+                "{},{},{},{},{},{},{},{}\n",
+                x + 0.03 * (row * 0.11).sin(),
+                1.02 * x + 0.02 * (row * 0.17).cos(),
+                w + 0.03 * (row * 0.23).cos(),
+                0.98 * w + 0.02 * (row * 0.29).sin(),
+                z + 0.03 * (row * 0.31).sin(),
+                1.01 * z + 0.02 * (row * 0.41).cos(),
+                y + 0.03 * (row * 0.43).sin(),
+                1.01 * y + 0.02 * (row * 0.47).cos(),
+            ));
+        }
+        let dataset = qpls_data::import_delimited_bytes(
+            csv.as_bytes(),
+            "schema6-simultaneous-moderation.csv",
+            b',',
+            &qpls_data::ImportOptions::default(),
+        )
+        .unwrap();
+        let source_recipe = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: Uuid::from_u128(0x4d4f_4452_5343_4845_4d41_3602),
+            created_at: Utc.timestamp_opt(1_700_000_000, 0).unwrap(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: source_model.clone(),
+            settings: AnalysisSettings {
+                method: AnalysisMethod::PlsPm,
+                workers: 1,
+                ..AnalysisSettings::default()
+            },
+            method_config: Some(MethodConfig::PlsAlgorithm),
+            metadata: BTreeMap::new(),
+        };
+        let pending = migrate_analysis_recipe_to_v4_pending(&source_recipe).unwrap();
+        let (mut recipe, mut model) = confirm_legacy_recipe_estimand_v4(
+            &pending,
+            &source_model,
+            &[],
+            LegacyBasicModelInterpretationV4::PlsComposite,
+        )
+        .unwrap();
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut model.data_binding else {
+            unreachable!()
+        };
+        *dataset_id = dataset.id.to_string();
+        add_schema6_two_way_interaction(
+            &mut model,
+            "interaction:x_by_w",
+            "construct:x",
+            "construct:w",
+        );
+        add_schema6_two_way_interaction(
+            &mut model,
+            "interaction:x_by_z",
+            "construct:x",
+            "construct:z",
+        );
+        let model_scientific_sha256 = model.scientific_sha256().unwrap();
+        recipe.model_binding = AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+            model_id: model.id.clone(),
+            scientific_sha256: model_scientific_sha256.clone(),
+        };
+        recipe.general_sem_config = Some(GeneralSemConfigV1::default());
+        recipe.ensure_valid().unwrap();
+        let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+        let execution = qpls_runner::run_compiled_general_sem_pls_recipe_v1(
+            &dataset,
+            &recipe,
+            &model,
+            &artifact,
+            || false,
+            |_| {},
+        )
+        .unwrap();
+        let general_sem_results = execution.canonical_general_sem_results_v1().unwrap();
+
+        let mut project = ProjectArchiveDocumentV6::new_general_sem_v1(
+            Uuid::from_u128(0x4d4f_4452_5343_4845_4d41_3603),
+            "Schema-6 simultaneous moderation authority",
+            Utc.timestamp_opt(1_800_000_000, 0).unwrap(),
+        );
+        project.datasets.push(DatasetDescriptor::from(&dataset));
+        project.models.push(ProjectModelRecordV6 {
+            model_id: model.id.clone(),
+            payload: ProjectModelPayloadV6::SemModelV4 {
+                model: model.clone(),
+                scientific_sha256: model_scientific_sha256.clone(),
+            },
+        });
+        project.recipes.push(recipe.clone());
+        crate::write_project_data_lineage_v1(
+            &mut project.layouts,
+            &crate::ProjectDataLineageV1 {
+                schema_version: crate::PROJECT_DATA_LINEAGE_SCHEMA_VERSION_V1,
+                records: vec![crate::ProjectDatasetVersionRecordV1 {
+                    dataset_id: dataset.id.to_string(),
+                    parent_dataset_id: None,
+                    operation: crate::ProjectDatasetVersionOperationV1::Import,
+                    created_at: None,
+                    summary: "Imported schema-6 simultaneous moderation authority fixture".into(),
+                    source_column: None,
+                    target_column: None,
+                    transformation: None,
+                }],
+            },
+        )
+        .unwrap();
+
+        let canonical = CanonicalResultDocumentV2 {
+            schema_version: 2,
+            document_id: "general_sem_moderation_authority_document".into(),
+            title: "General SEM simultaneous moderation results".into(),
+            provenance: CanonicalResultProvenanceV2 {
+                run_id: "general_sem_moderation_authority_run".into(),
+                project_id: project.project_id.to_string(),
+                model_id: model.id,
+                model_digest: model_scientific_sha256,
+                dataset_id: dataset.id.to_string(),
+                dataset_fingerprint: dataset.fingerprint.0,
+                recipe_id: recipe.id.to_string(),
+                recipe_digest: artifact.recipe_analytical_sha256().into(),
+                capability_cell: project_capability_cell_v2(artifact.capability_cell()),
+                method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1.into(),
+                engine_version: execution.adapter_version().into(),
+                seed: Some(recipe.settings.seed),
+                workers: recipe.settings.workers as u32,
+                started_at: "2026-08-19T00:00:00Z".into(),
+                completed_at: "2026-08-19T00:00:01Z".into(),
+            },
+            capability_cells: Some(vec![project_capability_cell_v2(artifact.capability_cell())]),
+            general_sem_results: Some(general_sem_results),
+            sections: Vec::new(),
+            tables: Vec::new(),
+            charts: Vec::new(),
+            notices: Vec::new(),
+            exclusions: Vec::new(),
+            footnotes: Vec::new(),
+            presentation: CanonicalResultPresentationV2 {
+                default_section_id: None,
+                default_table_id: None,
+                precision: 4,
+                missing_value_label: "—".into(),
+                chart_defaults: CanonicalChartDisplayOptionsV2::default(),
+            },
+        };
+        canonical.ensure_valid().unwrap();
+        project
+            .canonical_result_documents
+            .push(CanonicalResultDocumentAttachmentV2::from_document(canonical.clone()).unwrap());
+        (project, canonical)
+    }
+
     #[test]
     fn general_sem_result_is_bound_to_resident_schema6_authorities() {
         assert_eq!(
@@ -8438,6 +8780,10 @@ mod tests {
         assert_eq!(
             GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
             qpls_runner::RECIPE_V4_GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+        );
+        assert_eq!(
+            GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
+            qpls_runner::RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1
         );
         let (project, canonical) = general_sem_schema6_authority_fixture();
         project.ensure_valid().unwrap();
@@ -8518,6 +8864,105 @@ mod tests {
             bootstrap_project.ensure_valid(),
             Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
                 if message.contains("bootstrap settings")
+        ));
+    }
+
+    #[test]
+    fn general_sem_moderation_archive_rejects_coherent_plan_digest_and_section_tampering() {
+        let (project, canonical) = general_sem_schema6_moderation_authority_fixture();
+        project.ensure_valid().unwrap();
+        assert_eq!(
+            canonical
+                .general_sem_results
+                .as_ref()
+                .unwrap()
+                .interaction_effects
+                .len(),
+            2
+        );
+
+        let mut coherent_identity_tamper = canonical.clone();
+        let results = coherent_identity_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap();
+        let interaction_effect_id = results.interaction_effects[0].effect_id.clone();
+        let tampered_interaction_id = "interaction:coherent_tamper".to_string();
+        results.interaction_effects[0].interaction_id = tampered_interaction_id.clone();
+        for effect in &mut results.conditional_effects {
+            if effect.interaction_effect_id.as_deref() == Some(interaction_effect_id.as_str()) {
+                effect.interaction_id = tampered_interaction_id.clone();
+            }
+        }
+        for plot in &mut results.interaction_plots {
+            if plot.interaction_effect_id.as_deref() == Some(interaction_effect_id.as_str()) {
+                plot.interaction_id = tampered_interaction_id.clone();
+            }
+        }
+        coherent_identity_tamper.ensure_valid().unwrap();
+        let mut identity_project = project.clone();
+        identity_project.canonical_result_documents = vec![
+            CanonicalResultDocumentAttachmentV2::from_document(coherent_identity_tamper).unwrap(),
+        ];
+        assert!(matches!(
+            identity_project.ensure_valid(),
+            Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
+                if message.contains("compiled interaction")
+        ));
+
+        let mut coherent_digest_tamper = canonical.clone();
+        for effect in &mut coherent_digest_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .interaction_effects
+        {
+            effect.stage_one_model_scientific_sha256 = "0".repeat(64);
+        }
+        coherent_digest_tamper.ensure_valid().unwrap();
+        let mut digest_project = project.clone();
+        digest_project.canonical_result_documents = vec![
+            CanonicalResultDocumentAttachmentV2::from_document(coherent_digest_tamper).unwrap(),
+        ];
+        assert!(matches!(
+            digest_project.ensure_valid(),
+            Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
+                if message.contains("stage-one projection digest")
+        ));
+
+        let mut non_interaction_section = canonical;
+        let trace = non_interaction_section
+            .general_sem_results
+            .as_ref()
+            .unwrap()
+            .interaction_effects[0]
+            .trace
+            .clone();
+        let model_id = non_interaction_section.provenance.model_id.clone();
+        non_interaction_section
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .identification_diagnostics
+            .push(qpls_core::CanonicalIdentificationDiagnosticV1 {
+                diagnostic_id: "identification:unexpected_model_section".into(),
+                trace,
+                scope: qpls_core::CanonicalIdentificationScopeV1::Model,
+                subject_id: model_id,
+                status: qpls_core::CanonicalIdentificationStatusV1::Identified,
+                code: "identified".into(),
+                message: "Unexpected non-interaction result section.".into(),
+                degrees_of_freedom: Some(0),
+            });
+        non_interaction_section.ensure_valid().unwrap();
+        let mut section_project = project;
+        section_project.canonical_result_documents = vec![
+            CanonicalResultDocumentAttachmentV2::from_document(non_interaction_section).unwrap(),
+        ];
+        assert!(matches!(
+            section_project.ensure_valid(),
+            Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
+                if message.contains("point-only General SEM PLS interaction cell")
         ));
     }
 

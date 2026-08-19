@@ -218,15 +218,17 @@ promote the cell to Standard.
 
 | Scope | Verified result | Qualification |
 | --- | ---: | --- |
-| `qpls-core` full suite | 244 passed | Green for current shared topology, exact-cell preflight, plan, and canonical contracts |
-| `qpls-project` full suite | 171 unit + 2 integration passed | Green for current schema-6 authority, persistence, strict reopen, and result binding |
-| `qpls-runner` full suite | 60 passed; 2 intentionally ignored | Green for current bounded point/bootstrap runners |
+| `qpls-core` full suite | 254 passed | Green after merging the mediation and simultaneous two-way moderation compiler, preflight, plan, and canonical contracts |
+| `qpls-estimation` full suite | 166 passed; 1 intentionally ignored | Green for existing estimation plus the joint same- and different-focal two-way moderation point estimator |
+| `qpls-project` full suite | 172 unit + 2 integration passed | Green for schema-6 authority, persistence, strict reopen, result binding, and moderation-plan reconciliation |
+| `qpls-runner` full suite | 62 passed; 2 intentionally ignored | Green for the bounded mediation point/bootstrap runners and moderation point runner |
 | `qpls-resampling` full suite | 115 passed | Green for current bounded deterministic case-bootstrap kernel and regressions |
-| Frontend full Vitest suite | 177 files; 1,387 passed | Green after the connected project mode, strict reopen/data paging, lifecycle recovery, and canonical readback changes |
+| Frontend full Vitest suite | 177 files; 1,388 passed | Green after the combined connected project mode, strict reopen/data paging, lifecycle recovery, mediation readback, and moderation readback changes |
 | Frontend full typecheck | Passed | Repository command `npm run typecheck:full` |
 | Frontend production build | Passed | Repository command `npm run build`; this is not a packaged-Windows acceptance run |
 | `quickpls-desktop` full suite | 168 passed; 1 intentionally ignored | Green for native archive authority, project-mode lifecycle, strict paging, cancellation, one-shot result, and canonical point/bootstrap behavior |
-| Exact new-cell evidence manifest | Passed; 29/29 source descriptors current | Derived `engine_only`; deterministic simulation replay, 14/14 micro-reference checks, focused registry, and complexity gates passed |
+| Exact multiple-mediation evidence manifest | Passed; 29/29 source descriptors current | Derived `engine_only`; deterministic simulation replay, 14/14 micro-reference checks, focused registry, and complexity gates passed |
+| Exact simultaneous two-way moderation Registry cell | Passed | Registered as `partial / engine_only / labs` with `qualification_ready = false`; native calculation publication remains blocked |
 
 These checks establish bounded engine and workflow-plumbing evidence only. The
 same-app new-project authoring and authority-activation journey is connected,
@@ -244,14 +246,16 @@ is implemented and rerun:
   including BCa, one-sided and studentized inference, conditional probes, lazy
   materialization, and any unfrozen interval or tail semantics;
 - conditional-effect probes and moderated-mediation execution;
-- integration of the isolated `codx/sem-multiple-moderation-v1` point slice
-  into this branch and the same-app native workflow. That branch implements
-  simultaneous two-way point estimation with joint same- and different-focal
-  interactions, but moderation bootstrap, three-way execution, authored probes,
-  and moderated mediation remain blocked;
+- native-workflow integration of the simultaneous two-way moderation point
+  slice. Its compiler, joint same- and different-focal point estimator,
+  canonical-result contracts, TypeScript readback, and exact Registry cell are
+  integrated into this branch, but the same-app native calculation workspace
+  does not yet execute or publish that moderation cell. Moderation bootstrap,
+  three-way execution, authored probes, and moderated mediation also remain
+  blocked;
 - release hardening for the now-connected same-app General SEM project flow,
   including packaged-Windows roundtrip, crash recovery during draft promotion,
-  accessibility verification, and full-suite regression evidence;
+  accessibility verification, and cross-runtime acceptance evidence;
 - higher-order-construct expansion and staged estimation beyond the preserved
   legacy bounded workflow;
 - the CB-SEM General runtime adapter, including feedback/nonrecursive models;

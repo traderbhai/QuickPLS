@@ -1,9 +1,10 @@
 use crate::{
-    AnalysisRecipeV4, CapabilityCellReferenceV2, CapabilityRegistryV2, CompiledAnalysisRecipeV4,
-    CompiledPlsPlanV3, CompiledPlsPlanV3Error, CompiledRecipePlanV4, GeneralSemBootstrapIntervalV1,
-    GeneralSemInferenceTailV1, GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1,
-    PlsBootstrapTestTail, RecipeV4CompilationError, RecipeV4CompilerTarget, SemModelV4,
-    compile_analysis_recipe_v4, compile_pls_plan_v3, validate_compiled_analysis_recipe_v4,
+    AnalysisRecipeModelBindingV4, AnalysisRecipeV4, CapabilityCellReferenceV2,
+    CapabilityRegistryV2, CompiledAnalysisRecipeV4, CompiledPlsPlanV3, CompiledPlsPlanV3Error,
+    CompiledRecipePlanV4, GeneralSemBootstrapIntervalV1, GeneralSemInferenceTailV1,
+    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, PlsBootstrapTestTail,
+    RecipeV4CompilationError, RecipeV4CompilerTarget, SemModelV4, compile_analysis_recipe_v4,
+    compile_pls_plan_v3, compile_pls_stage_one_projection_v3, validate_compiled_analysis_recipe_v4,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -12,6 +13,8 @@ pub const GENERAL_SEM_PLS_RECIPE_ARTIFACT_SCHEMA_VERSION_V1: u32 = 1;
 pub const GENERAL_SEM_PLS_RECIPE_COMPILER_VERSION_V1: &str = "recipe_v4_to_compiled_pls_plan_v3_v1";
 pub const GENERAL_SEM_PLS_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1: &str =
     "recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1";
+pub const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_RECIPE_COMPILER_VERSION_V1: &str =
+    "recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_ID_V1: &str = "smartpls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CELL_ID_V1: &str = "qpls3.pls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_VERSION_V1: &str = "pls_mediation_v1";
@@ -20,6 +23,11 @@ pub const PLS_GENERAL_BOOTSTRAP_CELL_ID_V1: &str =
     "qpls3.pls.general_sem_multiple_mediation_bootstrap";
 pub const PLS_GENERAL_BOOTSTRAP_CAPABILITY_VERSION_V1: &str =
     "general_sem_pls_full_model_case_bootstrap_v1";
+pub const PLS_GENERAL_MULTIPLE_MODERATION_CAPABILITY_ID_V1: &str = "smartpls.moderation";
+pub const PLS_GENERAL_MULTIPLE_MODERATION_CELL_ID_V1: &str =
+    "qpls3.pls.general_sem_multiple_two_way_moderation_point";
+pub const PLS_GENERAL_MULTIPLE_MODERATION_CAPABILITY_VERSION_V1: &str =
+    "general_sem_pls_multiple_two_way_moderation_point_v1";
 
 pub fn pls_general_recursive_effects_capability_cell_v1() -> CapabilityCellReferenceV2 {
     CapabilityCellReferenceV2 {
@@ -36,6 +44,15 @@ pub fn pls_general_bootstrap_capability_cell_v1() -> CapabilityCellReferenceV2 {
         capability_id: PLS_GENERAL_BOOTSTRAP_CAPABILITY_ID_V1.into(),
         cell_id: PLS_GENERAL_BOOTSTRAP_CELL_ID_V1.into(),
         capability_version: PLS_GENERAL_BOOTSTRAP_CAPABILITY_VERSION_V1.into(),
+    }
+}
+
+pub fn pls_general_multiple_moderation_point_capability_cell_v1() -> CapabilityCellReferenceV2 {
+    CapabilityCellReferenceV2 {
+        registry_schema_version: 2,
+        capability_id: PLS_GENERAL_MULTIPLE_MODERATION_CAPABILITY_ID_V1.into(),
+        cell_id: PLS_GENERAL_MULTIPLE_MODERATION_CELL_ID_V1.into(),
+        capability_version: PLS_GENERAL_MULTIPLE_MODERATION_CAPABILITY_VERSION_V1.into(),
     }
 }
 
@@ -95,6 +112,18 @@ pub enum GeneralSemPlsRecipeCompilationErrorV1 {
     MissingGeneralSemConfig,
     #[error("General SEM PLS point-estimation v1 does not yet execute conditional probes")]
     ConditionalProbesNotYetExecutable,
+    #[error(
+        "General SEM PLS interaction_v2 point estimation does not yet execute bootstrap inference"
+    )]
+    InteractionBootstrapNotYetExecutable,
+    #[error(
+        "General SEM PLS interaction_v2 point estimation requires an empty requested-effect list"
+    )]
+    InteractionRequestedEffectsNotYetExecutable,
+    #[error(
+        "General SEM PLS interaction_v2 point estimation does not yet execute moderated mediation or other directed chains"
+    )]
+    ModeratedMediationNotYetExecutable,
     #[error("General SEM PLS case-bootstrap v1 executes percentile intervals only")]
     BootstrapIntervalNotYetExecutable,
     #[error("General SEM PLS case-bootstrap v1 executes two-sided inference only")]
@@ -164,33 +193,36 @@ pub fn compile_general_sem_pls_recipe_v1(
         .as_ref()
         .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
     ensure_compilation_scope(recipe, config)?;
-    ensure_capabilities_available(config)?;
+    let model = resolved_model_from_recipe(recipe, resolved_model)?;
+    let plan = compile_pls_plan_v3(model, config)?;
+    ensure_interaction_compilation_scope(config, &plan)?;
+    ensure_capabilities_available(config, &plan)?;
 
     let target = RecipeV4CompilerTarget::PlsPlanV2;
-    let base_recipe = project_general_sem_pls_base_recipe_v1(recipe)?;
+    let (base_recipe, base_model) = project_general_sem_pls_stage_one_recipe_v1(recipe, model)?;
     let base_artifact = compile_analysis_recipe_v4(
         &base_recipe,
-        resolved_model,
+        Some(&base_model),
         target,
         target.capability_cell_for_method(recipe.settings.method),
     )?;
-    let model = resolved_model_from_recipe(recipe, resolved_model)?;
-    let plan = compile_pls_plan_v3(model, config)?;
-    let found = plan.topology().specific_directed_paths().len();
-    match config.inference {
-        GeneralSemInferenceV1::None if found == 0 => {
-            return Err(
-                GeneralSemPlsRecipeCompilationErrorV1::MediationRequiresIndirectPath { found },
-            );
+    if plan.two_way_interactions().is_empty() {
+        let found = plan.topology().specific_directed_paths().len();
+        match config.inference {
+            GeneralSemInferenceV1::None if found == 0 => {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::MediationRequiresIndirectPath { found },
+                );
+            }
+            GeneralSemInferenceV1::CaseBootstrap { .. } if found < 2 => {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::MultipleMediationRequiresTwoIndirectPaths {
+                        found,
+                    },
+                );
+            }
+            _ => {}
         }
-        GeneralSemInferenceV1::CaseBootstrap { .. } if found < 2 => {
-            return Err(
-                GeneralSemPlsRecipeCompilationErrorV1::MultipleMediationRequiresTwoIndirectPaths {
-                    found,
-                },
-            );
-        }
-        _ => {}
     }
     let CompiledRecipePlanV4::PlsPlanV2 { plan: base_plan } = base_artifact.plan() else {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::BasePlanMismatch);
@@ -199,8 +231,8 @@ pub fn compile_general_sem_pls_recipe_v1(
         return Err(GeneralSemPlsRecipeCompilationErrorV1::BasePlanMismatch);
     }
 
-    let capability_cell = pls_general_recursive_effects_capability_cell_v1();
-    let compiler_version = compiler_version_for_config(config);
+    let capability_cell = capability_cell_for_plan(&plan);
+    let compiler_version = compiler_version_for_plan(config, &plan);
     let recipe_analytical_sha256 = crate::recipe_v4_analytical_sha256(recipe, model)?;
     let general_sem_config_sha256 = plan.general_sem_config_sha256().to_string();
     let artifact_identity_sha256 = hash_serializable(&GeneralSemArtifactIdentityV1 {
@@ -234,9 +266,12 @@ pub fn validate_compiled_general_sem_pls_recipe_v1(
         .as_ref()
         .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
     ensure_compilation_scope(recipe, config)?;
+    let model = resolved_model_from_recipe(recipe, resolved_model)?;
+    let expected_plan = compile_pls_plan_v3(model, config)?;
+    ensure_interaction_compilation_scope(config, &expected_plan)?;
     if artifact.schema_version != GENERAL_SEM_PLS_RECIPE_ARTIFACT_SCHEMA_VERSION_V1
-        || artifact.compiler_version != compiler_version_for_config(config)
-        || artifact.capability_cell != pls_general_recursive_effects_capability_cell_v1()
+        || artifact.compiler_version != compiler_version_for_plan(config, &expected_plan)
+        || artifact.capability_cell != capability_cell_for_plan(&expected_plan)
         || artifact.recipe_analytical_sha256
             != crate::recipe_v4_analytical_sha256(
                 recipe,
@@ -247,8 +282,12 @@ pub fn validate_compiled_general_sem_pls_recipe_v1(
     {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::InvalidArtifactContract);
     }
-    let base_recipe = project_general_sem_pls_base_recipe_v1(recipe)?;
-    validate_compiled_analysis_recipe_v4(artifact.base_artifact(), &base_recipe, resolved_model)?;
+    let (base_recipe, base_model) = project_general_sem_pls_stage_one_recipe_v1(recipe, model)?;
+    validate_compiled_analysis_recipe_v4(
+        artifact.base_artifact(),
+        &base_recipe,
+        Some(&base_model),
+    )?;
     let expected = compile_general_sem_pls_recipe_v1(recipe, resolved_model)?;
     if *artifact != expected {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::ArtifactMismatch);
@@ -370,7 +409,37 @@ pub fn project_general_sem_pls_base_recipe_v1(
     Ok(base_recipe)
 }
 
-fn compiler_version_for_config(config: &crate::GeneralSemConfigV1) -> &'static str {
+/// Projects an interaction-bearing General SEM recipe to the exact ordinary
+/// PLS model used only for shared stage-one construct scoring. The source
+/// recipe/model remain authoritative in the outer compiled artifact.
+pub fn project_general_sem_pls_stage_one_recipe_v1(
+    recipe: &AnalysisRecipeV4,
+    source_model: &SemModelV4,
+) -> Result<(AnalysisRecipeV4, SemModelV4), GeneralSemPlsRecipeCompilationErrorV1> {
+    let mut stage_one_recipe = project_general_sem_pls_base_recipe_v1(recipe)?;
+    let projection =
+        compile_pls_stage_one_projection_v3(source_model).map_err(CompiledPlsPlanV3Error::from)?;
+    if projection.source_scientific_sha256() == projection.projected_scientific_sha256() {
+        return Ok((stage_one_recipe, source_model.clone()));
+    }
+    let stage_one_model = projection.projected_model().clone();
+    stage_one_recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+        scientific_sha256: projection.projected_scientific_sha256().to_string(),
+        model: stage_one_model.clone(),
+    };
+    stage_one_recipe
+        .ensure_valid()
+        .map_err(RecipeV4CompilationError::from)?;
+    Ok((stage_one_recipe, stage_one_model))
+}
+
+fn compiler_version_for_plan(
+    config: &crate::GeneralSemConfigV1,
+    plan: &CompiledPlsPlanV3,
+) -> &'static str {
+    if !plan.two_way_interactions().is_empty() {
+        return GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_RECIPE_COMPILER_VERSION_V1;
+    }
     match config.inference {
         GeneralSemInferenceV1::None => GENERAL_SEM_PLS_RECIPE_COMPILER_VERSION_V1,
         GeneralSemInferenceV1::CaseBootstrap { .. } => {
@@ -381,8 +450,9 @@ fn compiler_version_for_config(config: &crate::GeneralSemConfigV1) -> &'static s
 
 fn ensure_capabilities_available(
     config: &crate::GeneralSemConfigV1,
+    plan: &CompiledPlsPlanV3,
 ) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
-    let mut expected_cells = vec![pls_general_recursive_effects_capability_cell_v1()];
+    let mut expected_cells = vec![capability_cell_for_plan(plan)];
     if matches!(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
@@ -402,6 +472,35 @@ fn ensure_capabilities_available(
         if !available {
             return Err(GeneralSemPlsRecipeCompilationErrorV1::CapabilityUnavailable);
         }
+    }
+    Ok(())
+}
+
+fn capability_cell_for_plan(plan: &CompiledPlsPlanV3) -> CapabilityCellReferenceV2 {
+    if plan.two_way_interactions().is_empty() {
+        pls_general_recursive_effects_capability_cell_v1()
+    } else {
+        pls_general_multiple_moderation_point_capability_cell_v1()
+    }
+}
+
+fn ensure_interaction_compilation_scope(
+    config: &crate::GeneralSemConfigV1,
+    plan: &CompiledPlsPlanV3,
+) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
+    if plan.two_way_interactions().is_empty() {
+        return Ok(());
+    }
+    if !matches!(config.inference, GeneralSemInferenceV1::None) {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::InteractionBootstrapNotYetExecutable);
+    }
+    if !config.requested_effect_estimands.is_empty() {
+        return Err(
+            GeneralSemPlsRecipeCompilationErrorV1::InteractionRequestedEffectsNotYetExecutable,
+        );
+    }
+    if !plan.topology().specific_directed_paths().is_empty() {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationNotYetExecutable);
     }
     Ok(())
 }
@@ -453,7 +552,9 @@ mod tests {
     use crate::{
         ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe,
         AnalysisRecipeModelBindingV4, AnalysisSettings, Construct, GeneralSemConfigV1,
-        LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig, ModelSpec, StructuralPath,
+        InteractionHierarchyPolicyV2, InteractionMethodV4, LegacyBasicModelInterpretationV4,
+        MeasurementMode, MethodConfig, ModelSpec, SemDerivedTermV4, SemParameterTargetV4,
+        SemParameterV4, SemRelationV4, SemVariableV4, StructuralPath, StructuralRelationRoleV4,
         confirm_legacy_recipe_estimand_v4, migrate_analysis_recipe_to_v4_pending,
     };
     use chrono::{TimeZone, Utc};
@@ -523,6 +624,129 @@ mod tests {
         (recipe, model)
     }
 
+    fn add_compiler_interaction(
+        model: &mut SemModelV4,
+        interaction_id: &str,
+        focal_predictor_id: &str,
+        moderator_id: &str,
+    ) {
+        let focal_relation = model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                SemRelationV4::Structural {
+                    id, source, target, ..
+                } if source == focal_predictor_id && target == "construct:y" => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let output = format!("derived:{interaction_id}");
+        let effect_relation = format!("relation:{interaction_id}:effect");
+        let effect_parameter = format!("parameter:{interaction_id}:effect");
+        model.variables.push(SemVariableV4::Derived {
+            id: output.clone(),
+            label: interaction_id.into(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: effect_relation,
+            source: output.clone(),
+            target: "construct:y".into(),
+            parameter: effect_parameter.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: effect_parameter,
+            label: format!("{interaction_id} -> Y"),
+            target: SemParameterTargetV4::Regression {
+                source: output.clone(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+            id: interaction_id.into(),
+            output,
+            operands: vec![focal_predictor_id.into(), moderator_id.into()],
+            focal_relation,
+            method: InteractionMethodV4::TwoStage,
+            hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+            product_indicator: None,
+        });
+        model.ensure_valid().unwrap();
+    }
+
+    fn interaction_recipe_and_model() -> (AnalysisRecipeV4, SemModelV4) {
+        let source_model = ModelSpec {
+            id: Uuid::from_u128(0x5031_53a0),
+            name: "Compiler multiple moderation fixture".into(),
+            constructs: ["x", "w", "z", "y"]
+                .into_iter()
+                .map(|id| Construct {
+                    id: id.into(),
+                    name: id.to_uppercase(),
+                    short_name: id.to_uppercase(),
+                    mode: MeasurementMode::Reflective,
+                    indicators: vec![format!("{id}1"), format!("{id}2")],
+                })
+                .collect(),
+            paths: [("x", "y"), ("w", "y"), ("z", "y")]
+                .into_iter()
+                .map(|(source, target)| StructuralPath {
+                    source: source.into(),
+                    target: target.into(),
+                })
+                .collect(),
+            controls: Vec::new(),
+            higher_order_constructs: Vec::new(),
+            interactions: Vec::new(),
+        };
+        let legacy = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: Uuid::from_u128(0x5031_53a1),
+            created_at: Utc.timestamp_opt(1_700_000_000, 0).unwrap(),
+            dataset_fingerprint: "dataset-fingerprint".into(),
+            model: source_model.clone(),
+            settings: AnalysisSettings {
+                method: AnalysisMethod::PlsPm,
+                ..AnalysisSettings::default()
+            },
+            method_config: Some(MethodConfig::PlsAlgorithm),
+            metadata: BTreeMap::new(),
+        };
+        let pending = migrate_analysis_recipe_to_v4_pending(&legacy).unwrap();
+        let (mut recipe, mut model) = confirm_legacy_recipe_estimand_v4(
+            &pending,
+            &source_model,
+            &[],
+            LegacyBasicModelInterpretationV4::PlsComposite,
+        )
+        .unwrap();
+        add_compiler_interaction(
+            &mut model,
+            "interaction:x_by_w",
+            "construct:x",
+            "construct:w",
+        );
+        add_compiler_interaction(
+            &mut model,
+            "interaction:x_by_z",
+            "construct:x",
+            "construct:z",
+        );
+        recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+            scientific_sha256: model.scientific_sha256().unwrap(),
+            model: model.clone(),
+        };
+        recipe.general_sem_config = Some(GeneralSemConfigV1::default());
+        recipe.ensure_valid().unwrap();
+        (recipe, model)
+    }
+
     fn configure_percentile_bootstrap(recipe: &mut AnalysisRecipeV4) {
         let inference = GeneralSemInferenceV1::CaseBootstrap {
             resamples: 500,
@@ -565,6 +789,92 @@ mod tests {
         assert_eq!(
             validate_compiled_general_sem_pls_recipe_v1(&tampered, &recipe, Some(&model)),
             Err(GeneralSemPlsRecipeCompilationErrorV1::ArtifactMismatch)
+        );
+    }
+
+    #[test]
+    fn multiple_moderation_compilation_projects_one_shared_stage_one_model() {
+        let (recipe, model) = interaction_recipe_and_model();
+        let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+        assert_eq!(artifact.plan().two_way_interactions().len(), 2);
+        assert_eq!(
+            artifact.compiler_version(),
+            GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_RECIPE_COMPILER_VERSION_V1
+        );
+        assert_eq!(
+            artifact.capability_cell(),
+            &pls_general_multiple_moderation_point_capability_cell_v1()
+        );
+        let (stage_one_recipe, stage_one_model) =
+            project_general_sem_pls_stage_one_recipe_v1(&recipe, &model).unwrap();
+        assert!(stage_one_model.derived_terms.is_empty());
+        assert_eq!(
+            stage_one_model.scientific_sha256().unwrap(),
+            artifact
+                .plan()
+                .stage_one_projection_scientific_sha256()
+                .unwrap()
+        );
+        assert_ne!(
+            artifact.plan().scientific_hash(),
+            stage_one_model.scientific_sha256().unwrap()
+        );
+        validate_compiled_analysis_recipe_v4(
+            artifact.base_artifact(),
+            &stage_one_recipe,
+            Some(&stage_one_model),
+        )
+        .unwrap();
+        validate_compiled_general_sem_pls_recipe_v1(&artifact, &recipe, Some(&model)).unwrap();
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model))
+                .unwrap()
+                .artifact_identity_sha256(),
+            artifact.artifact_identity_sha256()
+        );
+    }
+
+    #[test]
+    fn interaction_bootstrap_and_directed_chains_remain_typed_blocked() {
+        let (mut recipe, model) = interaction_recipe_and_model();
+        configure_percentile_bootstrap(&mut recipe);
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::InteractionBootstrapNotYetExecutable)
+        );
+
+        let (mut recipe, mut model) = interaction_recipe_and_model();
+        let chain_parameter = "parameter:chain:x_to_w".to_string();
+        model.relations.push(SemRelationV4::Structural {
+            id: "relation:chain:x_to_w".into(),
+            source: "construct:x".into(),
+            target: "construct:w".into(),
+            parameter: chain_parameter.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: chain_parameter,
+            label: "X -> W".into(),
+            target: SemParameterTargetV4::Regression {
+                source: "construct:x".into(),
+                target: "construct:w".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.ensure_valid().unwrap();
+        recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+            scientific_sha256: model.scientific_sha256().unwrap(),
+            model: model.clone(),
+        };
+        recipe.ensure_valid().unwrap();
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationNotYetExecutable)
         );
     }
 

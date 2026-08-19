@@ -5,7 +5,7 @@
   "feature_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
   "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
   "catalogue_snapshot_date": "2026-08-19",
-  "generated_at_utc": "2026-08-19T06:51:13.317569Z",
+  "generated_at_utc": "2026-08-19T07:58:59.0449150Z",
   "passed": true,
   "qualification_ready": false,
   "evidence_scope": "engine_only_contract_micro_reference_boundary_and_source_binding",
@@ -36,28 +36,28 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-core/src/canonical_result_v2.rs",
-      "size": 153113,
-      "sha256": "868d5c348cb5e57d2096e5797b493380ed7029d9932680febd6fc300ff121d57"
+      "size": 180728,
+      "sha256": "7caa8aaf52940a767172c4b17e333a67e62e35c489bb36c6dfc03e475f4a2dcc"
     },
     {
       "path": "crates/qpls-core/src/compiled_pls_plan_v3.rs",
-      "size": 22219,
-      "sha256": "86a0015b54f9d14fa33d7723dee56c2522f45cb3f03e6f33f0e9985613bed027"
+      "size": 53453,
+      "sha256": "6edfb1849c361eaaf10847a664cbe42263d3465a3de368e2a9c7078154eb37c6"
     },
     {
       "path": "crates/qpls-core/src/general_sem_capability_preflight_v1.rs",
-      "size": 35513,
-      "sha256": "ffbc965602f5dc0594c3764af1cdb96569e9c893fcb1a679291a676bc608f6b4"
+      "size": 50058,
+      "sha256": "9b4d7251c42b1a768481d61113f95d8f97f5f63b0e77e494b3a34ad7956b2c16"
     },
     {
       "path": "crates/qpls-core/src/general_sem_recipe_compiler_v1.rs",
-      "size": 33205,
-      "sha256": "aaa12f886c7fd1c26cfb38f1587aa734fbebd103f13cb3a2b13f590bea716b1a"
+      "size": 45957,
+      "sha256": "f6274d7716a7d46e4723d24e6f07df779e1b154eefc820a0f60ad5143378718b"
     },
     {
       "path": "crates/qpls-project/src/project_schema_v6.rs",
-      "size": 410819,
-      "sha256": "4e347f7c8c46e06277f661110cefc2d2b73201642238bab9b76d504ca0a72073"
+      "size": 430232,
+      "sha256": "33e90654498204f4d90b1df80b84b650faf9cc6cd04a2a80b69ce829fd882c4f"
     },
     {
       "path": "crates/qpls-resampling/src/general_sem_pls_bootstrap_v1.rs",
@@ -66,8 +66,8 @@
     },
     {
       "path": "crates/qpls-runner/src/recipe_v4_general_sem_pls_execution.rs",
-      "size": 48229,
-      "sha256": "b5e10a78c4ff247caa513bc8e1139185fb7f3d0af01c993fbf0cc171081440fe"
+      "size": 73847,
+      "sha256": "d135c37f4937038765d80fb86347673aef6cab61046e69649bc5a7782cfdffe0"
     },
     {
       "path": "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MEDIATION_BOOTSTRAP_V1.md",
@@ -96,8 +96,8 @@
     },
     {
       "path": "src/domain/canonicalGeneralSemResultsV1.ts",
-      "size": 63521,
-      "sha256": "e33866d6e9692593d6e2df7a87b90f2d35d78e70726535300cb5961ae5cf620b"
+      "size": 80497,
+      "sha256": "cbb795d33fe06615a3defe3b77d4693d8b15d128b8d67b5d2d802216a4c91c96"
     },
     {
       "path": "src/domain/generalSemCapabilityPreflightV1.test.ts",

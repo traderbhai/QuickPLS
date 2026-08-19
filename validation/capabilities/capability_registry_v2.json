@@ -1,7 +1,7 @@
 {
   "registry_schema_version": 2,
   "registry_id": "quickpls.capability_registry.v2",
-  "registry_version": "2.3.0",
+  "registry_version": "2.4.0",
   "frozen_on": "2026-08-19",
   "catalogue_snapshot": {
     "provider": "SmartPLS GmbH",
@@ -4856,7 +4856,7 @@
       "official_lifecycle": "active",
       "official_url": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
       "coverage_state": "partial",
-      "evidence_state": "archive_qualified",
+      "evidence_state": "engine_only",
       "surface": "labs",
       "product_areas": [
         "diagram",
@@ -4906,7 +4906,7 @@
           "scope:bounded"
         ]
       },
-      "scope_statement": "One two-way interaction on an existing recursive PLS path using the bounded standardized two-stage score workflow and simple slopes at -1, 0, and +1.",
+      "scope_statement": "Bounded standardized two-stage PLS moderation: the established single-interaction workflow plus an Experimental Labs point-only General SEM cell that jointly estimates one or more interaction_v2 terms on a direct-only structural graph and reports product-scale receipts, interaction coefficients, conditional slopes, and plots at standardized -1, 0, and +1.",
       "settings_references": [
         "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/"
       ],
@@ -4925,7 +4925,8 @@
       },
       "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
       "qualification_references": [
-        "validation/methods/moderation_v1.manifest.json"
+        "validation/methods/moderation_v1.manifest.json",
+        "validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json"
       ],
       "qualification_links": [
         {
@@ -4933,11 +4934,18 @@
           "capability_id": "smartpls.moderation",
           "cell_id": "qpls3.pls.moderation",
           "capability_version": "pls_two_stage_moderation_v1"
+        },
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.moderation",
+          "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+          "capability_version": "general_sem_pls_multiple_two_way_moderation_point_v1"
         }
       ],
       "qualification_spec": {
         "references": [
-          "validation/methods/moderation_v1.manifest.json"
+          "validation/methods/moderation_v1.manifest.json",
+          "validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json"
         ],
         "links": [
           {
@@ -4945,11 +4953,17 @@
             "capability_id": "smartpls.moderation",
             "cell_id": "qpls3.pls.moderation",
             "capability_version": "pls_two_stage_moderation_v1"
+          },
+          {
+            "registry_schema_version": 2,
+            "capability_id": "smartpls.moderation",
+            "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+            "capability_version": "general_sem_pls_multiple_two_way_moderation_point_v1"
           }
         ]
       },
       "known_differences": [
-        "Create current method-scoped release evidence; multiple interactions, three-way interactions, arbitrary probing values, and broader interaction systems remain excluded."
+        "The General SEM simultaneous cell is point-only and engine-only in Labs; bootstrap inference, three-way interactions, authored arbitrary probe policies, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
       ],
       "legacy_row": {
         "id": "smartpls.moderation",
@@ -4960,16 +4974,17 @@
         "priority": "P1",
         "target_release": "2.49.0",
         "competitor_scope": true,
-        "quickpls_scope": "One two-way interaction on an existing recursive PLS path using the bounded standardized two-stage score workflow and simple slopes at -1, 0, and +1.",
+        "quickpls_scope": "Bounded standardized two-stage PLS moderation: the established single-interaction workflow plus an Experimental Labs point-only General SEM cell that jointly estimates one or more interaction_v2 terms on a direct-only structural graph and reports product-scale receipts, interaction coefficients, conditional slopes, and plots at standardized -1, 0, and +1.",
         "quickpls_capability_ids": [
-          "qpls3.pls.moderation"
+          "qpls3.pls.moderation",
+          "qpls3.pls.general_sem_multiple_two_way_moderation_point"
         ],
         "implementation_evidence": [],
         "dependencies": [
           "smartpls.pls_algorithm",
           "smartpls.pls_bootstrapping"
         ],
-        "remaining_gap": "Create current method-scoped release evidence; multiple interactions, three-way interactions, arbitrary probing values, and broader interaction systems remain excluded."
+        "remaining_gap": "The General SEM simultaneous cell is point-only and engine-only in Labs; bootstrap inference, three-way interactions, authored arbitrary probe policies, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
       },
       "option_cells": [
         {
@@ -5025,6 +5040,72 @@
           },
           "known_differences": [
             "Create current method-scoped release evidence; multiple interactions, three-way interactions, arbitrary probing values, and broader interaction systems remain excluded."
+          ]
+        },
+        {
+          "capability_id": "smartpls.moderation",
+          "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+          "capability_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+          "coverage_state": "partial",
+          "evidence_state": "engine_only",
+          "surface": "labs",
+          "supported_model_predicate": {
+            "official": [
+              "model_family:pls_sem",
+              "relationship:interaction"
+            ],
+            "quickpls": [
+              "schema_generation:general_sem_v1",
+              "derived_term:interaction_v2",
+              "interaction_order:two_way",
+              "construction:two_stage",
+              "hierarchy:strong",
+              "interaction_count:one_or_more",
+              "structural_topology:direct_only_acyclic",
+              "inference:point_only"
+            ]
+          },
+          "supported_data_predicate": {
+            "official": [
+              "input:raw_numeric",
+              "missing_data:method_defined"
+            ],
+            "quickpls": [
+              "input:raw_continuous",
+              "missing_data:listwise",
+              "weights:none",
+              "groups:single"
+            ]
+          },
+          "settings_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+              "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_V1.md"
+            ]
+          },
+          "result_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+              "crates/qpls-core/src/canonical_result_v2.rs",
+              "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_V1.md"
+            ]
+          },
+          "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+          "qualification_spec": {
+            "references": [
+              "validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json"
+            ],
+            "links": [
+              {
+                "registry_schema_version": 2,
+                "capability_id": "smartpls.moderation",
+                "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+                "capability_version": "general_sem_pls_multiple_two_way_moderation_point_v1"
+              }
+            ]
+          },
+          "known_differences": [
+            "This engine-only Labs cell publishes descriptive point estimates only; bootstrap inference, three-way moderation, moderated mediation, directed chains, and authored arbitrary probe values are blocked."
           ]
         }
       ]

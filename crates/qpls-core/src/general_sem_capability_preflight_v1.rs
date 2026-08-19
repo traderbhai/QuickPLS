@@ -1,11 +1,12 @@
 use crate::{
-    CompiledCbsemExecutionDispositionV3, CompiledCbsemStructuralFormV3, CompiledPlsPlanV3Error,
+    CompiledCbsemExecutionDispositionV3, CompiledCbsemStructuralFormV3,
+    CompiledPlsInteractionV3Error, CompiledPlsPlanV3, CompiledPlsPlanV3Error,
     GeneralSemBootstrapIntervalV1, GeneralSemConfigV1, GeneralSemInferenceTailV1,
     GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicyV4,
     ObservedScaleV4, SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
     SemCapabilityDecisionV1ValidationError, SemCapabilityDiagnosticSeverityV1,
-    SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1, SemDataBindingV4, SemGroupV4, SemModelV4,
-    SemVariableV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
+    SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1, SemDataBindingV4, SemDerivedTermV4,
+    SemGroupV4, SemModelV4, SemVariableV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
 };
 
 pub const GENERAL_SEM_PLS_ESTIMATOR_ID_V1: &str = "qpls.pls_sem.v3";
@@ -18,17 +19,30 @@ pub fn preflight_general_sem_pls_v1(
     model: &SemModelV4,
     config: &GeneralSemConfigV1,
 ) -> Result<SemCapabilityDecisionV1, SemCapabilityDecisionV1ValidationError> {
-    let capability_cells = pls_cells(config)?;
-    let mut evidence = vec![
-        SemCapabilityEvidenceV1::new(
+    let has_interactions = model
+        .derived_terms
+        .iter()
+        .any(|term| matches!(term, SemDerivedTermV4::InteractionV2 { .. }));
+    let capability_cells = pls_cells(has_interactions, config)?;
+    let mut evidence = vec![SemCapabilityEvidenceV1::new(
+        "compiler:recipe_v4_to_compiled_pls_plan_v3_v1",
+        "The versioned PLS v3 compiler preserves the proven v2 scoring plan and adds stable topology and effect identities.",
+    )?];
+    if has_interactions {
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1",
+            "The bounded compiler projects one shared stage-one score model and jointly solves every qualified two-way interaction in each stage-two equation.",
+        )?);
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_point:general_sem_pls_multiple_two_way_moderation_point_v1",
+            "Capability Registry V2 exposes the exact simultaneous interaction_v2 point-estimation option in Experimental Labs.",
+        )?);
+    } else {
+        evidence.push(SemCapabilityEvidenceV1::new(
             "capability_registry_v2:smartpls.mediation:qpls3.pls.mediation:pls_mediation_v1",
             "Capability Registry V2 exposes the exact mediation option in Experimental Labs.",
-        )?,
-        SemCapabilityEvidenceV1::new(
-            "compiler:recipe_v4_to_compiled_pls_plan_v3_v1",
-            "The versioned PLS v3 compiler preserves the proven v2 scoring plan and adds stable topology and effect identities.",
-        )?,
-    ];
+        )?);
+    }
     if matches!(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
@@ -46,36 +60,40 @@ pub fn preflight_general_sem_pls_v1(
             "The exact General SEM cell uses the separately governed indexed case-resampling mechanism without inheriting that mechanism cell's release maturity.",
         )?);
     }
-    let mut diagnostics = execution_scope_diagnostics(model, config)?;
+    let mut diagnostics = execution_scope_diagnostics(model, config, has_interactions)?;
     match compile_pls_plan_v3(model, config) {
         Ok(plan) => {
-            let found = plan.topology().specific_directed_paths().len();
-            match config.inference {
-                GeneralSemInferenceV1::None if found == 0 => {
-                    diagnostics.push(SemCapabilityDiagnosticV1::new(
-                        "sem.capability.pls.mediation_requires_indirect_path",
-                        SemCapabilityDiagnosticSeverityV1::Error,
-                        None,
-                        "The PLS mediation point cell requires at least one compiled specific indirect path; this graph has none.",
-                        vec![
-                            "Add a supported mediator path, or use the existing ordinary PLS workflow for a direct-only recursive model.".into(),
-                        ],
-                    )?);
+            if has_interactions {
+                diagnostics.extend(interaction_scope_diagnostics(config, &plan)?);
+            } else {
+                let found = plan.topology().specific_directed_paths().len();
+                match config.inference {
+                    GeneralSemInferenceV1::None if found == 0 => {
+                        diagnostics.push(SemCapabilityDiagnosticV1::new(
+                            "sem.capability.pls.mediation_requires_indirect_path",
+                            SemCapabilityDiagnosticSeverityV1::Error,
+                            None,
+                            "The PLS mediation point cell requires at least one compiled specific indirect path; this graph has none.",
+                            vec![
+                                "Add a supported mediator path, or use the existing ordinary PLS workflow for a direct-only recursive model.".into(),
+                            ],
+                        )?);
+                    }
+                    GeneralSemInferenceV1::CaseBootstrap { .. } if found < 2 => {
+                        diagnostics.push(SemCapabilityDiagnosticV1::new(
+                            "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
+                            SemCapabilityDiagnosticSeverityV1::Error,
+                            None,
+                            format!(
+                                "The exact multiple-mediation bootstrap cell requires at least two compiled specific indirect paths; this graph has {found}."
+                            ),
+                            vec![
+                                "Add a second supported parallel or serial mediation path, or use point inference under the mediation cell until a single-mediation bootstrap cell is separately governed.".into(),
+                            ],
+                        )?);
+                    }
+                    _ => {}
                 }
-                GeneralSemInferenceV1::CaseBootstrap { .. } if found < 2 => {
-                    diagnostics.push(SemCapabilityDiagnosticV1::new(
-                        "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
-                        SemCapabilityDiagnosticSeverityV1::Error,
-                        None,
-                        format!(
-                            "The exact multiple-mediation bootstrap cell requires at least two compiled specific indirect paths; this graph has {found}."
-                        ),
-                        vec![
-                            "Add a second supported parallel or serial mediation path, or use point inference under the mediation cell until a single-mediation bootstrap cell is separately governed.".into(),
-                        ],
-                    )?);
-                }
-                _ => {}
             }
         }
         Err(error) => diagnostics.push(pls_compile_diagnostic(error)?),
@@ -99,24 +117,32 @@ pub fn preflight_general_sem_pls_v1(
             "sem.capability.pls.experimental_labs",
             SemCapabilityDiagnosticSeverityV1::Info,
             None,
-            match config.inference {
-                GeneralSemInferenceV1::None => {
-                    "General recursive PLS point estimation and path-specific effects pass the Experimental Labs compiler preflight."
-                }
-                GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                    "General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+            if has_interactions {
+                "General SEM simultaneous two-way moderation point estimation passes the Experimental Labs compiler preflight."
+            } else {
+                match config.inference {
+                    GeneralSemInferenceV1::None => {
+                        "General recursive PLS point estimation and path-specific effects pass the Experimental Labs compiler preflight."
+                    }
+                    GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                        "General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                    }
                 }
             },
             Vec::new(),
         )?],
         evidence,
         "PLS-SEM can compile this exact request in Experimental Labs.",
-        match config.inference {
-            GeneralSemInferenceV1::None => {
-                "The compiler binds the proven PLS scoring plan to stable relation-path identities. Runtime validation remains authoritative before a result can be published."
-            }
-            GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                "The compiler binds percentile, two-sided case resampling to the exact multiple-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
+        if has_interactions {
+            "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
+        } else {
+            match config.inference {
+                GeneralSemInferenceV1::None => {
+                    "The compiler binds the proven PLS scoring plan to stable relation-path identities. Runtime validation remains authoritative before a result can be published."
+                }
+                GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                    "The compiler binds percentile, two-sided case resampling to the exact multiple-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
+                }
             }
         },
     )
@@ -191,6 +217,7 @@ pub fn preflight_general_sem_cbsem_v1(
 fn execution_scope_diagnostics(
     model: &SemModelV4,
     config: &GeneralSemConfigV1,
+    has_interactions: bool,
 ) -> Result<Vec<SemCapabilityDiagnosticV1>, SemCapabilityDecisionV1ValidationError> {
     let mut diagnostics = Vec::new();
     match &model.data_binding {
@@ -271,7 +298,11 @@ fn execution_scope_diagnostics(
             "sem.capability.pls.conditional_probes_not_executable",
             SemCapabilityDiagnosticSeverityV1::Error,
             None,
-            "Conditional-effect probes are authored but are not executable in the current PLS v3 point-estimation slice.",
+            if has_interactions {
+                "Authored probe policies are preserved, but the first interaction_v2 point cell uses the frozen standardized -1/0/+1 policy only."
+            } else {
+                "Conditional-effect probes are authored but are not executable in the current PLS v3 point-estimation slice."
+            },
             vec![
                 "Remove the probe request for point estimation, or wait for the qualified moderation execution cell.".into(),
             ],
@@ -318,6 +349,50 @@ fn execution_scope_diagnostics(
     Ok(diagnostics)
 }
 
+fn interaction_scope_diagnostics(
+    config: &GeneralSemConfigV1,
+    plan: &CompiledPlsPlanV3,
+) -> Result<Vec<SemCapabilityDiagnosticV1>, SemCapabilityDecisionV1ValidationError> {
+    if plan.two_way_interactions().is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut diagnostics = Vec::new();
+    if !matches!(config.inference, GeneralSemInferenceV1::None) {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.pls.multiple_moderation_bootstrap_not_executable",
+            SemCapabilityDiagnosticSeverityV1::Error,
+            None,
+            "Simultaneous interaction_v2 bootstrap inference is not qualified in the current point-only cell.",
+            vec![
+                "Set General SEM inference to none for descriptive point estimation, or keep the request in Labs until complete-model interaction resampling is qualified.".into(),
+            ],
+        )?);
+    }
+    if !config.requested_effect_estimands.is_empty() {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.pls.multiple_moderation_effect_requests_not_executable",
+            SemCapabilityDiagnosticSeverityV1::Error,
+            None,
+            "Mediation-effect requests cannot be combined with the first simultaneous interaction_v2 point cell.",
+            vec![
+                "Clear requested indirect/total effects and calculate moderation point estimates only, or retain the model until the combined estimand cell is qualified.".into(),
+            ],
+        )?);
+    }
+    if !plan.topology().specific_directed_paths().is_empty() {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.pls.moderated_mediation_not_executable",
+            SemCapabilityDiagnosticSeverityV1::Error,
+            None,
+            "A directed chain is present, so this graph may imply moderated mediation outside the bounded moderation-only point cell.",
+            vec![
+                "Use a direct-only structural graph for this point cell, or retain the authored chain until moderated-mediation execution is qualified.".into(),
+            ],
+        )?);
+    }
+    Ok(diagnostics)
+}
+
 fn pls_compile_diagnostic(
     error: CompiledPlsPlanV3Error,
 ) -> Result<SemCapabilityDiagnosticV1, SemCapabilityDecisionV1ValidationError> {
@@ -346,6 +421,28 @@ fn pls_compile_diagnostic(
             "sem.capability.pls.model_shape_not_executable",
             "Review generated terms and construct types in the estimator compatibility inspector; unsupported semantics will remain saved.",
         ),
+        CompiledPlsPlanV3Error::Interaction(error) => match error {
+            CompiledPlsInteractionV3Error::UnsupportedInteractionOrder { .. } => (
+                "sem.capability.pls.interaction_order_not_executable",
+                "Use exactly two operands per interaction_v2 term; three-way and higher-order moderation remain blocked.",
+            ),
+            CompiledPlsInteractionV3Error::UnsupportedInteractionMethod { .. } => (
+                "sem.capability.pls.interaction_method_not_executable",
+                "Choose the two-stage interaction construction method for this bounded point cell.",
+            ),
+            CompiledPlsInteractionV3Error::UnsupportedInteractionHierarchy { .. } => (
+                "sem.capability.pls.interaction_hierarchy_not_executable",
+                "Use strong hierarchy and retain every required lower-order path.",
+            ),
+            CompiledPlsInteractionV3Error::DuplicateInteractionProductDesign { .. } => (
+                "sem.capability.pls.duplicate_interaction_product_design",
+                "Keep one two-way product per operand pair and outcome under the fixed two-stage sample-standardized policy; its authored operand order still defines the focal predictor and moderator roles.",
+            ),
+            _ => (
+                "sem.capability.pls.interaction_shape_not_executable",
+                "Review the interaction output, effect relation, parameter, and generated-column identities in the compatibility inspector.",
+            ),
+        },
         CompiledPlsPlanV3Error::Topology(_) => (
             "sem.capability.pls.topology_not_compilable",
             "Resolve the reported path-limit or topology issue without deleting unsupported semantics silently.",
@@ -382,10 +479,25 @@ fn pls_bootstrap_cell() -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1
     )
 }
 
+fn pls_multiple_moderation_point_cell()
+-> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    SemCapabilityCellIdV1::new(
+        2,
+        "smartpls.moderation",
+        "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+        "general_sem_pls_multiple_two_way_moderation_point_v1",
+    )
+}
+
 fn pls_cells(
+    has_interactions: bool,
     config: &GeneralSemConfigV1,
 ) -> Result<Vec<SemCapabilityCellIdV1>, SemCapabilityDecisionV1ValidationError> {
-    let mut cells = vec![pls_cell()?];
+    let mut cells = if has_interactions {
+        vec![pls_multiple_moderation_point_cell()?]
+    } else {
+        vec![pls_cell()?]
+    };
     if matches!(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
@@ -403,9 +515,11 @@ fn cbsem_cell() -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1Validati
 mod tests {
     use super::*;
     use crate::{
-        Construct, LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec, ObservedRoleV4,
-        ObservedTransformationOperationV4, ObservedTransformationStepV4, SemWeightBindingV4,
-        StructuralPath, convert_legacy_basic_model_v4,
+        Construct, InteractionHierarchyPolicyV2, InteractionMethodV4,
+        LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec, ObservedRoleV4,
+        ObservedTransformationOperationV4, ObservedTransformationStepV4, SemParameterTargetV4,
+        SemParameterV4, SemRelationV4, SemWeightBindingV4, StructuralPath,
+        StructuralRelationRoleV4, convert_legacy_basic_model_v4,
     };
     use uuid::Uuid;
 
@@ -528,6 +642,107 @@ mod tests {
         });
     }
 
+    fn add_preflight_interaction(
+        model: &mut SemModelV4,
+        interaction_id: &str,
+        focal_predictor_id: &str,
+        moderator_id: &str,
+    ) {
+        let focal_relation = model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                SemRelationV4::Structural {
+                    id, source, target, ..
+                } if source == focal_predictor_id && target == "construct:y" => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let output = format!("derived:{interaction_id}");
+        let effect_relation = format!("relation:{interaction_id}:effect");
+        let effect_parameter = format!("parameter:{interaction_id}:effect");
+        model.variables.push(SemVariableV4::Derived {
+            id: output.clone(),
+            label: interaction_id.into(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: effect_relation,
+            source: output.clone(),
+            target: "construct:y".into(),
+            parameter: effect_parameter.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: effect_parameter,
+            label: format!("{interaction_id} -> Y"),
+            target: SemParameterTargetV4::Regression {
+                source: output.clone(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+            id: interaction_id.into(),
+            output,
+            operands: vec![focal_predictor_id.into(), moderator_id.into()],
+            focal_relation,
+            method: InteractionMethodV4::TwoStage,
+            hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+            product_indicator: None,
+        });
+        model.ensure_valid().unwrap();
+    }
+
+    fn multiple_moderation_model() -> SemModelV4 {
+        let mut model = convert_legacy_basic_model_v4(
+            &ModelSpec {
+                id: Uuid::from_u128(0x5031_53b0),
+                name: "Multiple moderation preflight".into(),
+                constructs: ["x", "w", "z", "y"]
+                    .into_iter()
+                    .map(|id| Construct {
+                        id: id.into(),
+                        name: id.to_uppercase(),
+                        short_name: id.to_uppercase(),
+                        mode: MeasurementMode::Reflective,
+                        indicators: vec![format!("{id}1"), format!("{id}2")],
+                    })
+                    .collect(),
+                paths: [("x", "y"), ("w", "y"), ("z", "y")]
+                    .into_iter()
+                    .map(|(source, target)| StructuralPath {
+                        source: source.into(),
+                        target: target.into(),
+                    })
+                    .collect(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            LegacyBasicModelInterpretationV4::PlsComposite,
+            &[],
+        )
+        .unwrap();
+        add_preflight_interaction(
+            &mut model,
+            "interaction:x_by_w",
+            "construct:x",
+            "construct:w",
+        );
+        add_preflight_interaction(
+            &mut model,
+            "interaction:x_by_z",
+            "construct:x",
+            "construct:z",
+        );
+        model
+    }
+
     #[test]
     fn recursive_pls_is_experimental_and_feedback_is_blocked_with_correction() {
         let model = recursive_model();
@@ -592,6 +807,115 @@ mod tests {
         assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
         assert!(decision.diagnostics().iter().any(|diagnostic| {
             diagnostic.code() == "sem.capability.pls.mediation_requires_indirect_path"
+                && !diagnostic.corrections().is_empty()
+        }));
+    }
+
+    #[test]
+    fn multiple_two_way_moderation_uses_only_the_exact_point_labs_cell() {
+        let model = multiple_moderation_model();
+        let decision =
+            preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
+        assert_eq!(
+            decision.status(),
+            SemCapabilityDecisionStatusV1::Experimental
+        );
+        assert_eq!(decision.capability_cells().len(), 1);
+        let cell = &decision.capability_cells()[0];
+        assert_eq!(cell.capability_id(), "smartpls.moderation");
+        assert_eq!(
+            cell.cell_id(),
+            "qpls3.pls.general_sem_multiple_two_way_moderation_point"
+        );
+        assert_eq!(
+            cell.capability_version(),
+            "general_sem_pls_multiple_two_way_moderation_point_v1"
+        );
+        assert!(decision.evidence().iter().any(|item| {
+            item.evidence_id()
+                == "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1"
+        }));
+        assert!(decision.explanation().contains("product-scale receipts"));
+    }
+
+    #[test]
+    fn reversed_role_duplicate_product_design_has_a_corrective_preflight_code() {
+        let mut model = multiple_moderation_model();
+        add_preflight_interaction(
+            &mut model,
+            "interaction:w_by_x",
+            "construct:w",
+            "construct:x",
+        );
+
+        let decision =
+            preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+        let diagnostic = decision
+            .diagnostics()
+            .iter()
+            .find(|diagnostic| {
+                diagnostic.code() == "sem.capability.pls.duplicate_interaction_product_design"
+            })
+            .unwrap();
+        assert!(diagnostic.message().contains("interaction:x_by_w"));
+        assert!(diagnostic.message().contains("interaction:w_by_x"));
+        assert!(diagnostic.message().contains("construct:y"));
+        assert!(
+            diagnostic
+                .corrections()
+                .iter()
+                .any(|correction| correction.contains("authored operand order"))
+        );
+    }
+
+    #[test]
+    fn interaction_bootstrap_and_directed_chain_preflight_remain_explicitly_blocked() {
+        let model = multiple_moderation_model();
+        let mut config = GeneralSemConfigV1::default();
+        config.inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 11,
+            confidence_level: 0.95,
+            interval: crate::GeneralSemBootstrapIntervalV1::Percentile,
+            tail: crate::GeneralSemInferenceTailV1::TwoSided,
+        };
+        let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert!(decision.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code() == "sem.capability.pls.multiple_moderation_bootstrap_not_executable"
+        }));
+        assert_eq!(decision.capability_cells().len(), 2);
+
+        let mut chain = model;
+        let parameter = "parameter:chain:x_to_w".to_string();
+        chain.relations.push(SemRelationV4::Structural {
+            id: "relation:chain:x_to_w".into(),
+            source: "construct:x".into(),
+            target: "construct:w".into(),
+            parameter: parameter.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        chain.parameters.push(SemParameterV4::Free {
+            id: parameter,
+            label: "X -> W".into(),
+            target: SemParameterTargetV4::Regression {
+                source: "construct:x".into(),
+                target: "construct:w".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        chain.ensure_valid().unwrap();
+        let decision =
+            preflight_general_sem_pls_v1(&chain, &GeneralSemConfigV1::default()).unwrap();
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert!(decision.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code() == "sem.capability.pls.moderated_mediation_not_executable"
                 && !diagnostic.corrections().is_empty()
         }));
     }

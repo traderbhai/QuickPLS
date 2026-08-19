@@ -19,6 +19,14 @@ pub const GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1: &str =
     "null_centered_plus_one_v1";
 pub const GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1: &str =
     "minimum_usable_fraction_0_9_v1";
+pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1: &str =
+    "qpls.general-sem-pls.multiple-two-way.point.v1";
+pub const GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1: &str =
+    "qpls.general-sem-pls.two-stage-product.sample-standardized.v1";
+pub const GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1: &str =
+    "qpls.general-sem-pls.simple-slope.other-moderators-zero.v1";
+pub const GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1: &str =
+    "qpls.general-sem-pls.interaction-hierarchy.strong.v1";
 const MAX_SAFE_INTEGER: i64 = 9_007_199_254_740_991;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -611,6 +619,49 @@ pub struct CanonicalConditionalEffectProbeResultV1 {
     pub values: CanonicalConditionalProbeValuesResultV1,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalInteractionHierarchyPolicyV1 {
+    Strong,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalInteractionConstructionMethodV1 {
+    TwoStage,
+}
+
+/// Point-estimate authority for one compiled two-stage interaction. The
+/// coefficient fitted to the standardized product and the rescaled scientific
+/// gamma are both retained with the exact product-scale receipt; consumers
+/// never have to infer one scale from an unlabeled coefficient.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalInteractionEffectResultV1 {
+    pub effect_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub interaction_id: String,
+    pub focal_relation_id: String,
+    pub interaction_effect_relation_id: String,
+    pub interaction_effect_parameter_id: String,
+    pub focal_predictor_id: String,
+    pub moderator_id: String,
+    pub outcome_id: String,
+    pub generated_product_column_id: String,
+    pub stage_one_model_scientific_sha256: String,
+    pub method_version: String,
+    pub construction_method: CanonicalInteractionConstructionMethodV1,
+    pub product_scale_version: String,
+    pub hierarchy_policy: CanonicalInteractionHierarchyPolicyV1,
+    pub hierarchy_policy_version: String,
+    pub conditioning_policy_version: String,
+    pub observation_count: u32,
+    pub unstandardized_product_mean: f64,
+    pub unstandardized_product_sample_standard_deviation: f64,
+    pub standardized_product_coefficient: CanonicalGeneralSemEstimateV1,
+    pub scientific_rescaled_gamma: CanonicalGeneralSemEstimateV1,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct CanonicalConditionalEffectResultV1 {
@@ -618,6 +669,8 @@ pub struct CanonicalConditionalEffectResultV1 {
     pub estimand_id: String,
     pub trace: CanonicalGeneralSemResultTraceV1,
     pub interaction_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interaction_effect_id: Option<String>,
     pub focal_relation_id: String,
     pub probe_id: String,
     pub moderator_id: String,
@@ -653,6 +706,8 @@ pub struct CanonicalInteractionPlotResultV1 {
     pub plot_id: String,
     pub trace: CanonicalGeneralSemResultTraceV1,
     pub interaction_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interaction_effect_id: Option<String>,
     pub focal_relation_id: String,
     pub focal_predictor_id: String,
     pub moderator_id: String,
@@ -769,6 +824,8 @@ pub struct CanonicalGeneralSemResultsV1 {
     pub specific_indirect_effects: Vec<CanonicalSpecificIndirectEffectResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub aggregate_effects: Vec<CanonicalAggregateEffectResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub interaction_effects: Vec<CanonicalInteractionEffectResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conditional_effect_probes: Vec<CanonicalConditionalEffectProbeResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1091,6 +1148,20 @@ fn conditional_probe_value(
     }
 }
 
+fn is_frozen_standardized_three_point_probe(
+    probe: &CanonicalConditionalEffectProbeResultV1,
+) -> bool {
+    match &probe.values {
+        CanonicalConditionalProbeValuesResultV1::Explicit { values } => {
+            values.len() == 3
+                && approximately_equal(values[0], -1.0)
+                && approximately_equal(values[1], 0.0)
+                && approximately_equal(values[2], 1.0)
+        }
+        CanonicalConditionalProbeValuesResultV1::DataDerivedMeanPlusMinusOneSd { .. } => false,
+    }
+}
+
 fn validate_general_sem_inference_receipt_v1(
     errors: &mut Vec<String>,
     results: &CanonicalGeneralSemResultsV1,
@@ -1109,7 +1180,10 @@ fn validate_general_sem_inference_receipt_v1(
                 .map(|effect| (effect.effect_id.as_str(), &effect.value, &effect.trace)),
         )
         .collect::<Vec<_>>();
-    let uncovered_inference = results
+    let uncovered_inference = results.interaction_effects.iter().any(|effect| {
+        general_sem_estimate_has_inference(&effect.standardized_product_coefficient)
+            || general_sem_estimate_has_inference(&effect.scientific_rescaled_gamma)
+    }) || results
         .conditional_effects
         .iter()
         .any(|effect| general_sem_estimate_has_inference(&effect.value))
@@ -1419,7 +1493,7 @@ fn validate_general_sem_inference_receipt_v1(
     }
     if uncovered_inference {
         errors.push(format!(
-            "{context} v1 does not cover conditional or higher-order estimate inference"
+            "{context} v1 does not cover interaction, conditional, or higher-order estimate inference"
         ));
     }
     let expected_effect_capability = crate::pls_general_recursive_effects_capability_cell_v1();
@@ -1472,6 +1546,7 @@ fn validate_general_sem_results_v1(
     validate_general_sem_inference_receipt_v1(errors, results, provenance, document_capability_ids);
     if results.specific_indirect_effects.is_empty()
         && results.aggregate_effects.is_empty()
+        && results.interaction_effects.is_empty()
         && results.conditional_effect_probes.is_empty()
         && results.conditional_effects.is_empty()
         && results.interaction_plots.is_empty()
@@ -1484,6 +1559,14 @@ fn validate_general_sem_results_v1(
         ));
     }
 
+    require_canonical_stable_ids(
+        errors,
+        results
+            .interaction_effects
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.interaction_effects"),
+    );
     require_canonical_stable_ids(
         errors,
         results
@@ -1707,6 +1790,173 @@ fn validate_general_sem_results_v1(
         validate_general_sem_estimate(errors, &effect.value, &format!("{item_context}.value"));
     }
 
+    let mut interaction_effects_by_id = BTreeMap::new();
+    let mut interaction_ids = BTreeSet::new();
+    let mut interaction_relation_ids = BTreeSet::new();
+    let mut interaction_parameter_ids = BTreeSet::new();
+    let mut generated_product_column_ids = BTreeSet::new();
+    let mut stage_one_model_digests = BTreeSet::new();
+    for (index, effect) in results.interaction_effects.iter().enumerate() {
+        let item_context = format!("{context}.interaction_effects[{index}]");
+        if !effect_ids.insert(effect.effect_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.effect_id is duplicated across effect sections"
+            ));
+        }
+        for (name, id) in [
+            ("interaction_id", effect.interaction_id.as_str()),
+            ("focal_relation_id", effect.focal_relation_id.as_str()),
+            (
+                "interaction_effect_relation_id",
+                effect.interaction_effect_relation_id.as_str(),
+            ),
+            (
+                "interaction_effect_parameter_id",
+                effect.interaction_effect_parameter_id.as_str(),
+            ),
+            ("focal_predictor_id", effect.focal_predictor_id.as_str()),
+            ("moderator_id", effect.moderator_id.as_str()),
+            ("outcome_id", effect.outcome_id.as_str()),
+            (
+                "generated_product_column_id",
+                effect.generated_product_column_id.as_str(),
+            ),
+            ("method_version", effect.method_version.as_str()),
+            (
+                "product_scale_version",
+                effect.product_scale_version.as_str(),
+            ),
+            (
+                "hierarchy_policy_version",
+                effect.hierarchy_policy_version.as_str(),
+            ),
+            (
+                "conditioning_policy_version",
+                effect.conditioning_policy_version.as_str(),
+            ),
+        ] {
+            require_stable_id(errors, id, &format!("{item_context}.{name}"));
+        }
+        if !is_lowercase_sha256(&effect.stage_one_model_scientific_sha256) {
+            errors.push(format!(
+                "{item_context}.stage_one_model_scientific_sha256 must be a lowercase SHA-256"
+            ));
+        }
+        if effect.stage_one_model_scientific_sha256 == provenance.model_digest {
+            errors.push(format!(
+                "{item_context}.stage_one_model_scientific_sha256 must identify the projected interaction-free scoring model"
+            ));
+        }
+        stage_one_model_digests.insert(effect.stage_one_model_scientific_sha256.as_str());
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        if effect.trace.capability_cell
+            != crate::pls_general_multiple_moderation_point_capability_cell_v1()
+        {
+            errors.push(format!(
+                "{item_context}.trace.capability_cell must equal the General SEM multiple two-way moderation point option cell"
+            ));
+        }
+        if effect.effect_id != effect.interaction_effect_relation_id {
+            errors.push(format!(
+                "{item_context}.effect_id must equal interaction_effect_relation_id"
+            ));
+        }
+        if !interaction_ids.insert(effect.interaction_id.as_str()) {
+            errors.push(format!("{item_context}.interaction_id is duplicated"));
+        }
+        if !interaction_relation_ids.insert(effect.interaction_effect_relation_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.interaction_effect_relation_id is duplicated"
+            ));
+        }
+        if !interaction_parameter_ids.insert(effect.interaction_effect_parameter_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.interaction_effect_parameter_id is duplicated"
+            ));
+        }
+        if !generated_product_column_ids.insert(effect.generated_product_column_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.generated_product_column_id is duplicated"
+            ));
+        }
+        if effect.focal_predictor_id == effect.moderator_id
+            || effect.focal_predictor_id == effect.outcome_id
+            || effect.moderator_id == effect.outcome_id
+        {
+            errors.push(format!(
+                "{item_context} requires distinct focal, moderator, and outcome identities"
+            ));
+        }
+        if effect.observation_count < 3 {
+            errors.push(format!(
+                "{item_context}.observation_count must be at least three"
+            ));
+        }
+        if effect.method_version != GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1 {
+            errors.push(format!(
+                "{item_context}.method_version must equal {GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1}"
+            ));
+        }
+        if effect.product_scale_version != GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1 {
+            errors.push(format!(
+                "{item_context}.product_scale_version must equal {GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1}"
+            ));
+        }
+        if effect.hierarchy_policy_version != GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1 {
+            errors.push(format!(
+                "{item_context}.hierarchy_policy_version must equal {GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1}"
+            ));
+        }
+        if effect.conditioning_policy_version != GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1 {
+            errors.push(format!(
+                "{item_context}.conditioning_policy_version must equal {GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1}"
+            ));
+        }
+        if !effect.unstandardized_product_mean.is_finite() {
+            errors.push(format!(
+                "{item_context}.unstandardized_product_mean must be finite"
+            ));
+        }
+        if !effect
+            .unstandardized_product_sample_standard_deviation
+            .is_finite()
+            || effect.unstandardized_product_sample_standard_deviation <= f64::EPSILON
+        {
+            errors.push(format!(
+                "{item_context}.unstandardized_product_sample_standard_deviation must be finite and positive"
+            ));
+        }
+        validate_general_sem_estimate(
+            errors,
+            &effect.standardized_product_coefficient,
+            &format!("{item_context}.standardized_product_coefficient"),
+        );
+        validate_general_sem_estimate(
+            errors,
+            &effect.scientific_rescaled_gamma,
+            &format!("{item_context}.scientific_rescaled_gamma"),
+        );
+        let expected_gamma = effect.standardized_product_coefficient.estimate
+            / effect.unstandardized_product_sample_standard_deviation;
+        if !approximately_equal(expected_gamma, effect.scientific_rescaled_gamma.estimate) {
+            errors.push(format!(
+                "{item_context}.scientific_rescaled_gamma must equal standardized_product_coefficient divided by the product sample standard deviation"
+            ));
+        }
+        interaction_effects_by_id.insert(effect.effect_id.as_str(), effect);
+    }
+    if stage_one_model_digests.len() > 1 {
+        errors.push(format!(
+            "{context}.interaction_effects must share one stage-one model scientific digest"
+        ));
+    }
+
     for (index, probe) in results.conditional_effect_probes.iter().enumerate() {
         let item_context = format!("{context}.conditional_effect_probes[{index}]");
         validate_general_sem_trace(
@@ -1764,6 +2014,7 @@ fn validate_general_sem_results_v1(
         .map(|probe| (probe.probe_id.as_str(), probe))
         .collect::<BTreeMap<_, _>>();
     let mut conditional_signatures = BTreeSet::new();
+    let mut interaction_conditional_indices = BTreeMap::<String, Vec<u32>>::new();
     for (index, effect) in results.conditional_effects.iter().enumerate() {
         let item_context = format!("{context}.conditional_effects[{index}]");
         if !effect_ids.insert(effect.effect_id.as_str()) {
@@ -1779,6 +2030,50 @@ fn validate_general_sem_results_v1(
             ("moderator_id", effect.moderator_id.as_str()),
         ] {
             require_stable_id(errors, id, &format!("{item_context}.{name}"));
+        }
+        match effect.interaction_effect_id.as_deref() {
+            Some(effect_id) => {
+                require_stable_id(
+                    errors,
+                    effect_id,
+                    &format!("{item_context}.interaction_effect_id"),
+                );
+                match interaction_effects_by_id.get(effect_id) {
+                    None => errors.push(format!(
+                        "{item_context}.interaction_effect_id references a missing interaction effect"
+                    )),
+                    Some(interaction_effect)
+                        if interaction_effect.interaction_id != effect.interaction_id
+                            || interaction_effect.focal_relation_id != effect.focal_relation_id
+                            || interaction_effect.moderator_id != effect.moderator_id
+                            || interaction_effect.trace.capability_cell
+                                != effect.trace.capability_cell =>
+                    {
+                        errors.push(format!(
+                            "{item_context} contradicts its interaction effect authority"
+                        ));
+                    }
+                    _ => {}
+                }
+            }
+            None if !results.interaction_effects.is_empty() => errors.push(format!(
+                "{item_context}.interaction_effect_id is required when interaction_effects are present"
+            )),
+            None => {}
+        }
+        let is_interaction_linked = effect
+            .interaction_effect_id
+            .as_deref()
+            .is_some_and(|effect_id| interaction_effects_by_id.contains_key(effect_id));
+        if let Some(effect_id) = effect
+            .interaction_effect_id
+            .as_deref()
+            .filter(|effect_id| interaction_effects_by_id.contains_key(*effect_id))
+        {
+            interaction_conditional_indices
+                .entry(effect_id.to_string())
+                .or_default()
+                .push(effect.probe_value_index);
         }
         validate_general_sem_trace(
             errors,
@@ -1797,6 +2092,16 @@ fn validate_general_sem_results_v1(
             Some(probe) => {
                 if effect.moderator_id != probe.moderator_id {
                     errors.push(format!("{item_context}.moderator_id contradicts its probe"));
+                }
+                if effect.trace.capability_cell != probe.trace.capability_cell {
+                    errors.push(format!(
+                        "{item_context}.trace contradicts its probe authority"
+                    ));
+                }
+                if is_interaction_linked && !is_frozen_standardized_three_point_probe(probe) {
+                    errors.push(format!(
+                        "{item_context}.probe_id must use the frozen standardized -1/0/+1 interaction policy"
+                    ));
                 }
                 match conditional_probe_value(probe, effect.probe_value_index) {
                     None => errors.push(format!(
@@ -1826,6 +2131,7 @@ fn validate_general_sem_results_v1(
         validate_general_sem_estimate(errors, &effect.value, &format!("{item_context}.value"));
     }
 
+    let mut interaction_plot_counts = BTreeMap::<String, usize>::new();
     for (index, plot) in results.interaction_plots.iter().enumerate() {
         let item_context = format!("{context}.interaction_plots[{index}]");
         validate_general_sem_trace(
@@ -1844,6 +2150,52 @@ fn validate_general_sem_results_v1(
         ] {
             require_stable_id(errors, id, &format!("{item_context}.{name}"));
         }
+        match plot.interaction_effect_id.as_deref() {
+            Some(effect_id) => {
+                require_stable_id(
+                    errors,
+                    effect_id,
+                    &format!("{item_context}.interaction_effect_id"),
+                );
+                match interaction_effects_by_id.get(effect_id) {
+                    None => errors.push(format!(
+                        "{item_context}.interaction_effect_id references a missing interaction effect"
+                    )),
+                    Some(interaction_effect)
+                        if interaction_effect.interaction_id != plot.interaction_id
+                            || interaction_effect.focal_relation_id != plot.focal_relation_id
+                            || interaction_effect.focal_predictor_id != plot.focal_predictor_id
+                            || interaction_effect.moderator_id != plot.moderator_id
+                            || interaction_effect.outcome_id != plot.outcome_id
+                            || interaction_effect.trace.capability_cell
+                                != plot.trace.capability_cell =>
+                    {
+                        errors.push(format!(
+                            "{item_context} contradicts its interaction effect authority"
+                        ));
+                    }
+                    _ => {}
+                }
+            }
+            None if !results.interaction_effects.is_empty() => errors.push(format!(
+                "{item_context}.interaction_effect_id is required when interaction_effects are present"
+            )),
+            None => {}
+        }
+        let linked_interaction_effect_id = plot
+            .interaction_effect_id
+            .as_deref()
+            .filter(|effect_id| interaction_effects_by_id.contains_key(*effect_id));
+        if let Some(effect_id) = linked_interaction_effect_id {
+            *interaction_plot_counts
+                .entry(effect_id.to_string())
+                .or_default() += 1;
+            if plot.series.len() != 3 {
+                errors.push(format!(
+                    "{item_context}.series must contain exactly the frozen -1/0/+1 interaction probes"
+                ));
+            }
+        }
         if plot.focal_predictor_id == plot.moderator_id
             || plot.focal_predictor_id == plot.outcome_id
             || plot.moderator_id == plot.outcome_id
@@ -1861,6 +2213,7 @@ fn validate_general_sem_results_v1(
             &format!("{item_context}.series"),
         );
         let mut expected_grid: Option<Vec<f64>> = None;
+        let mut linked_series_probe_indices = BTreeSet::new();
         for (series_index, series) in plot.series.iter().enumerate() {
             let series_context = format!("{item_context}.series[{series_index}]");
             require_stable_id(
@@ -1881,6 +2234,18 @@ fn validate_general_sem_results_v1(
                             "{series_context}.probe_id uses a different moderator"
                         ));
                     }
+                    if probe.trace.capability_cell != plot.trace.capability_cell {
+                        errors.push(format!(
+                            "{series_context}.probe_id uses a different capability authority"
+                        ));
+                    }
+                    if linked_interaction_effect_id.is_some()
+                        && !is_frozen_standardized_three_point_probe(probe)
+                    {
+                        errors.push(format!(
+                            "{series_context}.probe_id must use the frozen standardized -1/0/+1 interaction policy"
+                        ));
+                    }
                     match conditional_probe_value(probe, series.probe_value_index) {
                         None => errors.push(format!(
                             "{series_context}.probe_value_index is outside its probe"
@@ -1895,6 +2260,9 @@ fn validate_general_sem_results_v1(
                         _ => {}
                     }
                 }
+            }
+            if linked_interaction_effect_id.is_some() {
+                linked_series_probe_indices.insert(series.probe_value_index);
             }
             if series.points.is_empty() {
                 errors.push(format!("{series_context}.points must not be empty"));
@@ -1935,6 +2303,32 @@ fn validate_general_sem_results_v1(
             } else {
                 expected_grid = Some(grid);
             }
+        }
+        if linked_interaction_effect_id.is_some()
+            && linked_series_probe_indices != BTreeSet::from([0_u32, 1, 2])
+        {
+            errors.push(format!(
+                "{item_context}.series must cover probe indices 0, 1, and 2 exactly"
+            ));
+        }
+    }
+
+    for effect in &results.interaction_effects {
+        let indices = interaction_conditional_indices
+            .get(&effect.effect_id)
+            .cloned()
+            .unwrap_or_default();
+        if indices.len() != 3
+            || indices.into_iter().collect::<BTreeSet<_>>() != BTreeSet::from([0, 1, 2])
+        {
+            errors.push(format!(
+                "{context}.interaction_effects must each have exactly three conditional rows at probe indices 0, 1, and 2"
+            ));
+        }
+        if interaction_plot_counts.get(&effect.effect_id).copied() != Some(1) {
+            errors.push(format!(
+                "{context}.interaction_effects must each have exactly one cross-referenced interaction plot"
+            ));
         }
     }
 
@@ -3035,6 +3429,7 @@ mod tests {
                     value: effect_value(0.60),
                 },
             ],
+            interaction_effects: Vec::new(),
             conditional_effect_probes: vec![
                 CanonicalConditionalEffectProbeResultV1 {
                     probe_id: "probe_data".to_string(),
@@ -3060,6 +3455,7 @@ mod tests {
                 estimand_id: "estimand_conditional_1".to_string(),
                 trace: general_sem_trace(),
                 interaction_id: "interaction_1".to_string(),
+                interaction_effect_id: None,
                 focal_relation_id: "relation_focal_1".to_string(),
                 probe_id: "probe_data".to_string(),
                 moderator_id: "moderator_m".to_string(),
@@ -3071,6 +3467,7 @@ mod tests {
                 plot_id: "interaction_plot_1".to_string(),
                 trace: general_sem_trace(),
                 interaction_id: "interaction_1".to_string(),
+                interaction_effect_id: None,
                 focal_relation_id: "relation_focal_1".to_string(),
                 focal_predictor_id: "construct_x".to_string(),
                 moderator_id: "moderator_m".to_string(),
@@ -3178,6 +3575,108 @@ mod tests {
             .aggregate_effects
             .sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
         results
+    }
+
+    fn general_sem_multiple_moderation_capability_reference() -> CapabilityCellReferenceV2 {
+        crate::pls_general_multiple_moderation_point_capability_cell_v1()
+    }
+
+    fn general_sem_interaction_document_fixture() -> CanonicalResultDocumentV2 {
+        let mut document = document_fixture();
+        let moderation_cell = general_sem_multiple_moderation_capability_reference();
+        document.capability_cells = Some(vec![capability_reference(), moderation_cell.clone()]);
+        let mut results = general_sem_results_fixture();
+        let interaction_effect_id = "relation_interaction_1_effect".to_string();
+        let interaction_trace = CanonicalGeneralSemResultTraceV1 {
+            model_id: document.provenance.model_id.clone(),
+            capability_cell: moderation_cell,
+        };
+        results.interaction_effects = vec![CanonicalInteractionEffectResultV1 {
+            effect_id: interaction_effect_id.clone(),
+            trace: interaction_trace.clone(),
+            interaction_id: "interaction_1".to_string(),
+            focal_relation_id: "relation_focal_1".to_string(),
+            interaction_effect_relation_id: interaction_effect_id.clone(),
+            interaction_effect_parameter_id: "parameter_interaction_1_effect".to_string(),
+            focal_predictor_id: "construct_x".to_string(),
+            moderator_id: "moderator_m".to_string(),
+            outcome_id: "construct_y".to_string(),
+            generated_product_column_id: "generated_interaction_1_product".to_string(),
+            stage_one_model_scientific_sha256: "d".repeat(64),
+            method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1.to_string(),
+            construction_method: CanonicalInteractionConstructionMethodV1::TwoStage,
+            product_scale_version: GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1.to_string(),
+            hierarchy_policy: CanonicalInteractionHierarchyPolicyV1::Strong,
+            hierarchy_policy_version: GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1
+                .to_string(),
+            conditioning_policy_version: GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1.to_string(),
+            observation_count: 31,
+            unstandardized_product_mean: 0.125,
+            unstandardized_product_sample_standard_deviation: 0.5,
+            standardized_product_coefficient: effect_value(0.2),
+            scientific_rescaled_gamma: effect_value(0.4),
+        }];
+        let probe_id = "probe:interaction_1:standardized_minus1_zero_plus1".to_string();
+        results.conditional_effect_probes = vec![CanonicalConditionalEffectProbeResultV1 {
+            probe_id: probe_id.clone(),
+            trace: interaction_trace.clone(),
+            moderator_id: "moderator_m".to_string(),
+            values: CanonicalConditionalProbeValuesResultV1::Explicit {
+                values: vec![-1.0, 0.0, 1.0],
+            },
+        }];
+        results.conditional_effects = [-1.0, 0.0, 1.0]
+            .into_iter()
+            .enumerate()
+            .map(
+                |(index, moderator_value)| CanonicalConditionalEffectResultV1 {
+                    effect_id: format!("conditional:interaction_1:{index}"),
+                    estimand_id: "conditional_slope:interaction_1".to_string(),
+                    trace: interaction_trace.clone(),
+                    interaction_id: "interaction_1".to_string(),
+                    interaction_effect_id: Some(interaction_effect_id.clone()),
+                    focal_relation_id: "relation_focal_1".to_string(),
+                    probe_id: probe_id.clone(),
+                    moderator_id: "moderator_m".to_string(),
+                    probe_value_index: index as u32,
+                    moderator_value,
+                    value: effect_value(0.4 + 0.1 * moderator_value),
+                },
+            )
+            .collect();
+        results.interaction_plots = vec![CanonicalInteractionPlotResultV1 {
+            plot_id: "plot:interaction_1".to_string(),
+            trace: interaction_trace,
+            interaction_id: "interaction_1".to_string(),
+            interaction_effect_id: Some(interaction_effect_id),
+            focal_relation_id: "relation_focal_1".to_string(),
+            focal_predictor_id: "construct_x".to_string(),
+            moderator_id: "moderator_m".to_string(),
+            outcome_id: "construct_y".to_string(),
+            series: [-1.0, 0.0, 1.0]
+                .into_iter()
+                .enumerate()
+                .map(
+                    |(index, moderator_value)| CanonicalInteractionPlotSeriesV1 {
+                        series_id: format!("series:interaction_1:{index}"),
+                        probe_id: probe_id.clone(),
+                        probe_value_index: index as u32,
+                        moderator_value,
+                        points: [-1.0, 0.0, 1.0]
+                            .into_iter()
+                            .map(|focal_value| CanonicalInteractionPlotPointV1 {
+                                focal_value,
+                                predicted_value: focal_value * (0.4 + 0.1 * moderator_value),
+                                lower: None,
+                                upper: None,
+                            })
+                            .collect(),
+                    },
+                )
+                .collect(),
+        }];
+        document.general_sem_results = Some(results);
+        document
     }
 
     fn general_sem_inference_document_fixture() -> CanonicalResultDocumentV2 {
@@ -3502,6 +4001,119 @@ mod tests {
     }
 
     #[test]
+    fn interaction_authority_roundtrips_and_scale_or_cross_reference_tampering_fails_closed() {
+        let document = general_sem_interaction_document_fixture();
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(validation.passed, "{:?}", validation.errors);
+        let encoded = canonical_result_document_json(&document).unwrap();
+        let decoded: CanonicalResultDocumentV2 = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, document);
+
+        let mut wrong_gamma = document.clone();
+        wrong_gamma
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .interaction_effects[0]
+            .scientific_rescaled_gamma
+            .estimate = 0.41;
+        assert!(
+            validate_canonical_result_document_v2(&wrong_gamma)
+                .errors
+                .iter()
+                .any(|error| error.contains("scientific_rescaled_gamma must equal"))
+        );
+
+        let mut wrong_projection = document.clone();
+        let source_model_digest = wrong_projection.provenance.model_digest.clone();
+        wrong_projection
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .interaction_effects[0]
+            .stage_one_model_scientific_sha256 = source_model_digest;
+        assert!(
+            validate_canonical_result_document_v2(&wrong_projection)
+                .errors
+                .iter()
+                .any(|error| error.contains("projected interaction-free scoring model"))
+        );
+
+        let mut missing_cross_reference = document.clone();
+        missing_cross_reference
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .conditional_effects[0]
+            .interaction_effect_id = None;
+        assert!(
+            validate_canonical_result_document_v2(&missing_cross_reference)
+                .errors
+                .iter()
+                .any(|error| error.contains("interaction_effect_id is required"))
+        );
+
+        let mut wrong_probe_policy = document.clone();
+        wrong_probe_policy
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .conditional_effect_probes[0]
+            .values = CanonicalConditionalProbeValuesResultV1::Explicit {
+            values: vec![-2.0, 0.0, 1.0],
+        };
+        assert!(
+            validate_canonical_result_document_v2(&wrong_probe_policy)
+                .errors
+                .iter()
+                .any(|error| error.contains("frozen standardized -1/0/+1 interaction policy"))
+        );
+
+        let mut omitted_conditional_row = document.clone();
+        omitted_conditional_row
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .conditional_effects
+            .pop();
+        assert!(
+            validate_canonical_result_document_v2(&omitted_conditional_row)
+                .errors
+                .iter()
+                .any(|error| error.contains("exactly three conditional rows"))
+        );
+
+        let mut omitted_plot = document.clone();
+        omitted_plot
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .interaction_plots
+            .clear();
+        assert!(
+            validate_canonical_result_document_v2(&omitted_plot)
+                .errors
+                .iter()
+                .any(|error| error.contains("exactly one cross-referenced interaction plot"))
+        );
+
+        let mut wrong_trace = document;
+        wrong_trace
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .interaction_effects[0]
+            .trace
+            .capability_cell = capability_reference();
+        assert!(
+            validate_canonical_result_document_v2(&wrong_trace)
+                .errors
+                .iter()
+                .any(|error| error.contains("multiple two-way moderation point option cell"))
+        );
+    }
+
+    #[test]
     fn general_sem_identity_path_and_aggregate_contradictions_fail_closed() {
         let mut document = document_fixture();
         let mut results = general_sem_results_fixture();
@@ -3648,6 +4260,7 @@ mod tests {
             inference_receipt: None,
             specific_indirect_effects: Vec::new(),
             aggregate_effects: Vec::new(),
+            interaction_effects: Vec::new(),
             conditional_effect_probes: Vec::new(),
             conditional_effects: Vec::new(),
             interaction_plots: Vec::new(),
