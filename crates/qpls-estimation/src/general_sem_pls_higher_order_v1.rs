@@ -237,7 +237,7 @@ pub fn prepare_general_sem_pls_disjoint_hoc_score_dataset_v1(
         return Err(GeneralSemPlsDisjointHocScoreDatasetErrorV1::DisjointTwoStageRequired);
     }
     let used_rows =
-        compiled_plan_complete_case_rows(dataset, plan.base_plan(), &mut should_continue)?;
+        general_sem_pls_hoc_complete_case_rows_v1(dataset, plan.base_plan(), &mut should_continue)?;
     if stage_one.used_observations != used_rows.len()
         || stage_one.omitted_observations
             != dataset.batch.num_rows().saturating_sub(used_rows.len())
@@ -326,10 +326,13 @@ pub fn prepare_general_sem_pls_disjoint_hoc_score_dataset_v1(
     })
 }
 
-fn compiled_plan_complete_case_rows(
+/// Resolves the raw-case frame shared by HOC point preparation and indexed
+/// full-model bootstrap. Missing source columns fail closed rather than being
+/// silently omitted from the listwise predicate.
+pub fn general_sem_pls_hoc_complete_case_rows_v1(
     dataset: &Dataset,
     plan: &CompiledPlsPlanV2,
-    should_continue: &mut impl FnMut() -> bool,
+    mut should_continue: impl FnMut() -> bool,
 ) -> Result<Vec<usize>, GeneralSemPlsDisjointHocScoreDatasetErrorV1> {
     let source_columns = plan
         .blocks()

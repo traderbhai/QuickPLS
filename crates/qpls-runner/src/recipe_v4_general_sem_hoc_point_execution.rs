@@ -4,21 +4,22 @@ use crate::{
 };
 use qpls_assessment::{AssessmentError, variance_inflation_factor_with_control};
 use qpls_core::{
-    AnalysisRecipeModelBindingV4, AnalysisRecipeV4,
-    CompiledPlsHocComponentRelationInterpretationV1, CompiledPlsHocStageRoleV1, CompiledPlsPlanV3,
-    CompiledRecipePlanV4, HigherOrderConstructionApproachV4, HigherOrderMeasurementTypeV4,
-    RecipeV4CompilationError, RecipeV4CompilerTarget, SemModelV4, StructuralRelationRoleV4,
-    compile_analysis_recipe_v4, compile_pls_disjoint_higher_order_stage_two_projection_v1,
+    AnalysisRecipeModelBindingV4, AnalysisRecipeV4, CompiledAnalysisRecipeV4,
+    CompiledPlsDisjointHocStageTwoProjectionV1, CompiledPlsHocComponentRelationInterpretationV1,
+    CompiledPlsHocStageRoleV1, CompiledPlsPlanV3, CompiledRecipePlanV4,
+    HigherOrderConstructionApproachV4, HigherOrderMeasurementTypeV4, RecipeV4CompilationError,
+    RecipeV4CompilerTarget, SemModelV4, StructuralRelationRoleV4, compile_analysis_recipe_v4,
+    compile_pls_disjoint_higher_order_stage_two_projection_v1,
     project_general_sem_pls_base_recipe_v1, sha256_serialized,
 };
 use qpls_data::Dataset;
 use qpls_estimation::{
     GENERAL_SEM_PLS_DISJOINT_HOC_SCORE_DATASET_RECEIPT_VERSION_V1,
     GeneralSemPlsDisjointHocScoreDatasetErrorV1, GeneralSemPlsDisjointHocScoreDatasetReceiptV1,
-    prepare_general_sem_pls_disjoint_hoc_score_dataset_v1,
+    PlsResult, prepare_general_sem_pls_disjoint_hoc_score_dataset_v1,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub const GENERAL_SEM_PLS_DISJOINT_HIGHER_ORDER_POINT_METHOD_VERSION_V1: &str =
     qpls_core::PLS_GENERAL_HIGHER_ORDER_POINT_CAPABILITY_VERSION_V1;
@@ -435,6 +436,215 @@ impl GeneralSemPlsHigherOrderPointResultV1 {
     }
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct GeneralSemPlsDisjointHocPointExecutionContextV1 {
+    projection: CompiledPlsDisjointHocStageTwoProjectionV1,
+    stage_two_recipe: AnalysisRecipeV4,
+    stage_two_artifact: CompiledAnalysisRecipeV4,
+}
+
+impl GeneralSemPlsDisjointHocPointExecutionContextV1 {
+    pub(crate) fn projection(&self) -> &CompiledPlsDisjointHocStageTwoProjectionV1 {
+        &self.projection
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct GeneralSemPlsDisjointHocPointExecutionArtifactsV1 {
+    result: GeneralSemPlsHigherOrderPointResultV1,
+    stage_two_construct_scores: BTreeMap<String, Vec<f64>>,
+}
+
+impl GeneralSemPlsDisjointHocPointExecutionArtifactsV1 {
+    pub(crate) fn result(&self) -> &GeneralSemPlsHigherOrderPointResultV1 {
+        &self.result
+    }
+
+    pub(crate) fn stage_two_construct_scores(&self) -> &BTreeMap<String, Vec<f64>> {
+        &self.stage_two_construct_scores
+    }
+
+    fn into_result(self) -> GeneralSemPlsHigherOrderPointResultV1 {
+        self.result
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct GeneralSemPlsHocScoreAlignmentReferenceV1<'a> {
+    original_scores: &'a BTreeMap<String, Vec<f64>>,
+    sampled_positions: &'a [usize],
+}
+
+impl<'a> GeneralSemPlsHocScoreAlignmentReferenceV1<'a> {
+    pub(crate) fn new(
+        original_scores: &'a BTreeMap<String, Vec<f64>>,
+        sampled_positions: &'a [usize],
+    ) -> Self {
+        Self {
+            original_scores,
+            sampled_positions,
+        }
+    }
+}
+
+#[derive(Debug, Clone, thiserror::Error, PartialEq, Eq)]
+pub enum GeneralSemPlsHocScoreAlignmentErrorV1 {
+    #[error("HOC score sign alignment was cancelled")]
+    Cancelled,
+    #[error("replicate and original HOC construct-score domains differ")]
+    ConstructDomainMismatch,
+    #[error("original HOC construct score is missing for {construct_id}")]
+    MissingOriginalScore { construct_id: String },
+    #[error(
+        "sampled position {sampled_position} is outside original HOC construct score {construct_id}"
+    )]
+    SampledPositionOutOfBounds {
+        construct_id: String,
+        sampled_position: usize,
+    },
+    #[error(
+        "replicate HOC construct score {construct_id} has {actual} observations; expected {expected}"
+    )]
+    ScoreLengthMismatch {
+        construct_id: String,
+        expected: usize,
+        actual: usize,
+    },
+    #[error("HOC construct score {construct_id} contains a non-finite alignment value")]
+    NonFiniteScore { construct_id: String },
+    #[error("HOC construct score sign is indeterminate for {construct_id}")]
+    IndeterminateSign { construct_id: String },
+}
+
+pub(crate) fn align_general_sem_pls_hoc_result_signs_v1(
+    estimate: &mut PlsResult,
+    reference: GeneralSemPlsHocScoreAlignmentReferenceV1<'_>,
+    is_cancelled: &(impl Fn() -> bool + Sync),
+) -> Result<(), GeneralSemPlsHocScoreAlignmentErrorV1> {
+    if estimate.construct_scores.keys().collect::<Vec<_>>()
+        != reference.original_scores.keys().collect::<Vec<_>>()
+    {
+        return Err(GeneralSemPlsHocScoreAlignmentErrorV1::ConstructDomainMismatch);
+    }
+    let mut signs = BTreeMap::new();
+    for (construct_id, replicate) in &estimate.construct_scores {
+        if is_cancelled() {
+            return Err(GeneralSemPlsHocScoreAlignmentErrorV1::Cancelled);
+        }
+        let original = reference.original_scores.get(construct_id).ok_or_else(|| {
+            GeneralSemPlsHocScoreAlignmentErrorV1::MissingOriginalScore {
+                construct_id: construct_id.clone(),
+            }
+        })?;
+        let aligned_reference = reference
+            .sampled_positions
+            .iter()
+            .map(|position| {
+                original.get(*position).copied().ok_or_else(|| {
+                    GeneralSemPlsHocScoreAlignmentErrorV1::SampledPositionOutOfBounds {
+                        construct_id: construct_id.clone(),
+                        sampled_position: *position,
+                    }
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        if replicate.len() != aligned_reference.len() {
+            return Err(GeneralSemPlsHocScoreAlignmentErrorV1::ScoreLengthMismatch {
+                construct_id: construct_id.clone(),
+                expected: aligned_reference.len(),
+                actual: replicate.len(),
+            });
+        }
+        if replicate
+            .iter()
+            .chain(&aligned_reference)
+            .any(|value| !value.is_finite())
+        {
+            return Err(GeneralSemPlsHocScoreAlignmentErrorV1::NonFiniteScore {
+                construct_id: construct_id.clone(),
+            });
+        }
+        let (covariance, absolute_cross_product_sum) =
+            hoc_score_alignment_covariance_v1(&aligned_reference, replicate);
+        let tolerance =
+            64.0 * f64::EPSILON * absolute_cross_product_sum.max(covariance.abs()).max(1.0);
+        let sign = if covariance > tolerance {
+            1.0
+        } else if covariance < -tolerance {
+            -1.0
+        } else {
+            return Err(GeneralSemPlsHocScoreAlignmentErrorV1::IndeterminateSign {
+                construct_id: construct_id.clone(),
+            });
+        };
+        signs.insert(construct_id.clone(), sign);
+    }
+
+    for (construct_id, scores) in &mut estimate.construct_scores {
+        let sign = signs[construct_id];
+        if sign < 0.0 {
+            for score in scores {
+                if is_cancelled() {
+                    return Err(GeneralSemPlsHocScoreAlignmentErrorV1::Cancelled);
+                }
+                *score = -*score;
+            }
+        }
+    }
+    for outer in &mut estimate.outer_estimates {
+        let sign = signs[&outer.construct];
+        outer.weight *= sign;
+        outer.loading *= sign;
+    }
+    for path in &mut estimate.paths {
+        path.coefficient *= signs[&path.source] * signs[&path.target];
+    }
+    for control in &mut estimate.control_estimates {
+        control.coefficient *= signs[&control.source] * signs[&control.target];
+    }
+    for effect in &mut estimate.effects {
+        let sign = signs[&effect.source] * signs[&effect.target];
+        effect.direct *= sign;
+        effect.indirect *= sign;
+        effect.total *= sign;
+    }
+    Ok(())
+}
+
+fn hoc_score_alignment_covariance_v1(left: &[f64], right: &[f64]) -> (f64, f64) {
+    let left_mean = hoc_stable_sum_v1(left) / left.len() as f64;
+    let right_mean = hoc_stable_sum_v1(right) / right.len() as f64;
+    let cross_products = left
+        .iter()
+        .zip(right)
+        .map(|(left, right)| (left - left_mean) * (right - right_mean))
+        .collect::<Vec<_>>();
+    (
+        hoc_stable_sum_v1(&cross_products),
+        hoc_stable_sum_v1(
+            &cross_products
+                .iter()
+                .map(|value| value.abs())
+                .collect::<Vec<_>>(),
+        ),
+    )
+}
+
+fn hoc_stable_sum_v1(values: &[f64]) -> f64 {
+    let mut sum = 0.0_f64;
+    let mut compensation = 0.0_f64;
+    for value in values {
+        let updated = sum + value;
+        if sum.abs() >= value.abs() {
+            compensation += (sum - updated) + value;
+        } else {
+            compensation += (value - updated) + sum;
+        }
+        sum = updated;
+    }
+    sum + compensation
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum GeneralSemPlsHigherOrderPointErrorV1 {
     #[error("higher-order point execution was cancelled")]
@@ -449,6 +659,8 @@ pub enum GeneralSemPlsHigherOrderPointErrorV1 {
     StageTwoCompilation(#[from] RecipeV4CompilationError),
     #[error(transparent)]
     PointEstimation(#[from] RecipeV4PlsExecutionError),
+    #[error(transparent)]
+    StageTwoScoreAlignment(#[from] GeneralSemPlsHocScoreAlignmentErrorV1),
     #[error("stage-one point result is not bound to the compiled lower-order plan and dataset")]
     StageOneBindingMismatch,
     #[error("stage-two recipe compilation differs from the typed HOC projection")]
@@ -479,6 +691,41 @@ pub enum GeneralSemPlsHigherOrderPointErrorV1 {
     InvalidResultContract(String),
 }
 
+pub(crate) fn compile_general_sem_pls_disjoint_hoc_point_context_v1(
+    recipe: &AnalysisRecipeV4,
+    resolved_model: &SemModelV4,
+    plan: &CompiledPlsPlanV3,
+) -> Result<GeneralSemPlsDisjointHocPointExecutionContextV1, GeneralSemPlsHigherOrderPointErrorV1> {
+    let projection =
+        compile_pls_disjoint_higher_order_stage_two_projection_v1(resolved_model, plan)?;
+    let mut stage_two_recipe = project_general_sem_pls_base_recipe_v1(recipe)?;
+    stage_two_recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+        scientific_sha256: projection.projected_scientific_sha256().to_string(),
+        model: projection.projected_model().clone(),
+    };
+    let target = RecipeV4CompilerTarget::PlsPlanV2;
+    let stage_two_artifact = compile_analysis_recipe_v4(
+        &stage_two_recipe,
+        Some(projection.projected_model()),
+        target,
+        target.capability_cell_for_method(recipe.settings.method),
+    )?;
+    let CompiledRecipePlanV4::PlsPlanV2 {
+        plan: stage_two_plan,
+    } = stage_two_artifact.plan()
+    else {
+        return Err(GeneralSemPlsHigherOrderPointErrorV1::StageTwoPlanMismatch);
+    };
+    if stage_two_plan != projection.projected_plan() {
+        return Err(GeneralSemPlsHigherOrderPointErrorV1::StageTwoPlanMismatch);
+    }
+    Ok(GeneralSemPlsDisjointHocPointExecutionContextV1 {
+        projection,
+        stage_two_recipe,
+        stage_two_artifact,
+    })
+}
+
 pub fn run_compiled_general_sem_pls_disjoint_higher_order_point_v1(
     dataset: &Dataset,
     recipe: &AnalysisRecipeV4,
@@ -488,6 +735,33 @@ pub fn run_compiled_general_sem_pls_disjoint_higher_order_point_v1(
     should_cancel: impl Fn() -> bool + Sync,
     progress: impl Fn(RunnerProgress) + Sync,
 ) -> Result<GeneralSemPlsHigherOrderPointResultV1, GeneralSemPlsHigherOrderPointErrorV1> {
+    if should_cancel() {
+        return Err(GeneralSemPlsHigherOrderPointErrorV1::Cancelled);
+    }
+    let context =
+        compile_general_sem_pls_disjoint_hoc_point_context_v1(recipe, resolved_model, plan)?;
+    run_compiled_general_sem_pls_disjoint_higher_order_point_with_context_v1(
+        dataset,
+        plan,
+        stage_one,
+        &context,
+        None,
+        should_cancel,
+        progress,
+    )
+    .map(GeneralSemPlsDisjointHocPointExecutionArtifactsV1::into_result)
+}
+
+pub(crate) fn run_compiled_general_sem_pls_disjoint_higher_order_point_with_context_v1(
+    dataset: &Dataset,
+    plan: &CompiledPlsPlanV3,
+    stage_one: &RecipeV4PlsExecutionResultV1,
+    context: &GeneralSemPlsDisjointHocPointExecutionContextV1,
+    stage_two_alignment: Option<GeneralSemPlsHocScoreAlignmentReferenceV1<'_>>,
+    should_cancel: impl Fn() -> bool + Sync,
+    progress: impl Fn(RunnerProgress) + Sync,
+) -> Result<GeneralSemPlsDisjointHocPointExecutionArtifactsV1, GeneralSemPlsHigherOrderPointErrorV1>
+{
     if should_cancel() {
         return Err(GeneralSemPlsHigherOrderPointErrorV1::Cancelled);
     }
@@ -502,8 +776,17 @@ pub fn run_compiled_general_sem_pls_disjoint_higher_order_point_v1(
     {
         return Err(GeneralSemPlsHigherOrderPointErrorV1::StageOneBindingMismatch);
     }
-    let projection =
-        compile_pls_disjoint_higher_order_stage_two_projection_v1(resolved_model, plan)?;
+    let projection = &context.projection;
+    if projection.source_scientific_sha256() != plan.scientific_hash()
+        || projection.hoc_stage_plan_sha256() != sha256_serialized(hoc)
+        || projection.projected_plan()
+            != match context.stage_two_artifact.plan() {
+                CompiledRecipePlanV4::PlsPlanV2 { plan } => plan,
+                _ => return Err(GeneralSemPlsHigherOrderPointErrorV1::StageTwoPlanMismatch),
+            }
+    {
+        return Err(GeneralSemPlsHigherOrderPointErrorV1::StageTwoPlanMismatch);
+    }
     progress(RunnerProgress {
         phase: "general_sem_hoc_prepare_stage_two".into(),
         completed_units: 0,
@@ -530,32 +813,11 @@ pub fn run_compiled_general_sem_pls_disjoint_higher_order_point_v1(
         return Err(GeneralSemPlsHigherOrderPointErrorV1::Cancelled);
     }
 
-    let mut stage_two_recipe = project_general_sem_pls_base_recipe_v1(recipe)?;
-    stage_two_recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
-        scientific_sha256: projection.projected_scientific_sha256().to_string(),
-        model: projection.projected_model().clone(),
-    };
-    let target = RecipeV4CompilerTarget::PlsPlanV2;
-    let stage_two_artifact = compile_analysis_recipe_v4(
-        &stage_two_recipe,
-        Some(projection.projected_model()),
-        target,
-        target.capability_cell_for_method(recipe.settings.method),
-    )?;
-    let CompiledRecipePlanV4::PlsPlanV2 {
-        plan: stage_two_plan,
-    } = stage_two_artifact.plan()
-    else {
-        return Err(GeneralSemPlsHigherOrderPointErrorV1::StageTwoPlanMismatch);
-    };
-    if stage_two_plan != projection.projected_plan() {
-        return Err(GeneralSemPlsHigherOrderPointErrorV1::StageTwoPlanMismatch);
-    }
     let mut final_estimation = run_compiled_pls_recipe_v4_allowing_isolated(
         prepared.dataset(),
-        &stage_two_recipe,
+        &context.stage_two_recipe,
         projection.projected_model(),
-        &stage_two_artifact,
+        &context.stage_two_artifact,
         &should_cancel,
         |update| {
             progress(RunnerProgress {
@@ -569,10 +831,24 @@ pub fn run_compiled_general_sem_pls_disjoint_higher_order_point_v1(
         RecipeV4PlsExecutionError::Cancelled => GeneralSemPlsHigherOrderPointErrorV1::Cancelled,
         other => GeneralSemPlsHigherOrderPointErrorV1::PointEstimation(other),
     })?;
+    if let Some(reference) = stage_two_alignment {
+        align_general_sem_pls_hoc_result_signs_v1(
+            final_estimation.estimation_mut(),
+            reference,
+            &should_cancel,
+        )
+        .map_err(|error| match error {
+            GeneralSemPlsHocScoreAlignmentErrorV1::Cancelled => {
+                GeneralSemPlsHigherOrderPointErrorV1::Cancelled
+            }
+            other => GeneralSemPlsHigherOrderPointErrorV1::StageTwoScoreAlignment(other),
+        })?;
+    }
     final_estimation.retain_source_row_accounting(
         stage_one.estimation().used_observations,
         stage_one.estimation().omitted_observations,
     );
+    let stage_two_construct_scores = final_estimation.estimation().construct_scores.clone();
     let (_, generated_score_dataset) = prepared.into_parts();
 
     let mut relation_estimates = Vec::new();
@@ -752,7 +1028,10 @@ pub fn run_compiled_general_sem_pls_disjoint_higher_order_point_v1(
         stages,
     };
     result.ensure_valid_against_plan_v1(plan)?;
-    Ok(result)
+    Ok(GeneralSemPlsDisjointHocPointExecutionArtifactsV1 {
+        result,
+        stage_two_construct_scores,
+    })
 }
 
 fn invalid_result(message: impl Into<String>) -> GeneralSemPlsHigherOrderPointErrorV1 {
@@ -760,7 +1039,7 @@ fn invalid_result(message: impl Into<String>) -> GeneralSemPlsHigherOrderPointEr
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use chrono::{TimeZone, Utc};
     use qpls_core::{
@@ -850,7 +1129,7 @@ mod tests {
         }
     }
 
-    fn fixture(
+    pub(crate) fn fixture(
         measurement_type: HigherOrderMeasurementTypeV4,
     ) -> (
         Dataset,

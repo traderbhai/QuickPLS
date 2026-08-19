@@ -115,6 +115,10 @@ impl RecipeV4PlsExecutionResultV1 {
         &self.estimation
     }
 
+    pub(crate) fn estimation_mut(&mut self) -> &mut PlsResult {
+        &mut self.estimation
+    }
+
     pub(crate) fn retain_source_row_accounting(
         &mut self,
         used_observations: usize,
