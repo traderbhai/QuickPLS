@@ -575,17 +575,18 @@
       "priority": "P1",
       "target_release": "2.49.0",
       "competitor_scope": true,
-      "quickpls_scope": "Bounded standardized two-stage PLS moderation: the established single-interaction workflow plus an Experimental Labs point-only General SEM cell that jointly estimates one or more interaction_v2 terms on a direct-only structural graph and reports product-scale receipts, interaction coefficients, conditional slopes, and plots at standardized -1, 0, and +1.",
+      "quickpls_scope": "Bounded standardized two-stage PLS moderation: the established single-interaction workflow, an Experimental Labs General SEM point cell that jointly estimates one or more interaction_v2 terms on a direct-only graph, and a connected supplemental full-model indexed case-bootstrap cell that publishes two-sided Type-7 inference for scientific rescaled interaction gamma only.",
       "quickpls_capability_ids": [
         "qpls3.pls.moderation",
-        "qpls3.pls.general_sem_multiple_two_way_moderation_point"
+        "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+        "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap"
       ],
       "implementation_evidence": [],
       "dependencies": [
         "smartpls.pls_algorithm",
         "smartpls.pls_bootstrapping"
       ],
-      "remaining_gap": "The General SEM simultaneous cell is connected end to end in the existing QuickPLS desktop application but remains point-only and engine-only in Labs; bootstrap inference, three-way interactions, authored arbitrary probe policies, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
+      "remaining_gap": "The connected General SEM point and supplemental scientific-gamma bootstrap cells remain partial, engine-only, and opt-in Labs. Standardized-product beta, ordinary-coefficient, fixed-slope, and plot inference remain excluded, while independent full-PLS qualification, semantic export/readback, packaged Windows, performance/soak, and review evidence remain pending; three-way interactions, authored arbitrary probes, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
     },
     {
       "id": "smartpls.mediation",

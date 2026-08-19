@@ -5,7 +5,7 @@
   "feature_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
   "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
   "catalogue_snapshot_date": "2026-08-19",
-  "generated_at_utc": "2026-08-19T07:58:59.0449150Z",
+  "generated_at_utc": "2026-08-19T13:36:30.5445898Z",
   "passed": true,
   "qualification_ready": false,
   "evidence_scope": "engine_only_contract_micro_reference_boundary_and_source_binding",
@@ -36,8 +36,8 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-core/src/canonical_result_v2.rs",
-      "size": 180728,
-      "sha256": "7caa8aaf52940a767172c4b17e333a67e62e35c489bb36c6dfc03e475f4a2dcc"
+      "size": 209456,
+      "sha256": "910020fd4fba38fe24153c9280f8b71673f1a4b76130950cc9acb6345bd0898f"
     },
     {
       "path": "crates/qpls-core/src/compiled_pls_plan_v3.rs",
@@ -46,28 +46,28 @@
     },
     {
       "path": "crates/qpls-core/src/general_sem_capability_preflight_v1.rs",
-      "size": 50058,
-      "sha256": "9b4d7251c42b1a768481d61113f95d8f97f5f63b0e77e494b3a34ad7956b2c16"
+      "size": 60796,
+      "sha256": "f109fbd802fbbcd71118c7cd7ff9e459cddee00cedf6fc2d6702b52d24211ef5"
     },
     {
       "path": "crates/qpls-core/src/general_sem_recipe_compiler_v1.rs",
-      "size": 45957,
-      "sha256": "f6274d7716a7d46e4723d24e6f07df779e1b154eefc820a0f60ad5143378718b"
+      "size": 55284,
+      "sha256": "7940c204d78c554b4a4c8d998ebdfc7ddaa2b9514cc80ecdecc8504063a078a0"
     },
     {
       "path": "crates/qpls-project/src/project_schema_v6.rs",
-      "size": 430232,
-      "sha256": "33e90654498204f4d90b1df80b84b650faf9cc6cd04a2a80b69ce829fd882c4f"
+      "size": 541247,
+      "sha256": "290a93c0b1f467098623dcdf0be61b19c0c59863e3dcb8745dab952230ca2000"
     },
     {
       "path": "crates/qpls-resampling/src/general_sem_pls_bootstrap_v1.rs",
-      "size": 68521,
-      "sha256": "cedc04e184040182746e62a23d41de7817a2a44b9aa8aab051c7595cef79033b"
+      "size": 147315,
+      "sha256": "c65513904d2a301f15b5d48a06e33f664eefdc93c81248a533254b398ccc29ba"
     },
     {
       "path": "crates/qpls-runner/src/recipe_v4_general_sem_pls_execution.rs",
-      "size": 73847,
-      "sha256": "d135c37f4937038765d80fb86347673aef6cab61046e69649bc5a7782cfdffe0"
+      "size": 101554,
+      "sha256": "f1e25f234b97c9af3165856dc9af08797e65166ab5acf896fbdf7657ab7ac0df"
     },
     {
       "path": "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MEDIATION_BOOTSTRAP_V1.md",
@@ -86,43 +86,43 @@
     },
     {
       "path": "src-tauri/src/recipe_v4_general_sem_canonical_result.rs",
-      "size": 21586,
-      "sha256": "cf98dd0fe230d8c9bb854d35fe10e4d0f33105f10b13637de4f0e1f9125d3282"
+      "size": 97115,
+      "sha256": "b2467e39a4094d49c65c1b706acc04ddb12e3a0092978a41f69a96114e60dcae"
     },
     {
       "path": "src-tauri/src/recipe_v4_general_sem_pls_jobs.rs",
-      "size": 59019,
-      "sha256": "4097c79d4f5887b2d50d2d2658b7d82aa82cc8dedae552f14fa70e208d8c0127"
+      "size": 125069,
+      "sha256": "9f4edaa2f26369c82fa55190b2e35f0eafc6a49338de652863227bcbead702b9"
     },
     {
       "path": "src/domain/canonicalGeneralSemResultsV1.ts",
-      "size": 80497,
-      "sha256": "cbb795d33fe06615a3defe3b77d4693d8b15d128b8d67b5d2d802216a4c91c96"
+      "size": 91785,
+      "sha256": "7146504655f56d5ea81f57550c0e442ed8c366cd9970e83002a3417fda9618dd"
     },
     {
       "path": "src/domain/generalSemCapabilityPreflightV1.test.ts",
-      "size": 17504,
-      "sha256": "fb4b47bc450c84dbce218607efc0ea6d45d286d37da1caba0ee452219a63cca8"
+      "size": 28196,
+      "sha256": "887fae9eb1c83f477dce46216cd64eeeb496ff7954b7b6dbcef713953b4ab805"
     },
     {
       "path": "src/domain/generalSemCapabilityPreflightV1.ts",
-      "size": 27211,
-      "sha256": "0d83cabe923217942cd310f7f711cd338847790b86142deee01ddf5bca3ef3d7"
+      "size": 44553,
+      "sha256": "f17b096cf2d8925b71a1245185a527a9d1340e43c6978bde71aef0093a58b87b"
     },
     {
       "path": "src/domain/internalRecipeV4GeneralSemWorkspace.ts",
-      "size": 39718,
-      "sha256": "4e11af7b87ec349c4e6799bf2ce34531ddf8aa86504ffa5abaf6cccefc45ed90"
+      "size": 87163,
+      "sha256": "9b5a03f51703de185037a2fb833096df834f92b35dc491c2b1a190fcf48d626d"
     },
     {
       "path": "src/native/NativeDesktopApp.tsx",
-      "size": 110023,
-      "sha256": "c7d45314bf038716e6017e87866e702c5428df383c8983557e0e84da3bd95139"
+      "size": 120498,
+      "sha256": "97f46ac0be1d73ea35c0b3a84f25f373412028cb2cd887463f05c55b0f19bcce"
     },
     {
       "path": "src/native/NativeRecipeV4GeneralSemWorkspace.tsx",
-      "size": 65730,
-      "sha256": "fcbce9fd818f5030ac849999cac3d66b110ef9a90455dffa2890b1c40ba16cd6"
+      "size": 72760,
+      "sha256": "72998aff5bb3f7b90b0081c95216145e5e4bad5cc07e37042055371a1367ce61"
     },
     {
       "path": "src/services/projectService.ts",

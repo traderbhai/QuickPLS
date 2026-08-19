@@ -151,9 +151,12 @@ export function selectCurrentGeneralSemNativePlsDecisionV1(
 
 export interface GeneralSemCanonicalModerationInventoryV1 {
   readonly interactionEffectCount: number;
+  readonly gammaInferenceCount: number;
   readonly conditionalSlopeCount: number;
   readonly interactionPlotCount: number;
   readonly interactionPlotPointCount: number;
+  readonly bootstrapResamplesRequested: number | null;
+  readonly bootstrapResamplesUsable: number | null;
 }
 
 export function generalSemCanonicalModerationInventoryV1(
@@ -162,14 +165,31 @@ export function generalSemCanonicalModerationInventoryV1(
   const results = document?.general_sem_results;
   const interactionEffectCount = results?.interaction_effects?.length ?? 0;
   if (interactionEffectCount === 0) return null;
+  const moderationBootstrapReceipt = results?.inference_receipt?.capability_cell.cell_id
+    === "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap"
+    ? results.inference_receipt
+    : null;
   return {
     interactionEffectCount,
+    gammaInferenceCount: results?.interaction_effects?.filter((effect) => (
+      effect.scientific_rescaled_gamma?.standard_error != null
+    )).length ?? 0,
     conditionalSlopeCount: results?.conditional_effects?.length ?? 0,
     interactionPlotCount: results?.interaction_plots?.length ?? 0,
     interactionPlotPointCount: results?.interaction_plots?.reduce((plotTotal, plot) => (
       plotTotal + plot.series.reduce((seriesTotal, series) => seriesTotal + series.points.length, 0)
     ), 0) ?? 0,
+    bootstrapResamplesRequested: moderationBootstrapReceipt?.resamples_requested ?? null,
+    bootstrapResamplesUsable: moderationBootstrapReceipt?.resamples_usable ?? null,
   };
+}
+
+export function generalSemCalculationActionLabelV1(
+  interactionPlan: boolean,
+  bootstrap: boolean,
+): string {
+  if (!interactionPlan) return "Calculate PLS effects";
+  return bootstrap ? "Calculate moderation bootstrap" : "Calculate moderation point estimates";
 }
 
 export function selectLatestGeneralSemReopenedEntryV1(
@@ -1296,11 +1316,9 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const progressValue = Math.min(snapshot?.completedUnits ?? 0, progressMaximum);
   const bootstrap = effectiveEngine.inference === "percentile_case_bootstrap";
   const interactionPlan = Boolean(model?.derived_terms.some((term) => term.kind === "interaction_v2"));
-  const moderationBootstrapTurnOffRequired = interactionPlan && bootstrap && !markedGeneralSemProjectMode;
   const moderationBootstrapInputDisabled = running
     || operationBusy
-    || markedGeneralSemProjectMode
-    || (interactionPlan && !bootstrap);
+    || markedGeneralSemProjectMode;
 
   return <section id="nd-model-general-sem-labs-panel" className="nd-cbsem-v4-workspace nd-general-sem-workspace" role="tabpanel" aria-labelledby="nd-model-general-sem-labs-tab">
     <header className="nd-cbsem-v4-header"><div><h2>General SEM in QuickPLS</h2><p>One QuickPLS canvas · explicit General SEM project authority · PLS-first Experimental Labs</p></div><FlaskConical size={24} aria-hidden="true" /></header>
@@ -1319,12 +1337,13 @@ export function NativeRecipeV4GeneralSemWorkspace({
         <fieldset className="nd-cbsem-v4-scales"><legend>Inference</legend>
           <label className="nd-checkbox-row" htmlFor="nd-general-sem-bootstrap"><input id="nd-general-sem-bootstrap" type="checkbox" checked={bootstrap} disabled={moderationBootstrapInputDisabled} aria-describedby={interactionPlan ? "nd-general-sem-moderation-inference-note" : undefined} onChange={(event) => {
             if (markedGeneralSemProjectMode) return;
-            if (interactionPlan && event.target.checked) return;
             setEngine((current) => ({ ...current, inference: event.target.checked ? "percentile_case_bootstrap" : "none" }));
             setReceipt(null); setArchiveSnapshot(null); setNativePlsPreflight(null); clearResults();
           }} />Full-model percentile case bootstrap</label>
           {interactionPlan ? <p id="nd-general-sem-moderation-inference-note" className="nd-inline-warning" role="status">
-            Simultaneous two-way moderation is point-estimation only. Bootstrap inference is not qualified for this exact capability cell.{moderationBootstrapTurnOffRequired ? " Turn off Full-model percentile case bootstrap to continue." : " The bootstrap option remains unavailable for this model."}
+            {bootstrap
+              ? "Full-model case bootstrap reports percentile inference only for each scientific rescaled interaction gamma. Standardized-product coefficients, joint-stage coefficients, fixed -1/0/+1 slopes, and interaction plots remain point estimates; plots do not include confidence bands."
+              : "Optional full-model case bootstrap is available for scientific rescaled interaction gamma. Standardized-product coefficients, joint-stage coefficients, fixed -1/0/+1 slopes, and interaction plots remain point-only."}
           </p> : null}
           {bootstrap ? <>
             <label htmlFor="nd-general-sem-bootstrap-samples">Replicates<input id="nd-general-sem-bootstrap-samples" type="number" min={2} max={10_000} step={100} value={effectiveEngine.bootstrapSamples} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => setEngine((current) => ({ ...current, bootstrapSamples: Number(event.target.value) }))} /></label>
@@ -1342,11 +1361,11 @@ export function NativeRecipeV4GeneralSemWorkspace({
         <ol className="nd-cbsem-v4-preflight-list">
           <li className={localPreflight.ready ? "ready" : "blocked"}><span aria-hidden="true">{localPreflight.ready ? "✓" : "!"}</span><div><strong>General SEM project and model authority</strong><small>{localPreflight.ready ? "Ready for QuickPLS engine verification" : `${localPreflight.issues.length} issue${localPreflight.issues.length === 1 ? "" : "s"}`}</small>{localPreflight.issues.map((item) => <p key={`${item.code}:${item.subject}`}><strong>{item.message}</strong> {item.correctiveAction} <code>{item.code}</code></p>)}</div></li>
           <li className={receipt ? "ready" : "blocked"}><span aria-hidden="true">{receipt ? "✓" : "2"}</span><div><strong>Safe QuickPLS project file</strong><small>{receipt ? `Verified ${receipt.destinationArchivePath}` : "Save the current dataset, canvas model, and analysis settings in one calculation file"}</small>{receipt && !archiveCurrent ? <p>The canvas or settings changed. Keep the saved file unchanged and create a fresh calculation project from the current canvas.</p> : null}</div></li>
-          <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? nativePlsExecution?.kind === "multiple_two_way_moderation_point" ? "Exact simultaneous two-way moderation point cell verified" : "Experimental PLS support verified" : "Pending final engine verification"}</small></div></li>
+          <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? nativePlsExecution?.kind === "multiple_two_way_moderation_bootstrap" ? "Exact simultaneous two-way moderation gamma-bootstrap cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_point" ? "Exact simultaneous two-way moderation point cell verified" : "Experimental PLS support verified" : "Pending final engine verification"}</small></div></li>
         </ol>
         <div className="nd-cbsem-v4-actions">
           <button ref={createButtonRef} type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !freshGeneralSemDraftMode || !localPreflight.ready} title={!freshGeneralSemDraftMode ? "Start a new General SEM project to create its marked authority; existing projects cannot enter this path." : !localPreflight.ready ? "Resolve every compatibility issue first." : "Save and activate this new General SEM project as the current QuickPLS canvas authority."} onClick={() => void createCalculationProject()}><Archive size={15} aria-hidden="true" />Save and activate project…</button>
-          <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />{interactionPlan ? "Calculate moderation point estimates" : "Calculate PLS effects"}</button>
+          <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />{generalSemCalculationActionLabelV1(interactionPlan, bootstrap)}</button>
           <button type="button" className="danger" disabled={!activeJobIdRef.current || snapshot?.state === "cancelling" || snapshot?.state === "completed"} onClick={() => void cancel()}><CircleStop size={15} aria-hidden="true" />Cancel</button>
           {markedGeneralSemProjectMode ? <button type="button" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || unpersistedCompletedResult} title={unpersistedCompletedResult ? "Save and strictly reopen the completed result, or dismiss it explicitly, before closing." : undefined} onClick={() => void closeGeneralSemProject()}><FolderOpen size={15} aria-hidden="true" />Close General SEM project</button> : null}
         </div>
@@ -1373,7 +1392,9 @@ export function NativeRecipeV4GeneralSemWorkspace({
     {!completed && reopenedEntry ? <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-general-sem-reopened-result-heading"><h3 id="nd-general-sem-reopened-result-heading"><CheckCircle2 size={16} aria-hidden="true" />Verified project result</h3><p>QuickPLS restored the latest matching General SEM result from strict archive readback.</p><div className="nd-cbsem-v4-actions"><button type="button" disabled={!displayedDocument} onClick={() => void exportDisplayed()}><Download size={15} aria-hidden="true" />Export XLSX</button></div><p className="nd-cbsem-v4-success" role="status">Verified result {reopenedEntry.documentId}.</p>{exportFeedback ? <p role="status" aria-live="polite">{exportFeedback}</p> : null}</section> : null}
 
     {moderationInventory ? <p className="nd-cbsem-v4-success" role="status" aria-live="polite">
-      Verified canonical moderation output: {moderationInventory.interactionEffectCount} interaction effect{moderationInventory.interactionEffectCount === 1 ? "" : "s"}, {moderationInventory.conditionalSlopeCount} conditional slope{moderationInventory.conditionalSlopeCount === 1 ? "" : "s"}, and {moderationInventory.interactionPlotCount} interaction plot{moderationInventory.interactionPlotCount === 1 ? "" : "s"} with {moderationInventory.interactionPlotPointCount} persisted point{moderationInventory.interactionPlotPointCount === 1 ? "" : "s"}. QuickPLS displays and exports the native canonical values without adding inference.
+      Verified canonical moderation output: {moderationInventory.interactionEffectCount} interaction effect{moderationInventory.interactionEffectCount === 1 ? "" : "s"}, {moderationInventory.conditionalSlopeCount} conditional slope{moderationInventory.conditionalSlopeCount === 1 ? "" : "s"}, and {moderationInventory.interactionPlotCount} interaction plot{moderationInventory.interactionPlotCount === 1 ? "" : "s"} with {moderationInventory.interactionPlotPointCount} persisted point{moderationInventory.interactionPlotPointCount === 1 ? "" : "s"}. {moderationInventory.gammaInferenceCount > 0
+        ? `Scientific gamma inference is complete for ${moderationInventory.gammaInferenceCount} interaction${moderationInventory.gammaInferenceCount === 1 ? "" : "s"} using ${moderationInventory.bootstrapResamplesUsable} of ${moderationInventory.bootstrapResamplesRequested} bootstrap replicates. Standardized-product coefficients, joint-stage coefficients, slopes, and plots remain point estimates; plots have no confidence bands.`
+        : "QuickPLS displays and exports the native canonical point values without adding inference."}
     </p> : null}
     {displayedDocument ? <CanonicalResultDocumentV2View document={displayedDocument} reopened={Boolean(reopenedEntry)} headingRef={resultHeadingRef} compilationReceipt={null} /> : null}
     {archiveSnapshot ? <details className="nd-cbsem-v4-run-details"><summary>Calculation project receipt</summary><dl><div><dt>Project</dt><dd>{archiveSnapshot.project.project_id}</dd></div><div><dt>File SHA-256</dt><dd>{currentArchiveSha256 ?? archiveSnapshot.archiveSha256}</dd></div><div><dt>Model</dt><dd>{receipt?.residentModelId}</dd></div><div><dt>Recipe</dt><dd>{receipt?.residentRecipeId}</dd></div></dl></details> : null}

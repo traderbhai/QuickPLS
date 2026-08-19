@@ -3,15 +3,21 @@ import type { CanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
 import { canonicalResultDocumentJson, validateCanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
 import {
   GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
   GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
   GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1,
   GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1,
 } from "./canonicalGeneralSemResultsV1";
 import {
   bindGeneralSemPlsModelToDatasetV1,
+  appendGeneralSemResultV1,
   buildGeneralSemRecipeV1,
   defaultGeneralSemPlsEngineOptionsV1,
   GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
   generalSemConfigFromEngineV1,
@@ -349,6 +355,217 @@ function moderationCanonicalDocument(): CanonicalResultDocumentV2 {
   return document;
 }
 
+function moderationBootstrapCanonicalDocument(): CanonicalResultDocumentV2 {
+  const document = moderationCanonicalDocument();
+  const results = document.general_sem_results!;
+  const effect = results.interaction_effects![0]!;
+  const usableIndices = Array.from({ length: 9 }, (_, index) => index);
+  const failedReplicates = [{
+    replicate_index: 9,
+    reason_code: "constant_interaction_product" as const,
+    message: "The sampled interaction product was constant.",
+  }];
+  effect.scientific_rescaled_gamma = {
+    estimate: 0.4,
+    bootstrap_mean: 0.41,
+    bootstrap_bias: 0.01,
+    standard_error: 0.1,
+    lower: 0.2,
+    upper: 0.6,
+    p_value: 0.3,
+    bootstrap_usable_replicates: 9,
+    bootstrap_two_sided_exceedances: 2,
+  };
+  const canonicalIdentity = {
+    kind: "interaction_scientific_rescaled_gamma" as const,
+    effect_id: effect.effect_id,
+    interaction_id: effect.interaction_id,
+    focal_relation_id: effect.focal_relation_id,
+    interaction_effect_relation_id: effect.interaction_effect_relation_id,
+    interaction_effect_parameter_id: effect.interaction_effect_parameter_id,
+    generated_product_column_id: effect.generated_product_column_id,
+    focal_predictor_id: effect.focal_predictor_id,
+    moderator_id: effect.moderator_id,
+    outcome_id: effect.outcome_id,
+    stage_one_model_scientific_sha256: effect.stage_one_model_scientific_sha256,
+    product_scale_version: effect.product_scale_version,
+    method_version: effect.method_version,
+  };
+  results.inference_receipt = {
+    kind: "case_bootstrap",
+    capability_cell: GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+    method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+    resampling_operation_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+    resampling_stream_version: "indexed_case_resampling_v1",
+    quantile_method_version: "type7_quantile_v1",
+    standard_error_method_version: "sample_standard_error_b_minus_1_v1",
+    summation_method_version: "neumaier_compensated_sum_v1",
+    p_value_method_version: "null_centered_plus_one_v1",
+    failure_policy_version: "minimum_usable_fraction_0_9_v1",
+    compilation_artifact_identity_sha256: "1".repeat(64),
+    compiled_plan_sha256: "2".repeat(64),
+    general_sem_config_sha256: "3".repeat(64),
+    recipe_analytical_sha256: document.provenance.recipe_digest,
+    model_scientific_sha256: document.provenance.model_digest,
+    source_dataset_fingerprint: document.provenance.dataset_fingerprint,
+    complete_case_frame_sha256: "4".repeat(64),
+    usable_replicate_indices_sha256: sha256HexUtf8V1(JSON.stringify(usableIndices)),
+    effect_identity_set_sha256: sha256HexUtf8V1(JSON.stringify([canonicalIdentity])),
+    effect_ids: [effect.effect_id],
+    interval: "percentile_type7",
+    tail: "two_sided",
+    confidence_level: 0.95,
+    resamples_requested: 10,
+    resamples_usable: 9,
+    minimum_usable_resamples: 9,
+    seed: "42",
+    workers: 1,
+    complete_model_reestimated_per_replicate: true,
+    failed_replicates: failedReplicates,
+  };
+  const baseCell = {
+    registry_schema_version: 2 as const,
+    capability_id: "smartpls.pls_algorithm",
+    cell_id: "qpls3.pls.algorithm",
+    capability_version: "pls_pm_v1",
+  };
+  document.provenance.engine_version =
+    "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_percentile_bootstrap_execution_v1";
+  document.provenance.method_version =
+    GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1;
+  document.capability_cells = [
+    GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+    GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+    baseCell,
+  ];
+  return document;
+}
+
+function moderationBootstrapCompletedFixture(): {
+  completed: GeneralSemPlsCompletedResultV1;
+  execution: GeneralSemPlsExecutionCapabilityV1;
+} {
+  const canonical = moderationBootstrapCanonicalDocument();
+  const effect = canonical.general_sem_results!.interaction_effects![0]!;
+  const receipt = canonical.general_sem_results!.inference_receipt!;
+  const rawTarget = {
+    kind: "interaction_scientific_rescaled_gamma" as const,
+    target_version: GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1,
+    target_id: effect.effect_id,
+    interaction_id: effect.interaction_id,
+    focal_relation_id: effect.focal_relation_id,
+    interaction_effect_relation_id: effect.interaction_effect_relation_id,
+    interaction_effect_parameter_id: effect.interaction_effect_parameter_id,
+    generated_product_column_id: effect.generated_product_column_id,
+    focal_predictor_id: effect.focal_predictor_id,
+    moderator_id: effect.moderator_id,
+    outcome_id: effect.outcome_id,
+    stage_one_model_scientific_sha256: effect.stage_one_model_scientific_sha256,
+    product_scale_version: effect.product_scale_version,
+    method_version: effect.method_version,
+  };
+  const failedReplicates = structuredClone(receipt.failed_replicates);
+  const moderationBootstrapInference = {
+    schema_version: 1,
+    method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+    point_method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+    resampling_operation_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+    resampling_stream_version: "indexed_case_resampling_v1",
+    quantile_method_version: "type7_quantile_v1",
+    standard_error_method_version: "sample_standard_error_b_minus_1_v1",
+    summation_method_version: "neumaier_compensated_sum_v1",
+    p_value_method_version: "null_centered_plus_one_v1",
+    failure_policy_version: "minimum_usable_fraction_0_9_v1",
+    sign_alignment_method_version: GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1,
+    product_scale_version: GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
+    gamma_target_version: GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1,
+    general_sem_config_sha256: receipt.general_sem_config_sha256,
+    compiled_plan_sha256: receipt.compiled_plan_sha256,
+    model_scientific_sha256: receipt.model_scientific_sha256,
+    stage_one_model_scientific_sha256: effect.stage_one_model_scientific_sha256,
+    source_dataset_fingerprint: receipt.source_dataset_fingerprint,
+    complete_case_frame_sha256: receipt.complete_case_frame_sha256,
+    usable_replicate_indices_sha256: receipt.usable_replicate_indices_sha256,
+    gamma_target_identity_set_sha256: sha256HexUtf8V1(JSON.stringify([rawTarget])),
+    gamma_target_ids: [rawTarget.target_id],
+    interval: "percentile",
+    tail: "two_sided",
+    confidence_level: receipt.confidence_level,
+    resamples_requested: receipt.resamples_requested,
+    resamples_usable: receipt.resamples_usable,
+    minimum_usable_resamples: receipt.minimum_usable_resamples,
+    seed: receipt.seed,
+    workers: receipt.workers,
+    complete_model_reestimated_per_replicate: true,
+    shared_stage_one_reestimated_per_replicate: true,
+    score_vectors_sign_aligned_before_products: true,
+    product_scaling_recomputed_per_replicate: true,
+    joint_stage_two_reestimated_per_replicate: true,
+    complete_joint_point_contract_validated_per_replicate: true,
+    failed_replicates: failedReplicates,
+    interaction_gammas: [{
+      target: rawTarget,
+      original: 0.4,
+      bootstrap_mean: 0.41,
+      bootstrap_bias: 0.01,
+      standard_error: 0.1,
+      lower: 0.2,
+      upper: 0.6,
+      p_value_two_sided: 0.3,
+      usable_replicates: 9,
+      two_sided_exceedances: 2,
+    }],
+  };
+  const completed = completedResult();
+  completed.canonicalDocument = canonical;
+  completed.analyticalResult = {
+    schema_version: 1,
+    adapter_version:
+      "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_percentile_bootstrap_execution_v1",
+    capability_cell: GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+    compilation_artifact_identity_sha256: receipt.compilation_artifact_identity_sha256,
+    compiled_plan_sha256: receipt.compiled_plan_sha256,
+    recipe_analytical_sha256: canonical.provenance.recipe_digest,
+    model_scientific_sha256: canonical.provenance.model_digest,
+    stage_one_model_scientific_sha256: effect.stage_one_model_scientific_sha256,
+    source_dataset_fingerprint: canonical.provenance.dataset_fingerprint,
+    general_sem_config_sha256: receipt.general_sem_config_sha256,
+    point_estimation: {},
+    requested_effects: [],
+    interaction_point_estimation: {
+      method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+      observation_count: 24,
+      product_scale_receipts: [],
+      structural_coefficients: [],
+      interaction_coefficients: [{
+        interaction_id: effect.interaction_id,
+        focal_relation_id: effect.focal_relation_id,
+        interaction_effect_relation_id: effect.interaction_effect_relation_id,
+        interaction_effect_parameter_id: effect.interaction_effect_parameter_id,
+        focal_predictor_id: effect.focal_predictor_id,
+        moderator_id: effect.moderator_id,
+        outcome_id: effect.outcome_id,
+        construction_method: "two_stage",
+        hierarchy_policy: "strong",
+        hierarchy_policy_version: GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1,
+        standardized_product_estimate: 0.2,
+        raw_product_estimate: 0.4,
+      }],
+      simple_slopes: [],
+    },
+    moderation_bootstrap_inference: moderationBootstrapInference,
+  };
+  return {
+    completed,
+    execution: {
+      kind: "multiple_two_way_moderation_bootstrap",
+      capabilityCell: GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+      interactionIds: [effect.interaction_id],
+      focalRelationIds: [effect.focal_relation_id],
+    },
+  };
+}
+
 function rustSpecificPathIdentityV1(relationIds: readonly string[]): string {
   const encoder = new TextEncoder();
   const domain = encoder.encode("qpls.compiled-sem-topology-v1.specific-directed-path\0");
@@ -547,7 +764,7 @@ function completedExecutionFixture(
   completed.analyticalResult = {
     schema_version: 1,
     adapter_version: adapterVersion,
-    capability_cell: execution.capabilityCell,
+    capability_cell: primaryCell,
     compilation_artifact_identity_sha256: "1".repeat(64),
     compiled_plan_sha256: "2".repeat(64),
     recipe_analytical_sha256: completed.canonicalDocument.provenance.recipe_digest,
@@ -621,12 +838,22 @@ describe("General SEM Recipe-v4 workspace contract", () => {
   });
 
   it.each(["same_focal", "different_focal"] as const)(
-    "routes simultaneous two-way moderation with %s paths through its exact native point cell",
+    "routes simultaneous two-way moderation with %s paths through exact point and supplemental bootstrap cells",
     (layout) => {
       const model = multipleModerationModel(layout);
       const config = generalSemConfigFromEngineV1(defaultGeneralSemPlsEngineOptionsV1());
       const decision = preflightGeneralSemPlsV1(model, config);
       const selected = selectGeneralSemPlsExecutionCapabilityV1({ model, config, decision });
+      const bootstrapConfig = generalSemConfigFromEngineV1({
+        ...defaultGeneralSemPlsEngineOptionsV1(),
+        inference: "percentile_case_bootstrap",
+      });
+      const bootstrapDecision = preflightGeneralSemPlsV1(model, bootstrapConfig);
+      const bootstrapSelected = selectGeneralSemPlsExecutionCapabilityV1({
+        model,
+        config: bootstrapConfig,
+        decision: bootstrapDecision,
+      });
 
       expect(selected).toMatchObject({
         kind: "multiple_two_way_moderation_point",
@@ -639,10 +866,19 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       expect(generalSemJobRequestFromReceiptV1(
         receipt(), model, config, decision,
       ).capabilityCell).toStrictEqual(GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1);
+      expect(bootstrapSelected).toMatchObject({
+        kind: "multiple_two_way_moderation_bootstrap",
+        capabilityCell: GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+        interactionIds: selected.interactionIds,
+        focalRelationIds: selected.focalRelationIds,
+      });
+      expect(generalSemJobRequestFromReceiptV1(
+        receipt(), model, bootstrapConfig, bootstrapDecision,
+      ).capabilityCell).toStrictEqual(GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1);
     },
   );
 
-  it("blocks interaction bootstrap and stale native capability authority before job start", () => {
+  it("blocks stale native capability authority before job start without retiring interaction bootstrap", () => {
     const model = multipleModerationModel("same_focal");
     const point = generalSemConfigFromEngineV1(defaultGeneralSemPlsEngineOptionsV1());
     const staleMediationDecision = preflightGeneralSemPlsV1(multipleMediationModel(), point);
@@ -656,13 +892,10 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       ...defaultGeneralSemPlsEngineOptionsV1(),
       inference: "percentile_case_bootstrap",
     });
-    const blockedDecision = preflightGeneralSemPlsV1(model, bootstrap);
-    expect(() => generalSemJobRequestFromReceiptV1(
-      receipt(), model, bootstrap, blockedDecision,
-    )).toThrowError(expect.objectContaining({
-      code: "sem.capability.pls.multiple_moderation_bootstrap_not_executable",
-      correctiveAction: expect.stringContaining("Turn off"),
-    }));
+    const bootstrapDecision = preflightGeneralSemPlsV1(model, bootstrap);
+    expect(generalSemJobRequestFromReceiptV1(
+      receipt(), model, bootstrap, bootstrapDecision,
+    ).capabilityCell).toStrictEqual(GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1);
   });
 
   it.each([
@@ -672,6 +905,130 @@ describe("General SEM Recipe-v4 workspace contract", () => {
   ] as const)("reconciles a completed %s result with its exact native execution authority", (kind) => {
     const fixture = completedExecutionFixture(kind);
     expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution)).not.toThrow();
+  });
+
+  it("keeps the mediation-bootstrap request cell distinct from the compiled analytical point cell", () => {
+    const fixture = completedExecutionFixture("mediation_bootstrap");
+    expect(fixture.execution.capabilityCell).toStrictEqual(GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1);
+    expect((fixture.completed.analyticalResult as Record<string, unknown>).capability_cell)
+      .toStrictEqual(GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1);
+    expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution)).not.toThrow();
+
+    (fixture.completed.analyticalResult as Record<string, unknown>).capability_cell =
+      GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1;
+    expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution))
+      .toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+  });
+
+  it("strictly parses and reconciles the gamma-only moderation bootstrap request, raw receipt, and canonical result", () => {
+    const fixture = moderationBootstrapCompletedFixture();
+
+    expect(validateCanonicalResultDocumentV2(fixture.completed.canonicalDocument))
+      .toEqual({ passed: true, errors: [] });
+    expect(parseGeneralSemPlsCompletedResultV1(fixture.completed)).toStrictEqual(fixture.completed);
+    expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution))
+      .not.toThrow();
+    expect(fixture.execution.capabilityCell)
+      .toStrictEqual(GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1);
+    expect((fixture.completed.analyticalResult as Record<string, unknown>).capability_cell)
+      .toStrictEqual(GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1);
+    expect(fixture.completed.canonicalDocument.provenance).toMatchObject({
+      capability_cell: GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+      method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+    });
+
+    fixture.completed.canonicalDocument.provenance.method_version =
+      GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1;
+    expect(() => validateGeneralSemPlsCompletedExecutionV1(fixture.completed, fixture.execution))
+      .toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+  });
+
+  it.each([
+    "generated_product_column_id",
+    "stage_one_model_scientific_sha256",
+    "product_scale_version",
+    "method_version",
+  ] as const)("rejects raw and canonical gamma identity tampering in %s", (field) => {
+    const rawTamper = moderationBootstrapCompletedFixture();
+    const raw = (rawTamper.completed.analyticalResult as Record<string, unknown>)
+      .moderation_bootstrap_inference as Record<string, unknown>;
+    const row = (raw.interaction_gammas as Array<Record<string, unknown>>)[0]!;
+    const target = row.target as Record<string, unknown>;
+    target[field] = field === "stage_one_model_scientific_sha256"
+      ? "9".repeat(64)
+      : "tampered:v1";
+    expect(() => parseGeneralSemPlsCompletedResultV1(rawTamper.completed))
+      .toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+
+    const canonicalTamper = moderationBootstrapCompletedFixture();
+    const effect = canonicalTamper.completed.canonicalDocument.general_sem_results!
+      .interaction_effects![0] as unknown as Record<string, unknown>;
+    effect[field] = field === "stage_one_model_scientific_sha256"
+      ? "9".repeat(64)
+      : "tampered:v1";
+    expect(validateCanonicalResultDocumentV2(canonicalTamper.completed.canonicalDocument).passed)
+      .toBe(false);
+  });
+
+  it("rejects raw gamma schema drift, inference on point-only moderation surfaces, and plot confidence bands", () => {
+    const rawExtra = moderationBootstrapCompletedFixture();
+    const raw = (rawExtra.completed.analyticalResult as Record<string, unknown>)
+      .moderation_bootstrap_inference as Record<string, unknown>;
+    const target = ((raw.interaction_gammas as Array<Record<string, unknown>>)[0]!
+      .target as Record<string, unknown>);
+    target.unexpected = true;
+    expect(() => parseGeneralSemPlsCompletedResultV1(rawExtra.completed))
+      .toThrowError(expect.objectContaining({ code: "general_sem.wire.completed_execution_mismatch" }));
+
+    for (const mutate of [
+      (document: CanonicalResultDocumentV2) => {
+        document.general_sem_results!.interaction_effects![0]!.standardized_product_coefficient = {
+          estimate: 0.2,
+          bootstrap_mean: 0.21,
+          bootstrap_bias: 0.01,
+          standard_error: 0.1,
+          lower: 0,
+          upper: 0.4,
+          p_value: 0.3,
+          bootstrap_usable_replicates: 9,
+          bootstrap_two_sided_exceedances: 2,
+        };
+      },
+      (document: CanonicalResultDocumentV2) => {
+        document.general_sem_results!.joint_stage_structural_coefficients![0]!.estimate = {
+          estimate: 0.3,
+          bootstrap_mean: 0.31,
+          bootstrap_bias: 0.01,
+          standard_error: 0.1,
+          lower: 0.1,
+          upper: 0.5,
+          p_value: 0.3,
+          bootstrap_usable_replicates: 9,
+          bootstrap_two_sided_exceedances: 2,
+        };
+      },
+      (document: CanonicalResultDocumentV2) => {
+        document.general_sem_results!.conditional_effects![0]!.value = {
+          estimate: 0.1,
+          bootstrap_mean: 0.11,
+          bootstrap_bias: 0.01,
+          standard_error: 0.1,
+          lower: -0.1,
+          upper: 0.3,
+          p_value: 0.3,
+          bootstrap_usable_replicates: 9,
+          bootstrap_two_sided_exceedances: 2,
+        };
+      },
+      (document: CanonicalResultDocumentV2) => {
+        document.general_sem_results!.interaction_plots![0]!.series[0]!.points[0]!.lower = -1;
+        document.general_sem_results!.interaction_plots![0]!.series[0]!.points[0]!.upper = 1;
+      },
+    ]) {
+      const document = moderationBootstrapCanonicalDocument();
+      mutate(document);
+      expect(validateCanonicalResultDocumentV2(document).passed).toBe(false);
+    }
   });
 
   it("rejects completed-result capability, method, engine, digest, inventory, and payload-shape relabeling", () => {
@@ -1092,7 +1449,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     const validation = validateCanonicalResultDocumentV2(genericCellTamper);
     expect(validation.passed).toBe(false);
     expect(validation.errors.join("\n")).toContain(
-      "must equal the General SEM multiple-mediation full-model case-bootstrap option cell",
+      "must equal the exact General SEM multiple-mediation or multiple two-way moderation full-model case-bootstrap option cell",
     );
     expect(() => parseGeneralSemPlsCompletedResultV1({
       ...completedResult(),
@@ -1147,6 +1504,44 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     expect(read).toHaveBeenCalledWith(expect.objectContaining({
       expectedSourceSha256: "8".repeat(64),
     }));
+  });
+
+  it("preserves the gamma inference receipt losslessly through schema-6 append and strict reopen", async () => {
+    const fixture = moderationBootstrapCompletedFixture();
+    const completed = parseGeneralSemPlsCompletedResultV1(fixture.completed);
+    const canonicalJson = canonicalResultDocumentJson(completed.canonicalDocument);
+    const append = vi.fn().mockResolvedValue({ status: "ok" });
+    await appendGeneralSemResultV1(completed, append);
+    expect(append).toHaveBeenCalledWith(expect.objectContaining({
+      canonicalDocument: completed.canonicalDocument,
+    }));
+
+    const read = vi.fn().mockResolvedValue({
+      status: "ok" as const,
+      value: {
+        schemaVersion: 1 as const,
+        projectId: PROJECT_ID,
+        archivePath: completed.archiveIdentity.archivePath,
+        sourceDocumentSha256: "8".repeat(64),
+        canonicalResultDocumentCount: 1,
+        documents: [{
+          documentId: completed.canonicalDocument.document_id,
+          runId: completed.canonicalDocument.provenance.run_id,
+          canonicalDocumentSha256: "9".repeat(64),
+          immutable: true as const,
+          canonicalDocumentJson: canonicalJson,
+          canonicalDocument: structuredClone(completed.canonicalDocument),
+        }],
+        sourceRecheckedUnchanged: true as const,
+      },
+    });
+    const reopened = await reopenGeneralSemResultV1(completed, "8".repeat(64), read);
+    expect(reopened.entry?.canonicalDocument.general_sem_results?.inference_receipt)
+      .toStrictEqual(completed.canonicalDocument.general_sem_results?.inference_receipt);
+    expect(reopened.entry?.canonicalDocument.general_sem_results?.interaction_effects?.[0]
+      .scientific_rescaled_gamma)
+      .toStrictEqual(completed.canonicalDocument.general_sem_results?.interaction_effects?.[0]
+        .scientific_rescaled_gamma);
   });
 
   it("stops immediately when monitoring is cancelled and never requests a result", async () => {

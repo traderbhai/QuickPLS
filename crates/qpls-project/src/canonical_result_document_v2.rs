@@ -4,17 +4,18 @@ pub use qpls_core::{
     CanonicalAggregateEffectResultV1, CanonicalCbsemFitResultV1,
     CanonicalConditionalEffectProbeResultV1, CanonicalConditionalEffectResultV1,
     CanonicalConditionalProbeValuesResultV1, CanonicalGeneralSemBootstrapIntervalV1,
-    CanonicalGeneralSemEstimateV1, CanonicalGeneralSemFailedReplicateV1,
-    CanonicalGeneralSemInferenceKindV1, CanonicalGeneralSemInferenceReceiptV1,
-    CanonicalGeneralSemInferenceTailV1, CanonicalGeneralSemIntervalV1,
-    CanonicalGeneralSemResultTraceV1, CanonicalGeneralSemResultsV1, CanonicalHocRelationEstimateV1,
-    CanonicalHocStageKindV1, CanonicalHocStageResultV1, CanonicalIdentificationDiagnosticV1,
-    CanonicalIdentificationScopeV1, CanonicalIdentificationStatusV1,
-    CanonicalInteractionConstructionMethodV1, CanonicalInteractionEffectResultV1,
-    CanonicalInteractionHierarchyPolicyV1, CanonicalInteractionPlotPointV1,
-    CanonicalInteractionPlotResultV1, CanonicalInteractionPlotSeriesV1,
-    CanonicalJointStageStructuralCoefficientResultV1, CanonicalSpecificIndirectEffectResultV1,
-    CanonicalStructuralEstimateStageV1, CanonicalStructuralRelationRoleV1,
+    CanonicalGeneralSemEffectIdentityV1, CanonicalGeneralSemEstimateV1,
+    CanonicalGeneralSemFailedReplicateV1, CanonicalGeneralSemInferenceKindV1,
+    CanonicalGeneralSemInferenceReceiptV1, CanonicalGeneralSemInferenceTailV1,
+    CanonicalGeneralSemIntervalV1, CanonicalGeneralSemResultTraceV1, CanonicalGeneralSemResultsV1,
+    CanonicalHocRelationEstimateV1, CanonicalHocStageKindV1, CanonicalHocStageResultV1,
+    CanonicalIdentificationDiagnosticV1, CanonicalIdentificationScopeV1,
+    CanonicalIdentificationStatusV1, CanonicalInteractionConstructionMethodV1,
+    CanonicalInteractionEffectResultV1, CanonicalInteractionHierarchyPolicyV1,
+    CanonicalInteractionPlotPointV1, CanonicalInteractionPlotResultV1,
+    CanonicalInteractionPlotSeriesV1, CanonicalJointStageStructuralCoefficientResultV1,
+    CanonicalSpecificIndirectEffectResultV1, CanonicalStructuralEstimateStageV1,
+    CanonicalStructuralRelationRoleV1,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -1525,6 +1526,42 @@ mod tests {
                 .unwrap_err()
                 .to_string()
                 .contains("effect_identity_set_sha256 does not match")
+        );
+    }
+
+    #[test]
+    fn moderation_gamma_identity_round_trips_with_complete_scientific_binding() {
+        let identity = CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma {
+            effect_id: "relation:interaction_effect".into(),
+            interaction_id: "interaction:x_by_w".into(),
+            focal_relation_id: "relation:x_y".into(),
+            interaction_effect_relation_id: "relation:interaction_effect".into(),
+            interaction_effect_parameter_id: "parameter:interaction_effect".into(),
+            generated_product_column_id: "derived:x_by_w".into(),
+            focal_predictor_id: "construct:x".into(),
+            moderator_id: "construct:w".into(),
+            outcome_id: "construct:y".into(),
+            stage_one_model_scientific_sha256: "a".repeat(64),
+            product_scale_version: qpls_core::GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1.into(),
+            method_version: qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+                .into(),
+        };
+        let encoded = serde_json::to_value(&identity).unwrap();
+        assert_eq!(encoded["kind"], "interaction_scientific_rescaled_gamma");
+        assert_eq!(encoded["generated_product_column_id"], "derived:x_by_w");
+        assert_eq!(
+            encoded["method_version"],
+            qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+        );
+        let restored: CanonicalGeneralSemEffectIdentityV1 =
+            serde_json::from_value(encoded.clone()).unwrap();
+        assert_eq!(restored, identity);
+
+        let mut unknown = encoded.as_object().unwrap().clone();
+        unknown.insert("unbound_target".into(), Value::Bool(true));
+        assert!(
+            serde_json::from_value::<CanonicalGeneralSemEffectIdentityV1>(Value::Object(unknown))
+                .is_err()
         );
     }
 

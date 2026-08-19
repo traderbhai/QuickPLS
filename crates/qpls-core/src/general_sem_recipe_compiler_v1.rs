@@ -15,6 +15,8 @@ pub const GENERAL_SEM_PLS_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1: &str =
     "recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1";
 pub const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_RECIPE_COMPILER_VERSION_V1: &str =
     "recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1";
+pub const GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1: &str =
+    "recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_bootstrap_v1";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_ID_V1: &str = "smartpls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CELL_ID_V1: &str = "qpls3.pls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_VERSION_V1: &str = "pls_mediation_v1";
@@ -28,6 +30,11 @@ pub const PLS_GENERAL_MULTIPLE_MODERATION_CELL_ID_V1: &str =
     "qpls3.pls.general_sem_multiple_two_way_moderation_point";
 pub const PLS_GENERAL_MULTIPLE_MODERATION_CAPABILITY_VERSION_V1: &str =
     "general_sem_pls_multiple_two_way_moderation_point_v1";
+pub const PLS_GENERAL_MULTIPLE_MODERATION_BOOTSTRAP_CAPABILITY_ID_V1: &str = "smartpls.moderation";
+pub const PLS_GENERAL_MULTIPLE_MODERATION_BOOTSTRAP_CELL_ID_V1: &str =
+    "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap";
+pub const PLS_GENERAL_MULTIPLE_MODERATION_BOOTSTRAP_CAPABILITY_VERSION_V1: &str =
+    "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1";
 
 pub fn pls_general_recursive_effects_capability_cell_v1() -> CapabilityCellReferenceV2 {
     CapabilityCellReferenceV2 {
@@ -53,6 +60,15 @@ pub fn pls_general_multiple_moderation_point_capability_cell_v1() -> CapabilityC
         capability_id: PLS_GENERAL_MULTIPLE_MODERATION_CAPABILITY_ID_V1.into(),
         cell_id: PLS_GENERAL_MULTIPLE_MODERATION_CELL_ID_V1.into(),
         capability_version: PLS_GENERAL_MULTIPLE_MODERATION_CAPABILITY_VERSION_V1.into(),
+    }
+}
+
+pub fn pls_general_multiple_moderation_bootstrap_capability_cell_v1() -> CapabilityCellReferenceV2 {
+    CapabilityCellReferenceV2 {
+        registry_schema_version: 2,
+        capability_id: PLS_GENERAL_MULTIPLE_MODERATION_BOOTSTRAP_CAPABILITY_ID_V1.into(),
+        cell_id: PLS_GENERAL_MULTIPLE_MODERATION_BOOTSTRAP_CELL_ID_V1.into(),
+        capability_version: PLS_GENERAL_MULTIPLE_MODERATION_BOOTSTRAP_CAPABILITY_VERSION_V1.into(),
     }
 }
 
@@ -110,18 +126,14 @@ impl CompiledGeneralSemPlsRecipeV1 {
 pub enum GeneralSemPlsRecipeCompilationErrorV1 {
     #[error("General SEM PLS compilation requires general_sem_config")]
     MissingGeneralSemConfig,
-    #[error("General SEM PLS point-estimation v1 does not yet execute conditional probes")]
+    #[error(
+        "General SEM PLS moderation v1 does not execute authored conditional probes; bootstrap inference is gamma-only"
+    )]
     ConditionalProbesNotYetExecutable,
-    #[error(
-        "General SEM PLS interaction_v2 point estimation does not yet execute bootstrap inference"
-    )]
-    InteractionBootstrapNotYetExecutable,
-    #[error(
-        "General SEM PLS interaction_v2 point estimation requires an empty requested-effect list"
-    )]
+    #[error("General SEM PLS interaction_v2 moderation requires an empty requested-effect list")]
     InteractionRequestedEffectsNotYetExecutable,
     #[error(
-        "General SEM PLS interaction_v2 point estimation does not yet execute moderated mediation or other directed chains"
+        "General SEM PLS interaction_v2 moderation does not yet execute moderated mediation or other directed chains"
     )]
     ModeratedMediationNotYetExecutable,
     #[error("General SEM PLS case-bootstrap v1 executes percentile intervals only")]
@@ -438,7 +450,14 @@ fn compiler_version_for_plan(
     plan: &CompiledPlsPlanV3,
 ) -> &'static str {
     if !plan.two_way_interactions().is_empty() {
-        return GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_RECIPE_COMPILER_VERSION_V1;
+        return match config.inference {
+            GeneralSemInferenceV1::None => {
+                GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_RECIPE_COMPILER_VERSION_V1
+            }
+            GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1
+            }
+        };
     }
     match config.inference {
         GeneralSemInferenceV1::None => GENERAL_SEM_PLS_RECIPE_COMPILER_VERSION_V1,
@@ -457,7 +476,11 @@ fn ensure_capabilities_available(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
     ) {
-        expected_cells.push(pls_general_bootstrap_capability_cell_v1());
+        expected_cells.push(if plan.two_way_interactions().is_empty() {
+            pls_general_bootstrap_capability_cell_v1()
+        } else {
+            pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+        });
     }
     let registry = CapabilityRegistryV2::embedded().map_err(|error| {
         GeneralSemPlsRecipeCompilationErrorV1::CapabilityRegistry(error.to_string())
@@ -490,9 +513,6 @@ fn ensure_interaction_compilation_scope(
 ) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
     if plan.two_way_interactions().is_empty() {
         return Ok(());
-    }
-    if !matches!(config.inference, GeneralSemInferenceV1::None) {
-        return Err(GeneralSemPlsRecipeCompilationErrorV1::InteractionBootstrapNotYetExecutable);
     }
     if !config.requested_effect_estimands.is_empty() {
         return Err(
@@ -551,11 +571,13 @@ mod tests {
     use super::*;
     use crate::{
         ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe,
-        AnalysisRecipeModelBindingV4, AnalysisSettings, Construct, GeneralSemConfigV1,
-        InteractionHierarchyPolicyV2, InteractionMethodV4, LegacyBasicModelInterpretationV4,
-        MeasurementMode, MethodConfig, ModelSpec, SemDerivedTermV4, SemParameterTargetV4,
-        SemParameterV4, SemRelationV4, SemVariableV4, StructuralPath, StructuralRelationRoleV4,
-        confirm_legacy_recipe_estimand_v4, migrate_analysis_recipe_to_v4_pending,
+        AnalysisRecipeModelBindingV4, AnalysisSettings, CompiledPlsInteractionV3Error, Construct,
+        GeneralSemConditionalEffectProbeV1, GeneralSemConditionalProbeValuesV1, GeneralSemConfigV1,
+        GeneralSemEffectEstimandV1, InteractionHierarchyPolicyV2, InteractionMethodV4,
+        LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig, ModelSpec,
+        SemDerivedTermV4, SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
+        StructuralPath, StructuralRelationRoleV4, confirm_legacy_recipe_estimand_v4,
+        migrate_analysis_recipe_to_v4_pending,
     };
     use chrono::{TimeZone, Utc};
     use std::collections::BTreeMap;
@@ -680,7 +702,9 @@ mod tests {
         model.ensure_valid().unwrap();
     }
 
-    fn interaction_recipe_and_model() -> (AnalysisRecipeV4, SemModelV4) {
+    fn interaction_recipe_and_model_for_layout(
+        different_focal: bool,
+    ) -> (AnalysisRecipeV4, SemModelV4) {
         let source_model = ModelSpec {
             id: Uuid::from_u128(0x5031_53a0),
             name: "Compiler multiple moderation fixture".into(),
@@ -734,9 +758,21 @@ mod tests {
         );
         add_compiler_interaction(
             &mut model,
-            "interaction:x_by_z",
-            "construct:x",
-            "construct:z",
+            if different_focal {
+                "interaction:z_by_w"
+            } else {
+                "interaction:x_by_z"
+            },
+            if different_focal {
+                "construct:z"
+            } else {
+                "construct:x"
+            },
+            if different_focal {
+                "construct:w"
+            } else {
+                "construct:z"
+            },
         );
         recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
             scientific_sha256: model.scientific_sha256().unwrap(),
@@ -745,6 +781,17 @@ mod tests {
         recipe.general_sem_config = Some(GeneralSemConfigV1::default());
         recipe.ensure_valid().unwrap();
         (recipe, model)
+    }
+
+    fn interaction_recipe_and_model() -> (AnalysisRecipeV4, SemModelV4) {
+        interaction_recipe_and_model_for_layout(false)
+    }
+
+    fn rebind_recipe_model(recipe: &mut AnalysisRecipeV4, model: &SemModelV4) {
+        recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+            scientific_sha256: model.scientific_sha256().unwrap(),
+            model: model.clone(),
+        };
     }
 
     fn configure_percentile_bootstrap(recipe: &mut AnalysisRecipeV4) {
@@ -835,12 +882,100 @@ mod tests {
     }
 
     #[test]
-    fn interaction_bootstrap_and_directed_chains_remain_typed_blocked() {
+    fn simultaneous_moderation_bootstrap_compiles_for_same_and_different_focal_paths() {
+        for different_focal in [false, true] {
+            let (mut recipe, model) = interaction_recipe_and_model_for_layout(different_focal);
+            let point_bytes = serde_json::to_vec(
+                &compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap(),
+            )
+            .unwrap();
+            configure_percentile_bootstrap(&mut recipe);
+
+            let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+            assert_eq!(
+                artifact.compiler_version(),
+                GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1
+            );
+            assert_eq!(
+                artifact.capability_cell(),
+                &pls_general_multiple_moderation_point_capability_cell_v1()
+            );
+            assert_eq!(artifact.plan().two_way_interactions().len(), 2);
+            validate_compiled_general_sem_pls_recipe_v1(&artifact, &recipe, Some(&model)).unwrap();
+            assert_eq!(
+                serde_json::to_vec(
+                    &compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap()
+                )
+                .unwrap(),
+                serde_json::to_vec(&artifact).unwrap()
+            );
+
+            let (point_recipe, point_model) =
+                interaction_recipe_and_model_for_layout(different_focal);
+            assert_eq!(
+                serde_json::to_vec(
+                    &compile_general_sem_pls_recipe_v1(&point_recipe, Some(&point_model)).unwrap()
+                )
+                .unwrap(),
+                point_bytes,
+                "compiling the supplemental bootstrap cell must not change point-artifact bytes"
+            );
+        }
+    }
+
+    #[test]
+    fn interaction_bootstrap_keeps_interval_tail_probe_effect_and_chain_boundaries_typed() {
         let (mut recipe, model) = interaction_recipe_and_model();
         configure_percentile_bootstrap(&mut recipe);
+        if let GeneralSemInferenceV1::CaseBootstrap { interval, .. } =
+            &mut recipe.general_sem_config.as_mut().unwrap().inference
+        {
+            *interval = GeneralSemBootstrapIntervalV1::Bca;
+        }
         assert_eq!(
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
-            Err(GeneralSemPlsRecipeCompilationErrorV1::InteractionBootstrapNotYetExecutable)
+            Err(GeneralSemPlsRecipeCompilationErrorV1::BootstrapIntervalNotYetExecutable)
+        );
+
+        configure_percentile_bootstrap(&mut recipe);
+        if let GeneralSemInferenceV1::CaseBootstrap { tail, .. } =
+            &mut recipe.general_sem_config.as_mut().unwrap().inference
+        {
+            *tail = GeneralSemInferenceTailV1::OneSidedUpper;
+        }
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::BootstrapTailNotYetExecutable)
+        );
+
+        let (mut recipe, model) = interaction_recipe_and_model();
+        recipe
+            .general_sem_config
+            .as_mut()
+            .unwrap()
+            .conditional_effect_probes = vec![GeneralSemConditionalEffectProbeV1 {
+            probe_id: "probe:w".into(),
+            moderator_id: "construct:w".into(),
+            values: GeneralSemConditionalProbeValuesV1::DataDerivedMeanPlusMinusOneSd,
+        }];
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::ConditionalProbesNotYetExecutable)
+        );
+
+        let (mut recipe, model) = interaction_recipe_and_model();
+        recipe
+            .general_sem_config
+            .as_mut()
+            .unwrap()
+            .requested_effect_estimands = vec![GeneralSemEffectEstimandV1::TotalEffect {
+            estimand_id: "effect:x_to_y".into(),
+            source_id: "construct:x".into(),
+            target_id: "construct:y".into(),
+        }];
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::InteractionRequestedEffectsNotYetExecutable)
         );
 
         let (mut recipe, mut model) = interaction_recipe_and_model();
@@ -867,15 +1002,101 @@ mod tests {
             group_overrides: Vec::new(),
         });
         model.ensure_valid().unwrap();
-        recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
-            scientific_sha256: model.scientific_sha256().unwrap(),
-            model: model.clone(),
-        };
+        rebind_recipe_model(&mut recipe, &model);
         recipe.ensure_valid().unwrap();
         assert_eq!(
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
             Err(GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationNotYetExecutable)
         );
+    }
+
+    #[test]
+    fn interaction_bootstrap_keeps_order_method_hierarchy_and_derived_scope_boundaries_typed() {
+        let (mut recipe, mut model) = interaction_recipe_and_model();
+        let SemDerivedTermV4::InteractionV2 {
+            operands,
+            hierarchy_policy,
+            ..
+        } = &mut model.derived_terms[0]
+        else {
+            unreachable!()
+        };
+        operands.push("construct:z".into());
+        // Weak hierarchy keeps this deliberately unsupported three-way term
+        // scientifically valid long enough to exercise the compiler's typed
+        // interaction-order boundary.
+        *hierarchy_policy = InteractionHierarchyPolicyV2::Weak;
+        model.ensure_valid().unwrap();
+        rebind_recipe_model(&mut recipe, &model);
+        configure_percentile_bootstrap(&mut recipe);
+        assert!(matches!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::PlsPlanV3(
+                CompiledPlsPlanV3Error::Interaction(
+                    CompiledPlsInteractionV3Error::UnsupportedInteractionOrder { .. }
+                )
+            ))
+        ));
+
+        let (mut recipe, mut model) = interaction_recipe_and_model();
+        let SemDerivedTermV4::InteractionV2 { method, .. } = &mut model.derived_terms[0] else {
+            unreachable!()
+        };
+        *method = InteractionMethodV4::Orthogonalizing;
+        model.ensure_valid().unwrap();
+        rebind_recipe_model(&mut recipe, &model);
+        configure_percentile_bootstrap(&mut recipe);
+        assert!(matches!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::PlsPlanV3(
+                CompiledPlsPlanV3Error::Interaction(
+                    CompiledPlsInteractionV3Error::UnsupportedInteractionMethod { .. }
+                )
+            ))
+        ));
+
+        let (mut recipe, mut model) = interaction_recipe_and_model();
+        let SemDerivedTermV4::InteractionV2 {
+            hierarchy_policy, ..
+        } = &mut model.derived_terms[0]
+        else {
+            unreachable!()
+        };
+        *hierarchy_policy = InteractionHierarchyPolicyV2::Weak;
+        model.ensure_valid().unwrap();
+        rebind_recipe_model(&mut recipe, &model);
+        configure_percentile_bootstrap(&mut recipe);
+        assert!(matches!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::PlsPlanV3(
+                CompiledPlsPlanV3Error::Interaction(
+                    CompiledPlsInteractionV3Error::UnsupportedInteractionHierarchy { .. }
+                )
+            ))
+        ));
+
+        let (mut recipe, mut model) = interaction_recipe_and_model();
+        model.variables.push(SemVariableV4::Derived {
+            id: "derived:x_squared".into(),
+            label: "X squared".into(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::Polynomial {
+            id: "polynomial:x_squared".into(),
+            output: "derived:x_squared".into(),
+            source: "construct:x".into(),
+            degree: 2,
+        });
+        model.ensure_valid().unwrap();
+        rebind_recipe_model(&mut recipe, &model);
+        configure_percentile_bootstrap(&mut recipe);
+        assert!(matches!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::PlsPlanV3(
+                CompiledPlsPlanV3Error::Interaction(
+                    CompiledPlsInteractionV3Error::UnsupportedDerivedTerm { .. }
+                )
+            ))
+        ));
     }
 
     #[test]

@@ -5,7 +5,7 @@
   "feature_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
   "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
   "catalogue_snapshot_date": "2026-08-19",
-  "generated_at_utc": "2026-08-19T11:30:39.5424034Z",
+  "generated_at_utc": "2026-08-19T13:36:30.5445898Z",
   "passed": true,
   "qualification_ready": false,
   "promotion_allowed": false,
@@ -89,8 +89,8 @@
   "source_artifacts": [
     {
       "path": "crates/qpls-core/src/canonical_result_v2.rs",
-      "size": 190120,
-      "sha256": "aef934d4f9be7aab8e1106ed601fde39b94ce6e3c6ee94f5070259a23f5062aa"
+      "size": 209456,
+      "sha256": "910020fd4fba38fe24153c9280f8b71673f1a4b76130950cc9acb6345bd0898f"
     },
     {
       "path": "crates/qpls-core/src/compiled_pls_plan_v3.rs",
@@ -99,28 +99,28 @@
     },
     {
       "path": "crates/qpls-core/src/general_sem_capability_preflight_v1.rs",
-      "size": 50058,
-      "sha256": "9b4d7251c42b1a768481d61113f95d8f97f5f63b0e77e494b3a34ad7956b2c16"
+      "size": 60796,
+      "sha256": "f109fbd802fbbcd71118c7cd7ff9e459cddee00cedf6fc2d6702b52d24211ef5"
     },
     {
       "path": "crates/qpls-core/src/general_sem_recipe_compiler_v1.rs",
-      "size": 45957,
-      "sha256": "f6274d7716a7d46e4723d24e6f07df779e1b154eefc820a0f60ad5143378718b"
+      "size": 55284,
+      "sha256": "7940c204d78c554b4a4c8d998ebdfc7ddaa2b9514cc80ecdecc8504063a078a0"
     },
     {
       "path": "crates/qpls-estimation/src/general_sem_pls_interactions_v1.rs",
-      "size": 51318,
-      "sha256": "de635392de5b90d060618b0d491fbd49964d766989b1502f2dd7b45bee5d8906"
+      "size": 54795,
+      "sha256": "7a5d4753f1aafc0cc3057a855f0671b5b1dc680034c1cda4f97e7c00579f418c"
     },
     {
       "path": "crates/qpls-runner/src/recipe_v4_general_sem_pls_execution.rs",
-      "size": 73908,
-      "sha256": "170d250da664150010233cae61a1b31486fd3acec1e5d9790e6cda2a58dcc75c"
+      "size": 101554,
+      "sha256": "f1e25f234b97c9af3165856dc9af08797e65166ab5acf896fbdf7657ab7ac0df"
     },
     {
       "path": "crates/qpls-project/src/canonical_result_document_v2.rs",
-      "size": 63491,
-      "sha256": "7808268ebd52150ff75ebf8d42938224501a115c8c6b684b376d55722578b9be"
+      "size": 65389,
+      "sha256": "5a1e39a2c990c362a1c3e2721de713b2add8cf93982f914a9cc3ade335a50700"
     },
     {
       "path": "crates/qpls-project/src/lib.rs",
@@ -139,8 +139,8 @@
     },
     {
       "path": "crates/qpls-project/src/project_schema_v6.rs",
-      "size": 499438,
-      "sha256": "fc2fcd367df77789c2aa29d975317c208bdc98fb7021a872e3403fb4130e76ac"
+      "size": 541247,
+      "sha256": "290a93c0b1f467098623dcdf0be61b19c0c59863e3dcb8745dab952230ca2000"
     },
     {
       "path": "crates/qpls-project/src/project_archive_v6_general_sem_revision.rs",
@@ -184,38 +184,38 @@
     },
     {
       "path": "src-tauri/src/recipe_v4_general_sem_canonical_result.rs",
-      "size": 64152,
-      "sha256": "dbaa8a87b59f63fe7dbf635990e5d1d29f07149a3215a5bca8f9b14e445d50bf"
+      "size": 97115,
+      "sha256": "b2467e39a4094d49c65c1b706acc04ddb12e3a0092978a41f69a96114e60dcae"
     },
     {
       "path": "src-tauri/src/recipe_v4_general_sem_pls_jobs.rs",
-      "size": 101760,
-      "sha256": "9cafdec6362da2e868512c2d88a81ef9395c68d52efa34460e3d6b6d5b73ae1b"
+      "size": 125069,
+      "sha256": "9f4edaa2f26369c82fa55190b2e35f0eafc6a49338de652863227bcbead702b9"
     },
     {
       "path": "src/domain/canonicalGeneralSemResultsV1.ts",
-      "size": 84228,
-      "sha256": "dde6be9ab6ba244942170d99a106b7f1fde502e4c45184920995242d8e809f36"
+      "size": 91785,
+      "sha256": "7146504655f56d5ea81f57550c0e442ed8c366cd9970e83002a3417fda9618dd"
     },
     {
       "path": "src/domain/generalSemCapabilityPreflightV1.ts",
-      "size": 42571,
-      "sha256": "1ae4133479d27090457c03c84993c22bfccdf0213ed44c067e03d0045de959e6"
+      "size": 44553,
+      "sha256": "f17b096cf2d8925b71a1245185a527a9d1340e43c6978bde71aef0093a58b87b"
     },
     {
       "path": "src/domain/generalSemCapabilityPreflightV1.test.ts",
-      "size": 22345,
-      "sha256": "6539e7957875019524bff84a0a845fdfc0a1c1edf55647cc06a6e2c55a610dc3"
+      "size": 28196,
+      "sha256": "887fae9eb1c83f477dce46216cd64eeeb496ff7954b7b6dbcef713953b4ab805"
     },
     {
       "path": "src/domain/internalRecipeV4GeneralSemWorkspace.ts",
-      "size": 59881,
-      "sha256": "bb9e82f92f19bc8d462b2adbe3159ef2b19d99503a3faa4ded814349165236ab"
+      "size": 87163,
+      "sha256": "9b5a03f51703de185037a2fb833096df834f92b35dc491c2b1a190fcf48d626d"
     },
     {
       "path": "src/domain/internalRecipeV4GeneralSemWorkspace.test.ts",
-      "size": 50946,
-      "sha256": "6f394024028664581eae60bcdf184c31c33de2ec72a6a71400c5ceae557dce62"
+      "size": 69841,
+      "sha256": "f9e07b1065612ca61ab21a56c0af0365874703c16efe48c1446c9e4b27a38b5c"
     },
     {
       "path": "src/domain/nativeWorkbenchSemModelV4Adapter.ts",
@@ -309,13 +309,13 @@
     },
     {
       "path": "src/native/NativeRecipeV4GeneralSemWorkspace.tsx",
-      "size": 71148,
-      "sha256": "5fd6d00a081ea9bf8d45d7b5148af4a8f0e02f5c6594e9e8579e8de3ac315539"
+      "size": 72760,
+      "sha256": "72998aff5bb3f7b90b0081c95216145e5e4bad5cc07e37042055371a1367ce61"
     },
     {
       "path": "src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx",
-      "size": 34147,
-      "sha256": "14f75909e80cda05b0cd0f1f110c046c46b4c59d91a285909f172afd5c15c7d9"
+      "size": 36150,
+      "sha256": "2fb7f627bc9d62b4aae26e5bed5d8195666411dc84030609aeb6bed8e8d923ff"
     },
     {
       "path": "src/native/NativeRecipeV4CbsemWorkspace.tsx",
@@ -379,8 +379,8 @@
     },
     {
       "path": "validation/capabilities/capability_registry_v2.json",
-      "size": 326895,
-      "sha256": "871926c6bd8bbc40a345e841fb7bc94f8ca00030d6a16baa30dc55a04b060675"
+      "size": 333426,
+      "sha256": "98117e1576a97c2d7ec69c1cbe7342112a32e116e4ffb2ed522fd4acb3a6ddfc"
     },
     {
       "path": "validation/capabilities/capability_registry_v2.schema.json",
@@ -389,23 +389,23 @@
     },
     {
       "path": "validation/test_capability_registry_v2.py",
-      "size": 40589,
-      "sha256": "ff254b343f9f43395c82bc4c949bc4cca118ae3bb941fddfb2010abf2faef7a6"
+      "size": 48346,
+      "sha256": "81f1d7db441c5b977575b4728afe5a1dabbd698fcaf19409e2fb47a746694402"
     },
     {
       "path": "validation/quickpls_3_competitor_catalogue.json",
-      "size": 44279,
-      "sha256": "8d3cecae8c164ec9f0ffd8a95fdc04bc97f0c2d0134309e5a72d013948d8471c"
+      "size": 44552,
+      "sha256": "00b7ce90a3cef439d815603a18e9d6c251126d8592aba6da27c3b24c43291097"
     },
     {
       "path": "validation/capabilities/complexity_performance_profiles_v2.manifest.json",
       "size": 15803,
-      "sha256": "3f92932c39acc66895bcba04ae0a70ffd7fc773ed76857cc21ed41ce34d9aee5"
+      "sha256": "409fb058da62e2447106c711741ca9ff12f4677c4c8f28d99737df2c96ed2d4d"
     },
     {
       "path": "validation/capabilities/complexity_performance_profiles_v2.schema.json",
       "size": 11360,
-      "sha256": "095386e27e1fb632f17d3060e20b09af9a733a1fa8f81c3c0dc8610a53ae11c4"
+      "sha256": "52ac31e92751e2ae8c28ea2e852ff963bdd0db85858f2321bd40d1832af2e7d3"
     },
     {
       "path": "validation/complexity_performance_v2.py",
@@ -415,7 +415,7 @@
     {
       "path": "validation/test_complexity_performance_v2.py",
       "size": 10892,
-      "sha256": "b8bd7a688615e14d84551d3eb67369fb33eba5ad55c3ba6be148f519dd7ae3cc"
+      "sha256": "c829a44357b944bf4401989a9a2051e8f6739df8ebd416c5501fa0022c0120de"
     }
   ]
 }

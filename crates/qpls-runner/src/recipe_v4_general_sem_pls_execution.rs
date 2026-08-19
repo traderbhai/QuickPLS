@@ -21,17 +21,21 @@ use qpls_core::{
     GeneralSemPlsRecipeCompilationErrorV1, MethodConfig, SemModelV4, StructuralRelationRoleV4,
     ValidatedExecutionRecipe, decompose_general_sem_effects_v1,
     general_sem_effect_identity_set_sha256_v1, pls_general_bootstrap_capability_cell_v1,
+    pls_general_multiple_moderation_bootstrap_capability_cell_v1,
     project_general_sem_pls_stage_one_recipe_v1, validate_compiled_general_sem_pls_recipe_v1,
 };
 use qpls_data::Dataset;
 use qpls_estimation::{
     GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1, GeneralSemPlsInteractionPointErrorV1,
     GeneralSemPlsMultipleInteractionPointResultV1,
-    estimate_general_sem_pls_multiple_two_way_interactions_v1,
+    estimate_general_sem_pls_multiple_two_way_interactions_v1_with_control,
 };
 use qpls_resampling::{
     GeneralSemPlsBootstrapEffectInferenceV1, GeneralSemPlsBootstrapErrorV1,
-    GeneralSemPlsBootstrapResultV1, bootstrap_general_sem_pls_v1,
+    GeneralSemPlsBootstrapResultV1, GeneralSemPlsModerationBootstrapGammaInferenceV1,
+    GeneralSemPlsMultipleModerationBootstrapErrorV1,
+    GeneralSemPlsMultipleModerationBootstrapResultV1,
+    bootstrap_general_sem_pls_multiple_two_way_moderation_v1, bootstrap_general_sem_pls_v1,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -43,6 +47,8 @@ pub const RECIPE_V4_GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1: &str
     "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1";
 pub const RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1: &str =
     "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1";
+pub const RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1:
+    &str = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_percentile_bootstrap_execution_v1";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
@@ -172,6 +178,8 @@ pub struct RecipeV4GeneralSemPlsExecutionResultV1 {
     interaction_point_estimation: Option<GeneralSemPlsMultipleInteractionPointResultV1>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     bootstrap_inference: Option<GeneralSemPlsBootstrapResultV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    moderation_bootstrap_inference: Option<GeneralSemPlsMultipleModerationBootstrapResultV1>,
 }
 
 impl RecipeV4GeneralSemPlsExecutionResultV1 {
@@ -233,6 +241,12 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
         self.bootstrap_inference.as_ref()
     }
 
+    pub fn moderation_bootstrap_inference(
+        &self,
+    ) -> Option<&GeneralSemPlsMultipleModerationBootstrapResultV1> {
+        self.moderation_bootstrap_inference.as_ref()
+    }
+
     /// Produces the typed additive section consumed by
     /// `CanonicalResultDocumentV2`. Point-only executions preserve the legacy
     /// omission shape; inferred executions require an exact bootstrap receipt.
@@ -259,6 +273,7 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
             capability_cell: self.capability_cell.clone(),
         };
         let inference_by_id = validate_bootstrap_inference_binding(self)?;
+        let moderation_inference_by_id = validate_moderation_bootstrap_inference_binding(self)?;
         let mut specific_indirect_effects = Vec::new();
         let mut aggregate_effects = Vec::new();
         for effect in &self.requested_effects {
@@ -333,14 +348,30 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
             conditional_effect_probes,
             conditional_effects,
             interaction_plots,
-        ) = canonical_interaction_sections_v1(self, &trace)?;
+        ) = canonical_interaction_sections_v1(self, &trace, &moderation_inference_by_id)?;
+        let inference_receipt = match (
+            self.bootstrap_inference.as_ref(),
+            self.moderation_bootstrap_inference.as_ref(),
+        ) {
+            (Some(bootstrap), None) => Some(canonical_inference_receipt(self, bootstrap)?),
+            (None, Some(bootstrap)) => Some(canonical_moderation_inference_receipt(
+                self,
+                bootstrap,
+                &interaction_effects,
+            )?),
+            (None, None) => None,
+            (Some(_), Some(_)) => {
+                return Err(
+                    RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                        "mediation and moderation bootstrap payloads are mutually exclusive"
+                            .to_string(),
+                    ),
+                );
+            }
+        };
         Ok(CanonicalGeneralSemResultsV1 {
             schema_version: CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
-            inference_receipt: self
-                .bootstrap_inference
-                .as_ref()
-                .map(|bootstrap| canonical_inference_receipt(self, bootstrap))
-                .transpose()?,
+            inference_receipt,
             specific_indirect_effects,
             aggregate_effects,
             joint_stage_structural_coefficients: Vec::new(),
@@ -385,6 +416,26 @@ fn canonical_estimate(
     }
 }
 
+fn canonical_moderation_gamma_estimate(
+    estimate: f64,
+    inference: Option<&GeneralSemPlsModerationBootstrapGammaInferenceV1>,
+) -> CanonicalGeneralSemEstimateV1 {
+    let Some(inference) = inference else {
+        return canonical_estimate(estimate, None);
+    };
+    CanonicalGeneralSemEstimateV1 {
+        estimate,
+        bootstrap_mean: Some(inference.bootstrap_mean),
+        bootstrap_bias: Some(inference.bootstrap_bias),
+        standard_error: Some(inference.standard_error),
+        lower: Some(inference.lower),
+        upper: Some(inference.upper),
+        p_value: Some(inference.p_value_two_sided),
+        bootstrap_usable_replicates: Some(inference.usable_replicates),
+        bootstrap_two_sided_exceedances: Some(inference.two_sided_exceedances),
+    }
+}
+
 type CanonicalInteractionSectionsV1 = (
     Vec<CanonicalInteractionEffectResultV1>,
     Vec<CanonicalConditionalEffectProbeResultV1>,
@@ -395,6 +446,7 @@ type CanonicalInteractionSectionsV1 = (
 fn canonical_interaction_sections_v1(
     result: &RecipeV4GeneralSemPlsExecutionResultV1,
     trace: &CanonicalGeneralSemResultTraceV1,
+    moderation_inference_by_id: &BTreeMap<&str, &GeneralSemPlsModerationBootstrapGammaInferenceV1>,
 ) -> Result<CanonicalInteractionSectionsV1, RecipeV4GeneralSemPlsExecutionErrorV1> {
     let Some(interactions) = &result.interaction_point_estimation else {
         if result.stage_one_model_scientific_sha256 != result.model_scientific_sha256 {
@@ -472,7 +524,12 @@ fn canonical_interaction_sections_v1(
                 coefficient.standardized_product_estimate(),
                 None,
             ),
-            scientific_rescaled_gamma: canonical_estimate(coefficient.raw_product_estimate(), None),
+            scientific_rescaled_gamma: canonical_moderation_gamma_estimate(
+                coefficient.raw_product_estimate(),
+                moderation_inference_by_id
+                    .get(coefficient.interaction_effect_relation_id())
+                    .copied(),
+            ),
         });
 
         let probe_id = format!(
@@ -674,6 +731,137 @@ fn validate_bootstrap_inference_binding(
     Ok(by_id)
 }
 
+fn validate_moderation_bootstrap_inference_binding(
+    result: &RecipeV4GeneralSemPlsExecutionResultV1,
+) -> Result<
+    BTreeMap<&str, &GeneralSemPlsModerationBootstrapGammaInferenceV1>,
+    RecipeV4GeneralSemPlsExecutionErrorV1,
+> {
+    let Some(bootstrap) = &result.moderation_bootstrap_inference else {
+        return Ok(BTreeMap::new());
+    };
+    bootstrap.ensure_valid()?;
+    let interactions = result
+        .interaction_point_estimation
+        .as_ref()
+        .ok_or_else(|| {
+            RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                "moderation bootstrap inference requires its complete interaction point result"
+                    .to_string(),
+            )
+        })?;
+    interactions.ensure_self_consistent_v1()?;
+    if result.bootstrap_inference.is_some()
+        || result.capability_cell
+            != qpls_core::pls_general_multiple_moderation_point_capability_cell_v1()
+        || !result.requested_effects.is_empty()
+    {
+        return Err(
+            RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                "moderation bootstrap contradicts the point capability, mediation payload, or requested-effect scope"
+                    .to_string(),
+            ),
+        );
+    }
+    if bootstrap.general_sem_config_sha256 != result.general_sem_config_sha256
+        || bootstrap.compiled_plan_sha256 != result.compiled_plan_sha256
+        || bootstrap.model_scientific_sha256 != result.model_scientific_sha256
+        || bootstrap.stage_one_model_scientific_sha256 != result.stage_one_model_scientific_sha256
+        || bootstrap.source_dataset_fingerprint != result.source_dataset_fingerprint
+    {
+        return Err(
+            RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                "moderation bootstrap provenance differs from the compiled point execution"
+                    .to_string(),
+            ),
+        );
+    }
+
+    let point_by_target = interactions
+        .interaction_coefficients()
+        .iter()
+        .map(|coefficient| (coefficient.interaction_effect_relation_id(), coefficient))
+        .collect::<BTreeMap<_, _>>();
+    let product_receipts_by_interaction = interactions
+        .product_scale_receipts()
+        .iter()
+        .map(|receipt| (receipt.interaction_id(), receipt))
+        .collect::<BTreeMap<_, _>>();
+    let expected_target_ids = point_by_target
+        .keys()
+        .map(|target_id| (*target_id).to_string())
+        .collect::<Vec<_>>();
+    if bootstrap.gamma_target_ids != expected_target_ids {
+        return Err(
+            RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                "moderation bootstrap target IDs do not exactly match the point interaction inventory"
+                    .to_string(),
+            ),
+        );
+    }
+    let mut by_id = BTreeMap::new();
+    for gamma in &bootstrap.interaction_gammas {
+        let target = &gamma.target;
+        let coefficient = point_by_target
+            .get(target.target_id.as_str())
+            .ok_or_else(|| {
+                RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(format!(
+                    "moderation bootstrap target {} is absent from the point interaction inventory",
+                    target.target_id
+                ))
+            })?;
+        let product_receipt = product_receipts_by_interaction
+            .get(target.interaction_id.as_str())
+            .ok_or_else(|| {
+                RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(format!(
+                    "moderation bootstrap target {} has no point product-scale receipt",
+                    target.target_id
+                ))
+            })?;
+        if target.interaction_id != coefficient.interaction_id()
+            || target.focal_relation_id != coefficient.focal_relation_id()
+            || target.interaction_effect_relation_id != coefficient.interaction_effect_relation_id()
+            || target.interaction_effect_parameter_id
+                != coefficient.interaction_effect_parameter_id()
+            || target.generated_product_column_id != product_receipt.generated_product_column_id()
+            || target.focal_predictor_id != coefficient.focal_predictor_id()
+            || target.moderator_id != coefficient.moderator_id()
+            || target.outcome_id != coefficient.outcome_id()
+            || target.stage_one_model_scientific_sha256 != result.stage_one_model_scientific_sha256
+            || target.product_scale_version != product_receipt.scale_version()
+            || target.product_scale_version != qpls_core::GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1
+            || target.method_version != interactions.method_version()
+            || target.method_version
+                != qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+            || gamma.original.to_bits() != coefficient.raw_product_estimate().to_bits()
+        {
+            return Err(
+                RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(format!(
+                    "moderation bootstrap target {} contradicts its point interaction identity or scientific gamma",
+                    target.target_id
+                )),
+            );
+        }
+        if by_id.insert(target.target_id.as_str(), gamma).is_some() {
+            return Err(
+                RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(format!(
+                    "moderation bootstrap target {} is duplicated",
+                    target.target_id
+                )),
+            );
+        }
+    }
+    if by_id.len() != expected_target_ids.len() {
+        return Err(
+            RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                "moderation bootstrap gamma rows do not exactly cover the point interaction inventory"
+                    .to_string(),
+            ),
+        );
+    }
+    Ok(by_id)
+}
+
 fn canonical_inference_receipt(
     result: &RecipeV4GeneralSemPlsExecutionResultV1,
     bootstrap: &GeneralSemPlsBootstrapResultV1,
@@ -764,6 +952,136 @@ fn canonical_inference_receipt(
     })
 }
 
+fn canonical_moderation_inference_receipt(
+    result: &RecipeV4GeneralSemPlsExecutionResultV1,
+    bootstrap: &GeneralSemPlsMultipleModerationBootstrapResultV1,
+    interaction_effects: &[CanonicalInteractionEffectResultV1],
+) -> Result<CanonicalGeneralSemInferenceReceiptV1, RecipeV4GeneralSemPlsExecutionErrorV1> {
+    let interval = match bootstrap.interval {
+        GeneralSemBootstrapIntervalV1::Percentile => {
+            CanonicalGeneralSemBootstrapIntervalV1::PercentileType7
+        }
+        GeneralSemBootstrapIntervalV1::Bca => {
+            return Err(
+                RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                    "BCa moderation bootstrap cannot be labeled as the percentile v1 canonical slice"
+                        .to_string(),
+                ),
+            );
+        }
+    };
+    let tail = match bootstrap.tail {
+        GeneralSemInferenceTailV1::TwoSided => CanonicalGeneralSemInferenceTailV1::TwoSided,
+        GeneralSemInferenceTailV1::OneSidedLower | GeneralSemInferenceTailV1::OneSidedUpper => {
+            return Err(
+                RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                    "one-sided moderation bootstrap cannot be labeled as the two-sided v1 canonical slice"
+                        .to_string(),
+                ),
+            );
+        }
+    };
+    let identities = interaction_effects
+        .iter()
+        .map(
+            |effect| CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma {
+                effect_id: effect.effect_id.clone(),
+                interaction_id: effect.interaction_id.clone(),
+                focal_relation_id: effect.focal_relation_id.clone(),
+                interaction_effect_relation_id: effect.interaction_effect_relation_id.clone(),
+                interaction_effect_parameter_id: effect.interaction_effect_parameter_id.clone(),
+                generated_product_column_id: effect.generated_product_column_id.clone(),
+                focal_predictor_id: effect.focal_predictor_id.clone(),
+                moderator_id: effect.moderator_id.clone(),
+                outcome_id: effect.outcome_id.clone(),
+                stage_one_model_scientific_sha256: effect.stage_one_model_scientific_sha256.clone(),
+                product_scale_version: effect.product_scale_version.clone(),
+                method_version: effect.method_version.clone(),
+            },
+        )
+        .collect::<Vec<_>>();
+    let effect_ids = identities
+        .iter()
+        .map(|identity| identity.effect_id().to_string())
+        .collect::<Vec<_>>();
+    Ok(CanonicalGeneralSemInferenceReceiptV1 {
+        kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
+        capability_cell: pls_general_multiple_moderation_bootstrap_capability_cell_v1(),
+        method_version:
+            qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+                .to_string(),
+        resampling_operation_version:
+            qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+                .to_string(),
+        resampling_stream_version: bootstrap.resampling_stream_version.clone(),
+        quantile_method_version: bootstrap.quantile_method_version.clone(),
+        standard_error_method_version: bootstrap.standard_error_method_version.clone(),
+        summation_method_version: bootstrap.summation_method_version.clone(),
+        p_value_method_version: bootstrap.p_value_method_version.clone(),
+        failure_policy_version: bootstrap.failure_policy_version.clone(),
+        compilation_artifact_identity_sha256: result.compilation_artifact_identity_sha256.clone(),
+        compiled_plan_sha256: bootstrap.compiled_plan_sha256.clone(),
+        general_sem_config_sha256: bootstrap.general_sem_config_sha256.clone(),
+        recipe_analytical_sha256: result.recipe_analytical_sha256.clone(),
+        model_scientific_sha256: bootstrap.model_scientific_sha256.clone(),
+        source_dataset_fingerprint: bootstrap.source_dataset_fingerprint.clone(),
+        complete_case_frame_sha256: bootstrap.complete_case_frame_sha256.clone(),
+        usable_replicate_indices_sha256: bootstrap.usable_replicate_indices_sha256.clone(),
+        effect_identity_set_sha256: general_sem_effect_identity_set_sha256_v1(&identities),
+        effect_ids,
+        interval,
+        tail,
+        confidence_level: bootstrap.confidence_level,
+        resamples_requested: bootstrap.resamples_requested,
+        resamples_usable: bootstrap.resamples_usable,
+        minimum_usable_resamples: bootstrap.minimum_usable_resamples,
+        seed: bootstrap.seed.clone(),
+        workers: bootstrap.workers,
+        complete_model_reestimated_per_replicate: bootstrap
+            .complete_model_reestimated_per_replicate,
+        failed_replicates: bootstrap
+            .failed_replicates
+            .iter()
+            .map(|failure| CanonicalGeneralSemFailedReplicateV1 {
+                replicate_index: failure.replicate_index,
+                reason_code: match failure.reason_code {
+                    qpls_resampling::GeneralSemPlsModerationBootstrapFailureCodeV1::InsufficientObservations => {
+                        CanonicalGeneralSemFailedReplicateReasonV1::InsufficientObservations
+                    }
+                    qpls_resampling::GeneralSemPlsModerationBootstrapFailureCodeV1::ConstantIndicator => {
+                        CanonicalGeneralSemFailedReplicateReasonV1::ConstantIndicator
+                    }
+                    qpls_resampling::GeneralSemPlsModerationBootstrapFailureCodeV1::StageOneRankDeficient => {
+                        CanonicalGeneralSemFailedReplicateReasonV1::StageOneRankDeficient
+                    }
+                    qpls_resampling::GeneralSemPlsModerationBootstrapFailureCodeV1::IsolatedConstruct => {
+                        CanonicalGeneralSemFailedReplicateReasonV1::IsolatedConstruct
+                    }
+                    qpls_resampling::GeneralSemPlsModerationBootstrapFailureCodeV1::StageOneNonconvergence => {
+                        CanonicalGeneralSemFailedReplicateReasonV1::StageOneNonconvergence
+                    }
+                    qpls_resampling::GeneralSemPlsModerationBootstrapFailureCodeV1::IndeterminateScoreSign => {
+                        CanonicalGeneralSemFailedReplicateReasonV1::IndeterminateScoreSign
+                    }
+                    qpls_resampling::GeneralSemPlsModerationBootstrapFailureCodeV1::ConstantConstructScore => {
+                        CanonicalGeneralSemFailedReplicateReasonV1::ConstantConstructScore
+                    }
+                    qpls_resampling::GeneralSemPlsModerationBootstrapFailureCodeV1::ConstantInteractionProduct => {
+                        CanonicalGeneralSemFailedReplicateReasonV1::ConstantInteractionProduct
+                    }
+                    qpls_resampling::GeneralSemPlsModerationBootstrapFailureCodeV1::JointStageRankDeficient => {
+                        CanonicalGeneralSemFailedReplicateReasonV1::JointStageRankDeficient
+                    }
+                    qpls_resampling::GeneralSemPlsModerationBootstrapFailureCodeV1::NumericalFailure => {
+                        CanonicalGeneralSemFailedReplicateReasonV1::NumericalFailure
+                    }
+                },
+                message: failure.message.clone(),
+            })
+            .collect(),
+    })
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum RecipeV4GeneralSemPlsExecutionErrorV1 {
     #[error("analysis was cancelled")]
@@ -776,6 +1094,8 @@ pub enum RecipeV4GeneralSemPlsExecutionErrorV1 {
     InferenceProjection(#[from] ExecutionRecipeError),
     #[error(transparent)]
     Bootstrap(#[from] GeneralSemPlsBootstrapErrorV1),
+    #[error(transparent)]
+    ModerationBootstrap(#[from] GeneralSemPlsMultipleModerationBootstrapErrorV1),
     #[error(transparent)]
     InteractionPoint(#[from] GeneralSemPlsInteractionPointErrorV1),
     #[error(transparent)]
@@ -839,10 +1159,17 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
         if should_cancel() {
             return Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled);
         }
-        let result = estimate_general_sem_pls_multiple_two_way_interactions_v1(
+        let result = estimate_general_sem_pls_multiple_two_way_interactions_v1_with_control(
             artifact.plan(),
             &point_estimation.estimation().construct_scores,
-        )?;
+            || !should_cancel(),
+        )
+        .map_err(|error| match error {
+            GeneralSemPlsInteractionPointErrorV1::Cancelled => {
+                RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled
+            }
+            error => RecipeV4GeneralSemPlsExecutionErrorV1::InteractionPoint(error),
+        })?;
         result.ensure_valid_against_plan_v1(artifact.plan())?;
         progress(RunnerProgress {
             phase: "general_sem_interaction_point".into(),
@@ -863,8 +1190,8 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
         .general_sem_config
         .as_ref()
         .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
-    let bootstrap_inference = match config.inference {
-        GeneralSemInferenceV1::None => None,
+    let (bootstrap_inference, moderation_bootstrap_inference) = match config.inference {
+        GeneralSemInferenceV1::None => (None, None),
         GeneralSemInferenceV1::CaseBootstrap { .. } => {
             let projected_recipe = project_pls_plan_to_current_recipe(
                 &base_recipe,
@@ -877,8 +1204,42 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
                 Some(MethodConfig::PlsAlgorithmConfiguredV2(config)) => Some(config),
                 _ => None,
             };
-            Some(
-                bootstrap_general_sem_pls_v1(
+            if let Some(interaction_point) = interaction_point_estimation.as_ref() {
+                let moderation_bootstrap =
+                    bootstrap_general_sem_pls_multiple_two_way_moderation_v1(
+                        dataset,
+                        &execution,
+                        artifact.plan(),
+                        point_estimation.estimation(),
+                        interaction_point,
+                        config,
+                        initialization,
+                        recipe.settings.workers,
+                        &should_cancel,
+                        |update| {
+                            progress(RunnerProgress {
+                                phase: format!(
+                                    "general_sem_moderation_{}",
+                                    update.phase.as_str()
+                                ),
+                                completed_units: u64::from(update.completed_replicates),
+                                total_units: u64::from(update.total_replicates),
+                            });
+                        },
+                    )
+                    .map_err(|error| match error {
+                        GeneralSemPlsMultipleModerationBootstrapErrorV1::PointRefitCancelled
+                        | GeneralSemPlsMultipleModerationBootstrapErrorV1::InteractionPointRefitCancelled
+                        | GeneralSemPlsMultipleModerationBootstrapErrorV1::Resampling(
+                            qpls_resampling::ResamplingError::Cancelled,
+                        ) => RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled,
+                        error => {
+                            RecipeV4GeneralSemPlsExecutionErrorV1::ModerationBootstrap(error)
+                        }
+                    })?;
+                (None, Some(moderation_bootstrap))
+            } else {
+                let mediation_bootstrap = bootstrap_general_sem_pls_v1(
                     dataset,
                     &execution,
                     artifact.plan(),
@@ -901,14 +1262,17 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
                         qpls_resampling::ResamplingError::Cancelled,
                     ) => RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled,
                     error => RecipeV4GeneralSemPlsExecutionErrorV1::Bootstrap(error),
-                })?,
-            )
+                })?;
+                (Some(mediation_bootstrap), None)
+            }
         }
     };
     if should_cancel() {
         return Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled);
     }
-    let adapter_version = if interaction_point_estimation.is_some() {
+    let adapter_version = if moderation_bootstrap_inference.is_some() {
+        RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+    } else if interaction_point_estimation.is_some() {
         RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1
     } else if bootstrap_inference.is_some() {
         RECIPE_V4_GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
@@ -934,6 +1298,7 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
         requested_effects,
         interaction_point_estimation,
         bootstrap_inference,
+        moderation_bootstrap_inference,
     })
 }
 
@@ -1675,6 +2040,7 @@ mod tests {
             );
             assert!(first.requested_effects().is_empty());
             assert!(first.bootstrap_inference().is_none());
+            assert!(first.moderation_bootstrap_inference().is_none());
             first
                 .interaction_point_estimation()
                 .unwrap()
@@ -1720,6 +2086,209 @@ mod tests {
                     .is_some_and(|effect_id| effect_ids.contains(effect_id))
             }));
         }
+    }
+
+    #[test]
+    fn production_runner_publishes_gamma_only_full_model_moderation_bootstrap() {
+        for different_focal_paths in [false, true] {
+            let (dataset, mut recipe, model, _) =
+                moderation_execution_fixture(different_focal_paths);
+            recipe.settings.bootstrap_samples = 20;
+            recipe.settings.seed = 42;
+            recipe.settings.confidence_level = 0.95;
+            recipe.settings.bootstrap_test_tail = qpls_core::PlsBootstrapTestTail::TwoSided;
+            recipe.settings.studentized_inner_samples = 0;
+            recipe.settings.workers = 2;
+            recipe.general_sem_config = Some(GeneralSemConfigV1 {
+                inference: GeneralSemInferenceV1::CaseBootstrap {
+                    resamples: 20,
+                    seed: 42,
+                    confidence_level: 0.95,
+                    interval: GeneralSemBootstrapIntervalV1::Percentile,
+                    tail: GeneralSemInferenceTailV1::TwoSided,
+                },
+                ..GeneralSemConfigV1::default()
+            });
+            recipe.ensure_valid().unwrap();
+            let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+            assert_eq!(
+                artifact.capability_cell(),
+                &qpls_core::pls_general_multiple_moderation_point_capability_cell_v1()
+            );
+
+            let result = run_compiled_general_sem_pls_recipe_v1(
+                &dataset,
+                &recipe,
+                &model,
+                &artifact,
+                || false,
+                |_| {},
+            )
+            .unwrap();
+            assert_eq!(
+                result.adapter_version(),
+                RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+            );
+            assert!(result.bootstrap_inference().is_none());
+            let bootstrap = result.moderation_bootstrap_inference().unwrap();
+            assert_eq!(bootstrap.resamples_requested, 20);
+            assert!(bootstrap.resamples_usable >= 18);
+            assert_eq!(bootstrap.interaction_gammas.len(), 2);
+            assert!(bootstrap.interaction_gammas.iter().all(|gamma| {
+                gamma.target.stage_one_model_scientific_sha256
+                    == result.stage_one_model_scientific_sha256()
+                    && gamma.target.product_scale_version
+                        == qpls_core::GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1
+                    && gamma.target.method_version
+                        == qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+                    && !gamma.target.generated_product_column_id.is_empty()
+            }));
+            bootstrap
+                .ensure_valid_against_plan_v1(
+                    artifact.plan(),
+                    result.interaction_point_estimation().unwrap(),
+                )
+                .unwrap();
+
+            let canonical = result.canonical_general_sem_results_v1().unwrap();
+            let receipt = canonical.inference_receipt.as_ref().unwrap();
+            assert_eq!(
+                receipt.capability_cell,
+                qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+            );
+            assert_eq!(
+                receipt.method_version,
+                qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+            );
+            assert_eq!(
+                receipt.resampling_operation_version,
+                qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+            );
+            assert_eq!(receipt.effect_ids, bootstrap.gamma_target_ids);
+            assert!(canonical.interaction_effects.iter().all(|effect| {
+                effect.scientific_rescaled_gamma.bootstrap_mean.is_some()
+                    && effect.scientific_rescaled_gamma.standard_error.is_some()
+                    && effect.scientific_rescaled_gamma.lower.is_some()
+                    && effect.scientific_rescaled_gamma.upper.is_some()
+                    && effect.scientific_rescaled_gamma.p_value.is_some()
+                    && effect
+                        .standardized_product_coefficient
+                        .bootstrap_mean
+                        .is_none()
+                    && effect
+                        .standardized_product_coefficient
+                        .standard_error
+                        .is_none()
+            }));
+            assert!(
+                canonical
+                    .joint_stage_structural_coefficients
+                    .iter()
+                    .all(|coefficient| coefficient.estimate.standard_error.is_none())
+            );
+            assert!(
+                canonical
+                    .conditional_effects
+                    .iter()
+                    .all(|effect| effect.value.standard_error.is_none())
+            );
+            assert!(
+                canonical
+                    .interaction_plots
+                    .iter()
+                    .all(|plot| plot.series.iter().all(|series| series
+                        .points
+                        .iter()
+                        .all(|point| point.lower.is_none() && point.upper.is_none())))
+            );
+            let identities =
+                qpls_core::canonical_general_sem_effect_identities_v1(&canonical)
+                    .into_iter()
+                    .filter(|identity| {
+                        matches!(
+                        identity,
+                        CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma {
+                            ..
+                        }
+                    )
+                    })
+                    .collect::<Vec<_>>();
+            assert_eq!(
+                receipt.effect_identity_set_sha256,
+                general_sem_effect_identity_set_sha256_v1(&identities)
+            );
+
+            let mut tampered = result.clone();
+            let tampered_gamma = &mut tampered
+                .moderation_bootstrap_inference
+                .as_mut()
+                .unwrap()
+                .interaction_gammas[0];
+            tampered_gamma.original += 0.01;
+            tampered_gamma.bootstrap_bias = tampered_gamma.bootstrap_mean - tampered_gamma.original;
+            assert!(matches!(
+                tampered.canonical_general_sem_results_v1(),
+                Err(RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(_))
+            ));
+
+            let mut tampered_product = result.clone();
+            let bootstrap = tampered_product
+                .moderation_bootstrap_inference
+                .as_mut()
+                .unwrap();
+            bootstrap.interaction_gammas[0]
+                .target
+                .generated_product_column_id = "generated:coherently_tampered".to_string();
+            let identities = bootstrap
+                .interaction_gammas
+                .iter()
+                .map(|gamma| gamma.target.clone())
+                .collect::<Vec<_>>();
+            bootstrap.gamma_target_identity_set_sha256 = qpls_core::sha256_serialized(&identities);
+            assert!(matches!(
+                tampered_product.canonical_general_sem_results_v1(),
+                Err(RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(_))
+            ));
+        }
+    }
+
+    #[test]
+    fn moderation_bootstrap_cancellation_publishes_no_execution_result() {
+        let (dataset, mut recipe, model, _) = moderation_execution_fixture(false);
+        recipe.settings.bootstrap_samples = 20;
+        recipe.settings.seed = 42;
+        recipe.settings.confidence_level = 0.95;
+        recipe.settings.bootstrap_test_tail = qpls_core::PlsBootstrapTestTail::TwoSided;
+        recipe.settings.workers = 2;
+        recipe.general_sem_config = Some(GeneralSemConfigV1 {
+            inference: GeneralSemInferenceV1::CaseBootstrap {
+                resamples: 20,
+                seed: 42,
+                confidence_level: 0.95,
+                interval: GeneralSemBootstrapIntervalV1::Percentile,
+                tail: GeneralSemInferenceTailV1::TwoSided,
+            },
+            ..GeneralSemConfigV1::default()
+        });
+        recipe.ensure_valid().unwrap();
+        let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+        let cancel = AtomicBool::new(false);
+        let outcome = run_compiled_general_sem_pls_recipe_v1(
+            &dataset,
+            &recipe,
+            &model,
+            &artifact,
+            || cancel.load(Ordering::SeqCst),
+            |update| {
+                if update.phase.starts_with("general_sem_moderation_") {
+                    cancel.store(true, Ordering::SeqCst);
+                }
+            },
+        );
+        assert!(matches!(
+            outcome,
+            Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled)
+        ));
     }
 
     #[test]

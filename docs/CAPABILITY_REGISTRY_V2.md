@@ -98,18 +98,27 @@ Evidence is a separate internal axis:
 
 These labels are governance data, not customer copy.
 
-The authoritative inventory contains 50 option cells: 48 active and two
-legacy. Their baseline coverage counts are 0 full, 37 partial, 11 absent, and
+The authoritative inventory contains 51 option cells: 49 active and two
+legacy. Their baseline coverage counts are 0 full, 38 partial, 11 absent, and
 2 intentionally excluded. The different cell count is expected because the
-sample-size/power, mediation, and permutation catalogue rows contain separately
-governed option cells. The frozen 45-row counts above remain the conservative
+sample-size/power, moderation, mediation, and permutation catalogue rows contain
+separately governed option cells. The frozen 45-row counts above remain the conservative
 compatibility projection used by historical reports.
 
-Option-cell evidence is 16 absent, three engine-only, two archive-qualified,
+Option-cell evidence is 16 absent, four engine-only, two archive-qualified,
 zero native-qualified, and 29 release-qualified. Row evidence is 16 absent,
 three engine-only, zero archive-qualified, zero native-qualified, and 26
 release-qualified; the row projection remains conservative when independently
 governed cells on one official row differ.
+
+The General SEM simultaneous-moderation bootstrap is one of those engine-only
+cells. Its supplemental runtime is connected for full-model indexed case
+resampling and scientific rescaled gamma inference only, while the companion
+point cell remains the primary artifact authority. The live qualification link
+is `validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json`;
+the capability-cell contract remains an exact predicate and product-boundary
+reference, not a substitute for source-bound method evidence. Both cells stay
+opt-in Labs until their independent full-PLS and release gates are complete.
 
 ## Coverage and lifecycle rules
 

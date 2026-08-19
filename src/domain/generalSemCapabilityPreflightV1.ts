@@ -44,6 +44,13 @@ export const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1 = Object.freeze({
   capability_version: "general_sem_pls_multiple_two_way_moderation_point_v1",
 } as const);
 
+export const GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.moderation",
+  cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+  capability_version: "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+} as const);
+
 const CBSEM_CELL = {
   registry_schema_version: 2,
   capability_id: "smartpls.cbsem",
@@ -85,6 +92,17 @@ const PLS_MULTIPLE_MODERATION_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
   {
     evidence_id: "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_point:general_sem_pls_multiple_two_way_moderation_point_v1",
     description: "Capability Registry V2 exposes the exact simultaneous interaction_v2 point-estimation option in Experimental Labs.",
+  },
+];
+
+const PLS_MULTIPLE_MODERATION_BOOTSTRAP_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
+  {
+    evidence_id: "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_bootstrap_v1",
+    description: "The supplemental moderation bootstrap compiler binds percentile, two-sided full-model case resampling while preserving the point cell as the compiled artifact's primary authority.",
+  },
+  {
+    evidence_id: "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap:general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+    description: "Capability Registry V2 exposes the exact gamma-only simultaneous interaction_v2 full-model case-bootstrap option in Experimental Labs.",
   },
 ];
 
@@ -297,7 +315,7 @@ function executionScopeDiagnostics(
     diagnostics.push(errorDiagnostic(
       "sem.capability.pls.conditional_probes_not_executable",
       hasInteractions
-        ? "Authored probe policies are preserved, but the first interaction_v2 point cell uses the frozen standardized -1/0/+1 policy only."
+        ? "Authored probe policies are preserved, but the moderation point cell uses the frozen standardized -1/0/+1 policy and the supplemental bootstrap cell is gamma-only."
         : "Conditional-effect probes are authored but are not executable in the current PLS v3 point-estimation slice.",
       "Remove the probe request for point estimation, or wait for the qualified moderation execution cell.",
     ));
@@ -331,6 +349,18 @@ function executionScopeDiagnostics(
 
 function plsShapeDiagnostics(model: SemModelV4, hasInteractions: boolean): SemCapabilityDiagnosticV1[] {
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
+  if (hasInteractions) {
+    for (const term of model.derived_terms) {
+      if (term.kind === "interaction_v2" && term.operands.length !== 2) {
+        diagnostics.push(errorDiagnostic(
+          "sem.capability.pls.interaction_order_not_executable",
+          `Interaction ${term.id} requires exactly two operands; received ${term.operands.length}.`,
+          "Use exactly two operands per interaction_v2 term; three-way and higher-order moderation remain blocked.",
+          term.id,
+        ));
+      }
+    }
+  }
   if (model.variables.some((variable) => variable.kind === "common_factor")) {
     diagnostics.push(errorDiagnostic(
       "sem.capability.pls.common_factor_not_executable",
@@ -605,20 +635,15 @@ function interactionScopeDiagnostics(
   paths: readonly SpecificDirectedPath[],
 ): SemCapabilityDiagnosticV1[] {
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
-  if (config.inference.kind !== "none") diagnostics.push(errorDiagnostic(
-    "sem.capability.pls.multiple_moderation_bootstrap_not_executable",
-    "Simultaneous interaction_v2 bootstrap inference is not qualified in the current point-only cell.",
-    "Set General SEM inference to none for descriptive point estimation, or keep the request in Labs until complete-model interaction resampling is qualified.",
-  ));
   if (config.requested_effect_estimands.length > 0) diagnostics.push(errorDiagnostic(
     "sem.capability.pls.multiple_moderation_effect_requests_not_executable",
-    "Mediation-effect requests cannot be combined with the first simultaneous interaction_v2 point cell.",
+    "Mediation-effect requests cannot be combined with the simultaneous interaction_v2 point or gamma-only bootstrap cells.",
     "Clear requested indirect/total effects and calculate moderation point estimates only, or retain the model until the combined estimand cell is qualified.",
   ));
   if (paths.length > 0) diagnostics.push(errorDiagnostic(
     "sem.capability.pls.moderated_mediation_not_executable",
-    "A directed chain is present, so this graph may imply moderated mediation outside the bounded moderation-only point cell.",
-    "Use a direct-only structural graph for this point cell, or retain the authored chain until moderated-mediation execution is qualified.",
+    "A directed chain is present, so this graph may imply moderated mediation outside the bounded direct-only moderation cells.",
+    "Use a direct-only structural graph for these cells, or retain the authored chain until moderated-mediation execution is qualified.",
   ));
   return diagnostics;
 }
@@ -731,7 +756,11 @@ export function preflightGeneralSemPlsV1(
   const bootstrapRequested = validatedConfig.inference.kind === "case_bootstrap";
   const capabilityCells = [
     hasInteractions ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1 : PLS_CELL,
-    ...(bootstrapRequested ? [PLS_BOOTSTRAP_CELL] : []),
+    ...(bootstrapRequested
+      ? [hasInteractions
+        ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1
+        : PLS_BOOTSTRAP_CELL]
+      : []),
   ];
   const evidence = [
     PLS_EVIDENCE.find((item) => item.evidence_id === "compiler:recipe_v4_to_compiled_pls_plan_v3_v1")!,
@@ -739,8 +768,9 @@ export function preflightGeneralSemPlsV1(
       item.evidence_id !== "compiler:recipe_v4_to_compiled_pls_plan_v3_v1"
     ))),
     ...(bootstrapRequested ? [
-      PLS_BOOTSTRAP_COMPILER_EVIDENCE,
-      PLS_BOOTSTRAP_EVIDENCE,
+      ...(hasInteractions
+        ? PLS_MULTIPLE_MODERATION_BOOTSTRAP_EVIDENCE
+        : [PLS_BOOTSTRAP_COMPILER_EVIDENCE, PLS_BOOTSTRAP_EVIDENCE]),
       PLS_BOOTSTRAP_MECHANISM_EVIDENCE,
     ] : []),
   ];
@@ -854,17 +884,21 @@ export function preflightGeneralSemPlsV1(
       code: "sem.capability.pls.experimental_labs",
       severity: "info",
       subject: null,
-      message: bootstrapRequested
-        ? "General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
-        : hasInteractions
-          ? "General SEM simultaneous two-way moderation point estimation passes the Experimental Labs compiler preflight."
+      message: hasInteractions
+        ? bootstrapRequested
+          ? "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+          : "General SEM simultaneous two-way moderation point estimation passes the Experimental Labs compiler preflight."
+        : bootstrapRequested
+          ? "General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
           : "General recursive PLS point estimation and path-specific effects pass the Experimental Labs compiler preflight.",
       corrections: [],
     }],
     evidence,
     summary: "PLS-SEM can compile this exact request in Experimental Labs.",
     explanation: hasInteractions
-      ? "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
+      ? bootstrapRequested
+        ? "The point moderation cell remains the primary artifact authority and the supplemental Labs cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
+        : "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
       : bootstrapRequested
       ? "The compiler binds percentile, two-sided case resampling to the exact multiple-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
       : "The compiler binds the proven PLS scoring plan to stable relation-path identities. Runtime validation remains authoritative before a result can be published.",
