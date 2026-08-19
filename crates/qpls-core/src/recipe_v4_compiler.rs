@@ -7,13 +7,17 @@ use crate::{
     CbsemExactCaseBootstrapZeroNullUnavailableReasonV1, CbsemInput,
     CbsemMlExactCapabilityProfileV2, CbsemModelType, CompiledCbsemParameterRoleV2,
     CompiledCbsemParameterStatusV2, CompiledCbsemPlanV2, CompiledCbsemPlanV2Error,
-    CompiledCbsemProductIndicatorErrorV1, CompiledCbsemProductIndicatorPlanV1, CompiledPlsPlanV2,
-    CompiledPlsPlanV2Error, EXECUTABLE_LEGACY_METADATA_KEYS, LegacyEstimandConfirmationV4,
-    MethodConfig, MissingDataPolicy, MissingDataPolicyV4, SemConstraintV4, SemDataBindingV4,
-    SemModelV4, SemModelV4ValidationError, SemVariableV4, WeightCapabilityIssueContractErrorV1,
+    CompiledCbsemPlanV3, CompiledCbsemPlanV3Error, CompiledCbsemProductIndicatorErrorV1,
+    CompiledCbsemProductIndicatorPlanV1, CompiledCbsemStructuralFormV3, CompiledPlsPlanV2,
+    CompiledPlsPlanV2Error, EXECUTABLE_LEGACY_METADATA_KEYS, GeneralSemBootstrapIntervalV1,
+    GeneralSemInferenceTailV1, GeneralSemInferenceV1, LegacyEstimandConfirmationV4, MethodConfig,
+    MissingDataPolicy, MissingDataPolicyV4, SemConstraintV4, SemDataBindingV4, SemModelV4,
+    SemModelV4ValidationError, SemVariableV4, WeightCapabilityIssueContractErrorV1,
     WeightCapabilityIssueV1, WeightCapabilityTargetV1, WeightDeclarationResolutionErrorV1,
-    compile_cbsem_plan_v2, compile_cbsem_product_indicator_plan_v1, compile_pls_plan_v2,
-    ensure_cbsem_ml_exact_parameter_table_v4_capability_v2, resolve_weight_declaration_v1,
+    cbsem_general_sem_ml_capability_cell_v1, cbsem_recursive_sem_bootstrap_capability_cell_v1,
+    compile_cbsem_plan_v2, compile_cbsem_plan_v3, compile_cbsem_product_indicator_plan_v1,
+    compile_pls_plan_v2, ensure_cbsem_ml_exact_parameter_table_v4_capability_v2,
+    resolve_weight_declaration_v1,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -23,6 +27,7 @@ use uuid::Uuid;
 pub const RECIPE_V4_COMPILATION_RECEIPT_SCHEMA_VERSION: u32 = 1;
 pub const RECIPE_V4_PLS_COMPILER_VERSION: &str = "recipe_v4_to_compiled_pls_plan_v2_v2";
 pub const RECIPE_V4_CBSEM_COMPILER_VERSION: &str = "recipe_v4_to_compiled_cbsem_plan_v2_v2";
+pub const RECIPE_V4_CBSEM_V3_COMPILER_VERSION: &str = "recipe_v4_to_compiled_cbsem_plan_v3_v1";
 pub const RECIPE_V4_CBSEM_PRODUCT_INDICATOR_COMPILER_VERSION: &str =
     "recipe_v4_to_compiled_cbsem_product_indicator_plan_v1_v1";
 
@@ -37,8 +42,7 @@ pub const CBSEM_ML_CELL_ID: &str = "qpls3.cbsem.ml";
 pub const CBSEM_ML_CAPABILITY_VERSION: &str = "cbsem_ml_v1";
 pub const CBSEM_EXACT_BOOTSTRAP_CAPABILITY_ID: &str = "smartpls.cbsem_bootstrapping";
 pub const CBSEM_EXACT_BOOTSTRAP_CELL_ID: &str = "qpls3.cbsem.bootstrap";
-pub const CBSEM_EXACT_BOOTSTRAP_CAPABILITY_VERSION: &str =
-    "cbsem_exact_case_bootstrap_v1";
+pub const CBSEM_EXACT_BOOTSTRAP_CAPABILITY_VERSION: &str = "cbsem_exact_case_bootstrap_v1";
 pub const CBSEM_PRODUCT_INDICATOR_CAPABILITY_ID: &str = "smartpls.cbsem_moderator";
 pub const CBSEM_PRODUCT_INDICATOR_CELL_ID: &str = "qpls3.cbsem.moderator.product_indicator";
 pub const CBSEM_PRODUCT_INDICATOR_CAPABILITY_VERSION: &str = "cbsem_product_indicator_v1";
@@ -116,6 +120,7 @@ pub fn compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1(
 pub enum RecipeV4CompilerTarget {
     PlsPlanV2,
     CbsemPlanV2,
+    CbsemPlanV3,
     CbsemProductIndicatorPlanV1,
 }
 
@@ -124,6 +129,7 @@ impl RecipeV4CompilerTarget {
         match self {
             Self::PlsPlanV2 => RECIPE_V4_PLS_COMPILER_VERSION,
             Self::CbsemPlanV2 => RECIPE_V4_CBSEM_COMPILER_VERSION,
+            Self::CbsemPlanV3 => RECIPE_V4_CBSEM_V3_COMPILER_VERSION,
             Self::CbsemProductIndicatorPlanV1 => RECIPE_V4_CBSEM_PRODUCT_INDICATOR_COMPILER_VERSION,
         }
     }
@@ -142,6 +148,7 @@ impl RecipeV4CompilerTarget {
                 cell_id: CBSEM_ML_CELL_ID.into(),
                 capability_version: CBSEM_ML_CAPABILITY_VERSION.into(),
             },
+            Self::CbsemPlanV3 => cbsem_general_sem_ml_capability_cell_v1(),
             Self::CbsemProductIndicatorPlanV1 => CapabilityCellReferenceV2 {
                 registry_schema_version: 2,
                 capability_id: CBSEM_PRODUCT_INDICATOR_CAPABILITY_ID.into(),
@@ -167,6 +174,28 @@ impl RecipeV4CompilerTarget {
             self.capability_cell()
         }
     }
+
+    /// Primary candidate-cell identity for this exact recipe. This does not
+    /// activate either V3 cell in the Registry; it only freezes compiler and
+    /// receipt attribution ahead of a connected runner.
+    pub fn capability_cell_for_recipe(
+        self,
+        recipe: &AnalysisRecipeV4,
+    ) -> CapabilityCellReferenceV2 {
+        if self == Self::CbsemPlanV3
+            && matches!(
+                recipe
+                    .general_sem_config
+                    .as_ref()
+                    .map(|config| config.inference),
+                Some(GeneralSemInferenceV1::CaseBootstrap { .. })
+            )
+        {
+            cbsem_recursive_sem_bootstrap_capability_cell_v1()
+        } else {
+            self.capability_cell_for_method(recipe.settings.method)
+        }
+    }
 }
 
 pub fn cbsem_exact_bootstrap_capability_cell_v1() -> CapabilityCellReferenceV2 {
@@ -187,6 +216,9 @@ pub enum CompiledRecipePlanV4 {
     CbsemPlanV2 {
         plan: CompiledCbsemPlanV2,
     },
+    CbsemPlanV3 {
+        plan: CompiledCbsemPlanV3,
+    },
     CbsemProductIndicatorPlanV1 {
         plan: CompiledCbsemProductIndicatorPlanV1,
     },
@@ -197,6 +229,7 @@ impl CompiledRecipePlanV4 {
         match self {
             Self::PlsPlanV2 { .. } => RecipeV4CompilerTarget::PlsPlanV2,
             Self::CbsemPlanV2 { .. } => RecipeV4CompilerTarget::CbsemPlanV2,
+            Self::CbsemPlanV3 { .. } => RecipeV4CompilerTarget::CbsemPlanV3,
             Self::CbsemProductIndicatorPlanV1 { .. } => {
                 RecipeV4CompilerTarget::CbsemProductIndicatorPlanV1
             }
@@ -207,6 +240,7 @@ impl CompiledRecipePlanV4 {
         match self {
             Self::PlsPlanV2 { plan } => plan.scientific_hash(),
             Self::CbsemPlanV2 { plan } => plan.scientific_hash(),
+            Self::CbsemPlanV3 { plan } => plan.scientific_hash(),
             Self::CbsemProductIndicatorPlanV1 { plan } => plan.source_model_scientific_sha256(),
         }
     }
@@ -367,6 +401,8 @@ pub enum RecipeV4CompilationError {
     WeightCapabilityContract(#[from] WeightCapabilityIssueContractErrorV1),
     #[error("recipe method configuration is required for compilation")]
     MissingMethodConfig,
+    #[error("recipe-v4 CB-SEM plan-v3 compilation requires general_sem_config v1")]
+    MissingGeneralSemConfig,
     #[error("recipe-v4 PLS score-execution contract is invalid: {0}")]
     PlsScoreExecutionContract(String),
     #[error("recipe-v4 PLS nonlinear-effects contract is invalid: {0}")]
@@ -399,7 +435,11 @@ pub enum RecipeV4CompilationError {
     #[error(transparent)]
     CbsemCompiler(#[from] CompiledCbsemPlanV2Error),
     #[error(transparent)]
+    CbsemV3Compiler(#[from] CompiledCbsemPlanV3Error),
+    #[error(transparent)]
     CbsemEstimatorCapability(#[from] CbsemEstimatorCapabilityErrorV2),
+    #[error("recipe-v4 CB-SEM general-SEM v1 scope is unsupported: {0}")]
+    CbsemGeneralSemScope(String),
     #[error(transparent)]
     CbsemProductIndicatorCompiler(#[from] CompiledCbsemProductIndicatorErrorV1),
     #[error("compilation receipt schema must equal 1 (found {0})")]
@@ -463,6 +503,15 @@ pub fn compile_analysis_recipe_v4(
             };
             ensure_cbsem_ml_exact_parameter_table_v4_capability_v2(&plan, profile)?;
             CompiledRecipePlanV4::CbsemPlanV2 { plan }
+        }
+        RecipeV4CompilerTarget::CbsemPlanV3 => {
+            let config = recipe
+                .general_sem_config
+                .as_ref()
+                .ok_or(RecipeV4CompilationError::MissingGeneralSemConfig)?;
+            let plan = compile_cbsem_plan_v3(model, config)?;
+            ensure_cbsem_general_sem_v1_scope(recipe, &plan)?;
+            CompiledRecipePlanV4::CbsemPlanV3 { plan }
         }
         RecipeV4CompilerTarget::CbsemProductIndicatorPlanV1 => {
             let source_plan = compile_cbsem_plan_v2(model)?;
@@ -649,6 +698,7 @@ fn ensure_weight_capability_v1(
                 WeightCapabilityTargetV1::CbsemMlV1
             }
         }
+        RecipeV4CompilerTarget::CbsemPlanV3 => WeightCapabilityTargetV1::CbsemMlV1,
         RecipeV4CompilerTarget::CbsemProductIndicatorPlanV1 => {
             WeightCapabilityTargetV1::CbsemProductIndicatorPlanV1
         }
@@ -715,6 +765,7 @@ fn ensure_estimand_compatibility(
             LegacyEstimandConfirmationV4::ConfirmedCommonFactor
         ) | (
             RecipeV4CompilerTarget::CbsemPlanV2
+                | RecipeV4CompilerTarget::CbsemPlanV3
                 | RecipeV4CompilerTarget::CbsemProductIndicatorPlanV1,
             LegacyEstimandConfirmationV4::ConfirmedComposite
         ) | (_, LegacyEstimandConfirmationV4::LegacyEstimandUnspecified)
@@ -738,6 +789,7 @@ fn ensure_estimand_compatibility(
     let compatible = match target {
         RecipeV4CompilerTarget::PlsPlanV2 => composites > 0 && factors == 0,
         RecipeV4CompilerTarget::CbsemPlanV2
+        | RecipeV4CompilerTarget::CbsemPlanV3
         | RecipeV4CompilerTarget::CbsemProductIndicatorPlanV1 => factors > 0 && composites == 0,
     };
     if !compatible {
@@ -751,6 +803,9 @@ fn ensure_method_compatibility(
     model: &SemModelV4,
     target: RecipeV4CompilerTarget,
 ) -> Result<(), RecipeV4CompilationError> {
+    if target == RecipeV4CompilerTarget::CbsemPlanV3 && recipe.general_sem_config.is_none() {
+        return Err(RecipeV4CompilationError::MissingGeneralSemConfig);
+    }
     let Some(config) = recipe.method_config.as_ref() else {
         return Err(RecipeV4CompilationError::MissingMethodConfig);
     };
@@ -791,6 +846,9 @@ fn ensure_method_compatibility(
                 );
             recipe.settings.method == AnalysisMethod::Cbsem
                 && (point_only || is_exact_cbsem_cfa_case_bootstrap_v2(recipe, model, config))
+        }
+        RecipeV4CompilerTarget::CbsemPlanV3 => {
+            is_cbsem_general_sem_v3_method_request(recipe, config)
         }
         RecipeV4CompilerTarget::CbsemProductIndicatorPlanV1 => {
             recipe.settings.method == AnalysisMethod::Cbsem
@@ -860,7 +918,9 @@ fn ensure_method_compatibility(
     }
     if matches!(
         target,
-        RecipeV4CompilerTarget::CbsemPlanV2 | RecipeV4CompilerTarget::CbsemProductIndicatorPlanV1
+        RecipeV4CompilerTarget::CbsemPlanV2
+            | RecipeV4CompilerTarget::CbsemPlanV3
+            | RecipeV4CompilerTarget::CbsemProductIndicatorPlanV1
     ) {
         let MethodConfig::Cbsem {
             model_type, input, ..
@@ -885,6 +945,147 @@ fn ensure_method_compatibility(
         if *model_type != expected_model_type || *input != expected_input {
             return Err(RecipeV4CompilationError::CbsemConfigurationMismatch);
         }
+    }
+    Ok(())
+}
+
+fn is_cbsem_general_sem_v3_method_request(
+    recipe: &AnalysisRecipeV4,
+    config: &MethodConfig,
+) -> bool {
+    let Some(general_sem) = recipe.general_sem_config.as_ref() else {
+        return false;
+    };
+    let MethodConfig::Cbsem {
+        model_type,
+        estimator: CbsemEstimator::Ml,
+        input: CbsemInput::Raw,
+        mean_structure: false,
+        bootstrap_samples,
+        bootstrap_v2,
+        group_column: None,
+        invariance_steps,
+    } = config
+    else {
+        return false;
+    };
+    if recipe.settings.method != AnalysisMethod::Cbsem
+        || recipe.settings.preprocessing != crate::Preprocessing::Unstandardized
+        || recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion
+        || recipe.settings.studentized_inner_samples != 0
+        || recipe.settings.permutation_samples != 0
+        || recipe.settings.case_weight_column.is_some()
+        || !invariance_steps.is_empty()
+    {
+        return false;
+    }
+
+    match general_sem.inference {
+        GeneralSemInferenceV1::None => {
+            recipe.settings.bootstrap_samples == 0
+                && *bootstrap_samples == 0
+                && bootstrap_v2.is_none()
+        }
+        GeneralSemInferenceV1::CaseBootstrap {
+            resamples,
+            seed,
+            confidence_level,
+            interval: GeneralSemBootstrapIntervalV1::Percentile,
+            tail: GeneralSemInferenceTailV1::TwoSided,
+        } => {
+            *model_type == CbsemModelType::Sem
+                && (500..=10_000).contains(&resamples)
+                && confidence_level.to_bits() == 0.95_f64.to_bits()
+                && recipe.settings.bootstrap_samples == resamples
+                && recipe.settings.bootstrap_test_tail == crate::PlsBootstrapTestTail::TwoSided
+                && recipe.settings.seed == seed
+                && recipe.settings.confidence_level.to_bits() == confidence_level.to_bits()
+                && *bootstrap_samples == resamples
+                && matches!(
+                    bootstrap_v2,
+                    Some(CbsemBootstrapConfigV2 {
+                        algorithm: CbsemBootstrapAlgorithm::CaseResamplingFullMl,
+                        interval: CbsemBootstrapInterval::PercentileType7,
+                        test_tail: crate::CbsemBootstrapTestTail::TwoSided,
+                    })
+                )
+        }
+        GeneralSemInferenceV1::CaseBootstrap { .. } => false,
+    }
+}
+
+fn ensure_cbsem_general_sem_v1_scope(
+    recipe: &AnalysisRecipeV4,
+    plan: &CompiledCbsemPlanV3,
+) -> Result<(), RecipeV4CompilationError> {
+    ensure_cbsem_ml_exact_parameter_table_v4_capability_v2(
+        plan.base_plan(),
+        CbsemMlExactCapabilityProfileV2::CovarianceStructure,
+    )?;
+    if !matches!(
+        plan.base_plan().input(),
+        crate::CompiledCbsemInputV2::Raw {
+            missing_data: MissingDataPolicyV4::ListwiseDeletion,
+            weight: None,
+            cluster_variable: None,
+            strata_variable: None,
+            ..
+        }
+    ) {
+        return Err(RecipeV4CompilationError::CbsemGeneralSemScope(
+            "requires unweighted raw continuous data with listwise deletion and no cluster or strata binding"
+                .into(),
+        ));
+    }
+    if plan.identification_evidence().structural_form() != CompiledCbsemStructuralFormV3::Recursive
+    {
+        return Err(RecipeV4CompilationError::CbsemGeneralSemScope(
+            "feedback/nonrecursive topology is outside the v1 execution predicate".into(),
+        ));
+    }
+    if !plan.base_plan().constraints().is_empty() {
+        return Err(RecipeV4CompilationError::CbsemGeneralSemScope(
+            "explicit constraint objects are unsupported; use fixed/free rows, equality_label, and finite row bounds"
+                .into(),
+        ));
+    }
+    let general_sem = recipe
+        .general_sem_config
+        .as_ref()
+        .ok_or(RecipeV4CompilationError::MissingGeneralSemConfig)?;
+    if !general_sem.requested_effect_estimands.is_empty()
+        || !general_sem.conditional_effect_probes.is_empty()
+    {
+        return Err(RecipeV4CompilationError::CbsemGeneralSemScope(
+            "derived effect estimands and conditional probes are not executed by the point or recursive-bootstrap v1 cells"
+                .into(),
+        ));
+    }
+    let expected_cells = if matches!(
+        general_sem.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) {
+        vec![
+            cbsem_general_sem_ml_capability_cell_v1(),
+            cbsem_recursive_sem_bootstrap_capability_cell_v1(),
+        ]
+    } else {
+        vec![cbsem_general_sem_ml_capability_cell_v1()]
+    };
+    if plan.capability_cells() != expected_cells {
+        return Err(RecipeV4CompilationError::CbsemGeneralSemScope(
+            "compiled capability-cell set does not match the exact inference request".into(),
+        ));
+    }
+    if matches!(
+        general_sem.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) && plan.base_plan().regressions().is_empty()
+    {
+        return Err(RecipeV4CompilationError::CbsemGeneralSemScope(
+            "the recursive-SEM bootstrap cell requires at least one structural regression; CFA keeps its existing bootstrap cell"
+                .into(),
+        ));
     }
     Ok(())
 }
@@ -1098,6 +1299,13 @@ fn ensure_capability_cell_for_recipe(
     recipe: &AnalysisRecipeV4,
     actual: &CapabilityCellReferenceV2,
 ) -> Result<(), RecipeV4CompilationError> {
+    if target == RecipeV4CompilerTarget::CbsemPlanV3 {
+        return if *actual == target.capability_cell_for_recipe(recipe) {
+            Ok(())
+        } else {
+            Err(RecipeV4CompilationError::CapabilityCellMismatch)
+        };
+    }
     let exact_cbsem_bootstrap = target == RecipeV4CompilerTarget::CbsemPlanV2
         && matches!(
             recipe.method_config.as_ref(),
@@ -1111,7 +1319,10 @@ fn ensure_capability_cell_for_recipe(
     // They remain valid under their stored identity, while current desktop
     // requests are required to use the method-scoped bootstrap cell.
     let historical = exact_cbsem_bootstrap && *actual == target.capability_cell();
-    if !current && !historical && *actual != target.capability_cell_for_method(recipe.settings.method) {
+    if !current
+        && !historical
+        && *actual != target.capability_cell_for_method(recipe.settings.method)
+    {
         return Err(RecipeV4CompilationError::CapabilityCellMismatch);
     }
     Ok(())
@@ -1122,6 +1333,13 @@ fn ensure_receipt_capability_cell(
     actual: &CapabilityCellReferenceV2,
 ) -> Result<(), RecipeV4CompilationError> {
     let base = target.capability_cell();
+    if target == RecipeV4CompilerTarget::CbsemPlanV3 {
+        return if *actual == base || *actual == cbsem_recursive_sem_bootstrap_capability_cell_v1() {
+            Ok(())
+        } else {
+            Err(RecipeV4CompilationError::CapabilityCellMismatch)
+        };
+    }
     let nonlinear = target.capability_cell_for_method(AnalysisMethod::NonlinearEffects);
     let exact_cbsem_bootstrap = cbsem_exact_bootstrap_capability_cell_v1();
     if *actual != base && *actual != nonlinear && *actual != exact_cbsem_bootstrap {
@@ -2144,13 +2362,9 @@ mod tests {
             let mut recipe = point_recipe.clone();
             enable_exact_cbsem_cfa_case_bootstrap_v2(&mut recipe, samples);
             let exact_cell = cbsem_exact_bootstrap_capability_cell_v1();
-            let compiled = compile_analysis_recipe_v4(
-                &recipe,
-                Some(&model),
-                target,
-                exact_cell.clone(),
-            )
-            .unwrap();
+            let compiled =
+                compile_analysis_recipe_v4(&recipe, Some(&model), target, exact_cell.clone())
+                    .unwrap();
             assert_eq!(compiled.receipt().capability_cell(), &exact_cell);
             assert_eq!(compiled.plan(), point.plan());
             assert_ne!(
@@ -3212,6 +3426,186 @@ mod tests {
                 .iter()
                 .any(|issue| issue.code == "product_indicator_method_required")
         );
+    }
+
+    fn cbsem_v3_point_recipe_and_model() -> (AnalysisRecipeV4, SemModelV4) {
+        let (mut recipe, model) = cbsem_recipe_and_model(false);
+        recipe.settings.preprocessing = crate::Preprocessing::Unstandardized;
+        recipe.general_sem_config = Some(crate::GeneralSemConfigV1::default());
+        (recipe, model)
+    }
+
+    fn enable_cbsem_v3_recursive_bootstrap(recipe: &mut AnalysisRecipeV4, samples: u32) {
+        recipe.settings.bootstrap_samples = samples;
+        recipe.settings.seed = 777;
+        recipe.settings.workers = 4;
+        recipe.settings.confidence_level = 0.95;
+        recipe.general_sem_config = Some(crate::GeneralSemConfigV1 {
+            inference: GeneralSemInferenceV1::CaseBootstrap {
+                resamples: samples,
+                seed: recipe.settings.seed,
+                confidence_level: 0.95,
+                interval: GeneralSemBootstrapIntervalV1::Percentile,
+                tail: GeneralSemInferenceTailV1::TwoSided,
+            },
+            ..crate::GeneralSemConfigV1::default()
+        });
+        let Some(MethodConfig::Cbsem {
+            bootstrap_samples,
+            bootstrap_v2,
+            ..
+        }) = recipe.method_config.as_mut()
+        else {
+            unreachable!()
+        };
+        *bootstrap_samples = samples;
+        *bootstrap_v2 = Some(CbsemBootstrapConfigV2 {
+            algorithm: CbsemBootstrapAlgorithm::CaseResamplingFullMl,
+            interval: CbsemBootstrapInterval::PercentileType7,
+            test_tail: crate::CbsemBootstrapTestTail::TwoSided,
+        });
+    }
+
+    #[test]
+    fn cbsem_plan_v3_binds_resident_authority_and_exact_point_cell() {
+        let (recipe, model) = cbsem_v3_point_recipe_and_model();
+        let target = RecipeV4CompilerTarget::CbsemPlanV3;
+        let artifact = compile_analysis_recipe_v4(
+            &recipe,
+            Some(&model),
+            target,
+            target.capability_cell_for_recipe(&recipe),
+        )
+        .unwrap();
+        let CompiledRecipePlanV4::CbsemPlanV3 { plan } = artifact.plan() else {
+            panic!("expected compiled CB-SEM plan v3")
+        };
+        assert_eq!(plan.model_id(), model.id);
+        assert_eq!(plan.parameters(), plan.base_plan().parameters());
+        assert_eq!(
+            plan.parameter_table_authority().row_count(),
+            plan.parameters().len() as u64
+        );
+        assert_eq!(
+            plan.capability_cells(),
+            &[cbsem_general_sem_ml_capability_cell_v1()]
+        );
+        for digest in [
+            plan.scientific_sha256(),
+            plan.general_sem_config_sha256(),
+            plan.data_binding_sha256(),
+            plan.base_plan_sha256(),
+            plan.capability_cells_sha256(),
+            plan.parameter_table_authority().parameter_table_sha256(),
+        ] {
+            assert!(is_lowercase_sha256(digest));
+        }
+        assert_eq!(
+            artifact.receipt().capability_cell(),
+            &cbsem_general_sem_ml_capability_cell_v1()
+        );
+        validate_compiled_analysis_recipe_v4(&artifact, &recipe, Some(&model)).unwrap();
+
+        let mut tampered = serde_json::to_value(&artifact).unwrap();
+        tampered["plan"]["plan"]["base_plan"]["model_name"] = serde_json::json!("tampered");
+        let tampered: CompiledAnalysisRecipeV4 = serde_json::from_value(tampered).unwrap();
+        assert_eq!(
+            validate_compiled_analysis_recipe_v4(&tampered, &recipe, Some(&model)),
+            Err(RecipeV4CompilationError::ArtifactMismatch)
+        );
+    }
+
+    #[test]
+    fn cbsem_plan_v3_recursive_bootstrap_selector_is_exact_and_not_cfa() {
+        let (mut recipe, model) = cbsem_v3_point_recipe_and_model();
+        enable_cbsem_v3_recursive_bootstrap(&mut recipe, 500);
+        let target = RecipeV4CompilerTarget::CbsemPlanV3;
+        let bootstrap_cell = cbsem_recursive_sem_bootstrap_capability_cell_v1();
+        assert_eq!(target.capability_cell_for_recipe(&recipe), bootstrap_cell);
+        let artifact =
+            compile_analysis_recipe_v4(&recipe, Some(&model), target, bootstrap_cell.clone())
+                .unwrap();
+        let CompiledRecipePlanV4::CbsemPlanV3 { plan } = artifact.plan() else {
+            panic!("expected compiled CB-SEM plan v3")
+        };
+        assert_eq!(
+            plan.capability_cells(),
+            &[
+                cbsem_general_sem_ml_capability_cell_v1(),
+                bootstrap_cell.clone(),
+            ]
+        );
+        assert_eq!(artifact.receipt().capability_cell(), &bootstrap_cell);
+
+        let mut wrong_tail = recipe.clone();
+        wrong_tail.settings.bootstrap_test_tail = crate::PlsBootstrapTestTail::OneSidedGreater;
+        assert!(matches!(
+            compile_analysis_recipe_v4(
+                &wrong_tail,
+                Some(&model),
+                target,
+                target.capability_cell_for_recipe(&wrong_tail),
+            ),
+            Err(RecipeV4CompilationError::MethodCompilerMismatch { .. })
+        ));
+
+        assert_eq!(
+            compile_analysis_recipe_v4(
+                &recipe,
+                Some(&model),
+                target,
+                cbsem_general_sem_ml_capability_cell_v1(),
+            ),
+            Err(RecipeV4CompilationError::CapabilityCellMismatch)
+        );
+
+        let (mut cfa_recipe, cfa_model) = cbsem_cfa_recipe_and_model();
+        cfa_recipe.settings.preprocessing = crate::Preprocessing::Unstandardized;
+        cfa_recipe.general_sem_config = Some(crate::GeneralSemConfigV1::default());
+        enable_cbsem_v3_recursive_bootstrap(&mut cfa_recipe, 500);
+        assert!(matches!(
+            compile_analysis_recipe_v4(
+                &cfa_recipe,
+                Some(&cfa_model),
+                target,
+                target.capability_cell_for_recipe(&cfa_recipe),
+            ),
+            Err(RecipeV4CompilationError::CbsemConfigurationMismatch)
+                | Err(RecipeV4CompilationError::MethodCompilerMismatch { .. })
+                | Err(RecipeV4CompilationError::CbsemGeneralSemScope(_))
+        ));
+    }
+
+    #[test]
+    fn cbsem_plan_v3_rejects_unmodeled_constraint_objects_without_rewriting_model() {
+        let (mut recipe, mut model) = cbsem_v3_point_recipe_and_model();
+        let parameter_id = model
+            .parameters
+            .iter()
+            .find_map(|parameter| match parameter {
+                SemParameterV4::Free { id, .. } => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        model.constraints.push(SemConstraintV4::Bound {
+            id: "constraint:unsupported_explicit_bound".into(),
+            parameter: parameter_id,
+            lower: Some(-1.0),
+            upper: Some(1.0),
+        });
+        model.ensure_valid().unwrap();
+        embed(&mut recipe, &model);
+        let before = model.clone();
+        assert!(matches!(
+            compile_analysis_recipe_v4(
+                &recipe,
+                Some(&model),
+                RecipeV4CompilerTarget::CbsemPlanV3,
+                cbsem_general_sem_ml_capability_cell_v1(),
+            ),
+            Err(RecipeV4CompilationError::CbsemGeneralSemScope(_))
+        ));
+        assert_eq!(model, before);
     }
 
     #[test]

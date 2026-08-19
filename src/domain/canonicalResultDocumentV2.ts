@@ -471,20 +471,15 @@ function analyticalGeneralSemResults(document: CanonicalResultDocumentV2): unkno
   }
 
   const results = generalSemResults as unknown as Record<string, unknown>;
-  const inferenceReceipt = results.inference_receipt;
-  if (
-    inferenceReceipt == null
-    || typeof inferenceReceipt !== "object"
-    || Array.isArray(inferenceReceipt)
-  ) {
-    return generalSemResults;
+  const analyticalResults = { ...results };
+  for (const key of ["inference_receipt", "cbsem_bootstrap_receipt"] as const) {
+    const receipt = results[key];
+    if (receipt != null && typeof receipt === "object" && !Array.isArray(receipt)) {
+      const { workers: _workers, ...analyticalReceipt } = receipt as Record<string, unknown>;
+      analyticalResults[key] = analyticalReceipt;
+    }
   }
-
-  const { workers: _workers, ...analyticalReceipt } = inferenceReceipt as Record<string, unknown>;
-  return {
-    ...results,
-    inference_receipt: analyticalReceipt,
-  };
+  return analyticalResults;
 }
 
 /**

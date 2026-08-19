@@ -31,6 +31,10 @@ pub const GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1: &str =
     "qpls.general-sem-pls.simple-slope.other-moderators-zero.v1";
 pub const GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1: &str =
     "qpls.general-sem-pls.interaction-hierarchy.strong.v1";
+pub const CBSEM_RECURSIVE_SEM_BOOTSTRAP_METHOD_VERSION_V1: &str =
+    "cbsem_exact_recursive_sem_case_bootstrap_v1";
+pub const CBSEM_RECURSIVE_SEM_BOOTSTRAP_OPERATION_VERSION_V1: &str =
+    "cbsem_recursive_sem_full_ml_case_bootstrap_v1";
 const MAX_SAFE_INTEGER: i64 = 9_007_199_254_740_991;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -830,6 +834,157 @@ pub struct CanonicalGeneralSemIntervalV1 {
     pub upper: f64,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case", deny_unknown_fields)]
+pub enum CanonicalCbsemParameterRoleV1 {
+    Loading,
+    Regression,
+    Covariance,
+    Variance,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum CanonicalCbsemEndpointV1 {
+    Variable { variable_id: String },
+    Residual { variable_id: String },
+    Disturbance { variable_id: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum CanonicalCbsemParameterTargetV1 {
+    Loading {
+        factor_id: String,
+        indicator_id: String,
+    },
+    Regression {
+        source_id: String,
+        target_id: String,
+    },
+    Covariance {
+        left: CanonicalCbsemEndpointV1,
+        right: CanonicalCbsemEndpointV1,
+    },
+    Variance {
+        endpoint: CanonicalCbsemEndpointV1,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum CanonicalCbsemParameterStateV1 {
+    Fixed {
+        value: f64,
+    },
+    Free {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        equality_label: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        lower: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        upper: Option<f64>,
+    },
+}
+
+/// Typed point-estimate row bound to one authoritative V3 parameter-table row.
+/// Location/threshold/derived families are absent because the bounded v1
+/// compiler rejects them before estimation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalCbsemParameterResultV1 {
+    pub parameter_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub role: CanonicalCbsemParameterRoleV1,
+    pub target: CanonicalCbsemParameterTargetV1,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub relation_id: Option<String>,
+    pub state: CanonicalCbsemParameterStateV1,
+    pub estimate: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub standard_error: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub z_value: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub p_value: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub standardized_estimate: Option<f64>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case", deny_unknown_fields)]
+pub enum CanonicalCbsemBootstrapFailedReplicateReasonV1 {
+    InsufficientObservations,
+    NonpositiveDefiniteSampleCovariance,
+    Nonconvergence,
+    NonfiniteEstimate,
+    ParameterInventoryMismatch,
+    NumericalFailure,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalCbsemBootstrapFailedReplicateV1 {
+    pub replicate_index: u32,
+    pub reason_code: CanonicalCbsemBootstrapFailedReplicateReasonV1,
+    pub message: String,
+}
+
+/// Exact receipt for the bounded recursive-SEM percentile case bootstrap.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalCbsemBootstrapReceiptV1 {
+    pub capability_cell: CapabilityCellReferenceV2,
+    pub method_version: String,
+    pub resampling_operation_version: String,
+    pub quantile_method_version: String,
+    pub compiled_plan_sha256: String,
+    pub base_plan_sha256: String,
+    pub parameter_inventory_sha256: String,
+    pub model_scientific_sha256: String,
+    pub general_sem_config_sha256: String,
+    pub recipe_analytical_sha256: String,
+    pub source_dataset_fingerprint: String,
+    pub complete_case_frame_sha256: String,
+    pub usable_replicate_indices_sha256: String,
+    pub confidence_level: f64,
+    pub resamples_requested: u32,
+    pub resamples_usable: u32,
+    pub minimum_usable_resamples: u32,
+    /// Canonical decimal u64 wire form; exact in JavaScript runtimes.
+    pub seed: String,
+    pub workers: u32,
+    pub complete_model_reestimated_per_replicate: bool,
+    pub failed_replicates: Vec<CanonicalCbsemBootstrapFailedReplicateV1>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case", deny_unknown_fields)]
+pub enum CanonicalCbsemBootstrapUnavailableReasonV1 {
+    InsufficientUsableReplicates,
+    ParameterNotEligible,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum CanonicalCbsemBootstrapInferenceOutcomeV1 {
+    Available {
+        value: CanonicalGeneralSemEstimateV1,
+    },
+    Unavailable {
+        reason: CanonicalCbsemBootstrapUnavailableReasonV1,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalCbsemBootstrapParameterInferenceV1 {
+    pub parameter_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub point_estimate: f64,
+    pub outcome: CanonicalCbsemBootstrapInferenceOutcomeV1,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct CanonicalCbsemFitResultV1 {
@@ -917,9 +1072,15 @@ pub struct CanonicalGeneralSemResultsV1 {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub higher_order_stages: Vec<CanonicalHocStageResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cbsem_parameters: Vec<CanonicalCbsemParameterResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub cbsem_fit: Vec<CanonicalCbsemFitResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub identification_diagnostics: Vec<CanonicalIdentificationDiagnosticV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cbsem_bootstrap_receipt: Option<CanonicalCbsemBootstrapReceiptV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cbsem_bootstrap_inference: Vec<CanonicalCbsemBootstrapParameterInferenceV1>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -1720,6 +1881,443 @@ fn validate_general_sem_inference_receipt_v1(
     }
 }
 
+fn validate_cbsem_endpoint_v1(
+    errors: &mut Vec<String>,
+    endpoint: &CanonicalCbsemEndpointV1,
+    context: &str,
+) {
+    let variable_id = match endpoint {
+        CanonicalCbsemEndpointV1::Variable { variable_id }
+        | CanonicalCbsemEndpointV1::Residual { variable_id }
+        | CanonicalCbsemEndpointV1::Disturbance { variable_id } => variable_id,
+    };
+    require_stable_id(errors, variable_id, &format!("{context}.variable_id"));
+}
+
+fn validate_cbsem_parameter_result_v1(
+    errors: &mut Vec<String>,
+    row: &CanonicalCbsemParameterResultV1,
+    document_model_id: &str,
+    document_capability_ids: Option<&HashSet<String>>,
+    context: &str,
+) {
+    validate_general_sem_trace(
+        errors,
+        &row.trace,
+        document_model_id,
+        document_capability_ids,
+        &format!("{context}.trace"),
+    );
+    if row.trace.capability_cell != crate::cbsem_general_sem_ml_capability_cell_v1() {
+        errors.push(format!(
+            "{context}.trace.capability_cell must equal the exact CB-SEM General SEM ML point cell"
+        ));
+    }
+    if let Some(relation_id) = &row.relation_id {
+        require_stable_id(errors, relation_id, &format!("{context}.relation_id"));
+    }
+    let target_matches_role = matches!(
+        (&row.role, &row.target),
+        (
+            CanonicalCbsemParameterRoleV1::Loading,
+            CanonicalCbsemParameterTargetV1::Loading { .. }
+        ) | (
+            CanonicalCbsemParameterRoleV1::Regression,
+            CanonicalCbsemParameterTargetV1::Regression { .. }
+        ) | (
+            CanonicalCbsemParameterRoleV1::Covariance,
+            CanonicalCbsemParameterTargetV1::Covariance { .. }
+        ) | (
+            CanonicalCbsemParameterRoleV1::Variance,
+            CanonicalCbsemParameterTargetV1::Variance { .. }
+        )
+    );
+    if !target_matches_role {
+        errors.push(format!("{context}.role and target kind must agree"));
+    }
+    match &row.target {
+        CanonicalCbsemParameterTargetV1::Loading {
+            factor_id,
+            indicator_id,
+        } => {
+            require_stable_id(errors, factor_id, &format!("{context}.target.factor_id"));
+            require_stable_id(
+                errors,
+                indicator_id,
+                &format!("{context}.target.indicator_id"),
+            );
+            if factor_id == indicator_id {
+                errors.push(format!(
+                    "{context}.target loading factor and indicator must differ"
+                ));
+            }
+        }
+        CanonicalCbsemParameterTargetV1::Regression {
+            source_id,
+            target_id,
+        } => {
+            require_stable_id(errors, source_id, &format!("{context}.target.source_id"));
+            require_stable_id(errors, target_id, &format!("{context}.target.target_id"));
+            if source_id == target_id {
+                errors.push(format!(
+                    "{context}.target regression source and target must differ"
+                ));
+            }
+        }
+        CanonicalCbsemParameterTargetV1::Covariance { left, right } => {
+            validate_cbsem_endpoint_v1(errors, left, &format!("{context}.target.left"));
+            validate_cbsem_endpoint_v1(errors, right, &format!("{context}.target.right"));
+            if left == right {
+                errors.push(format!("{context}.target covariance endpoints must differ"));
+            }
+        }
+        CanonicalCbsemParameterTargetV1::Variance { endpoint } => {
+            validate_cbsem_endpoint_v1(errors, endpoint, &format!("{context}.target.endpoint"));
+        }
+    }
+    if !row.estimate.is_finite() {
+        errors.push(format!("{context}.estimate must be finite"));
+    }
+    let uncertainty_count = [
+        row.standard_error.is_some(),
+        row.z_value.is_some(),
+        row.p_value.is_some(),
+    ]
+    .into_iter()
+    .filter(|present| *present)
+    .count();
+    if uncertainty_count != 0 && uncertainty_count != 3 {
+        errors.push(format!(
+            "{context} standard_error, z_value, and p_value must be all absent or all present"
+        ));
+    }
+    if row
+        .standard_error
+        .is_some_and(|value| !value.is_finite() || value < 0.0)
+    {
+        errors.push(format!(
+            "{context}.standard_error must be finite and nonnegative"
+        ));
+    }
+    if row.z_value.is_some_and(|value| !value.is_finite()) {
+        errors.push(format!("{context}.z_value must be finite"));
+    }
+    if row
+        .p_value
+        .is_some_and(|value| !value.is_finite() || !(0.0..=1.0).contains(&value))
+    {
+        errors.push(format!(
+            "{context}.p_value must be finite and between 0 and 1"
+        ));
+    }
+    if row
+        .standardized_estimate
+        .is_some_and(|value| !value.is_finite())
+    {
+        errors.push(format!("{context}.standardized_estimate must be finite"));
+    }
+    match &row.state {
+        CanonicalCbsemParameterStateV1::Fixed { value } => {
+            if !value.is_finite() || !approximately_equal(*value, row.estimate) {
+                errors.push(format!(
+                    "{context}.state fixed value must be finite and equal estimate"
+                ));
+            }
+            if uncertainty_count != 0 {
+                errors.push(format!(
+                    "{context} fixed parameters must not publish sampling uncertainty"
+                ));
+            }
+        }
+        CanonicalCbsemParameterStateV1::Free {
+            equality_label,
+            lower,
+            upper,
+        } => {
+            if equality_label
+                .as_deref()
+                .is_some_and(|label| label.trim().is_empty())
+            {
+                errors.push(format!(
+                    "{context}.state.equality_label must be nonempty when present"
+                ));
+            }
+            validate_general_sem_bounds(errors, *lower, *upper, &format!("{context}.state"));
+            if lower.is_some_and(|value| !value.is_finite())
+                || upper.is_some_and(|value| !value.is_finite())
+            {
+                errors.push(format!("{context}.state bounds must be finite"));
+            }
+            if lower.is_some_and(|value| row.estimate < value)
+                || upper.is_some_and(|value| row.estimate > value)
+            {
+                errors.push(format!(
+                    "{context}.estimate must satisfy its declared bounds"
+                ));
+            }
+        }
+    }
+}
+
+fn validate_cbsem_bootstrap_v1(
+    errors: &mut Vec<String>,
+    results: &CanonicalGeneralSemResultsV1,
+    provenance: &CanonicalResultProvenanceV2,
+    document_capability_ids: Option<&HashSet<String>>,
+) {
+    let context = "general_sem_results.cbsem_bootstrap_receipt";
+    let Some(receipt) = &results.cbsem_bootstrap_receipt else {
+        if !results.cbsem_bootstrap_inference.is_empty() {
+            errors.push(format!(
+                "{context} is required when cbsem_bootstrap_inference is present"
+            ));
+        }
+        return;
+    };
+    if results.cbsem_bootstrap_inference.is_empty() {
+        errors.push(format!(
+            "{context} requires at least one cbsem_bootstrap_inference row"
+        ));
+    }
+    validate_capability_reference(
+        errors,
+        &receipt.capability_cell,
+        &format!("{context}.capability_cell"),
+    );
+    let exact_cell = crate::cbsem_recursive_sem_bootstrap_capability_cell_v1();
+    if receipt.capability_cell != exact_cell {
+        errors.push(format!(
+            "{context}.capability_cell must equal the exact recursive-SEM bootstrap cell"
+        ));
+    }
+    let identity = capability_cell_reference_identity_v2(&receipt.capability_cell);
+    if document_capability_ids.is_some_and(|ids| !ids.contains(&identity)) {
+        errors.push(format!(
+            "{context}.capability_cell references undeclared option cell {identity}"
+        ));
+    }
+    if receipt.method_version != CBSEM_RECURSIVE_SEM_BOOTSTRAP_METHOD_VERSION_V1 {
+        errors.push(format!(
+            "{context}.method_version is not the frozen v1 method"
+        ));
+    }
+    if receipt.resampling_operation_version != CBSEM_RECURSIVE_SEM_BOOTSTRAP_OPERATION_VERSION_V1 {
+        errors.push(format!(
+            "{context}.resampling_operation_version is not the frozen v1 operation"
+        ));
+    }
+    if receipt.quantile_method_version != GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1 {
+        errors.push(format!(
+            "{context}.quantile_method_version must equal type7_quantile_v1"
+        ));
+    }
+    for (name, value) in [
+        (
+            "compiled_plan_sha256",
+            receipt.compiled_plan_sha256.as_str(),
+        ),
+        ("base_plan_sha256", receipt.base_plan_sha256.as_str()),
+        (
+            "parameter_inventory_sha256",
+            receipt.parameter_inventory_sha256.as_str(),
+        ),
+        (
+            "model_scientific_sha256",
+            receipt.model_scientific_sha256.as_str(),
+        ),
+        (
+            "general_sem_config_sha256",
+            receipt.general_sem_config_sha256.as_str(),
+        ),
+        (
+            "recipe_analytical_sha256",
+            receipt.recipe_analytical_sha256.as_str(),
+        ),
+        (
+            "complete_case_frame_sha256",
+            receipt.complete_case_frame_sha256.as_str(),
+        ),
+        (
+            "usable_replicate_indices_sha256",
+            receipt.usable_replicate_indices_sha256.as_str(),
+        ),
+    ] {
+        if !is_lowercase_sha256(value) {
+            errors.push(format!("{context}.{name} must be a lowercase SHA-256"));
+        }
+    }
+    if receipt.model_scientific_sha256 != provenance.model_digest {
+        errors.push(format!(
+            "{context}.model_scientific_sha256 must equal provenance.model_digest"
+        ));
+    }
+    if receipt.recipe_analytical_sha256 != provenance.recipe_digest {
+        errors.push(format!(
+            "{context}.recipe_analytical_sha256 must equal provenance.recipe_digest"
+        ));
+    }
+    if receipt.source_dataset_fingerprint != provenance.dataset_fingerprint
+        || !is_dataset_fingerprint_v1(&receipt.source_dataset_fingerprint)
+    {
+        errors.push(format!(
+            "{context}.source_dataset_fingerprint must equal provenance.dataset_fingerprint"
+        ));
+    }
+    if receipt.confidence_level.to_bits() != 0.95_f64.to_bits() {
+        errors.push(format!("{context}.confidence_level must equal 0.95"));
+    }
+    if !(500..=10_000).contains(&receipt.resamples_requested) {
+        errors.push(format!(
+            "{context}.resamples_requested must be between 500 and 10000"
+        ));
+    }
+    let expected_minimum = (f64::from(receipt.resamples_requested) * 0.9).ceil() as u32;
+    if receipt.minimum_usable_resamples != expected_minimum {
+        errors.push(format!(
+            "{context}.minimum_usable_resamples must equal the 90 percent usable gate"
+        ));
+    }
+    if receipt.resamples_usable > receipt.resamples_requested
+        || receipt.resamples_usable as usize + receipt.failed_replicates.len()
+            != receipt.resamples_requested as usize
+    {
+        errors.push(format!(
+            "{context} requested count must equal usable plus failed replicates"
+        ));
+    }
+    if !(1..=64).contains(&receipt.workers) || i64::from(receipt.workers) != provenance.workers {
+        errors.push(format!(
+            "{context}.workers must be between 1 and 64 and equal provenance.workers"
+        ));
+    }
+    match receipt.seed.parse::<u64>() {
+        Ok(seed) if seed.to_string() == receipt.seed => {
+            if provenance.seed.and_then(|value| u64::try_from(value).ok()) != Some(seed) {
+                errors.push(format!("{context}.seed must equal provenance.seed"));
+            }
+        }
+        _ => errors.push(format!("{context}.seed must be a canonical decimal u64")),
+    }
+    if !receipt.complete_model_reestimated_per_replicate {
+        errors.push(format!(
+            "{context}.complete_model_reestimated_per_replicate must be true"
+        ));
+    }
+    let mut previous = None;
+    for (index, failure) in receipt.failed_replicates.iter().enumerate() {
+        let failure_context = format!("{context}.failed_replicates[{index}]");
+        if failure.replicate_index >= receipt.resamples_requested
+            || previous.is_some_and(|value| value >= failure.replicate_index)
+        {
+            errors.push(format!(
+                "{failure_context}.replicate_index must be unique, ordered, and in range"
+            ));
+        }
+        previous = Some(failure.replicate_index);
+        if failure.message.trim().is_empty() {
+            errors.push(format!("{failure_context}.message must be nonempty"));
+        }
+    }
+
+    let point_rows = results
+        .cbsem_parameters
+        .iter()
+        .map(|row| (row.parameter_id.as_str(), row))
+        .collect::<BTreeMap<_, _>>();
+    let parameter_ids = results
+        .cbsem_bootstrap_inference
+        .iter()
+        .map(|row| row.parameter_id.as_str())
+        .collect::<Vec<_>>();
+    if receipt.parameter_inventory_sha256 != crate::sha256_serialized(&parameter_ids) {
+        errors.push(format!(
+            "{context}.parameter_inventory_sha256 must bind the ordered inference parameter IDs"
+        ));
+    }
+    for (index, inference) in results.cbsem_bootstrap_inference.iter().enumerate() {
+        let inference_context = format!("general_sem_results.cbsem_bootstrap_inference[{index}]");
+        validate_general_sem_trace(
+            errors,
+            &inference.trace,
+            provenance.model_id.as_str(),
+            document_capability_ids,
+            &format!("{inference_context}.trace"),
+        );
+        if inference.trace.capability_cell != exact_cell {
+            errors.push(format!(
+                "{inference_context}.trace.capability_cell must equal the recursive-SEM bootstrap cell"
+            ));
+        }
+        let Some(point) = point_rows.get(inference.parameter_id.as_str()) else {
+            errors.push(format!(
+                "{inference_context}.parameter_id must reference cbsem_parameters"
+            ));
+            continue;
+        };
+        if !inference.point_estimate.is_finite()
+            || !approximately_equal(inference.point_estimate, point.estimate)
+        {
+            errors.push(format!(
+                "{inference_context}.point_estimate must equal the point parameter estimate"
+            ));
+        }
+        match &inference.outcome {
+            CanonicalCbsemBootstrapInferenceOutcomeV1::Available { value } => {
+                if !matches!(point.state, CanonicalCbsemParameterStateV1::Free { .. }) {
+                    errors.push(format!(
+                        "{inference_context}.outcome cannot publish inference for a fixed parameter"
+                    ));
+                }
+                validate_general_sem_estimate(
+                    errors,
+                    value,
+                    &format!("{inference_context}.outcome.value"),
+                );
+                if !approximately_equal(value.estimate, inference.point_estimate)
+                    || !general_sem_estimate_has_inference(value)
+                {
+                    errors.push(format!(
+                        "{inference_context}.outcome.value must contain inference for the same point estimate"
+                    ));
+                }
+                if value.bootstrap_usable_replicates != Some(receipt.resamples_usable) {
+                    errors.push(format!(
+                        "{inference_context}.outcome.value bootstrap usable count must equal the receipt"
+                    ));
+                }
+                if let (Some(exceedances), Some(p_value)) =
+                    (value.bootstrap_two_sided_exceedances, value.p_value)
+                {
+                    if exceedances > receipt.resamples_usable
+                        || !approximately_equal(
+                            p_value,
+                            f64::from(exceedances + 1)
+                                / f64::from(receipt.resamples_usable + 1),
+                        )
+                    {
+                        errors.push(format!(
+                            "{inference_context}.outcome.value p_value contradicts the plus-one exceedance ledger"
+                        ));
+                    }
+                }
+                if receipt.resamples_usable < receipt.minimum_usable_resamples {
+                    errors.push(format!(
+                        "{inference_context} cannot be available below the usable-replicate gate"
+                    ));
+                }
+            }
+            CanonicalCbsemBootstrapInferenceOutcomeV1::Unavailable {
+                reason: CanonicalCbsemBootstrapUnavailableReasonV1::InsufficientUsableReplicates,
+            } if receipt.resamples_usable >= receipt.minimum_usable_resamples => errors.push(
+                format!(
+                    "{inference_context} cannot report insufficient usable replicates after the gate passed"
+                ),
+            ),
+            CanonicalCbsemBootstrapInferenceOutcomeV1::Unavailable { .. } => {}
+        }
+    }
+}
+
 fn validate_general_sem_results_v1(
     errors: &mut Vec<String>,
     results: &CanonicalGeneralSemResultsV1,
@@ -1742,8 +2340,11 @@ fn validate_general_sem_results_v1(
         && results.conditional_effects.is_empty()
         && results.interaction_plots.is_empty()
         && results.higher_order_stages.is_empty()
+        && results.cbsem_parameters.is_empty()
         && results.cbsem_fit.is_empty()
         && results.identification_diagnostics.is_empty()
+        && results.cbsem_bootstrap_receipt.is_none()
+        && results.cbsem_bootstrap_inference.is_empty()
     {
         errors.push(format!(
             "{context} must contain at least one typed result section"
@@ -1816,6 +2417,14 @@ fn validate_general_sem_results_v1(
     );
     require_canonical_stable_ids(
         errors,
+        results
+            .cbsem_parameters
+            .iter()
+            .map(|item| item.parameter_id.as_str()),
+        &format!("{context}.cbsem_parameters"),
+    );
+    require_canonical_stable_ids(
+        errors,
         results.cbsem_fit.iter().map(|item| item.fit_id.as_str()),
         &format!("{context}.cbsem_fit"),
     );
@@ -1826,6 +2435,14 @@ fn validate_general_sem_results_v1(
             .iter()
             .map(|item| item.diagnostic_id.as_str()),
         &format!("{context}.identification_diagnostics"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .cbsem_bootstrap_inference
+            .iter()
+            .map(|item| item.parameter_id.as_str()),
+        &format!("{context}.cbsem_bootstrap_inference"),
     );
 
     let mut effect_ids = BTreeSet::new();
@@ -2675,6 +3292,16 @@ fn validate_general_sem_results_v1(
         }
     }
 
+    for (index, row) in results.cbsem_parameters.iter().enumerate() {
+        validate_cbsem_parameter_result_v1(
+            errors,
+            row,
+            document_model_id,
+            document_capability_ids,
+            &format!("{context}.cbsem_parameters[{index}]"),
+        );
+    }
+
     for (index, fit) in results.cbsem_fit.iter().enumerate() {
         let item_context = format!("{context}.cbsem_fit[{index}]");
         validate_general_sem_trace(
@@ -2783,6 +3410,8 @@ fn validate_general_sem_results_v1(
             ));
         }
     }
+
+    validate_cbsem_bootstrap_v1(errors, results, provenance, document_capability_ids);
 }
 
 fn is_lowercase_sha256(value: &str) -> bool {
@@ -3327,15 +3956,17 @@ pub fn canonical_analytical_result_json(
         provenance.remove("started_at");
         provenance.remove("completed_at");
     }
-    if let Some(receipt) = root
+    if let Some(results) = root
         .get_mut("general_sem_results")
         .and_then(Value::as_object_mut)
-        .and_then(|results| results.get_mut("inference_receipt"))
-        .and_then(Value::as_object_mut)
     {
-        // Worker count is execution provenance, not a scientific estimand.
-        // The complete receipt still preserves it in the archival document.
-        receipt.remove("workers");
+        for key in ["inference_receipt", "cbsem_bootstrap_receipt"] {
+            if let Some(receipt) = results.get_mut(key).and_then(Value::as_object_mut) {
+                // Worker count is execution provenance, not a scientific estimand.
+                // The complete receipt still preserves it in the archival document.
+                receipt.remove("workers");
+            }
+        }
     }
 
     if let Some(tables) = root.get_mut("tables").and_then(Value::as_array_mut) {
@@ -3813,6 +4444,7 @@ mod tests {
                     }],
                 },
             ],
+            cbsem_parameters: Vec::new(),
             cbsem_fit: vec![CanonicalCbsemFitResultV1 {
                 fit_id: "cbsem_fit_1".to_string(),
                 trace: general_sem_trace(),
@@ -3841,6 +4473,8 @@ mod tests {
                 message: "The compiled model passed identification checks.".to_string(),
                 degrees_of_freedom: Some(8),
             }],
+            cbsem_bootstrap_receipt: None,
+            cbsem_bootstrap_inference: Vec::new(),
         };
         results
             .aggregate_effects
@@ -4580,6 +5214,13 @@ mod tests {
         let value = serde_json::to_value(&document).unwrap();
         let results = &value["general_sem_results"];
         assert!(results.get("inference_receipt").is_none());
+        for absent in [
+            "cbsem_parameters",
+            "cbsem_bootstrap_receipt",
+            "cbsem_bootstrap_inference",
+        ] {
+            assert!(results.get(absent).is_none(), "unexpected {absent}");
+        }
         let estimate = &results["specific_indirect_effects"][0]["value"];
         for absent in [
             "bootstrap_mean",
@@ -4939,8 +5580,11 @@ mod tests {
             conditional_effects: Vec::new(),
             interaction_plots: Vec::new(),
             higher_order_stages: Vec::new(),
+            cbsem_parameters: Vec::new(),
             cbsem_fit: Vec::new(),
             identification_diagnostics: Vec::new(),
+            cbsem_bootstrap_receipt: None,
+            cbsem_bootstrap_inference: Vec::new(),
         });
         assert!(
             validate_canonical_result_document_v2(&empty)
@@ -5213,6 +5857,165 @@ mod tests {
                     CanonicalResultQualificationIneligibilityV2::LegacyCapabilityAttributionMissing
                 ),
             }
+        );
+    }
+
+    fn cbsem_v3_canonical_document_fixture() -> CanonicalResultDocumentV2 {
+        let mut document = document_fixture();
+        let point_cell = crate::cbsem_general_sem_ml_capability_cell_v1();
+        let bootstrap_cell = crate::cbsem_recursive_sem_bootstrap_capability_cell_v1();
+        document.provenance.capability_cell = point_cell.clone();
+        document.provenance.method_version = "cbsem_general_sem_ml_v1".into();
+        document.capability_cells = Some(vec![point_cell.clone(), bootstrap_cell.clone()]);
+        for section in &mut document.sections {
+            section.capability_cells = Some(vec![point_cell.clone()]);
+        }
+        for table in &mut document.tables {
+            table.capability_cells = Some(vec![point_cell.clone()]);
+        }
+        let point_trace = CanonicalGeneralSemResultTraceV1 {
+            model_id: document.provenance.model_id.clone(),
+            capability_cell: point_cell,
+        };
+        let bootstrap_trace = CanonicalGeneralSemResultTraceV1 {
+            model_id: document.provenance.model_id.clone(),
+            capability_cell: bootstrap_cell.clone(),
+        };
+        document.general_sem_results = Some(CanonicalGeneralSemResultsV1 {
+            schema_version: CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
+            inference_receipt: None,
+            specific_indirect_effects: Vec::new(),
+            aggregate_effects: Vec::new(),
+            joint_stage_structural_coefficients: Vec::new(),
+            interaction_effects: Vec::new(),
+            conditional_effect_probes: Vec::new(),
+            conditional_effects: Vec::new(),
+            interaction_plots: Vec::new(),
+            higher_order_stages: Vec::new(),
+            cbsem_parameters: vec![CanonicalCbsemParameterResultV1 {
+                parameter_id: "parameter_loading_x1".into(),
+                trace: point_trace,
+                role: CanonicalCbsemParameterRoleV1::Loading,
+                target: CanonicalCbsemParameterTargetV1::Loading {
+                    factor_id: "construct_x".into(),
+                    indicator_id: "observed_x1".into(),
+                },
+                relation_id: Some("relation_loading_x1".into()),
+                state: CanonicalCbsemParameterStateV1::Free {
+                    equality_label: Some("metric equality".into()),
+                    lower: Some(-2.0),
+                    upper: Some(2.0),
+                },
+                estimate: 0.8,
+                standard_error: Some(0.1),
+                z_value: Some(8.0),
+                p_value: Some(0.0),
+                standardized_estimate: Some(0.75),
+            }],
+            cbsem_fit: Vec::new(),
+            identification_diagnostics: Vec::new(),
+            cbsem_bootstrap_receipt: Some(CanonicalCbsemBootstrapReceiptV1 {
+                capability_cell: bootstrap_cell,
+                method_version: CBSEM_RECURSIVE_SEM_BOOTSTRAP_METHOD_VERSION_V1.into(),
+                resampling_operation_version: CBSEM_RECURSIVE_SEM_BOOTSTRAP_OPERATION_VERSION_V1
+                    .into(),
+                quantile_method_version: GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1.into(),
+                compiled_plan_sha256: "d".repeat(64),
+                base_plan_sha256: "e".repeat(64),
+                parameter_inventory_sha256: crate::sha256_serialized(&vec!["parameter_loading_x1"]),
+                model_scientific_sha256: document.provenance.model_digest.clone(),
+                general_sem_config_sha256: "1".repeat(64),
+                recipe_analytical_sha256: document.provenance.recipe_digest.clone(),
+                source_dataset_fingerprint: document.provenance.dataset_fingerprint.clone(),
+                complete_case_frame_sha256: "2".repeat(64),
+                usable_replicate_indices_sha256: "3".repeat(64),
+                confidence_level: 0.95,
+                resamples_requested: 500,
+                resamples_usable: 500,
+                minimum_usable_resamples: 450,
+                seed: document.provenance.seed.unwrap().to_string(),
+                workers: u32::try_from(document.provenance.workers).unwrap(),
+                complete_model_reestimated_per_replicate: true,
+                failed_replicates: Vec::new(),
+            }),
+            cbsem_bootstrap_inference: vec![CanonicalCbsemBootstrapParameterInferenceV1 {
+                parameter_id: "parameter_loading_x1".into(),
+                trace: bootstrap_trace,
+                point_estimate: 0.8,
+                outcome: CanonicalCbsemBootstrapInferenceOutcomeV1::Available {
+                    value: CanonicalGeneralSemEstimateV1 {
+                        estimate: 0.8,
+                        bootstrap_mean: Some(0.81),
+                        bootstrap_bias: Some(0.01),
+                        standard_error: Some(0.05),
+                        lower: Some(0.70),
+                        upper: Some(0.90),
+                        p_value: Some(1.0 / 501.0),
+                        bootstrap_usable_replicates: Some(500),
+                        bootstrap_two_sided_exceedances: Some(0),
+                    },
+                },
+            }],
+        });
+        document
+    }
+
+    #[test]
+    fn cbsem_v3_parameter_and_recursive_bootstrap_contracts_round_trip_and_fail_closed() {
+        let document = cbsem_v3_canonical_document_fixture();
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(validation.passed, "{:?}", validation.errors);
+        let encoded = canonical_result_document_json(&document).unwrap();
+        let decoded: CanonicalResultDocumentV2 = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, document);
+
+        let mut bound_tamper = document.clone();
+        let CanonicalCbsemParameterStateV1::Free { upper, .. } = &mut bound_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .cbsem_parameters[0]
+            .state
+        else {
+            unreachable!()
+        };
+        *upper = Some(0.5);
+        assert!(
+            validate_canonical_result_document_v2(&bound_tamper)
+                .errors
+                .iter()
+                .any(|error| error.contains("estimate must satisfy its declared bounds"))
+        );
+
+        let mut fixed_inference = document.clone();
+        let fixed_row = &mut fixed_inference
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .cbsem_parameters[0];
+        fixed_row.state = CanonicalCbsemParameterStateV1::Fixed { value: 0.8 };
+        fixed_row.standard_error = None;
+        fixed_row.z_value = None;
+        fixed_row.p_value = None;
+        assert!(
+            validate_canonical_result_document_v2(&fixed_inference)
+                .errors
+                .iter()
+                .any(|error| error.contains("cannot publish inference for a fixed parameter"))
+        );
+
+        let mut parameter_tamper = document;
+        parameter_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .cbsem_bootstrap_inference[0]
+            .parameter_id = "parameter_missing".into();
+        assert!(
+            validate_canonical_result_document_v2(&parameter_tamper)
+                .errors
+                .iter()
+                .any(|error| error.contains("must reference cbsem_parameters"))
         );
     }
 

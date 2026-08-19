@@ -107,6 +107,88 @@ function generalSemAnalyticalJson(document: GeneralSemAnalyticalFixture): string
   return canonicalAnalyticalResultJson(document as unknown as CanonicalResultDocumentV2);
 }
 
+function cbsemV3DocumentFixture(): CanonicalResultDocumentV2 {
+  const document = documentFixture();
+  const pointCell = {
+    registry_schema_version: 2 as const,
+    capability_id: "smartpls.cbsem",
+    cell_id: "qpls3.cbsem.general_sem_ml",
+    capability_version: "cbsem_general_sem_ml_v1",
+  };
+  const bootstrapCell = {
+    registry_schema_version: 2 as const,
+    capability_id: "smartpls.cbsem_bootstrapping",
+    cell_id: "qpls3.cbsem.bootstrap.recursive_sem",
+    capability_version: "cbsem_exact_recursive_sem_case_bootstrap_v1",
+  };
+  document.provenance.capability_cell = pointCell;
+  document.provenance.method_version = "cbsem_general_sem_ml_v1";
+  document.capability_cells = [pointCell, bootstrapCell];
+  document.sections[0].capability_cells = [pointCell];
+  document.tables[0].capability_cells = [pointCell];
+  const pointTrace = { model_id: document.provenance.model_id, capability_cell: pointCell };
+  const bootstrapTrace = { model_id: document.provenance.model_id, capability_cell: bootstrapCell };
+  document.general_sem_results = {
+    schema_version: 1,
+    cbsem_parameters: [{
+      parameter_id: "parameter_loading_x1",
+      trace: pointTrace,
+      role: "loading",
+      target: { kind: "loading", factor_id: "construct_x", indicator_id: "observed_x1" },
+      relation_id: "relation_loading_x1",
+      state: { kind: "free", equality_label: "metric equality", lower: -2, upper: 2 },
+      estimate: 0.8,
+      standard_error: 0.1,
+      z_value: 8,
+      p_value: 0,
+      standardized_estimate: 0.75,
+    }],
+    cbsem_bootstrap_receipt: {
+      capability_cell: bootstrapCell,
+      method_version: "cbsem_exact_recursive_sem_case_bootstrap_v1",
+      resampling_operation_version: "cbsem_recursive_sem_full_ml_case_bootstrap_v1",
+      quantile_method_version: "type7_quantile_v1",
+      compiled_plan_sha256: "b".repeat(64),
+      base_plan_sha256: "c".repeat(64),
+      parameter_inventory_sha256: "2c097a401178e7164c09e3d31fc758a40934431f161cca45b2094d4aa8b72bc2",
+      model_scientific_sha256: document.provenance.model_digest,
+      general_sem_config_sha256: "e".repeat(64),
+      recipe_analytical_sha256: document.provenance.recipe_digest,
+      source_dataset_fingerprint: document.provenance.dataset_fingerprint,
+      complete_case_frame_sha256: "f".repeat(64),
+      usable_replicate_indices_sha256: "1".repeat(64),
+      confidence_level: 0.95,
+      resamples_requested: 500,
+      resamples_usable: 500,
+      minimum_usable_resamples: 450,
+      seed: "42",
+      workers: 4,
+      complete_model_reestimated_per_replicate: true,
+      failed_replicates: [],
+    },
+    cbsem_bootstrap_inference: [{
+      parameter_id: "parameter_loading_x1",
+      trace: bootstrapTrace,
+      point_estimate: 0.8,
+      outcome: {
+        kind: "available",
+        value: {
+          estimate: 0.8,
+          bootstrap_mean: 0.81,
+          bootstrap_bias: 0.01,
+          standard_error: 0.05,
+          lower: 0.7,
+          upper: 0.9,
+          p_value: 1 / 501,
+          bootstrap_usable_replicates: 500,
+          bootstrap_two_sided_exceedances: 0,
+        },
+      },
+    }],
+  };
+  return document;
+}
+
 describe("CanonicalResultDocumentV2", () => {
   it("accepts a typed, cross-referenced result document", () => {
     expect(validateCanonicalResultDocumentV2(documentFixture())).toEqual({ passed: true, errors: [] });
@@ -190,6 +272,42 @@ describe("CanonicalResultDocumentV2", () => {
     expect(canonicalResultDocumentJson(workerOnlyChange as unknown as CanonicalResultDocumentV2))
       .not.toBe(canonicalResultDocumentJson(first as unknown as CanonicalResultDocumentV2));
     expect(generalSemAnalyticalJson(workerOnlyChange)).toBe(generalSemAnalyticalJson(first));
+  });
+
+  it("validates typed CB-SEM V3 point and recursive-bootstrap ledgers fail closed", () => {
+    const document = cbsemV3DocumentFixture();
+    expect(validateCanonicalResultDocumentV2(document)).toEqual({ passed: true, errors: [] });
+
+    const boundTamper = JSON.parse(JSON.stringify(document)) as CanonicalResultDocumentV2;
+    const state = boundTamper.general_sem_results!.cbsem_parameters![0].state;
+    if (state.kind !== "free") throw new Error("expected free parameter fixture");
+    state.upper = 0.5;
+    expect(validateCanonicalResultDocumentV2(boundTamper).errors).toEqual(expect.arrayContaining([
+      expect.stringContaining("estimate must satisfy its declared bounds"),
+    ]));
+
+    const fixedInference = JSON.parse(JSON.stringify(document)) as CanonicalResultDocumentV2;
+    const fixedRow = fixedInference.general_sem_results!.cbsem_parameters![0];
+    fixedRow.state = { kind: "fixed", value: 0.8 };
+    delete fixedRow.standard_error;
+    delete fixedRow.z_value;
+    delete fixedRow.p_value;
+    expect(validateCanonicalResultDocumentV2(fixedInference).errors).toEqual(expect.arrayContaining([
+      expect.stringContaining("cannot publish inference for a fixed parameter"),
+    ]));
+
+    const receiptTamper = JSON.parse(JSON.stringify(document)) as CanonicalResultDocumentV2;
+    receiptTamper.general_sem_results!.cbsem_bootstrap_receipt!.workers = 1;
+    expect(validateCanonicalResultDocumentV2(receiptTamper).errors).toEqual(expect.arrayContaining([
+      expect.stringContaining("workers must be between 1 and 64 and equal provenance.workers"),
+    ]));
+
+    const workerOnlyChange = JSON.parse(JSON.stringify(document)) as CanonicalResultDocumentV2;
+    workerOnlyChange.provenance.workers = 1;
+    workerOnlyChange.general_sem_results!.cbsem_bootstrap_receipt!.workers = 1;
+    expect(validateCanonicalResultDocumentV2(workerOnlyChange)).toEqual({ passed: true, errors: [] });
+    expect(canonicalResultDocumentJson(workerOnlyChange)).not.toBe(canonicalResultDocumentJson(document));
+    expect(canonicalAnalyticalResultJson(workerOnlyChange)).toBe(canonicalAnalyticalResultJson(document));
   });
 
   it("preserves legacy string tables without inferring numeric meaning", () => {

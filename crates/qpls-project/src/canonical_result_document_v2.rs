@@ -1,7 +1,10 @@
 use chrono::DateTime;
 pub use qpls_core::{
     CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION, CanonicalAggregateEffectKindV1,
-    CanonicalAggregateEffectResultV1, CanonicalCbsemFitResultV1,
+    CanonicalAggregateEffectResultV1, CanonicalCbsemBootstrapInferenceOutcomeV1,
+    CanonicalCbsemBootstrapParameterInferenceV1, CanonicalCbsemBootstrapReceiptV1,
+    CanonicalCbsemEndpointV1, CanonicalCbsemFitResultV1, CanonicalCbsemParameterResultV1,
+    CanonicalCbsemParameterRoleV1, CanonicalCbsemParameterStateV1, CanonicalCbsemParameterTargetV1,
     CanonicalConditionalEffectProbeResultV1, CanonicalConditionalEffectResultV1,
     CanonicalConditionalProbeValuesResultV1, CanonicalGeneralSemBootstrapIntervalV1,
     CanonicalGeneralSemEffectIdentityV1, CanonicalGeneralSemEstimateV1,
@@ -728,6 +731,29 @@ fn ensure_general_sem_results_finite(
             )?;
         }
     }
+    for (index, parameter) in results.cbsem_parameters.iter().enumerate() {
+        let context = format!("general_sem_results.cbsem_parameters[{index}]");
+        require_finite(parameter.estimate, &format!("{context}.estimate"))?;
+        ensure_optional_finite(
+            parameter.standard_error,
+            &format!("{context}.standard_error"),
+        )?;
+        ensure_optional_finite(parameter.z_value, &format!("{context}.z_value"))?;
+        ensure_optional_finite(parameter.p_value, &format!("{context}.p_value"))?;
+        ensure_optional_finite(
+            parameter.standardized_estimate,
+            &format!("{context}.standardized_estimate"),
+        )?;
+        match &parameter.state {
+            CanonicalCbsemParameterStateV1::Fixed { value } => {
+                require_finite(*value, &format!("{context}.state.value"))?;
+            }
+            CanonicalCbsemParameterStateV1::Free { lower, upper, .. } => {
+                ensure_optional_finite(*lower, &format!("{context}.state.lower"))?;
+                ensure_optional_finite(*upper, &format!("{context}.state.upper"))?;
+            }
+        }
+    }
     for (index, fit) in results.cbsem_fit.iter().enumerate() {
         let context = format!("general_sem_results.cbsem_fit[{index}]");
         require_finite(fit.chi_square, &format!("{context}.chi_square"))?;
@@ -750,6 +776,22 @@ fn ensure_general_sem_results_finite(
             )?;
             require_finite(interval.lower, &format!("{interval_context}.lower"))?;
             require_finite(interval.upper, &format!("{interval_context}.upper"))?;
+        }
+    }
+    if let Some(receipt) = &results.cbsem_bootstrap_receipt {
+        require_finite(
+            receipt.confidence_level,
+            "general_sem_results.cbsem_bootstrap_receipt.confidence_level",
+        )?;
+    }
+    for (index, inference) in results.cbsem_bootstrap_inference.iter().enumerate() {
+        let context = format!("general_sem_results.cbsem_bootstrap_inference[{index}]");
+        require_finite(
+            inference.point_estimate,
+            &format!("{context}.point_estimate"),
+        )?;
+        if let CanonicalCbsemBootstrapInferenceOutcomeV1::Available { value } = &inference.outcome {
+            ensure_general_sem_estimate_finite(value, &format!("{context}.outcome.value"))?;
         }
     }
     Ok(())
@@ -1297,6 +1339,7 @@ mod tests {
                     }],
                 },
             ],
+            cbsem_parameters: Vec::new(),
             cbsem_fit: vec![CanonicalCbsemFitResultV1 {
                 fit_id: "fit_1".into(),
                 trace: trace(),
@@ -1325,6 +1368,8 @@ mod tests {
                 message: "The model is identified.".into(),
                 degrees_of_freedom: Some(10),
             }],
+            cbsem_bootstrap_receipt: None,
+            cbsem_bootstrap_inference: Vec::new(),
         }
     }
 

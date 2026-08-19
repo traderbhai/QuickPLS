@@ -380,8 +380,11 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
             conditional_effects,
             interaction_plots,
             higher_order_stages: Vec::new(),
+            cbsem_parameters: Vec::new(),
             cbsem_fit: Vec::new(),
             identification_diagnostics: Vec::new(),
+            cbsem_bootstrap_receipt: None,
+            cbsem_bootstrap_inference: Vec::new(),
         })
     }
 }

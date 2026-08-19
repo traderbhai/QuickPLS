@@ -18,6 +18,8 @@ export const GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1 = "comp
 export const GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1 = "qpls.general-sem-pls.two-stage-product.sample-standardized.v1" as const;
 export const GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1 = "qpls.general-sem-pls.simple-slope.other-moderators-zero.v1" as const;
 export const GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1 = "qpls.general-sem-pls.interaction-hierarchy.strong.v1" as const;
+export const CBSEM_RECURSIVE_SEM_BOOTSTRAP_METHOD_VERSION_V1 = "cbsem_exact_recursive_sem_case_bootstrap_v1" as const;
+export const CBSEM_RECURSIVE_SEM_BOOTSTRAP_OPERATION_VERSION_V1 = "cbsem_recursive_sem_full_ml_case_bootstrap_v1" as const;
 
 export interface CanonicalGeneralSemResultTraceV1 {
   model_id: string;
@@ -287,6 +289,86 @@ export interface CanonicalGeneralSemIntervalV1 {
   upper: number;
 }
 
+export type CanonicalCbsemParameterRoleV1 = "loading" | "regression" | "covariance" | "variance";
+
+export type CanonicalCbsemEndpointV1 =
+  | { kind: "variable"; variable_id: string }
+  | { kind: "residual"; variable_id: string }
+  | { kind: "disturbance"; variable_id: string };
+
+export type CanonicalCbsemParameterTargetV1 =
+  | { kind: "loading"; factor_id: string; indicator_id: string }
+  | { kind: "regression"; source_id: string; target_id: string }
+  | { kind: "covariance"; left: CanonicalCbsemEndpointV1; right: CanonicalCbsemEndpointV1 }
+  | { kind: "variance"; endpoint: CanonicalCbsemEndpointV1 };
+
+export type CanonicalCbsemParameterStateV1 =
+  | { kind: "fixed"; value: number }
+  | { kind: "free"; equality_label?: string | null; lower?: number | null; upper?: number | null };
+
+export interface CanonicalCbsemParameterResultV1 {
+  parameter_id: string;
+  trace: CanonicalGeneralSemResultTraceV1;
+  role: CanonicalCbsemParameterRoleV1;
+  target: CanonicalCbsemParameterTargetV1;
+  relation_id?: string | null;
+  state: CanonicalCbsemParameterStateV1;
+  estimate: number;
+  standard_error?: number | null;
+  z_value?: number | null;
+  p_value?: number | null;
+  standardized_estimate?: number | null;
+}
+
+export type CanonicalCbsemBootstrapFailedReplicateReasonV1 =
+  | "insufficient_observations"
+  | "nonpositive_definite_sample_covariance"
+  | "nonconvergence"
+  | "nonfinite_estimate"
+  | "parameter_inventory_mismatch"
+  | "numerical_failure";
+
+export interface CanonicalCbsemBootstrapFailedReplicateV1 {
+  replicate_index: number;
+  reason_code: CanonicalCbsemBootstrapFailedReplicateReasonV1;
+  message: string;
+}
+
+export interface CanonicalCbsemBootstrapReceiptV1 {
+  capability_cell: CapabilityCellReferenceV2;
+  method_version: typeof CBSEM_RECURSIVE_SEM_BOOTSTRAP_METHOD_VERSION_V1;
+  resampling_operation_version: typeof CBSEM_RECURSIVE_SEM_BOOTSTRAP_OPERATION_VERSION_V1;
+  quantile_method_version: typeof GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1;
+  compiled_plan_sha256: string;
+  base_plan_sha256: string;
+  parameter_inventory_sha256: string;
+  model_scientific_sha256: string;
+  general_sem_config_sha256: string;
+  recipe_analytical_sha256: string;
+  source_dataset_fingerprint: string;
+  complete_case_frame_sha256: string;
+  usable_replicate_indices_sha256: string;
+  confidence_level: number;
+  resamples_requested: number;
+  resamples_usable: number;
+  minimum_usable_resamples: number;
+  seed: string;
+  workers: number;
+  complete_model_reestimated_per_replicate: boolean;
+  failed_replicates: CanonicalCbsemBootstrapFailedReplicateV1[];
+}
+
+export type CanonicalCbsemBootstrapInferenceOutcomeV1 =
+  | { kind: "available"; value: CanonicalGeneralSemEstimateV1 }
+  | { kind: "unavailable"; reason: "insufficient_usable_replicates" | "parameter_not_eligible" };
+
+export interface CanonicalCbsemBootstrapParameterInferenceV1 {
+  parameter_id: string;
+  trace: CanonicalGeneralSemResultTraceV1;
+  point_estimate: number;
+  outcome: CanonicalCbsemBootstrapInferenceOutcomeV1;
+}
+
 export interface CanonicalCbsemFitResultV1 {
   fit_id: string;
   trace: CanonicalGeneralSemResultTraceV1;
@@ -338,8 +420,11 @@ export interface CanonicalGeneralSemResultsV1 {
   conditional_effects?: CanonicalConditionalEffectResultV1[];
   interaction_plots?: CanonicalInteractionPlotResultV1[];
   higher_order_stages?: CanonicalHocStageResultV1[];
+  cbsem_parameters?: CanonicalCbsemParameterResultV1[];
   cbsem_fit?: CanonicalCbsemFitResultV1[];
   identification_diagnostics?: CanonicalIdentificationDiagnosticV1[];
+  cbsem_bootstrap_receipt?: CanonicalCbsemBootstrapReceiptV1 | null;
+  cbsem_bootstrap_inference?: CanonicalCbsemBootstrapParameterInferenceV1[];
 }
 
 export interface CanonicalGeneralSemResultsV1Context {
@@ -402,6 +487,18 @@ const GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1: Capabili
   capability_id: "smartpls.moderation",
   cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
   capability_version: "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+};
+const CBSEM_GENERAL_SEM_ML_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = {
+  registry_schema_version: 2,
+  capability_id: "smartpls.cbsem",
+  cell_id: "qpls3.cbsem.general_sem_ml",
+  capability_version: "cbsem_general_sem_ml_v1",
+};
+const CBSEM_RECURSIVE_SEM_BOOTSTRAP_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = {
+  registry_schema_version: 2,
+  capability_id: "smartpls.cbsem_bootstrapping",
+  cell_id: "qpls3.cbsem.bootstrap.recursive_sem",
+  capability_version: "cbsem_exact_recursive_sem_case_bootstrap_v1",
 };
 
 function capabilityCellIdentity(reference: CapabilityCellReferenceV2): string {
@@ -1306,6 +1403,190 @@ function validateConditionalProbeValues(value: unknown, path: string): number[] 
   return explicit;
 }
 
+function validateCbsemEndpointV1(value: unknown, path: string): string {
+  const endpoint = strictWireRecord(value, path);
+  const kind = wireEnum(endpoint.kind, ["variable", "residual", "disturbance"] as const, `${path}.kind`);
+  const exact = exactWireRecord(value, ["kind", "variable_id"], [], path);
+  const variableId = wireStableId(exact.variable_id, `${path}.variable_id`);
+  return `${kind}:${variableId}`;
+}
+
+function validateCbsemParameterRowsV1(
+  values: readonly unknown[],
+  context: GeneralSemWireContext,
+): Map<string, { estimate: number; isFree: boolean }> {
+  const pointCell = capabilityCellIdentity(CBSEM_GENERAL_SEM_ML_CAPABILITY_CELL_V1);
+  const rows = new Map<string, { estimate: number; isFree: boolean }>();
+  values.forEach((value, index) => {
+    const path = `general_sem_results.cbsem_parameters[${index}]`;
+    const row = exactWireRecord(value, [
+      "parameter_id", "trace", "role", "target", "state", "estimate",
+    ], ["relation_id", "standard_error", "z_value", "p_value", "standardized_estimate"], path);
+    const parameterId = wireStableId(row.parameter_id, `${path}.parameter_id`);
+    const traceCell = validateGeneralSemTrace(row.trace, `${path}.trace`, context);
+    if (capabilityCellIdentity(traceCell) !== pointCell) {
+      wireFail("document.invalid", `${path}.trace.capability_cell`, `${path}.trace.capability_cell must equal the exact CB-SEM General SEM ML point cell.`);
+    }
+    const role = wireEnum(row.role, ["loading", "regression", "covariance", "variance"] as const, `${path}.role`);
+    if (row.relation_id != null) wireStableId(row.relation_id, `${path}.relation_id`);
+    const target = strictWireRecord(row.target, `${path}.target`);
+    const targetKind = wireEnum(target.kind, ["loading", "regression", "covariance", "variance"] as const, `${path}.target.kind`);
+    if (targetKind !== role) wireFail("document.invalid", `${path}.target.kind`, `${path}.role and target kind must agree.`);
+    if (targetKind === "loading") {
+      const exact = exactWireRecord(row.target, ["kind", "factor_id", "indicator_id"], [], `${path}.target`);
+      const factor = wireStableId(exact.factor_id, `${path}.target.factor_id`);
+      const indicator = wireStableId(exact.indicator_id, `${path}.target.indicator_id`);
+      if (factor === indicator) wireFail("document.invalid", `${path}.target`, `${path}.target loading factor and indicator must differ.`);
+    } else if (targetKind === "regression") {
+      const exact = exactWireRecord(row.target, ["kind", "source_id", "target_id"], [], `${path}.target`);
+      const source = wireStableId(exact.source_id, `${path}.target.source_id`);
+      const targetId = wireStableId(exact.target_id, `${path}.target.target_id`);
+      if (source === targetId) wireFail("document.invalid", `${path}.target`, `${path}.target regression source and target must differ.`);
+    } else if (targetKind === "covariance") {
+      const exact = exactWireRecord(row.target, ["kind", "left", "right"], [], `${path}.target`);
+      const left = validateCbsemEndpointV1(exact.left, `${path}.target.left`);
+      const right = validateCbsemEndpointV1(exact.right, `${path}.target.right`);
+      if (left === right) wireFail("document.invalid", `${path}.target`, `${path}.target covariance endpoints must differ.`);
+    } else {
+      const exact = exactWireRecord(row.target, ["kind", "endpoint"], [], `${path}.target`);
+      validateCbsemEndpointV1(exact.endpoint, `${path}.target.endpoint`);
+    }
+    const estimate = wireFinite(row.estimate, `${path}.estimate`);
+    const standardError = optionalWireFinite(row, "standard_error", path);
+    const zValue = optionalWireFinite(row, "z_value", path);
+    const pValue = optionalWireFinite(row, "p_value", path);
+    optionalWireFinite(row, "standardized_estimate", path);
+    const uncertaintyCount = [standardError, zValue, pValue].filter((item) => item != null).length;
+    if (uncertaintyCount !== 0 && uncertaintyCount !== 3) {
+      wireFail("document.invalid", path, `${path} standard_error, z_value, and p_value must be all absent or all present.`);
+    }
+    if (standardError != null && standardError < 0) wireFail("document.invalid", `${path}.standard_error`, `${path}.standard_error must be nonnegative.`);
+    if (pValue != null && (pValue < 0 || pValue > 1)) wireFail("document.invalid", `${path}.p_value`, `${path}.p_value must be between 0 and 1.`);
+    const state = strictWireRecord(row.state, `${path}.state`);
+    const stateKind = wireEnum(state.kind, ["fixed", "free"] as const, `${path}.state.kind`);
+    if (stateKind === "fixed") {
+      const exact = exactWireRecord(row.state, ["kind", "value"], [], `${path}.state`);
+      const fixed = wireFinite(exact.value, `${path}.state.value`);
+      if (!approximatelyEqualGeneralSem(fixed, estimate) || uncertaintyCount !== 0) {
+        wireFail("document.invalid", `${path}.state`, `${path}.state fixed value must equal estimate and must not publish uncertainty.`);
+      }
+    } else {
+      const exact = exactWireRecord(row.state, ["kind"], ["equality_label", "lower", "upper"], `${path}.state`);
+      if (exact.equality_label != null) wireText(exact.equality_label, `${path}.state.equality_label`);
+      const lower = optionalWireFinite(exact, "lower", `${path}.state`);
+      const upper = optionalWireFinite(exact, "upper", `${path}.state`);
+      validateGeneralSemBounds(lower, upper, `${path}.state`);
+      if ((lower != null && estimate < lower) || (upper != null && estimate > upper)) {
+        wireFail("document.invalid", `${path}.estimate`, `${path}.estimate must satisfy its declared bounds.`);
+      }
+    }
+    rows.set(parameterId, { estimate, isFree: stateKind === "free" });
+  });
+  return rows;
+}
+
+function validateCbsemBootstrapV1(
+  receiptValue: unknown,
+  inferenceValues: readonly unknown[],
+  pointRows: ReadonlyMap<string, { estimate: number; isFree: boolean }>,
+  context: GeneralSemWireContext,
+): void {
+  const path = "general_sem_results.cbsem_bootstrap_receipt";
+  if (receiptValue == null) {
+    if (inferenceValues.length > 0) wireFail("document.invalid", path, `${path} is required when cbsem_bootstrap_inference is present.`);
+    return;
+  }
+  if (inferenceValues.length === 0) wireFail("document.invalid", path, `${path} requires at least one cbsem_bootstrap_inference row.`);
+  const receipt = exactWireRecord(receiptValue, [
+    "capability_cell", "method_version", "resampling_operation_version", "quantile_method_version",
+    "compiled_plan_sha256", "base_plan_sha256", "parameter_inventory_sha256",
+    "model_scientific_sha256", "general_sem_config_sha256", "recipe_analytical_sha256",
+    "source_dataset_fingerprint", "complete_case_frame_sha256", "usable_replicate_indices_sha256",
+    "confidence_level", "resamples_requested", "resamples_usable", "minimum_usable_resamples",
+    "seed", "workers", "complete_model_reestimated_per_replicate", "failed_replicates",
+  ], [], path);
+  const cell = validateWireCapabilityCell(receipt.capability_cell, `${path}.capability_cell`);
+  const exactCellIdentity = capabilityCellIdentity(CBSEM_RECURSIVE_SEM_BOOTSTRAP_CAPABILITY_CELL_V1);
+  if (capabilityCellIdentity(cell) !== exactCellIdentity || !context.capabilityIds.has(exactCellIdentity)) {
+    wireFail("document.invalid", `${path}.capability_cell`, `${path}.capability_cell must equal the declared recursive-SEM bootstrap cell.`);
+  }
+  if (receipt.method_version !== CBSEM_RECURSIVE_SEM_BOOTSTRAP_METHOD_VERSION_V1) wireFail("document.invalid", `${path}.method_version`, `${path}.method_version is not the frozen v1 method.`);
+  if (receipt.resampling_operation_version !== CBSEM_RECURSIVE_SEM_BOOTSTRAP_OPERATION_VERSION_V1) wireFail("document.invalid", `${path}.resampling_operation_version`, `${path}.resampling_operation_version is not the frozen v1 operation.`);
+  if (receipt.quantile_method_version !== GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1) wireFail("document.invalid", `${path}.quantile_method_version`, `${path}.quantile_method_version must equal type7_quantile_v1.`);
+  for (const key of [
+    "compiled_plan_sha256", "base_plan_sha256", "parameter_inventory_sha256",
+    "model_scientific_sha256", "general_sem_config_sha256", "recipe_analytical_sha256",
+    "complete_case_frame_sha256", "usable_replicate_indices_sha256",
+  ] as const) wireGeneralSemSha256(receipt[key], `${path}.${key}`);
+  if (receipt.model_scientific_sha256 !== context.modelDigest) wireFail("document.invalid", `${path}.model_scientific_sha256`, `${path}.model_scientific_sha256 must equal provenance.model_digest.`);
+  if (receipt.recipe_analytical_sha256 !== context.recipeDigest) wireFail("document.invalid", `${path}.recipe_analytical_sha256`, `${path}.recipe_analytical_sha256 must equal provenance.recipe_digest.`);
+  if (wireGeneralSemDatasetFingerprint(receipt.source_dataset_fingerprint, `${path}.source_dataset_fingerprint`) !== context.datasetFingerprint) wireFail("document.invalid", `${path}.source_dataset_fingerprint`, `${path}.source_dataset_fingerprint must equal provenance.dataset_fingerprint.`);
+  const confidence = wireFinite(receipt.confidence_level, `${path}.confidence_level`);
+  if (confidence !== 0.95) wireFail("document.invalid", `${path}.confidence_level`, `${path}.confidence_level must equal 0.95.`);
+  const requested = wireU32(receipt.resamples_requested, `${path}.resamples_requested`);
+  const usable = wireU32(receipt.resamples_usable, `${path}.resamples_usable`);
+  const minimum = wireU32(receipt.minimum_usable_resamples, `${path}.minimum_usable_resamples`);
+  if (requested < 500 || requested > 10_000) wireFail("document.invalid", `${path}.resamples_requested`, `${path}.resamples_requested must be between 500 and 10000.`);
+  if (minimum !== Math.ceil(requested * 0.9)) wireFail("document.invalid", `${path}.minimum_usable_resamples`, `${path}.minimum_usable_resamples must equal the 90 percent usable gate.`);
+  const workers = wireU32(receipt.workers, `${path}.workers`);
+  if (workers < 1 || workers > 64 || workers !== context.workers) wireFail("document.invalid", `${path}.workers`, `${path}.workers must be between 1 and 64 and equal provenance.workers.`);
+  const seed = wireGeneralSemDecimalSafeSeed(receipt.seed, `${path}.seed`);
+  if (context.seed == null || Number(seed) !== context.seed) wireFail("document.invalid", `${path}.seed`, `${path}.seed must equal provenance.seed.`);
+  if (receipt.complete_model_reestimated_per_replicate !== true) wireFail("document.invalid", `${path}.complete_model_reestimated_per_replicate`, `${path}.complete_model_reestimated_per_replicate must be true.`);
+  const failures = wireArray(receipt.failed_replicates, `${path}.failed_replicates`);
+  if (usable + failures.length !== requested) wireFail("document.invalid", path, `${path} requested count must equal usable plus failed replicates.`);
+  let previousFailure = -1;
+  failures.forEach((value, index) => {
+    const failurePath = `${path}.failed_replicates[${index}]`;
+    const failure = exactWireRecord(value, ["replicate_index", "reason_code", "message"], [], failurePath);
+    const replicate = wireU32(failure.replicate_index, `${failurePath}.replicate_index`);
+    if (replicate >= requested || replicate <= previousFailure) wireFail("document.invalid", `${failurePath}.replicate_index`, `${failurePath}.replicate_index must be unique, ordered, and in range.`);
+    previousFailure = replicate;
+    wireEnum(failure.reason_code, ["insufficient_observations", "nonpositive_definite_sample_covariance", "nonconvergence", "nonfinite_estimate", "parameter_inventory_mismatch", "numerical_failure"] as const, `${failurePath}.reason_code`);
+    wireText(failure.message, `${failurePath}.message`);
+  });
+  const inferenceParameterIds = inferenceValues.map((value, index) => wireStableId(
+    strictWireRecord(value, `general_sem_results.cbsem_bootstrap_inference[${index}]`).parameter_id,
+    `general_sem_results.cbsem_bootstrap_inference[${index}].parameter_id`,
+  ));
+  if (receipt.parameter_inventory_sha256 !== generalSemSerializedSha256(inferenceParameterIds)) {
+    wireFail("document.invalid", `${path}.parameter_inventory_sha256`, `${path}.parameter_inventory_sha256 must bind the ordered inference parameter IDs.`);
+  }
+  inferenceValues.forEach((value, index) => {
+    const inferencePath = `general_sem_results.cbsem_bootstrap_inference[${index}]`;
+    const inference = exactWireRecord(value, ["parameter_id", "trace", "point_estimate", "outcome"], [], inferencePath);
+    const parameterId = wireStableId(inference.parameter_id, `${inferencePath}.parameter_id`);
+    const traceCell = validateGeneralSemTrace(inference.trace, `${inferencePath}.trace`, context);
+    if (capabilityCellIdentity(traceCell) !== exactCellIdentity) wireFail("document.invalid", `${inferencePath}.trace.capability_cell`, `${inferencePath}.trace.capability_cell must equal the recursive-SEM bootstrap cell.`);
+    const point = wireFinite(inference.point_estimate, `${inferencePath}.point_estimate`);
+    const pointRow = pointRows.get(parameterId);
+    if (!pointRow || !approximatelyEqualGeneralSem(pointRow.estimate, point)) wireFail("document.invalid", `${inferencePath}.point_estimate`, `${inferencePath}.point_estimate must equal the point parameter estimate.`);
+    const outcome = strictWireRecord(inference.outcome, `${inferencePath}.outcome`);
+    const kind = wireEnum(outcome.kind, ["available", "unavailable"] as const, `${inferencePath}.outcome.kind`);
+    if (kind === "available") {
+      if (!pointRow!.isFree) wireFail("document.invalid", `${inferencePath}.outcome`, `${inferencePath}.outcome cannot publish inference for a fixed parameter.`);
+      const available = exactWireRecord(inference.outcome, ["kind", "value"], [], `${inferencePath}.outcome`);
+      validateGeneralSemEstimate(available.value, `${inferencePath}.outcome.value`);
+      const estimate = strictWireRecord(available.value, `${inferencePath}.outcome.value`);
+      if (!approximatelyEqualGeneralSem(wireFinite(estimate.estimate, `${inferencePath}.outcome.value.estimate`), point)
+        || !generalSemEstimateHasInference(estimate) || usable < minimum) {
+        wireFail("document.invalid", `${inferencePath}.outcome`, `${inferencePath}.outcome must contain available inference for the same point estimate above the usable gate.`);
+      }
+      const rowUsable = optionalWireU32(estimate, "bootstrap_usable_replicates", `${inferencePath}.outcome.value`);
+      const exceedances = optionalWireU32(estimate, "bootstrap_two_sided_exceedances", `${inferencePath}.outcome.value`);
+      const pValue = optionalWireFinite(estimate, "p_value", `${inferencePath}.outcome.value`);
+      if (rowUsable !== usable || exceedances == null || exceedances > usable || pValue == null
+        || !approximatelyEqualGeneralSem(pValue, (exceedances + 1) / (usable + 1))) {
+        wireFail("document.invalid", `${inferencePath}.outcome.value`, `${inferencePath}.outcome.value must reconcile with the receipt and plus-one exceedance ledger.`);
+      }
+    } else {
+      const unavailable = exactWireRecord(inference.outcome, ["kind", "reason"], [], `${inferencePath}.outcome`);
+      const reason = wireEnum(unavailable.reason, ["insufficient_usable_replicates", "parameter_not_eligible"] as const, `${inferencePath}.outcome.reason`);
+      if (reason === "insufficient_usable_replicates" && usable >= minimum) wireFail("document.invalid", `${inferencePath}.outcome.reason`, `${inferencePath} cannot report insufficient usable replicates after the gate passed.`);
+    }
+  });
+}
+
 /** Strict, lossless validator for the optional Rust General SEM result extension. */
 export function parseCanonicalGeneralSemResultsV1(
   value: unknown,
@@ -1327,8 +1608,11 @@ export function parseCanonicalGeneralSemResultsV1(
       "conditional_effects",
       "interaction_plots",
       "higher_order_stages",
+      "cbsem_parameters",
       "cbsem_fit",
       "identification_diagnostics",
+      "cbsem_bootstrap_receipt",
+      "cbsem_bootstrap_inference",
     ],
     "general_sem_results",
   );
@@ -1380,10 +1664,18 @@ export function parseCanonicalGeneralSemResultsV1(
   const conditional = optionalWireArray(results, "conditional_effects", "general_sem_results");
   const plots = optionalWireArray(results, "interaction_plots", "general_sem_results");
   const hocStages = optionalWireArray(results, "higher_order_stages", "general_sem_results");
+  const cbsemParameters = optionalWireArray(results, "cbsem_parameters", "general_sem_results");
   const fits = optionalWireArray(results, "cbsem_fit", "general_sem_results");
   const identification = optionalWireArray(results, "identification_diagnostics", "general_sem_results");
-  if ([specific, aggregate, jointStageCoefficients, interactionEffects, probes, conditional, plots, hocStages, fits, identification]
-    .every((collection) => collection.length === 0)) {
+  const cbsemBootstrapInference = optionalWireArray(
+    results,
+    "cbsem_bootstrap_inference",
+    "general_sem_results",
+  );
+  const hasCbsemBootstrapReceipt = Object.prototype.hasOwnProperty.call(results, "cbsem_bootstrap_receipt")
+    && results.cbsem_bootstrap_receipt != null;
+  if ([specific, aggregate, jointStageCoefficients, interactionEffects, probes, conditional, plots, hocStages, cbsemParameters, fits, identification, cbsemBootstrapInference]
+    .every((collection) => collection.length === 0) && !hasCbsemBootstrapReceipt) {
     return wireFail("document.invalid", "general_sem_results", "general_sem_results must contain at least one typed result section.");
   }
 
@@ -1399,8 +1691,14 @@ export function parseCanonicalGeneralSemResultsV1(
   validateCanonicalWireIds(conditional, "effect_id", "general_sem_results.conditional_effects");
   validateCanonicalWireIds(plots, "plot_id", "general_sem_results.interaction_plots");
   validateCanonicalWireIds(hocStages, "stage_id", "general_sem_results.higher_order_stages");
+  validateCanonicalWireIds(cbsemParameters, "parameter_id", "general_sem_results.cbsem_parameters");
   validateCanonicalWireIds(fits, "fit_id", "general_sem_results.cbsem_fit");
   validateCanonicalWireIds(identification, "diagnostic_id", "general_sem_results.identification_diagnostics");
+  validateCanonicalWireIds(
+    cbsemBootstrapInference,
+    "parameter_id",
+    "general_sem_results.cbsem_bootstrap_inference",
+  );
 
   const effectIds = new Set<string>();
   const specificSignatures = new Set<string>();
@@ -2007,6 +2305,8 @@ export function parseCanonicalGeneralSemResultsV1(
     });
   });
 
+  const cbsemPointRows = validateCbsemParameterRowsV1(cbsemParameters, wireContext);
+
   fits.forEach((item, index) => {
     const path = `general_sem_results.cbsem_fit[${index}]`;
     const fit = exactWireRecord(item, ["fit_id", "trace", "chi_square", "degrees_of_freedom"], [
@@ -2063,6 +2363,12 @@ export function parseCanonicalGeneralSemResultsV1(
     conditional,
     plots,
     hocStages,
+    wireContext,
+  );
+  validateCbsemBootstrapV1(
+    results.cbsem_bootstrap_receipt,
+    cbsemBootstrapInference,
+    cbsemPointRows,
     wireContext,
   );
 

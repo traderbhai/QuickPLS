@@ -1,10 +1,10 @@
 use crate::{
-    CompiledCbsemParameterRowV2, CompiledCbsemParameterStatusV2, CompiledCbsemPlanV2,
-    CompiledCbsemPlanV2Error, CompiledSemStronglyConnectedComponentV1, CompiledSemTopologyV1,
-    CompiledSemTopologyV1Error, FactorIdentificationV4, GeneralSemConfigV1,
-    GeneralSemConfigV1ValidationError, GeneralSemSpecificPathLimitBehaviorV1, SemConstraintV4,
-    SemEndpointV4, SemParameterTargetV4, SemVariableV4, compile_cbsem_plan_v2,
-    compile_sem_topology_v1,
+    CapabilityCellReferenceV2, CompiledCbsemParameterRowV2, CompiledCbsemParameterStatusV2,
+    CompiledCbsemPlanV2, CompiledCbsemPlanV2Error, CompiledSemStronglyConnectedComponentV1,
+    CompiledSemTopologyV1, CompiledSemTopologyV1Error, FactorIdentificationV4, GeneralSemConfigV1,
+    GeneralSemConfigV1ValidationError, GeneralSemInferenceV1,
+    GeneralSemSpecificPathLimitBehaviorV1, SemConstraintV4, SemEndpointV4, SemParameterTargetV4,
+    SemVariableV4, compile_cbsem_plan_v2, compile_sem_topology_v1,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -12,6 +12,31 @@ use std::collections::{BTreeMap, BTreeSet};
 
 pub const COMPILED_CBSEM_PLAN_V3_SCHEMA_VERSION: u32 = 3;
 pub const COMPILED_CBSEM_IDENTIFICATION_EVIDENCE_V3_SCHEMA_VERSION: u32 = 1;
+pub const CBSEM_GENERAL_SEM_ML_CAPABILITY_ID_V1: &str = "smartpls.cbsem";
+pub const CBSEM_GENERAL_SEM_ML_CELL_ID_V1: &str = "qpls3.cbsem.general_sem_ml";
+pub const CBSEM_GENERAL_SEM_ML_CAPABILITY_VERSION_V1: &str = "cbsem_general_sem_ml_v1";
+pub const CBSEM_RECURSIVE_SEM_BOOTSTRAP_CAPABILITY_ID_V1: &str = "smartpls.cbsem_bootstrapping";
+pub const CBSEM_RECURSIVE_SEM_BOOTSTRAP_CELL_ID_V1: &str = "qpls3.cbsem.bootstrap.recursive_sem";
+pub const CBSEM_RECURSIVE_SEM_BOOTSTRAP_CAPABILITY_VERSION_V1: &str =
+    "cbsem_exact_recursive_sem_case_bootstrap_v1";
+
+pub fn cbsem_general_sem_ml_capability_cell_v1() -> CapabilityCellReferenceV2 {
+    CapabilityCellReferenceV2 {
+        registry_schema_version: 2,
+        capability_id: CBSEM_GENERAL_SEM_ML_CAPABILITY_ID_V1.into(),
+        cell_id: CBSEM_GENERAL_SEM_ML_CELL_ID_V1.into(),
+        capability_version: CBSEM_GENERAL_SEM_ML_CAPABILITY_VERSION_V1.into(),
+    }
+}
+
+pub fn cbsem_recursive_sem_bootstrap_capability_cell_v1() -> CapabilityCellReferenceV2 {
+    CapabilityCellReferenceV2 {
+        registry_schema_version: 2,
+        capability_id: CBSEM_RECURSIVE_SEM_BOOTSTRAP_CAPABILITY_ID_V1.into(),
+        cell_id: CBSEM_RECURSIVE_SEM_BOOTSTRAP_CELL_ID_V1.into(),
+        capability_version: CBSEM_RECURSIVE_SEM_BOOTSTRAP_CAPABILITY_VERSION_V1.into(),
+    }
+}
 
 /// The structural form represented by the compiled topology.
 ///
@@ -227,7 +252,10 @@ pub struct CompiledCbsemPlanV3 {
     model_id: String,
     scientific_sha256: String,
     general_sem_config_sha256: String,
+    data_binding_sha256: String,
     base_plan_sha256: String,
+    capability_cells_sha256: String,
+    capability_cells: Vec<CapabilityCellReferenceV2>,
     base_plan: CompiledCbsemPlanV2,
     topology: CompiledSemTopologyV1,
     parameter_table_authority: CompiledCbsemParameterTableAuthorityV3,
@@ -256,8 +284,23 @@ impl CompiledCbsemPlanV3 {
         &self.general_sem_config_sha256
     }
 
+    pub fn data_binding_sha256(&self) -> &str {
+        &self.data_binding_sha256
+    }
+
     pub fn base_plan_sha256(&self) -> &str {
         &self.base_plan_sha256
+    }
+
+    pub fn capability_cells_sha256(&self) -> &str {
+        &self.capability_cells_sha256
+    }
+
+    /// Exact candidate cells selected by the General SEM inference request.
+    /// These are compiler identities only; Registry admission remains a
+    /// separate release action after a connected runner is qualified.
+    pub fn capability_cells(&self) -> &[CapabilityCellReferenceV2] {
+        &self.capability_cells
     }
 
     pub fn base_plan(&self) -> &CompiledCbsemPlanV2 {
@@ -336,19 +379,36 @@ pub fn compile_cbsem_plan_v3(
     let parameter_table_authority = compile_parameter_table_authority(&base_plan);
     let identification_evidence = compile_identification_evidence(&base_plan, &topology)?;
     let scientific_sha256 = base_plan.scientific_hash().to_string();
+    let data_binding_sha256 = sha256_serialized(base_plan.input());
     let base_plan_sha256 = base_plan.deterministic_sha256();
+    let capability_cells = compiled_capability_cells(config);
+    let capability_cells_sha256 = sha256_serialized(&capability_cells);
 
     Ok(CompiledCbsemPlanV3 {
         schema_version: COMPILED_CBSEM_PLAN_V3_SCHEMA_VERSION,
         model_id: base_plan.model_id().to_string(),
         scientific_sha256,
         general_sem_config_sha256: sha256_serialized(config),
+        data_binding_sha256,
         base_plan_sha256,
+        capability_cells_sha256,
+        capability_cells,
         base_plan,
         topology,
         parameter_table_authority,
         identification_evidence,
     })
+}
+
+fn compiled_capability_cells(config: &GeneralSemConfigV1) -> Vec<CapabilityCellReferenceV2> {
+    let mut cells = vec![cbsem_general_sem_ml_capability_cell_v1()];
+    if matches!(
+        config.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) {
+        cells.push(cbsem_recursive_sem_bootstrap_capability_cell_v1());
+    }
+    cells
 }
 
 fn compile_parameter_table_authority(
@@ -700,6 +760,18 @@ mod tests {
         assert_eq!(plan.base_plan(), &expected_v2);
         assert_eq!(plan.scientific_hash(), expected_v2.scientific_hash());
         assert_eq!(plan.base_plan_sha256(), expected_v2.deterministic_sha256());
+        assert_eq!(
+            plan.data_binding_sha256(),
+            sha256_serialized(expected_v2.input())
+        );
+        assert_eq!(
+            plan.capability_cells(),
+            &[cbsem_general_sem_ml_capability_cell_v1()]
+        );
+        assert_eq!(
+            plan.capability_cells_sha256(),
+            sha256_serialized(plan.capability_cells())
+        );
         assert!(!plan.topology().has_feedback());
         assert_eq!(
             plan.identification_evidence().structural_form(),
@@ -733,6 +805,30 @@ mod tests {
             authority.parameter_table_sha256(),
             sha256_serialized(expected_v2.parameters())
         );
+    }
+
+    #[test]
+    fn bootstrap_request_adds_only_the_exact_recursive_bootstrap_candidate_cell() {
+        let model = recursive_model();
+        let config = GeneralSemConfigV1 {
+            inference: GeneralSemInferenceV1::CaseBootstrap {
+                resamples: 500,
+                seed: 7,
+                confidence_level: 0.95,
+                interval: crate::GeneralSemBootstrapIntervalV1::Percentile,
+                tail: crate::GeneralSemInferenceTailV1::TwoSided,
+            },
+            ..GeneralSemConfigV1::default()
+        };
+        let plan = compile_cbsem_plan_v3(&model, &config).unwrap();
+        assert_eq!(
+            plan.capability_cells(),
+            &[
+                cbsem_general_sem_ml_capability_cell_v1(),
+                cbsem_recursive_sem_bootstrap_capability_cell_v1(),
+            ]
+        );
+        assert_eq!(plan.general_sem_config_sha256(), sha256_serialized(&config));
     }
 
     #[test]
