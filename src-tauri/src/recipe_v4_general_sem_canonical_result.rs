@@ -18,18 +18,22 @@ use qpls_core::{
     GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
     GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1,
     GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
-    GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1, RecipeV4CompilerTarget, SemModelV4,
-    SemParameterV4, StructuralRelationRoleV4, canonical_general_sem_effect_identities_v1,
-    compile_general_sem_pls_recipe_v1, general_sem_effect_identity_set_sha256_v1,
-    pls_general_bootstrap_capability_cell_v1,
+    GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+    GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1,
+    RecipeV4CompilerTarget, SemModelV4, SemParameterV4, StructuralRelationRoleV4,
+    canonical_general_sem_effect_identities_v1, compile_general_sem_pls_recipe_v1,
+    compile_general_sem_pls_recipe_with_internal_capability_admission_v1,
+    general_sem_effect_identity_set_sha256_v1, pls_general_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_point_capability_cell_v1,
-    pls_general_recursive_effects_capability_cell_v1, project_general_sem_pls_stage_one_recipe_v1,
-    validate_canonical_result_document_v2,
+    pls_general_recursive_effects_capability_cell_v1,
+    pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1,
+    project_general_sem_pls_stage_one_recipe_v1, validate_canonical_result_document_v2,
 };
 use qpls_runner::{
     RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
     RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
+    RECIPE_V4_GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
     RecipeV4GeneralSemPlsExecutionResultV1,
 };
 use uuid::Uuid;
@@ -42,6 +46,16 @@ const GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1: &str =
     "general_sem_moderation_gamma_inference";
 const GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1: &str =
     "general_sem_moderation_bootstrap_receipt";
+const GENERAL_SEM_MODERATED_MEDIATION_BOOTSTRAP_SECTION_ID_V1: &str =
+    "general_sem_moderated_mediation_bootstrap";
+const GENERAL_SEM_MODERATED_MEDIATION_GAMMA_TABLE_ID_V1: &str =
+    "general_sem_moderated_mediation_gamma_inference";
+const GENERAL_SEM_CONDITIONAL_INDIRECT_TABLE_ID_V1: &str =
+    "general_sem_conditional_indirect_effects";
+const GENERAL_SEM_MODERATED_MEDIATION_INDEX_TABLE_ID_V1: &str =
+    "general_sem_moderated_mediation_indices";
+const GENERAL_SEM_MODERATED_MEDIATION_RECEIPT_TABLE_ID_V1: &str =
+    "general_sem_moderated_mediation_bootstrap_receipt";
 
 pub(crate) fn general_sem_multiple_mediation_bootstrap_capability_cell_v1()
 -> CapabilityCellReferenceV2 {
@@ -58,9 +72,138 @@ pub(crate) fn general_sem_multiple_moderation_bootstrap_capability_cell_v1()
     pls_general_multiple_moderation_bootstrap_capability_cell_v1()
 }
 
+fn validate_archived_moderated_mediation_method_identity_v1(
+    document: &qpls_project::CanonicalResultDocumentV2,
+) -> Result<(), String> {
+    let point_cell = general_sem_multiple_moderation_point_capability_cell_v1();
+    let supplemental_cell = pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+    let project_cell_matches =
+        |candidate: &qpls_project::CapabilityCellReferenceV2,
+         expected: &CapabilityCellReferenceV2| {
+            candidate.registry_schema_version == expected.registry_schema_version
+                && candidate.capability_id == expected.capability_id
+                && candidate.cell_id == expected.cell_id
+                && candidate.capability_version == expected.capability_version
+        };
+    if !project_cell_matches(&document.provenance.capability_cell, &point_cell)
+        || document.provenance.method_version
+            != GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
+        || document.provenance.engine_version
+            != RECIPE_V4_GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+        || document.title != "General SEM two-way PLS moderated-mediation bootstrap inference"
+    {
+        return Err(
+            "archived moderated-mediation document has a stale primary cell, method, adapter, or title"
+                .into(),
+        );
+    }
+    let results = document.general_sem_results.as_ref().ok_or_else(|| {
+        "archived moderated-mediation document omits its typed scientific payload".to_string()
+    })?;
+    let receipt = results.inference_receipt.as_ref().ok_or_else(|| {
+        "archived moderated-mediation document omits its combined bootstrap receipt".to_string()
+    })?;
+    if receipt.capability_cell != supplemental_cell
+        || receipt.method_version
+            != GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
+        || receipt.capability_dependencies.len() != 2
+        || results.interaction_effects.len() != 1
+        || results.conditional_indirect_effects.len() != 3
+        || results.moderated_mediation_indices.len() != 1
+        || results.joint_stage_structural_coefficients.is_empty()
+        || !results.specific_indirect_effects.is_empty()
+        || !results.aggregate_effects.is_empty()
+    {
+        return Err(
+            "archived moderated-mediation typed payload or exact three-cell receipt is incomplete"
+                .into(),
+        );
+    }
+    let expected_section_tables = [
+        GENERAL_SEM_MODERATED_MEDIATION_GAMMA_TABLE_ID_V1,
+        GENERAL_SEM_CONDITIONAL_INDIRECT_TABLE_ID_V1,
+        GENERAL_SEM_MODERATED_MEDIATION_INDEX_TABLE_ID_V1,
+        GENERAL_SEM_MODERATED_MEDIATION_RECEIPT_TABLE_ID_V1,
+    ];
+    let section = document
+        .sections
+        .iter()
+        .find(|section| section.id == GENERAL_SEM_MODERATED_MEDIATION_BOOTSTRAP_SECTION_ID_V1)
+        .ok_or_else(|| {
+            "archived moderated-mediation document omits its result section".to_string()
+        })?;
+    let table_suffix = document
+        .tables
+        .iter()
+        .rev()
+        .take(expected_section_tables.len())
+        .map(|table| table.id.as_str())
+        .collect::<Vec<_>>();
+    if document.sections.last().map(|section| section.id.as_str())
+        != Some(GENERAL_SEM_MODERATED_MEDIATION_BOOTSTRAP_SECTION_ID_V1)
+        || section
+            .table_ids
+            .iter()
+            .map(String::as_str)
+            .ne(expected_section_tables)
+        || !section.chart_ids.is_empty()
+        || section.capability_cells.as_deref().is_none_or(
+            |cells| !matches!(cells, [cell] if project_cell_matches(cell, &supplemental_cell)),
+        )
+        || table_suffix
+            != expected_section_tables
+                .iter()
+                .rev()
+                .copied()
+                .collect::<Vec<_>>()
+        || document.presentation.default_section_id.as_deref()
+            != Some(GENERAL_SEM_MODERATED_MEDIATION_BOOTSTRAP_SECTION_ID_V1)
+        || document.presentation.default_table_id.as_deref()
+            != Some(GENERAL_SEM_CONDITIONAL_INDIRECT_TABLE_ID_V1)
+        || expected_section_tables.iter().any(|table_id| {
+            let tables = document
+                .tables
+                .iter()
+                .filter(|table| table.id == *table_id)
+                .collect::<Vec<_>>();
+            !matches!(tables.as_slice(), [table] if table.capability_cells.as_deref().is_some_and(
+                |cells| matches!(cells, [cell] if project_cell_matches(cell, &supplemental_cell))
+            ))
+        })
+    {
+        return Err(
+            "archived moderated-mediation section, table order, ownership, or presentation binding is invalid"
+                .into(),
+        );
+    }
+    document.ensure_valid().map_err(|error| error.to_string())
+}
+
 pub(crate) fn validate_archived_general_sem_pls_method_identity_v1(
     document: &qpls_project::CanonicalResultDocumentV2,
 ) -> Result<(), String> {
+    let combined_cell = pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+    let has_combined_artifact = document
+        .general_sem_results
+        .as_ref()
+        .and_then(|results| results.inference_receipt.as_ref())
+        .is_some_and(|receipt| receipt.capability_cell == combined_cell)
+        || document.provenance.method_version
+            == GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
+        || document.provenance.engine_version
+            == RECIPE_V4_GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+        || document.tables.iter().any(|table| {
+            matches!(
+                table.id.as_str(),
+                GENERAL_SEM_MODERATED_MEDIATION_GAMMA_TABLE_ID_V1
+                    | GENERAL_SEM_CONDITIONAL_INDIRECT_TABLE_ID_V1
+                    | GENERAL_SEM_MODERATED_MEDIATION_INDEX_TABLE_ID_V1
+                    | GENERAL_SEM_MODERATED_MEDIATION_RECEIPT_TABLE_ID_V1
+            )
+        });
+    if has_combined_artifact {
+        return validate_archived_moderated_mediation_method_identity_v1(document);
+    }
     let moderation_cell = general_sem_multiple_moderation_point_capability_cell_v1();
     let bootstrap_cell = general_sem_multiple_moderation_bootstrap_capability_cell_v1();
     let project_cell_matches =
@@ -525,11 +668,21 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
 ) -> Result<CanonicalResultDocumentV2, Vec<String>> {
     let interaction_point = result.interaction_point_estimation();
     let moderation_bootstrap = result.moderation_bootstrap_inference();
+    let moderated_mediation_bootstrap = result.moderated_mediation_bootstrap_inference();
     let moderation_artifact = interaction_point
         .map(|interactions| {
-            let artifact = compile_general_sem_pls_recipe_v1(recipe, Some(model)).map_err(
-                |error| vec![format!("General SEM moderation recompilation failed: {error}")],
-            )?;
+            let artifact = if moderated_mediation_bootstrap.is_some() {
+                compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
+                    recipe,
+                    Some(model),
+                    pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1(),
+                )
+            } else {
+                compile_general_sem_pls_recipe_v1(recipe, Some(model))
+            }
+            .map_err(|error| {
+                vec![format!("General SEM moderation recompilation failed: {error}")]
+            })?;
             let moderation_cell = general_sem_multiple_moderation_point_capability_cell_v1();
             if artifact.plan().two_way_interactions().is_empty()
                 || artifact.capability_cell() != &moderation_cell
@@ -573,10 +726,37 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
                         )]
                     })?;
             }
+            if let Some(bootstrap) = moderated_mediation_bootstrap {
+                let supplemental =
+                    pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+                if artifact.supplemental_capability_admission() != Some(&supplemental)
+                    || artifact.plan().two_way_moderated_mediation_target().is_none()
+                    || !matches!(
+                        recipe
+                            .general_sem_config
+                            .as_ref()
+                            .map(|config| &config.inference),
+                        Some(qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. })
+                    )
+                {
+                    return Err(vec![
+                        "General SEM moderated-mediation result lacks its exact internal compiler/config authority"
+                            .into(),
+                    ]);
+                }
+                bootstrap
+                    .ensure_valid_against_plan_v1(artifact.plan(), interactions)
+                    .map_err(|error| {
+                        vec![format!(
+                            "General SEM moderated-mediation bootstrap failed compiled-plan validation: {error}"
+                        )]
+                    })?;
+            }
             Ok(artifact)
         })
         .transpose()?;
     let moderation = moderation_artifact.is_some();
+    let moderated_mediation = moderated_mediation_bootstrap.is_some();
     let (base_recipe, stage_one_model) = project_general_sem_pls_stage_one_recipe_v1(recipe, model)
         .map_err(|error| vec![format!("General SEM stage-one projection failed: {error}")])?;
     let base_request = InternalRecipeV4PlsExecutionRequestV1 {
@@ -614,14 +794,20 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
             )?;
     }
     let inferred = general_sem_results.inference_receipt.is_some();
-    if moderation && inferred != moderation_bootstrap.is_some() {
+    if moderation
+        && inferred != (moderation_bootstrap.is_some() || moderated_mediation_bootstrap.is_some())
+        || moderation_bootstrap.is_some() && moderated_mediation_bootstrap.is_some()
+    {
         return Err(vec![
-            "The typed moderation inference receipt and raw bootstrap result disagree".into(),
+            "The typed moderation inference receipt and the mutually exclusive raw bootstrap results disagree"
+                .into(),
         ]);
     }
 
     document.schema_version = CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION;
-    document.title = if moderation && inferred {
+    document.title = if moderated_mediation {
+        "General SEM two-way PLS moderated-mediation bootstrap inference".into()
+    } else if moderation && inferred {
         "General SEM simultaneous two-way PLS moderation bootstrap inference".into()
     } else if moderation {
         "General SEM simultaneous two-way PLS moderation point estimates".into()
@@ -643,7 +829,9 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
     } else {
         point_cell.clone()
     };
-    document.provenance.method_version = if moderation && inferred {
+    document.provenance.method_version = if moderated_mediation {
+        GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1.into()
+    } else if moderation && inferred {
         GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1.into()
     } else if moderation {
         GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1.into()
@@ -663,7 +851,9 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
 
     let base_cell =
         RecipeV4CompilerTarget::PlsPlanV2.capability_cell_for_method(recipe.settings.method);
-    let bootstrap_combination_cell = if moderation {
+    let bootstrap_combination_cell = if moderated_mediation {
+        pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1()
+    } else if moderation {
         general_sem_multiple_moderation_bootstrap_capability_cell_v1()
     } else {
         general_sem_multiple_mediation_bootstrap_capability_cell_v1()
@@ -737,7 +927,30 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
         chart_ids,
         capability_cells: Some(general_sem_table_cells),
     });
-    if let (Some(bootstrap), true) = (moderation_bootstrap, moderation) {
+    if let Some(bootstrap) = moderated_mediation_bootstrap {
+        let bootstrap_tables = moderated_mediation_bootstrap_tables(
+            &general_sem_results,
+            bootstrap,
+            result,
+            &bootstrap_combination_cell,
+        )?;
+        let bootstrap_table_ids = bootstrap_tables
+            .iter()
+            .map(|table| table.id.clone())
+            .collect::<Vec<_>>();
+        document.tables.extend(bootstrap_tables);
+        document.sections.push(CanonicalResultSection {
+            id: GENERAL_SEM_MODERATED_MEDIATION_BOOTSTRAP_SECTION_ID_V1.into(),
+            title: "Moderated-mediation bootstrap inference".into(),
+            description: Some(
+                "One shared full-model case-bootstrap ledger for scientific gamma, three locked standardized-moderator conditional indirect effects, and the index of moderated mediation."
+                    .into(),
+            ),
+            table_ids: bootstrap_table_ids,
+            chart_ids: Vec::new(),
+            capability_cells: Some(vec![bootstrap_combination_cell.clone()]),
+        });
+    } else if let (Some(bootstrap), true) = (moderation_bootstrap, moderation) {
         let bootstrap_tables = moderation_bootstrap_tables(
             &general_sem_results,
             bootstrap,
@@ -762,7 +975,31 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
         });
     }
     document.general_sem_results = Some(general_sem_results);
-    document.exclusions = if moderation && inferred {
+    document.exclusions = if moderated_mediation {
+        vec![
+            CanonicalResultExclusion {
+                id: "moderated_mediation_single_two_relation_target_only".into(),
+                capability_cell: Some(bootstrap_combination_cell.clone()),
+                title: "One bounded conditional-process target".into(),
+                reason: "This exact cell supports one selected two-relation X to M to Y path and one first- or second-stage two-way interaction only."
+                    .into(),
+            },
+            CanonicalResultExclusion {
+                id: "moderated_mediation_locked_standardized_probes".into(),
+                capability_cell: Some(bootstrap_combination_cell.clone()),
+                title: "Conditional indirect probes are fixed".into(),
+                reason: "Conditional indirect effects are reported only at standardized moderator values -1, 0, and +1; arbitrary probes and both-stage moderation remain deferred."
+                    .into(),
+            },
+            CanonicalResultExclusion {
+                id: "moderated_mediation_no_causal_claim".into(),
+                capability_cell: Some(bootstrap_combination_cell),
+                title: "No causal interpretation is implied".into(),
+                reason: "The reported conditional-process estimands and percentile intervals are associational unless the research design independently supports causal interpretation."
+                    .into(),
+            },
+        ]
+    } else if moderation && inferred {
         vec![
             CanonicalResultExclusion {
                 id: "moderation_bootstrap_scientific_gamma_only".into(),
@@ -814,14 +1051,18 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
                 .into(),
         }]
     };
-    document.presentation.default_section_id = Some(if moderation && inferred {
+    document.presentation.default_section_id = Some(if moderated_mediation {
+        GENERAL_SEM_MODERATED_MEDIATION_BOOTSTRAP_SECTION_ID_V1.into()
+    } else if moderation && inferred {
         GENERAL_SEM_MODERATION_BOOTSTRAP_SECTION_ID_V1.into()
     } else if moderation {
         "general_sem_moderation".into()
     } else {
         "general_sem_effects".into()
     });
-    document.presentation.default_table_id = Some(if moderation && inferred {
+    document.presentation.default_table_id = Some(if moderated_mediation {
+        GENERAL_SEM_CONDITIONAL_INDIRECT_TABLE_ID_V1.into()
+    } else if moderation && inferred {
         GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1.into()
     } else {
         document
@@ -1669,6 +1910,782 @@ fn moderation_bootstrap_tables(
         capability_cells: Some(vec![capability_cell.clone()]),
     };
     Ok(vec![gamma_table, receipt_table])
+}
+
+fn moderated_mediation_stage_label(
+    stage: qpls_core::CanonicalModeratedMediationStageV1,
+) -> &'static str {
+    match stage {
+        qpls_core::CanonicalModeratedMediationStageV1::FirstStage => "first_stage",
+        qpls_core::CanonicalModeratedMediationStageV1::SecondStage => "second_stage",
+    }
+}
+
+fn moderated_mediation_inference_cells(
+    estimate: &CanonicalGeneralSemEstimateV1,
+) -> Result<Vec<CanonicalResultCell>, Vec<String>> {
+    let complete = [
+        estimate.bootstrap_mean,
+        estimate.bootstrap_bias,
+        estimate.standard_error,
+        estimate.lower,
+        estimate.upper,
+        estimate.p_value,
+    ];
+    if complete.iter().any(Option::is_none)
+        || estimate.bootstrap_usable_replicates.is_none()
+        || estimate.bootstrap_two_sided_exceedances.is_none()
+    {
+        return Err(vec![
+            "Moderated-mediation five-target rows require complete bootstrap inference".into(),
+        ]);
+    }
+    Ok(vec![
+        number(estimate.estimate),
+        number(estimate.bootstrap_mean.unwrap()),
+        number(estimate.bootstrap_bias.unwrap()),
+        number(estimate.standard_error.unwrap()),
+        number(estimate.lower.unwrap()),
+        number(estimate.upper.unwrap()),
+        number(estimate.p_value.unwrap()),
+        number(f64::from(estimate.bootstrap_usable_replicates.unwrap())),
+        number(f64::from(estimate.bootstrap_two_sided_exceedances.unwrap())),
+    ])
+}
+
+fn moderated_mediation_inference_columns() -> Vec<CanonicalResultColumn> {
+    vec![
+        number_column("estimate", "Estimate", "Point estimate."),
+        number_column(
+            "bootstrap_mean",
+            "Bootstrap mean",
+            "Mean across usable replicates.",
+        ),
+        number_column(
+            "bootstrap_bias",
+            "Bias",
+            "Bootstrap mean minus point estimate.",
+        ),
+        number_column(
+            "standard_error",
+            "Standard error",
+            "Sample standard error across usable replicates.",
+        ),
+        number_column("lower", "Lower", "Lower type-7 percentile bound."),
+        number_column("upper", "Upper", "Upper type-7 percentile bound."),
+        number_column(
+            "p_value",
+            "P value",
+            "Two-sided null-centered plus-one probability.",
+        ),
+        number_column(
+            "bootstrap_usable_replicates",
+            "Usable",
+            "Shared usable replicate count.",
+        ),
+        number_column(
+            "bootstrap_two_sided_exceedances",
+            "Exceedances",
+            "Shared two-sided exceedance count.",
+        ),
+    ]
+}
+
+fn moderated_mediation_bootstrap_tables(
+    results: &CanonicalGeneralSemResultsV1,
+    bootstrap: &qpls_resampling::GeneralSemPlsTwoWayModeratedMediationBootstrapResultV1,
+    execution: &RecipeV4GeneralSemPlsExecutionResultV1,
+    capability_cell: &CapabilityCellReferenceV2,
+) -> Result<Vec<CanonicalResultTable>, Vec<String>> {
+    bootstrap.ensure_valid().map_err(|error| {
+        vec![format!(
+            "General SEM moderated-mediation bootstrap result is invalid: {error}"
+        )]
+    })?;
+    let expected_cell = pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+    let point_cell = general_sem_multiple_moderation_point_capability_cell_v1();
+    let base_cell = bootstrap.base_pls_capability_cell.clone();
+    let receipt = results.inference_receipt.as_ref().ok_or_else(|| {
+        vec!["General SEM moderated-mediation bootstrap omitted its typed receipt".into()]
+    })?;
+    let mut expected_dependencies = vec![base_cell.clone(), point_cell.clone()];
+    sort_and_deduplicate_cells(&mut expected_dependencies);
+    if capability_cell != &expected_cell
+        || receipt.capability_cell != expected_cell
+        || receipt.capability_dependencies != expected_dependencies
+        || receipt.method_version != bootstrap.method_version
+        || receipt.resampling_operation_version != bootstrap.resampling_operation_version
+        || receipt.resampling_stream_version != bootstrap.resampling_stream_version
+        || receipt.quantile_method_version != bootstrap.quantile_method_version
+        || receipt.standard_error_method_version != bootstrap.standard_error_method_version
+        || receipt.summation_method_version != bootstrap.summation_method_version
+        || receipt.p_value_method_version != bootstrap.p_value_method_version
+        || receipt.failure_policy_version != bootstrap.failure_policy_version
+        || receipt.compilation_artifact_identity_sha256
+            != execution.compilation_artifact_identity_sha256()
+        || receipt.compiled_plan_sha256 != bootstrap.compiled_plan_sha256
+        || receipt.general_sem_config_sha256 != bootstrap.general_sem_config_sha256
+        || receipt.recipe_analytical_sha256 != execution.recipe_analytical_sha256()
+        || receipt.model_scientific_sha256 != bootstrap.model_scientific_sha256
+        || receipt.source_dataset_fingerprint != bootstrap.source_dataset_fingerprint
+        || receipt.complete_case_frame_sha256 != bootstrap.complete_case_frame_sha256
+        || receipt.usable_replicate_indices_sha256 != bootstrap.usable_replicate_indices_sha256
+        || receipt.effect_ids != bootstrap.five_target_ids
+        || receipt.resamples_requested != bootstrap.resamples_requested
+        || receipt.resamples_usable != bootstrap.resamples_usable
+        || receipt.minimum_usable_resamples != bootstrap.minimum_usable_resamples
+        || receipt.seed != bootstrap.seed
+        || receipt.workers != bootstrap.workers
+        || receipt.complete_model_reestimated_per_replicate
+            != bootstrap.complete_model_reestimated_per_replicate
+        || !bootstrap.all_five_targets_share_one_replicate_ledger
+        || execution.general_sem_config_sha256() != bootstrap.general_sem_config_sha256
+        || execution.compiled_plan_sha256() != bootstrap.compiled_plan_sha256
+        || execution.model_scientific_sha256() != bootstrap.model_scientific_sha256
+        || execution.stage_one_model_scientific_sha256()
+            != bootstrap.stage_one_model_scientific_sha256
+        || execution.source_dataset_fingerprint() != bootstrap.source_dataset_fingerprint
+    {
+        return Err(vec![
+            "General SEM moderated-mediation raw/canonical receipt or three-cell execution provenance has drifted"
+                .into(),
+        ]);
+    }
+    let failed_replicates_match = receipt.failed_replicates.len()
+        == bootstrap.failed_replicates.len()
+        && receipt
+            .failed_replicates
+            .iter()
+            .zip(&bootstrap.failed_replicates)
+            .all(|(canonical, raw)| {
+                canonical.replicate_index == raw.replicate_index
+                    && canonical.message == raw.message
+                    && serde_json::to_value(canonical.reason_code).ok()
+                        == serde_json::to_value(&raw.reason_code).ok()
+            });
+    if !failed_replicates_match {
+        return Err(vec![
+            "General SEM moderated-mediation failure ledger differs from its raw bootstrap ledger"
+                .into(),
+        ]);
+    }
+    let [gamma] = results.interaction_effects.as_slice() else {
+        return Err(vec![
+            "Moderated-mediation canonical results require exactly one scientific gamma".into(),
+        ]);
+    };
+    let raw_gamma = &bootstrap.interaction_gamma;
+    if gamma.effect_id != raw_gamma.target.target_id
+        || gamma.interaction_id != raw_gamma.target.interaction_id
+        || gamma.scientific_rescaled_gamma.estimate.to_bits() != raw_gamma.original.to_bits()
+        || gamma
+            .scientific_rescaled_gamma
+            .bootstrap_mean
+            .map(f64::to_bits)
+            != Some(raw_gamma.bootstrap_mean.to_bits())
+        || gamma
+            .scientific_rescaled_gamma
+            .bootstrap_bias
+            .map(f64::to_bits)
+            != Some(raw_gamma.bootstrap_bias.to_bits())
+        || gamma
+            .scientific_rescaled_gamma
+            .standard_error
+            .map(f64::to_bits)
+            != Some(raw_gamma.standard_error.to_bits())
+        || gamma.scientific_rescaled_gamma.lower.map(f64::to_bits)
+            != Some(raw_gamma.lower.to_bits())
+        || gamma.scientific_rescaled_gamma.upper.map(f64::to_bits)
+            != Some(raw_gamma.upper.to_bits())
+        || gamma.scientific_rescaled_gamma.p_value.map(f64::to_bits)
+            != Some(raw_gamma.p_value_two_sided.to_bits())
+    {
+        return Err(vec![
+            "Moderated-mediation scientific gamma differs from its shared five-target ledger"
+                .into(),
+        ]);
+    }
+
+    let mut gamma_cells = vec![
+        text(&gamma.effect_id),
+        text(&gamma.interaction_id),
+        text(&gamma.focal_relation_id),
+        text(&gamma.interaction_effect_relation_id),
+        text(&gamma.interaction_effect_parameter_id),
+        text(&gamma.generated_product_column_id),
+        text(&gamma.focal_predictor_id),
+        text(&gamma.moderator_id),
+        text(&gamma.outcome_id),
+        text(&gamma.stage_one_model_scientific_sha256),
+        text(&gamma.product_scale_version),
+        text(&gamma.method_version),
+    ];
+    gamma_cells.extend(moderated_mediation_inference_cells(
+        &gamma.scientific_rescaled_gamma,
+    )?);
+    let mut gamma_columns = vec![
+        text_column(
+            "effect_id",
+            "Effect ID",
+            "Canonical scientific gamma identity.",
+        ),
+        text_column(
+            "interaction_id",
+            "Interaction",
+            "Authored interaction identity.",
+        ),
+        text_column(
+            "focal_relation_id",
+            "Focal path",
+            "Moderated relation identity.",
+        ),
+        text_column(
+            "interaction_effect_relation_id",
+            "Effect relation",
+            "Interaction-effect relation identity.",
+        ),
+        text_column(
+            "interaction_effect_parameter_id",
+            "Effect parameter",
+            "Interaction-effect parameter identity.",
+        ),
+        text_column(
+            "generated_product_column_id",
+            "Product column",
+            "Generated product-column identity.",
+        ),
+        text_column(
+            "focal_predictor_id",
+            "Focal predictor",
+            "Focal predictor identity.",
+        ),
+        text_column("moderator_id", "Moderator", "Moderator identity."),
+        text_column("outcome_id", "Outcome", "Moderated-stage outcome identity."),
+        text_column(
+            "stage_one_model_scientific_sha256",
+            "Stage-one digest",
+            "Shared stage-one scientific digest.",
+        ),
+        text_column(
+            "product_scale_version",
+            "Product scale",
+            "Scientific gamma scaling policy.",
+        ),
+        text_column(
+            "point_method_version",
+            "Point method",
+            "Exact interaction point method.",
+        ),
+    ];
+    gamma_columns.extend(moderated_mediation_inference_columns());
+    let gamma_table = CanonicalResultTable {
+        id: GENERAL_SEM_MODERATED_MEDIATION_GAMMA_TABLE_ID_V1.into(),
+        title: "Scientific gamma inference".into(),
+        description: Some("The interaction gamma from the same usable replicate ledger as all conditional-process targets.".into()),
+        columns: gamma_columns,
+        rows: vec![CanonicalResultRow {
+            id: "moderated_mediation_gamma_inference_0000".into(),
+            cells: gamma_cells,
+        }],
+        footnote_ids: Vec::new(),
+        capability_cells: Some(vec![capability_cell.clone()]),
+    };
+
+    let mut conditional_rows = Vec::with_capacity(3);
+    for (index, effect) in results.conditional_indirect_effects.iter().enumerate() {
+        let raw = bootstrap
+            .derived_effects
+            .iter()
+            .find(|candidate| candidate.effect_id() == effect.effect_id)
+            .ok_or_else(|| {
+                vec![format!(
+                    "Conditional indirect {} is absent from the raw shared ledger",
+                    effect.effect_id
+                )]
+            })?;
+        if effect.value.estimate.to_bits() != raw.original.to_bits() {
+            return Err(vec![format!(
+                "Conditional indirect {} differs from its raw point identity",
+                effect.effect_id
+            )]);
+        }
+        let ordered_relation_ids = serde_json::to_string(&effect.ordered_relation_ids)
+            .map_err(|error| vec![format!("ordered relation serialization failed: {error}")])?;
+        let mut cells = vec![
+            text(&effect.effect_id),
+            text(&effect.target_id),
+            text(&effect.estimand_id),
+            text(moderated_mediation_stage_label(effect.moderated_stage)),
+            text(&effect.interaction_id),
+            text(&effect.x_id),
+            text(&effect.mediator_id),
+            text(&effect.y_id),
+            text(&effect.moderator_id),
+            text(&ordered_relation_ids),
+            number(f64::from(effect.probe_value_index)),
+            number(effect.moderator_value),
+        ];
+        cells.extend(moderated_mediation_inference_cells(&effect.value)?);
+        conditional_rows.push(CanonicalResultRow {
+            id: format!("conditional_indirect_{index:04}"),
+            cells,
+        });
+    }
+    let mut conditional_columns = vec![
+        text_column(
+            "effect_id",
+            "Effect ID",
+            "Conditional-indirect effect identity.",
+        ),
+        text_column(
+            "target_id",
+            "Target ID",
+            "Compiled conditional-process target.",
+        ),
+        text_column(
+            "estimand_id",
+            "Estimand",
+            "Selected SpecificPath request identity.",
+        ),
+        text_column(
+            "moderated_stage",
+            "Stage",
+            "First- or second-stage moderation.",
+        ),
+        text_column(
+            "interaction_id",
+            "Interaction",
+            "Authored interaction identity.",
+        ),
+        text_column("x_id", "X", "Path origin."),
+        text_column("mediator_id", "M", "Selected mediator."),
+        text_column("y_id", "Y", "Path outcome."),
+        text_column("moderator_id", "W", "Moderator."),
+        text_column(
+            "ordered_relation_ids",
+            "Path relations",
+            "Ordered stable relation identities as canonical JSON.",
+        ),
+        number_column("probe_value_index", "Probe index", "Frozen probe index."),
+        number_column(
+            "moderator_value",
+            "Moderator value",
+            "Frozen standardized moderator value.",
+        ),
+    ];
+    conditional_columns.extend(moderated_mediation_inference_columns());
+    let conditional_table = CanonicalResultTable {
+        id: GENERAL_SEM_CONDITIONAL_INDIRECT_TABLE_ID_V1.into(),
+        title: "Conditional indirect effects".into(),
+        description: Some("Indirect effects at standardized moderator values -1, 0, and +1, from one full-model case-bootstrap ledger.".into()),
+        columns: conditional_columns,
+        rows: conditional_rows,
+        footnote_ids: Vec::new(),
+        capability_cells: Some(vec![capability_cell.clone()]),
+    };
+
+    let [index_effect] = results.moderated_mediation_indices.as_slice() else {
+        return Err(vec![
+            "Moderated-mediation canonical results require exactly one index".into(),
+        ]);
+    };
+    let raw_index = bootstrap
+        .derived_effects
+        .iter()
+        .find(|candidate| candidate.effect_id() == index_effect.effect_id)
+        .ok_or_else(|| {
+            vec!["The moderated-mediation index is absent from the raw ledger".into()]
+        })?;
+    if index_effect.value.estimate.to_bits() != raw_index.original.to_bits() {
+        return Err(vec![
+            "The moderated-mediation index differs from its raw point identity".into(),
+        ]);
+    }
+    let ordered_relation_ids = serde_json::to_string(&index_effect.ordered_relation_ids)
+        .map_err(|error| vec![format!("ordered relation serialization failed: {error}")])?;
+    let mut index_cells = vec![
+        text(&index_effect.effect_id),
+        text(&index_effect.target_id),
+        text(&index_effect.estimand_id),
+        text(moderated_mediation_stage_label(
+            index_effect.moderated_stage,
+        )),
+        text(&index_effect.interaction_id),
+        text(&index_effect.x_id),
+        text(&index_effect.mediator_id),
+        text(&index_effect.y_id),
+        text(&index_effect.moderator_id),
+        text(&ordered_relation_ids),
+    ];
+    index_cells.extend(moderated_mediation_inference_cells(&index_effect.value)?);
+    let mut index_columns = vec![
+        text_column("effect_id", "Effect ID", "Index effect identity."),
+        text_column(
+            "target_id",
+            "Target ID",
+            "Compiled conditional-process target.",
+        ),
+        text_column(
+            "estimand_id",
+            "Estimand",
+            "Selected SpecificPath request identity.",
+        ),
+        text_column(
+            "moderated_stage",
+            "Stage",
+            "First- or second-stage moderation.",
+        ),
+        text_column(
+            "interaction_id",
+            "Interaction",
+            "Authored interaction identity.",
+        ),
+        text_column("x_id", "X", "Path origin."),
+        text_column("mediator_id", "M", "Selected mediator."),
+        text_column("y_id", "Y", "Path outcome."),
+        text_column("moderator_id", "W", "Moderator."),
+        text_column(
+            "ordered_relation_ids",
+            "Path relations",
+            "Ordered stable relation identities as canonical JSON.",
+        ),
+    ];
+    index_columns.extend(moderated_mediation_inference_columns());
+    let index_table = CanonicalResultTable {
+        id: GENERAL_SEM_MODERATED_MEDIATION_INDEX_TABLE_ID_V1.into(),
+        title: "Index of moderated mediation".into(),
+        description: Some(
+            "Scientific gamma multiplied by the coefficient of the unmoderated stage.".into(),
+        ),
+        columns: index_columns,
+        rows: vec![CanonicalResultRow {
+            id: "moderated_mediation_index_0000".into(),
+            cells: index_cells,
+        }],
+        footnote_ids: Vec::new(),
+        capability_cells: Some(vec![capability_cell.clone()]),
+    };
+
+    let target = &bootstrap.compiled_target;
+    let five_target_ids = serde_json::to_string(&bootstrap.five_target_ids)
+        .map_err(|error| vec![format!("five-target serialization failed: {error}")])?;
+    let receipt_columns = vec![
+        text_column(
+            "capability_id",
+            "Capability",
+            "Supplemental capability identity.",
+        ),
+        text_column("cell_id", "Cell", "Supplemental cell identity."),
+        text_column(
+            "capability_version",
+            "Capability version",
+            "Supplemental capability version.",
+        ),
+        text_column(
+            "base_capability_id",
+            "Base capability",
+            "Base PLS dependency.",
+        ),
+        text_column("base_cell_id", "Base cell", "Base PLS cell dependency."),
+        text_column(
+            "base_capability_version",
+            "Base version",
+            "Base PLS dependency version.",
+        ),
+        text_column(
+            "moderation_capability_id",
+            "Moderation capability",
+            "Moderation-point dependency.",
+        ),
+        text_column(
+            "moderation_cell_id",
+            "Moderation cell",
+            "Moderation-point cell dependency.",
+        ),
+        text_column(
+            "moderation_capability_version",
+            "Moderation version",
+            "Moderation-point dependency version.",
+        ),
+        text_column("method_version", "Method", "Combined bootstrap method."),
+        text_column(
+            "point_method_version",
+            "Point method",
+            "Joint point method.",
+        ),
+        text_column(
+            "resampling_operation_version",
+            "Operation",
+            "Case-resampling operation.",
+        ),
+        text_column(
+            "resampling_stream_version",
+            "Stream",
+            "Indexed resampling stream.",
+        ),
+        text_column(
+            "quantile_method_version",
+            "Quantile",
+            "Interval quantile method.",
+        ),
+        text_column(
+            "standard_error_method_version",
+            "Standard error",
+            "Standard-error method.",
+        ),
+        text_column(
+            "summation_method_version",
+            "Summation",
+            "Stable summation method.",
+        ),
+        text_column(
+            "p_value_method_version",
+            "P value",
+            "Bootstrap p-value method.",
+        ),
+        text_column(
+            "failure_policy_version",
+            "Failure policy",
+            "Minimum usable policy.",
+        ),
+        text_column(
+            "sign_alignment_method_version",
+            "Sign alignment",
+            "Score sign-alignment method.",
+        ),
+        text_column(
+            "product_scale_version",
+            "Product scale",
+            "Per-replicate product scaling.",
+        ),
+        text_column(
+            "gamma_target_version",
+            "Gamma target",
+            "Scientific gamma target schema.",
+        ),
+        text_column(
+            "target_contract_version",
+            "Target contract",
+            "Compiled conditional-process target contract.",
+        ),
+        text_column(
+            "target_id",
+            "Target ID",
+            "Compiled conditional-process target identity.",
+        ),
+        text_column(
+            "compiled_target_sha256",
+            "Target digest",
+            "Compiled target digest.",
+        ),
+        text_column(
+            "probe_policy_version",
+            "Probe policy",
+            "Frozen standardized probe policy.",
+        ),
+        text_column(
+            "conditional_target_version",
+            "Conditional target",
+            "Conditional-indirect target schema.",
+        ),
+        text_column(
+            "index_target_version",
+            "Index target",
+            "Moderated-mediation index target schema.",
+        ),
+        text_column(
+            "compilation_artifact_identity_sha256",
+            "Artifact digest",
+            "Compiled artifact identity digest.",
+        ),
+        text_column(
+            "compiled_plan_sha256",
+            "Plan digest",
+            "Compiled plan digest.",
+        ),
+        text_column(
+            "general_sem_config_sha256",
+            "Config digest",
+            "General SEM config digest.",
+        ),
+        text_column(
+            "recipe_analytical_sha256",
+            "Recipe digest",
+            "Analytical recipe digest.",
+        ),
+        text_column(
+            "model_scientific_sha256",
+            "Model digest",
+            "Full model scientific digest.",
+        ),
+        text_column(
+            "stage_one_model_scientific_sha256",
+            "Stage-one digest",
+            "Shared stage-one projection digest.",
+        ),
+        text_column(
+            "source_dataset_fingerprint",
+            "Dataset",
+            "Source dataset fingerprint.",
+        ),
+        text_column(
+            "complete_case_frame_sha256",
+            "Complete-case digest",
+            "Complete-case frame digest.",
+        ),
+        text_column(
+            "usable_replicate_indices_sha256",
+            "Usable-index digest",
+            "Usable replicate ledger digest.",
+        ),
+        text_column(
+            "five_target_identity_set_sha256",
+            "Raw identity digest",
+            "Raw five-target identity digest.",
+        ),
+        text_column(
+            "canonical_effect_identity_set_sha256",
+            "Canonical identity digest",
+            "Canonical five-target identity digest.",
+        ),
+        text_column(
+            "five_target_ids",
+            "Five targets",
+            "Ordered five-target identities as canonical JSON.",
+        ),
+        text_column("interval", "Interval", "Canonical interval family."),
+        text_column("tail", "Tail", "Canonical hypothesis tail."),
+        number_column("confidence_level", "Confidence", "Confidence level."),
+        number_column("resamples_requested", "Requested", "Requested replicates."),
+        number_column("resamples_usable", "Usable", "Usable replicates."),
+        number_column(
+            "minimum_usable_resamples",
+            "Minimum usable",
+            "Required usable replicates.",
+        ),
+        text_column("seed", "Seed", "Exact decimal resampling seed."),
+        number_column("workers", "Workers", "Configured worker count."),
+        boolean_column(
+            "complete_model_reestimated_per_replicate",
+            "Complete model",
+            "Complete model re-estimated per replicate.",
+        ),
+        boolean_column(
+            "shared_stage_one_reestimated_per_replicate",
+            "Stage one",
+            "Shared stage one re-estimated per replicate.",
+        ),
+        boolean_column(
+            "score_vectors_sign_aligned_before_products",
+            "Sign aligned",
+            "Scores sign aligned before product regeneration.",
+        ),
+        boolean_column(
+            "product_scaling_recomputed_per_replicate",
+            "Product scaling",
+            "Product scaling recomputed per replicate.",
+        ),
+        boolean_column(
+            "joint_stage_two_reestimated_per_replicate",
+            "Joint stage two",
+            "Joint stage two re-estimated per replicate.",
+        ),
+        boolean_column(
+            "complete_joint_point_contract_validated_per_replicate",
+            "Point contract",
+            "Complete point contract validated per replicate.",
+        ),
+        boolean_column(
+            "all_five_targets_share_one_replicate_ledger",
+            "Shared ledger",
+            "All five targets share one usable/failure ledger.",
+        ),
+        number_column(
+            "failed_replicate_count",
+            "Failed",
+            "Typed failed replicate count.",
+        ),
+    ];
+    let receipt_cells = vec![
+        text(&receipt.capability_cell.capability_id),
+        text(&receipt.capability_cell.cell_id),
+        text(&receipt.capability_cell.capability_version),
+        text(&base_cell.capability_id),
+        text(&base_cell.cell_id),
+        text(&base_cell.capability_version),
+        text(&point_cell.capability_id),
+        text(&point_cell.cell_id),
+        text(&point_cell.capability_version),
+        text(&receipt.method_version),
+        text(&bootstrap.point_method_version),
+        text(&receipt.resampling_operation_version),
+        text(&receipt.resampling_stream_version),
+        text(&receipt.quantile_method_version),
+        text(&receipt.standard_error_method_version),
+        text(&receipt.summation_method_version),
+        text(&receipt.p_value_method_version),
+        text(&receipt.failure_policy_version),
+        text(&bootstrap.sign_alignment_method_version),
+        text(&bootstrap.product_scale_version),
+        text(&bootstrap.gamma_target_version),
+        text(target.contract_version()),
+        text(target.target_id()),
+        text(&bootstrap.compiled_target_sha256),
+        text(target.probe_policy_version()),
+        text(target.conditional_target_version()),
+        text(target.index_target_version()),
+        text(&receipt.compilation_artifact_identity_sha256),
+        text(&receipt.compiled_plan_sha256),
+        text(&receipt.general_sem_config_sha256),
+        text(&receipt.recipe_analytical_sha256),
+        text(&receipt.model_scientific_sha256),
+        text(&bootstrap.stage_one_model_scientific_sha256),
+        text(&receipt.source_dataset_fingerprint),
+        text(&receipt.complete_case_frame_sha256),
+        text(&receipt.usable_replicate_indices_sha256),
+        text(&bootstrap.five_target_identity_set_sha256),
+        text(&receipt.effect_identity_set_sha256),
+        text(&five_target_ids),
+        text("percentile_type7"),
+        text("two_sided"),
+        number(receipt.confidence_level),
+        number(f64::from(receipt.resamples_requested)),
+        number(f64::from(receipt.resamples_usable)),
+        number(f64::from(receipt.minimum_usable_resamples)),
+        text(&receipt.seed),
+        number(f64::from(receipt.workers)),
+        boolean(bootstrap.complete_model_reestimated_per_replicate),
+        boolean(bootstrap.shared_stage_one_reestimated_per_replicate),
+        boolean(bootstrap.score_vectors_sign_aligned_before_products),
+        boolean(bootstrap.product_scaling_recomputed_per_replicate),
+        boolean(bootstrap.joint_stage_two_reestimated_per_replicate),
+        boolean(bootstrap.complete_joint_point_contract_validated_per_replicate),
+        boolean(bootstrap.all_five_targets_share_one_replicate_ledger),
+        number(bootstrap.failed_replicates.len() as f64),
+    ];
+    if receipt_columns.len() != receipt_cells.len() {
+        return Err(vec![
+            "Moderated-mediation receipt table has an internal column-width mismatch".into(),
+        ]);
+    }
+    let receipt_table = CanonicalResultTable {
+        id: GENERAL_SEM_MODERATED_MEDIATION_RECEIPT_TABLE_ID_V1.into(),
+        title: "Moderated-mediation bootstrap pipeline receipt".into(),
+        description: Some("Exact three-cell ownership, compiled target, provenance, full-refit pipeline, and shared usable/failure ledger receipt.".into()),
+        columns: receipt_columns,
+        rows: vec![CanonicalResultRow {
+            id: "moderated_mediation_bootstrap_receipt".into(),
+            cells: receipt_cells,
+        }],
+        footnote_ids: Vec::new(),
+        capability_cells: Some(vec![capability_cell.clone()]),
+    };
+    Ok(vec![
+        gamma_table,
+        conditional_table,
+        index_table,
+        receipt_table,
+    ])
 }
 
 fn moderation_charts(results: &CanonicalGeneralSemResultsV1) -> Vec<CanonicalResultChart> {

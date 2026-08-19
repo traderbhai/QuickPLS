@@ -697,6 +697,20 @@ fn ensure_general_sem_results_finite(
         )?;
         ensure_general_sem_estimate_finite(&effect.value, &format!("{context}.value"))?;
     }
+    for (index, effect) in results.conditional_indirect_effects.iter().enumerate() {
+        let context = format!("general_sem_results.conditional_indirect_effects[{index}]");
+        require_finite(
+            effect.moderator_value,
+            &format!("{context}.moderator_value"),
+        )?;
+        ensure_general_sem_estimate_finite(&effect.value, &format!("{context}.value"))?;
+    }
+    for (index, effect) in results.moderated_mediation_indices.iter().enumerate() {
+        ensure_general_sem_estimate_finite(
+            &effect.value,
+            &format!("general_sem_results.moderated_mediation_indices[{index}].value"),
+        )?;
+    }
     for (plot_index, plot) in results.interaction_plots.iter().enumerate() {
         for (series_index, series) in plot.series.iter().enumerate() {
             let series_context = format!(
