@@ -1,6 +1,9 @@
 use crate::{
+    GeneralSemPlsHigherOrderPointErrorV1, GeneralSemPlsHigherOrderPointResultV1,
     RecipeV4PlsExecutionError, RecipeV4PlsExecutionResultV1, RunnerProgress,
-    project_pls_plan_to_current_recipe, run_compiled_pls_recipe_v4,
+    project_pls_plan_to_current_recipe,
+    run_compiled_general_sem_pls_disjoint_higher_order_point_v1, run_compiled_pls_recipe_v4,
+    run_compiled_pls_recipe_v4_allowing_isolated,
 };
 use qpls_core::{
     AnalysisRecipeV4, CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
@@ -11,7 +14,8 @@ use qpls_core::{
     CanonicalGeneralSemFailedReplicateReasonV1, CanonicalGeneralSemFailedReplicateV1,
     CanonicalGeneralSemInferenceKindV1, CanonicalGeneralSemInferenceReceiptV1,
     CanonicalGeneralSemInferenceTailV1, CanonicalGeneralSemResultTraceV1,
-    CanonicalGeneralSemResultsV1, CanonicalInteractionConstructionMethodV1,
+    CanonicalGeneralSemResultsV1, CanonicalHocRelationEstimateV1, CanonicalHocStageKindV1,
+    CanonicalHocStageResultV1, CanonicalInteractionConstructionMethodV1,
     CanonicalInteractionEffectResultV1, CanonicalInteractionHierarchyPolicyV1,
     CanonicalInteractionPlotPointV1, CanonicalInteractionPlotResultV1,
     CanonicalInteractionPlotSeriesV1, CanonicalSpecificIndirectEffectResultV1,
@@ -49,6 +53,8 @@ pub const RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_
     "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1";
 pub const RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1:
     &str = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_percentile_bootstrap_execution_v1";
+pub const RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1: &str =
+    "compiled_general_sem_pls_recipe_v1_disjoint_higher_order_point_execution_v1";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
@@ -177,6 +183,8 @@ pub struct RecipeV4GeneralSemPlsExecutionResultV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     interaction_point_estimation: Option<GeneralSemPlsMultipleInteractionPointResultV1>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    higher_order_point_estimation: Option<GeneralSemPlsHigherOrderPointResultV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     bootstrap_inference: Option<GeneralSemPlsBootstrapResultV1>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     moderation_bootstrap_inference: Option<GeneralSemPlsMultipleModerationBootstrapResultV1>,
@@ -235,6 +243,10 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
         &self,
     ) -> Option<&GeneralSemPlsMultipleInteractionPointResultV1> {
         self.interaction_point_estimation.as_ref()
+    }
+
+    pub fn higher_order_point_estimation(&self) -> Option<&GeneralSemPlsHigherOrderPointResultV1> {
+        self.higher_order_point_estimation.as_ref()
     }
 
     pub fn bootstrap_inference(&self) -> Option<&GeneralSemPlsBootstrapResultV1> {
@@ -349,6 +361,7 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
             conditional_effects,
             interaction_plots,
         ) = canonical_interaction_sections_v1(self, &trace, &moderation_inference_by_id)?;
+        let higher_order_stages = canonical_higher_order_stages_v1(self, &trace)?;
         let inference_receipt = match (
             self.bootstrap_inference.as_ref(),
             self.moderation_bootstrap_inference.as_ref(),
@@ -379,11 +392,70 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
             conditional_effect_probes,
             conditional_effects,
             interaction_plots,
-            higher_order_stages: Vec::new(),
+            higher_order_stages,
             cbsem_fit: Vec::new(),
             identification_diagnostics: Vec::new(),
         })
     }
+}
+
+fn canonical_higher_order_stages_v1(
+    result: &RecipeV4GeneralSemPlsExecutionResultV1,
+    trace: &CanonicalGeneralSemResultTraceV1,
+) -> Result<Vec<CanonicalHocStageResultV1>, RecipeV4GeneralSemPlsExecutionErrorV1> {
+    let Some(higher_order) = result.higher_order_point_estimation.as_ref() else {
+        if result.stage_one_model_scientific_sha256 != result.model_scientific_sha256
+            && result.interaction_point_estimation.is_none()
+        {
+            return Err(
+                RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                    "a projected stage-one HOC model requires a typed higher-order point payload"
+                        .into(),
+                ),
+            );
+        }
+        return Ok(Vec::new());
+    };
+    higher_order
+        .stages()
+        .iter()
+        .map(|stage| {
+            let kind = match stage.receipt().role() {
+                qpls_core::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation => {
+                    CanonicalHocStageKindV1::LowerOrderScoreEstimation
+                }
+                qpls_core::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores => {
+                    CanonicalHocStageKindV1::HigherOrderEstimation
+                }
+                _ => {
+                    return Err(
+                        RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                            "disjoint HOC point payload contains an unsupported stage role".into(),
+                        ),
+                    );
+                }
+            };
+            Ok(CanonicalHocStageResultV1 {
+                stage_id: stage.stage_id().to_string(),
+                trace: trace.clone(),
+                higher_order_construct_id: higher_order.output_variable_id().to_string(),
+                stage_number: u32::from(stage.receipt().stage_number()),
+                kind,
+                input_construct_ids: stage.input_construct_ids().to_vec(),
+                output_variable_ids: stage.output_variable_ids().to_vec(),
+                relation_estimates: stage
+                    .relation_estimates()
+                    .iter()
+                    .map(|relation| CanonicalHocRelationEstimateV1 {
+                        relation_id: relation.relation_id().to_string(),
+                        source_id: relation.source_id().to_string(),
+                        target_id: relation.target_id().to_string(),
+                        value: canonical_estimate(relation.estimate(), None),
+                    })
+                    .collect(),
+            })
+        })
+        .collect()
 }
 
 fn canonical_estimate(
@@ -449,7 +521,9 @@ fn canonical_interaction_sections_v1(
     moderation_inference_by_id: &BTreeMap<&str, &GeneralSemPlsModerationBootstrapGammaInferenceV1>,
 ) -> Result<CanonicalInteractionSectionsV1, RecipeV4GeneralSemPlsExecutionErrorV1> {
     let Some(interactions) = &result.interaction_point_estimation else {
-        if result.stage_one_model_scientific_sha256 != result.model_scientific_sha256 {
+        if result.stage_one_model_scientific_sha256 != result.model_scientific_sha256
+            && result.higher_order_point_estimation.is_none()
+        {
             return Err(
                 RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
                     "a projected stage-one model requires a typed interaction point payload".into(),
@@ -464,6 +538,7 @@ fn canonical_interaction_sections_v1(
         || result.bootstrap_inference.is_some()
         || !result.requested_effects.is_empty()
         || result.stage_one_model_scientific_sha256 == result.model_scientific_sha256
+        || result.higher_order_point_estimation.is_some()
     {
         return Err(
             RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
@@ -1099,6 +1174,10 @@ pub enum RecipeV4GeneralSemPlsExecutionErrorV1 {
     #[error(transparent)]
     InteractionPoint(#[from] GeneralSemPlsInteractionPointErrorV1),
     #[error(transparent)]
+    HigherOrderPoint(#[from] GeneralSemPlsHigherOrderPointErrorV1),
+    #[error("General SEM HOC full-model case bootstrap is not connected in this point checkpoint")]
+    HigherOrderBootstrapNotConnected,
+    #[error(transparent)]
     EffectDecomposition(#[from] GeneralSemEffectsV1Error),
     #[error(
         "PLS result does not contain exactly one coefficient for relation {relation_id} ({source_id} -> {target_id})"
@@ -1130,17 +1209,41 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
         return Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled);
     }
     validate_compiled_general_sem_pls_recipe_v1(artifact, recipe, Some(resolved_model))?;
+    let config = recipe
+        .general_sem_config
+        .as_ref()
+        .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
+    let has_higher_order = !artifact.plan().higher_order_stage_plans().is_empty();
+    if has_higher_order
+        && matches!(
+            config.inference,
+            GeneralSemInferenceV1::CaseBootstrap { .. }
+        )
+    {
+        return Err(RecipeV4GeneralSemPlsExecutionErrorV1::HigherOrderBootstrapNotConnected);
+    }
     let (base_recipe, stage_one_model) =
         project_general_sem_pls_stage_one_recipe_v1(recipe, resolved_model)?;
-    let point_estimation = run_compiled_pls_recipe_v4(
-        dataset,
-        &base_recipe,
-        &stage_one_model,
-        artifact.base_artifact(),
-        None,
-        &should_cancel,
-        &progress,
-    )
+    let point_estimation = if has_higher_order {
+        run_compiled_pls_recipe_v4_allowing_isolated(
+            dataset,
+            &base_recipe,
+            &stage_one_model,
+            artifact.base_artifact(),
+            &should_cancel,
+            &progress,
+        )
+    } else {
+        run_compiled_pls_recipe_v4(
+            dataset,
+            &base_recipe,
+            &stage_one_model,
+            artifact.base_artifact(),
+            None,
+            &should_cancel,
+            &progress,
+        )
+    }
     .map_err(|error| match error {
         RecipeV4PlsExecutionError::Cancelled => RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled,
         error => RecipeV4GeneralSemPlsExecutionErrorV1::PointEstimation(error),
@@ -1148,6 +1251,27 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
     if should_cancel() {
         return Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled);
     }
+    let higher_order_point_estimation = if has_higher_order {
+        Some(
+            run_compiled_general_sem_pls_disjoint_higher_order_point_v1(
+                dataset,
+                recipe,
+                resolved_model,
+                artifact.plan(),
+                &point_estimation,
+                &should_cancel,
+                &progress,
+            )
+            .map_err(|error| match error {
+                GeneralSemPlsHigherOrderPointErrorV1::Cancelled => {
+                    RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled
+                }
+                other => RecipeV4GeneralSemPlsExecutionErrorV1::HigherOrderPoint(other),
+            })?,
+        )
+    } else {
+        None
+    };
     let interaction_point_estimation = if artifact.plan().two_way_interactions().is_empty() {
         None
     } else {
@@ -1181,15 +1305,15 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
     let requested_effects = if interaction_point_estimation.is_some() {
         Vec::new()
     } else {
-        let relation_coefficients = relation_coefficients(artifact, point_estimation.estimation())?;
+        let relation_coefficients = if let Some(higher_order) = &higher_order_point_estimation {
+            higher_order_relation_coefficients(artifact, higher_order)?
+        } else {
+            relation_coefficients(artifact, point_estimation.estimation())?
+        };
         let decomposition =
             decompose_general_sem_effects_v1(artifact.plan().topology(), &relation_coefficients)?;
         select_requested_effects(artifact, &decomposition)?
     };
-    let config = recipe
-        .general_sem_config
-        .as_ref()
-        .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
     let (bootstrap_inference, moderation_bootstrap_inference) = match config.inference {
         GeneralSemInferenceV1::None => (None, None),
         GeneralSemInferenceV1::CaseBootstrap { .. } => {
@@ -1270,7 +1394,9 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
     if should_cancel() {
         return Err(RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled);
     }
-    let adapter_version = if moderation_bootstrap_inference.is_some() {
+    let adapter_version = if higher_order_point_estimation.is_some() {
+        RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1
+    } else if moderation_bootstrap_inference.is_some() {
         RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
     } else if interaction_point_estimation.is_some() {
         RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1
@@ -1297,6 +1423,7 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
         point_estimation,
         requested_effects,
         interaction_point_estimation,
+        higher_order_point_estimation,
         bootstrap_inference,
         moderation_bootstrap_inference,
     })
@@ -1340,6 +1467,35 @@ fn relation_coefficients(
                 );
             }
             Ok((relation.relation_id().into(), coefficients[0]))
+        })
+        .collect()
+}
+
+fn higher_order_relation_coefficients(
+    artifact: &CompiledGeneralSemPlsRecipeV1,
+    result: &GeneralSemPlsHigherOrderPointResultV1,
+) -> Result<BTreeMap<String, f64>, RecipeV4GeneralSemPlsExecutionErrorV1> {
+    artifact
+        .plan()
+        .topology()
+        .structural_relations()
+        .iter()
+        .map(|relation| {
+            let estimates = result
+                .structural_relation_estimates()
+                .filter(|estimate| estimate.relation_id() == relation.relation_id())
+                .map(|estimate| estimate.estimate())
+                .collect::<Vec<_>>();
+            if estimates.len() != 1 {
+                return Err(
+                    RecipeV4GeneralSemPlsExecutionErrorV1::RelationEstimateCardinality {
+                        relation_id: relation.relation_id().into(),
+                        source_id: relation.source().into(),
+                        target_id: relation.target().into(),
+                    },
+                );
+            }
+            Ok((relation.relation_id().into(), estimates[0]))
         })
         .collect()
 }

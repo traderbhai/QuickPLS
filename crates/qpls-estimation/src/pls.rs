@@ -34,6 +34,9 @@ use std::{
 };
 use thiserror::Error;
 
+use crate::general_sem_pls_higher_order_v1::{
+    PlsGeneratedScoreColumnSpecV1, append_pls_generated_score_columns_v1,
+};
 use crate::{
     CbsemBootstrapAnalysisV2, CbsemExactCaseBootstrapResultV1,
     CbsemExactCaseBootstrapWithBcaResultV1, CbsemExactCaseBootstrapWithStudentizedResultV1,
@@ -3030,6 +3033,20 @@ pub fn estimate_pls_validated_with_control(
     estimate_pls_internal(dataset, effective, None, false, true, &mut control)
 }
 
+/// Trusted schema-6 stage boundary for HOC scoring. Isolated measurement
+/// blocks are intentional in a disjoint stage, while every other recipe and
+/// dataset check remains identical to ordinary validated PLS execution.
+pub fn estimate_pls_validated_allowing_isolated_with_control(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    mut control: impl FnMut(EstimationProgress) -> bool,
+) -> Result<PlsResult, EstimationError> {
+    let effective = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
+    estimate_pls_internal(dataset, effective, None, true, true, &mut control)
+}
+
 /// Executes a validated schema-v3 projection while taking construct-score
 /// semantics exclusively from its compiled SemModelV4 plan. The optional
 /// initialization is the exact typed value from the source recipe-v4 and is
@@ -3052,6 +3069,32 @@ pub fn estimate_pls_validated_with_compiled_plan_v2_with_control(
             initialization,
         }),
         false,
+        true,
+        &mut control,
+    )
+}
+
+/// Compiled-score counterpart of the trusted disjoint-stage boundary above.
+/// It permits isolated blocks but does not relax the compiled plan, recipe,
+/// initialization, dataset, or numerical validation contracts.
+pub fn estimate_pls_validated_with_compiled_plan_v2_allowing_isolated_with_control(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    plan: &CompiledPlsPlanV2,
+    initialization: Option<&PlsAlgorithmConfigV2>,
+    mut control: impl FnMut(EstimationProgress) -> bool,
+) -> Result<PlsResult, EstimationError> {
+    let effective = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
+    estimate_pls_internal(
+        dataset,
+        effective,
+        Some(CompiledScoreExecutionInputV2 {
+            plan,
+            initialization,
+        }),
+        true,
         true,
         &mut control,
     )
@@ -4306,24 +4349,8 @@ fn expand_two_stage_higher_order_dataset(
             "stage-1 used row count does not match construct-score length".into(),
         ));
     }
-    let mut arrays = Vec::<ArrayRef>::new();
-    let mut fields = dataset
-        .batch
-        .schema()
-        .fields()
-        .iter()
-        .map(|field| Field::new(field.name(), field.data_type().clone(), field.is_nullable()))
-        .collect::<Vec<_>>();
-    let mut schema = dataset.schema.clone();
-    for column in dataset.batch.columns() {
-        arrays.push(subset_array(column.as_ref(), used_rows)?);
-    }
-    let existing_fields = fields
-        .iter()
-        .map(|field| field.name().to_string())
-        .collect::<HashSet<_>>();
-    let mut generated_names = HashSet::new();
     let mut stage2_recipe = recipe.clone();
+    let mut generated_score_specs = Vec::new();
 
     for higher_order in &recipe.model.higher_order_constructs {
         if higher_order.method != HigherOrderMethod::TwoStage {
@@ -4342,25 +4369,13 @@ fn expand_two_stage_higher_order_dataset(
                 ));
             }
             let indicator_name = higher_order_component_indicator_name(&higher_order.id, component);
-            if existing_fields.contains(&indicator_name)
-                || !generated_names.insert(indicator_name.clone())
-            {
-                return Err(EstimationError::DuplicateIndicator(indicator_name));
-            }
-            arrays.push(Arc::new(Float64Array::from(scores.clone())) as ArrayRef);
-            fields.push(Field::new(&indicator_name, DataType::Float64, false));
-            schema.columns.push(ColumnMetadata {
-                name: indicator_name.clone(),
-                label: Some(format!(
+            generated_score_specs.push(PlsGeneratedScoreColumnSpecV1 {
+                source_score_id: component.clone(),
+                generated_column_id: indicator_name.clone(),
+                label: format!(
                     "Two-stage HOC component score: {} <- {}",
                     higher_order.id, component
-                )),
-                column_type: ColumnType::Numeric,
-                scale_type: ScaleType::Continuous,
-                missing_markers: Vec::new(),
-                theoretical_min: None,
-                theoretical_max: None,
-                value_labels: BTreeMap::new(),
+                ),
             });
             indicators.push(indicator_name);
         }
@@ -4378,18 +4393,13 @@ fn expand_two_stage_higher_order_dataset(
         .model
         .higher_order_constructs
         .retain(|higher_order| higher_order.method != HigherOrderMethod::TwoStage);
-    let batch = RecordBatch::try_new(Arc::new(Schema::new(fields)), arrays)
-        .map_err(|error| EstimationError::Numerical(error.to_string()))?;
-    Ok((
-        Dataset {
-            id: dataset.id,
-            name: dataset.name.clone(),
-            schema,
-            fingerprint: dataset.fingerprint.clone(),
-            batch,
-        },
-        stage2_recipe,
-    ))
+    let expanded_dataset = append_pls_generated_score_columns_v1(
+        dataset,
+        &stage1.construct_scores,
+        used_rows,
+        &generated_score_specs,
+    )?;
+    Ok((expanded_dataset, stage2_recipe))
 }
 
 fn apply_plsc_correction(
@@ -6114,7 +6124,7 @@ fn expand_two_stage_moderation_dataset(
     Ok((expanded_dataset, stage2_recipe))
 }
 
-fn subset_array(array: &dyn Array, rows: &[usize]) -> Result<ArrayRef, EstimationError> {
+pub(crate) fn subset_array(array: &dyn Array, rows: &[usize]) -> Result<ArrayRef, EstimationError> {
     if let Some(values) = array.as_any().downcast_ref::<Float64Array>() {
         Ok(Arc::new(Float64Array::from(
             rows.iter()

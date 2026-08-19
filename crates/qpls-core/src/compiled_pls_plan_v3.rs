@@ -5,9 +5,9 @@ use crate::{
     GeneralSemConfigV1ValidationError, GeneralSemEffectEstimandV1,
     GeneralSemSpecificPathLimitBehaviorV1, HigherOrderConstructionApproachV4,
     HigherOrderMeasurementTypeV4, InteractionHierarchyPolicyV2, InteractionMethodV4,
-    SemConstraintV4, SemDerivedTermV4, SemModelV4, SemParameterTargetV4, SemParameterV4,
-    SemPresentationV4, SemRelationV4, SemVariableV4, StructuralRelationRoleV4, compile_pls_plan_v2,
-    compile_sem_topology_v1,
+    ObservedRoleV4, ObservedScaleV4, SemConstraintV4, SemDerivedTermV4, SemModelV4,
+    SemParameterTargetV4, SemParameterV4, SemPresentationV4, SemRelationV4, SemVariableV4,
+    StructuralRelationRoleV4, compile_pls_plan_v2, compile_sem_topology_v1,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -22,6 +22,8 @@ pub const COMPILED_PLS_HIGHER_ORDER_STAGE_PLAN_V1_VERSION: &str =
     "qpls.compiled-pls-higher-order-stage-plan.v1";
 pub const COMPILED_PLS_HIGHER_ORDER_PROJECTION_V1_VERSION: &str =
     "qpls.compiled-pls-higher-order-lower-order-projection.v1";
+pub const COMPILED_PLS_DISJOINT_HIGHER_ORDER_STAGE_TWO_PROJECTION_V1_VERSION: &str =
+    "qpls.compiled-pls-disjoint-higher-order-stage-two-projection.v1";
 
 pub const PLS_GENERAL_HIGHER_ORDER_CAPABILITY_ID_V1: &str = "smartpls.higher_order_models";
 pub const PLS_GENERAL_HIGHER_ORDER_POINT_CELL_ID_V1: &str =
@@ -187,6 +189,51 @@ impl CompiledPlsStageOneProjectionV3 {
     }
 }
 
+/// Deterministic schema-6 projection for the second stage of the bounded
+/// disjoint HOC executor. The projected model contains the authored HOC and
+/// ordinary substantive graph, replaces LOC blocks with generated score
+/// indicators, and embeds the exact ordinary PLS plan used by the kernel.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CompiledPlsDisjointHocStageTwoProjectionV1 {
+    contract_version: String,
+    source_scientific_sha256: String,
+    hoc_stage_plan_sha256: String,
+    projected_scientific_sha256: String,
+    projected_model: SemModelV4,
+    projected_plan: CompiledPlsPlanV2,
+}
+
+impl CompiledPlsDisjointHocStageTwoProjectionV1 {
+    pub fn contract_version(&self) -> &str {
+        &self.contract_version
+    }
+
+    pub fn source_scientific_sha256(&self) -> &str {
+        &self.source_scientific_sha256
+    }
+
+    pub fn hoc_stage_plan_sha256(&self) -> &str {
+        &self.hoc_stage_plan_sha256
+    }
+
+    pub fn projected_scientific_sha256(&self) -> &str {
+        &self.projected_scientific_sha256
+    }
+
+    pub fn projected_model(&self) -> &SemModelV4 {
+        &self.projected_model
+    }
+
+    pub fn projected_plan(&self) -> &CompiledPlsPlanV2 {
+        &self.projected_plan
+    }
+
+    pub fn deterministic_sha256(&self) -> String {
+        sha256_serialized(self)
+    }
+}
+
 #[derive(Debug, Clone, thiserror::Error, PartialEq, Eq)]
 pub enum CompiledPlsInteractionV3Error {
     #[error(transparent)]
@@ -305,6 +352,23 @@ pub enum CompiledPlsHigherOrderV1Error {
         "higher-order generated identity collides with authored or generated identity {identity}"
     )]
     GeneratedIdentityCollision { identity: String },
+    #[error("the supplied compiled PLS v3 plan does not match the higher-order source model")]
+    CompiledPlanMismatch,
+    #[error("the point-stage executor currently requires disjoint_two_stage construction")]
+    DisjointStageTwoRequired,
+    #[error(
+        "disjoint two-stage checkpoint requires measurement-only lower-order component {component_id}; authored structural relation {relation_id} is outside this checkpoint"
+    )]
+    DisjointComponentStructuralRelation {
+        component_id: String,
+        relation_id: String,
+    },
+    #[error(
+        "higher-order output {output_id} must be a derived variable before stage-two projection"
+    )]
+    StageTwoOutputVariableKind { output_id: String },
+    #[error(transparent)]
+    StageTwoPlan(#[from] CompiledPlsPlanV2Error),
 }
 
 /// Stable effect identities compiled from ordinary directed structural paths.
@@ -1289,6 +1353,212 @@ pub fn compile_pls_higher_order_lower_order_projection_v1(
     })
 }
 
+/// Compiles the exact second-stage schema-6 authority for the first executable
+/// Rank-1 checkpoint. LOCs are measurement-only in this checkpoint: they are
+/// scored by the embedded stage-one plan, removed from the substantive stage-
+/// two graph, and represented only by deterministic generated score columns.
+/// No legacy `ModelSpec` or legacy HOC declaration is created here.
+pub fn compile_pls_disjoint_higher_order_stage_two_projection_v1(
+    model: &SemModelV4,
+    plan: &CompiledPlsPlanV3,
+) -> Result<CompiledPlsDisjointHocStageTwoProjectionV1, CompiledPlsHigherOrderV1Error> {
+    let source_scientific_sha256 = model.scientific_sha256()?;
+    let expected_hoc_plans = compile_pls_higher_order_stage_plans_v1(model)?;
+    let expected_stage_one_projection = compile_pls_higher_order_lower_order_projection_v1(model)?;
+    let expected_base_plan = compile_pls_plan_v2(expected_stage_one_projection.projected_model())?;
+    if plan.scientific_hash() != source_scientific_sha256
+        || plan.higher_order_stage_plans() != expected_hoc_plans.as_slice()
+        || plan.base_plan() != &expected_base_plan
+        || plan.stage_one_projection_scientific_sha256()
+            != Some(expected_stage_one_projection.projected_scientific_sha256())
+        || expected_hoc_plans.len() != 1
+    {
+        return Err(CompiledPlsHigherOrderV1Error::CompiledPlanMismatch);
+    }
+    let hoc = &expected_hoc_plans[0];
+    if hoc.approach() != &HigherOrderConstructionApproachV4::DisjointTwoStage {
+        return Err(CompiledPlsHigherOrderV1Error::DisjointStageTwoRequired);
+    }
+    let component_ids = hoc
+        .component_ids()
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    for relation in &model.relations {
+        let SemRelationV4::Structural {
+            id, source, target, ..
+        } = relation
+        else {
+            continue;
+        };
+        if let Some(component_id) = [source.as_str(), target.as_str()]
+            .into_iter()
+            .find(|candidate| component_ids.contains(candidate))
+        {
+            return Err(
+                CompiledPlsHigherOrderV1Error::DisjointComponentStructuralRelation {
+                    component_id: component_id.to_string(),
+                    relation_id: id.clone(),
+                },
+            );
+        }
+    }
+
+    let component_indicator_ids = model
+        .relations
+        .iter()
+        .filter_map(|relation| match relation {
+            SemRelationV4::MeasurementEffect {
+                construct,
+                indicator,
+                ..
+            } if component_ids.contains(construct.as_str()) => Some(indicator.clone()),
+            SemRelationV4::MeasurementCausal {
+                composite,
+                indicator,
+                ..
+            } if component_ids.contains(composite.as_str()) => Some(indicator.clone()),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    let removed_variable_ids = component_ids
+        .iter()
+        .map(|value| (*value).to_string())
+        .chain(component_indicator_ids.iter().cloned())
+        .collect::<BTreeSet<_>>();
+    let removed_relation_ids = model
+        .relations
+        .iter()
+        .filter(|relation| {
+            removed_variable_ids
+                .iter()
+                .any(|variable_id| relation_references_variable(relation, variable_id))
+        })
+        .map(|relation| relation.id().to_string())
+        .collect::<BTreeSet<_>>();
+    let mut removed_parameter_ids = BTreeSet::new();
+    for relation in &model.relations {
+        if !removed_relation_ids.contains(relation.id()) {
+            continue;
+        }
+        removed_parameter_ids.insert(relation.parameter().to_string());
+        if let SemRelationV4::Structural {
+            intercept_parameter: Some(parameter),
+            ..
+        } = relation
+        {
+            removed_parameter_ids.insert(parameter.clone());
+        }
+    }
+
+    let mut projected_model = model.clone();
+    projected_model
+        .variables
+        .retain(|variable| !removed_variable_ids.contains(variable.id()));
+    let output_index = projected_model
+        .variables
+        .iter()
+        .position(|variable| variable.id() == hoc.output_variable_id())
+        .ok_or_else(
+            || CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
+                output_id: hoc.output_variable_id().to_string(),
+            },
+        )?;
+    let (output_id, output_label) = match &projected_model.variables[output_index] {
+        SemVariableV4::Derived { id, label } => (id.clone(), label.clone()),
+        _ => {
+            return Err(CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
+                output_id: hoc.output_variable_id().to_string(),
+            });
+        }
+    };
+    projected_model.variables[output_index] = SemVariableV4::Composite {
+        id: output_id.clone(),
+        label: output_label,
+        weighting: match hoc.hoc_component_mode() {
+            CompiledPlsBlockModeV2::ModeA => CompositeWeightingV4::ModeA,
+            CompiledPlsBlockModeV2::ModeB => CompositeWeightingV4::ModeB,
+        },
+    };
+    projected_model
+        .relations
+        .retain(|relation| !removed_relation_ids.contains(relation.id()));
+    projected_model
+        .parameters
+        .retain(|parameter| !removed_parameter_ids.contains(parameter.id()));
+    projected_model.derived_terms.clear();
+
+    for mapping in hoc.component_mappings() {
+        let generated_id = mapping.generated_score_variable_id().to_string();
+        projected_model.variables.push(SemVariableV4::Observed {
+            id: generated_id.clone(),
+            label: format!("Lower-order component score: {}", mapping.component_id()),
+            source_column: generated_id.clone(),
+            scale: ObservedScaleV4::Continuous,
+            role: ObservedRoleV4::Indicator,
+            categories: Vec::new(),
+            value_labels: BTreeMap::new(),
+            missing_markers: Vec::new(),
+            transformation_lineage: Vec::new(),
+        });
+        let (relation, target) = match mapping.relation_interpretation() {
+            CompiledPlsHocComponentRelationInterpretationV1::Loading => (
+                SemRelationV4::MeasurementEffect {
+                    id: mapping.generated_component_relation_id().to_string(),
+                    construct: output_id.clone(),
+                    indicator: generated_id.clone(),
+                    parameter: mapping.generated_component_parameter_id().to_string(),
+                },
+                SemParameterTargetV4::Loading {
+                    construct: output_id.clone(),
+                    indicator: generated_id.clone(),
+                },
+            ),
+            CompiledPlsHocComponentRelationInterpretationV1::WeightAndCollinearity => (
+                SemRelationV4::MeasurementCausal {
+                    id: mapping.generated_component_relation_id().to_string(),
+                    indicator: generated_id.clone(),
+                    composite: output_id.clone(),
+                    parameter: mapping.generated_component_parameter_id().to_string(),
+                },
+                SemParameterTargetV4::Weight {
+                    indicator: generated_id,
+                    composite: output_id.clone(),
+                },
+            ),
+        };
+        projected_model.relations.push(relation);
+        projected_model.parameters.push(SemParameterV4::Free {
+            id: mapping.generated_component_parameter_id().to_string(),
+            label: format!("HOC component relation: {}", mapping.component_id()),
+            target,
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+    }
+    projected_model.annotations.clear();
+    projected_model.presentation = SemPresentationV4::None;
+    projected_model = projected_model.canonicalized();
+    projected_model.ensure_valid()?;
+    let projected_scientific_sha256 = projected_model.scientific_sha256()?;
+    let projected_plan = compile_pls_plan_v2(&projected_model)?;
+    debug_assert_eq!(
+        projected_plan.scientific_hash(),
+        projected_scientific_sha256
+    );
+    Ok(CompiledPlsDisjointHocStageTwoProjectionV1 {
+        contract_version: COMPILED_PLS_DISJOINT_HIGHER_ORDER_STAGE_TWO_PROJECTION_V1_VERSION.into(),
+        source_scientific_sha256,
+        hoc_stage_plan_sha256: sha256_serialized(hoc),
+        projected_scientific_sha256,
+        projected_model,
+        projected_plan,
+    })
+}
+
 fn hoc_loc_mode_v1(measurement_type: &HigherOrderMeasurementTypeV4) -> CompiledPlsBlockModeV2 {
     match measurement_type {
         HigherOrderMeasurementTypeV4::ReflectiveReflective
@@ -2265,6 +2535,31 @@ mod tests {
         model.ensure_valid().unwrap();
     }
 
+    fn measurement_only_disjoint_hoc_model() -> SemModelV4 {
+        let mut model = recursive_model();
+        let removed_parameters = model
+            .relations
+            .iter()
+            .filter_map(|relation| match relation {
+                SemRelationV4::Structural { parameter, .. } => Some(parameter.clone()),
+                _ => None,
+            })
+            .collect::<BTreeSet<_>>();
+        model
+            .relations
+            .retain(|relation| !matches!(relation, SemRelationV4::Structural { .. }));
+        model
+            .parameters
+            .retain(|parameter| !removed_parameters.contains(parameter.id()));
+        add_higher_order(
+            &mut model,
+            HigherOrderConstructionApproachV4::DisjointTwoStage,
+            HigherOrderMeasurementTypeV4::ReflectiveReflective,
+            false,
+        );
+        model
+    }
+
     #[test]
     fn default_config_infers_all_specific_and_aggregate_effects_deterministically() {
         let model = recursive_model();
@@ -2742,6 +3037,104 @@ mod tests {
         assert_eq!(
             compile_pls_plan_v3(&reordered, &GeneralSemConfigV1::default()).unwrap(),
             plan
+        );
+    }
+
+    #[test]
+    fn disjoint_stage_two_projection_removes_locs_and_compiles_generated_score_block() {
+        let model = measurement_only_disjoint_hoc_model();
+        let plan = compile_pls_plan_v3(&model, &GeneralSemConfigV1::default()).unwrap();
+        let projection =
+            compile_pls_disjoint_higher_order_stage_two_projection_v1(&model, &plan).unwrap();
+        let hoc = &plan.higher_order_stage_plans()[0];
+
+        assert_eq!(
+            projection.contract_version(),
+            COMPILED_PLS_DISJOINT_HIGHER_ORDER_STAGE_TWO_PROJECTION_V1_VERSION
+        );
+        assert_eq!(
+            projection.source_scientific_sha256(),
+            plan.scientific_hash()
+        );
+        assert_eq!(projection.hoc_stage_plan_sha256(), sha256_serialized(hoc));
+        assert_eq!(
+            projection.projected_plan().scientific_hash(),
+            projection.projected_scientific_sha256()
+        );
+        assert!(hoc.component_ids().iter().all(|component_id| {
+            projection
+                .projected_model()
+                .variables
+                .iter()
+                .all(|variable| variable.id() != component_id)
+        }));
+        let hoc_block = projection
+            .projected_plan()
+            .blocks()
+            .iter()
+            .find(|block| block.construct_id() == hoc.output_variable_id())
+            .unwrap();
+        assert_eq!(hoc_block.mode(), CompiledPlsBlockModeV2::ModeA);
+        assert_eq!(
+            hoc_block
+                .indicators()
+                .iter()
+                .map(|indicator| indicator.variable_id())
+                .collect::<Vec<_>>(),
+            hoc.component_mappings()
+                .iter()
+                .map(|mapping| mapping.generated_score_variable_id())
+                .collect::<Vec<_>>()
+        );
+
+        let mut reordered = model;
+        reordered.variables.reverse();
+        reordered.relations.reverse();
+        reordered.parameters.reverse();
+        let reordered_plan =
+            compile_pls_plan_v3(&reordered, &GeneralSemConfigV1::default()).unwrap();
+        assert_eq!(
+            compile_pls_disjoint_higher_order_stage_two_projection_v1(&reordered, &reordered_plan)
+                .unwrap(),
+            projection
+        );
+    }
+
+    #[test]
+    fn disjoint_stage_two_projection_blocks_authored_loc_structural_paths() {
+        let mut model = measurement_only_disjoint_hoc_model();
+        let parameter_id = "parameter:loc_y".to_string();
+        model.relations.push(SemRelationV4::Structural {
+            id: "relation:loc_y".into(),
+            source: "construct:x".into(),
+            target: "construct:y".into(),
+            parameter: parameter_id.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: parameter_id,
+            label: "LOC -> Y".into(),
+            target: SemParameterTargetV4::Regression {
+                source: "construct:x".into(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.ensure_valid().unwrap();
+        let plan = compile_pls_plan_v3(&model, &GeneralSemConfigV1::default()).unwrap();
+        assert_eq!(
+            compile_pls_disjoint_higher_order_stage_two_projection_v1(&model, &plan),
+            Err(
+                CompiledPlsHigherOrderV1Error::DisjointComponentStructuralRelation {
+                    component_id: "construct:x".into(),
+                    relation_id: "relation:loc_y".into(),
+                }
+            )
         );
     }
 
