@@ -20,14 +20,20 @@ use qpls_core::{
     GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
     GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1, RecipeV4CompilerTarget, SemModelV4,
     SemParameterV4, StructuralRelationRoleV4, canonical_general_sem_effect_identities_v1,
-    compile_general_sem_pls_recipe_v1, general_sem_effect_identity_set_sha256_v1,
-    pls_general_bootstrap_capability_cell_v1,
+    compile_general_sem_pls_recipe_v1, compile_unpublished_general_sem_pls_higher_order_recipe_v1,
+    general_sem_effect_identity_set_sha256_v1, pls_general_bootstrap_capability_cell_v1,
+    pls_general_higher_order_bootstrap_capability_cell_v1,
+    pls_general_higher_order_point_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_point_capability_cell_v1,
     pls_general_recursive_effects_capability_cell_v1, project_general_sem_pls_stage_one_recipe_v1,
     validate_canonical_result_document_v2,
 };
 use qpls_runner::{
+    GENERAL_SEM_PLS_DISJOINT_HIGHER_ORDER_POINT_METHOD_VERSION_V1,
+    GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_METHOD_VERSION_V1,
+    RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+    RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1,
     RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
     RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
     RecipeV4GeneralSemPlsExecutionResultV1,
@@ -42,6 +48,12 @@ const GENERAL_SEM_MODERATION_GAMMA_INFERENCE_TABLE_ID_V1: &str =
     "general_sem_moderation_gamma_inference";
 const GENERAL_SEM_MODERATION_BOOTSTRAP_RECEIPT_TABLE_ID_V1: &str =
     "general_sem_moderation_bootstrap_receipt";
+const GENERAL_SEM_HIGHER_ORDER_SECTION_ID_V1: &str = "general_sem_higher_order";
+const GENERAL_SEM_HIGHER_ORDER_BOOTSTRAP_SECTION_ID_V1: &str = "general_sem_higher_order_bootstrap";
+const GENERAL_SEM_HIGHER_ORDER_STAGES_TABLE_ID_V1: &str = "general_sem_higher_order_stages";
+const GENERAL_SEM_HIGHER_ORDER_TARGETS_TABLE_ID_V1: &str = "general_sem_higher_order_targets";
+const GENERAL_SEM_HIGHER_ORDER_BOOTSTRAP_RECEIPT_TABLE_ID_V1: &str =
+    "general_sem_higher_order_bootstrap_receipt";
 
 pub(crate) fn general_sem_multiple_mediation_bootstrap_capability_cell_v1()
 -> CapabilityCellReferenceV2 {
@@ -63,6 +75,8 @@ pub(crate) fn validate_archived_general_sem_pls_method_identity_v1(
 ) -> Result<(), String> {
     let moderation_cell = general_sem_multiple_moderation_point_capability_cell_v1();
     let bootstrap_cell = general_sem_multiple_moderation_bootstrap_capability_cell_v1();
+    let hoc_point_cell = pls_general_higher_order_point_capability_cell_v1();
+    let hoc_bootstrap_cell = pls_general_higher_order_bootstrap_capability_cell_v1();
     let project_cell_matches =
         |candidate: &qpls_project::CapabilityCellReferenceV2,
          expected: &CapabilityCellReferenceV2| {
@@ -78,6 +92,95 @@ pub(crate) fn validate_archived_general_sem_pls_method_identity_v1(
         project_cell_matches(candidate, &bootstrap_cell)
     };
     let cell = &document.provenance.capability_cell;
+    let is_hoc_cell = project_cell_matches(cell, &hoc_point_cell);
+    let has_hoc_artifact = document
+        .general_sem_results
+        .as_ref()
+        .is_some_and(|results| {
+            results.higher_order_stages.iter().any(|stage| {
+                stage.receipt.is_some()
+                    || stage.approach.is_some()
+                    || !stage.generated_variable_mappings.is_empty()
+            }) || results.higher_order_inference_receipt.is_some()
+        })
+        || document.sections.iter().any(|section| {
+            matches!(
+                section.id.as_str(),
+                GENERAL_SEM_HIGHER_ORDER_SECTION_ID_V1
+                    | GENERAL_SEM_HIGHER_ORDER_BOOTSTRAP_SECTION_ID_V1
+            )
+        })
+        || document.tables.iter().any(|table| {
+            matches!(
+                table.id.as_str(),
+                GENERAL_SEM_HIGHER_ORDER_STAGES_TABLE_ID_V1
+                    | GENERAL_SEM_HIGHER_ORDER_TARGETS_TABLE_ID_V1
+                    | GENERAL_SEM_HIGHER_ORDER_BOOTSTRAP_RECEIPT_TABLE_ID_V1
+            )
+        })
+        || matches!(
+            document.provenance.method_version.as_str(),
+            GENERAL_SEM_PLS_DISJOINT_HIGHER_ORDER_POINT_METHOD_VERSION_V1
+                | GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_METHOD_VERSION_V1
+        )
+        || matches!(
+            document.provenance.engine_version.as_str(),
+            RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1
+                | RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+        );
+    if is_hoc_cell || has_hoc_artifact {
+        if !is_hoc_cell {
+            return Err(
+                "archived non-HOC document contains injected General SEM HOC artifacts".into(),
+            );
+        }
+        let results = document.general_sem_results.as_ref().ok_or_else(|| {
+            "archived General SEM HOC document omits its typed scientific payload".to_string()
+        })?;
+        let inferred = results.higher_order_inference_receipt.is_some();
+        let (expected_method, expected_adapter, expected_title) = if inferred {
+            (
+                GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_METHOD_VERSION_V1,
+                RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+                "General SEM disjoint two-stage higher-order PLS bootstrap inference",
+            )
+        } else {
+            (
+                GENERAL_SEM_PLS_DISJOINT_HIGHER_ORDER_POINT_METHOD_VERSION_V1,
+                RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1,
+                "General SEM disjoint two-stage higher-order PLS point estimates",
+            )
+        };
+        if document.provenance.method_version != expected_method
+            || document.provenance.engine_version != expected_adapter
+            || document.title != expected_title
+            || results.higher_order_stages.len() != 2
+            || results.inference_receipt.is_some()
+            || !results.specific_indirect_effects.is_empty()
+            || !results.aggregate_effects.is_empty()
+            || !results.interaction_effects.is_empty()
+        {
+            return Err(
+                "archived General SEM HOC identity or exact typed inventory has drifted".into(),
+            );
+        }
+        if inferred
+            && results
+                .higher_order_inference_receipt
+                .as_ref()
+                .is_none_or(|receipt| {
+                    receipt.capability_cell != hoc_bootstrap_cell
+                        || receipt.method_version
+                            != GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_METHOD_VERSION_V1
+                })
+        {
+            return Err(
+                "archived General SEM HOC bootstrap receipt has a stale supplemental identity"
+                    .into(),
+            );
+        }
+        return Ok(());
+    }
     let is_moderation_cell = project_cell_is_moderation(cell);
     let has_moderation_artifact = document
         .general_sem_results
@@ -523,6 +626,18 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
     model: &SemModelV4,
     result: &RecipeV4GeneralSemPlsExecutionResultV1,
 ) -> Result<CanonicalResultDocumentV2, Vec<String>> {
+    if result.higher_order_point_estimation().is_some() {
+        return build_recipe_v4_general_sem_pls_hoc_canonical_result_v1(
+            job_id,
+            project_id,
+            dataset_id,
+            started_at,
+            completed_at,
+            recipe,
+            model,
+            result,
+        );
+    }
     let interaction_point = result.interaction_point_estimation();
     let moderation_bootstrap = result.moderation_bootstrap_inference();
     let moderation_artifact = interaction_point
@@ -846,6 +961,538 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
         )]
     })?;
     Ok(document)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_recipe_v4_general_sem_pls_hoc_canonical_result_v1(
+    job_id: Uuid,
+    project_id: Uuid,
+    dataset_id: Uuid,
+    started_at: &str,
+    completed_at: &str,
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+    result: &RecipeV4GeneralSemPlsExecutionResultV1,
+) -> Result<CanonicalResultDocumentV2, Vec<String>> {
+    let artifact = compile_unpublished_general_sem_pls_higher_order_recipe_v1(recipe, Some(model))
+        .map_err(|error| vec![format!("General SEM HOC recompilation failed: {error}")])?;
+    let [hoc_plan] = artifact.plan().higher_order_stage_plans() else {
+        return Err(vec![
+            "The internal HOC canonical path requires exactly one compiled higher-order stage plan"
+                .into(),
+        ]);
+    };
+    if hoc_plan.approach() != &qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage
+        || result.capability_cell() != &pls_general_higher_order_point_capability_cell_v1()
+        || artifact.capability_cell() != result.capability_cell()
+        || result.compiled_plan_sha256() != artifact.plan().deterministic_sha256()
+        || result.model_scientific_sha256() != artifact.plan().scientific_hash()
+    {
+        return Err(vec![
+            "The HOC result differs from the exact disjoint compiled plan or point capability cell"
+                .into(),
+        ]);
+    }
+    let point = result.higher_order_point_estimation().ok_or_else(|| {
+        vec!["The HOC canonical path requires its typed point-stage result".into()]
+    })?;
+    point
+        .ensure_valid_against_plan_v1(artifact.plan())
+        .map_err(|error| {
+            vec![format!(
+                "HOC point result failed recompiled-plan validation: {error}"
+            )]
+        })?;
+    if let Some(bootstrap) = result.higher_order_bootstrap_inference() {
+        bootstrap
+            .ensure_valid_against_plan_v1(artifact.plan(), point)
+            .map_err(|error| {
+                vec![format!(
+                    "HOC bootstrap result failed recompiled-plan validation: {error}"
+                )]
+            })?;
+    }
+
+    let (base_recipe, stage_one_model) = project_general_sem_pls_stage_one_recipe_v1(recipe, model)
+        .map_err(|error| {
+            vec![format!(
+                "General SEM HOC stage-one projection failed: {error}"
+            )]
+        })?;
+    let base_request = InternalRecipeV4PlsExecutionRequestV1 {
+        surface: InternalRecipeV4ExecutionSurfaceV1::InternalLabs,
+        experimental_labs_enabled: true,
+        resident_data: InternalRecipeV4ResidentDataV1::ProjectResident,
+        dataset_id: dataset_id.to_string(),
+        dataset_fingerprint: result.source_dataset_fingerprint().into(),
+        recipe: base_recipe,
+        model: stage_one_model,
+        compiler_target: RecipeV4CompilerTarget::PlsPlanV2,
+        capability_cell: RecipeV4CompilerTarget::PlsPlanV2
+            .capability_cell_for_method(recipe.settings.method),
+        posthoc_technical_minimum_sample_size: None,
+    };
+    let mut document = build_recipe_v4_pls_canonical_result(
+        job_id,
+        project_id,
+        started_at,
+        completed_at,
+        &base_request,
+        result.point_estimation(),
+    )?;
+    let general_sem_results = result
+        .canonical_general_sem_results_v1()
+        .map_err(|error| vec![format!("HOC canonical projection failed: {error}")])?;
+    if !general_sem_results.specific_indirect_effects.is_empty()
+        || !general_sem_results.aggregate_effects.is_empty()
+        || !general_sem_results.interaction_effects.is_empty()
+        || general_sem_results.inference_receipt.is_some()
+        || general_sem_results.higher_order_stages.len() != 2
+        || general_sem_results.higher_order_inference_receipt.is_some()
+            != result.higher_order_bootstrap_inference().is_some()
+    {
+        return Err(vec![
+            "The bounded HOC canonical inventory contains non-HOC effects or mismatched inference authority"
+                .into(),
+        ]);
+    }
+
+    let point_cell = pls_general_higher_order_point_capability_cell_v1();
+    let bootstrap_cell = pls_general_higher_order_bootstrap_capability_cell_v1();
+    let inferred = result.higher_order_bootstrap_inference().is_some();
+    document.schema_version = CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION;
+    document.title = if inferred {
+        "General SEM disjoint two-stage higher-order PLS bootstrap inference".into()
+    } else {
+        "General SEM disjoint two-stage higher-order PLS point estimates".into()
+    };
+    document.provenance.model_id = model.id.clone();
+    document.provenance.model_digest = result.model_scientific_sha256().into();
+    document.provenance.dataset_id = dataset_id.to_string();
+    document.provenance.dataset_fingerprint = result.source_dataset_fingerprint().into();
+    document.provenance.recipe_id = recipe.id.to_string();
+    document.provenance.recipe_digest = result.recipe_analytical_sha256().into();
+    document.provenance.capability_cell = point_cell.clone();
+    document.provenance.method_version = if inferred {
+        GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_METHOD_VERSION_V1.into()
+    } else {
+        GENERAL_SEM_PLS_DISJOINT_HIGHER_ORDER_POINT_METHOD_VERSION_V1.into()
+    };
+    document.provenance.engine_version = if inferred {
+        RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1.into()
+    } else {
+        RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1.into()
+    };
+    document.provenance.seed = Some(i64::try_from(recipe.settings.seed).map_err(|_| {
+        vec!["General SEM HOC recipe seed exceeds the canonical safe-integer boundary".into()]
+    })?);
+    document.provenance.workers = i64::try_from(recipe.settings.workers)
+        .ok()
+        .filter(|workers| *workers > 0)
+        .ok_or_else(|| vec!["General SEM HOC recipe worker count is invalid".into()])?;
+
+    let base_cell =
+        RecipeV4CompilerTarget::PlsPlanV2.capability_cell_for_method(recipe.settings.method);
+    let mut document_cells = vec![base_cell, point_cell.clone()];
+    if inferred {
+        document_cells.push(bootstrap_cell.clone());
+    }
+    sort_and_deduplicate_cells(&mut document_cells);
+    document.capability_cells = Some(document_cells);
+
+    for section in &mut document.sections {
+        if matches!(
+            section.id.as_str(),
+            "run_details" | "measurement_model" | "structural_model"
+        ) {
+            section.title = format!("Stage-one {}", section.title.to_lowercase());
+            section.description = Some(
+                "Lower-order construct score estimation only; final HOC coefficients are reported in the higher-order section."
+                    .into(),
+            );
+        }
+    }
+    let stage_table = higher_order_stage_table_v1(&general_sem_results, &point_cell)?;
+    let target_table = higher_order_target_table_v1(&general_sem_results, &point_cell)?;
+    document.tables.push(stage_table);
+    document.tables.push(target_table);
+    document.sections.push(CanonicalResultSection {
+        id: GENERAL_SEM_HIGHER_ORDER_SECTION_ID_V1.into(),
+        title: "Higher-order construct stages and targets".into(),
+        description: Some(
+            "Exact disjoint stage projections, generated score mappings, component loadings or weights, and authored HOC structural paths."
+                .into(),
+        ),
+        table_ids: vec![
+            GENERAL_SEM_HIGHER_ORDER_STAGES_TABLE_ID_V1.into(),
+            GENERAL_SEM_HIGHER_ORDER_TARGETS_TABLE_ID_V1.into(),
+        ],
+        chart_ids: Vec::new(),
+        capability_cells: Some(vec![point_cell.clone()]),
+    });
+    if inferred {
+        document
+            .tables
+            .push(higher_order_bootstrap_receipt_table_v1(
+                &general_sem_results,
+                &bootstrap_cell,
+            )?);
+        document.sections.push(CanonicalResultSection {
+            id: GENERAL_SEM_HIGHER_ORDER_BOOTSTRAP_SECTION_ID_V1.into(),
+            title: "Higher-order full-model case bootstrap".into(),
+            description: Some(
+                "One shared usable/failure ledger for the exact HOC component and HOC structural-path target inventory."
+                    .into(),
+            ),
+            table_ids: vec![GENERAL_SEM_HIGHER_ORDER_BOOTSTRAP_RECEIPT_TABLE_ID_V1.into()],
+            chart_ids: Vec::new(),
+            capability_cells: Some(vec![bootstrap_cell.clone()]),
+        });
+    }
+    document.general_sem_results = Some(general_sem_results);
+    document.exclusions = vec![CanonicalResultExclusion {
+        id: if inferred {
+            "higher_order_bootstrap_bounded_targets_only".into()
+        } else {
+            "higher_order_point_estimation_only".into()
+        },
+        capability_cell: Some(if inferred {
+            bootstrap_cell.clone()
+        } else {
+            point_cell.clone()
+        }),
+        title: if inferred {
+            "Bootstrap inference is limited to exact HOC targets".into()
+        } else {
+            "Higher-order inference was not requested".into()
+        },
+        reason: if inferred {
+            "This checkpoint infers HOC component loadings or weights and authored structural paths touching the HOC; ordinary controls and unrelated paths remain point-only."
+                .into()
+        } else {
+            "The resident GeneralSemConfigV1 requested disjoint two-stage HOC point estimation without case bootstrap."
+                .into()
+        },
+    }];
+    document.presentation.default_section_id = Some(if inferred {
+        GENERAL_SEM_HIGHER_ORDER_BOOTSTRAP_SECTION_ID_V1.into()
+    } else {
+        GENERAL_SEM_HIGHER_ORDER_SECTION_ID_V1.into()
+    });
+    document.presentation.default_table_id =
+        Some(GENERAL_SEM_HIGHER_ORDER_TARGETS_TABLE_ID_V1.into());
+
+    let validation = validate_canonical_result_document_v2(&document);
+    if !validation.passed {
+        return Err(validation.errors);
+    }
+    let archive_value = serde_json::to_value(&document).map_err(|error| {
+        vec![format!(
+            "HOC canonical result serialization failed: {error}"
+        )]
+    })?;
+    let archive_document =
+        serde_json::from_value::<qpls_project::CanonicalResultDocumentV2>(archive_value)
+            .map_err(|error| vec![format!("schema-6 HOC result parsing failed: {error}")])?;
+    archive_document
+        .ensure_valid()
+        .map_err(|error| vec![format!("schema-6 HOC canonical validation failed: {error}")])?;
+    Ok(document)
+}
+
+fn higher_order_stage_table_v1(
+    results: &CanonicalGeneralSemResultsV1,
+    point_cell: &CapabilityCellReferenceV2,
+) -> Result<CanonicalResultTable, Vec<String>> {
+    let rows = results
+        .higher_order_stages
+        .iter()
+        .enumerate()
+        .map(|(index, stage)| {
+            let receipt = stage.receipt.as_ref().ok_or_else(|| {
+                vec![format!(
+                    "HOC stage {} omits its point receipt",
+                    stage.stage_id
+                )]
+            })?;
+            let generated = receipt.generated_score_dataset.as_ref();
+            Ok(CanonicalResultRow {
+                id: format!("higher_order_stage_{index:04}"),
+                cells: vec![
+                    text(&stage.stage_id),
+                    text(&stage.higher_order_construct_id),
+                    number(f64::from(stage.stage_number)),
+                    text(match stage.kind {
+                        qpls_core::CanonicalHocStageKindV1::LowerOrderScoreEstimation => {
+                            "lower_order_score_estimation"
+                        }
+                        qpls_core::CanonicalHocStageKindV1::HigherOrderEstimation => {
+                            "higher_order_estimation"
+                        }
+                    }),
+                    text(match stage.approach.as_ref() {
+                        Some(qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage) => {
+                            "disjoint_two_stage"
+                        }
+                        _ => "unsupported",
+                    }),
+                    text(match stage.measurement_type.as_ref() {
+                        Some(qpls_core::HigherOrderMeasurementTypeV4::ReflectiveReflective) => {
+                            "reflective_reflective"
+                        }
+                        Some(qpls_core::HigherOrderMeasurementTypeV4::ReflectiveFormative) => {
+                            "reflective_formative"
+                        }
+                        Some(qpls_core::HigherOrderMeasurementTypeV4::FormativeReflective) => {
+                            "formative_reflective"
+                        }
+                        Some(qpls_core::HigherOrderMeasurementTypeV4::FormativeFormative) => {
+                            "formative_formative"
+                        }
+                        None => "missing",
+                    }),
+                    text(match receipt.role {
+                        qpls_core::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation => {
+                            "disjoint_lower_order_score_estimation"
+                        }
+                        qpls_core::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores => {
+                            "higher_order_from_lower_order_scores"
+                        }
+                        _ => "unsupported",
+                    }),
+                    text(stage.input_construct_ids.join(";")),
+                    text(stage.output_variable_ids.join(";")),
+                    text(&receipt.receipt_version),
+                    text(&receipt.projection_identity_sha256),
+                    text(&receipt.model_scientific_sha256),
+                    text(&receipt.compiled_plan_sha256),
+                    text(&receipt.dataset_fingerprint),
+                    number(f64::from(receipt.used_observations)),
+                    number(f64::from(receipt.omitted_observations)),
+                    optional_text(generated.map(|value| value.receipt_version.as_str())),
+                    optional_text(generated.map(|value| value.complete_case_rows_sha256.as_str())),
+                ],
+            })
+        })
+        .collect::<Result<Vec<_>, Vec<String>>>()?;
+    Ok(CanonicalResultTable {
+        id: GENERAL_SEM_HIGHER_ORDER_STAGES_TABLE_ID_V1.into(),
+        title: "Higher-order stage receipts".into(),
+        description: Some(
+            "Ordered stage projections and generated-score dataset identities for the disjoint two-stage HOC."
+                .into(),
+        ),
+        columns: vec![
+            text_column("stage_id", "Stage ID", "Stable compiled stage identity."),
+            text_column("higher_order_construct_id", "HOC", "Higher-order construct identity."),
+            number_column("stage_number", "Stage", "One-based stage number."),
+            text_column("stage_kind", "Kind", "Canonical stage kind."),
+            text_column("approach", "Approach", "Frozen HOC construction approach."),
+            text_column("measurement_type", "HCM type", "Frozen higher-order measurement type."),
+            text_column("stage_role", "Role", "Exact compiled stage role."),
+            text_column("input_construct_ids", "Inputs", "Ordered input construct identities."),
+            text_column("output_variable_ids", "Outputs", "Ordered output variable identities."),
+            text_column("receipt_version", "Receipt", "Point-stage receipt version."),
+            text_column("projection_identity_sha256", "Projection digest", "Compiled projection identity."),
+            text_column("model_scientific_sha256", "Model digest", "Stage scientific model digest."),
+            text_column("compiled_plan_sha256", "Plan digest", "Stage compiled-plan digest."),
+            text_column("dataset_fingerprint", "Dataset", "Source dataset fingerprint."),
+            number_column("used_observations", "Used", "Complete observations used."),
+            number_column("omitted_observations", "Omitted", "Rows omitted by listwise deletion."),
+            text_column("generated_score_receipt_version", "Score receipt", "Generated-score receipt version when applicable."),
+            text_column("complete_case_rows_sha256", "Row digest", "Complete-case row identity when applicable."),
+        ],
+        rows,
+        footnote_ids: Vec::new(),
+        capability_cells: Some(vec![point_cell.clone()]),
+    })
+}
+
+fn higher_order_target_table_v1(
+    results: &CanonicalGeneralSemResultsV1,
+    point_cell: &CapabilityCellReferenceV2,
+) -> Result<CanonicalResultTable, Vec<String>> {
+    let stage = results
+        .higher_order_stages
+        .iter()
+        .find(|stage| stage.stage_number == 2)
+        .ok_or_else(|| vec!["HOC canonical payload omits stage two".into()])?;
+    Ok(CanonicalResultTable {
+        id: GENERAL_SEM_HIGHER_ORDER_TARGETS_TABLE_ID_V1.into(),
+        title: "Higher-order component and structural targets".into(),
+        description: Some(
+            "Component loadings or weights, authored structural paths, collinearity, and optional shared-ledger bootstrap inference."
+                .into(),
+        ),
+        columns: vec![
+            text_column("relation_id", "Relation ID", "Stable relation or target identity."),
+            text_column("parameter_id", "Parameter ID", "Stable parameter identity."),
+            text_column("kind", "Kind", "Loading, weight, structural, or control interpretation."),
+            text_column("source_id", "Source", "Relation source identity."),
+            text_column("target_id", "Target", "Relation target identity."),
+            number_column("estimate", "Estimate", "Point estimate."),
+            number_column("collinearity_vif", "VIF", "Formative component collinearity when applicable."),
+            number_column("bootstrap_mean", "Bootstrap mean", "Mean across usable replicates."),
+            number_column("bootstrap_bias", "Bias", "Bootstrap mean minus point estimate."),
+            number_column("standard_error", "SE", "Bootstrap sample standard error."),
+            number_column("lower", "Lower", "Percentile Type-7 lower bound."),
+            number_column("upper", "Upper", "Percentile Type-7 upper bound."),
+            number_column("p_value", "P value", "Two-sided plus-one probability."),
+            number_column("usable_replicates", "Usable", "Shared usable replicate count."),
+            number_column("two_sided_exceedances", "Exceedances", "Shared-ledger two-sided exceedance count."),
+        ],
+        rows: stage
+            .relation_estimates
+            .iter()
+            .enumerate()
+            .map(|(index, relation)| CanonicalResultRow {
+                id: format!("higher_order_target_{index:04}"),
+                cells: vec![
+                    text(&relation.relation_id),
+                    optional_text(relation.parameter_id.as_deref()),
+                    text(match relation.kind {
+                        Some(qpls_core::CanonicalHocRelationKindV1::ComponentLoading) => {
+                            "component_loading"
+                        }
+                        Some(qpls_core::CanonicalHocRelationKindV1::ComponentWeight) => {
+                            "component_weight"
+                        }
+                        Some(qpls_core::CanonicalHocRelationKindV1::AuthoredStructural) => {
+                            "authored_structural"
+                        }
+                        Some(qpls_core::CanonicalHocRelationKindV1::AuthoredControl) => {
+                            "authored_control"
+                        }
+                        None => "missing",
+                    }),
+                    text(&relation.source_id),
+                    text(&relation.target_id),
+                    number(relation.value.estimate),
+                    optional_number(relation.collinearity_vif),
+                    optional_number(relation.value.bootstrap_mean),
+                    optional_number(relation.value.bootstrap_bias),
+                    optional_number(relation.value.standard_error),
+                    optional_number(relation.value.lower),
+                    optional_number(relation.value.upper),
+                    optional_number(relation.value.p_value),
+                    optional_number(relation.value.bootstrap_usable_replicates.map(f64::from)),
+                    optional_number(
+                        relation
+                            .value
+                            .bootstrap_two_sided_exceedances
+                            .map(f64::from),
+                    ),
+                ],
+            })
+            .collect(),
+        footnote_ids: Vec::new(),
+        capability_cells: Some(vec![point_cell.clone()]),
+    })
+}
+
+fn higher_order_bootstrap_receipt_table_v1(
+    results: &CanonicalGeneralSemResultsV1,
+    bootstrap_cell: &CapabilityCellReferenceV2,
+) -> Result<CanonicalResultTable, Vec<String>> {
+    let receipt = results
+        .higher_order_inference_receipt
+        .as_ref()
+        .ok_or_else(|| vec!["HOC bootstrap table requires its typed receipt".into()])?;
+    Ok(CanonicalResultTable {
+        id: GENERAL_SEM_HIGHER_ORDER_BOOTSTRAP_RECEIPT_TABLE_ID_V1.into(),
+        title: "Higher-order bootstrap receipt".into(),
+        description: Some(
+            "Exact two-stage refit, target, usable-replicate, failure-ledger, seed, and worker authority."
+                .into(),
+        ),
+        columns: vec![
+            text_column("capability_id", "Capability", "Capability owner."),
+            text_column("cell_id", "Cell", "Exact supplemental bootstrap cell."),
+            text_column("capability_version", "Version", "Exact capability version."),
+            text_column("method_version", "Method", "Bootstrap method version."),
+            text_column("point_method_version", "Point method", "Bound point method version."),
+            text_column("resampling_operation_version", "Operation", "Resampling operation version."),
+            text_column("resampling_stream_version", "Stream", "Indexed stream version."),
+            text_column("quantile_method_version", "Quantile", "Quantile method version."),
+            text_column("standard_error_method_version", "SE method", "Standard-error method version."),
+            text_column("summation_method_version", "Summation", "Summation method version."),
+            text_column("p_value_method_version", "P method", "P-value method version."),
+            text_column("failure_policy_version", "Failure policy", "Usable-gate policy version."),
+            text_column("sign_alignment_method_version", "Alignment", "Score sign-alignment method."),
+            text_column("target_version", "Target version", "Exact target identity version."),
+            text_column("general_sem_config_sha256", "Config digest", "General SEM config digest."),
+            text_column("compiled_plan_sha256", "Plan digest", "Compiled PLS v3 plan digest."),
+            text_column("hoc_stage_plan_sha256", "HOC digest", "Compiled HOC stage-plan digest."),
+            text_column("model_scientific_sha256", "Model digest", "Full scientific model digest."),
+            text_column("stage_one_model_scientific_sha256", "Stage-one digest", "Stage-one model digest."),
+            text_column("stage_two_model_scientific_sha256", "Stage-two digest", "Stage-two model digest."),
+            text_column("source_dataset_fingerprint", "Dataset", "Source dataset fingerprint."),
+            text_column("complete_case_frame_sha256", "Frame digest", "Complete-case frame identity."),
+            text_column("usable_replicate_indices_sha256", "Usable digest", "Usable index ledger digest."),
+            text_column("target_identity_set_sha256", "Target digest", "Target identity-set digest."),
+            text_column("target_ids", "Targets", "Ordered target identities."),
+            number_column("confidence_level", "Confidence", "Confidence level."),
+            number_column("resamples_requested", "Requested", "Requested replicates."),
+            number_column("resamples_usable", "Usable", "Usable replicates."),
+            number_column("minimum_usable_resamples", "Minimum", "Minimum usable gate."),
+            text_column("seed", "Seed", "Canonical decimal seed."),
+            number_column("workers", "Workers", "Worker count."),
+            boolean_column("complete_model_reestimated_per_replicate", "Complete refit", "Complete model refit flag."),
+            boolean_column("stage_one_reestimated_per_replicate", "Stage one", "Stage-one refit flag."),
+            boolean_column("generated_component_values_recalculated_per_replicate", "Generated values", "Generated-value recalculation flag."),
+            boolean_column("stage_one_scores_sign_aligned_per_replicate", "Stage-one alignment", "Stage-one sign-alignment flag."),
+            boolean_column("stage_two_reestimated_per_replicate", "Stage two", "Stage-two refit flag."),
+            boolean_column("stage_two_scores_sign_aligned_per_replicate", "Stage-two alignment", "Stage-two sign-alignment flag."),
+            boolean_column("complete_point_contract_validated_per_replicate", "Point contract", "Per-replicate point-contract validation flag."),
+            number_column("failed_replicate_count", "Failed", "Typed failed replicate count."),
+        ],
+        rows: vec![CanonicalResultRow {
+            id: "higher_order_bootstrap_receipt".into(),
+            cells: vec![
+                text(&receipt.capability_cell.capability_id),
+                text(&receipt.capability_cell.cell_id),
+                text(&receipt.capability_cell.capability_version),
+                text(&receipt.method_version),
+                text(&receipt.point_method_version),
+                text(&receipt.resampling_operation_version),
+                text(&receipt.resampling_stream_version),
+                text(&receipt.quantile_method_version),
+                text(&receipt.standard_error_method_version),
+                text(&receipt.summation_method_version),
+                text(&receipt.p_value_method_version),
+                text(&receipt.failure_policy_version),
+                text(&receipt.sign_alignment_method_version),
+                text(&receipt.target_version),
+                text(&receipt.general_sem_config_sha256),
+                text(&receipt.compiled_plan_sha256),
+                text(&receipt.hoc_stage_plan_sha256),
+                text(&receipt.model_scientific_sha256),
+                text(&receipt.stage_one_model_scientific_sha256),
+                text(&receipt.stage_two_model_scientific_sha256),
+                text(&receipt.source_dataset_fingerprint),
+                text(&receipt.complete_case_frame_sha256),
+                text(&receipt.usable_replicate_indices_sha256),
+                text(&receipt.target_identity_set_sha256),
+                text(receipt.target_ids.join(";")),
+                number(receipt.confidence_level),
+                number(f64::from(receipt.resamples_requested)),
+                number(f64::from(receipt.resamples_usable)),
+                number(f64::from(receipt.minimum_usable_resamples)),
+                text(&receipt.seed),
+                number(f64::from(receipt.workers)),
+                boolean(receipt.complete_model_reestimated_per_replicate),
+                boolean(receipt.stage_one_reestimated_per_replicate),
+                boolean(receipt.generated_component_values_recalculated_per_replicate),
+                boolean(receipt.stage_one_scores_sign_aligned_per_replicate),
+                boolean(receipt.stage_two_reestimated_per_replicate),
+                boolean(receipt.stage_two_scores_sign_aligned_per_replicate),
+                boolean(receipt.complete_point_contract_validated_per_replicate),
+                number(receipt.failed_replicates.len() as f64),
+            ],
+        }],
+        footnote_ids: Vec::new(),
+        capability_cells: Some(vec![bootstrap_cell.clone()]),
+    })
 }
 
 fn canonical_joint_stage_structural_coefficients_v1(
@@ -1972,6 +2619,16 @@ fn optional_number(value: Option<f64>) -> CanonicalResultCell {
             display: None,
         },
         number,
+    )
+}
+
+fn optional_text(value: Option<&str>) -> CanonicalResultCell {
+    value.map_or(
+        CanonicalResultCell::Missing {
+            reason: CanonicalMissingReason::NotApplicable,
+            display: None,
+        },
+        text,
     )
 }
 

@@ -799,13 +799,76 @@ pub enum CanonicalHocStageKindV1 {
     HigherOrderEstimation,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalHocRelationKindV1 {
+    ComponentLoading,
+    ComponentWeight,
+    AuthoredStructural,
+    AuthoredControl,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocGeneratedVariableMappingV1 {
+    pub component_id: String,
+    pub generated_score_variable_id: String,
+    pub generated_component_relation_id: String,
+    pub generated_component_parameter_id: String,
+    pub component_relation_source_id: String,
+    pub component_relation_target_id: String,
+    pub relation_interpretation: crate::CompiledPlsHocComponentRelationInterpretationV1,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocGeneratedScoreColumnReceiptV1 {
+    pub component_id: String,
+    pub generated_score_variable_id: String,
+    pub observation_count: u32,
+    pub values_sha256: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocGeneratedScoreDatasetReceiptV1 {
+    pub receipt_version: String,
+    pub source_dataset_fingerprint: String,
+    pub complete_case_row_count: u32,
+    pub omitted_row_count: u32,
+    pub complete_case_rows_sha256: String,
+    pub generated_score_columns: Vec<CanonicalHocGeneratedScoreColumnReceiptV1>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocPointStageReceiptV1 {
+    pub receipt_version: String,
+    pub stage_number: u32,
+    pub role: crate::CompiledPlsHocStageRoleV1,
+    pub projection_identity_sha256: String,
+    pub model_scientific_sha256: String,
+    pub compiled_plan_sha256: String,
+    pub dataset_fingerprint: String,
+    pub used_observations: u32,
+    pub omitted_observations: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generated_score_dataset: Option<CanonicalHocGeneratedScoreDatasetReceiptV1>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct CanonicalHocRelationEstimateV1 {
     pub relation_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter_id: Option<String>,
     pub source_id: String,
     pub target_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<CanonicalHocRelationKindV1>,
     pub value: CanonicalGeneralSemEstimateV1,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub collinearity_vif: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -818,8 +881,107 @@ pub struct CanonicalHocStageResultV1 {
     pub kind: CanonicalHocStageKindV1,
     pub input_construct_ids: Vec<String>,
     pub output_variable_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub approach: Option<crate::HigherOrderConstructionApproachV4>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub measurement_type: Option<crate::HigherOrderMeasurementTypeV4>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub generated_variable_mappings: Vec<CanonicalHocGeneratedVariableMappingV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub receipt: Option<CanonicalHocPointStageReceiptV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub relation_estimates: Vec<CanonicalHocRelationEstimateV1>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalHocBootstrapTargetKindV1 {
+    ComponentLoading,
+    ComponentWeight,
+    HocStructuralPath,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocBootstrapTargetIdentityV1 {
+    pub kind: CanonicalHocBootstrapTargetKindV1,
+    pub target_version: String,
+    pub target_id: String,
+    pub relation_id: String,
+    pub parameter_id: String,
+    pub source_id: String,
+    pub target_variable_id: String,
+    pub point_method_version: String,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalHocBootstrapFailureReasonV1 {
+    InsufficientObservations,
+    ConstantIndicator,
+    StageOneRankDeficient,
+    IsolatedConstruct,
+    StageOneNonconvergence,
+    IndeterminateScoreSign,
+    ConstantComponentScore,
+    StageTwoRankDeficient,
+    StageTwoNonconvergence,
+    ComponentCollinearity,
+    NumericalFailure,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocBootstrapFailedReplicateV1 {
+    pub replicate_index: u32,
+    pub reason_code: CanonicalHocBootstrapFailureReasonV1,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocBootstrapReceiptV1 {
+    pub schema_version: u32,
+    pub capability_cell: CapabilityCellReferenceV2,
+    pub method_version: String,
+    pub point_method_version: String,
+    pub resampling_operation_version: String,
+    pub resampling_stream_version: String,
+    pub quantile_method_version: String,
+    pub standard_error_method_version: String,
+    pub summation_method_version: String,
+    pub p_value_method_version: String,
+    pub failure_policy_version: String,
+    pub sign_alignment_method_version: String,
+    pub target_version: String,
+    pub general_sem_config_sha256: String,
+    pub compiled_plan_sha256: String,
+    pub hoc_stage_plan_sha256: String,
+    pub model_scientific_sha256: String,
+    pub stage_one_model_scientific_sha256: String,
+    pub stage_two_model_scientific_sha256: String,
+    pub source_dataset_fingerprint: String,
+    pub complete_case_frame_sha256: String,
+    pub usable_replicate_indices_sha256: String,
+    pub target_identity_set_sha256: String,
+    pub target_ids: Vec<String>,
+    pub target_identities: Vec<CanonicalHocBootstrapTargetIdentityV1>,
+    pub interval: CanonicalGeneralSemBootstrapIntervalV1,
+    pub tail: CanonicalGeneralSemInferenceTailV1,
+    pub confidence_level: f64,
+    pub resamples_requested: u32,
+    pub resamples_usable: u32,
+    pub minimum_usable_resamples: u32,
+    pub seed: String,
+    pub workers: u32,
+    pub complete_model_reestimated_per_replicate: bool,
+    pub stage_one_reestimated_per_replicate: bool,
+    pub generated_component_values_recalculated_per_replicate: bool,
+    pub stage_one_scores_sign_aligned_per_replicate: bool,
+    pub stage_two_reestimated_per_replicate: bool,
+    pub stage_two_scores_sign_aligned_per_replicate: bool,
+    pub complete_point_contract_validated_per_replicate: bool,
+    pub failed_replicates: Vec<CanonicalHocBootstrapFailedReplicateV1>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -916,6 +1078,8 @@ pub struct CanonicalGeneralSemResultsV1 {
     pub interaction_plots: Vec<CanonicalInteractionPlotResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub higher_order_stages: Vec<CanonicalHocStageResultV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub higher_order_inference_receipt: Option<CanonicalHocBootstrapReceiptV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub cbsem_fit: Vec<CanonicalCbsemFitResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1294,13 +1458,7 @@ fn validate_general_sem_inference_receipt_v1(
         || results
             .conditional_effects
             .iter()
-            .any(|effect| general_sem_estimate_has_inference(&effect.value))
-        || results.higher_order_stages.iter().any(|stage| {
-            stage
-                .relation_estimates
-                .iter()
-                .any(|relation| general_sem_estimate_has_inference(&relation.value))
-        });
+            .any(|effect| general_sem_estimate_has_inference(&effect.value));
     let interaction_plot_interval_fields = results.interaction_plots.iter().any(|plot| {
         plot.series.iter().any(|series| {
             series
@@ -1720,6 +1878,258 @@ fn validate_general_sem_inference_receipt_v1(
     }
 }
 
+fn validate_hoc_inference_receipt_v1(
+    errors: &mut Vec<String>,
+    results: &CanonicalGeneralSemResultsV1,
+    provenance: &CanonicalResultProvenanceV2,
+    document_capability_ids: Option<&HashSet<String>>,
+) {
+    let context = "general_sem_results.higher_order_inference_receipt";
+    let inferred_relations = results
+        .higher_order_stages
+        .iter()
+        .flat_map(|stage| stage.relation_estimates.iter())
+        .filter(|relation| general_sem_estimate_has_inference(&relation.value))
+        .collect::<Vec<_>>();
+    let Some(receipt) = &results.higher_order_inference_receipt else {
+        if !inferred_relations.is_empty() {
+            errors.push(format!(
+                "{context} is required when higher-order relations contain inference"
+            ));
+        }
+        return;
+    };
+    if results.inference_receipt.is_some() {
+        errors.push(format!(
+            "{context} is mutually exclusive with the mediation/moderation inference receipt"
+        ));
+    }
+    validate_capability_reference(
+        errors,
+        &receipt.capability_cell,
+        &format!("{context}.capability_cell"),
+    );
+    let receipt_identity = capability_cell_reference_identity_v2(&receipt.capability_cell);
+    if document_capability_ids.is_none_or(|ids| !ids.contains(&receipt_identity)) {
+        errors.push(format!(
+            "{context}.capability_cell must be declared by document capability_cells"
+        ));
+    }
+    if receipt.capability_cell != crate::pls_general_higher_order_bootstrap_capability_cell_v1() {
+        errors.push(format!(
+            "{context}.capability_cell must equal the exact HOC bootstrap cell"
+        ));
+    }
+    if receipt.schema_version != 1
+        || receipt.method_version != crate::PLS_GENERAL_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_VERSION_V1
+        || receipt.point_method_version
+            != crate::PLS_GENERAL_HIGHER_ORDER_POINT_CAPABILITY_VERSION_V1
+        || receipt.resampling_operation_version
+            != "general_sem_pls_higher_order_full_model_case_bootstrap_operation_v1"
+        || receipt.resampling_stream_version != "indexed_case_resampling_v1"
+        || receipt.quantile_method_version != "type7_quantile_v1"
+        || receipt.standard_error_method_version != "sample_standard_error_b_minus_1_v1"
+        || receipt.summation_method_version != "neumaier_compensated_sum_v1"
+        || receipt.p_value_method_version != "null_centered_plus_one_v1"
+        || receipt.failure_policy_version != "minimum_usable_fraction_0_9_v1"
+        || receipt.sign_alignment_method_version != "sampled_original_construct_score_covariance_v1"
+        || receipt.target_version != "compiled_hoc_component_and_structural_relation_target_v1"
+    {
+        errors.push(format!(
+            "{context} schema, point method, or bootstrap method identity is invalid"
+        ));
+    }
+    for (name, digest) in [
+        (
+            "general_sem_config_sha256",
+            receipt.general_sem_config_sha256.as_str(),
+        ),
+        (
+            "compiled_plan_sha256",
+            receipt.compiled_plan_sha256.as_str(),
+        ),
+        (
+            "hoc_stage_plan_sha256",
+            receipt.hoc_stage_plan_sha256.as_str(),
+        ),
+        (
+            "model_scientific_sha256",
+            receipt.model_scientific_sha256.as_str(),
+        ),
+        (
+            "stage_one_model_scientific_sha256",
+            receipt.stage_one_model_scientific_sha256.as_str(),
+        ),
+        (
+            "stage_two_model_scientific_sha256",
+            receipt.stage_two_model_scientific_sha256.as_str(),
+        ),
+        (
+            "complete_case_frame_sha256",
+            receipt.complete_case_frame_sha256.as_str(),
+        ),
+        (
+            "usable_replicate_indices_sha256",
+            receipt.usable_replicate_indices_sha256.as_str(),
+        ),
+        (
+            "target_identity_set_sha256",
+            receipt.target_identity_set_sha256.as_str(),
+        ),
+    ] {
+        if !is_lowercase_sha256(digest) {
+            errors.push(format!("{context}.{name} must be a lowercase SHA-256"));
+        }
+    }
+    if receipt.model_scientific_sha256 != provenance.model_digest
+        || receipt.source_dataset_fingerprint != provenance.dataset_fingerprint
+        || receipt.seed.parse::<i64>().ok() != provenance.seed
+        || i64::from(receipt.workers) != provenance.workers
+    {
+        errors.push(format!(
+            "{context} model, dataset, seed, or worker authority differs from provenance"
+        ));
+    }
+    if receipt.interval != CanonicalGeneralSemBootstrapIntervalV1::PercentileType7
+        || receipt.tail != CanonicalGeneralSemInferenceTailV1::TwoSided
+        || !receipt.confidence_level.is_finite()
+        || !(0.0..1.0).contains(&receipt.confidence_level)
+        || !(2..=10_000).contains(&receipt.resamples_requested)
+    {
+        errors.push(format!(
+            "{context} inference configuration is outside the exact percentile two-sided contract"
+        ));
+    }
+    let expected_minimum = ((f64::from(receipt.resamples_requested) * 0.9).ceil() as u32).max(2);
+    if receipt.minimum_usable_resamples != expected_minimum
+        || receipt.resamples_usable < expected_minimum
+        || receipt.resamples_usable > receipt.resamples_requested
+        || receipt.resamples_usable as usize + receipt.failed_replicates.len()
+            != receipt.resamples_requested as usize
+        || !(1..=64).contains(&receipt.workers)
+        || !receipt.complete_model_reestimated_per_replicate
+        || !receipt.stage_one_reestimated_per_replicate
+        || !receipt.generated_component_values_recalculated_per_replicate
+        || !receipt.stage_one_scores_sign_aligned_per_replicate
+        || !receipt.stage_two_reestimated_per_replicate
+        || !receipt.stage_two_scores_sign_aligned_per_replicate
+        || !receipt.complete_point_contract_validated_per_replicate
+    {
+        errors.push(format!(
+            "{context} usable gate or full two-stage refit flags are invalid"
+        ));
+    }
+    require_canonical_stable_ids(
+        errors,
+        receipt.target_ids.iter().map(String::as_str),
+        &format!("{context}.target_ids"),
+    );
+    let identity_ids = receipt
+        .target_identities
+        .iter()
+        .map(|identity| identity.target_id.as_str())
+        .collect::<Vec<_>>();
+    if identity_ids
+        != receipt
+            .target_ids
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>()
+        || sha256_serialized(&receipt.target_identities) != receipt.target_identity_set_sha256
+    {
+        errors.push(format!(
+            "{context} target identities or identity digest contradict target_ids"
+        ));
+    }
+    let relations = results
+        .higher_order_stages
+        .iter()
+        .flat_map(|stage| stage.relation_estimates.iter())
+        .map(|relation| (relation.relation_id.as_str(), relation))
+        .collect::<BTreeMap<_, _>>();
+    for identity in &receipt.target_identities {
+        let Some(relation) = relations.get(identity.relation_id.as_str()) else {
+            errors.push(format!(
+                "{context} target {} references a missing HOC relation",
+                identity.target_id
+            ));
+            continue;
+        };
+        let expected_kind = match identity.kind {
+            CanonicalHocBootstrapTargetKindV1::ComponentLoading => {
+                CanonicalHocRelationKindV1::ComponentLoading
+            }
+            CanonicalHocBootstrapTargetKindV1::ComponentWeight => {
+                CanonicalHocRelationKindV1::ComponentWeight
+            }
+            CanonicalHocBootstrapTargetKindV1::HocStructuralPath => {
+                CanonicalHocRelationKindV1::AuthoredStructural
+            }
+        };
+        if identity.target_id != identity.relation_id
+            || identity.target_version != receipt.target_version
+            || identity.point_method_version != receipt.point_method_version
+            || relation.parameter_id.as_deref() != Some(identity.parameter_id.as_str())
+            || relation.source_id != identity.source_id
+            || relation.target_id != identity.target_variable_id
+            || relation.kind != Some(expected_kind)
+            || !general_sem_estimate_has_complete_inference(&relation.value)
+            || relation.value.bootstrap_usable_replicates != Some(receipt.resamples_usable)
+        {
+            errors.push(format!(
+                "{context} target {} differs from its typed HOC relation or inference ledger",
+                identity.target_id
+            ));
+        }
+        if let (Some(exceedances), Some(usable), Some(p_value)) = (
+            relation.value.bootstrap_two_sided_exceedances,
+            relation.value.bootstrap_usable_replicates,
+            relation.value.p_value,
+        ) {
+            let expected = f64::from(exceedances + 1) / f64::from(usable + 1);
+            if exceedances > usable || !approximately_equal(p_value, expected) {
+                errors.push(format!(
+                    "{context} target {} contradicts the plus-one probability ledger",
+                    identity.target_id
+                ));
+            }
+        }
+    }
+    let target_ids = receipt
+        .target_ids
+        .iter()
+        .map(String::as_str)
+        .collect::<HashSet<_>>();
+    if inferred_relations
+        .iter()
+        .any(|relation| !target_ids.contains(relation.relation_id.as_str()))
+    {
+        errors.push(format!(
+            "{context} leaves inferred HOC relations outside its exact target inventory"
+        ));
+    }
+    let mut previous_failure = None;
+    let mut failed_indices = BTreeSet::new();
+    for failure in &receipt.failed_replicates {
+        if failure.replicate_index >= receipt.resamples_requested
+            || previous_failure.is_some_and(|previous| previous >= failure.replicate_index)
+            || failure.message.trim().is_empty()
+        {
+            errors.push(format!("{context}.failed_replicates is not canonical"));
+        }
+        previous_failure = Some(failure.replicate_index);
+        failed_indices.insert(failure.replicate_index);
+    }
+    let usable_indices = (0..receipt.resamples_requested)
+        .filter(|index| !failed_indices.contains(index))
+        .collect::<Vec<_>>();
+    if sha256_serialized(&usable_indices) != receipt.usable_replicate_indices_sha256 {
+        errors.push(format!(
+            "{context}.usable_replicate_indices_sha256 contradicts the failure ledger"
+        ));
+    }
+}
+
 fn validate_general_sem_results_v1(
     errors: &mut Vec<String>,
     results: &CanonicalGeneralSemResultsV1,
@@ -1734,6 +2144,7 @@ fn validate_general_sem_results_v1(
         ));
     }
     validate_general_sem_inference_receipt_v1(errors, results, provenance, document_capability_ids);
+    validate_hoc_inference_receipt_v1(errors, results, provenance, document_capability_ids);
     if results.specific_indirect_effects.is_empty()
         && results.aggregate_effects.is_empty()
         && results.joint_stage_structural_coefficients.is_empty()
@@ -2626,6 +3037,130 @@ fn validate_general_sem_results_v1(
                 "{item_context}.stage_number contradicts its stage kind"
             ));
         }
+        if stage.approach.is_some() != stage.measurement_type.is_some() {
+            errors.push(format!(
+                "{item_context}.approach and measurement_type must be present or absent together"
+            ));
+        }
+        if let Some(receipt) = &stage.receipt {
+            if receipt.receipt_version != "general_sem_pls_higher_order_point_stage_receipt_v1"
+                || receipt.stage_number != stage.stage_number
+                || receipt.role
+                    != match stage.kind {
+                        CanonicalHocStageKindV1::LowerOrderScoreEstimation => {
+                            crate::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation
+                        }
+                        CanonicalHocStageKindV1::HigherOrderEstimation => {
+                            crate::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores
+                        }
+                    }
+                || receipt.used_observations == 0
+                || receipt.dataset_fingerprint != provenance.dataset_fingerprint
+            {
+                errors.push(format!(
+                    "{item_context}.receipt contradicts the exact stage identity or row accounting"
+                ));
+            }
+            for (name, digest) in [
+                (
+                    "projection_identity_sha256",
+                    receipt.projection_identity_sha256.as_str(),
+                ),
+                (
+                    "model_scientific_sha256",
+                    receipt.model_scientific_sha256.as_str(),
+                ),
+                (
+                    "compiled_plan_sha256",
+                    receipt.compiled_plan_sha256.as_str(),
+                ),
+            ] {
+                if !is_lowercase_sha256(digest) {
+                    errors.push(format!(
+                        "{item_context}.receipt.{name} must be a lowercase SHA-256"
+                    ));
+                }
+            }
+            if receipt.dataset_fingerprint.trim().is_empty() {
+                errors.push(format!(
+                    "{item_context}.receipt.dataset_fingerprint must be nonempty"
+                ));
+            }
+            if let Some(generated) = &receipt.generated_score_dataset {
+                if generated.receipt_version
+                    != "general_sem_pls_disjoint_hoc_score_dataset_receipt_v1"
+                    || generated.source_dataset_fingerprint != provenance.dataset_fingerprint
+                    || generated.complete_case_row_count != receipt.used_observations
+                    || generated.omitted_row_count != receipt.omitted_observations
+                    || generated.generated_score_columns.is_empty()
+                    || !is_lowercase_sha256(&generated.complete_case_rows_sha256)
+                {
+                    errors.push(format!(
+                        "{item_context}.receipt.generated_score_dataset is incomplete"
+                    ));
+                }
+                require_canonical_stable_ids(
+                    errors,
+                    generated
+                        .generated_score_columns
+                        .iter()
+                        .map(|column| column.component_id.as_str()),
+                    &format!(
+                        "{item_context}.receipt.generated_score_dataset.generated_score_columns"
+                    ),
+                );
+                for column in &generated.generated_score_columns {
+                    require_stable_id(
+                        errors,
+                        &column.generated_score_variable_id,
+                        &format!(
+                            "{item_context}.receipt.generated_score_dataset.generated_score_variable_id"
+                        ),
+                    );
+                    if column.observation_count != generated.complete_case_row_count
+                        || !is_lowercase_sha256(&column.values_sha256)
+                    {
+                        errors.push(format!(
+                            "{item_context}.receipt generated score row count or value digest is invalid"
+                        ));
+                    }
+                }
+            }
+        }
+        require_canonical_stable_ids(
+            errors,
+            stage
+                .generated_variable_mappings
+                .iter()
+                .map(|mapping| mapping.component_id.as_str()),
+            &format!("{item_context}.generated_variable_mappings"),
+        );
+        for mapping in &stage.generated_variable_mappings {
+            for (name, id) in [
+                (
+                    "generated_score_variable_id",
+                    mapping.generated_score_variable_id.as_str(),
+                ),
+                (
+                    "generated_component_relation_id",
+                    mapping.generated_component_relation_id.as_str(),
+                ),
+                (
+                    "generated_component_parameter_id",
+                    mapping.generated_component_parameter_id.as_str(),
+                ),
+                (
+                    "component_relation_source_id",
+                    mapping.component_relation_source_id.as_str(),
+                ),
+                (
+                    "component_relation_target_id",
+                    mapping.component_relation_target_id.as_str(),
+                ),
+            ] {
+                require_stable_id(errors, id, &format!("{item_context}.{name}"));
+            }
+        }
         if !hoc_stage_signatures
             .insert((stage.higher_order_construct_id.as_str(), stage.stage_number))
         {
@@ -2665,6 +3200,26 @@ fn validate_general_sem_results_v1(
             if relation.source_id == relation.target_id {
                 errors.push(format!(
                     "{relation_context} requires distinct source_id and target_id"
+                ));
+            }
+            if relation.parameter_id.is_some() != relation.kind.is_some() {
+                errors.push(format!(
+                    "{relation_context}.parameter_id and kind must be present or absent together"
+                ));
+            }
+            if let Some(parameter_id) = &relation.parameter_id {
+                require_stable_id(
+                    errors,
+                    parameter_id,
+                    &format!("{relation_context}.parameter_id"),
+                );
+            }
+            if relation
+                .collinearity_vif
+                .is_some_and(|value| !value.is_finite() || value <= 0.0)
+            {
+                errors.push(format!(
+                    "{relation_context}.collinearity_vif must be finite and positive"
                 ));
             }
             validate_general_sem_estimate(
@@ -3795,6 +4350,10 @@ mod tests {
                     kind: CanonicalHocStageKindV1::LowerOrderScoreEstimation,
                     input_construct_ids: vec!["construct_a".to_string(), "construct_b".to_string()],
                     output_variable_ids: vec!["score_a".to_string(), "score_b".to_string()],
+                    approach: None,
+                    measurement_type: None,
+                    generated_variable_mappings: Vec::new(),
+                    receipt: None,
                     relation_estimates: Vec::new(),
                 },
                 CanonicalHocStageResultV1 {
@@ -3805,14 +4364,22 @@ mod tests {
                     kind: CanonicalHocStageKindV1::HigherOrderEstimation,
                     input_construct_ids: vec!["score_a".to_string(), "score_b".to_string()],
                     output_variable_ids: vec!["hoc_ab".to_string()],
+                    approach: None,
+                    measurement_type: None,
+                    generated_variable_mappings: Vec::new(),
+                    receipt: None,
                     relation_estimates: vec![CanonicalHocRelationEstimateV1 {
                         relation_id: "relation_hoc_1".to_string(),
+                        parameter_id: None,
                         source_id: "hoc_ab".to_string(),
                         target_id: "construct_y".to_string(),
+                        kind: None,
                         value: effect_value(0.31),
+                        collinearity_vif: None,
                     }],
                 },
             ],
+            higher_order_inference_receipt: None,
             cbsem_fit: vec![CanonicalCbsemFitResultV1 {
                 fit_id: "cbsem_fit_1".to_string(),
                 trace: general_sem_trace(),
@@ -4939,6 +5506,7 @@ mod tests {
             conditional_effects: Vec::new(),
             interaction_plots: Vec::new(),
             higher_order_stages: Vec::new(),
+            higher_order_inference_receipt: None,
             cbsem_fit: Vec::new(),
             identification_diagnostics: Vec::new(),
         });
