@@ -118,6 +118,111 @@ class GeneralSemRank0QualificationRunnerTests(unittest.TestCase):
             with self.assertRaises(runner.PlanValidationError):
                 runner.validate_frozen_full_plan(different)
 
+    def test_plan4b_policy_has_exact_inventory_prefixes_and_precision(self) -> None:
+        plan = runner.build_plan()
+        policy = runner.build_plan4b_policy(plan)
+        runner.validate_plan4b_policy(policy, plan)
+        self.assertEqual(
+            policy["execution_inventory"],
+            {
+                "required_shards": 1_629,
+                "continued_shards": 0,
+                "pending_shards": 1_629,
+                "pending_internal_shards": 1_607,
+                "pending_external_shards": 22,
+                "excluded_parent_shards": 857,
+            },
+        )
+        self.assertNotIn(
+            "pairwise", {row["suite"] for row in policy["scenario_targets"]}
+        )
+        targets = {row["scenario_id"]: row for row in policy["scenario_targets"]}
+        self.assertEqual(
+            targets["coverage.mediation_bootstrap"]["required_trial_count"],
+            9_604,
+        )
+        self.assertEqual(
+            targets["coverage.moderation_bootstrap"]["required_trial_count"],
+            4_480,
+        )
+        for family in ("mediation_bootstrap", "moderation_bootstrap"):
+            self.assertEqual(
+                targets[f"null_calibration.{family}"]["required_trial_count"],
+                2_880,
+            )
+            self.assertEqual(
+                targets[f"seed_replay.{family}"]["required_trial_count"],
+                1_024,
+            )
+            self.assertEqual(
+                targets[f"worker_replay.{family}"]["required_trial_count"],
+                1_024,
+            )
+        maximum_half_width = float(
+            runner.FROZEN_THRESHOLDS["monte_carlo_maximum_half_width"]
+        )
+        confidence = float(runner.FROZEN_THRESHOLDS["monte_carlo_confidence_level"])
+        for metric, budget in runner.PLAN4B_METRIC_TRIAL_POLICY.items():
+            with self.subTest(metric=metric):
+                rate = float(budget["decision_rate"])
+                minimum = int(budget["minimum_trials"])
+                widths = []
+                for events in {int(rate * minimum), int(rate * minimum) + 1}:
+                    lower, upper = runner.wilson_interval(
+                        min(events, minimum), minimum, confidence
+                    )
+                    widths.append((upper - lower) / 2.0)
+                self.assertLessEqual(max(widths), maximum_half_width + 1.0e-12)
+
+    def test_plan4b_policy_and_partial_aggregate_tamper_fail_closed(self) -> None:
+        plan = runner.build_plan()
+        policy = runner.build_plan4b_policy(plan)
+        aggregate = runner._aggregate_from_compact_ledger(  # noqa: SLF001
+            plan, [], plan4b_policy=policy
+        )
+        runner.validate_aggregate(aggregate, plan, plan4b_policy=policy)
+        self.assertEqual(len(aggregate["missing_shard_ids"]), 1_629)
+        with self.assertRaises(runner.ArtifactTamperError):
+            runner.validate_frozen_plan4b_aggregate(aggregate, plan, policy)
+
+        tampered = json.loads(json.dumps(policy))
+        tampered["pending_shard_ids"] = tampered["pending_shard_ids"][:-1]
+        tampered["policy_sha256"] = runner.canonical_sha256(
+            {key: value for key, value in tampered.items() if key != "policy_sha256"}
+        )
+        with self.assertRaises(runner.PlanValidationError):
+            runner.validate_plan4b_policy(tampered, plan)
+
+    def test_plan4b_continuation_binds_exact_existing_shard_bytes(self) -> None:
+        plan = runner.build_plan(
+            qualification_trials=1,
+            shard_size=1,
+            included_suites=("pairwise",),
+        )
+        scenario_by_id = runner._scenario_map(plan)  # noqa: SLF001
+        shard = next(
+            row
+            for row in plan["shards"]
+            if scenario_by_id[str(row["scenario_id"])]["cell_key"] == "mediation_point"
+        )
+        with (
+            self.temporary_output() as raw,
+            mock.patch.object(runner, "validate_frozen_full_plan"),
+            mock.patch.object(runner, "PLAN4B_SKIPPED_SUITES", frozenset()),
+        ):
+            output = Path(raw)
+            runner.execute_shard(plan, str(shard["shard_id"]), output)
+            policy = runner.build_plan4b_policy(plan, output)
+            runner.validate_plan4b_policy(policy, plan, output_root=output)
+            self.assertEqual(policy["execution_inventory"]["continued_shards"], 1)
+            self.assertEqual(
+                policy["continued_shards"][0]["shard_id"], shard["shard_id"]
+            )
+            continued_path = output / policy["continued_shards"][0]["path"]
+            continued_path.write_bytes(continued_path.read_bytes() + b" ")
+            with self.assertRaises(runner.ArtifactTamperError):
+                runner.validate_plan4b_policy(policy, plan, output_root=output)
+
     def test_resource_guard_stops_at_either_drive_boundary(self) -> None:
         def healthy(path: str) -> float:
             return 40.0 if path.startswith("C") else 50.0

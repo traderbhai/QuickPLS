@@ -58,6 +58,9 @@ from general_sem_rank0_qualification import (
     GeneralSemScenario,
     MINIMUM_WORST_CASE_BINOMIAL_TRIALS,
     PERFORMANCE_HARDWARE_PROFILE_ID,
+    PLAN4B_DECISION_POLICY_VERSION,
+    PLAN4B_METRIC_TRIAL_POLICY,
+    PLAN4B_SCENARIO_TRIAL_OVERRIDES,
     build_qualification_spec,
     make_mediation_scenario,
     make_moderation_scenario,
@@ -74,10 +77,14 @@ DEFAULT_OUTPUT_ROOT = (
     ROOT / "validation" / "results" / "general_sem_rank0_qualification_v1"
 )
 PLAN_FILENAME = "plan.json"
+PLAN4B_POLICY_FILENAME = "plan4b-continuation-policy.json"
 MATRIX_VERSION = "general_sem_rank0_independent_prequalification_v1"
 PLAN_KIND = "general_sem_rank0_qualification_plan_v1"
+PLAN4B_POLICY_KIND = "general_sem_rank0_plan4b_continuation_policy_v1"
 SHARD_KIND = "general_sem_rank0_qualification_shard_v1"
 AGGREGATE_KIND = "general_sem_rank0_qualification_aggregate_v1"
+PLAN4B_AGGREGATE_KIND = "general_sem_rank0_qualification_aggregate_plan4b_v1"
+PLAN4B_SKIPPED_SUITES = frozenset({"pairwise"})
 SEED_DERIVATION = "sha256_matrix_scenario_trial_stream_first_u53_v1"
 INTEGRITY_SCOPE = "prequalification_integrity_only_not_source_or_identity_receipt"
 PRODUCT_REQUEST_KIND = "general_sem_rank0_current_product_request_v1"
@@ -121,6 +128,9 @@ DETERMINISTIC_SUITES = frozenset(
     }
 )
 ALL_SUITES = tuple(sorted(TRIAL_SUITES | DETERMINISTIC_SUITES))
+EXTERNAL_EXECUTION_SUITES = frozenset(
+    {"maximum_axis", "compound_stress", "current_product_comparison"}
+)
 METRIC_TO_THRESHOLD = {
     "effect_recovery_rate": "recovery_acceptance_interval",
     "empirical_coverage": "coverage_acceptance_interval",
@@ -905,6 +915,307 @@ def validate_frozen_full_plan(plan: Mapping[str, object]) -> None:
         raise PlanValidationError("plan differs from the exact frozen full matrix")
 
 
+def _plan4b_policy_body(policy: Mapping[str, object]) -> dict[str, object]:
+    return {key: value for key, value in policy.items() if key != "policy_sha256"}
+
+
+def build_plan4b_policy(
+    plan: Mapping[str, object], output_root: Path | None = None
+) -> dict[str, object]:
+    """Select fixed, whole-shard Plan 4B prefixes from the frozen V1 plan.
+
+    The policy changes no estimator, threshold, seed, scenario, or accepted
+    artifact.  It narrows only the number of trials required for metrics whose
+    frozen pass regions are far from the p=.50 worst case, and omits the
+    prequalification-only pairwise matrix from the Standard completion gate.
+    """
+
+    validate_frozen_full_plan(plan)
+    scenario_by_id = _scenario_map(plan)
+    shards_by_scenario: dict[str, list[Mapping[str, object]]] = {
+        scenario_id: [] for scenario_id in scenario_by_id
+    }
+    for shard in plan["shards"]:
+        shards_by_scenario[str(shard["scenario_id"])].append(shard)
+
+    scenario_targets: list[dict[str, object]] = []
+    required_ids: set[str] = set()
+    for scenario_id in sorted(scenario_by_id):
+        scenario = scenario_by_id[scenario_id]
+        if scenario["suite"] in PLAN4B_SKIPPED_SUITES:
+            continue
+        metrics = scenario["metrics"]
+        if not isinstance(metrics, list) or len(metrics) != 1:
+            raise PlanValidationError("Plan 4B requires one metric per scenario")
+        metric = str(metrics[0])
+        if scenario["suite"] in TRIAL_SUITES:
+            metric_policy = PLAN4B_METRIC_TRIAL_POLICY.get(metric)
+            if metric_policy is None:
+                raise PlanValidationError(
+                    f"Plan 4B metric {metric!r} has no frozen trial policy"
+                )
+            minimum_trials = int(metric_policy["minimum_trials"])
+            target_trials = int(
+                PLAN4B_SCENARIO_TRIAL_OVERRIDES.get(
+                    scenario_id, metric_policy["execution_target_trials"]
+                )
+            )
+        else:
+            minimum_trials = int(scenario["trial_count"])
+            target_trials = int(scenario["trial_count"])
+        if not minimum_trials <= target_trials <= int(scenario["trial_count"]):
+            raise PlanValidationError("Plan 4B trial target is outside the parent plan")
+
+        ordered = sorted(
+            shards_by_scenario[scenario_id],
+            key=lambda row: int(row["trial_start_inclusive"]),
+        )
+        selected: list[Mapping[str, object]] = []
+        cursor = 0
+        for shard in ordered:
+            stop = int(shard["trial_stop_exclusive"])
+            if stop > target_trials:
+                break
+            if int(shard["trial_start_inclusive"]) != cursor:
+                raise PlanValidationError(
+                    "Plan 4B parent shard prefix is not contiguous"
+                )
+            selected.append(shard)
+            cursor = stop
+        if cursor != target_trials:
+            raise PlanValidationError(
+                "Plan 4B target must align to an exact parent shard boundary"
+            )
+        selected_ids = [str(shard["shard_id"]) for shard in selected]
+        required_ids.update(selected_ids)
+        scenario_targets.append(
+            {
+                "scenario_id": scenario_id,
+                "scenario_sha256": canonical_sha256(scenario),
+                "suite": scenario["suite"],
+                "metric": metric,
+                "parent_trial_count": int(scenario["trial_count"]),
+                "minimum_trials": minimum_trials,
+                "required_trial_count": target_trials,
+                "required_shard_ids": selected_ids,
+            }
+        )
+
+    ordered_required_ids = [
+        str(shard["shard_id"])
+        for shard in plan["shards"]
+        if str(shard["shard_id"]) in required_ids
+    ]
+    excluded_ids = [
+        str(shard["shard_id"])
+        for shard in plan["shards"]
+        if str(shard["shard_id"]) not in required_ids
+    ]
+    continued_shards: list[dict[str, object]] = []
+    if output_root is not None:
+        output_root = output_root.resolve()
+        parent_shards = _shard_map(plan)
+        shard_directory = output_root / "shards"
+        if shard_directory.exists():
+            for path in sorted(shard_directory.glob("shard-*.json")):
+                if path.is_symlink():
+                    raise ArtifactTamperError(
+                        "Plan 4B cannot continue from a symlinked shard"
+                    )
+                shard_id = path.stem
+                if shard_id not in parent_shards:
+                    raise ArtifactTamperError(
+                        "Plan 4B found an accepted shard outside the parent plan"
+                    )
+                if shard_id not in required_ids:
+                    # Valid parent-plan artifacts outside the Plan 4B completion
+                    # set are harmless cache entries and are deliberately ignored.
+                    load_validated_shard(path, plan, parent_shards[shard_id])
+                    continue
+                artifact = load_validated_shard(path, plan, parent_shards[shard_id])
+                payload = path.read_bytes()
+                continued_shards.append(
+                    {
+                        "shard_id": shard_id,
+                        "path": f"shards/{path.name}",
+                        "size": len(payload),
+                        "sha256": hashlib.sha256(payload).hexdigest(),
+                        "artifact_sha256": artifact["artifact_sha256"],
+                    }
+                )
+    continued_by_id = {str(row["shard_id"]): row for row in continued_shards}
+    continued_shards = [
+        continued_by_id[shard_id]
+        for shard_id in ordered_required_ids
+        if shard_id in continued_by_id
+    ]
+    pending_ids = [
+        shard_id for shard_id in ordered_required_ids if shard_id not in continued_by_id
+    ]
+    shard_by_id = _shard_map(plan)
+    external_pending_count = sum(
+        scenario_by_id[str(shard_by_id[shard_id]["scenario_id"])]["suite"]
+        in EXTERNAL_EXECUTION_SUITES
+        for shard_id in pending_ids
+    )
+    body: dict[str, object] = {
+        "schema_version": 1,
+        "kind": PLAN4B_POLICY_KIND,
+        "policy_version": PLAN4B_DECISION_POLICY_VERSION,
+        "parent_plan_sha256": plan["plan_sha256"],
+        "parent_plan_kind": plan["kind"],
+        "matrix_version": plan["matrix_version"],
+        "confidence_method": "wilson_score_two_sided_v1",
+        "confidence_level": FROZEN_THRESHOLDS["monte_carlo_confidence_level"],
+        "maximum_half_width": FROZEN_THRESHOLDS["monte_carlo_maximum_half_width"],
+        "selection_rule": "fixed_contiguous_parent_shard_prefix_v1",
+        "budget_derivation_uses_outcome_values": False,
+        "metric_trial_policy": {
+            metric: dict(policy)
+            for metric, policy in PLAN4B_METRIC_TRIAL_POLICY.items()
+        },
+        "scenario_trial_overrides": dict(PLAN4B_SCENARIO_TRIAL_OVERRIDES),
+        "scenario_targets": scenario_targets,
+        "required_shard_ids": ordered_required_ids,
+        "excluded_parent_shard_ids": excluded_ids,
+        "continued_shards": continued_shards,
+        "pending_shard_ids": pending_ids,
+        "execution_inventory": {
+            "required_shards": len(ordered_required_ids),
+            "continued_shards": len(continued_shards),
+            "pending_shards": len(pending_ids),
+            "pending_internal_shards": len(pending_ids) - external_pending_count,
+            "pending_external_shards": external_pending_count,
+            "excluded_parent_shards": len(excluded_ids),
+        },
+    }
+    return {**body, "policy_sha256": canonical_sha256(body)}
+
+
+def validate_plan4b_policy(
+    policy: Mapping[str, object],
+    plan: Mapping[str, object],
+    *,
+    output_root: Path | None = None,
+) -> None:
+    validate_frozen_full_plan(plan)
+    required = {
+        "schema_version",
+        "kind",
+        "policy_version",
+        "parent_plan_sha256",
+        "parent_plan_kind",
+        "matrix_version",
+        "confidence_method",
+        "confidence_level",
+        "maximum_half_width",
+        "selection_rule",
+        "budget_derivation_uses_outcome_values",
+        "metric_trial_policy",
+        "scenario_trial_overrides",
+        "scenario_targets",
+        "required_shard_ids",
+        "excluded_parent_shard_ids",
+        "continued_shards",
+        "pending_shard_ids",
+        "execution_inventory",
+        "policy_sha256",
+    }
+    if set(policy) != required:
+        raise PlanValidationError("Plan 4B policy fields differ")
+    if policy.get("policy_sha256") != canonical_sha256(_plan4b_policy_body(policy)):
+        raise PlanValidationError("Plan 4B policy digest differs")
+    expected = build_plan4b_policy(plan)
+    dynamic_fields = {
+        "continued_shards",
+        "pending_shard_ids",
+        "execution_inventory",
+        "policy_sha256",
+    }
+    for key in set(expected) - dynamic_fields:
+        if policy.get(key) != expected[key]:
+            raise PlanValidationError("Plan 4B policy differs from the frozen contract")
+
+    required_ids = [str(value) for value in policy["required_shard_ids"]]
+    continued = policy["continued_shards"]
+    pending_ids = policy["pending_shard_ids"]
+    if not isinstance(continued, list) or not isinstance(pending_ids, list):
+        raise PlanValidationError("Plan 4B continuation partition is invalid")
+    continued_ids: list[str] = []
+    shard_by_id = _shard_map(plan)
+    scenario_by_id = _scenario_map(plan)
+    for row in continued:
+        if not isinstance(row, Mapping) or set(row) != {
+            "shard_id",
+            "path",
+            "size",
+            "sha256",
+            "artifact_sha256",
+        }:
+            raise PlanValidationError("Plan 4B continued shard descriptor differs")
+        shard_id = row.get("shard_id")
+        if (
+            not isinstance(shard_id, str)
+            or shard_id in continued_ids
+            or shard_id not in shard_by_id
+            or row.get("path") != f"shards/{shard_id}.json"
+            or type(row.get("size")) is not int
+            or int(row["size"]) < 1
+            or not _is_sha256(row.get("sha256"))
+            or not _is_sha256(row.get("artifact_sha256"))
+        ):
+            raise PlanValidationError("Plan 4B continued shard identity differs")
+        continued_ids.append(shard_id)
+        if output_root is not None:
+            root = output_root.resolve()
+            path = root / "shards" / f"{shard_id}.json"
+            if path.is_symlink() or not path.is_file():
+                raise ArtifactTamperError("Plan 4B continued shard path is invalid")
+            resolved = path.resolve()
+            try:
+                resolved.relative_to(root)
+            except ValueError as error:
+                raise ArtifactTamperError(
+                    "Plan 4B continued shard leaves its evidence root"
+                ) from error
+            payload = resolved.read_bytes()
+            if (
+                len(payload) != row["size"]
+                or hashlib.sha256(payload).hexdigest() != row["sha256"]
+            ):
+                raise ArtifactTamperError("Plan 4B continued shard bytes differ")
+            artifact = load_validated_shard(resolved, plan, shard_by_id[shard_id])
+            if artifact.get("artifact_sha256") != row["artifact_sha256"]:
+                raise ArtifactTamperError(
+                    "Plan 4B continued shard artifact identity differs"
+                )
+    normalized_pending = [str(value) for value in pending_ids]
+    if (
+        continued_ids
+        != [shard_id for shard_id in required_ids if shard_id in set(continued_ids)]
+        or normalized_pending
+        != [shard_id for shard_id in required_ids if shard_id not in set(continued_ids)]
+        or set(continued_ids) & set(normalized_pending)
+        or set(continued_ids) | set(normalized_pending) != set(required_ids)
+    ):
+        raise PlanValidationError("Plan 4B continuation partition differs")
+    external_pending = sum(
+        scenario_by_id[str(shard_by_id[shard_id]["scenario_id"])]["suite"]
+        in EXTERNAL_EXECUTION_SUITES
+        for shard_id in normalized_pending
+    )
+    expected_inventory = {
+        "required_shards": len(required_ids),
+        "continued_shards": len(continued_ids),
+        "pending_shards": len(normalized_pending),
+        "pending_internal_shards": len(normalized_pending) - external_pending,
+        "pending_external_shards": external_pending,
+        "excluded_parent_shards": len(policy["excluded_parent_shard_ids"]),
+    }
+    if policy.get("execution_inventory") != expected_inventory:
+        raise PlanValidationError("Plan 4B execution inventory differs")
+
+
 def load_json(path: Path) -> object:
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -981,6 +1292,29 @@ def publish_plan(plan: Mapping[str, object], output_root: Path) -> Path:
         if canonical_bytes(existing) != payload:
             raise ArtifactTamperError(
                 "existing accepted plan differs; overwrite refused"
+            )
+        return path
+    _exclusive_atomic_publish(path, payload)
+    return path
+
+
+def publish_plan4b_policy(
+    policy: Mapping[str, object], plan: Mapping[str, object], output_root: Path
+) -> Path:
+    validate_plan4b_policy(policy, plan, output_root=output_root)
+    path = output_root / PLAN4B_POLICY_FILENAME
+    payload = canonical_bytes(policy)
+    if path.exists():
+        existing = load_json(path)
+        if not isinstance(existing, Mapping):
+            raise ArtifactTamperError("existing Plan 4B policy is not an object")
+        try:
+            validate_plan4b_policy(existing, plan, output_root=output_root)
+        except PlanValidationError as error:
+            raise ArtifactTamperError(str(error)) from error
+        if canonical_bytes(existing) != payload:
+            raise ArtifactTamperError(
+                "existing Plan 4B policy differs; overwrite refused"
             )
         return path
     _exclusive_atomic_publish(path, payload)
@@ -4700,6 +5034,7 @@ def run_shards(
     concurrency: int = DEFAULT_CONCURRENCY,
     suites: Iterable[str] | None = None,
     max_shards: int | None = None,
+    required_shard_ids: Iterable[str] | None = None,
     stale_claim_seconds: float = DEFAULT_STALE_CLAIM_SECONDS,
     progress: Callable[[Mapping[str, object]], None] | None = None,
 ) -> dict[str, object]:
@@ -4713,6 +5048,15 @@ def run_shards(
         raise PlanValidationError("plan is not an object")
     validate_plan(loaded)
     scenario_by_id = _scenario_map(loaded)
+    required_id_filter = (
+        None
+        if required_shard_ids is None
+        else {str(value) for value in required_shard_ids}
+    )
+    if required_id_filter is not None and not required_id_filter <= set(
+        _shard_map(loaded)
+    ):
+        raise PlanValidationError("required shard selection is outside the plan")
     suite_filter = set(ALL_SUITES if suites is None else suites)
     if suite_filter - set(loaded["included_suites"]):
         raise PlanValidationError("requested suites are outside the plan")
@@ -4720,6 +5064,7 @@ def run_shards(
         shard
         for shard in loaded["shards"]
         if scenario_by_id[str(shard["scenario_id"])]["suite"] in suite_filter
+        and (required_id_filter is None or str(shard["shard_id"]) in required_id_filter)
     ]
     pending: list[Mapping[str, object]] = []
     accepted_existing = 0
@@ -5324,12 +5669,24 @@ def _validate_compact_shard_ledger_row(
         raise ArtifactTamperError("non-product ledger row carries product evidence")
 
 
-def aggregate_plan(plan: Mapping[str, object], output_root: Path) -> dict[str, object]:
+def aggregate_plan(
+    plan: Mapping[str, object],
+    output_root: Path,
+    *,
+    plan4b_policy: Mapping[str, object] | None = None,
+) -> dict[str, object]:
     """Validate and combine every shard independently of completion order."""
 
     validate_plan(plan)
+    if plan4b_policy is not None:
+        validate_plan4b_policy(plan4b_policy, plan, output_root=output_root)
     enforce_resource_guard()
     scenario_by_id = _scenario_map(plan)
+    required_ids = (
+        {str(value) for value in plan4b_policy["required_shard_ids"]}
+        if plan4b_policy is not None
+        else {str(shard["shard_id"]) for shard in plan["shards"]}
+    )
     shards_by_scenario: dict[str, list[Mapping[str, object]]] = {
         scenario_id: [] for scenario_id in scenario_by_id
     }
@@ -5339,6 +5696,8 @@ def aggregate_plan(plan: Mapping[str, object], output_root: Path) -> dict[str, o
     current_product_source_set_sha256: str | None = None
     for shard in sorted(plan["shards"], key=lambda row: str(row["shard_id"])):
         shard_id = str(shard["shard_id"])
+        if shard_id not in required_ids:
+            continue
         shards_by_scenario[str(shard["scenario_id"])].append(shard)
         path = shard_path(output_root, shard_id)
         if not path.exists():
@@ -5378,24 +5737,45 @@ def aggregate_plan(plan: Mapping[str, object], output_root: Path) -> dict[str, o
             shard=shard,
             scenario=scenario_by_id[str(shard["scenario_id"])],
         )
-    return _aggregate_from_compact_ledger(plan, shard_content_ledger)
+    return _aggregate_from_compact_ledger(
+        plan, shard_content_ledger, plan4b_policy=plan4b_policy
+    )
 
 
 def _aggregate_from_compact_ledger(
-    plan: Mapping[str, object], ledger: object
+    plan: Mapping[str, object],
+    ledger: object,
+    *,
+    plan4b_policy: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     validate_plan(plan)
+    if plan4b_policy is not None:
+        validate_plan4b_policy(plan4b_policy, plan)
     if not isinstance(ledger, list):
         raise ArtifactTamperError("aggregate compact shard ledger is absent")
     scenario_by_id = _scenario_map(plan)
     shard_by_id = _shard_map(plan)
+    required_ids = (
+        {str(value) for value in plan4b_policy["required_shard_ids"]}
+        if plan4b_policy is not None
+        else set(shard_by_id)
+    )
+    scenario_targets = (
+        {str(row["scenario_id"]): row for row in plan4b_policy["scenario_targets"]}
+        if plan4b_policy is not None
+        else {}
+    )
     ledger_by_id: dict[str, Mapping[str, object]] = {}
     ledger_ids: list[str] = []
     for row in ledger:
         if not isinstance(row, Mapping) or not isinstance(row.get("shard_id"), str):
             raise ArtifactTamperError("aggregate compact shard ledger row is invalid")
         shard_id = str(row["shard_id"])
-        if shard_id in ledger_by_id or shard_id not in shard_by_id:
+        if (
+            shard_id in ledger_by_id
+            or shard_id not in shard_by_id
+            or shard_id not in required_ids
+        ):
             raise ArtifactTamperError("aggregate compact shard identity differs")
         shard = shard_by_id[shard_id]
         scenario = scenario_by_id[str(shard["scenario_id"])]
@@ -5407,20 +5787,27 @@ def _aggregate_from_compact_ledger(
     expected_order = [
         str(shard["shard_id"])
         for shard in plan["shards"]
-        if str(shard["shard_id"]) in ledger_by_id
+        if str(shard["shard_id"]) in required_ids
+        and str(shard["shard_id"]) in ledger_by_id
     ]
     if ledger_ids != expected_order:
         raise ArtifactTamperError("aggregate compact shard ledger order differs")
     missing_shards = [
         str(shard["shard_id"])
         for shard in plan["shards"]
-        if str(shard["shard_id"]) not in ledger_by_id
+        if str(shard["shard_id"]) in required_ids
+        and str(shard["shard_id"]) not in ledger_by_id
     ]
     scenario_reports: list[dict[str, object]] = []
     for scenario_id in sorted(scenario_by_id):
         scenario = scenario_by_id[scenario_id]
+        if plan4b_policy is not None and scenario_id not in scenario_targets:
+            continue
         expected_shards = [
-            shard for shard in plan["shards"] if shard["scenario_id"] == scenario_id
+            shard
+            for shard in plan["shards"]
+            if shard["scenario_id"] == scenario_id
+            and str(shard["shard_id"]) in required_ids
         ]
         present = [
             ledger_by_id[str(shard["shard_id"])]
@@ -5445,9 +5832,13 @@ def _aggregate_from_compact_ledger(
                 )
             recovery_rows.extend(row["recovery_moments"])
         required_trials = (
-            int(plan["qualification_trials"])
-            if scenario["suite"] in TRIAL_SUITES
-            else int(scenario["trial_count"])
+            int(scenario_targets[scenario_id]["required_trial_count"])
+            if plan4b_policy is not None
+            else (
+                int(plan["qualification_trials"])
+                if scenario["suite"] in TRIAL_SUITES
+                else int(scenario["trial_count"])
+            )
         )
         reports = [
             _metric_report(
@@ -5522,8 +5913,8 @@ def _aggregate_from_compact_ledger(
         row["passed"] for row in performance_rows
     )
     body: dict[str, object] = {
-        "schema_version": 1,
-        "kind": AGGREGATE_KIND,
+        "schema_version": 2 if plan4b_policy is not None else 1,
+        "kind": PLAN4B_AGGREGATE_KIND if plan4b_policy is not None else AGGREGATE_KIND,
         "matrix_version": MATRIX_VERSION,
         "integrity_scope": INTEGRITY_SCOPE,
         "plan_sha256": plan["plan_sha256"],
@@ -5560,14 +5951,24 @@ def _aggregate_from_compact_ledger(
             "confidence_interval_must_be_contained_in_acceptance_interval": True,
         },
     }
+    if plan4b_policy is not None:
+        body["plan4b_policy_sha256"] = plan4b_policy["policy_sha256"]
+        body["excluded_parent_shard_count"] = len(
+            plan4b_policy["excluded_parent_shard_ids"]
+        )
     return {**body, "artifact_sha256": canonical_sha256(body)}
 
 
 def validate_aggregate(
-    aggregate: Mapping[str, object], plan: Mapping[str, object]
+    aggregate: Mapping[str, object],
+    plan: Mapping[str, object],
+    *,
+    plan4b_policy: Mapping[str, object] | None = None,
 ) -> None:
     expected = _aggregate_from_compact_ledger(
-        plan, aggregate.get("shard_content_ledger")
+        plan,
+        aggregate.get("shard_content_ledger"),
+        plan4b_policy=plan4b_policy,
     )
     if canonical_bytes(aggregate) != canonical_bytes(expected):
         raise ArtifactTamperError(
@@ -5598,17 +5999,48 @@ def validate_frozen_full_aggregate(
         )
 
 
+def validate_frozen_plan4b_aggregate(
+    aggregate: Mapping[str, object],
+    plan: Mapping[str, object],
+    plan4b_policy: Mapping[str, object],
+) -> None:
+    """Require the complete exact Plan 4B continuation ledger."""
+
+    validate_frozen_full_plan(plan)
+    validate_plan4b_policy(plan4b_policy, plan)
+    validate_aggregate(aggregate, plan, plan4b_policy=plan4b_policy)
+    ledger = aggregate.get("shard_content_ledger")
+    expected_ids = [str(value) for value in plan4b_policy["required_shard_ids"]]
+    if (
+        not isinstance(ledger, list)
+        or [row.get("shard_id") for row in ledger if isinstance(row, Mapping)]
+        != expected_ids
+        or len(ledger) != len(expected_ids)
+        or aggregate.get("expected_shard_count") != len(expected_ids)
+        or aggregate.get("accepted_shard_count") != len(expected_ids)
+        or aggregate.get("missing_shard_ids") != []
+        or aggregate.get("plan4b_policy_sha256") != plan4b_policy["policy_sha256"]
+    ):
+        raise ArtifactTamperError(
+            "aggregate is not the exact frozen Plan 4B continuation ledger"
+        )
+
+
 def publish_aggregate(
-    aggregate: Mapping[str, object], plan: Mapping[str, object], output_root: Path
+    aggregate: Mapping[str, object],
+    plan: Mapping[str, object],
+    output_root: Path,
+    *,
+    plan4b_policy: Mapping[str, object] | None = None,
 ) -> Path:
-    validate_aggregate(aggregate, plan)
+    validate_aggregate(aggregate, plan, plan4b_policy=plan4b_policy)
     digest = str(aggregate["artifact_sha256"])
     path = output_root / "aggregates" / f"aggregate-{digest}.json"
     _exclusive_atomic_publish(path, canonical_bytes(aggregate))
     loaded = load_json(path)
     if not isinstance(loaded, Mapping):
         raise ArtifactTamperError("published aggregate is not an object")
-    validate_aggregate(loaded, plan)
+    validate_aggregate(loaded, plan, plan4b_policy=plan4b_policy)
     return path
 
 
@@ -5642,6 +6074,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("plan", help="Create or verify the full frozen plan.")
+    subparsers.add_parser(
+        "plan4b", help="Create or verify the frozen Plan 4B continuation policy."
+    )
     run_parser = subparsers.add_parser("run", help="Execute missing shards.")
     run_parser.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY)
     run_parser.add_argument(
@@ -5651,10 +6086,28 @@ def main(argv: Sequence[str] | None = None) -> int:
     run_parser.add_argument(
         "--stale-claim-seconds", type=float, default=DEFAULT_STALE_CLAIM_SECONDS
     )
+    run4b_parser = subparsers.add_parser(
+        "run-plan4b", help="Execute only missing shards required by Plan 4B."
+    )
+    run4b_parser.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY)
+    run4b_parser.add_argument(
+        "--suite", action="append", choices=ALL_SUITES, dest="suites"
+    )
+    run4b_parser.add_argument("--max-shards", type=int)
+    run4b_parser.add_argument(
+        "--stale-claim-seconds", type=float, default=DEFAULT_STALE_CLAIM_SECONDS
+    )
     subparsers.add_parser(
         "aggregate", help="Validate shards and publish a content-addressed report."
     )
     subparsers.add_parser("status", help="Print an aggregate without publishing it.")
+    subparsers.add_parser(
+        "aggregate-plan4b",
+        help="Validate required Plan 4B shards and publish a report.",
+    )
+    subparsers.add_parser(
+        "status-plan4b", help="Print the Plan 4B aggregate without publishing it."
+    )
     subparsers.add_parser(
         "product-requests",
         help="Materialize exclusive inputs for the serialized root-owned Cargo runner.",
@@ -5701,6 +6154,34 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not plan_path_value.exists():
         publish_plan(build_plan(), output_root)
     plan = _load_plan_path(plan_path_value)
+    if arguments.command == "plan4b":
+        policy = build_plan4b_policy(plan, output_root)
+        path = publish_plan4b_policy(policy, plan, output_root)
+        print(
+            _canonical_pretty(
+                {
+                    "path": str(path),
+                    "parent_plan_sha256": plan["plan_sha256"],
+                    "policy_sha256": policy["policy_sha256"],
+                    "execution_inventory": policy["execution_inventory"],
+                    "qualification_ready": False,
+                }
+            ),
+            end="",
+        )
+        return 0
+    plan4b_policy: Mapping[str, object] | None = None
+    if arguments.command in {"run-plan4b", "aggregate-plan4b", "status-plan4b"}:
+        policy_path = output_root / PLAN4B_POLICY_FILENAME
+        if not policy_path.exists():
+            publish_plan4b_policy(
+                build_plan4b_policy(plan, output_root), plan, output_root
+            )
+        loaded_policy = load_json(policy_path)
+        if not isinstance(loaded_policy, Mapping):
+            raise PlanValidationError("Plan 4B policy is not an object")
+        validate_plan4b_policy(loaded_policy, plan, output_root=output_root)
+        plan4b_policy = loaded_policy
     if arguments.command == "product-requests":
         paths = publish_product_requests(plan, output_root)
         print(
@@ -5767,21 +6248,28 @@ def main(argv: Sequence[str] | None = None) -> int:
             end="",
         )
         return 0
-    if arguments.command == "run":
+    if arguments.command in {"run", "run-plan4b"}:
         report = run_shards(
             plan_path_value,
             output_root,
             concurrency=arguments.concurrency,
             suites=arguments.suites,
             max_shards=arguments.max_shards,
+            required_shard_ids=(
+                plan4b_policy["required_shard_ids"]
+                if plan4b_policy is not None
+                else None
+            ),
             stale_claim_seconds=arguments.stale_claim_seconds,
             progress=_progress_to_stderr,
         )
         print(_canonical_pretty(report), end="")
         return 0
-    aggregate = aggregate_plan(plan, output_root)
-    if arguments.command == "aggregate":
-        path = publish_aggregate(aggregate, plan, output_root)
+    aggregate = aggregate_plan(plan, output_root, plan4b_policy=plan4b_policy)
+    if arguments.command in {"aggregate", "aggregate-plan4b"}:
+        path = publish_aggregate(
+            aggregate, plan, output_root, plan4b_policy=plan4b_policy
+        )
         result = {
             "path": str(path),
             "artifact_sha256": aggregate["artifact_sha256"],

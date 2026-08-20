@@ -635,7 +635,21 @@ def _validate_scientific_product(
     except ImportError:
         import general_sem_rank0_qualification_runner as runner
 
-    runner.validate_frozen_full_aggregate(aggregate, plan)
+    continuation_descriptor = evidence.get("continuation_policy")
+    if continuation_descriptor is None:
+        runner.validate_frozen_full_aggregate(aggregate, plan)
+    else:
+        continuation_policy, continuation_path = _artifact_json(
+            continuation_descriptor,
+            root,
+            "evidence.continuation_policy",
+        )
+        runner.validate_plan4b_policy(
+            continuation_policy,
+            plan,
+            output_root=continuation_path.parent,
+        )
+        runner.validate_frozen_plan4b_aggregate(aggregate, plan, continuation_policy)
     expected = payload["capability_cell"]
     cell_kind = "bootstrap" if expected["cell_id"] in BOOTSTRAP_CELL_IDS else "point"
     required_suites = SCIENTIFIC_SUITES[payload["role"]][cell_kind]

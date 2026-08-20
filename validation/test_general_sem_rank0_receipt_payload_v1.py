@@ -163,6 +163,8 @@ class Rank0ReceiptPayloadTests(unittest.TestCase):
         scientific = schema["$defs"]["scientific_product"]
         self.assertNotIn("shards", scientific["required"])
         self.assertNotIn("shards", scientific["properties"])
+        self.assertNotIn("continuation_policy", scientific["required"])
+        self.assertIn("continuation_policy", scientific["properties"])
 
     def test_unified_source_inventory_is_exact_sorted_and_excludes_mutable_results(
         self,

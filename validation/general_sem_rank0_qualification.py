@@ -43,6 +43,70 @@ SPEC_DIRECTORY = ROOT / "validation" / "qualification_v2"
 SPEC_FROZEN_AT_UTC = "2026-08-19T00:00:00Z"
 QUALIFICATION_SPEC_VERSION = 2
 MINIMUM_WORST_CASE_BINOMIAL_TRIALS = 9_604
+PLAN4B_DECISION_POLICY_VERSION = (
+    "general_sem_rank0_decision_boundary_fixed_n_continuation_v1"
+)
+# Plan 4B retains the original 95% Wilson +/-1 percentage-point requirement
+# where a metric can pass.  The old 9,604 global minimum was sized at p=.50,
+# even though every frozen acceptance interval lies close to zero or one.
+# These minima are calculated at the least-favourable passing boundary.  The
+# execution targets are whole 64-trial shards and are frozen before Plan 4B
+# scientific outcomes are inspected.
+PLAN4B_METRIC_TRIAL_POLICY: Mapping[str, Mapping[str, object]] = MappingProxyType(
+    {
+        "effect_recovery_rate": MappingProxyType(
+            {
+                "decision_rate": 0.90,
+                "minimum_trials": 3_465,
+                "execution_target_trials": 9_604,
+            }
+        ),
+        "empirical_coverage": MappingProxyType(
+            {
+                "decision_rate": 0.90,
+                "minimum_trials": 3_465,
+                "execution_target_trials": 3_520,
+            }
+        ),
+        "null_rejection_rate": MappingProxyType(
+            {
+                "decision_rate": 0.08,
+                "minimum_trials": 2_835,
+                "execution_target_trials": 2_880,
+            }
+        ),
+        "failure_classification_rate": MappingProxyType(
+            {
+                "decision_rate": 0.95,
+                "minimum_trials": 1_839,
+                "execution_target_trials": 9_604,
+            }
+        ),
+        "worker_replay_rate": MappingProxyType(
+            {
+                "decision_rate": 0.99,
+                "minimum_trials": 473,
+                "execution_target_trials": 1_024,
+            }
+        ),
+        "seed_replay_rate": MappingProxyType(
+            {
+                "decision_rate": 0.99,
+                "minimum_trials": 473,
+                "execution_target_trials": 1_024,
+            }
+        ),
+    }
+)
+# These two coverage prefixes were complete when Rank 0 was paused.  They are
+# frozen from completion state only (never from event rates) so Plan 4B carries
+# every already-accepted shard while still executing no additional coverage.
+PLAN4B_SCENARIO_TRIAL_OVERRIDES: Mapping[str, int] = MappingProxyType(
+    {
+        "coverage.mediation_bootstrap": 9_604,
+        "coverage.moderation_bootstrap": 4_480,
+    }
+)
 PERFORMANCE_HARDWARE_PROFILE_ID = "standard_windows_6c16g"
 PERFORMANCE_PROFILE_MANIFEST = (
     ROOT
@@ -1016,6 +1080,19 @@ def build_qualification_spec(cell_key: str) -> dict[str, object]:
                     "monte_carlo_maximum_half_width"
                 ],
                 "failed_fits_in_denominator": True,
+                "decision_boundary_trial_policy": {
+                    "policy_version": PLAN4B_DECISION_POLICY_VERSION,
+                    "confidence_method": "wilson_score_two_sided_v1",
+                    "selection_rule": (
+                        "fixed_before_plan4b_outcome_review_contiguous_prefix_v1"
+                    ),
+                    "global_worst_case_trials": (MINIMUM_WORST_CASE_BINOMIAL_TRIALS),
+                    "metric_budgets": {
+                        metric: dict(policy)
+                        for metric, policy in PLAN4B_METRIC_TRIAL_POLICY.items()
+                    },
+                    "scenario_trial_overrides": dict(PLAN4B_SCENARIO_TRIAL_OVERRIDES),
+                },
             },
         },
         "comparison_contract": {
@@ -1442,7 +1519,14 @@ def run_micro_harness() -> dict[str, object]:
         "checks": checks,
         "frozen_thresholds": dict(FROZEN_THRESHOLDS),
         "remaining_qualification": {
-            "minimum_trials_per_binomial_gate": MINIMUM_WORST_CASE_BINOMIAL_TRIALS,
+            "decision_boundary_trial_policy": {
+                "policy_version": PLAN4B_DECISION_POLICY_VERSION,
+                "metric_budgets": {
+                    metric: dict(policy)
+                    for metric, policy in PLAN4B_METRIC_TRIAL_POLICY.items()
+                },
+                "scenario_trial_overrides": dict(PLAN4B_SCENARIO_TRIAL_OVERRIDES),
+            },
             "full_pairwise_and_complexity_scenarios_pending": True,
             "external_r_oracle_supplied": True,
             "external_r_qualification_shards_pending": True,

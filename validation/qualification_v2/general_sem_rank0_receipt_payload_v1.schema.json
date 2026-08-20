@@ -143,6 +143,7 @@
       "properties": {
         "kind": { "const": "general_sem_rank0_scientific_product_v1" },
         "plan": { "$ref": "#/$defs/artifact" },
+        "continuation_policy": { "$ref": "#/$defs/artifact" },
         "aggregate": { "$ref": "#/$defs/artifact" },
         "product_source_set_sha256": { "$ref": "#/$defs/sha256" }
       }

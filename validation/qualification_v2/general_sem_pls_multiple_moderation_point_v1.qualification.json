@@ -805,6 +805,48 @@
     ],
     "monte_carlo_policy": {
       "confidence_level": 0.95,
+      "decision_boundary_trial_policy": {
+        "confidence_method": "wilson_score_two_sided_v1",
+        "global_worst_case_trials": 9604,
+        "metric_budgets": {
+          "effect_recovery_rate": {
+            "decision_rate": 0.9,
+            "execution_target_trials": 9604,
+            "minimum_trials": 3465
+          },
+          "empirical_coverage": {
+            "decision_rate": 0.9,
+            "execution_target_trials": 3520,
+            "minimum_trials": 3465
+          },
+          "failure_classification_rate": {
+            "decision_rate": 0.95,
+            "execution_target_trials": 9604,
+            "minimum_trials": 1839
+          },
+          "null_rejection_rate": {
+            "decision_rate": 0.08,
+            "execution_target_trials": 2880,
+            "minimum_trials": 2835
+          },
+          "seed_replay_rate": {
+            "decision_rate": 0.99,
+            "execution_target_trials": 1024,
+            "minimum_trials": 473
+          },
+          "worker_replay_rate": {
+            "decision_rate": 0.99,
+            "execution_target_trials": 1024,
+            "minimum_trials": 473
+          }
+        },
+        "policy_version": "general_sem_rank0_decision_boundary_fixed_n_continuation_v1",
+        "scenario_trial_overrides": {
+          "coverage.mediation_bootstrap": 9604,
+          "coverage.moderation_bootstrap": 4480
+        },
+        "selection_rule": "fixed_before_plan4b_outcome_review_contiguous_prefix_v1"
+      },
       "failed_fits_in_denominator": true,
       "maximum_half_width": 0.01
     }

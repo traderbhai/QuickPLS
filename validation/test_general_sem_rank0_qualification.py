@@ -106,6 +106,28 @@ class GeneralSemRank0QualificationTests(unittest.TestCase):
                 comparisons["effect_recovery_rmse"]["grouping_keys"],
                 ["family", "target_id"],
             )
+            policy = spec["scenario_contract"]["monte_carlo_policy"][
+                "decision_boundary_trial_policy"
+            ]
+            self.assertEqual(
+                policy["policy_version"],
+                qualification.PLAN4B_DECISION_POLICY_VERSION,
+            )
+            self.assertEqual(
+                policy["metric_budgets"]["null_rejection_rate"],
+                {
+                    "decision_rate": 0.08,
+                    "minimum_trials": 2_835,
+                    "execution_target_trials": 2_880,
+                },
+            )
+            self.assertEqual(
+                policy["scenario_trial_overrides"],
+                {
+                    "coverage.mediation_bootstrap": 9_604,
+                    "coverage.moderation_bootstrap": 4_480,
+                },
+            )
 
     def test_every_contract_has_full_scenario_and_operational_obligations(self) -> None:
         required_axes = {
@@ -263,8 +285,10 @@ class GeneralSemRank0QualificationTests(unittest.TestCase):
         self.assertFalse(report["qualification_ready"])
         self.assertTrue(report["sources_stable_required_before_receipts"])
         self.assertEqual(
-            report["remaining_qualification"]["minimum_trials_per_binomial_gate"],
-            9_604,
+            report["remaining_qualification"]["decision_boundary_trial_policy"][
+                "policy_version"
+            ],
+            qualification.PLAN4B_DECISION_POLICY_VERSION,
         )
 
 
