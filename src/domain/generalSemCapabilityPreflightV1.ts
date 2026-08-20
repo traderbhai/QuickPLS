@@ -286,7 +286,7 @@ function sameRelationPath(left: readonly string[], right: readonly string[]): bo
 }
 
 /** Mirrors qpls-core specific_directed_path_identity_v1 byte-for-byte. */
-function specificDirectedPathIdentityV1(relationIds: readonly string[]): string {
+export function specificDirectedPathIdentityV1(relationIds: readonly string[]): string {
   const encoder = new TextEncoder();
   const domain = encoder.encode("qpls.compiled-sem-topology-v1.specific-directed-path\0");
   const encodedIds = relationIds.map((relationId) => encoder.encode(relationId));

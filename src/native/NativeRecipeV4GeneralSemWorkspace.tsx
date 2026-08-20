@@ -46,6 +46,10 @@ import {
 import { useInternalProjectArchiveV6Session } from "../internalProjectArchiveV6SessionStore";
 import { inspectInternalProjectArchiveV6At } from "../services/internalProjectArchiveV6ReadService";
 import {
+  GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_CONNECTED_V1,
+  saveInternalGeneralSemModeratedMediationRevisionV1,
+} from "../services/internalGeneralSemModeratedMediationRevisionV2Service";
+import {
   appendInternalProjectSchema6CanonicalResultV2,
   bootstrapInternalGeneralSemProjectArchiveV6,
   cancelInternalLabsGeneralSemPlsJobV1,
@@ -61,6 +65,7 @@ import {
 } from "../services/projectService";
 import { useWorkspace } from "../store";
 import { GeneralSemEstimatorCompatibilityPanel } from "./GeneralSemEstimatorCompatibilityPanel";
+import { NativeGeneralSemModeratedMediationPanel } from "./NativeGeneralSemModeratedMediationPanel";
 import { observedSemanticsForParameterTable } from "./NativeSemParameterTable";
 import {
   CanonicalResultDocumentV2View,
@@ -409,6 +414,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const analysisSettings = useWorkspace((state) => state.analysisSettings);
   const generalSemSession = useInternalProjectArchiveV6Session((state) => state.session);
   const generalSemSessionDirty = useInternalProjectArchiveV6Session((state) => state.dirty);
+  const generalSemRevisionPending = useInternalProjectArchiveV6Session((state) => state.revisionForkPending);
   const markedGeneralSemProjectMode = Boolean(
     generalSemSession?.standardActivation
     && supportsGeneralSemV1(generalSemSession.project)
@@ -1372,6 +1378,25 @@ export function NativeRecipeV4GeneralSemWorkspace({
         {generalSemSessionDirty ? <p className="nd-inline-warning" role="status">The canvas presentation differs from the saved archive. Undo those presentation changes before calculating or appending a result.</p> : null}
       </section>
     </div>
+
+    {GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_CONNECTED_V1 && model && config
+      ? <NativeGeneralSemModeratedMediationPanel
+          connected={GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_CONNECTED_V1}
+          model={model}
+          config={config}
+          revisionPending={generalSemRevisionPending}
+          onSaveAsRevision={async (selection) => {
+            const outcome = await saveInternalGeneralSemModeratedMediationRevisionV1(selection);
+            setFailure({
+              schemaVersion: 1,
+              stage: "archive_authority",
+              subject: "general_sem_config.requested_effect_estimands",
+              ...outcome.diagnostic,
+              issues: [],
+            });
+          }}
+        />
+      : null}
 
     {snapshot ? <section className="nd-cbsem-v4-card nd-cbsem-v4-monitor" aria-labelledby="nd-general-sem-monitor-heading"><div><h3 id="nd-general-sem-monitor-heading">Calculation progress</h3><span className={`nd-cbsem-v4-state ${snapshot.state}`}>{snapshot.state}</span></div><progress max={progressMaximum} value={progressValue}>{progressValue} of {progressMaximum}</progress><p aria-live="polite" aria-atomic="true">{snapshot.phase}: {snapshot.completedUnits} of {snapshot.totalUnits}</p>{snapshot.state === "failed" || snapshot.state === "cancelled" ? <button type="button" onClick={() => void clearTerminal()}><RotateCcw size={15} aria-hidden="true" />Clear terminal job</button> : null}{jobRecoveryRequired ? <div className="nd-cbsem-v4-actions"><button type="button" className="primary" disabled={busy} onClick={() => void recoverJob()}><RotateCcw size={15} aria-hidden="true" />Retry job recovery</button><button type="button" className="danger" disabled={busy} onClick={() => void abandonJobRecovery()}><CircleStop size={15} aria-hidden="true" />Abandon unrecovered job</button></div> : null}</section> : null}
     {failure ? <div className="nd-cbsem-v4-failure" role="alert"><AlertTriangle size={16} aria-hidden="true" /><div><strong>{failure.message}</strong><p>{failure.correctiveAction}</p><small>{failure.code}</small></div></div> : null}
