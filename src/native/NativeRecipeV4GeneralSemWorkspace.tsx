@@ -882,13 +882,19 @@ export function NativeRecipeV4GeneralSemWorkspace({
         readSession: () => useInternalProjectArchiveV6Session.getState().session,
         readWorkspace: () => useWorkspace.getState(),
       });
+      const activatedExecution = rehydrateGeneralSemExecutionAuthorityV1(inspected.value);
+      const activatedModelAuthority = useWorkspace.getState()
+        .standardSemModelV4Authorities[createdReceipt.residentModelId];
+      if (!activatedModelAuthority) {
+        throw new Error("The newly activated General SEM model authority is unavailable.");
+      }
       const activatedAuthorityKey = generalSemAuthorityKeyV1({
-        sourceProjectId: createdReceipt.projectId,
-        datasetId: dataset.id,
-        datasetFingerprint: dataset.fingerprint,
-        modelScientificInput: scientificSemModelV4HashInput(model),
-        config,
-        engine: effectiveEngine,
+        sourceProjectId: activatedExecution.receipt.projectId,
+        datasetId: activatedExecution.receipt.residentDatasetId,
+        datasetFingerprint: activatedExecution.receipt.residentDatasetFingerprint,
+        modelScientificInput: scientificSemModelV4HashInput(activatedModelAuthority.model),
+        config: activatedExecution.config,
+        engine: activatedExecution.engine,
       });
       capturedAuthorityKeyRef.current = activatedAuthorityKey;
       latestAuthorityKeyRef.current = activatedAuthorityKey;

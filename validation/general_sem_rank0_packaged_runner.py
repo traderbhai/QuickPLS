@@ -63,6 +63,8 @@ PACKAGE_PROVENANCE = {
     "file_identity_source": "resolved_path_size_sha256",
     "version_identity_source": "System.Diagnostics.FileVersionInfo",
 }
+TAURI_PORTABLE_BUNDLE_MARKER = b"__TAURI_BUNDLE_TYPE_VAR_UNK"
+TAURI_NSIS_BUNDLE_MARKER = b"__TAURI_BUNDLE_TYPE_VAR_NSS"
 PACKAGED_TAURI_ORIGIN = "http://tauri.localhost"
 PACKAGED_TAURI_IPC_ORIGIN = "http://ipc.localhost"
 ALLOWED_OFFLINE_ORIGINS = {
@@ -81,9 +83,12 @@ def _exact(value: Any, keys: set[str], subject: str) -> Mapping[str, Any]:
 
 def _write_new_json(path: Path, value: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(
-        value, indent=2, sort_keys=False, ensure_ascii=False, allow_nan=False
-    ) + "\n"
+    payload = (
+        json.dumps(
+            value, indent=2, sort_keys=False, ensure_ascii=False, allow_nan=False
+        )
+        + "\n"
+    )
     with path.open("x", encoding="utf-8", newline="\n") as handle:
         handle.write(payload)
         handle.flush()
@@ -94,11 +99,35 @@ def _sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _is_exact_tauri_nsis_bundle_variant(
+    installed_executable: Path, portable_executable: Path
+) -> bool:
+    """Accept only Tauri's exact UNK -> NSS package-kind marker rewrite."""
+
+    portable = portable_executable.read_bytes()
+    installed = installed_executable.read_bytes()
+    if (
+        len(installed) != len(portable)
+        or portable.count(TAURI_PORTABLE_BUNDLE_MARKER) != 1
+        or installed.count(TAURI_NSIS_BUNDLE_MARKER) != 1
+    ):
+        return False
+    offset = portable.index(TAURI_PORTABLE_BUNDLE_MARKER)
+    marker_end = offset + len(TAURI_PORTABLE_BUNDLE_MARKER)
+    return bool(
+        installed[:offset] == portable[:offset]
+        and installed[offset:marker_end] == TAURI_NSIS_BUNDLE_MARKER
+        and installed[marker_end:] == portable[marker_end:]
+    )
+
+
 def package_set_fingerprint(packages: Sequence[Mapping[str, Any]]) -> str:
     lines: list[str] = []
     for expected_kind, package in zip(("installed", "portable"), packages):
         if package.get("package_kind") != expected_kind:
-            raise ContractError("package identity order must be installed then portable")
+            raise ContractError(
+                "package identity order must be installed then portable"
+            )
         provenance = package.get("provenance")
         if provenance != PACKAGE_PROVENANCE:
             raise ContractError(f"{expected_kind} package provenance is not frozen")
@@ -170,7 +199,9 @@ def _validate_package_identities(
             raise ContractError(f"{expected_kind} package path must not be a symlink")
         resolved = unresolved.resolve()
         if resolved != expected_path.resolve() or not resolved.is_file():
-            raise ContractError(f"{expected_kind} package path differs from the executable prerequisite")
+            raise ContractError(
+                f"{expected_kind} package path differs from the executable prerequisite"
+            )
         if (
             row.get("package_kind") != expected_kind
             or row.get("size") != resolved.stat().st_size
@@ -183,16 +214,23 @@ def _validate_package_identities(
             or not row["file_version"]
             or row.get("provenance") != PACKAGE_PROVENANCE
         ):
-            raise ContractError(f"{expected_kind} package identity does not match its current bytes/version authority")
+            raise ContractError(
+                f"{expected_kind} package identity does not match its current bytes/version authority"
+            )
         normalized.append(dict(row))
-    if normalized[0]["resolved_path"].casefold() == normalized[1]["resolved_path"].casefold():
+    if (
+        normalized[0]["resolved_path"].casefold()
+        == normalized[1]["resolved_path"].casefold()
+    ):
         raise ContractError("installed and portable package paths must be distinct")
     fingerprint = package_set_fingerprint(normalized)
     if root.get("package_set_fingerprint") != fingerprint:
         raise ContractError("raw package-set fingerprint does not reproduce")
-    if normalized[0]["sha256"] != normalized[1]["sha256"]:
+    if not _is_exact_tauri_nsis_bundle_variant(
+        installed_executable, portable_executable
+    ):
         raise ContractError(
-            "installed and portable executables must be byte-identical qualification builds"
+            "installed executable is not the exact Tauri NSIS marker variant of the portable build"
         )
     hardware = root.get("hardware_fingerprint")
     expected_hardware_fields = {
@@ -223,7 +261,9 @@ def _validate_package_identities(
         or isinstance(memory, bool)
         or memory < 16 * 1024**3
     ):
-        raise ContractError("raw package hardware does not satisfy standard_windows_6c16g")
+        raise ContractError(
+            "raw package hardware does not satisfy standard_windows_6c16g"
+        )
     return normalized, fingerprint, dict(hardware)
 
 
@@ -232,7 +272,9 @@ def _relative(path: Path, repository_root: Path) -> str:
     try:
         relative = resolved.relative_to(repository_root.resolve())
     except ValueError as error:
-        raise ContractError(f"evidence path leaves the repository: {resolved}") from error
+        raise ContractError(
+            f"evidence path leaves the repository: {resolved}"
+        ) from error
     return relative.as_posix()
 
 
@@ -245,9 +287,13 @@ def _descriptor(path: Path, kind: str, repository_root: Path) -> dict[str, Any]:
     }
 
 
-def _file_descriptor(path: Path, format_id: str, repository_root: Path) -> dict[str, Any]:
+def _file_descriptor(
+    path: Path, format_id: str, repository_root: Path
+) -> dict[str, Any]:
     if not path.is_file() or path.is_symlink() or path.stat().st_size <= 0:
-        raise ContractError(f"{format_id} export is not a non-empty regular file: {path}")
+        raise ContractError(
+            f"{format_id} export is not a non-empty regular file: {path}"
+        )
     return {
         "format": format_id,
         "path": _relative(path, repository_root),
@@ -277,7 +323,9 @@ def _reference_tuple(value: Any, subject: str) -> tuple[int, str, str, str]:
         row.get("cell_id"),
         row.get("capability_version"),
     )
-    if result[0] != 2 or any(not isinstance(item, str) or not item for item in result[1:]):
+    if result[0] != 2 or any(
+        not isinstance(item, str) or not item for item in result[1:]
+    ):
         raise ContractError(f"{subject} is invalid")
     return result  # type: ignore[return-value]
 
@@ -289,17 +337,28 @@ def _load_project_document(path: Path) -> Mapping[str, Any]:
         if path.read_bytes()[:4] == b"PK\x03\x04":
             with zipfile.ZipFile(path, "r") as archive:
                 if archive.testzip() is not None:
-                    raise ContractError("schema-6 project ZIP contains a corrupt member")
+                    raise ContractError(
+                        "schema-6 project ZIP contains a corrupt member"
+                    )
                 names = archive.namelist()
                 if names.count("project.json") != 1:
-                    raise ContractError("schema-6 project ZIP must contain exactly one project.json")
-                value = json.loads(archive.read("project.json"), parse_constant=lambda token: (_ for _ in ()).throw(ContractError(f"non-finite JSON: {token}")))
+                    raise ContractError(
+                        "schema-6 project ZIP must contain exactly one project.json"
+                    )
+                value = json.loads(
+                    archive.read("project.json"),
+                    parse_constant=lambda token: (_ for _ in ()).throw(
+                        ContractError(f"non-finite JSON: {token}")
+                    ),
+                )
         else:
             value = load_json(path)
     except (OSError, UnicodeError, json.JSONDecodeError, zipfile.BadZipFile) as error:
         raise ContractError(str(error)) from error
     if not isinstance(value, Mapping) or value.get("schema_version") != 6:
-        raise ContractError("General SEM acceptance requires a strict schema-6 project document")
+        raise ContractError(
+            "General SEM acceptance requires a strict schema-6 project document"
+        )
     if value.get("sem_generation") != "general_sem_v1":
         raise ContractError("project archive is not marked general_sem_v1")
     return value
@@ -330,7 +389,9 @@ def _canonical_attachment(
         if observed_run == run_id and observed_document == document_id:
             matches.append(attachment)
     if len(matches) != 1:
-        raise ContractError("schema-6 archive does not contain exactly one matching canonical result")
+        raise ContractError(
+            "schema-6 archive does not contain exactly one matching canonical result"
+        )
     attachment = matches[0]
     document = attachment["canonical_document"]
     provenance = document.get("provenance")
@@ -356,13 +417,17 @@ def _canonical_attachment(
         for index, cell in enumerate(inventory)
     ]
     if inventory_cells.count(authority["primary"]) != 1:
-        raise ContractError("canonical result omits or duplicates its point-primary cell")
+        raise ContractError(
+            "canonical result omits or duplicates its point-primary cell"
+        )
     results = document.get("general_sem_results")
     receipt = results.get("inference_receipt") if isinstance(results, Mapping) else None
     supplemental = authority["supplemental"]
     if supplemental is None:
         if receipt is not None:
-            raise ContractError("point result cannot claim a supplemental inference receipt")
+            raise ContractError(
+                "point result cannot claim a supplemental inference receipt"
+            )
     else:
         if inventory_cells.count(supplemental) != 1:
             raise ContractError(
@@ -390,11 +455,15 @@ def _canonical_attachment(
     digest = hashlib.sha256(canonical_bytes).hexdigest()
     recorded_digest = attachment.get("canonical_document_sha256")
     if recorded_digest != digest or not SHA256.fullmatch(digest):
-        raise ContractError("canonical result bytes do not reproduce the attachment digest")
+        raise ContractError(
+            "canonical result bytes do not reproduce the attachment digest"
+        )
     return document, digest, authority
 
 
-def _raw_identity(value: Mapping[str, Any], package: str, variant: str, kind: str, subject: str) -> None:
+def _raw_identity(
+    value: Mapping[str, Any], package: str, variant: str, kind: str, subject: str
+) -> None:
     if value.get("schema_version") != 1 or value.get("evidence_kind") != kind:
         raise ContractError(f"{subject} evidence identity is invalid")
     if value.get("package_kind") != package or value.get("variant_id") != variant:
@@ -483,16 +552,16 @@ def _cancel_archive_identity(value: Any, subject: str) -> dict[str, Any]:
     return {
         "byte_length": row["byte_length"],
         "sha256": row["sha256"],
-        "canonical_result_attachment_count": row[
-            "canonical_result_attachment_count"
-        ],
+        "canonical_result_attachment_count": row["canonical_result_attachment_count"],
     }
 
 
 def _normalize_cancellation(value: Any, required: bool) -> dict[str, Any] | None:
     if not required:
         if value is not None:
-            raise ContractError("optional acceptance cannot claim cancellation evidence")
+            raise ContractError(
+                "optional acceptance cannot claim cancellation evidence"
+            )
         return None
     row = _exact(
         value,
@@ -537,7 +606,9 @@ def _normalize_cancellation(value: Any, required: bool) -> dict[str, Any] | None
         or not isinstance(row.get("settingsBefore"), Mapping)
         or row.get("settingsRetry") != row.get("settingsBefore")
     ):
-        raise ContractError("raw cancellation did not satisfy the exact <=1.0s retry gate")
+        raise ContractError(
+            "raw cancellation did not satisfy the exact <=1.0s retry gate"
+        )
     before = _cancel_archive_identity(row.get("archiveBefore"), "cancel archive before")
     after = _cancel_archive_identity(row.get("archiveAfter"), "cancel archive after")
     if before != after:
@@ -557,9 +628,7 @@ def _normalize_cancellation(value: Any, required: bool) -> dict[str, Any] | None
     }
 
 
-def _normalize_export_cancellation(
-    value: Any, repository_root: Path
-) -> dict[str, Any]:
+def _normalize_export_cancellation(value: Any, repository_root: Path) -> dict[str, Any]:
     row = _exact(value, {"uiControls", "saveDialog"}, "raw export cancellation")
     raw_ui = row.get("uiControls")
     if not isinstance(raw_ui, list) or len(raw_ui) != 3:
@@ -647,7 +716,9 @@ def _normalize_export_cancellation(
     )
     destination = save.get("destinationPath")
     publication = save.get("publication")
-    published_file = publication.get("file") if isinstance(publication, Mapping) else None
+    published_file = (
+        publication.get("file") if isinstance(publication, Mapping) else None
+    )
     if (
         save.get("format") != "csv"
         or not isinstance(destination, str)
@@ -688,7 +759,9 @@ def _normalize_result(
     variant_id = variant["variant_id"]
     evidence_dir = raw_root / package / variant_id
     primary = load_json(evidence_dir / "raw-run-trace.json")
-    _raw_identity(primary, package, variant_id, "general_sem_rank0_primary_run", "primary run")
+    _raw_identity(
+        primary, package, variant_id, "general_sem_rank0_primary_run", "primary run"
+    )
     exports_raw = load_json(evidence_dir / "raw-exported-files.json")
     if (
         not isinstance(exports_raw, Mapping)
@@ -699,11 +772,23 @@ def _normalize_result(
     ):
         raise ContractError("raw exported-files evidence identity is invalid")
     cleanup_raw = load_json(evidence_dir / "raw-process-cleanup.json")
-    _raw_identity(cleanup_raw, package, variant_id, "general_sem_rank0_process_cleanup", "process cleanup")
+    _raw_identity(
+        cleanup_raw,
+        package,
+        variant_id,
+        "general_sem_rank0_process_cleanup",
+        "process cleanup",
+    )
     reopen_raw = []
     for scale in SCALES:
         value = load_json(evidence_dir / f"raw-reopen-{scale}.json")
-        _raw_identity(value, package, variant_id, "general_sem_rank0_fresh_reopen", f"reopen {scale}")
+        _raw_identity(
+            value,
+            package,
+            variant_id,
+            "general_sem_rank0_fresh_reopen",
+            f"reopen {scale}",
+        )
         if value.get("scalePercent") != scale:
             raise ContractError(f"reopen {scale} scale identity is invalid")
         reopen_raw.append(value)
@@ -713,7 +798,12 @@ def _normalize_result(
         raise ContractError("primary run canonical identity is missing")
     run_id = identity.get("runId")
     document_id = identity.get("documentId")
-    if not isinstance(run_id, str) or not run_id or not isinstance(document_id, str) or not document_id:
+    if (
+        not isinstance(run_id, str)
+        or not run_id
+        or not isinstance(document_id, str)
+        or not document_id
+    ):
         raise ContractError("primary run/document identity is incomplete")
     reference = variant["reference"]
     reference_object = _capability_reference(reference)
@@ -741,11 +831,18 @@ def _normalize_result(
             raise ContractError("raw export format/order is invalid")
         raw_path = row.get("path")
         if not isinstance(raw_path, str) or not Path(raw_path).is_absolute():
-            raise ContractError("raw export paths must be absolute package-driver paths")
+            raise ContractError(
+                "raw export paths must be absolute package-driver paths"
+            )
         path_value = Path(raw_path).resolve()
         descriptor = _file_descriptor(path_value, expected_format, repository_root)
-        if row.get("size") != descriptor["size"] or row.get("sha256") != descriptor["sha256"]:
-            raise ContractError(f"raw {expected_format} export descriptor does not match its bytes")
+        if (
+            row.get("size") != descriptor["size"]
+            or row.get("sha256") != descriptor["sha256"]
+        ):
+            raise ContractError(
+                f"raw {expected_format} export descriptor does not match its bytes"
+            )
         try:
             readback = semantic_readback(
                 path_value, expected_format, canonical_document
@@ -755,14 +852,27 @@ def _normalize_result(
                 f"{expected_format} final-file semantic readback failed: {error}"
             ) from error
         normalized_exports.append({**descriptor, "semantic_readback": readback})
-    if exports_raw.get("run_id") != run_id or exports_raw.get("document_id") != document_id:
-        raise ContractError("six-format export evidence is not bound to the exact canonical run")
+    if (
+        exports_raw.get("run_id") != run_id
+        or exports_raw.get("document_id") != document_id
+    ):
+        raise ContractError(
+            "six-format export evidence is not bound to the exact canonical run"
+        )
 
     cleanup_sessions_raw = cleanup_raw.get("sessions")
     if not isinstance(cleanup_sessions_raw, list) or len(cleanup_sessions_raw) != 5:
-        raise ContractError("process cleanup must contain one primary and four reopen sessions")
+        raise ContractError(
+            "process cleanup must contain one primary and four reopen sessions"
+        )
     cleanup_sessions = []
-    expected_session_ids = ["primary", "scale_100", "scale_125", "scale_150", "scale_200"]
+    expected_session_ids = [
+        "primary",
+        "scale_100",
+        "scale_125",
+        "scale_150",
+        "scale_200",
+    ]
     for raw, expected_id in zip(cleanup_sessions_raw, expected_session_ids):
         if not isinstance(raw, Mapping) or raw.get("session_id") != expected_id:
             raise ContractError("process cleanup session identity/order is invalid")
@@ -798,7 +908,9 @@ def _normalize_result(
     if len(pids) != len(set(pids)):
         raise ContractError("fresh-process reopen sessions reused a process identity")
     if primary.get("process_id") != pids[0]:
-        raise ContractError("primary browser trace is not bound to the supervised process")
+        raise ContractError(
+            "primary browser trace is not bound to the supervised process"
+        )
 
     cells = []
     reopen_sessions = []
@@ -811,13 +923,26 @@ def _normalize_result(
         raw_identity = raw.get("identity")
         if not isinstance(raw_identity, Mapping):
             raise ContractError(f"reopen {scale} canonical identity is missing")
-        if raw_identity.get("runId") != run_id or raw_identity.get("documentId") != document_id:
+        if (
+            raw_identity.get("runId") != run_id
+            or raw_identity.get("documentId") != document_id
+        ):
             raise ContractError(f"reopen {scale} restored a different canonical run")
         raw_archive = raw.get("projectArchive")
-        if not isinstance(raw_archive, Mapping) or raw_archive.get("sha256") != project_digest:
-            raise ContractError(f"reopen {scale} project digest differs from the final archive")
-        if raw.get("freshProcessReopen") is not True or raw.get("closeProject") is not True:
-            raise ContractError(f"reopen {scale} did not prove fresh open and explicit close")
+        if (
+            not isinstance(raw_archive, Mapping)
+            or raw_archive.get("sha256") != project_digest
+        ):
+            raise ContractError(
+                f"reopen {scale} project digest differs from the final archive"
+            )
+        if (
+            raw.get("freshProcessReopen") is not True
+            or raw.get("closeProject") is not True
+        ):
+            raise ContractError(
+                f"reopen {scale} did not prove fresh open and explicit close"
+            )
         raw_cells = raw.get("cells")
         if not isinstance(raw_cells, list) or len(raw_cells) != len(VIEWPORTS):
             raise ContractError(f"reopen {scale} viewport matrix is incomplete")
@@ -827,7 +952,9 @@ def _normalize_result(
             snapshot = raw_cell.get("snapshot")
             keyboard = raw_cell.get("keyboard")
             if not isinstance(snapshot, Mapping) or not isinstance(keyboard, Mapping):
-                raise ContractError(f"reopen {scale}/{viewport} a11y evidence is missing")
+                raise ContractError(
+                    f"reopen {scale}/{viewport} a11y evidence is missing"
+                )
             cell = {
                 "scale_percent": scale,
                 "viewport": viewport,
@@ -837,7 +964,10 @@ def _normalize_result(
                 "device_pixel_ratio": snapshot.get("devicePixelRatio"),
                 "actual_client_width": snapshot.get("innerWidth"),
                 "actual_client_height": snapshot.get("innerHeight"),
-                "no_horizontal_overflow": bool(snapshot.get("documentNoHorizontalOverflow") and snapshot.get("appNoHorizontalOverflow")),
+                "no_horizontal_overflow": bool(
+                    snapshot.get("documentNoHorizontalOverflow")
+                    and snapshot.get("appNoHorizontalOverflow")
+                ),
                 "table_count": snapshot.get("tableCount"),
                 "accessible_table_count": snapshot.get("accessibleTableCount"),
                 "chart_count": snapshot.get("chartCount"),
@@ -865,7 +995,9 @@ def _normalize_result(
                 or cell["keyboard_distinct_targets"] < 4
                 or cell["keyboard_reached_interactive_control"] is not True
             ):
-                raise ContractError(f"reopen {scale}/{viewport} normalized a11y contract failed")
+                raise ContractError(
+                    f"reopen {scale}/{viewport} normalized a11y contract failed"
+                )
             cells.append(cell)
         offline_observations.append(
             _normalize_offline_observation(
@@ -873,7 +1005,9 @@ def _normalize_result(
             )
         )
         if raw.get("process_id") != pids[index]:
-            raise ContractError(f"reopen {scale} browser trace is not bound to the supervised process")
+            raise ContractError(
+                f"reopen {scale} browser trace is not bound to the supervised process"
+            )
         reopen_sessions.append(
             {
                 "scale_percent": scale,
@@ -899,7 +1033,9 @@ def _normalize_result(
     for check_id in variant["required_checks"]:
         value = derived.get(check_id, raw_steps.get(check_id))
         if value is not True:
-            raise ContractError(f"{package}/{variant_id} did not prove required step {check_id}")
+            raise ContractError(
+                f"{package}/{variant_id} did not prove required step {check_id}"
+            )
         steps[check_id] = True
 
     project_descriptor = {
@@ -912,9 +1048,7 @@ def _normalize_result(
         for path in evidence_dir.rglob("*")
         if path.is_file()
         and (
-            path.name.lower().endswith(
-                (".tmp", ".partial", ".part", ".crdownload")
-            )
+            path.name.lower().endswith((".tmp", ".partial", ".part", ".crdownload"))
             or path.name.startswith("~$")
             or path.name.endswith("~")
         )
@@ -1076,9 +1210,9 @@ def compose_report(
             "package_set_fingerprint must reproduce exact installed+portable identities"
         )
     package_hashes = [row.get("sha256") for row in package_identities]
-    if package_hashes != [build_fingerprint, build_fingerprint]:
+    if package_hashes[1] != build_fingerprint:
         raise ContractError(
-            "build_fingerprint must equal both installed and portable executable SHA-256 values"
+            "build_fingerprint must equal the portable pre-package executable SHA-256"
         )
     if output.exists():
         raise ContractError(f"report output must be new: {output}")
@@ -1094,7 +1228,9 @@ def compose_report(
         for variant in context["variants"]
         if variant_id is None or variant["variant_id"] == variant_id
     ]
-    if len(selected_variants) != (len(context["variants"]) if variant_id is None else 1):
+    if len(selected_variants) != (
+        len(context["variants"]) if variant_id is None else 1
+    ):
         raise ContractError("requested packaged variant is unavailable")
     results = [
         _normalize_result(
@@ -1121,11 +1257,15 @@ def compose_report(
         "qualification_contracts": qualification_contract_authorities(
             context, repository_root
         ),
-        "generated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "generated_at_utc": datetime.now(timezone.utc)
+        .isoformat()
+        .replace("+00:00", "Z"),
         "results": results,
     }
     if variant_id is None:
-        validate_report(report, context, repository_root, require_standard=require_standard)
+        validate_report(
+            report, context, repository_root, require_standard=require_standard
+        )
     else:
         target = selected_variants[0]
         validate_cell_report(
@@ -1164,7 +1304,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             ("portable", args.portable_executable),
         ):
             if not executable.is_file() or executable.suffix.lower() != ".exe":
-                raise ContractError(f"{kind} executable prerequisite is missing: {executable}")
+                raise ContractError(
+                    f"{kind} executable prerequisite is missing: {executable}"
+                )
         (
             package_identities,
             reproduced_package_set_fingerprint,
@@ -1174,11 +1316,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             installed_executable=args.installed_executable.resolve(),
             portable_executable=args.portable_executable.resolve(),
         )
-        if any(
-            row["sha256"] != args.build_fingerprint for row in package_identities
-        ):
+        if package_identities[1]["sha256"] != args.build_fingerprint:
             raise ContractError(
-                "command build fingerprint differs from installed/portable executable bytes"
+                "command build fingerprint differs from the portable pre-package executable bytes"
             )
         report = compose_report(
             raw_root=args.raw_root.resolve(),

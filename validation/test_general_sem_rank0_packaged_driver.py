@@ -11,7 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class GeneralSemRank0PackagedDriverContracts(unittest.TestCase):
-    def test_all_six_formats_use_native_publication_and_cancel_is_zero_file(self) -> None:
+    def test_all_six_formats_use_native_publication_and_cancel_is_zero_file(
+        self,
+    ) -> None:
         source = (
             ROOT / "validation/general_sem_rank0_packaged_acceptance.mjs"
         ).read_text(encoding="utf-8")
@@ -35,7 +37,9 @@ class GeneralSemRank0PackagedDriverContracts(unittest.TestCase):
         self.assertNotIn('.locator(".nd-canonical-result-v2")', source)
         self.assertIn("publication?.file?.sha256 !== file.sha256", source)
 
-    def test_all_four_cells_cancel_with_latency_and_exact_schema6_archive_identity(self) -> None:
+    def test_all_four_cells_cancel_with_latency_and_exact_schema6_archive_identity(
+        self,
+    ) -> None:
         source = (
             ROOT / "validation/general_sem_rank0_packaged_acceptance.mjs"
         ).read_text(encoding="utf-8")
@@ -51,7 +55,9 @@ class GeneralSemRank0PackagedDriverContracts(unittest.TestCase):
         ):
             self.assertIn(required, source)
 
-    def test_supervisor_freezes_two_packages_four_variants_and_four_scales(self) -> None:
+    def test_supervisor_freezes_two_packages_four_variants_and_four_scales(
+        self,
+    ) -> None:
         source = (
             ROOT / "validation/run_general_sem_rank0_packaged_acceptance.ps1"
         ).read_text(encoding="utf-8")
@@ -62,7 +68,10 @@ class GeneralSemRank0PackagedDriverContracts(unittest.TestCase):
             "multiple_two_way_moderation_bootstrap",
         ):
             self.assertIn(f'"{variant}"', source)
-        self.assertIn("$packages = [ordered]@{ installed = $installed; portable = $portable }", source)
+        self.assertIn(
+            "$packages = [ordered]@{ installed = $installed; portable = $portable }",
+            source,
+        )
         self.assertIn("foreach ($scale in @(100, 125, 150, 200))", source)
         self.assertIn("forced_termination = $forced", source)
         self.assertIn("cdp_endpoint_closed = $cdpClosed", source)
@@ -72,10 +81,11 @@ class GeneralSemRank0PackagedDriverContracts(unittest.TestCase):
             "launched_executable_path",
             "launched_executable_sha256",
             "package_set_fingerprint",
-            "$installedHash -cne $portableHash",
-            "$buildFingerprint = $installedHash",
+            "$buildFingerprint = $portableHash",
+            '"--require-standard-access"',
             "hardware_fingerprint",
             "Win32_Processor",
+            "Win32_PhysicalMemory",
             '"--variant-id", $VariantId',
         ):
             self.assertIn(required, source)
@@ -84,12 +94,12 @@ class GeneralSemRank0PackagedDriverContracts(unittest.TestCase):
         driver = (
             ROOT / "validation/general_sem_rank0_performance_driver.mjs"
         ).read_text(encoding="utf-8")
-        orchestrator = (
-            ROOT / "validation/general_sem_rank0_performance.py"
-        ).read_text(encoding="utf-8")
+        orchestrator = (ROOT / "validation/general_sem_rank0_performance.py").read_text(
+            encoding="utf-8"
+        )
         for required in (
             'new Set(["prepare", "measure", "observe"])',
-            "launchPackage(args[\"quickpls-executable\"])",
+            'launchPackage(args["quickpls-executable"])',
             "openExactProject(session.page, preparedProject)",
             "await runCalculation(session.page, loaded.variant.bootstrap, true)",
             "await cancelAndVerify(",

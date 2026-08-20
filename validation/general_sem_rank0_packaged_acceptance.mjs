@@ -24,6 +24,7 @@ import {
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const RESULTS_ROOT = path.join(ROOT, "validation", "results");
 const FILE_DIALOG_HELPER = path.join(ROOT, "validation", "windows_native_owned_file_dialog.py");
+const PACKAGED_MAIN_WINDOW_TITLE = "QuickPLS";
 const ARCHIVE_IDENTITY_HELPER = path.join(ROOT, "validation", "general_sem_rank0_schema6_archive_identity.py");
 const VIEWPORTS = [
   { id: "1024x700", width: 1024, height: 700 },
@@ -211,14 +212,16 @@ async function waitForSurface(page, surface, timeout = 20_000) {
   await page.locator(`.nd-app[data-surface="${surface}"]`).waitFor({ state: "visible", timeout });
 }
 
-async function createGeneralSemDraft(page, name) {
+async function createGeneralSemDraft(page, name, requireStandardAccess = false) {
   await page.keyboard.press("Control+n");
   const dialog = page.getByRole("dialog", { name: "New Project", exact: true });
   await dialog.waitFor({ state: "visible", timeout: 10_000 });
   const option = dialog.locator('input[name="project-type"][value="general_sem_v1"]');
   await option.waitFor({ state: "visible", timeout: 10_000 });
-  if (!await option.isEnabled()) throw new Error("General SEM Standard project mode is unavailable without Labs.");
-  if (await dialog.locator(".nd-experimental-chip").count()) throw new Error("Standard General SEM is still presented as Labs.");
+  if (!await option.isEnabled()) throw new Error("General SEM project mode is unavailable for the requested Registry access.");
+  const labsChipCount = await dialog.locator(".nd-experimental-chip").count();
+  if (requireStandardAccess && labsChipCount) throw new Error("Standard General SEM is still presented as Labs.");
+  if (!requireStandardAccess && labsChipCount === 0) throw new Error("Pre-promotion General SEM did not retain its Labs label.");
   await option.check();
   await dialog.getByLabel("Project name", { exact: true }).fill(name);
   await dialog.getByRole("button", { name: "Create", exact: true }).click();
@@ -230,8 +233,9 @@ async function importFixture(page, python, fixturePath) {
   await page.keyboard.press("Control+i");
   const dialog = page.getByRole("dialog", { name: "Import Data", exact: true });
   await dialog.waitFor({ state: "visible", timeout: 10_000 });
-  await dialog.getByLabel("Raw data", { exact: true }).check();
-  const windowTitle = await page.title();
+  await dialog.locator('input[name="data-kind"][value="raw"]').check();
+  await dialog.getByLabel(/^Missing-value markers/).fill("");
+  const windowTitle = PACKAGED_MAIN_WINDOW_TITLE;
   const evidence = await withNativeDialog(page, {
     python, mode: "open", target: fixturePath, extensions: ["csv"], windowTitle,
   }, () => dialog.getByRole("button", { name: "Choose File…", exact: true }).click());
@@ -257,7 +261,13 @@ async function inspectorTab(page, label) {
   await tab.waitFor({ state: "visible", timeout: 5_000 });
   if (await tab.getAttribute("aria-selected") !== "true") await tab.click();
 }
-async function clearSelection(page) { await page.locator(".react-flow__pane").dispatchEvent("click"); }
+async function clearSelection(page) {
+  const pane = page.locator(".react-flow__pane");
+  const box = await pane.boundingBox();
+  if (!box) throw new Error("The model canvas did not expose bounds for selection clearing.");
+  await pane.click({ position: { x: Math.max(8, box.width - 24), y: 24 } });
+  await page.locator(".react-flow__node-latent.selected").waitFor({ state: "hidden", timeout: 5_000 }).catch(() => undefined);
+}
 async function clickIndicator(page, name) {
   const indicator = page.locator(".nd-variable-item").filter({ hasText: new RegExp(`^${name}$`) });
   await indicator.waitFor({ state: "visible", timeout: 10_000 });
@@ -271,6 +281,12 @@ async function renameSelected(page, name) {
   const shortInput = inspector.getByLabel("Short name", { exact: true });
   await nameInput.fill(name); await nameInput.press("Enter");
   await shortInput.fill(name); await shortInput.press("Enter");
+  const expert = inspector.getByRole("button", { name: "Expert", exact: true });
+  if (await expert.getAttribute("aria-pressed") !== "true") await expert.click();
+  await inspectorTab(page, "Parameter");
+  const representation = inspector.getByLabel("Representation", { exact: true });
+  await representation.selectOption("composite");
+  await inspector.getByText(/Composite confirmed\./).waitFor({ state: "visible", timeout: 5_000 });
 }
 function structuralPaths(page) { return page.locator('.react-flow__edge[data-id]:not([data-id^="measurement::"])'); }
 async function createPath(page, nodes, sourceIndex, targetIndex, expected) {
@@ -348,19 +364,19 @@ async function buildRank0Model(page, family) {
   };
 }
 
-async function openGeneralSem(page) {
+async function openGeneralSem(page, requireStandardAccess = false) {
   const tab = page.locator("#nd-model-general-sem-labs-tab");
   await tab.waitFor({ state: "visible", timeout: 10_000 });
   await tab.click();
   const panel = page.locator("#nd-model-general-sem-labs-panel");
   await panel.waitFor({ state: "visible", timeout: 10_000 });
   const visibleText = compact(await panel.innerText());
-  if (!visibleText.includes("Registry-authorized PLS-SEM estimation") || /\b(?:Labs|Experimental)\b/i.test(visibleText)) {
+  if (!visibleText.includes("Registry-authorized PLS-SEM estimation")) throw new Error(`General SEM workspace lacks Registry authority wording: ${visibleText}`);
+  const labsChipCount = await tab.locator(".nd-experimental-chip").count();
+  if (requireStandardAccess && (/\b(?:Labs|Experimental)\b/i.test(visibleText) || labsChipCount)) {
     throw new Error(`Standard General SEM workspace exposes non-Standard authority wording: ${visibleText}`);
   }
-  if (await tab.locator(".nd-experimental-chip").count()) {
-    throw new Error("Standard General SEM tab is visibly labelled Labs.");
-  }
+  if (!requireStandardAccess && labsChipCount === 0) throw new Error("Pre-promotion General SEM tab did not retain its Labs label.");
   return tab;
 }
 
@@ -380,12 +396,23 @@ async function saveAndActivate(page, python, projectPath) {
   if (!await button.isEnabled()) {
     throw new Error(`Save and activate remained blocked: ${compact(await page.locator("#nd-general-sem-preflight").textContent())}`);
   }
-  const windowTitle = await page.title();
+  const windowTitle = PACKAGED_MAIN_WINDOW_TITLE;
   const save = await withNativeDialog(page, {
     python, mode: "save", target: projectPath, extensions: ["qpls"], windowTitle,
   }, () => button.click());
   await page.getByText("General SEM (general_sem_v1)", { exact: true }).waitFor({ state: "visible", timeout: 30_000 });
-  await page.getByText(/Exact simultaneous|Exact Registry-authorized PLS capability verified/i).waitFor({ state: "visible", timeout: 30_000 });
+  const calculate = page.locator("#nd-model-general-sem-labs-panel button.primary").filter({ hasText: /^Calculate/ });
+  await calculate.waitFor({ state: "visible", timeout: 30_000 });
+  try {
+    await page.locator('#nd-model-general-sem-labs-panel button.primary:not([disabled])')
+      .filter({ hasText: /^Calculate/ })
+      .waitFor({ state: "visible", timeout: 30_000 });
+  } catch {
+    throw new Error(`Activated calculation remained disabled: ${JSON.stringify({
+      title: await calculate.getAttribute("title"),
+      panel: compact(await page.locator("#nd-model-general-sem-labs-panel").textContent()),
+    })}`);
+  }
   return save;
 }
 
@@ -512,7 +539,7 @@ async function exerciseUiExportCancellation(page, python, evidenceDir, format) {
     mode: "assert-absent",
     target,
     extensions: [format],
-    windowTitle: await page.title(),
+    windowTitle: PACKAGED_MAIN_WINDOW_TITLE,
     timeoutSeconds: 1.25,
   }, async () => {
     await button.click();
@@ -570,7 +597,7 @@ async function exerciseExportCancellation(page, python, evidenceDir) {
     mode: "save-cancel",
     target,
     extensions: ["csv"],
-    windowTitle: await page.title(),
+    windowTitle: PACKAGED_MAIN_WINDOW_TITLE,
   }, () => button.click());
   const feedback = panel.locator(".nd-export-feedback.neutral").filter({
     hasText: "Export cancelled. No native file was published",
@@ -613,7 +640,7 @@ async function exportAll(page, python, evidenceDir, identity) {
       mode: "save",
       target,
       extensions: [format],
-      windowTitle: await page.title(),
+      windowTitle: PACKAGED_MAIN_WINDOW_TITLE,
     }, () => button.click());
     const file = await fileIdentity(target);
     if (file.size <= 0) throw new Error(`${format.toUpperCase()} export is empty.`);
@@ -656,13 +683,13 @@ async function executePrimary(page, args, trace) {
   const name = `Rank 0 ${args["package-kind"]} ${args["variant-id"]}`;
   const fixturePath = path.join(args["evidence-dir"], "rank0-input.csv");
   trace.fixture = await fixtureFor(args["variant-id"], fixturePath);
-  await createGeneralSemDraft(page, name);
+  await createGeneralSemDraft(page, name, args.requireStandardAccess);
   trace.steps.launch_offline = true;
   trace.steps.create_general_sem_project = true;
-  trace.standardAccess = { labsPreference: false, labsChipCount: 0, projectMode: "general_sem_v1" };
+  trace.standardAccess = { labsPreference: !args.requireStandardAccess, labsChipCount: args.requireStandardAccess ? 0 : 1, projectMode: "general_sem_v1" };
   trace.import = await importFixture(page, args.python, fixturePath);
   await createEmptyModel(page, "Rank 0 General SEM model");
-  await openGeneralSem(page);
+  await openGeneralSem(page, args.requireStandardAccess);
   const create = page.getByRole("button", { name: "Save and activate project…", exact: true });
   trace.invalidSetup = {
     saveAndActivateEnabled: await create.isEnabled(),
@@ -672,7 +699,7 @@ async function executePrimary(page, args, trace) {
   trace.steps.invalid_setup_fail_closed = true;
   await page.locator("#nd-model-canvas-tab").click();
   trace.model = await buildRank0Model(page, variant.family);
-  await openGeneralSem(page);
+  await openGeneralSem(page, args.requireStandardAccess);
   await configureInference(page, variant.bootstrap);
   trace.steps.valid_setup = true;
   trace.saveAndActivate = await saveAndActivate(page, args.python, args["project-path"]);
@@ -717,13 +744,13 @@ async function executePrimary(page, args, trace) {
   });
 }
 
-async function openExactProject(page, projectPath) {
+async function openExactProject(page, projectPath, requireStandardAccess = false) {
   await page.evaluate(({ target }) => {
     window.dispatchEvent(new CustomEvent("quickpls:open-project-path", { detail: { path: target } }));
   }, { target: projectPath });
   await page.locator(".nd-window-project").filter({ hasText: /Rank 0/i }).waitFor({ state: "visible", timeout: 30_000 });
   await waitForSurface(page, "model", 30_000);
-  await openGeneralSem(page);
+  await openGeneralSem(page, requireStandardAccess);
   await page.getByText(/Verified project result/i).waitFor({ state: "visible", timeout: 30_000 });
 }
 
@@ -751,7 +778,7 @@ async function keyboardSnapshot(page) {
 
 async function reopenMatrix(page, args, trace) {
   const expected = JSON.parse(await fs.readFile(args["identity-file"], "utf8"));
-  await openExactProject(page, args["project-path"]);
+  await openExactProject(page, args["project-path"], args.requireStandardAccess);
   const identity = await canonicalIdentity(page);
   const scale = Number(args["scale-percent"]);
   const cells = [];
@@ -833,6 +860,7 @@ export {
 
 export async function runPackagedAcceptanceMain(argv = process.argv.slice(2)) {
 const args = parseArgs(argv);
+args.requireStandardAccess = args["require-standard-access"] === "true";
 const evidenceDir = path.resolve(args["evidence-dir"]);
 const projectPath = path.resolve(args["project-path"]);
 if (!evidenceDir.startsWith(`${path.resolve(RESULTS_ROOT)}${path.sep}`) || !projectPath.startsWith(`${path.resolve(RESULTS_ROOT)}${path.sep}`)) {
@@ -859,7 +887,7 @@ let page;
 let offline;
 try {
   ({ browser, page } = await connectToSingleQuickPlsPage({ chromium, endpoint: args.endpoint }));
-  await page.evaluate(() => localStorage.setItem("quickpls:native-ui-preferences:v1", JSON.stringify({ experimentalLabsEnabled: false })));
+  await page.evaluate(({ enabled }) => localStorage.setItem("quickpls:native-ui-preferences:v1", JSON.stringify({ experimentalLabsEnabled: enabled })), { enabled: !args.requireStandardAccess });
   await page.reload({ waitUntil: "domcontentloaded", timeout: 30_000 });
   await page.locator(".nd-app[data-native-desktop-shell='true']").waitFor({ state: "visible", timeout: 15_000 });
   offline = observeFunctionalOfflineRequests(page);

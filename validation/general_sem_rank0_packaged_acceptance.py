@@ -1361,9 +1361,9 @@ def _validate_report_authority(
         raise ContractError(
             "package_set_fingerprint does not reproduce package identities"
         )
-    if any(row["sha256"] != fingerprint for row in package_identities.values()):
+    if package_identities["portable"]["sha256"] != fingerprint:
         raise ContractError(
-            "build_fingerprint must equal both installed and portable executable SHA-256 values"
+            "build_fingerprint must equal the portable pre-package executable SHA-256"
         )
     _validate_hardware_fingerprint(root.get("hardware_fingerprint"))
     try:

@@ -49,7 +49,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target", required=True)
     parser.add_argument("--allowed-root", required=True)
     parser.add_argument("--window-title", required=True)
-    parser.add_argument("--extension", action="append", dest="extensions", required=True)
+    parser.add_argument(
+        "--extension", action="append", dest="extensions", required=True
+    )
     parser.add_argument("--timeout-seconds", type=float, default=45.0)
     return parser.parse_args()
 
@@ -63,9 +65,15 @@ def validate_target(args: argparse.Namespace) -> tuple[Path, Path, tuple[str, ..
     try:
         target.relative_to(root)
     except ValueError as error:
-        raise GateFailure("The file-dialog target must remain below --allowed-root.") from error
-    extensions = tuple(sorted({value.strip().lower().lstrip(".") for value in args.extensions}))
-    if not extensions or any(not value or not value.replace("_", "").isalnum() for value in extensions):
+        raise GateFailure(
+            "The file-dialog target must remain below --allowed-root."
+        ) from error
+    extensions = tuple(
+        sorted({value.strip().lower().lstrip(".") for value in args.extensions})
+    )
+    if not extensions or any(
+        not value or not value.replace("_", "").isalnum() for value in extensions
+    ):
         raise GateFailure("--extension values must be non-empty file extensions.")
     if target.suffix.lower().lstrip(".") not in extensions:
         raise GateFailure(f"The target extension must be one of {extensions}.")
@@ -73,16 +81,21 @@ def validate_target(args: argparse.Namespace) -> tuple[Path, Path, tuple[str, ..
         if not target.is_file() or target.is_symlink() or target.stat().st_size <= 0:
             raise GateFailure("Open targets must be non-empty regular files.")
     elif target.exists() or not target.parent.is_dir():
-        raise GateFailure("Save targets must be new files with an existing parent directory.")
+        raise GateFailure(
+            "Save targets must be new files with an existing parent directory."
+        )
     return target, root, extensions
 
 
-def exact_controls(dialog: Any, require_cancel: bool) -> tuple[Any, Any, Any | None, list[dict[str, Any]]]:
+def exact_controls(
+    dialog: Any, require_cancel: bool
+) -> tuple[Any, Any, Any | None, list[dict[str, Any]]]:
     controls = dialog.descendants()
     edits = [
         control
         for control in controls
-        if control.class_name() == "Edit" and int(control.control_id()) in FILENAME_CONTROL_IDS
+        if control.class_name() == "Edit"
+        and int(control.control_id()) in FILENAME_CONTROL_IDS
     ]
     actions = [
         control
@@ -104,7 +117,9 @@ def exact_controls(dialog: Any, require_cancel: bool) -> tuple[Any, Any, Any | N
     return edits[0], actions[0], cancels[0] if cancels else None, summary
 
 
-def submit(dialog: Any, edit: Any, action: Any, target: Path, deadline: float, win32con: Any) -> dict[str, Any]:
+def submit(
+    dialog: Any, edit: Any, action: Any, target: Path, deadline: float, win32con: Any
+) -> dict[str, Any]:
     if not action.is_visible() or not action.is_enabled():
         raise GateFailure("The owned file-dialog action is not visible and enabled.")
     target_text = str(target)
@@ -127,7 +142,9 @@ def submit(dialog: Any, edit: Any, action: Any, target: Path, deadline: float, w
             verified = True
             break
     if not verified:
-        raise GateFailure(f"The filename field did not retain the exact target: {attempts}")
+        raise GateFailure(
+            f"The filename field did not retain the exact target: {attempts}"
+        )
     action.send_message(win32con.BM_CLICK, 0, 0)
     return {
         "filenameControlId": int(edit.control_id()),
@@ -138,9 +155,13 @@ def submit(dialog: Any, edit: Any, action: Any, target: Path, deadline: float, w
     }
 
 
-def cancel_save(dialog: Any, edit: Any, cancel: Any, target: Path, deadline: float, win32con: Any) -> dict[str, Any]:
+def cancel_save(
+    dialog: Any, edit: Any, cancel: Any, target: Path, deadline: float, win32con: Any
+) -> dict[str, Any]:
     if not cancel.is_visible() or not cancel.is_enabled():
-        raise GateFailure("The owned file-dialog Cancel action is not visible and enabled.")
+        raise GateFailure(
+            "The owned file-dialog Cancel action is not visible and enabled."
+        )
     target_text = str(target)
     attempts: list[dict[str, Any]] = []
     dialog.set_focus()
@@ -161,7 +182,9 @@ def cancel_save(dialog: Any, edit: Any, cancel: Any, target: Path, deadline: flo
             verified = True
             break
     if not verified:
-        raise GateFailure(f"The filename field did not retain the cancelled target: {attempts}")
+        raise GateFailure(
+            f"The filename field did not retain the cancelled target: {attempts}"
+        )
     cancel.send_message(win32con.BM_CLICK, 0, 0)
     return {
         "filenameControlId": int(edit.control_id()),
@@ -172,11 +195,18 @@ def cancel_save(dialog: Any, edit: Any, cancel: Any, target: Path, deadline: flo
     }
 
 
-def wait_for_completion(mode: str, dialog: Any, target: Path, deadline: float) -> dict[str, Any]:
+def wait_for_completion(
+    mode: str, dialog: Any, target: Path, deadline: float
+) -> dict[str, Any]:
     prior_size = -1
     stable_reads = 0
     while time.monotonic() < deadline:
-        dialog_visible = bool(dialog.is_visible()) if dialog.exists(timeout=0.1) else False
+        try:
+            dialog_visible = bool(dialog.is_visible())
+        except Exception:
+            # A destroyed Win32 dialog wrapper raises instead of exposing
+            # WindowSpecification.exists(); destruction is the terminal state.
+            dialog_visible = False
         if mode == "open" and not dialog_visible:
             break
         if mode == "save" and target.is_file() and target.stat().st_size > 0:
@@ -228,16 +258,18 @@ def main() -> int:
         main_window, main_info = visible_quickpls_window(
             args.window_title, Desktop, win32api, win32con, win32process
         )
-        emit({
-            "event": "ready",
-            "passed": True,
-            "phase": phase,
-            "mode": args.mode,
-            "targetPath": str(target),
-            "allowedRoot": str(root),
-            "extensions": extensions,
-            "mainWindow": main_info,
-        })
+        emit(
+            {
+                "event": "ready",
+                "passed": True,
+                "phase": phase,
+                "mode": args.mode,
+                "targetPath": str(target),
+                "allowedRoot": str(root),
+                "extensions": extensions,
+                "mainWindow": main_info,
+            }
+        )
         deadline = time.monotonic() + max(5.0, args.timeout_seconds)
         phase = "owned_dialog_binding"
         inspected: list[dict[str, Any]] = []
@@ -259,26 +291,34 @@ def main() -> int:
                 time.sleep(0.05)
             if target.exists():
                 raise GateFailure("UI export cancellation published a partial file.")
-            emit({
-                "event": "complete",
-                "passed": True,
-                "phase": "owned_dialog_absence",
-                "mode": args.mode,
-                "mainWindow": main_info,
-                "nativeDialogObserved": False,
-                "file": {
-                    "path": str(target),
-                    "exists": False,
-                    "cancelledBeforePublication": True,
-                },
-            })
+            emit(
+                {
+                    "event": "complete",
+                    "passed": True,
+                    "phase": "owned_dialog_absence",
+                    "mode": args.mode,
+                    "mainWindow": main_info,
+                    "nativeDialogObserved": False,
+                    "file": {
+                        "path": str(target),
+                        "exists": False,
+                        "cancelledBeforePublication": True,
+                    },
+                }
+            )
             return 0
         while time.monotonic() < deadline:
             candidates, inspected = owned_dialogs(
-                int(main_info["pid"]), int(main_window.handle), Desktop, win32con, win32gui
+                int(main_info["pid"]),
+                int(main_window.handle),
+                Desktop,
+                win32con,
+                win32gui,
             )
             if len(candidates) > 1:
-                raise GateFailure(f"Expected one owned common-file dialog; found {len(candidates)}: {inspected}")
+                raise GateFailure(
+                    f"Expected one owned common-file dialog; found {len(candidates)}: {inspected}"
+                )
             if len(candidates) == 1:
                 dialog = candidates[0]
                 break
@@ -300,36 +340,41 @@ def main() -> int:
         )
         phase = "file_completion"
         file_evidence = wait_for_completion(args.mode, dialog, target, deadline)
-        emit({
-            "event": "complete",
-            "passed": True,
-            "phase": phase,
-            "mode": args.mode,
-            "mainWindow": main_info,
-            "dialogHandle": dialog_handle,
-            "submission": submission,
-            "file": file_evidence,
-        })
+        emit(
+            {
+                "event": "complete",
+                "passed": True,
+                "phase": phase,
+                "mode": args.mode,
+                "mainWindow": main_info,
+                "dialogHandle": dialog_handle,
+                "submission": submission,
+                "file": file_evidence,
+            }
+        )
         return 0
     except Exception as error:
         if dialog_handle:
             try:
                 import win32con
                 import win32gui
+
                 if win32gui.IsWindow(dialog_handle):
                     win32gui.PostMessage(dialog_handle, win32con.WM_CLOSE, 0, 0)
             except Exception as close_error:
                 diagnostics["dialogCloseError"] = str(close_error)
-        emit({
-            "event": "complete",
-            "passed": False,
-            "phase": phase,
-            "mode": args.mode,
-            "targetPath": args.target,
-            "error": {"type": type(error).__name__, "message": str(error)},
-            "diagnostics": diagnostics,
-            "traceback": traceback.format_exc(),
-        })
+        emit(
+            {
+                "event": "complete",
+                "passed": False,
+                "phase": phase,
+                "mode": args.mode,
+                "targetPath": args.target,
+                "error": {"type": type(error).__name__, "message": str(error)},
+                "diagnostics": diagnostics,
+                "traceback": traceback.format_exc(),
+            }
+        )
         return 1
 
 

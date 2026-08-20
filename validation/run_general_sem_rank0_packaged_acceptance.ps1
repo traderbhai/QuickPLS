@@ -93,7 +93,8 @@ function Invoke-PackagedSession {
         [string]$EvidenceDir,
         [string]$ProjectPath,
         [string]$IdentityFile,
-        [object]$PackageIdentity
+        [object]$PackageIdentity,
+        [bool]$RequireStandardAccess
     )
     $endpoint = "http://127.0.0.1:9222"
     $factor = ([double]$ScalePercent / 100).ToString("0.##", [System.Globalization.CultureInfo]::InvariantCulture)
@@ -150,7 +151,8 @@ function Invoke-PackagedSession {
             "--evidence-dir", $EvidenceDir,
             "--project-path", $ProjectPath,
             "--python", $PythonExecutable,
-            "--process-id", [string]$application.Id
+            "--process-id", [string]$application.Id,
+            "--require-standard-access", $RequireStandardAccess.ToString().ToLowerInvariant()
         )
         if ($Phase -eq "reopen") {
             $nodeArguments += @("--scale-percent", [string]$ScalePercent, "--identity-file", $IdentityFile)
@@ -236,20 +238,17 @@ if ($installedVersion.ProductVersion -ne $portableVersion.ProductVersion -or $in
 }
 $installedHash = (Get-FileHash -LiteralPath $installed -Algorithm SHA256).Hash.ToLowerInvariant()
 $portableHash = (Get-FileHash -LiteralPath $portable -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($installedHash -cne $portableHash) {
-    throw "Installed and portable executables must be byte-identical qualification builds."
-}
-$buildFingerprint = $installedHash
+$buildFingerprint = $portableHash
 $osBuild = [System.Environment]::OSVersion.Version.Build
 $architecture = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()
 if ($osBuild -lt 22000 -or $architecture -ne "x64") {
     throw "Rank 0 packaged qualification requires Windows 11 x86-64."
 }
 $processorRows = @(Get-CimInstance -ClassName Win32_Processor -ErrorAction Stop)
-$computerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop
+$memoryModules = @(Get-CimInstance -ClassName Win32_PhysicalMemory -ErrorAction Stop)
 $physicalCores = [int](($processorRows | Measure-Object -Property NumberOfCores -Sum).Sum)
 $logicalCores = [int][System.Environment]::ProcessorCount
-$memoryBytes = [long]$computerSystem.TotalPhysicalMemory
+$memoryBytes = [long](($memoryModules | Measure-Object -Property Capacity -Sum).Sum)
 $cpuIdentity = [string](($processorRows | ForEach-Object { $_.Name.Trim() } | Sort-Object -Unique) -join "; ")
 if ($physicalCores -lt 6 -or $logicalCores -lt $physicalCores -or $memoryBytes -lt 16GB -or [string]::IsNullOrWhiteSpace($cpuIdentity)) {
     throw "Host does not satisfy the standard_windows_6c16g qualification profile."
@@ -338,12 +337,14 @@ foreach ($package in $packages.GetEnumerator()) {
         $sessions += Invoke-PackagedSession `
             -Executable $package.Value -PackageKind $package.Key -VariantId $variant `
             -Phase "execute" -ScalePercent 100 -EvidenceDir $evidenceDir `
-            -ProjectPath $projectPath -IdentityFile "" -PackageIdentity ($packageIdentities | Where-Object { $_.package_kind -eq $package.Key })
+            -ProjectPath $projectPath -IdentityFile "" -PackageIdentity ($packageIdentities | Where-Object { $_.package_kind -eq $package.Key }) `
+            -RequireStandardAccess $RequireStandard.IsPresent
         foreach ($scale in @(100, 125, 150, 200)) {
             $sessions += Invoke-PackagedSession `
                 -Executable $package.Value -PackageKind $package.Key -VariantId $variant `
                 -Phase "reopen" -ScalePercent $scale -EvidenceDir $evidenceDir `
-                -ProjectPath $projectPath -IdentityFile $identityFile -PackageIdentity ($packageIdentities | Where-Object { $_.package_kind -eq $package.Key })
+                -ProjectPath $projectPath -IdentityFile $identityFile -PackageIdentity ($packageIdentities | Where-Object { $_.package_kind -eq $package.Key }) `
+                -RequireStandardAccess $RequireStandard.IsPresent
         }
         $cleanup = [ordered]@{
             schema_version = 1

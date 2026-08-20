@@ -51,9 +51,11 @@ def _build_report():
     ) as directory_value:
         directory = Path(directory_value)
         package_identities = []
-        payload = b"byte-identical-qualification-build"
+        portable_payload = b"prefix__TAURI_BUNDLE_TYPE_VAR_UNKsuffix"
+        installed_payload = b"prefix__TAURI_BUNDLE_TYPE_VAR_NSSsuffix"
         for package in ("installed", "portable"):
             executable = directory / f"{package}.exe"
+            payload = installed_payload if package == "installed" else portable_payload
             executable.write_bytes(payload)
             package_identities.append(
                 {
@@ -151,8 +153,12 @@ def _build_report():
                                 "method_version": authority["method_version"],
                                 "dataset_fingerprint": "d" * 64,
                                 "semantic_sha256": "e" * 64,
-                                "table_ids": [] if format_id in {"svg", "png"} else ["effects"],
-                                "chart_ids": ["chart"] if format_id in {"svg", "png"} else [],
+                                "table_ids": []
+                                if format_id in {"svg", "png"}
+                                else ["effects"],
+                                "chart_ids": ["chart"]
+                                if format_id in {"svg", "png"}
+                                else [],
                                 "canonical_values_sha256": "f" * 64,
                                 "rendered_surface_match": True,
                                 "canonical_match": True,
@@ -180,9 +186,7 @@ def _build_report():
                             }
                             for index in range(5)
                         ],
-                        "steps": {
-                            check: True for check in variant["required_checks"]
-                        },
+                        "steps": {check: True for check in variant["required_checks"]},
                         "run_id": run_id,
                         "document_id": document_id,
                         "project_archive": {
@@ -193,35 +197,38 @@ def _build_report():
                             ).hexdigest(),
                         },
                         "cancellation_observation": {
-                                "terminal_latency_seconds": 0.25,
-                                "terminal_state": "cancelled",
-                                "job_completed_before_cancel": False,
-                                "no_partial_visible_result": True,
-                                "no_partial_committed_result": True,
-                                "archive_unchanged": True,
-                                "exact_same_settings_retry": True,
-                                "archive_before": {
-                                    "byte_length": project_path.stat().st_size,
-                                    "sha256": hashlib.sha256(
-                                        project_path.read_bytes()
-                                    ).hexdigest(),
-                                    "canonical_result_attachment_count": 0,
-                                },
-                                "archive_after": {
-                                    "byte_length": project_path.stat().st_size,
-                                    "sha256": hashlib.sha256(
-                                        project_path.read_bytes()
-                                    ).hexdigest(),
-                                    "canonical_result_attachment_count": 0,
-                                },
+                            "terminal_latency_seconds": 0.25,
+                            "terminal_state": "cancelled",
+                            "job_completed_before_cancel": False,
+                            "no_partial_visible_result": True,
+                            "no_partial_committed_result": True,
+                            "archive_unchanged": True,
+                            "exact_same_settings_retry": True,
+                            "archive_before": {
+                                "byte_length": project_path.stat().st_size,
+                                "sha256": hashlib.sha256(
+                                    project_path.read_bytes()
+                                ).hexdigest(),
+                                "canonical_result_attachment_count": 0,
                             },
+                            "archive_after": {
+                                "byte_length": project_path.stat().st_size,
+                                "sha256": hashlib.sha256(
+                                    project_path.read_bytes()
+                                ).hexdigest(),
+                                "canonical_result_attachment_count": 0,
+                            },
+                        },
                         "export_cancellation_observation": {
                             "ui_control_cancellations": [
                                 {
                                     "format": format_id,
                                     "destination_path": (
-                                        evidence_dir / f"ui-cancelled-export.{format_id}"
-                                    ).relative_to(ROOT).as_posix(),
+                                        evidence_dir
+                                        / f"ui-cancelled-export.{format_id}"
+                                    )
+                                    .relative_to(ROOT)
+                                    .as_posix(),
                                     "terminal_latency_seconds": 0.2,
                                     "terminal_state": "cancelled",
                                     "cancel_control_activated": True,
@@ -233,7 +240,9 @@ def _build_report():
                             ],
                             "save_dialog_destination_path": (
                                 evidence_dir / "cancelled-export.csv"
-                            ).relative_to(ROOT).as_posix(),
+                            )
+                            .relative_to(ROOT)
+                            .as_posix(),
                             "save_dialog_cancelled": True,
                             "semantic_readback_completed": True,
                             "save_dialog_no_partial_file": True,
@@ -304,13 +313,23 @@ def _build_report():
                         "variant_id": variant["variant_id"],
                         "sessions": [
                             {
-                                "session_id": "primary" if index == 0 else f"scale_{(100, 125, 150, 200)[index - 1]}",
+                                "session_id": "primary"
+                                if index == 0
+                                else f"scale_{(100, 125, 150, 200)[index - 1]}",
                                 "phase": "execute" if index == 0 else "reopen",
-                                "scale_percent": 100 if index == 0 else (100, 125, 150, 200)[index - 1],
+                                "scale_percent": 100
+                                if index == 0
+                                else (100, 125, 150, 200)[index - 1],
                                 "launched_pid": 1000 + index,
-                                "launched_executable_path": package_by_kind[package]["resolved_path"],
-                                "launched_executable_size": package_by_kind[package]["size"],
-                                "launched_executable_sha256": package_by_kind[package]["sha256"],
+                                "launched_executable_path": package_by_kind[package][
+                                    "resolved_path"
+                                ],
+                                "launched_executable_size": package_by_kind[package][
+                                    "size"
+                                ],
+                                "launched_executable_sha256": package_by_kind[package][
+                                    "sha256"
+                                ],
                                 "graceful_exit_confirmed": True,
                                 "forced_termination": False,
                                 "lingering_pids": [],
@@ -365,36 +384,37 @@ def _build_report():
                         "capability_reference": reference,
                         "offline": True,
                         "fresh_process_reopen": True,
-                        "checks": {
-                            check: True for check in variant["required_checks"]
-                        },
+                        "checks": {check: True for check in variant["required_checks"]},
                         "artifacts": artifacts,
                     }
                 )
-        yield context, {
-            "schema_version": 1,
-            "report_kind": "quickpls_general_sem_rank0_packaged_acceptance",
-            "contract_id": context["contract_id"],
-            "contract_version": context["contract_version"],
-            "contract_sha256": canonical_sha256(contract),
-            "build_fingerprint": package_identities[0]["sha256"],
-            "package_set_fingerprint": _package_fingerprint(package_identities),
-            "package_identities": package_identities,
-            "hardware_fingerprint": {
-                "os": "windows_11",
-                "architecture": "x86_64",
-                "cpu": "Fixture CPU",
-                "physical_cores": 6,
-                "logical_cores": 12,
-                "memory_bytes": 16 * 1024**3,
+        yield (
+            context,
+            {
+                "schema_version": 1,
+                "report_kind": "quickpls_general_sem_rank0_packaged_acceptance",
+                "contract_id": context["contract_id"],
+                "contract_version": context["contract_version"],
+                "contract_sha256": canonical_sha256(contract),
+                "build_fingerprint": package_identities[1]["sha256"],
+                "package_set_fingerprint": _package_fingerprint(package_identities),
+                "package_identities": package_identities,
+                "hardware_fingerprint": {
+                    "os": "windows_11",
+                    "architecture": "x86_64",
+                    "cpu": "Fixture CPU",
+                    "physical_cores": 6,
+                    "logical_cores": 12,
+                    "memory_bytes": 16 * 1024**3,
+                },
+                "source_receipt": unified_rank0_source_receipt(ROOT),
+                "qualification_contracts": qualification_contract_authorities(
+                    context, ROOT
+                ),
+                "generated_at_utc": "2026-08-19T00:00:00Z",
+                "results": results,
             },
-            "source_receipt": unified_rank0_source_receipt(ROOT),
-            "qualification_contracts": qualification_contract_authorities(
-                context, ROOT
-            ),
-            "generated_at_utc": "2026-08-19T00:00:00Z",
-            "results": results,
-        }
+        )
 
 
 _REPORT_MANAGER = None
@@ -421,7 +441,9 @@ def tearDownModule() -> None:
 
 class GeneralSemRank0PackagedAcceptanceTests(unittest.TestCase):
     def test_contract_resolves_exact_four_cells_and_two_packages(self) -> None:
-        context = validate_contract(load_json(DEFAULT_CONTRACT), load_json(DEFAULT_REGISTRY))
+        context = validate_contract(
+            load_json(DEFAULT_CONTRACT), load_json(DEFAULT_REGISTRY)
+        )
         self.assertEqual(context["packages"], ("installed", "portable"))
         self.assertEqual(
             [row["variant_id"] for row in context["variants"]],
@@ -471,12 +493,18 @@ class GeneralSemRank0PackagedAcceptanceTests(unittest.TestCase):
                     with self.assertRaises(ContractError):
                         validate_report(report, context, ROOT, require_standard=False)
 
-    def test_standard_gate_remains_closed_before_atomic_registry_promotion(self) -> None:
+    def test_standard_gate_remains_closed_before_atomic_registry_promotion(
+        self,
+    ) -> None:
         with _report() as (context, report):
-            with self.assertRaisesRegex(ContractError, "not release-qualified Standard"):
+            with self.assertRaisesRegex(
+                ContractError, "not release-qualified Standard"
+            ):
                 validate_report(report, context, ROOT, require_standard=True)
 
-    def test_common_build_package_hardware_source_and_contract_authorities_fail_closed(self) -> None:
+    def test_common_build_package_hardware_source_and_contract_authorities_fail_closed(
+        self,
+    ) -> None:
         for mutation in (
             "build",
             "package_set",
@@ -499,19 +527,19 @@ class GeneralSemRank0PackagedAcceptanceTests(unittest.TestCase):
                             "qualification_contract_sha256"
                         ] = "0" * 64
                     with self.assertRaises(ContractError):
-                        validate_report(
-                            report, context, ROOT, require_standard=False
-                        )
+                        validate_report(report, context, ROOT, require_standard=False)
 
-    def test_cell_validator_ignores_unrelated_cell_failure_but_not_target_failure(self) -> None:
+    def test_cell_validator_ignores_unrelated_cell_failure_but_not_target_failure(
+        self,
+    ) -> None:
         with _report() as (context, original):
             report = deepcopy(original)
             target = report["results"][0]["capability_reference"]
             unrelated = report["results"][-1]
             unrelated["checks"][next(iter(unrelated["checks"]))] = False
-            report["qualification_contracts"][-1][
-                "qualification_contract_sha256"
-            ] = "0" * 64
+            report["qualification_contracts"][-1]["qualification_contract_sha256"] = (
+                "0" * 64
+            )
             accepted = validate_cell_report(
                 report,
                 context,
