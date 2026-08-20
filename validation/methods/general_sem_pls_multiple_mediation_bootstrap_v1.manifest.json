@@ -270,62 +270,47 @@
     }
   },
   "qualification": {
-    "declared_state": "engine_only",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
       "method_spec": [
         "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MEDIATION_BOOTSTRAP_V1.md"
       ],
       "independent_reference": [
-        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_reference.py"
+        "validation/general_sem_rank0_csem_oracle.py",
+        "validation/general_sem_rank0_csem_oracle.R"
       ],
       "simulation_report": [
-        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_kernel_simulation.py"
+        "validation/general_sem_rank0_qualification_runner.py"
       ],
       "boundary_report": [
-        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_reference.py"
+        "validation/general_sem_rank0_qualification.py"
       ],
       "persistence_report": [
-        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_persistence_gate.py"
+        "validation/general_sem_rank0_packaged_acceptance.py"
       ],
       "frontend_report": [
-        "src/domain/generalSemPlsMultipleMediationBootstrapV1.golden.test.ts"
+        "src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx"
       ],
       "export_report": [
-        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_export_gate.py"
+        "src/domain/canonicalResultCrossFormatExportV2.test.ts"
       ],
       "method_audit": [
-        "validation/general_sem_pls_multiple_mediation_bootstrap_v1_method_audit.py"
+        "validation/mediation_method_promotion_audit.py"
       ],
       "packaged_acceptance": [
-        "validation/run_general_sem_pls_multiple_mediation_bootstrap_v1_native_acceptance.ps1"
+        "validation/run_general_sem_rank0_packaged_acceptance.ps1"
       ]
     },
     "evidence": {
       "engine_only": [
         {
-          "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/engine_evidence.identity.json",
+          "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
           "roles": [
             "method_spec",
             "independent_reference",
+            "simulation_report",
             "boundary_report"
-          ],
-          "verification": {
-            "kind": "identity_report",
-            "identity_pointers": {
-              "passed": "/passed",
-              "feature_id": "/feature_id",
-              "method_version": "/method_version",
-              "catalogue_snapshot_date": "/catalogue_snapshot_date"
-            },
-            "source_artifacts_pointer": "/source_artifacts",
-            "generated_at_pointer": "/generated_at_utc"
-          }
-        },
-        {
-          "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/kernel_simulation.identity.json",
-          "roles": [
-            "simulation_report"
           ],
           "verification": {
             "kind": "identity_report",
@@ -340,9 +325,65 @@
           }
         }
       ],
-      "archive_qualified": [],
-      "native_qualified": [],
-      "release_qualified": []
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "method_audit",
+            "packaged_acceptance"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
     }
   }
 }

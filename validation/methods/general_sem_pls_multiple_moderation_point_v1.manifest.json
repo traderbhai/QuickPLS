@@ -39,19 +39,40 @@
       {
         "id": "sample_standardized_two_stage_product",
         "expression": "p_i = z(x_i) z(w_i); z(p_i) = (p_i - mean(p)) / sd_sample(p)",
-        "variables": ["p_i", "x_i", "w_i", "z(p_i)", "mean(p)", "sd_sample(p)"],
+        "variables": [
+          "p_i",
+          "x_i",
+          "w_i",
+          "z(p_i)",
+          "mean(p)",
+          "sd_sample(p)"
+        ],
         "source_reference_id": "henseler_chin_2010"
       },
       {
         "id": "joint_stage_two_equation",
         "expression": "eta_y = sum_r beta_r eta_r + sum_j beta_product_j z(p_j) + epsilon_y",
-        "variables": ["eta_y", "beta_r", "eta_r", "beta_product_j", "z(p_j)", "epsilon_y"],
+        "variables": [
+          "eta_y",
+          "beta_r",
+          "eta_r",
+          "beta_product_j",
+          "z(p_j)",
+          "epsilon_y"
+        ],
         "source_reference_id": "henseler_chin_2010"
       },
       {
         "id": "scientific_gamma_and_simple_slope",
         "expression": "gamma_j = beta_product_j / sd_sample(p_j); slope_x(w_j) = beta_x + gamma_j w_j",
-        "variables": ["gamma_j", "beta_product_j", "sd_sample(p_j)", "slope_x(w_j)", "beta_x", "w_j"],
+        "variables": [
+          "gamma_j",
+          "beta_product_j",
+          "sd_sample(p_j)",
+          "slope_x(w_j)",
+          "beta_x",
+          "w_j"
+        ],
         "source_reference_id": "independent_contract_reference"
       }
     ],
@@ -79,7 +100,15 @@
         "purpose": "recovery",
         "design": "Deterministic standardized-score same-focal and different-focal synthetic equations with known joint OLS coefficients, correlated interaction products, fixed probes, a row-order replay, constant-product rejection, and singular-design rejection. Production QuickPLS code is never called.",
         "seed_policy": "No random generator is used; all score columns and coefficients are frozen in the validation-only Python reference.",
-        "metrics": ["coefficient_error", "product_standardization_error", "gamma_rescaling_error", "simple_slope_error", "row_order_error", "constant_product_rejection", "singular_rejection"],
+        "metrics": [
+          "coefficient_error",
+          "product_standardization_error",
+          "gamma_rescaling_error",
+          "simple_slope_error",
+          "row_order_error",
+          "constant_product_rejection",
+          "singular_rejection"
+        ],
         "acceptance_rule": "Every frozen check passes within 1e-10. This is a contract micro-reference only, not indicator-level PLS recovery, qualification-scale simulation, coverage evidence, or SmartPLS numerical parity."
       },
       {
@@ -87,7 +116,13 @@
         "purpose": "coverage",
         "design": "Same-focal and different-focal simultaneous interactions across loading, path, moderator correlation, sample-size, reliability, nonnormality, missingness, collinearity, and null/signal axes with a fully independent PLS score and joint-stage implementation.",
         "seed_policy": "Pending frozen scenario-indexed data and resampling streams with failed fits retained in the denominator.",
-        "metrics": ["interaction_bias", "simple_slope_bias", "interval_coverage", "null_rejection", "failure_rate"],
+        "metrics": [
+          "interaction_bias",
+          "simple_slope_bias",
+          "interval_coverage",
+          "null_rejection",
+          "failure_rate"
+        ],
         "acceptance_rule": "Pending independent qualification; the current engine-only evidence makes no claim that this gate has run."
       }
     ],
@@ -131,62 +166,161 @@
       "result_schema_version": 2,
       "payload_kind": "canonical_result_document_v2_general_sem_results_v1",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result or revision whose exact moderation capability differs from its resident compiled authority."},
-        {"category": "method_version", "expected_behavior": "Reject a result relabeled with another interaction method, product scale, hierarchy, conditioning, compiler, or runner version."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose resident dataset identity or fingerprint differs."},
-        {"category": "checksum", "expected_behavior": "Reject a changed archive member, stale source pin, or canonical attachment digest."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, nonfinite values, unordered identities, incomplete joint ledgers, or incoherent conditional/plot references."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Never attach this identity to an ordinary or historical project without newly created general_sem_v1 authority."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result or revision whose exact moderation capability differs from its resident compiled authority."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a result relabeled with another interaction method, product scale, hierarchy, conditioning, compiler, or runner version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose resident dataset identity or fingerprint differs."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject a changed archive member, stale source pin, or canonical attachment digest."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, nonfinite values, unordered identities, incomplete joint ledgers, or incoherent conditional/plot references."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never attach this identity to an ordinary or historical project without newly created general_sem_v1 authority."
+        }
       ],
       "legacy_policy": "This exact capability applies only to newly created schema-6 general_sem_v1 projects. Scientific edits to an activated authority create a separately compiled no-replace revision; the source archive is never rewritten."
     },
     "native": {
-      "setup_controls": ["Two-operand moderator-on-path intent", "Required strong-hierarchy paths", "Exact point-only estimator compatibility", "Fixed minus-one, zero, and plus-one probe policy", "Revision-aware toolbar, eligible-path context-menu, and keyboard command for immutable activated authorities"],
-      "applicability_blockers": ["Missing general_sem_v1 authority", "Unsupported interaction order, method, hierarchy, topology, data, group, or inference", "Stale archive, model, recipe, dataset, compiled plan, or revision source pin", "Pending authority operation, calculation, temporary result, dirty session, or another revision transaction", "Singular or inadmissible joint stage-two equation"],
-      "result_surfaces": ["Joint structural/control coefficients", "Interaction product and scientific-gamma estimates", "Fixed-probe conditional slopes", "Accessible interaction plots and source tables", "Run, archive, and method provenance"],
+      "setup_controls": [
+        "Two-operand moderator-on-path intent",
+        "Required strong-hierarchy paths",
+        "Exact point-only estimator compatibility",
+        "Fixed minus-one, zero, and plus-one probe policy",
+        "Revision-aware toolbar, eligible-path context-menu, and keyboard command for immutable activated authorities"
+      ],
+      "applicability_blockers": [
+        "Missing general_sem_v1 authority",
+        "Unsupported interaction order, method, hierarchy, topology, data, group, or inference",
+        "Stale archive, model, recipe, dataset, compiled plan, or revision source pin",
+        "Pending authority operation, calculation, temporary result, dirty session, or another revision transaction",
+        "Singular or inadmissible joint stage-two equation"
+      ],
+      "result_surfaces": [
+        "Joint structural/control coefficients",
+        "Interaction product and scientific-gamma estimates",
+        "Fixed-probe conditional slopes",
+        "Accessible interaction plots and source tables",
+        "Run, archive, and method provenance"
+      ],
       "gui_cli_parity_rule": "All surfaces must read the same canonical result for identical resident recipe, model, data, compiled plan, and exact capability identity. The same-app native workflow is connected through preflight, execution/cancellation, chart/table readback, append, close, and strict reopen, but independent cross-surface qualification remains pending.",
-      "accessibility_rules": ["Every chart has a programmatic label, persisted-data summary/table association, point title, visible legend, and non-color-only series distinction.", "Every estimate, provenance field, unavailable reason, revision outcome, and recovery action remains understandable without color, canvas position, or pointer-only interaction.", "The immutable-authority revision action remains keyboard reachable, and each busy or unavailable state exposes the same corrective reason across toolbar, context-menu, and shortcut resolution."]
+      "accessibility_rules": [
+        "Every chart has a programmatic label, persisted-data summary/table association, point title, visible legend, and non-color-only series distinction.",
+        "Every estimate, provenance field, unavailable reason, revision outcome, and recovery action remains understandable without color, canvas position, or pointer-only interaction.",
+        "The immutable-authority revision action remains keyboard reachable, and each busy or unavailable state exposes the same corrective reason across toolbar, context-menu, and shortcut resolution."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html", "pdf", "svg", "png"],
-      "tables": ["Joint stage-two coefficients", "Interaction effects and product-scale receipts", "Conditional effects", "Interaction plot points", "Run and revision provenance"],
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "pdf",
+        "svg",
+        "png"
+      ],
+      "tables": [
+        "Joint stage-two coefficients",
+        "Interaction effects and product-scale receipts",
+        "Conditional effects",
+        "Interaction plot points",
+        "Run and revision provenance"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": true,
       "process_cleanup_required": true
     },
     "audit": {
-      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
       "source_hashes_required": true,
       "freshness_required": true,
       "reports_must_pass": true
     }
   },
   "qualification": {
-    "declared_state": "engine_only",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_V1.md"],
-      "independent_reference": ["validation/general_sem_pls_multiple_moderation_point_v1_reference.py"],
-      "simulation_report": ["validation/general_sem_pls_multiple_moderation_point_v1_reference.py"],
-      "boundary_report": ["validation/general_sem_pls_multiple_moderation_point_v1_reference.py", "validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json"],
-      "persistence_report": ["validation/capabilities/general_sem_pls_multiple_moderation_point_v1.cell.manifest.json"],
-      "frontend_report": ["src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx", "src/native/nativeCanonicalResultDocumentV2.test.ts"],
-      "export_report": ["src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx"],
-      "method_audit": ["validation/moderation_method_promotion_audit.py"],
-      "packaged_acceptance": ["validation/run_general_sem_pls_multiple_moderation_point_v1_native_acceptance.ps1"]
+      "method_spec": [
+        "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_V1.md"
+      ],
+      "independent_reference": [
+        "validation/general_sem_rank0_csem_oracle.py",
+        "validation/general_sem_rank0_csem_oracle.R"
+      ],
+      "simulation_report": [
+        "validation/general_sem_rank0_qualification_runner.py"
+      ],
+      "boundary_report": [
+        "validation/general_sem_rank0_qualification.py"
+      ],
+      "persistence_report": [
+        "validation/general_sem_rank0_packaged_acceptance.py"
+      ],
+      "frontend_report": [
+        "src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx"
+      ],
+      "export_report": [
+        "src/domain/canonicalResultCrossFormatExportV2.test.ts"
+      ],
+      "method_audit": [
+        "validation/moderation_method_promotion_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_general_sem_rank0_packaged_acceptance.ps1"
+      ]
     },
     "evidence": {
       "engine_only": [
         {
-          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/engine_evidence.identity.json",
-          "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
           "verification": {
             "kind": "identity_report",
             "identity_pointers": {
@@ -200,9 +334,65 @@
           }
         }
       ],
-      "archive_qualified": [],
-      "native_qualified": [],
-      "release_qualified": []
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "method_audit",
+            "packaged_acceptance"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
     }
   }
 }

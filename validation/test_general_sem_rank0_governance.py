@@ -100,7 +100,7 @@ def _registry_cells(registry):
 
 
 class GeneralSemRank0GovernanceTests(unittest.TestCase):
-    def test_unpromoted_cells_have_exact_identities_and_six_format_contracts(self) -> None:
+    def test_standard_cells_have_exact_identities_and_six_format_contracts(self) -> None:
         registry = _load("validation/capabilities/capability_registry_v2.json")
         registry_cells = _registry_cells(registry)
         self.assertEqual(set(registry_cells), {row["cell_id"] for row in CELLS.values()})
@@ -109,12 +109,22 @@ class GeneralSemRank0GovernanceTests(unittest.TestCase):
             with self.subTest(cell=key):
                 capability, registry_cell = registry_cells[expected["cell_id"]]
                 self.assertEqual(capability["capability_id"], expected["capability_id"])
-                self.assertEqual(capability["evidence_state"], "engine_only")
-                self.assertEqual(capability["surface"], "labs")
+                expected_parent_evidence = (
+                    "release_qualified"
+                    if expected["capability_id"] == "smartpls.mediation"
+                    else "archive_qualified"
+                )
+                expected_parent_surface = (
+                    "standard"
+                    if expected["capability_id"] == "smartpls.mediation"
+                    else "labs"
+                )
+                self.assertEqual(capability["evidence_state"], expected_parent_evidence)
+                self.assertEqual(capability["surface"], expected_parent_surface)
                 self.assertEqual(registry_cell["capability_version"], expected["capability_version"])
                 self.assertEqual(registry_cell["coverage_state"], "partial")
-                self.assertEqual(registry_cell["evidence_state"], "engine_only")
-                self.assertEqual(registry_cell["surface"], "labs")
+                self.assertEqual(registry_cell["evidence_state"], "release_qualified")
+                self.assertEqual(registry_cell["surface"], "standard")
 
                 manifest = _load(expected["method_manifest"])
                 self.assertEqual(manifest["feature"]["id"], expected["cell_id"])
@@ -122,7 +132,7 @@ class GeneralSemRank0GovernanceTests(unittest.TestCase):
                     manifest["feature"]["method_version"],
                     expected["capability_version"],
                 )
-                self.assertEqual(manifest["qualification"]["declared_state"], "engine_only")
+                self.assertEqual(manifest["qualification"]["declared_state"], "release_qualified")
                 self.assertEqual(
                     manifest["qualification"]["target_state"], "release_qualified"
                 )
@@ -144,7 +154,10 @@ class GeneralSemRank0GovernanceTests(unittest.TestCase):
                     identity["analytical_method_version"],
                     expected["analytical_method_version"],
                 )
-                self.assertEqual(spec["evidence_contract"]["receipts"], [])
+                self.assertEqual(
+                    {receipt["role"] for receipt in spec["evidence_contract"]["receipts"]},
+                    set(spec["evidence_contract"]["required_roles"]),
+                )
 
                 if expected.get("cell_manifest"):
                     cell_manifest = _load(expected["cell_manifest"])
@@ -153,8 +166,8 @@ class GeneralSemRank0GovernanceTests(unittest.TestCase):
                         cell_manifest["feature"]["analytical_method_version"],
                         expected["analytical_method_version"],
                     )
-                    self.assertFalse(cell_manifest["qualification_ready"])
-                    self.assertFalse(cell_manifest["promotion_allowed"])
+                    self.assertTrue(cell_manifest["qualification_ready"])
+                    self.assertTrue(cell_manifest["promotion_allowed"])
 
                 method_doc = (ROOT / expected["method_doc"]).read_text(encoding="utf-8").lower()
                 for export_format in SIX_EXPORT_FORMATS:
@@ -169,8 +182,8 @@ class GeneralSemRank0GovernanceTests(unittest.TestCase):
             if row["id"] in {"smartpls.mediation", "smartpls.moderation"}
         }
         self.assertEqual(set(catalogue_rows), {"smartpls.mediation", "smartpls.moderation"})
-        for row in catalogue_rows.values():
-            self.assertEqual(row["status"], "engine-preview")
+        self.assertEqual(catalogue_rows["smartpls.mediation"]["status"], "release-qualified")
+        self.assertEqual(catalogue_rows["smartpls.moderation"]["status"], "engine-preview")
         self.assertTrue(
             expected_ids.issubset(
                 {

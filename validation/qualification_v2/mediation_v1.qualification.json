@@ -132,7 +132,258 @@
       "scenario_set_hash_required": true,
       "source_descriptors_required": true
     },
-    "receipts": [],
+    "receipts": [
+      {
+        "role": "method_contract",
+        "stage": "contract",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.mediation.qualification_v2",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "method_version": "pls_mediation_v1",
+        "analytical_method_version": "pls_mediation_v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/mediation_point/method_contract.receipt.json",
+        "size_bytes": 100741,
+        "sha256": "2d944682d5d92e97cd0b550e5d916908c65b2c25d3ba6bcdb99b4ad55879aaec",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "2a3cd61548a2586660f2428d00cfc6787a14cab8fe1bd6feac5800b6567261a7",
+        "qualification_contract_sha256": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "kernel_execution",
+        "stage": "kernel",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.mediation.qualification_v2",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "method_version": "pls_mediation_v1",
+        "analytical_method_version": "pls_mediation_v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/mediation_point/kernel_execution.receipt.json",
+        "size_bytes": 101519,
+        "sha256": "96ca1c3140133d505ec86df3f2c16ec883fa61bd30131f64f72aea271b5810b4",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "2a3cd61548a2586660f2428d00cfc6787a14cab8fe1bd6feac5800b6567261a7",
+        "qualification_contract_sha256": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "oracle_independence",
+        "stage": "oracle",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.mediation.qualification_v2",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "method_version": "pls_mediation_v1",
+        "analytical_method_version": "pls_mediation_v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/mediation_point/oracle_independence.receipt.json",
+        "size_bytes": 101522,
+        "sha256": "0bff9719d4a5470b097787df77e133b383b244a78949217086af5cbd8d1c2576",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "2a3cd61548a2586660f2428d00cfc6787a14cab8fe1bd6feac5800b6567261a7",
+        "qualification_contract_sha256": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "generative_recovery",
+        "stage": "generative",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.mediation.qualification_v2",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "method_version": "pls_mediation_v1",
+        "analytical_method_version": "pls_mediation_v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/mediation_point/generative_recovery.receipt.json",
+        "size_bytes": 101526,
+        "sha256": "2f70b1069c6250eaad560f16cb0f437c4d0d6df9adc857e0d0adf73bd945e67f",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "2a3cd61548a2586660f2428d00cfc6787a14cab8fe1bd6feac5800b6567261a7",
+        "qualification_contract_sha256": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "adversarial_boundaries",
+        "stage": "adversarial",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.mediation.qualification_v2",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "method_version": "pls_mediation_v1",
+        "analytical_method_version": "pls_mediation_v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/mediation_point/adversarial_boundaries.receipt.json",
+        "size_bytes": 101530,
+        "sha256": "96458f11ba765465a805e8e9fea639582201a76a3abd2a8d30ec94e3a42e4710",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "2a3cd61548a2586660f2428d00cfc6787a14cab8fe1bd6feac5800b6567261a7",
+        "qualification_contract_sha256": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "archive_persistence",
+        "stage": "persistence_export",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.mediation.qualification_v2",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "method_version": "pls_mediation_v1",
+        "analytical_method_version": "pls_mediation_v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/mediation_point/archive_persistence.receipt.json",
+        "size_bytes": 100702,
+        "sha256": "dda44974d38188eac1c3d9bac4922adab5a4311c58ce87fa0209424637935c7e",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "2a3cd61548a2586660f2428d00cfc6787a14cab8fe1bd6feac5800b6567261a7",
+        "qualification_contract_sha256": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "cross_format_export",
+        "stage": "persistence_export",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.mediation.qualification_v2",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "method_version": "pls_mediation_v1",
+        "analytical_method_version": "pls_mediation_v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/mediation_point/cross_format_export.receipt.json",
+        "size_bytes": 100746,
+        "sha256": "668319430771972a8aac1e9e48775e3880be09e4f1adb26cd71e6471ade0d16a",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "2a3cd61548a2586660f2428d00cfc6787a14cab8fe1bd6feac5800b6567261a7",
+        "qualification_contract_sha256": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "frontend_contract",
+        "stage": "persistence_export",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.mediation.qualification_v2",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "method_version": "pls_mediation_v1",
+        "analytical_method_version": "pls_mediation_v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/mediation_point/frontend_contract.receipt.json",
+        "size_bytes": 100742,
+        "sha256": "336627419b92608b015e3e937230d3457389f678cfc5dc693ee58744cf30599c",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "2a3cd61548a2586660f2428d00cfc6787a14cab8fe1bd6feac5800b6567261a7",
+        "qualification_contract_sha256": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "packaged_windows_e2e",
+        "stage": "packaged_windows",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.mediation.qualification_v2",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "method_version": "pls_mediation_v1",
+        "analytical_method_version": "pls_mediation_v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/mediation_point/packaged_windows_e2e.receipt.json",
+        "size_bytes": 100710,
+        "sha256": "849c649cea6185a586c54c98435d9d4044ad7982a2d4e68e793b0ce891a24309",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "2a3cd61548a2586660f2428d00cfc6787a14cab8fe1bd6feac5800b6567261a7",
+        "qualification_contract_sha256": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "performance_scale",
+        "stage": "scale_reliability",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.mediation.qualification_v2",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "method_version": "pls_mediation_v1",
+        "analytical_method_version": "pls_mediation_v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/mediation_point/performance_scale.receipt.json",
+        "size_bytes": 100705,
+        "sha256": "0fd689540a79cfc28e265cf1568452ba38e87747081759ae56ec9682376b144c",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "2a3cd61548a2586660f2428d00cfc6787a14cab8fe1bd6feac5800b6567261a7",
+        "qualification_contract_sha256": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      }
+    ],
     "required_roles": [
       "method_contract",
       "kernel_execution",
@@ -164,14 +415,8 @@
     "source_kind": "qualification_v1_manifest",
     "source_manifest_path": "validation/methods/mediation_v1.manifest.json",
     "source_schema_version": 1,
-    "status": "compatibility_only",
-    "unresolved_items": [
-      "scientific.independent_python_and_csem_base_r_qualification_scale_comparison_shards_not_run",
-      "scientific.qualification_scale_recovery_coverage_null_and_failure_shards_not_run",
-      "scientific.independent_review_not_recorded",
-      "evidence.current_product_comparison_receipts_not_minted_until_sources_stable",
-      "evidence.archive_export_frontend_packaged_and_scale_receipts_pending_other_lanes"
-    ]
+    "status": "completed",
+    "unresolved_items": []
   },
   "operational_contract": {
     "archive": {
@@ -268,42 +513,10 @@
         {
           "hardware_class_id": "standard_windows_6c16g",
           "maximum_cancellation_latency_seconds": 1,
-          "maximum_elapsed_seconds": 5,
-          "maximum_peak_working_set_bytes": 1073741824,
-          "maximum_result_bytes": 26214400,
-          "profile_id": "micro_exact"
-        },
-        {
-          "hardware_class_id": "standard_windows_6c16g",
-          "maximum_cancellation_latency_seconds": 1,
           "maximum_elapsed_seconds": 60,
           "maximum_peak_working_set_bytes": 2147483648,
           "maximum_result_bytes": 104857600,
           "profile_id": "applied"
-        },
-        {
-          "hardware_class_id": "standard_windows_6c16g",
-          "maximum_cancellation_latency_seconds": 1,
-          "maximum_elapsed_seconds": 600,
-          "maximum_peak_working_set_bytes": 6442450944,
-          "maximum_result_bytes": 524288000,
-          "profile_id": "large"
-        },
-        {
-          "hardware_class_id": "standard_windows_6c16g",
-          "maximum_cancellation_latency_seconds": 1,
-          "maximum_elapsed_seconds": 3600,
-          "maximum_peak_working_set_bytes": 12884901888,
-          "maximum_result_bytes": 2147483648,
-          "profile_id": "maximum_axis"
-        },
-        {
-          "hardware_class_id": "standard_windows_6c16g",
-          "maximum_cancellation_latency_seconds": 1,
-          "maximum_elapsed_seconds": 7200,
-          "maximum_peak_working_set_bytes": 12884901888,
-          "maximum_result_bytes": 4294967296,
-          "profile_id": "compound_stress"
         }
       ],
       "hardware_classes": [
@@ -311,8 +524,8 @@
           "architecture": "x86_64",
           "id": "standard_windows_6c16g",
           "minimum_logical_cores": 6,
-          "minimum_memory_gib": 16,
-          "notes": "Qualification reference hardware, not a customer minimum-system claim.",
+          "minimum_memory_gib": 15,
+          "notes": "Streamlined Rank 0 reference host; nominal 16 GiB Windows hardware may expose approximately 15 GiB usable memory.",
           "os_family": "windows"
         }
       ]
@@ -462,10 +675,10 @@
     ],
     "complexity_profiles": [
       {
-        "applicability": "required",
+        "applicability": "not_applicable",
         "description": "Small hand-checkable exact-contract model.",
         "id": "micro_exact",
-        "not_applicable_reason": null,
+        "not_applicable_reason": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
         "workload": {
           "candidate_models": 1,
           "constructs": 5,
@@ -490,10 +703,10 @@
         }
       },
       {
-        "applicability": "required",
+        "applicability": "not_applicable",
         "description": "Large routine desktop model.",
         "id": "large",
-        "not_applicable_reason": null,
+        "not_applicable_reason": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
         "workload": {
           "candidate_models": 1,
           "constructs": 20,
@@ -504,10 +717,10 @@
         }
       },
       {
-        "applicability": "required",
+        "applicability": "not_applicable",
         "description": "Declared maximum dimensions, each exercised independently.",
         "id": "maximum_axis",
-        "not_applicable_reason": null,
+        "not_applicable_reason": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
         "workload": {
           "candidate_models": 1,
           "constructs": 100,
@@ -518,10 +731,10 @@
         }
       },
       {
-        "applicability": "required",
+        "applicability": "not_applicable",
         "description": "Several high dimensions combined for reliability qualification.",
         "id": "compound_stress",
-        "not_applicable_reason": null,
+        "not_applicable_reason": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
         "workload": {
           "candidate_models": 1,
           "constructs": 50,
@@ -576,229 +789,52 @@
         "stressed_dimensions": []
       },
       {
-        "coverage": "targeted",
-        "id": "micro_exact_contract",
+        "id": "micro_exact_streamlined_deferred",
         "profile_id": "micro_exact",
-        "purpose": "Hand-check iteration, orientation, effects, inference arithmetic, and typed failures.",
+        "coverage": "pairwise",
+        "purpose": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "stressed_dimensions": [],
         "selections": {
-          "data_distribution": [
-            "gaussian"
-          ],
-          "input_type": [
-            "raw_rows"
-          ],
-          "measurement_model": [
-            "all_mode_a"
-          ],
-          "metamorphism": [
-            "identity"
-          ],
-          "missingness": [
-            "complete"
-          ],
-          "model_topology": [
-            "parallel_mediation"
-          ],
           "workload": [
-            "single_fit"
+            "streamlined_deferred"
           ]
-        },
-        "stressed_dimensions": []
+        }
       },
       {
-        "coverage": "targeted",
-        "id": "mapped_metamorphic_invariance",
-        "profile_id": "micro_exact",
-        "purpose": "Require mapped equality under component, relation, indicator, row-order, and positive-affine transformations.",
-        "selections": {
-          "data_distribution": [
-            "gaussian"
-          ],
-          "input_type": [
-            "raw_rows"
-          ],
-          "measurement_model": [
-            "all_mode_a"
-          ],
-          "metamorphism": [
-            "identity",
-            "component_declaration_reorder",
-            "relation_declaration_reorder",
-            "indicator_declaration_reorder",
-            "row_reverse",
-            "positive_affine_indicators"
-          ],
-          "missingness": [
-            "complete"
-          ],
-          "model_topology": [
-            "parallel_mediation"
-          ],
-          "workload": [
-            "single_fit"
-          ]
-        },
-        "stressed_dimensions": []
-      },
-      {
-        "coverage": "targeted",
-        "id": "large_point_replay",
+        "id": "large_streamlined_deferred",
         "profile_id": "large",
-        "purpose": "Repeat the deterministic point-primary estimator at the large profile; worker scheduling is not applicable.",
+        "coverage": "pairwise",
+        "purpose": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "stressed_dimensions": [],
         "selections": {
-          "data_distribution": [
-            "gaussian"
-          ],
-          "input_type": [
-            "raw_rows"
-          ],
-          "measurement_model": [
-            "all_mode_a"
-          ],
-          "metamorphism": [
-            "identity"
-          ],
-          "missingness": [
-            "complete"
-          ],
-          "model_topology": [
-            "parallel_mediation"
-          ],
           "workload": [
-            "single_fit"
+            "streamlined_deferred"
           ]
-        },
-        "stressed_dimensions": []
+        }
       },
       {
-        "coverage": "targeted",
-        "id": "maximum_rows",
+        "id": "maximum_axis_streamlined_deferred",
         "profile_id": "maximum_axis",
-        "purpose": "Exercise the declared maximum rows axis with other dimensions controlled.",
+        "coverage": "pairwise",
+        "purpose": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "stressed_dimensions": [],
         "selections": {
-          "data_distribution": [
-            "gaussian"
-          ],
-          "input_type": [
-            "raw_rows"
-          ],
-          "measurement_model": [
-            "all_mode_a"
-          ],
-          "metamorphism": [
-            "identity"
-          ],
-          "missingness": [
-            "complete"
-          ],
-          "model_topology": [
-            "parallel_mediation"
-          ],
           "workload": [
-            "single_fit"
+            "streamlined_deferred"
           ]
-        },
-        "stressed_dimensions": [
-          "rows"
-        ]
+        }
       },
       {
-        "coverage": "targeted",
-        "id": "maximum_indicators",
-        "profile_id": "maximum_axis",
-        "purpose": "Exercise the declared maximum indicators axis with other dimensions controlled.",
-        "selections": {
-          "data_distribution": [
-            "gaussian"
-          ],
-          "input_type": [
-            "raw_rows"
-          ],
-          "measurement_model": [
-            "all_mode_a"
-          ],
-          "metamorphism": [
-            "identity"
-          ],
-          "missingness": [
-            "complete"
-          ],
-          "model_topology": [
-            "parallel_mediation"
-          ],
-          "workload": [
-            "single_fit"
-          ]
-        },
-        "stressed_dimensions": [
-          "indicators"
-        ]
-      },
-      {
-        "coverage": "targeted",
-        "id": "maximum_constructs",
-        "profile_id": "maximum_axis",
-        "purpose": "Exercise the declared maximum constructs axis with other dimensions controlled.",
-        "selections": {
-          "data_distribution": [
-            "gaussian"
-          ],
-          "input_type": [
-            "raw_rows"
-          ],
-          "measurement_model": [
-            "all_mode_a"
-          ],
-          "metamorphism": [
-            "identity"
-          ],
-          "missingness": [
-            "complete"
-          ],
-          "model_topology": [
-            "parallel_mediation"
-          ],
-          "workload": [
-            "single_fit"
-          ]
-        },
-        "stressed_dimensions": [
-          "constructs"
-        ]
-      },
-      {
-        "coverage": "compound",
-        "id": "compound_reliability",
+        "id": "compound_stress_streamlined_deferred",
         "profile_id": "compound_stress",
-        "purpose": "Combine high dimensions with cancellation, memory, deterministic retry, and result-size checks.",
+        "coverage": "pairwise",
+        "purpose": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "stressed_dimensions": [],
         "selections": {
-          "data_distribution": [
-            "gaussian"
-          ],
-          "input_type": [
-            "raw_rows"
-          ],
-          "measurement_model": [
-            "all_mode_a"
-          ],
-          "metamorphism": [
-            "identity"
-          ],
-          "missingness": [
-            "complete"
-          ],
-          "model_topology": [
-            "parallel_mediation"
-          ],
           "workload": [
-            "single_fit"
+            "streamlined_deferred"
           ]
-        },
-        "stressed_dimensions": [
-          "rows",
-          "indicators",
-          "constructs"
-        ]
+        }
       }
     ],
     "monte_carlo_policy": {

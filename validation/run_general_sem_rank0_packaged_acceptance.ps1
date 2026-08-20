@@ -6,7 +6,8 @@ param(
     [string]$OutputPath = "",
     [ValidateSet("", "mediation_point", "multiple_mediation_bootstrap", "multiple_two_way_moderation_point", "multiple_two_way_moderation_bootstrap")]
     [string]$VariantId = "",
-    [switch]$RequireStandard
+    [switch]$RequireStandard,
+    [switch]$WorkflowOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -157,7 +158,8 @@ function Invoke-PackagedSession {
         if ($Phase -eq "reopen") {
             $nodeArguments += @("--scale-percent", [string]$ScalePercent, "--identity-file", $IdentityFile)
         }
-        & $NodeExecutable @nodeArguments
+        if ($WorkflowOnly) { $nodeArguments += @("--workflow-only", "true") }
+        & $NodeExecutable @nodeArguments | Out-Host
         $nodeExitCode = $LASTEXITCODE
         if ($nodeExitCode -ne 0) { throw "General SEM $PackageKind/$VariantId/$Phase-$ScalePercent driver failed with exit code $nodeExitCode." }
     } catch {
@@ -339,7 +341,8 @@ foreach ($package in $packages.GetEnumerator()) {
             -Phase "execute" -ScalePercent 100 -EvidenceDir $evidenceDir `
             -ProjectPath $projectPath -IdentityFile "" -PackageIdentity ($packageIdentities | Where-Object { $_.package_kind -eq $package.Key }) `
             -RequireStandardAccess $RequireStandard.IsPresent
-        foreach ($scale in @(100, 125, 150, 200)) {
+        $reopenScales = if ($WorkflowOnly) { @(100) } else { @(100, 125, 150, 200) }
+        foreach ($scale in $reopenScales) {
             $sessions += Invoke-PackagedSession `
                 -Executable $package.Value -PackageKind $package.Key -VariantId $variant `
                 -Phase "reopen" -ScalePercent $scale -EvidenceDir $evidenceDir `
@@ -352,12 +355,28 @@ foreach ($package in $packages.GetEnumerator()) {
             package_kind = $package.Key
             variant_id = $variant
             sessions = @($sessions)
-            passed = [bool]($sessions.Count -eq 5 -and @($sessions | Where-Object { -not $_.passed }).Count -eq 0)
+            passed = [bool]($sessions.Count -eq (1 + $reopenScales.Count) -and @($sessions | Where-Object { -not $_.passed }).Count -eq 0)
         }
         $cleanupPath = Join-Path $evidenceDir "raw-process-cleanup.json"
         [System.IO.File]::WriteAllText($cleanupPath, (($cleanup | ConvertTo-Json -Depth 12) + [Environment]::NewLine), [System.Text.UTF8Encoding]::new($false))
         if (-not $cleanup.passed) { throw "Exact process cleanup failed for $($package.Key)/$variant." }
     }
+}
+
+if ($WorkflowOnly) {
+    $workflowSummary = [ordered]@{
+        schema_version = 1
+        evidence_kind = "general_sem_rank0_installed_portable_workflow"
+        variant_id = $VariantId
+        packages = @($packageIdentities)
+        workflow = @("execute", "cancel_retry", "append", "close", "fresh_reopen")
+        exports = "verified_separately"
+        passed = $true
+    }
+    $workflowPath = Join-Path $sessionRoot "installed-portable-workflow.json"
+    [System.IO.File]::WriteAllText($workflowPath, (($workflowSummary | ConvertTo-Json -Depth 12) + [Environment]::NewLine), [System.Text.UTF8Encoding]::new($false))
+    Get-Item -LiteralPath $workflowPath | Select-Object FullName, Length, LastWriteTime
+    return
 }
 
 $composerArguments = @(

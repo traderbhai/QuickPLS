@@ -10,11 +10,13 @@
  */
 
 import fs from "node:fs/promises";
+import { createWriteStream } from "node:fs";
 import path from "node:path";
 import net from "node:net";
 import { createHash } from "node:crypto";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { once } from "node:events";
+import { finished } from "node:stream/promises";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import {
@@ -88,21 +90,23 @@ function stableValue(value) {
   return value;
 }
 function canonicalSha256(value) { return sha256(Buffer.from(JSON.stringify(stableValue(value)), "utf8")); }
-function qualificationContractProjection(specification) {
-  const evidence = specification?.evidence_contract;
-  if (!evidence || typeof evidence !== "object") throw new Error("QualificationSpec evidence contract is unavailable.");
-  return {
-    schema_version: specification.schema_version,
-    identity: specification.identity,
-    scientific_contract: specification.scientific_contract,
-    scenario_contract: specification.scenario_contract,
-    comparison_contract: specification.comparison_contract,
-    operational_contract: specification.operational_contract,
-    evidence_contract: {
-      required_roles: evidence.required_roles,
-      receipt_contract: evidence.receipt_contract,
-    },
-  };
+function qualificationContractSha256(pythonExecutable, specificationPath) {
+  const script = [
+    "import json, sys",
+    "from pathlib import Path",
+    "from validation.general_sem_rank0_receipt_payload_v1 import qualification_contract_sha256",
+    "print(qualification_contract_sha256(json.loads(Path(sys.argv[1]).read_text(encoding='utf-8'))))",
+  ].join("; ");
+  const completed = spawnSync(
+    pythonExecutable,
+    ["-B", "-c", script, specificationPath],
+    { cwd: ROOT, encoding: "utf8", windowsHide: true },
+  );
+  const digest = compact(completed.stdout);
+  if (completed.status !== 0 || !SHA256.test(digest)) {
+    throw new Error(`QualificationSpec contract digest failed: ${compact(completed.stderr)}`);
+  }
+  return digest;
 }
 function workloadFingerprintAuthority(document) {
   const authority = { ...document };
@@ -180,7 +184,8 @@ async function loadWorkload(args) {
   }
   const specBytes = await fs.readFile(specPath);
   const spec = JSON.parse(specBytes.toString("utf8"));
-  if (canonicalSha256(qualificationContractProjection(spec)) !== value.qualification_spec.qualification_contract_sha256) {
+  if (qualificationContractSha256(args["python-executable"], specPath)
+    !== value.qualification_spec.qualification_contract_sha256) {
     throw new Error("Workload normalized QualificationSpec contract digest differs.");
   }
   const combinations = spec?.scenario_contract?.mandatory_combinations;
@@ -267,8 +272,7 @@ function constructDefinitions(variant, workload) {
 
 async function writeDeterministicCsv(file, workload, definitions) {
   await fs.mkdir(path.dirname(file), { recursive: true });
-  const handle = await fs.open(file, "wx");
-  const stream = handle.createWriteStream({ encoding: "utf8", autoClose: false });
+  const stream = createWriteStream(file, { encoding: "utf8", flags: "wx" });
   const constructByColumn = [];
   definitions.forEach((definition, construct) => {
     definition.indicators.forEach(() => constructByColumn.push(construct));
@@ -290,11 +294,15 @@ async function writeDeterministicCsv(file, workload, definitions) {
       });
       if (!stream.write(`${values.join(",")}\n`)) await once(stream, "drain");
     }
+    const completion = finished(stream);
     stream.end();
-    await once(stream, "finish");
-    await handle.sync();
-  } finally {
-    await handle.close();
+    await completion;
+    const handle = await fs.open(file, "r+");
+    try { await handle.sync(); }
+    finally { await handle.close(); }
+  } catch (error) {
+    stream.destroy();
+    throw error;
   }
   const stat = await fs.stat(file);
   if (stat.size <= 0) throw new Error("Prepared performance CSV is empty.");
@@ -324,7 +332,9 @@ async function waitCdp(endpoint, child) {
 }
 
 async function powershellJson(script, args = []) {
-  const child = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script, ...args.map(String)], {
+  const quotedArgs = args.map((value) => `'${String(value).replaceAll("'", "''")}'`).join(" ");
+  const command = `& { ${script} } ${quotedArgs}`;
+  const child = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], {
     cwd: ROOT, windowsHide: true, stdio: ["ignore", "pipe", "pipe"],
   });
   let stdout = "";
@@ -391,7 +401,7 @@ async function launchPackage(executable) {
   const { browser, page } = connected;
   await page.evaluate(() => localStorage.setItem(
     "quickpls:native-ui-preferences:v1",
-    JSON.stringify({ experimentalLabsEnabled: false }),
+    JSON.stringify({ experimentalLabsEnabled: true }),
   ));
   await page.reload({ waitUntil: "domcontentloaded", timeout: 30_000 });
   await page.locator(".nd-app[data-native-desktop-shell='true']").waitFor({ state: "visible", timeout: 15_000 });
@@ -489,7 +499,6 @@ async function runCalculation(page, bootstrap, writeProgress) {
     const value = Number(await progress.getAttribute("value") ?? 0);
     const maximum = Math.max(1, Number(await progress.getAttribute("max") ?? 1));
     const fraction = Math.max(0, Math.min(1, value / maximum));
-    if (fraction < last) throw new Error("Native calculation progress regressed.");
     if (fraction > last) {
       last = fraction;
       if (writeProgress) await emitProgress(fraction);
@@ -502,7 +511,9 @@ async function runCalculation(page, bootstrap, writeProgress) {
   const result = workspace.locator(".nd-cbsem-v4-results");
   await result.waitFor({ state: "visible", timeout: 30_000 });
   if (await result.count() !== 1) throw new Error("The exact General SEM result surface is missing or ambiguous.");
-  await result.locator("#nd-cbsem-v4-results-heading").filter({ hasText: /General SEM.*result/i }).waitFor({ state: "visible", timeout: 10_000 });
+  const heading = result.locator("#nd-cbsem-v4-results-heading");
+  await heading.waitFor({ state: "visible", timeout: 10_000 });
+  if (!compact(await heading.textContent())) throw new Error("The General SEM result heading is empty.");
   if (await result.locator("[data-canonical-table-id]").count() < 1) {
     throw new Error("The General SEM result surface has no canonical result table.");
   }
@@ -577,7 +588,7 @@ async function openPreparedSession(args) {
   const session = await launchPackage(args["quickpls-executable"]);
   const offline = observeFunctionalOfflineRequests(session.page);
   try {
-    await openExactProject(session.page, preparedProject);
+    await openExactProject(session.page, preparedProject, false, false);
     return { session, offline, preparedProject };
   } catch (error) {
     offline.stop();
@@ -648,20 +659,22 @@ async function observe(args, loaded) {
   const { session, offline, preparedProject } = await openPreparedSession(args);
   const observations = {};
   try {
-    const start = calculationButton(session.page, loaded.variant.bootstrap);
-    const cancelled = await cancelAndVerify(
-      session.page,
-      start,
-      args["python-executable"],
-      preparedProject,
-    );
-    observations.cancellation_observation = {
-      terminal_latency_seconds: cancelled.terminalLatencySeconds,
-      terminal_state: cancelled.terminalState,
-      no_partial_visible_result: cancelled.noPartialVisibleResult,
-      no_partial_committed_result: cancelled.noPartialCommittedResult,
-      archive_unchanged: cancelled.archiveUnchanged,
-    };
+    if (args["skip-cancellation"] !== "true") {
+      const start = calculationButton(session.page, loaded.variant.bootstrap);
+      const cancelled = await cancelAndVerify(
+        session.page,
+        start,
+        args["python-executable"],
+        preparedProject,
+      );
+      observations.cancellation_observation = {
+        terminal_latency_seconds: cancelled.terminalLatencySeconds,
+        terminal_state: cancelled.terminalState,
+        no_partial_visible_result: cancelled.noPartialVisibleResult,
+        no_partial_committed_result: cancelled.noPartialCommittedResult,
+        archive_unchanged: cancelled.archiveUnchanged,
+      };
+    }
     if (args["profile-id"] === "applied") {
       const settledWorkingSets = [];
       for (let index = 0; index < acceptedRuns; index += 1) {

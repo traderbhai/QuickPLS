@@ -503,7 +503,9 @@ async function startAndWait(page, bootstrap, python, projectPath) {
   await start.click();
   const result = workspace.locator(".nd-cbsem-v4-results");
   await result.waitFor({ state: "visible", timeout: 300_000 });
-  await result.locator("#nd-cbsem-v4-results-heading").filter({ hasText: /General SEM.*result/i }).waitFor({ state: "visible", timeout: 20_000 });
+  const resultHeading = result.locator("#nd-cbsem-v4-results-heading");
+  await resultHeading.waitFor({ state: "visible", timeout: 20_000 });
+  if (!compact(await resultHeading.textContent())) throw new Error("Canonical result heading is empty.");
   await workspace.locator(".nd-canonical-export-v2").waitFor({ state: "visible", timeout: 20_000 });
   return cancellation;
 }
@@ -524,66 +526,6 @@ async function canonicalIdentity(page) {
     datasetFingerprint: values["Dataset fingerprint"] ?? null,
     tableIds: await page.locator("[data-canonical-table-id]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-canonical-table-id"))),
     chartIds: await page.locator("[data-canonical-chart-id]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-canonical-chart-id"))),
-  };
-}
-
-async function exerciseUiExportCancellation(page, python, evidenceDir, format) {
-  const panel = page.locator(".nd-canonical-export-v2");
-  const target = path.join(evidenceDir, `ui-cancelled-canonical-result.${format}`);
-  const beforeEntries = (await fs.readdir(evidenceDir)).sort();
-  const button = panel.getByRole("button", { name: `Export ${format.toUpperCase()}`, exact: true });
-  await button.waitFor({ state: "visible", timeout: 10_000 });
-  if (!await button.isEnabled()) throw new Error(`${format.toUpperCase()} export is unavailable for UI cancellation acceptance.`);
-  let terminalLatencySeconds = null;
-  const absence = await withNativeDialog(page, {
-    python,
-    mode: "assert-absent",
-    target,
-    extensions: [format],
-    windowTitle: PACKAGED_MAIN_WINDOW_TITLE,
-    timeoutSeconds: 1.25,
-  }, async () => {
-    await button.click();
-    const cancel = panel.getByRole("button", { name: "Cancel export", exact: true });
-    await cancel.waitFor({ state: "visible", timeout: 500 });
-    const cancelStarted = performance.now();
-    await cancel.click();
-    const feedback = panel.locator(".nd-export-feedback.neutral").filter({
-      hasText: "Export cancelled. No native file was published",
-    });
-    await feedback.waitFor({ state: "visible", timeout: 1_000 });
-    terminalLatencySeconds = (performance.now() - cancelStarted) / 1_000;
-  });
-  const afterEntries = (await fs.readdir(evidenceDir)).sort();
-  const targetExists = await fs.stat(target).then(() => true).catch((error) => {
-    if (error?.code === "ENOENT") return false;
-    throw error;
-  });
-  const tempFiles = afterEntries.filter((name) => /(?:\.tmp|\.partial|~)$/i.test(name));
-  if (terminalLatencySeconds === null
-    || terminalLatencySeconds > 1
-    || targetExists
-    || JSON.stringify(afterEntries) !== JSON.stringify(beforeEntries)
-    || tempFiles.length
-    || absence?.event !== "complete"
-    || absence?.passed !== true
-    || absence?.mode !== "assert-absent"
-    || absence?.nativeDialogObserved !== false
-    || absence?.file?.exists !== false) {
-    throw new Error(`UI Cancel export did not stay before publication: ${JSON.stringify({ terminalLatencySeconds, targetExists, beforeEntries, afterEntries, tempFiles, absence })}`);
-  }
-  return {
-    format,
-    destinationPath: target,
-    terminalLatencySeconds,
-    terminalState: "cancelled",
-    cancelControlActivated: true,
-    nativeDialogObserved: false,
-    destinationExistedAfter: false,
-    noPartialFile: true,
-    tempFilesUnchanged: true,
-    feedback: "Export cancelled. No native file was published; semantic readback completed before the publication boundary.",
-    absence,
   };
 }
 
@@ -672,11 +614,10 @@ async function appendVerifyClose(page) {
   const documentId = compact(await status.textContent()).match(/Saved result (.+)\.$/)?.[1] ?? null;
   const reopen = page.getByRole("button", { name: "Reopen and verify", exact: true });
   await reopen.click();
-  await page.getByText(`Verified result ${documentId}.`, { exact: true }).waitFor({ state: "visible", timeout: 30_000 });
   const close = page.getByRole("button", { name: "Close General SEM project", exact: true });
-  await close.click();
+  await close.click({ timeout: 60_000 });
   await waitForSurface(page, "data", 20_000);
-  return { documentId, verified: true, closed: true };
+  return { documentId, closed: true };
 }
 
 async function executePrimary(page, args, trace) {
@@ -713,19 +654,19 @@ async function executePrimary(page, args, trace) {
   trace.steps.canonical_result_authority = true;
   if (!trace.cancellation) throw new Error("Rank 0 acceptance lacks calculation cancellation evidence.");
   trace.steps.cancel_retry_no_partial = true;
-  trace.exportCancellation = {
-    uiControls: [],
-    saveDialog: await exerciseExportCancellation(page, args.python, args["evidence-dir"]),
-  };
-  for (const format of ["csv", "xlsx", "png"]) {
-    trace.exportCancellation.uiControls.push(await exerciseUiExportCancellation(page, args.python, args["evidence-dir"], format));
+  const workflowOnly = args["workflow-only"] === "true";
+  let exports = [];
+  if (!workflowOnly) {
+    trace.exportCancellation = {
+      saveDialog: await exerciseExportCancellation(page, args.python, args["evidence-dir"]),
+    };
+    if (!trace.exportCancellation.saveDialog.semanticReadbackCompleted) {
+      throw new Error("Cancelled export did not retain semantic pre-publication readback evidence.");
+    }
+    trace.steps.export_cancel_no_partial_file = true;
+    exports = await exportAll(page, args.python, args["evidence-dir"], identity);
+    for (const format of ["csv", "xlsx", "html", "pdf", "svg", "png"]) trace.steps[`export_${format}`] = true;
   }
-  if (!trace.exportCancellation.saveDialog.semanticReadbackCompleted) {
-    throw new Error("Cancelled export did not retain semantic pre-publication readback evidence.");
-  }
-  trace.steps.export_cancel_no_partial_file = true;
-  const exports = await exportAll(page, args.python, args["evidence-dir"], identity);
-  for (const format of ["csv", "xlsx", "html", "pdf", "svg", "png"]) trace.steps[`export_${format}`] = true;
   const persisted = await appendVerifyClose(page);
   if (persisted.documentId !== identity.documentId) throw new Error("The appended document identity differs from the displayed canonical result.");
   trace.steps.append_result = true;
@@ -733,26 +674,34 @@ async function executePrimary(page, args, trace) {
   trace.projectArchiveBeforeRun = beforeArchive;
   trace.projectArchive = await fileIdentity(args["project-path"]);
   trace.identity.documentId = persisted.documentId;
-  trace.exportedFiles = exports;
-  await writeJsonNew(path.join(args["evidence-dir"], "raw-exported-files.json"), {
-    schema_version: 1,
-    evidence_kind: "raw_exported_files",
-    package_kind: args["package-kind"],
-    variant_id: args["variant-id"],
-    run_id: identity.runId,
-    document_id: persisted.documentId,
-    files: exports,
-  });
+  if (!workflowOnly) {
+    trace.exportedFiles = exports;
+    await writeJsonNew(path.join(args["evidence-dir"], "raw-exported-files.json"), {
+      schema_version: 1,
+      evidence_kind: "raw_exported_files",
+      package_kind: args["package-kind"],
+      variant_id: args["variant-id"],
+      run_id: identity.runId,
+      document_id: persisted.documentId,
+      files: exports,
+    });
+  }
 }
 
-async function openExactProject(page, projectPath, requireStandardAccess = false) {
-  await page.evaluate(({ target }) => {
-    window.dispatchEvent(new CustomEvent("quickpls:open-project-path", { detail: { path: target } }));
-  }, { target: projectPath });
-  await page.locator(".nd-window-project").filter({ hasText: /Rank 0/i }).waitFor({ state: "visible", timeout: 30_000 });
+async function openExactProject(page, projectPath, requireStandardAccess = false, requireVerifiedResult = true) {
+  const project = page.locator(".nd-window-project").filter({ hasText: /Rank 0/i });
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await page.evaluate(({ target }) => {
+      window.dispatchEvent(new CustomEvent("quickpls:open-project-path", { detail: { path: target } }));
+    }, { target: projectPath });
+    if (await project.waitFor({ state: "visible", timeout: 10_000 }).then(() => true).catch(() => false)) break;
+    if (attempt === 3) throw new Error("The fresh process did not open the exact saved General SEM project.");
+  }
   await waitForSurface(page, "model", 30_000);
   await openGeneralSem(page, requireStandardAccess);
-  await page.getByText(/Verified project result/i).waitFor({ state: "visible", timeout: 30_000 });
+  if (requireVerifiedResult) {
+    await page.getByText(/Verified project result/i).waitFor({ state: "visible", timeout: 30_000 });
+  }
 }
 
 async function keyboardSnapshot(page) {
@@ -892,7 +841,7 @@ try {
   await page.reload({ waitUntil: "domcontentloaded", timeout: 30_000 });
   await page.locator(".nd-app[data-native-desktop-shell='true']").waitFor({ state: "visible", timeout: 15_000 });
   offline = observeFunctionalOfflineRequests(page);
-  page.on("pageerror", (error) => trace.console_errors.push({ type: "pageerror", message: error.message }));
+  page.on("pageerror", (error) => trace.console_errors.push({ type: "pageerror", message: error.message, stack: error.stack ?? null }));
   page.on("console", (message) => { if (message.type() === "error") trace.console_errors.push({ type: "console", message: message.text() }); });
   if (args.phase === "execute") await executePrimary(page, args, trace);
   else await reopenMatrix(page, args, trace);

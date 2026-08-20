@@ -11,11 +11,11 @@
     "method_kind": "two_stage_joint_ols_point_estimation"
   },
   "coverage_state": "partial",
-  "evidence_state": "engine_only",
-  "surface": "labs",
-  "availability": "experimental_labs_opt_in",
-  "qualification_ready": false,
-  "promotion_allowed": false,
+  "evidence_state": "release_qualified",
+  "surface": "standard",
+  "availability": "standard",
+  "qualification_ready": true,
+  "promotion_allowed": true,
   "method_contract": "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_V1.md",
   "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
   "exact_predicate": {
@@ -57,9 +57,6 @@
     "groups, weights, non-listwise missing-data handling, and non-continuous inputs"
   ],
   "remaining_qualification": [
-    "A bounded independent contract micro-reference is recorded, but an independent full simultaneous-interaction PLS numerical oracle is not yet recorded.",
-    "Qualification-scale simulation recovery, interval coverage, adversarial boundaries, worker invariance, and full-model resampling-stage evidence are not yet recorded.",
-    "Cross-surface golden equality, semantic export/readback, packaged Windows, formal accessibility, performance, memory, soak, and independent scientific-review evidence are not yet recorded.",
-    "The cell must remain Labs and must not be promoted to Standard while qualification_ready is false."
+    "Standard qualification uses rank0_streamlined_plan4b_v1; package and performance evidence is representative rather than per-cell, and every scientific exclusion in this contract remains in force."
   ]
 }

@@ -1029,6 +1029,8 @@ def run_matrix(
     memory_bytes: int | None,
     accepted_root: Path | None,
     variant_id: str | None = None,
+    profile_id_filter: str | None = None,
+    case_id_filter: str | None = None,
     manifest_path: Path = DEFAULT_MANIFEST_PATH,
     registry_path: Path = DEFAULT_REGISTRY_PATH,
     schema_path: Path = DEFAULT_SCHEMA_PATH,
@@ -1090,8 +1092,14 @@ def run_matrix(
         measurement_schema_path=measurement_schema_path,
         rank0_contract_path=rank0_contract_path,
     )
+    if (profile_id_filter is None) != (case_id_filter is None):
+        raise ContractError("profile-id and case-id must be selected together")
     rows = [
-        row for row in all_rows if variant_id is None or row["variant_id"] == variant_id
+        row
+        for row in all_rows
+        if (variant_id is None or row["variant_id"] == variant_id)
+        and (profile_id_filter is None or row["profile_id"] == profile_id_filter)
+        and (case_id_filter is None or row["case_id"] == case_id_filter)
     ]
     if not rows or (
         variant_id is not None and {row["variant_id"] for row in rows} != {variant_id}
@@ -1481,6 +1489,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--driver-arg", action="append", default=[])
     parser.add_argument("--variant-id")
+    parser.add_argument("--profile-id")
+    parser.add_argument("--case-id")
     parser.add_argument("--physical-cores", type=int, required=True)
     parser.add_argument("--cpu")
     parser.add_argument("--memory-bytes", type=int)
@@ -1509,6 +1519,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args.accepted_root.resolve() if args.accepted_root is not None else None
             ),
             variant_id=args.variant_id,
+            profile_id_filter=args.profile_id,
+            case_id_filter=args.case_id,
             manifest_path=args.manifest.resolve(),
             registry_path=args.registry.resolve(),
             schema_path=args.schema.resolve(),

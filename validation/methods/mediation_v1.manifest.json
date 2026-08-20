@@ -262,48 +262,42 @@
     }
   },
   "qualification": {
-    "declared_state": "engine_only",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
       "method_spec": [
         "docs/methods/PLS_MEDIATION_V1.md"
       ],
       "independent_reference": [
-        "validation/mediation_reference.py",
-        "validation/mediation_r_reference.py",
-        "validation/mediation_r_reference.R",
-        "validation/mediation_published_example.py"
+        "validation/general_sem_rank0_csem_oracle.py",
+        "validation/general_sem_rank0_csem_oracle.R"
       ],
       "simulation_report": [
-        "validation/mediation_metamorphic.py",
-        "validation/mediation_randomization.py",
-        "validation/mediation_coverage_qualification.py"
+        "validation/general_sem_rank0_qualification_runner.py"
       ],
       "boundary_report": [
-        "validation/mediation_boundary_gate.py"
+        "validation/general_sem_rank0_qualification.py"
       ],
       "persistence_report": [
-        "validation/mediation_persistence_gate.py"
+        "validation/general_sem_rank0_packaged_acceptance.py"
       ],
       "frontend_report": [
-        "src/native/nativeResults.test.ts",
-        "src/domain/resultInterpretation.test.ts"
+        "src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx"
       ],
       "export_report": [
-        "src/native/nativeExportTables.test.ts",
-        "src/domain/resultTables.test.ts"
+        "src/domain/canonicalResultCrossFormatExportV2.test.ts"
       ],
       "method_audit": [
         "validation/mediation_method_promotion_audit.py"
       ],
       "packaged_acceptance": [
-        "validation/run_mediation_native_acceptance.ps1"
+        "validation/run_general_sem_rank0_packaged_acceptance.ps1"
       ]
     },
     "evidence": {
       "engine_only": [
         {
-          "path": "validation/results/method_factory/mediation_v1/evidence_truth_reconciliation_v2/engine_evidence.identity.json",
+          "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
           "roles": [
             "method_spec",
             "independent_reference",
@@ -325,7 +319,7 @@
       ],
       "archive_qualified": [
         {
-          "path": "validation/results/method_factory/mediation_v1/evidence_truth_reconciliation_v2/persistence_report.identity.json",
+          "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
           "roles": [
             "persistence_report"
           ],
@@ -342,8 +336,46 @@
           }
         }
       ],
-      "native_qualified": [],
-      "release_qualified": []
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "method_audit",
+            "packaged_acceptance"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
     }
   }
 }

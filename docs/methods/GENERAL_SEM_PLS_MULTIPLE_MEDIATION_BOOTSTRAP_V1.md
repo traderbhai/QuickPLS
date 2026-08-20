@@ -5,15 +5,14 @@
 - Capability owner: `smartpls.mediation`
 - Capability cell: `qpls3.pls.general_sem_multiple_mediation_bootstrap`
 - Method version: `general_sem_pls_full_model_case_bootstrap_v1`
-- Product surface: opt-in Experimental Labs
+- Product surface: Standard
 - Coverage: partial
-- Evidence maturity: engine-only
-- QualificationSpec V2 readiness: false
+- Evidence maturity: release-qualified
+- QualificationSpec V2 readiness: true under `rank0_streamlined_plan4b_v1`
 
-This cell records one executable combination on the opt-in Labs surface. It
-does not promote the generic mediation or bootstrap families and does not
-inherit release status from the bounded Standard PLS algorithm or
-indexed-resampling primitive.
+This cell records one bounded Standard combination. It does not promote the
+generic mediation or bootstrap families and does not broaden the exact model,
+data, or inference predicate below.
 
 ## Supported model predicate
 
@@ -88,7 +87,7 @@ These sources define observable workflow compatibility only. SmartPLS random
 streams and undocumented internals are not an oracle, and this cell makes no
 claim of numerical identity.
 
-## Current evidence and remaining gates
+## Standard evidence boundary
 
 The engine evidence binds the frozen contract, an implementation-independent
 micro-reference for path products and inference summaries, and the implemented
@@ -117,24 +116,12 @@ readback, persistence, close, and reopen. This implementation evidence does
 not supply independent native or packaged qualification, a cross-runtime
 golden, semantic export qualification, or release acceptance.
 
-Before any maturity beyond `engine_only`, the cell still requires:
-
-1. an independent full PLS-PM implementation that refits every replicate;
-2. a public SmartPLS observable comparison with version and all settings
-   recorded, plus explained differences;
-3. full PLS-PM recovery, bias, interval-coverage, null-rejection, and
-   failure-denominator simulations across parallel, serial, and mixed graphs;
-4. a resident-authority-valid Rust result to deterministic schema-6 `.qpls`
-   archive to frontend golden readback fixture;
-5. semantic comparison and CSV/XLSX/HTML/SVG/PDF/PNG export readback;
-6. independent qualification of the connected schema-6 native configuration,
-   dataset/model activation, preflight, calculation, progress, cancellation,
-   persistence, reopen, and recovery flows;
-7. packaged offline Windows, accessibility, scaling, performance, memory, and
-   soak evidence; and
-8. a native QualificationSpec V2 with all eight immutable receipt stages and a
-   strict report returning `qualification_ready: true`.
-
-Until the later gates pass, the cell must remain `partial / engine_only / labs`.
-The observed-score smoke reference cannot be reused as archive, native, or release
-qualification evidence.
+The release-qualified receipt uses the newer streamlined Plan 4B decision: it
+retains the independent scientific and current-engine comparisons, schema-6
+append/reopen and cancellation evidence, the shared six-format export contract,
+one installed and one portable workflow, and one representative applied
+performance run with a ten-run soak. The retired 18 maximum/compound runs and
+the all-four-cell package matrix are not admission requirements. Package and
+performance evidence is representative rather than per-cell, as explicitly
+accepted for this profile. All exclusions remain unchanged, and no SmartPLS
+numerical identity is claimed.

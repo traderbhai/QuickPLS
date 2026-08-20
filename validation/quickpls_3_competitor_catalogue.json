@@ -593,7 +593,7 @@
       "catalogue_position": 27,
       "official_family": "Extended Relationships",
       "official_method": "Mediation",
-      "status": "engine-preview",
+      "status": "release-qualified",
       "priority": "P1",
       "target_release": "2.49.0",
       "competitor_scope": true,

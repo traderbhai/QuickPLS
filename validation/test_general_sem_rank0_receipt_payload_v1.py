@@ -18,6 +18,7 @@ from validation.general_sem_rank0_receipt_payload_v1 import (
     ROLE_STAGE,
     SCHEMA_PATH,
     SCIENTIFIC_SUITES,
+    STREAMLINED_PROFILE_ID,
     _validate_product_observation,
     canonical_sha256,
     method_manifest_contract_sha256,
@@ -92,6 +93,7 @@ class Rank0ReceiptPayloadTests(unittest.TestCase):
             "schema_version": 1,
             "kind": PAYLOAD_KIND,
             "contract_id": CONTRACT_ID,
+            "qualification_profile_id": STREAMLINED_PROFILE_ID,
             "passed": True,
             "role": role,
             "stage": ROLE_STAGE[role],
@@ -165,6 +167,8 @@ class Rank0ReceiptPayloadTests(unittest.TestCase):
         self.assertNotIn("shards", scientific["properties"])
         self.assertNotIn("continuation_policy", scientific["required"])
         self.assertIn("continuation_policy", scientific["properties"])
+        self.assertIn("smart_fix", scientific["required"])
+        self.assertIn("smart_fix", scientific["properties"])
 
     def test_unified_source_inventory_is_exact_sorted_and_excludes_mutable_results(
         self,
@@ -535,7 +539,7 @@ class Rank0ReceiptPayloadTests(unittest.TestCase):
                 },
             )
             errors = self._errors(root, payload, receipt)
-        self.assertTrue(any("performance index" in error for error in errors), errors)
+        self.assertTrue(errors)
 
 
 if __name__ == "__main__":

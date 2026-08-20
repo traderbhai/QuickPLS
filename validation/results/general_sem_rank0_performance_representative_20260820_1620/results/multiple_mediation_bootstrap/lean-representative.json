@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "general_sem_rank0_packaged_performance_result",
+  "variant_id": "multiple_mediation_bootstrap",
+  "capability_reference": {
+    "registry_schema_version": 2,
+    "capability_id": "smartpls.mediation",
+    "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+    "capability_version": "general_sem_pls_full_model_case_bootstrap_v1"
+  },
+  "qualification_contract_sha256": "2125ec5e68a99bbc8f622fef93e3cdd8d8638d8bb22d0765b0316855ae70c32b",
+  "profile_id": "applied",
+  "case_id": "applied",
+  "mandatory_combination_id": "applied_pairwise_matrix",
+  "workload_fingerprint": "9e1bcd7ffe9ce478e8c0c5fa4c9349170d2bcded107a8e7212f792e0ad175149",
+  "workload_document_sha256": "108358a2d72076c41739a28a10712c23422b3f156fb9c6155cc50a57de7e2eec",
+  "performance_driver_sha256": "70a44f01a1e179f7811d775d02fe9a9d5e26551d71e96c296ce3d4aaf1696d38",
+  "prepared_project": "D:\\QuickPLS-sem-upgrade\\validation\\results\\general_sem_rank0_performance_representative_20260820_1620\\prepared\\multiple_mediation_bootstrap\\applied__applied.qpls",
+  "package_executable_sha256": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+  "phase": "measured",
+  "run_index": 0,
+  "operation_elapsed_seconds": 30.792357799999998,
+  "canonical_identity": {
+    "documentId": "result_57e9b672-d8ec-4ea5-9923-ab12eaa819ea",
+    "runId": "57e9b672-d8ec-4ea5-9923-ab12eaa819ea",
+    "methodVersion": "general_sem_pls_full_model_case_bootstrap_v1",
+    "datasetFingerprint": "v2:c3d5e2457e66e59f0a0b7c505fd0569af4d99be1baf51469d4b0c0a8b92e2ebe",
+    "tableIds": [
+      "estimation_summary",
+      "point_estimate_attribution",
+      "algorithm_convergence_receipt",
+      "algorithm_block_order",
+      "outer_model",
+      "structural_paths",
+      "effects",
+      "r_squared",
+      "general_sem_specific_indirect_effects",
+      "general_sem_aggregate_effects",
+      "general_sem_bootstrap_receipt"
+    ],
+    "chartIds": [
+      "quickpls_export_specific_indirect_effect_estimates_v2"
+    ]
+  },
+  "offline": {
+    "passed": true,
+    "observedRequestCount": 125,
+    "externalRequestCount": 0,
+    "origins": [
+      "http://ipc.localhost"
+    ],
+    "externalRequests": []
+  },
+  "completed": true
+}

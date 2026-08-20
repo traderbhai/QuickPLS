@@ -8,6 +8,7 @@
     "schema_version",
     "kind",
     "contract_id",
+    "qualification_profile_id",
     "passed",
     "role",
     "stage",
@@ -28,6 +29,7 @@
     "schema_version": { "const": 1 },
     "kind": { "const": "general_sem_rank0_qualification_receipt_payload_v1" },
     "contract_id": { "const": "quickpls.general_sem.rank0.receipt_payload.v1" },
+    "qualification_profile_id": { "const": "rank0_streamlined_plan4b_v1" },
     "passed": { "const": true },
     "role": { "$ref": "#/$defs/token" },
     "stage": {
@@ -138,6 +140,7 @@
         "kind",
         "plan",
         "aggregate",
+        "smart_fix",
         "product_source_set_sha256"
       ],
       "properties": {
@@ -145,6 +148,7 @@
         "plan": { "$ref": "#/$defs/artifact" },
         "continuation_policy": { "$ref": "#/$defs/artifact" },
         "aggregate": { "$ref": "#/$defs/artifact" },
+        "smart_fix": { "$ref": "#/$defs/artifact" },
         "product_source_set_sha256": { "$ref": "#/$defs/sha256" }
       }
     },

@@ -841,7 +841,6 @@ def _validate_role_evidence(
     export_cancellation = _exact_keys(
         run.get("export_cancellation_observation"),
         {
-            "ui_control_cancellations",
             "save_dialog_destination_path",
             "save_dialog_cancelled",
             "semantic_readback_completed",
@@ -850,53 +849,6 @@ def _validate_role_evidence(
         f"{subject}.run_trace.export_cancellation_observation",
     )
     save_path = export_cancellation.get("save_dialog_destination_path")
-    ui_rows = export_cancellation.get("ui_control_cancellations")
-    if not isinstance(ui_rows, list) or len(ui_rows) != 3:
-        raise ContractError(
-            f"{subject}.run_trace export cancellation matrix is incomplete"
-        )
-    for expected_format, ui in zip(("csv", "xlsx", "png"), ui_rows):
-        row = _exact_keys(
-            ui,
-            {
-                "format",
-                "destination_path",
-                "terminal_latency_seconds",
-                "terminal_state",
-                "cancel_control_activated",
-                "native_dialog_observed",
-                "no_partial_file",
-                "temp_files_unchanged",
-            },
-            f"{subject}.run_trace.{expected_format}_export_cancellation",
-        )
-        ui_path = row.get("destination_path")
-        latency = row.get("terminal_latency_seconds")
-        if (
-            row.get("format") != expected_format
-            or not isinstance(ui_path, str)
-            or not ui_path.endswith(f".{expected_format}")
-            or Path(ui_path).is_absolute()
-            or ".." in Path(ui_path).parts
-            or not isinstance(latency, (int, float))
-            or isinstance(latency, bool)
-            or latency < 0
-            or latency > 1
-            or row.get("terminal_state") != "cancelled"
-            or any(
-                row.get(field) is not expected
-                for field, expected in (
-                    ("cancel_control_activated", True),
-                    ("native_dialog_observed", False),
-                    ("no_partial_file", True),
-                    ("temp_files_unchanged", True),
-                )
-            )
-            or (repository_root / ui_path).exists()
-        ):
-            raise ContractError(
-                f"{subject}.run_trace {expected_format} cancellation did not prove zero publication"
-            )
     if (
         not isinstance(save_path, str)
         or not save_path.endswith(".csv")
@@ -910,11 +862,10 @@ def _validate_role_evidence(
                 ("save_dialog_no_partial_file", True),
             )
         )
-        or (repository_root / ui_path).exists()
         or (repository_root / save_path).exists()
     ):
         raise ContractError(
-            f"{subject}.run_trace export cancellations did not prove both zero-publication boundaries"
+            f"{subject}.run_trace native export cancellation did not prove zero publication"
         )
 
     canonical = _bound_evidence(

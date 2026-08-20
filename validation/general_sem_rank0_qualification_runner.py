@@ -67,6 +67,7 @@ from general_sem_rank0_qualification import (
 )
 from general_sem_rank0_receipt_payload_v1 import (
     ReceiptPayloadError,
+    canonical_sha256 as receipt_canonical_sha256,
     unified_rank0_source_receipt,
     validate_unified_rank0_source_receipt,
 )
@@ -1459,18 +1460,22 @@ def _point_targets(scenario: GeneralSemScenario, family: str) -> dict[str, float
     )
 
 
-@lru_cache(maxsize=2)
-def population_reference(family: str) -> dict[str, float]:
+@lru_cache(maxsize=8)
+def population_reference(
+    family: str, effect_pattern: str = "positive"
+) -> dict[str, float]:
     """Return the deterministic large-sample pseudo-true oracle targets."""
 
-    reference_seed = _u63(MATRIX_VERSION, "population_reference", family)
+    reference_seed = _u63(
+        MATRIX_VERSION, "population_reference", family, effect_pattern
+    )
     if family == "mediation":
         base = make_mediation_scenario(
             "parallel_mediation",
             measurement_model="all_mode_a",
             distribution="gaussian",
             missingness="complete",
-            effect_pattern="positive",
+            effect_pattern=effect_pattern,
             rows=POPULATION_REFERENCE_ROWS,
             seed=reference_seed,
         )
@@ -1486,7 +1491,7 @@ def population_reference(family: str) -> dict[str, float]:
             measurement_model="all_mode_a",
             distribution="gaussian",
             missingness="complete",
-            effect_pattern="positive",
+            effect_pattern=effect_pattern,
             rows=POPULATION_REFERENCE_ROWS,
             seed=reference_seed,
         )
@@ -2014,7 +2019,7 @@ def _expected_failure_case(
         ),
         (
             "all_missing_indicator",
-            ModelContractError,
+            NumericalOracleError,
         ),
         (
             "cyclic_structural_graph",
@@ -2088,7 +2093,12 @@ def _evaluate_recovery(
 ) -> dict[str, object]:
     generated = make_runner_scenario(definition, trial_index)
     targets = _point_targets(generated, str(definition["family"]))
-    truth = population_reference(str(definition["family"]))
+    parameters = definition.get("parameters")
+    if not isinstance(parameters, Mapping):
+        raise PlanValidationError("recovery scenario parameters are absent")
+    truth = population_reference(
+        str(definition["family"]), str(parameters["effect_pattern"])
+    )
     common = sorted(set(targets) & set(truth))
     if not common:
         raise NumericalOracleError("recovery target inventory is empty")
@@ -2145,7 +2155,12 @@ def _evaluate_coverage(
 ) -> dict[str, object]:
     generated = make_runner_scenario(definition, trial_index)
     bootstrap = _bootstrap_result(definition, generated, trial_index)
-    truth = population_reference(str(definition["family"]))
+    parameters = definition.get("parameters")
+    if not isinstance(parameters, Mapping):
+        raise PlanValidationError("coverage scenario parameters are absent")
+    truth = population_reference(
+        str(definition["family"]), str(parameters["effect_pattern"])
+    )
     common = sorted(set(bootstrap.summaries) & set(truth))
     if not bootstrap.published or not common:
         raise NumericalOracleError("coverage bootstrap did not publish bound targets")
@@ -3155,7 +3170,25 @@ def _product_source_receipt() -> dict[str, object]:
         ) from error
 
 
-def _validate_product_source_receipt(receipt: Mapping[str, object]) -> None:
+def _validate_product_source_receipt(
+    receipt: Mapping[str, object],
+    *,
+    accepted_historical_source_sha256: str | None = None,
+) -> None:
+    if accepted_historical_source_sha256 is not None:
+        files = receipt.get("files")
+        if (
+            set(receipt) != {"scope", "file_count", "files", "source_set_sha256"}
+            or receipt.get("scope") != "quickpls_general_sem_rank0_unified_sources_v2"
+            or not isinstance(files, list)
+            or receipt.get("file_count") != len(files)
+            or receipt.get("source_set_sha256") != receipt_canonical_sha256(files)
+            or receipt.get("source_set_sha256") != accepted_historical_source_sha256
+        ):
+            raise ArtifactTamperError(
+                "historical product source receipt identity differs"
+            )
+        return
     try:
         validate_unified_rank0_source_receipt(
             receipt, ROOT, subject="product source receipt"
@@ -3302,6 +3335,7 @@ def _validate_embedded_product_observation(
     *,
     plan: Mapping[str, object],
     shard: Mapping[str, object],
+    accepted_historical_source_sha256: str | None = None,
 ) -> None:
     """Deeply revalidate the compact, source-bound product execution evidence."""
 
@@ -3415,7 +3449,10 @@ def _validate_embedded_product_observation(
         or len(command) != 10
     ):
         raise ArtifactTamperError("embedded product execution receipt identity differs")
-    _validate_product_source_receipt(source_receipt)
+    _validate_product_source_receipt(
+        source_receipt,
+        accepted_historical_source_sha256=accepted_historical_source_sha256,
+    )
     for descriptor in (executable, bundle_descriptor):
         if (
             set(descriptor) != {"path", "size", "sha256"}
@@ -5399,6 +5436,7 @@ def _validate_compact_shard_ledger_row(
     plan: Mapping[str, object],
     shard: Mapping[str, object],
     scenario: Mapping[str, object],
+    accepted_historical_product_source_sha256: str | None = None,
 ) -> None:
     required = {
         "shard_id",
@@ -5638,7 +5676,12 @@ def _validate_compact_shard_ledger_row(
     product_observation = row.get("product_observation")
     if scenario["suite"] == "current_product_comparison":
         _validate_embedded_product_observation(
-            product_observation, plan=plan, shard=shard
+            product_observation,
+            plan=plan,
+            shard=shard,
+            accepted_historical_source_sha256=(
+                accepted_historical_product_source_sha256
+            ),
         )
         product_bootstraps = [
             worker["production_receipts"]["bootstrap"]
@@ -5747,6 +5790,7 @@ def _aggregate_from_compact_ledger(
     ledger: object,
     *,
     plan4b_policy: Mapping[str, object] | None = None,
+    accepted_historical_product_source_sha256: str | None = None,
 ) -> dict[str, object]:
     validate_plan(plan)
     if plan4b_policy is not None:
@@ -5780,7 +5824,13 @@ def _aggregate_from_compact_ledger(
         shard = shard_by_id[shard_id]
         scenario = scenario_by_id[str(shard["scenario_id"])]
         _validate_compact_shard_ledger_row(
-            row, plan=plan, shard=shard, scenario=scenario
+            row,
+            plan=plan,
+            shard=shard,
+            scenario=scenario,
+            accepted_historical_product_source_sha256=(
+                accepted_historical_product_source_sha256
+            ),
         )
         ledger_by_id[shard_id] = row
         ledger_ids.append(shard_id)
@@ -5964,11 +6014,15 @@ def validate_aggregate(
     plan: Mapping[str, object],
     *,
     plan4b_policy: Mapping[str, object] | None = None,
+    accepted_historical_product_source_sha256: str | None = None,
 ) -> None:
     expected = _aggregate_from_compact_ledger(
         plan,
         aggregate.get("shard_content_ledger"),
         plan4b_policy=plan4b_policy,
+        accepted_historical_product_source_sha256=(
+            accepted_historical_product_source_sha256
+        ),
     )
     if canonical_bytes(aggregate) != canonical_bytes(expected):
         raise ArtifactTamperError(

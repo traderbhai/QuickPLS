@@ -220,24 +220,6 @@ def _build_report():
                             },
                         },
                         "export_cancellation_observation": {
-                            "ui_control_cancellations": [
-                                {
-                                    "format": format_id,
-                                    "destination_path": (
-                                        evidence_dir
-                                        / f"ui-cancelled-export.{format_id}"
-                                    )
-                                    .relative_to(ROOT)
-                                    .as_posix(),
-                                    "terminal_latency_seconds": 0.2,
-                                    "terminal_state": "cancelled",
-                                    "cancel_control_activated": True,
-                                    "native_dialog_observed": False,
-                                    "no_partial_file": True,
-                                    "temp_files_unchanged": True,
-                                }
-                                for format_id in ("csv", "xlsx", "png")
-                            ],
                             "save_dialog_destination_path": (
                                 evidence_dir / "cancelled-export.csv"
                             )

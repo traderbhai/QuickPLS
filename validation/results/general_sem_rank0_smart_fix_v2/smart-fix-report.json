@@ -1,0 +1,504 @@
+{
+  "schema_version": 1,
+  "kind": "general_sem_rank0_scientific_smart_fix_v1",
+  "qualification_profile_id": "rank0_streamlined_plan4b_v1",
+  "passed": true,
+  "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+  "qualification_trials": 1280,
+  "cell_ids": [
+    "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+    "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+    "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+    "qpls3.pls.mediation"
+  ],
+  "plan": {
+    "path": "validation/results/general_sem_rank0_smart_fix_v2/plan.json",
+    "size": 56234,
+    "sha256": "e654d497ddd2731b44a9d5959905053bfa4af134a6e3e6d8c875e984de9d1659"
+  },
+  "aggregate": {
+    "path": "validation/results/general_sem_rank0_smart_fix_v2/aggregates/aggregate-7f29f1e3a40a74959dbf718656c4192a11c7168b8c06fee601eb45af6543b47a.json",
+    "size": 234000,
+    "sha256": "5773a04174331de37beeda4ec4692378eddfdf4523c5e3f4e42fc5057234341e"
+  },
+  "run_summary": {
+    "selected_shards": 160,
+    "accepted_existing": 160,
+    "attempted_this_run": 0,
+    "published_this_run": 0,
+    "busy_this_run": 0,
+    "requires_serialized_cargo_bundle": 0,
+    "default_concurrency": 4,
+    "used_concurrency": 8
+  },
+  "scenario_reports": [
+    {
+      "scenario_id": "failure_classification.mediation_bootstrap",
+      "scenario_sha256": "3674168f67450ad79faac42b9bb45ae635fc48abdb1211a69baeada1d9a6bc83",
+      "suite": "failure_classification",
+      "cell_key": "mediation_bootstrap",
+      "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+      "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+      "analytical_method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+      "status": "passed",
+      "passed": true,
+      "expected_shards": 20,
+      "accepted_shards": 20,
+      "completed_trials": 1280,
+      "required_trials": 1280,
+      "unexpected_failure_count": 0,
+      "metrics": [
+        {
+          "metric": "failure_classification_rate",
+          "status": "passed",
+          "passed": true,
+          "event_count": 1280,
+          "eligible_count": 1280,
+          "rate": 1.0,
+          "acceptance_interval": [
+            0.95,
+            1.0
+          ],
+          "confidence_method": "wilson_score_two_sided_v1",
+          "confidence_level": 0.95,
+          "confidence_interval": [
+            0.9970078401859502,
+            0.9999999999999999
+          ],
+          "confidence_half_width": 0.0014960799070248276,
+          "maximum_half_width": 0.01,
+          "completed_trials": 1280,
+          "required_trials": 1280,
+          "minimum_trial_gate_met": true,
+          "reasons": []
+        }
+      ],
+      "recovery_moments": []
+    },
+    {
+      "scenario_id": "failure_classification.mediation_point",
+      "scenario_sha256": "13e1c14640a36b7634c11872f739574de745f53622c6f479f006d6f760cb8f69",
+      "suite": "failure_classification",
+      "cell_key": "mediation_point",
+      "cell_id": "qpls3.pls.mediation",
+      "method_version": "pls_mediation_v1",
+      "analytical_method_version": "pls_mediation_v1",
+      "status": "passed",
+      "passed": true,
+      "expected_shards": 20,
+      "accepted_shards": 20,
+      "completed_trials": 1280,
+      "required_trials": 1280,
+      "unexpected_failure_count": 0,
+      "metrics": [
+        {
+          "metric": "failure_classification_rate",
+          "status": "passed",
+          "passed": true,
+          "event_count": 1280,
+          "eligible_count": 1280,
+          "rate": 1.0,
+          "acceptance_interval": [
+            0.95,
+            1.0
+          ],
+          "confidence_method": "wilson_score_two_sided_v1",
+          "confidence_level": 0.95,
+          "confidence_interval": [
+            0.9970078401859502,
+            0.9999999999999999
+          ],
+          "confidence_half_width": 0.0014960799070248276,
+          "maximum_half_width": 0.01,
+          "completed_trials": 1280,
+          "required_trials": 1280,
+          "minimum_trial_gate_met": true,
+          "reasons": []
+        }
+      ],
+      "recovery_moments": []
+    },
+    {
+      "scenario_id": "failure_classification.moderation_bootstrap",
+      "scenario_sha256": "e8bdce99cbd6eaa7ad182c6dedc7cdbc0315a26020fbf91b8ebb87f982a7014c",
+      "suite": "failure_classification",
+      "cell_key": "moderation_bootstrap",
+      "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+      "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+      "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+      "status": "passed",
+      "passed": true,
+      "expected_shards": 20,
+      "accepted_shards": 20,
+      "completed_trials": 1280,
+      "required_trials": 1280,
+      "unexpected_failure_count": 0,
+      "metrics": [
+        {
+          "metric": "failure_classification_rate",
+          "status": "passed",
+          "passed": true,
+          "event_count": 1280,
+          "eligible_count": 1280,
+          "rate": 1.0,
+          "acceptance_interval": [
+            0.95,
+            1.0
+          ],
+          "confidence_method": "wilson_score_two_sided_v1",
+          "confidence_level": 0.95,
+          "confidence_interval": [
+            0.9970078401859502,
+            0.9999999999999999
+          ],
+          "confidence_half_width": 0.0014960799070248276,
+          "maximum_half_width": 0.01,
+          "completed_trials": 1280,
+          "required_trials": 1280,
+          "minimum_trial_gate_met": true,
+          "reasons": []
+        }
+      ],
+      "recovery_moments": []
+    },
+    {
+      "scenario_id": "failure_classification.moderation_point",
+      "scenario_sha256": "b95e18ea34fc260e91fc3d9d6f69026887d857e7ffc80d2903bd7973e9045fa0",
+      "suite": "failure_classification",
+      "cell_key": "moderation_point",
+      "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+      "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+      "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.point.v1",
+      "status": "passed",
+      "passed": true,
+      "expected_shards": 20,
+      "accepted_shards": 20,
+      "completed_trials": 1280,
+      "required_trials": 1280,
+      "unexpected_failure_count": 0,
+      "metrics": [
+        {
+          "metric": "failure_classification_rate",
+          "status": "passed",
+          "passed": true,
+          "event_count": 1280,
+          "eligible_count": 1280,
+          "rate": 1.0,
+          "acceptance_interval": [
+            0.95,
+            1.0
+          ],
+          "confidence_method": "wilson_score_two_sided_v1",
+          "confidence_level": 0.95,
+          "confidence_interval": [
+            0.9970078401859502,
+            0.9999999999999999
+          ],
+          "confidence_half_width": 0.0014960799070248276,
+          "maximum_half_width": 0.01,
+          "completed_trials": 1280,
+          "required_trials": 1280,
+          "minimum_trial_gate_met": true,
+          "reasons": []
+        }
+      ],
+      "recovery_moments": []
+    },
+    {
+      "scenario_id": "recovery.mediation_bootstrap",
+      "scenario_sha256": "639debfba025a1f514a61dc3c14acbd12bf1ed780d409e9ce845e9a5adfdbed4",
+      "suite": "recovery",
+      "cell_key": "mediation_bootstrap",
+      "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+      "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+      "analytical_method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+      "status": "passed",
+      "passed": true,
+      "expected_shards": 20,
+      "accepted_shards": 20,
+      "completed_trials": 1280,
+      "required_trials": 1280,
+      "unexpected_failure_count": 0,
+      "metrics": [
+        {
+          "metric": "effect_recovery_rate",
+          "status": "passed",
+          "passed": true,
+          "event_count": 2560,
+          "eligible_count": 2560,
+          "rate": 1.0,
+          "acceptance_interval": [
+            0.9,
+            1.0
+          ],
+          "confidence_method": "wilson_score_two_sided_v1",
+          "confidence_level": 0.95,
+          "confidence_interval": [
+            0.9985016784842614,
+            1.0
+          ],
+          "confidence_half_width": 0.0007491607578692938,
+          "maximum_half_width": 0.01,
+          "completed_trials": 1280,
+          "required_trials": 1280,
+          "minimum_trial_gate_met": true,
+          "reasons": []
+        }
+      ],
+      "recovery_moments": [
+        {
+          "family": "mediation",
+          "target_id": "specific:x->m1->y",
+          "n": 1280,
+          "failed_count": 0,
+          "sum_error": -0.6551741908820574,
+          "sum_squared_error": 1.6688279486787287,
+          "signed_bias": -0.0005118548366266074,
+          "absolute_bias": 0.0005118548366266074,
+          "rmse": 0.0361077808083695,
+          "absolute_bias_maximum": 0.05,
+          "rmse_maximum": 0.15,
+          "passed": true,
+          "reasons": []
+        },
+        {
+          "family": "mediation",
+          "target_id": "specific:x->m2->y",
+          "n": 1280,
+          "failed_count": 0,
+          "sum_error": -3.5583148490224272,
+          "sum_squared_error": 1.3447163030596798,
+          "signed_bias": -0.002779933475798771,
+          "absolute_bias": 0.002779933475798771,
+          "rmse": 0.032412337338818605,
+          "absolute_bias_maximum": 0.05,
+          "rmse_maximum": 0.15,
+          "passed": true,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "scenario_id": "recovery.mediation_point",
+      "scenario_sha256": "cb96dab67fb623011fa7e35400c0423f25cc7111c876872ecddfd333b38a50be",
+      "suite": "recovery",
+      "cell_key": "mediation_point",
+      "cell_id": "qpls3.pls.mediation",
+      "method_version": "pls_mediation_v1",
+      "analytical_method_version": "pls_mediation_v1",
+      "status": "passed",
+      "passed": true,
+      "expected_shards": 20,
+      "accepted_shards": 20,
+      "completed_trials": 1280,
+      "required_trials": 1280,
+      "unexpected_failure_count": 0,
+      "metrics": [
+        {
+          "metric": "effect_recovery_rate",
+          "status": "passed",
+          "passed": true,
+          "event_count": 2560,
+          "eligible_count": 2560,
+          "rate": 1.0,
+          "acceptance_interval": [
+            0.9,
+            1.0
+          ],
+          "confidence_method": "wilson_score_two_sided_v1",
+          "confidence_level": 0.95,
+          "confidence_interval": [
+            0.9985016784842614,
+            1.0
+          ],
+          "confidence_half_width": 0.0007491607578692938,
+          "maximum_half_width": 0.01,
+          "completed_trials": 1280,
+          "required_trials": 1280,
+          "minimum_trial_gate_met": true,
+          "reasons": []
+        }
+      ],
+      "recovery_moments": [
+        {
+          "family": "mediation",
+          "target_id": "specific:x->m1->y",
+          "n": 1280,
+          "failed_count": 0,
+          "sum_error": -3.7644305909063522,
+          "sum_squared_error": 1.5946614765795832,
+          "signed_bias": -0.002940961399145588,
+          "absolute_bias": 0.002940961399145588,
+          "rmse": 0.03529630686881843,
+          "absolute_bias_maximum": 0.05,
+          "rmse_maximum": 0.15,
+          "passed": true,
+          "reasons": []
+        },
+        {
+          "family": "mediation",
+          "target_id": "specific:x->m2->y",
+          "n": 1280,
+          "failed_count": 0,
+          "sum_error": -6.977700065802565,
+          "sum_squared_error": 1.3712802825510753,
+          "signed_bias": -0.0054513281764082535,
+          "absolute_bias": 0.0054513281764082535,
+          "rmse": 0.032730913839106715,
+          "absolute_bias_maximum": 0.05,
+          "rmse_maximum": 0.15,
+          "passed": true,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "scenario_id": "recovery.moderation_bootstrap",
+      "scenario_sha256": "76d8a95162b7935b0e12bd4e1598bb5a51d87e7d6825e0128e9cf70dec6891e3",
+      "suite": "recovery",
+      "cell_key": "moderation_bootstrap",
+      "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+      "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+      "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+      "status": "passed",
+      "passed": true,
+      "expected_shards": 20,
+      "accepted_shards": 20,
+      "completed_trials": 1280,
+      "required_trials": 1280,
+      "unexpected_failure_count": 0,
+      "metrics": [
+        {
+          "metric": "effect_recovery_rate",
+          "status": "passed",
+          "passed": true,
+          "event_count": 2425,
+          "eligible_count": 2560,
+          "rate": 0.947265625,
+          "acceptance_interval": [
+            0.9,
+            1.0
+          ],
+          "confidence_method": "wilson_score_two_sided_v1",
+          "confidence_level": 0.95,
+          "confidence_interval": [
+            0.9379181826147854,
+            0.9552727719668389
+          ],
+          "confidence_half_width": 0.008677294676026737,
+          "maximum_half_width": 0.01,
+          "completed_trials": 1280,
+          "required_trials": 1280,
+          "minimum_trial_gate_met": true,
+          "reasons": []
+        }
+      ],
+      "recovery_moments": [
+        {
+          "family": "moderation",
+          "target_id": "x_by_w",
+          "n": 1280,
+          "failed_count": 0,
+          "sum_error": -25.76825212769786,
+          "sum_squared_error": 6.819821804093906,
+          "signed_bias": -0.020131446974763954,
+          "absolute_bias": 0.020131446974763954,
+          "rmse": 0.07299305298758481,
+          "absolute_bias_maximum": 0.08,
+          "rmse_maximum": 0.2,
+          "passed": true,
+          "reasons": []
+        },
+        {
+          "family": "moderation",
+          "target_id": "x_by_z",
+          "n": 1280,
+          "failed_count": 0,
+          "sum_error": 61.82385880454164,
+          "sum_squared_error": 25.6838425982986,
+          "signed_bias": 0.04829988969104816,
+          "absolute_bias": 0.04829988969104816,
+          "rmse": 0.14165275157906668,
+          "absolute_bias_maximum": 0.08,
+          "rmse_maximum": 0.2,
+          "passed": true,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "scenario_id": "recovery.moderation_point",
+      "scenario_sha256": "2e90279cffb440f15eb32643d17272ccf609173d429703374939184a3b6fe55d",
+      "suite": "recovery",
+      "cell_key": "moderation_point",
+      "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+      "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+      "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.point.v1",
+      "status": "passed",
+      "passed": true,
+      "expected_shards": 20,
+      "accepted_shards": 20,
+      "completed_trials": 1280,
+      "required_trials": 1280,
+      "unexpected_failure_count": 0,
+      "metrics": [
+        {
+          "metric": "effect_recovery_rate",
+          "status": "passed",
+          "passed": true,
+          "event_count": 2398,
+          "eligible_count": 2560,
+          "rate": 0.93671875,
+          "acceptance_interval": [
+            0.9,
+            1.0
+          ],
+          "confidence_method": "wilson_score_two_sided_v1",
+          "confidence_level": 0.95,
+          "confidence_interval": [
+            0.9266175126844404,
+            0.9455112971166567
+          ],
+          "confidence_half_width": 0.009446892216108171,
+          "maximum_half_width": 0.01,
+          "completed_trials": 1280,
+          "required_trials": 1280,
+          "minimum_trial_gate_met": true,
+          "reasons": []
+        }
+      ],
+      "recovery_moments": [
+        {
+          "family": "moderation",
+          "target_id": "x_by_w",
+          "n": 1280,
+          "failed_count": 0,
+          "sum_error": -31.15964016783103,
+          "sum_squared_error": 6.679618607408271,
+          "signed_bias": -0.02434346888111799,
+          "absolute_bias": 0.02434346888111799,
+          "rmse": 0.07223885406786096,
+          "absolute_bias_maximum": 0.08,
+          "rmse_maximum": 0.2,
+          "passed": true,
+          "reasons": []
+        },
+        {
+          "family": "moderation",
+          "target_id": "x_by_z",
+          "n": 1280,
+          "failed_count": 0,
+          "sum_error": 77.38385616717329,
+          "sum_squared_error": 31.86337758290798,
+          "signed_bias": 0.06045613763060413,
+          "absolute_bias": 0.06045613763060413,
+          "rmse": 0.15777599226956826,
+          "absolute_bias_maximum": 0.08,
+          "rmse_maximum": 0.2,
+          "passed": true,
+          "reasons": []
+        }
+      ]
+    }
+  ]
+}

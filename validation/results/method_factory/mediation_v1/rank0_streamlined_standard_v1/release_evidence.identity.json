@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "report_kind": "general_sem_rank0_streamlined_method_identity_v1",
+  "passed": true,
+  "feature_id": "qpls3.pls.mediation",
+  "method_version": "pls_mediation_v1",
+  "catalogue_snapshot_date": "2026-08-12",
+  "generated_at_utc": "2026-08-20T12:46:50Z",
+  "qualification_profile_id": "rank0_streamlined_plan4b_v1",
+  "representative_evidence_acknowledged": true,
+  "streamlined_release_report": {
+    "path": "validation/results/general_sem_rank0_standard_v1/streamlined-release-evidence.json",
+    "size": 4873,
+    "sha256": "fbf0b137b6788ea4edf18ee1a97e063a5de6042e0ad26b389a019fd35dfd68b8"
+  },
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_MEDIATION_V1.md",
+      "size": 4919,
+      "sha256": "24a2a23a50eeeda4d3fc77741c4ef2a272287ca6435526908b8a5c50c63f4bd7"
+    },
+    {
+      "path": "src/domain/canonicalResultCrossFormatExportV2.test.ts",
+      "size": 20509,
+      "sha256": "724a466f96219756c1bcaeed82623f6ca22f8ec28a555c48a1d86e46f3f2493b"
+    },
+    {
+      "path": "src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx",
+      "size": 36450,
+      "sha256": "f3a6422fc102b6fff99966053d5884bf4b58b51bf483be714d461c769dfcc657"
+    },
+    {
+      "path": "validation/general_sem_rank0_csem_oracle.R",
+      "size": 18867,
+      "sha256": "fca2d60d3cdd3c8f9ccf3f3ad79161ab3da7d2afa517fb2296f847d56e9c5bb8"
+    },
+    {
+      "path": "validation/general_sem_rank0_csem_oracle.py",
+      "size": 8363,
+      "sha256": "43fd63ec24fed1539fe52448032c2c3c47a5fe867ac9a59130c53125f4724f0e"
+    },
+    {
+      "path": "validation/general_sem_rank0_packaged_acceptance.py",
+      "size": 59861,
+      "sha256": "1404768964421ee5d56d919c0700f6f2da71129693f40275e0d169bc830dedce"
+    },
+    {
+      "path": "validation/general_sem_rank0_qualification.py",
+      "size": 62257,
+      "sha256": "8e1cf510ebc4f3892e3c0f012ff899e20145a2f83e4be637df0164fe73b2c907"
+    },
+    {
+      "path": "validation/general_sem_rank0_qualification_runner.py",
+      "size": 252732,
+      "sha256": "1e67ceac06a735399e294c60b95e9b5e266e728dbfb4695779b64703e4f30f4f"
+    },
+    {
+      "path": "validation/mediation_method_promotion_audit.py",
+      "size": 690,
+      "sha256": "99724f294fa6d2ff06ffe45341a727b3bed3282298e6eb8ced6f148a25906a67"
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "size": 34283,
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865"
+    },
+    {
+      "path": "validation/methods/mediation_v1.manifest.json",
+      "size": 15117,
+      "sha256": "090aa27550f4749d8dd1fc6412baf8528fa982668254d34e70dfcdc2ef48feca"
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "size": 15836,
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743"
+    },
+    {
+      "path": "validation/run_general_sem_rank0_packaged_acceptance.ps1",
+      "size": 20730,
+      "sha256": "baa5f96dd96a90d98a810b5a00ebae4c583a8470a912adc19646a405f3988107"
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "size": 21368,
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926"
+    }
+  ]
+}

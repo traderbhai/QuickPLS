@@ -11,11 +11,11 @@
     "method_kind": "full_model_case_bootstrap_scientific_rescaled_gamma_inference"
   },
   "coverage_state": "partial",
-  "evidence_state": "engine_only",
-  "surface": "labs",
-  "availability": "experimental_labs_opt_in",
-  "qualification_ready": false,
-  "promotion_allowed": false,
+  "evidence_state": "release_qualified",
+  "surface": "standard",
+  "availability": "standard",
+  "qualification_ready": true,
+  "promotion_allowed": true,
   "primary_artifact_cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
   "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
   "official_bootstrap_reference": "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/",
@@ -62,7 +62,7 @@
     "only one typed stable scientific-rescaled-gamma target per compiled interaction receives Type-7 percentile, B-minus-one standard-error, and null-centered plus-one inference",
     "the exact max(2, ceil(0.9B)) usable gate, ordered typed failures, cancellation, and worker-invariant indexed execution are receipt-bound",
     "canonical gamma-only inference, schema-6 append and strict reopen, and native accessible readback are connected in the existing QuickPLS General SEM workflow",
-    "Capability Registry V2 records the exact gamma-only Labs predicate and keeps qualification_ready and promotion_allowed false",
+    "Capability Registry V2 records the exact gamma-only Standard predicate under rank0_streamlined_plan4b_v1",
     "typed compiler and runtime exclusions remain in force for BCa, one-sided tails, probes, requested mediation effects, directed chains, unsupported interaction order, unsupported construction methods, and non-strong hierarchy"
   ],
   "blocked_contracts": [
@@ -70,14 +70,9 @@
     "BCa, studentized, basic, one-sided, cluster, strata, weighted, parametric, residual, and Bayesian resampling",
     "three-way and higher-order interactions, moderated mediation, directed structural chains, requested indirect or total effects, and authored probe policies",
     "higher-order constructs, groups, weights, non-listwise missing-data handling, transformed observed inputs, and non-continuous observed scales",
-    "qualified semantic exports and reports, packaged Windows acceptance, qualification-scale performance and soak evidence, and Standard promotion",
     "legacy-project migration or any project without schema 6 and the general_sem_v1 generation marker"
   ],
   "remaining_qualification": [
-    "Extend the production-independent observed-score smoke to a fully independent indicator-level PLS oracle that qualifies stage-one score recovery and sign behavior as well as the already covered deterministic case resampling, product rescaling, joint equations, scientific gamma, Type-7, B-minus-one, plus-one, and exact usable gate.",
-    "Freeze null, positive, negative, unequal-scale, correlated-predictor, nonnormal, boundary-sample, rank-deficient, and controlled-failure simulations; require point recovery, interval-endpoint equality, empirical coverage, usable-replicate accounting, seed replay, and worker-count invariance.",
-    "Use public SmartPLS moderation and bootstrap examples only as documented workflow and observable-output compatibility benchmarks; independent references and review remain mandatory scientific evidence.",
-    "Record cross-surface golden equality, tamper rejection, cancellation without partial publication, semantic export/readback, packaged Windows, accessibility, performance, memory, soak, and independent scientific-review evidence.",
-    "The cell must remain opt-in Experimental Labs and must not be promoted to Standard while qualification_ready is false or any required runtime or evidence gate is incomplete."
+    "Standard qualification uses rank0_streamlined_plan4b_v1; package and performance evidence is representative rather than per-cell, and every scientific exclusion in this contract remains in force."
   ]
 }

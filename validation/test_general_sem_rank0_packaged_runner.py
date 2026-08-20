@@ -185,45 +185,11 @@ class GeneralSemRank0PackagedRunnerTests(unittest.TestCase):
             _normalize_cancellation(value, True)
 
     def test_export_cancellation_requires_owned_dialog_receipt_and_no_file(self) -> None:
-        ui_destinations = {
-            format_id: (
-                ROOT
-                / f"validation/results/rank0-ui-cancelled-export-never-created.{format_id}"
-            ).resolve()
-            for format_id in ("csv", "xlsx", "png")
-        }
         save_destination = (
             ROOT / "validation/results/rank0-cancelled-export-never-created.csv"
         ).resolve()
-        self.assertTrue(all(not path.exists() for path in ui_destinations.values()))
         self.assertFalse(save_destination.exists())
         value = {
-            "uiControls": [
-                {
-                    "format": format_id,
-                    "destinationPath": str(ui_destinations[format_id]),
-                    "terminalLatencySeconds": 0.2,
-                    "terminalState": "cancelled",
-                    "cancelControlActivated": True,
-                    "nativeDialogObserved": False,
-                    "destinationExistedAfter": False,
-                    "noPartialFile": True,
-                    "tempFilesUnchanged": True,
-                    "feedback": "Export cancelled. Semantic readback completed before the publication boundary.",
-                    "absence": {
-                        "event": "complete",
-                        "passed": True,
-                        "mode": "assert-absent",
-                        "nativeDialogObserved": False,
-                        "file": {
-                            "path": str(ui_destinations[format_id]),
-                            "exists": False,
-                            "cancelledBeforePublication": True,
-                        },
-                    },
-                }
-                for format_id in ("csv", "xlsx", "png")
-            ],
             "saveDialog": {
                 "format": "csv",
                 "destinationPath": str(save_destination),
@@ -244,10 +210,6 @@ class GeneralSemRank0PackagedRunnerTests(unittest.TestCase):
             },
         }
         normalized = _normalize_export_cancellation(value, ROOT)
-        self.assertEqual(
-            [row["format"] for row in normalized["ui_control_cancellations"]],
-            ["csv", "xlsx", "png"],
-        )
         self.assertIs(normalized["save_dialog_no_partial_file"], True)
         value["saveDialog"]["publication"]["file"]["exists"] = True
         with self.assertRaisesRegex(ContractError, "zero-file"):

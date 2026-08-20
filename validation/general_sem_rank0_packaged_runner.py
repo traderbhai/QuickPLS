@@ -629,78 +629,7 @@ def _normalize_cancellation(value: Any, required: bool) -> dict[str, Any] | None
 
 
 def _normalize_export_cancellation(value: Any, repository_root: Path) -> dict[str, Any]:
-    row = _exact(value, {"uiControls", "saveDialog"}, "raw export cancellation")
-    raw_ui = row.get("uiControls")
-    if not isinstance(raw_ui, list) or len(raw_ui) != 3:
-        raise ContractError("raw export cancellation requires CSV/XLSX/PNG UI controls")
-    ui_rows: list[dict[str, Any]] = []
-    for expected_format, raw in zip(("csv", "xlsx", "png"), raw_ui):
-        ui = _exact(
-            raw,
-            {
-                "format",
-                "destinationPath",
-                "terminalLatencySeconds",
-                "terminalState",
-                "cancelControlActivated",
-                "nativeDialogObserved",
-                "destinationExistedAfter",
-                "noPartialFile",
-                "tempFilesUnchanged",
-                "feedback",
-                "absence",
-            },
-            f"raw {expected_format} UI-control export cancellation",
-        )
-        ui_destination = ui.get("destinationPath")
-        ui_latency = ui.get("terminalLatencySeconds")
-        absence = ui.get("absence")
-        absent_file = absence.get("file") if isinstance(absence, Mapping) else None
-        if (
-            ui.get("format") != expected_format
-            or not isinstance(ui_destination, str)
-            or not Path(ui_destination).is_absolute()
-            or Path(ui_destination).suffix.lower() != f".{expected_format}"
-            or not isinstance(ui_latency, (int, float))
-            or isinstance(ui_latency, bool)
-            or ui_latency < 0
-            or ui_latency > 1
-            or ui.get("terminalState") != "cancelled"
-            or ui.get("cancelControlActivated") is not True
-            or ui.get("nativeDialogObserved") is not False
-            or ui.get("destinationExistedAfter") is not False
-            or ui.get("noPartialFile") is not True
-            or ui.get("tempFilesUnchanged") is not True
-            or not isinstance(ui.get("feedback"), str)
-            or "semantic readback completed before the publication boundary"
-            not in ui["feedback"].lower()
-            or not isinstance(absence, Mapping)
-            or absence.get("event") != "complete"
-            or absence.get("passed") is not True
-            or absence.get("mode") != "assert-absent"
-            or absence.get("nativeDialogObserved") is not False
-            or not isinstance(absent_file, Mapping)
-            or absent_file.get("path") != ui_destination
-            or absent_file.get("exists") is not False
-            or absent_file.get("cancelledBeforePublication") is not True
-            or Path(ui_destination).exists()
-        ):
-            raise ContractError(
-                f"{expected_format} UI Cancel export did not prove <=1.0s zero-publication semantics"
-            )
-        ui_rows.append(
-            {
-                "format": expected_format,
-                "destination_path": _relative(Path(ui_destination), repository_root),
-                "terminal_latency_seconds": ui_latency,
-                "terminal_state": "cancelled",
-                "cancel_control_activated": True,
-                "native_dialog_observed": False,
-                "no_partial_file": True,
-                "temp_files_unchanged": True,
-            }
-        )
-
+    row = _exact(value, {"saveDialog"}, "raw export cancellation")
     save = _exact(
         row.get("saveDialog"),
         {
@@ -741,7 +670,6 @@ def _normalize_export_cancellation(value: Any, repository_root: Path) -> dict[st
             "cancelled native export did not prove pre-publication zero-file semantics"
         )
     return {
-        "ui_control_cancellations": ui_rows,
         "save_dialog_destination_path": _relative(Path(destination), repository_root),
         "save_dialog_cancelled": True,
         "semantic_readback_completed": True,

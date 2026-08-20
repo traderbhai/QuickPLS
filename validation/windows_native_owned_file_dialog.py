@@ -123,6 +123,14 @@ def submit(
     if not action.is_visible() or not action.is_enabled():
         raise GateFailure("The owned file-dialog action is not visible and enabled.")
     target_text = str(target)
+    expected_address = f"Address: {target.parent}"
+    address_texts = {
+        control.window_text()
+        for control in dialog.descendants()
+        if control.class_name() == "ToolbarWindow32"
+        and control.window_text().startswith("Address: ")
+    }
+    entry_text = target.name if expected_address in address_texts else target_text
     attempts: list[dict[str, Any]] = []
     dialog.set_focus()
     dialog.wait_for_idle()
@@ -131,26 +139,31 @@ def submit(
         if time.monotonic() >= deadline:
             break
         edit.set_keyboard_focus()
-        edit.set_edit_text(target_text)
+        edit.set_edit_text(entry_text)
         dialog.wait_for_idle()
         observed: list[str] = []
         for _ in range(2):
             time.sleep(0.1)
             observed.append(edit.window_text())
         attempts.append({"attempt": number, "settledReads": observed})
-        if observed == [target_text, target_text]:
+        if observed == [entry_text, entry_text]:
             verified = True
             break
     if not verified:
         raise GateFailure(
             f"The filename field did not retain the exact target: {attempts}"
         )
-    action.send_message(win32con.BM_CLICK, 0, 0)
+    if entry_text == target.name:
+        dialog.type_keys("%s")
+        submission_method = "verified_directory_filename_Alt+S"
+    else:
+        action.send_message(win32con.BM_CLICK, 0, 0)
+        submission_method = "absolute_path_BM_CLICK"
     return {
         "filenameControlId": int(edit.control_id()),
         "actionControlId": int(action.control_id()),
         "filenameVerified": True,
-        "submissionMethod": "BM_CLICK",
+        "submissionMethod": submission_method,
         "setAttempts": attempts,
     }
 
@@ -338,6 +351,7 @@ def main() -> int:
             if args.mode == "save-cancel" and cancel is not None
             else submit(dialog, edit, action, target, deadline, win32con)
         )
+        diagnostics["submission"] = submission
         phase = "file_completion"
         file_evidence = wait_for_completion(args.mode, dialog, target, deadline)
         emit(

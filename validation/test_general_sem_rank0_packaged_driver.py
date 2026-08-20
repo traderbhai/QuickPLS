@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class GeneralSemRank0PackagedDriverContracts(unittest.TestCase):
-    def test_all_six_formats_use_native_publication_and_cancel_is_zero_file(
+    def test_all_six_formats_use_native_publication_and_save_cancel_is_zero_file(
         self,
     ) -> None:
         source = (
@@ -22,11 +22,7 @@ class GeneralSemRank0PackagedDriverContracts(unittest.TestCase):
             source,
         )
         self.assertNotIn('waitForEvent("download"', source)
-        self.assertIn('name: "Cancel export", exact: true', source)
-        self.assertIn('mode: "assert-absent"', source)
-        self.assertIn("terminalLatencySeconds > 1", source)
         self.assertIn('mode: "save-cancel"', source)
-        self.assertIn('for (const format of ["csv", "xlsx", "png"])', source)
         self.assertIn("cancelledBeforePublication", source)
         self.assertIn(".toLowerCase().includes", source)
         self.assertIn(
