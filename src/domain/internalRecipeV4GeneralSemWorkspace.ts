@@ -22,6 +22,8 @@ import {
   GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1,
 } from "./canonicalGeneralSemResultsV1";
 import {
+  GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
+  GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1,
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
   preflightGeneralSemPlsV1,
@@ -64,6 +66,20 @@ export const GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1 = Object.freeze({
   capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
 } as const satisfies CapabilityCellReferenceV2);
 
+export const GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.cbsem",
+  cell_id: "qpls3.cbsem.general_sem_ml",
+  capability_version: "cbsem_general_sem_ml_v1",
+} as const satisfies CapabilityCellReferenceV2);
+
+export const GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.cbsem_bootstrapping",
+  cell_id: "qpls3.cbsem.bootstrap.recursive_sem",
+  capability_version: "cbsem_exact_recursive_sem_case_bootstrap_v1",
+} as const satisfies CapabilityCellReferenceV2);
+
 export const GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1 =
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1;
 
@@ -82,6 +98,12 @@ const GENERAL_SEM_PLS_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recip
 const GENERAL_SEM_PLS_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1" as const;
 const GENERAL_SEM_PLS_MODERATION_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1" as const;
 const GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_percentile_bootstrap_execution_v1" as const;
+export const GENERAL_SEM_CBSEM_POINT_ADAPTER_VERSION_V1 = "compiled_recipe_v4_cbsem_plan_v3_point_execution_v1" as const;
+export const GENERAL_SEM_CBSEM_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_recipe_v4_cbsem_plan_v3_recursive_sem_case_bootstrap_execution_v1" as const;
+
+export type GeneralSemEstimatorIdV1 =
+  | typeof GENERAL_SEM_PLS_ESTIMATOR_ID_V1
+  | typeof GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1;
 
 export interface GeneralSemPlsEngineOptionsV1 {
   tolerance: number;
@@ -147,7 +169,7 @@ export function bindGeneralSemPlsModelToDatasetV1(model: SemModelV4, dataset: Da
     throw new GeneralSemWorkspaceErrorV1(
       "general_sem_pls.raw_data_required",
       dataset.id,
-      "The current General SEM PLS estimator requires resident raw case-level data.",
+      "The selected General SEM estimator requires resident raw case-level data.",
       "Choose a raw resident dataset. Matrix input remains available to qualified CB-SEM cells.",
     );
   }
@@ -200,7 +222,9 @@ export function preflightGeneralSemWorkspaceV1(input: {
   model: SemModelV4 | null;
   config: GeneralSemConfigV1;
   engine: GeneralSemPlsEngineOptionsV1;
+  estimatorId?: GeneralSemEstimatorIdV1;
 }): GeneralSemWorkspacePreflightV1 {
+  const estimatorId = input.estimatorId ?? GENERAL_SEM_PLS_ESTIMATOR_ID_V1;
   const issues: GeneralSemWorkspaceIssueV1[] = [];
   if (!input.experimentalLabsEnabled) issues.push(issue(
     "general_sem.access.experimental_labs_required",
@@ -230,7 +254,7 @@ export function preflightGeneralSemWorkspaceV1(input: {
     if (input.dataset.kind === "covariance" || input.dataset.kind === "correlation") issues.push(issue(
       "general_sem.dataset.raw_required",
       input.dataset.id,
-      "The current General SEM PLS slice requires raw case-level data.",
+      "The selected General SEM operation requires raw case-level data.",
       "Choose a raw dataset.",
     ));
   }
@@ -271,7 +295,7 @@ export function preflightGeneralSemWorkspaceV1(input: {
       if (!metadata || metadata.column_type !== "numeric" || metadata.scale_type !== "continuous") issues.push(issue(
         "general_sem.dataset.continuous_numeric_required",
         variable.id,
-        `Observed source column ${variable.source_column} must have continuous numeric metadata for this exact PLS cell.`,
+        `Observed source column ${variable.source_column} must have continuous numeric metadata for this exact General SEM cell.`,
         "Correct the column metadata through an explicit dataset operation, or use a future qualified estimator cell.",
       ));
     }
@@ -288,13 +312,57 @@ export function preflightGeneralSemWorkspaceV1(input: {
   if (!Number.isSafeInteger(input.engine.workers) || input.engine.workers < 1 || input.engine.workers > 64) issues.push(issue(
     "general_sem.settings.workers_invalid", "workers", "Worker count must be between 1 and 64.", "Choose a supported worker count.",
   ));
+  const minimumBootstrapSamples = estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1 ? 500 : 2;
   if (input.engine.inference === "percentile_case_bootstrap"
-    && (!Number.isSafeInteger(input.engine.bootstrapSamples) || input.engine.bootstrapSamples < 2 || input.engine.bootstrapSamples > 10_000)) issues.push(issue(
-      "general_sem.settings.bootstrap_samples_invalid", "bootstrapSamples", "Bootstrap samples must be an integer from 2 through 10,000.", "Choose a supported full-model case-bootstrap count.",
+    && (!Number.isSafeInteger(input.engine.bootstrapSamples) || input.engine.bootstrapSamples < minimumBootstrapSamples || input.engine.bootstrapSamples > 10_000)) issues.push(issue(
+      "general_sem.settings.bootstrap_samples_invalid", "bootstrapSamples", `Bootstrap samples must be an integer from ${minimumBootstrapSamples.toLocaleString()} through 10,000 for the selected estimator.`, "Choose a supported full-model case-bootstrap count.",
     ));
 
+  if (estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1 && input.model) {
+    if (input.model.data_binding.kind !== "raw"
+      || input.model.data_binding.missing_data !== "listwise_deletion"
+      || input.model.data_binding.weight != null
+      || input.model.data_binding.cluster_variable != null
+      || input.model.data_binding.strata_variable != null) issues.push(issue(
+      "general_sem.cbsem.raw_listwise_unweighted_required",
+      input.model.id,
+      "CB-SEM General v3 requires unweighted raw data with listwise deletion and no cluster or strata binding.",
+      "Use the exact raw, unweighted listwise model scope or choose another estimator.",
+    ));
+    if (!input.model.relations.some((relation) => relation.kind === "structural")) issues.push(issue(
+      "general_sem.cbsem.structural_relation_required",
+      input.model.id,
+      "CB-SEM General v3 is the recursive SEM operation and requires at least one structural regression.",
+      "Add a scientifically justified structural relation or use a future qualified CFA operation.",
+    ));
+    if (input.model.group.kind !== "single_group"
+      || input.model.variables.some((variable) => variable.kind === "composite" || variable.kind === "derived")
+      || input.model.relations.some((relation) => relation.kind === "measurement_causal")) issues.push(issue(
+      "general_sem.cbsem.common_factor_single_group_required",
+      input.model.id,
+      "CB-SEM General v3 requires a single-group common-factor SEM; composite, derived-variable, and formative measurement semantics are outside this cell.",
+      "Use common-factor measurement semantics in a single group or keep this estimator blocked.",
+    ));
+    if (input.model.derived_terms.length > 0
+      || input.model.parameters.some((parameter) => parameter.kind === "derived")
+      || input.model.constraints.length > 0
+      || input.config.requested_effect_estimands.length > 0
+      || input.config.conditional_effect_probes.length > 0) issues.push(issue(
+      "general_sem.cbsem.derived_scope_unsupported",
+      input.model.id,
+      "The exact CB-SEM General v3 operation does not execute derived terms, derived parameter rows, explicit constraints, requested effects, or conditional probes.",
+      "Remove unsupported requests from a new scientific model or keep this estimator blocked.",
+    ));
+    if (input.engine.inference === "percentile_case_bootstrap" && input.engine.confidenceLevel !== 0.95) issues.push(issue(
+      "general_sem.cbsem.bootstrap_confidence_fixed",
+      "confidenceLevel",
+      "CB-SEM General v3 recursive bootstrap uses the exact fixed 95% two-sided percentile interval.",
+      "Set the confidence level to 0.95.",
+    ));
+  }
+
   let decision: SemCapabilityDecisionV1 | null = null;
-  if (input.model) {
+  if (input.model && estimatorId === GENERAL_SEM_PLS_ESTIMATOR_ID_V1) {
     try {
       decision = preflightGeneralSemPlsV1(input.model, input.config);
       for (const diagnostic of decision.diagnostics.filter((item) => item.severity === "error")) issues.push(issue(
@@ -312,7 +380,12 @@ export function preflightGeneralSemWorkspaceV1(input: {
       ));
     }
   }
-  return { ready: issues.length === 0 && decision?.status === "experimental", decision, issues };
+  return {
+    ready: issues.length === 0
+      && (estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1 || decision?.status === "experimental"),
+    decision,
+    issues,
+  };
 }
 
 export interface BuildGeneralSemRecipeV1Input {
@@ -372,6 +445,86 @@ export function buildGeneralSemRecipeV1(input: BuildGeneralSemRecipeV1Input): An
   };
 }
 
+/** Publishes the exact resident RecipeV4 required by the CB-SEM V3 Labs adapters. */
+export function buildGeneralSemCbsemRecipeV3(input: BuildGeneralSemRecipeV1Input): AnalysisRecipeV4 {
+  if (!SHA256.test(input.nativeScientificSha256)) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.model.native_digest_invalid", input.model.id, "The native model digest is invalid.", "Re-run native scientific validation.",
+  );
+  if (!input.dataset.fingerprint?.trim() || input.model.data_binding.dataset_id !== input.dataset.id) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.dataset.binding_mismatch", input.dataset.id, "The model and resident dataset identities differ.", "Rebind the model to the selected dataset.",
+  );
+  const config = parseGeneralSemConfigV1(input.config);
+  const bootstrapInference = config.inference.kind === "case_bootstrap" ? config.inference : null;
+  if (bootstrapInference && (
+    bootstrapInference.resamples < 500
+    || bootstrapInference.interval !== "percentile"
+    || bootstrapInference.tail !== "two_sided"
+    || bootstrapInference.confidence_level !== 0.95
+  )) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.cbsem.bootstrap_scope_mismatch",
+    input.recipeId,
+    "CB-SEM V3 bootstrap requires 500 through 10,000 full-ML case resamples with a fixed two-sided 95% percentile interval.",
+    "Keep the recipe unchanged and choose the exact CB-SEM recursive bootstrap settings.",
+  );
+  const settings: AnalysisRecipeV4Settings<"listwise_deletion"> = {
+    method: "cbsem",
+    weighting_scheme: "path",
+    tolerance: input.engine.tolerance,
+    max_iterations: input.engine.maxIterations,
+    bootstrap_samples: bootstrapInference?.resamples ?? 0,
+    studentized_inner_samples: 0,
+    permutation_samples: 0,
+    seed: input.engine.seed,
+    workers: input.engine.workers,
+    confidence_level: bootstrapInference?.confidence_level ?? 0.95,
+    preprocessing: "unstandardized",
+    missing_data: "listwise_deletion",
+    case_weight_column: null,
+  };
+  return {
+    schema_version: 4,
+    id: input.recipeId,
+    created_at: input.createdAt,
+    dataset_fingerprint: input.dataset.fingerprint,
+    model_binding: {
+      kind: "project_sem_model_v4_reference",
+      model_id: input.model.id,
+      scientific_sha256: input.nativeScientificSha256,
+    },
+    estimand_confirmation: "not_legacy",
+    settings,
+    method_config: {
+      kind: "cbsem",
+      model_type: "sem",
+      estimator: "ml",
+      input: "raw",
+      mean_structure: false,
+      bootstrap_samples: bootstrapInference?.resamples ?? 0,
+      ...(bootstrapInference ? {
+        bootstrap_v2: {
+          algorithm: "case_resampling_full_ml" as const,
+          interval: "percentile_type7" as const,
+        },
+      } : {}),
+    },
+    general_sem_config: config,
+    metadata: {
+      execution_surface: "native_general_sem_cbsem_labs_v1",
+      general_sem_generation: "general_sem_v1",
+    },
+    legacy_source: null,
+  };
+}
+
+export function buildGeneralSemEstimatorRecipeV1(
+  estimatorId: GeneralSemEstimatorIdV1,
+  input: BuildGeneralSemRecipeV1Input,
+): AnalysisRecipeV4 {
+  return estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+    ? buildGeneralSemCbsemRecipeV3(input)
+    : buildGeneralSemRecipeV1(input);
+}
+
 export interface GeneralSemProjectBootstrapRequestV1 {
   surface: "internal_labs";
   experimentalLabsEnabled: true;
@@ -406,6 +559,7 @@ export interface GeneralSemProjectBootstrapReceiptV1 {
 
 export interface RehydratedGeneralSemExecutionAuthorityV1 {
   receipt: GeneralSemProjectBootstrapReceiptV1;
+  estimatorId: GeneralSemEstimatorIdV1;
   engine: GeneralSemPlsEngineOptionsV1;
   /** Exact resident config; never reconstructed from UI defaults. */
   config: GeneralSemConfigV1;
@@ -426,20 +580,43 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
   const config = recipe.general_sem_config
     ? parseGeneralSemConfigV1(recipe.general_sem_config)
     : null;
-  const methodConfig = recipe.method_config as { kind?: unknown } | undefined;
-  if (!config
-    || recipe.settings.method !== "pls_pm"
-    || recipe.settings.weighting_scheme !== "path"
-    || recipe.settings.preprocessing !== "standardized"
-    || recipe.settings.missing_data !== "listwise_deletion"
-    || recipe.settings.case_weight_column !== null
-    || methodConfig?.kind !== "pls_algorithm"
-    || recipe.metadata.execution_surface !== "native_general_sem_pls_labs_v1"
-    || recipe.metadata.general_sem_generation !== "general_sem_v1") {
+  const methodConfig = recipe.method_config as Record<string, unknown> | null | undefined;
+  const plsRecipe = Boolean(
+    config
+    && recipe.settings.method === "pls_pm"
+    && recipe.settings.weighting_scheme === "path"
+    && recipe.settings.preprocessing === "standardized"
+    && recipe.settings.missing_data === "listwise_deletion"
+    && recipe.settings.case_weight_column === null
+    && methodConfig?.kind === "pls_algorithm"
+    && recipe.metadata.execution_surface === "native_general_sem_pls_labs_v1"
+    && recipe.metadata.general_sem_generation === "general_sem_v1",
+  );
+  const cbsemRecipe = Boolean(
+    config
+    && recipe.settings.method === "cbsem"
+    && recipe.settings.weighting_scheme === "path"
+    && recipe.settings.preprocessing === "unstandardized"
+    && recipe.settings.missing_data === "listwise_deletion"
+    && recipe.settings.case_weight_column === null
+    && recipe.settings.confidence_level === 0.95
+    && (recipe.settings.bootstrap_test_tail === undefined || recipe.settings.bootstrap_test_tail === "two_sided")
+    && methodConfig?.kind === "cbsem"
+    && methodConfig.model_type === "sem"
+    && methodConfig.estimator === "ml"
+    && methodConfig.input === "raw"
+    && methodConfig.mean_structure === false
+    && methodConfig.bootstrap_samples === recipe.settings.bootstrap_samples
+    && methodConfig.group_column === undefined
+    && methodConfig.invariance_steps === undefined
+    && recipe.metadata.execution_surface === "native_general_sem_cbsem_labs_v1"
+    && recipe.metadata.general_sem_generation === "general_sem_v1",
+  );
+  if (!config || (!plsRecipe && !cbsemRecipe)) {
     throw new GeneralSemWorkspaceErrorV1(
       "general_sem.rehydrate.recipe_scope_mismatch",
       authority.recipeId,
-      "The resident RecipeV4 is outside the bounded General SEM PLS execution scope.",
+      "The resident RecipeV4 is outside the bounded General SEM PLS or CB-SEM V3 execution scope.",
       "Keep the archive unchanged and use an estimator cell that explicitly supports its recipe.",
     );
   }
@@ -457,6 +634,27 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
       authority.recipeId,
       "The resident RecipeV4 settings and GeneralSemConfigV1 inference authority differ.",
       "Preserve the archive unchanged and report the authority mismatch.",
+    );
+  }
+  if (cbsemRecipe) {
+    const bootstrapV2 = methodConfig?.bootstrap_v2 as Record<string, unknown> | undefined;
+    const bootstrapShapeMatches = inference.kind === "none"
+      ? bootstrapV2 === undefined
+      : Boolean(
+        bootstrapV2
+        && Object.keys(bootstrapV2).length === 2
+        && bootstrapV2.algorithm === "case_resampling_full_ml"
+        && bootstrapV2.interval === "percentile_type7"
+        && inference.resamples >= 500
+        && inference.confidence_level === 0.95
+        && inference.interval === "percentile"
+        && inference.tail === "two_sided",
+      );
+    if (!bootstrapShapeMatches) throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.rehydrate.cbsem_bootstrap_scope_mismatch",
+      authority.recipeId,
+      "The resident CB-SEM RecipeV4 bootstrap authority differs from the exact recursive full-ML case-bootstrap V3 operation.",
+      "Preserve the archive unchanged and keep CB-SEM calculation disabled.",
     );
   }
   return {
@@ -477,6 +675,7 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
       residentRecipeId: authority.recipeId,
       residentRecipeDocumentSha256: authority.recipeDocumentSha256,
     },
+    estimatorId: cbsemRecipe ? GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1 : GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
     engine: {
       tolerance: recipe.settings.tolerance,
       maxIterations: recipe.settings.max_iterations,
@@ -495,9 +694,28 @@ export type GeneralSemProjectBootstrapOutcomeV1 =
   | { status: "ok"; value: { schemaVersion: 1; receipt: GeneralSemProjectBootstrapReceiptV1 } }
   | { status: "blocked"; diagnostic: { code: string; message: string; correctiveAction: string } };
 
+export interface GeneralSemEstimatorParameterTableAuthorityV2 {
+  readonly source: "resident_schema6_sem_model_v4_parameter_table";
+  readonly modelId: string;
+  readonly modelScientificSha256: string;
+  readonly parameterTableSha256: string;
+  readonly parameterCount: number;
+  readonly freeParameterCount: number;
+  readonly fixedParameterCount: number;
+  readonly derivedParameterCount: number;
+  readonly equalityLabeledParameterCount: number;
+  readonly boundedParameterCount: number;
+  readonly explicitConstraintCount: number;
+}
+
 export interface GeneralSemNativePreflightOutcomeV1 {
   status: "ok";
-  value: { schemaVersion: 1; pls: SemCapabilityDecisionV1; cbsem: SemCapabilityDecisionV1 };
+  value: {
+    schemaVersion: 2;
+    pls: SemCapabilityDecisionV1;
+    cbsem: SemCapabilityDecisionV1;
+    authority: GeneralSemEstimatorParameterTableAuthorityV2;
+  };
 }
 
 export interface GeneralSemNativePreflightBlockedV1 {
@@ -521,6 +739,9 @@ export interface GeneralSemPlsJobRequestV1 {
   recipeDocumentSha256: string;
   capabilityCell: CapabilityCellReferenceV2;
 }
+
+/** PLS and CB-SEM General v3 share the same digest-bound native job request. */
+export type GeneralSemJobRequestV1 = GeneralSemPlsJobRequestV1;
 
 export type GeneralSemPlsJobStateV1 = "queued" | "running" | "cancelling" | "completed" | "failed" | "cancelled";
 export interface GeneralSemPlsJobFailureV1 {
@@ -565,6 +786,20 @@ export interface GeneralSemPlsCompletedResultV1 {
   analyticalResult: unknown;
   canonicalDocument: CanonicalResultDocumentV2;
 }
+
+export interface GeneralSemCbsemCompletedResultV1 {
+  schemaVersion: 1;
+  archiveIdentity: GeneralSemArchiveIdentityV1;
+  adapterVersion:
+    | typeof GENERAL_SEM_CBSEM_POINT_ADAPTER_VERSION_V1
+    | typeof GENERAL_SEM_CBSEM_BOOTSTRAP_ADAPTER_VERSION_V1;
+  capabilityCells: CapabilityCellReferenceV2[];
+  canonicalDocument: CanonicalResultDocumentV2;
+}
+
+export type GeneralSemCompletedResultV1 =
+  | GeneralSemPlsCompletedResultV1
+  | GeneralSemCbsemCompletedResultV1;
 
 type UnknownRecord = Record<string, unknown>;
 function recordAt(value: unknown, path: string): UnknownRecord {
@@ -676,12 +911,41 @@ export function parseGeneralSemEstimatorPreflightOutcomeV1(value: unknown): Gene
   if (outcome.status !== "ok") throw new GeneralSemWorkspaceErrorV1("general_sem.wire.status_invalid", "outcome.status", "Estimator preflight status is invalid.", "Retry from the installed desktop application.");
   exactKeysAt(outcome, ["status", "value"], "outcome");
   const body = recordAt(outcome.value, "outcome.value");
-  exactKeysAt(body, ["schemaVersion", "pls", "cbsem"], "outcome.value");
-  if (body.schemaVersion !== 1) throw new GeneralSemWorkspaceErrorV1("general_sem.wire.preflight_schema_invalid", "outcome.value.schemaVersion", "Estimator preflight requires schema version 1.", "Update QuickPLS and retry.");
+  exactKeysAt(body, ["schemaVersion", "pls", "cbsem", "authority"], "outcome.value");
+  if (body.schemaVersion !== 2) throw new GeneralSemWorkspaceErrorV1("general_sem.wire.preflight_schema_invalid", "outcome.value.schemaVersion", "Estimator preflight requires schema version 2.", "Update QuickPLS and retry.");
+  const authority = recordAt(body.authority, "outcome.value.authority");
+  exactKeysAt(authority, [
+    "source", "modelId", "modelScientificSha256", "parameterTableSha256", "parameterCount",
+    "freeParameterCount", "fixedParameterCount", "derivedParameterCount",
+    "equalityLabeledParameterCount", "boundedParameterCount", "explicitConstraintCount",
+  ], "outcome.value.authority");
+  if (authority.source !== "resident_schema6_sem_model_v4_parameter_table") throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.wire.preflight_authority_invalid", "outcome.value.authority.source", "Estimator preflight did not use the resident schema-6 SemModelV4 parameter table.", "Keep execution disabled and reopen the strict project authority.",
+  );
+  const parameterCount = countAt(authority.parameterCount, "outcome.value.authority.parameterCount");
+  const freeParameterCount = countAt(authority.freeParameterCount, "outcome.value.authority.freeParameterCount");
+  const fixedParameterCount = countAt(authority.fixedParameterCount, "outcome.value.authority.fixedParameterCount");
+  const derivedParameterCount = countAt(authority.derivedParameterCount, "outcome.value.authority.derivedParameterCount");
+  if (parameterCount !== freeParameterCount + fixedParameterCount + derivedParameterCount) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.wire.preflight_authority_invalid", "outcome.value.authority.parameterCount", "Estimator preflight parameter-state counts do not reconcile.", "Keep execution disabled and reopen the strict project authority.",
+  );
   return { status: "ok", value: {
-    schemaVersion: 1,
+    schemaVersion: 2,
     pls: parseSemCapabilityDecisionV1(body.pls),
     cbsem: parseSemCapabilityDecisionV1(body.cbsem),
+    authority: {
+      source: "resident_schema6_sem_model_v4_parameter_table",
+      modelId: textAt(authority.modelId, "outcome.value.authority.modelId"),
+      modelScientificSha256: digestAt(authority.modelScientificSha256, "outcome.value.authority.modelScientificSha256"),
+      parameterTableSha256: digestAt(authority.parameterTableSha256, "outcome.value.authority.parameterTableSha256"),
+      parameterCount,
+      freeParameterCount,
+      fixedParameterCount,
+      derivedParameterCount,
+      equalityLabeledParameterCount: countAt(authority.equalityLabeledParameterCount, "outcome.value.authority.equalityLabeledParameterCount"),
+      boundedParameterCount: countAt(authority.boundedParameterCount, "outcome.value.authority.boundedParameterCount"),
+      explicitConstraintCount: countAt(authority.explicitConstraintCount, "outcome.value.authority.explicitConstraintCount"),
+    },
   } };
 }
 
@@ -788,6 +1052,85 @@ export function parseGeneralSemPlsCompletedResultV1(value: unknown): GeneralSemP
   return { schemaVersion: 1, archiveIdentity, analyticalResult: completed.analyticalResult, canonicalDocument };
 }
 
+export function parseGeneralSemCbsemCompletedResultV1(value: unknown): GeneralSemCbsemCompletedResultV1 {
+  const completed = recordAt(value, "completed");
+  exactKeysAt(completed, ["schemaVersion", "archiveIdentity", "adapterVersion", "capabilityCells", "canonicalDocument"], "completed");
+  if (completed.schemaVersion !== 1) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.wire.result_schema_invalid",
+    "completed.schemaVersion",
+    "Completed CB-SEM General result requires schema version 1.",
+    "Update QuickPLS and retry.",
+  );
+  const archive = recordAt(completed.archiveIdentity, "completed.archiveIdentity");
+  exactKeysAt(archive, [
+    "archivePath", "archiveSha256", "projectId", "datasetId", "datasetFingerprint",
+    "modelId", "modelScientificSha256", "recipeId", "recipeDocumentSha256",
+  ], "completed.archiveIdentity");
+  const archiveIdentity: GeneralSemArchiveIdentityV1 = {
+    archivePath: textAt(archive.archivePath, "archiveIdentity.archivePath"),
+    archiveSha256: digestAt(archive.archiveSha256, "archiveIdentity.archiveSha256"),
+    projectId: uuidAt(archive.projectId, "archiveIdentity.projectId"),
+    datasetId: textAt(archive.datasetId, "archiveIdentity.datasetId"),
+    datasetFingerprint: textAt(archive.datasetFingerprint, "archiveIdentity.datasetFingerprint"),
+    modelId: textAt(archive.modelId, "archiveIdentity.modelId"),
+    modelScientificSha256: digestAt(archive.modelScientificSha256, "archiveIdentity.modelScientificSha256"),
+    recipeId: textAt(archive.recipeId, "archiveIdentity.recipeId"),
+    recipeDocumentSha256: digestAt(archive.recipeDocumentSha256, "archiveIdentity.recipeDocumentSha256"),
+  };
+  const adapterVersion = textAt(completed.adapterVersion, "completed.adapterVersion");
+  if (adapterVersion !== GENERAL_SEM_CBSEM_POINT_ADAPTER_VERSION_V1
+    && adapterVersion !== GENERAL_SEM_CBSEM_BOOTSTRAP_ADAPTER_VERSION_V1) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.wire.cbsem_adapter_invalid",
+    "completed.adapterVersion",
+    "The completed CB-SEM adapter is not an exact General SEM V3 adapter.",
+    "Discard this job and rerun it with the matching QuickPLS build.",
+  );
+  if (!Array.isArray(completed.capabilityCells)) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.wire.capability_cells_invalid",
+    "completed.capabilityCells",
+    "The completed CB-SEM capability-cell inventory must be an array.",
+    "Discard this job and rerun native preflight.",
+  );
+  const capabilityCells = completed.capabilityCells.map((cell, index) => (
+    capabilityCellAtV1(cell, `completed.capabilityCells[${index}]`)
+  ));
+  if (capabilityCells.length === 0
+    || capabilityCells.some((cell, index) => index > 0 && compareCapabilityCellsV1(capabilityCells[index - 1]!, cell) >= 0)) {
+    throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.wire.capability_cells_invalid",
+      "completed.capabilityCells",
+      "The completed CB-SEM capability cells must be nonempty, unique, and canonically ordered.",
+      "Discard this job and rerun native preflight.",
+    );
+  }
+  const canonicalDocument = completed.canonicalDocument as CanonicalResultDocumentV2;
+  const validation = validateCanonicalResultDocumentV2(canonicalDocument);
+  if (!validation.passed || !canonicalDocument.general_sem_results) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.wire.canonical_invalid",
+    "completed.canonicalDocument",
+    validation.errors.join("; ") || "The completed document has no General SEM result section.",
+    "Discard this completed job and retry after updating QuickPLS.",
+  );
+  if (canonicalDocument.provenance.project_id !== archiveIdentity.projectId
+    || canonicalDocument.provenance.dataset_id !== archiveIdentity.datasetId
+    || canonicalDocument.provenance.dataset_fingerprint !== archiveIdentity.datasetFingerprint
+    || canonicalDocument.provenance.model_id !== archiveIdentity.modelId
+    || canonicalDocument.provenance.model_digest !== archiveIdentity.modelScientificSha256
+    || canonicalDocument.provenance.recipe_id !== archiveIdentity.recipeId) throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.wire.result_authority_mismatch",
+      "completed.canonicalDocument.provenance",
+      "The CB-SEM canonical result differs from the archive authority returned by the job.",
+      "Discard the job; do not append this result.",
+    );
+  return {
+    schemaVersion: 1,
+    archiveIdentity,
+    adapterVersion,
+    capabilityCells,
+    canonicalDocument,
+  };
+}
+
 type GeneralSemCapabilityCellIdentityV1 = {
   readonly registry_schema_version: number;
   readonly capability_id: string;
@@ -826,6 +1169,17 @@ export interface GeneralSemPlsExecutionCapabilityV1 {
   readonly capabilityCell: CapabilityCellReferenceV2;
   readonly interactionIds: readonly string[];
   readonly focalRelationIds: readonly string[];
+}
+
+export type GeneralSemCbsemExecutionKindV1 = "recursive_sem_point" | "recursive_sem_bootstrap";
+
+export interface GeneralSemCbsemExecutionCapabilityV1 {
+  readonly kind: GeneralSemCbsemExecutionKindV1;
+  readonly capabilityCell: CapabilityCellReferenceV2;
+  readonly capabilityCells: readonly CapabilityCellReferenceV2[];
+  readonly adapterVersion:
+    | typeof GENERAL_SEM_CBSEM_POINT_ADAPTER_VERSION_V1
+    | typeof GENERAL_SEM_CBSEM_BOOTSTRAP_ADAPTER_VERSION_V1;
 }
 
 interface GeneralSemCompletedInteractionIdentityV1 {
@@ -976,6 +1330,88 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
     interactionIds: interactionTerms.map((term) => term.id),
     focalRelationIds: [...new Set(interactionTerms.map((term) => term.focal_relation))]
       .sort(compareUtf8StringsV1),
+  };
+}
+
+export function generalSemPlsRequestedCapabilityCellV1(
+  model: SemModelV4,
+  config: GeneralSemConfigV1,
+): CapabilityCellReferenceV2 {
+  const moderation = model.derived_terms.some((term) => term.kind === "interaction_v2");
+  if (moderation) return config.inference.kind === "case_bootstrap"
+    ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+    : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
+  return config.inference.kind === "case_bootstrap"
+    ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
+    : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
+}
+
+export function generalSemCbsemRequestedCapabilityCellV1(
+  config: GeneralSemConfigV1,
+): CapabilityCellReferenceV2 {
+  return config.inference.kind === "case_bootstrap"
+    ? GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1
+    : GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1;
+}
+
+export function generalSemRequestedCapabilityCellV1(
+  estimatorId: GeneralSemEstimatorIdV1,
+  model: SemModelV4,
+  config: GeneralSemConfigV1,
+): CapabilityCellReferenceV2 {
+  return estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+    ? generalSemCbsemRequestedCapabilityCellV1(config)
+    : generalSemPlsRequestedCapabilityCellV1(model, config);
+}
+
+function capabilityRegistryEvidenceIdV1(cell: CapabilityCellReferenceV2): string {
+  return `capability_registry_v2:${cell.capability_id}:${cell.cell_id}:${cell.capability_version}`;
+}
+
+/** Labs-only: a Standard/supported decision is deliberately not accepted here. */
+export function selectGeneralSemCbsemExecutionCapabilityV1(input: {
+  config: GeneralSemConfigV1;
+  decision: SemCapabilityDecisionV1;
+}): GeneralSemCbsemExecutionCapabilityV1 {
+  const bootstrap = input.config.inference.kind === "case_bootstrap";
+  const capabilityCells = [
+    GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1,
+    ...(bootstrap ? [GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1] : []),
+  ].sort(compareCapabilityCellsV1);
+  const capabilityCell = bootstrap
+    ? GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1
+    : GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1;
+  if (input.decision.estimator_id !== GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+    || input.decision.status !== "experimental") throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.capability.cbsem_labs_preflight_not_runnable",
+    input.decision.estimator_id,
+    "The exact native CB-SEM V3 decision is not authorized for Experimental Labs execution.",
+    "Keep CB-SEM disabled and rerun native Registry-backed preflight from the unchanged marked project.",
+  );
+  if (input.decision.capability_cells.length !== capabilityCells.length
+    || input.decision.capability_cells.some((cell, index) => !sameCapabilityCellV1(cell, capabilityCells[index]!))) {
+    throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.capability.cbsem_cell_mismatch",
+      capabilityCell.cell_id,
+      "The native CB-SEM V3 capability inventory differs from the exact resident point-or-bootstrap recipe.",
+      "Do not calculate from this stale authority. Reopen the marked project and rerun native preflight.",
+    );
+  }
+  const evidenceIds = new Set(input.decision.evidence.map((item) => item.evidence_id));
+  const missingRegistryEvidence = capabilityCells.find((cell) => !evidenceIds.has(capabilityRegistryEvidenceIdV1(cell)));
+  if (missingRegistryEvidence) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.capability.cbsem_registry_evidence_missing",
+    missingRegistryEvidence.cell_id,
+    "The native CB-SEM V3 decision omitted the exact Capability Registry V2 evidence for an execution cell.",
+    "Keep CB-SEM disabled until native preflight returns the Registry-backed Labs decision.",
+  );
+  return {
+    kind: bootstrap ? "recursive_sem_bootstrap" : "recursive_sem_point",
+    capabilityCell,
+    capabilityCells,
+    adapterVersion: bootstrap
+      ? GENERAL_SEM_CBSEM_BOOTSTRAP_ADAPTER_VERSION_V1
+      : GENERAL_SEM_CBSEM_POINT_ADAPTER_VERSION_V1,
   };
 }
 
@@ -1581,6 +2017,53 @@ export function validateGeneralSemPlsCompletedExecutionV1(
   }
 }
 
+export function validateGeneralSemCbsemCompletedExecutionV1(
+  completed: GeneralSemCbsemCompletedResultV1,
+  execution: GeneralSemCbsemExecutionCapabilityV1,
+): void {
+  const document = completed.canonicalDocument;
+  const expectedMethodVersion = execution.kind === "recursive_sem_bootstrap"
+    ? GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1.capability_version
+    : GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1.capability_version;
+  if (completed.adapterVersion !== execution.adapterVersion
+    || document.provenance.engine_version !== execution.adapterVersion) {
+    completedExecutionMismatchV1(
+      "completed.adapterVersion",
+      "The CB-SEM completed-result adapter or canonical engine version differs from the exact resident inference recipe.",
+    );
+  }
+  if (!sameCapabilityCellV1(document.provenance.capability_cell, execution.capabilityCell)
+    || document.provenance.method_version !== expectedMethodVersion) {
+    completedExecutionMismatchV1(
+      "completed.canonicalDocument.provenance",
+      "The CB-SEM canonical primary capability or method version differs from the exact selected operation.",
+    );
+  }
+  for (const [path, cells] of [
+    ["completed.capabilityCells", completed.capabilityCells],
+    ["completed.canonicalDocument.capability_cells", document.capability_cells ?? []],
+  ] as const) {
+    if (cells.length !== execution.capabilityCells.length
+      || cells.some((cell, index) => !sameCapabilityCellV1(cell, execution.capabilityCells[index]!))) {
+      completedExecutionMismatchV1(
+        path,
+        "The CB-SEM point/bootstrap capability inventory differs from the Registry-authorized execution decision.",
+      );
+    }
+  }
+  if (document.provenance.project_id !== completed.archiveIdentity.projectId
+    || document.provenance.dataset_id !== completed.archiveIdentity.datasetId
+    || document.provenance.dataset_fingerprint !== completed.archiveIdentity.datasetFingerprint
+    || document.provenance.model_id !== completed.archiveIdentity.modelId
+    || document.provenance.model_digest !== completed.archiveIdentity.modelScientificSha256
+    || document.provenance.recipe_id !== completed.archiveIdentity.recipeId) {
+    completedExecutionMismatchV1(
+      "completed.canonicalDocument.provenance",
+      "The CB-SEM canonical provenance differs from the immutable schema-6 archive identity.",
+    );
+  }
+}
+
 function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKindV1) {
   const moderation = kind === "multiple_two_way_moderation_point"
     || kind === "multiple_two_way_moderation_bootstrap";
@@ -1668,6 +2151,53 @@ export function generalSemJobRequestFromReceiptV1(
   };
 }
 
+export function generalSemCbsemJobRequestFromReceiptV1(
+  receipt: GeneralSemProjectBootstrapReceiptV1,
+  config: GeneralSemConfigV1,
+  decision: SemCapabilityDecisionV1,
+  expectedArchiveSha256 = receipt.destinationArchiveSha256,
+): GeneralSemJobRequestV1 {
+  const execution = selectGeneralSemCbsemExecutionCapabilityV1({ config, decision });
+  return {
+    surface: "internal_labs",
+    experimentalLabsEnabled: true,
+    archivePath: receipt.destinationArchivePath,
+    expectedArchiveSha256,
+    projectId: receipt.projectId,
+    datasetId: receipt.residentDatasetId,
+    datasetFingerprint: receipt.residentDatasetFingerprint,
+    modelId: receipt.residentModelId,
+    modelScientificSha256: receipt.residentModelScientificSha256,
+    recipeId: receipt.residentRecipeId,
+    recipeDocumentSha256: receipt.residentRecipeDocumentSha256,
+    capabilityCell: execution.capabilityCell,
+  };
+}
+
+export function generalSemJobRequestForEstimatorFromReceiptV1(input: {
+  estimatorId: GeneralSemEstimatorIdV1;
+  receipt: GeneralSemProjectBootstrapReceiptV1;
+  model: SemModelV4;
+  config: GeneralSemConfigV1;
+  decision: SemCapabilityDecisionV1;
+  expectedArchiveSha256?: string;
+}): GeneralSemJobRequestV1 {
+  return input.estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+    ? generalSemCbsemJobRequestFromReceiptV1(
+      input.receipt,
+      input.config,
+      input.decision,
+      input.expectedArchiveSha256,
+    )
+    : generalSemJobRequestFromReceiptV1(
+      input.receipt,
+      input.model,
+      input.config,
+      input.decision,
+      input.expectedArchiveSha256,
+    );
+}
+
 export type GeneralSemPlsMonitorOutcomeV1 =
   | { status: "completed"; snapshot: GeneralSemPlsJobSnapshotV1; completed: GeneralSemPlsCompletedResultV1 }
   | { status: "terminal_without_result"; snapshot: GeneralSemPlsJobSnapshotV1 }
@@ -1696,29 +2226,70 @@ export async function monitorGeneralSemPlsJobV1(input: {
   return { status: "completed", snapshot, completed: await input.getResult(snapshot.jobId) };
 }
 
+export type GeneralSemCbsemMonitorOutcomeV1 =
+  | { status: "completed"; snapshot: GeneralSemPlsJobSnapshotV1; completed: GeneralSemCbsemCompletedResultV1 }
+  | { status: "terminal_without_result"; snapshot: GeneralSemPlsJobSnapshotV1 }
+  | { status: "aborted"; snapshot: GeneralSemPlsJobSnapshotV1 };
+
+export async function monitorGeneralSemCbsemJobV1(input: {
+  initial: GeneralSemPlsJobSnapshotV1;
+  getStatus: (jobId: string) => Promise<GeneralSemPlsJobSnapshotV1>;
+  getResult: (jobId: string) => Promise<GeneralSemCbsemCompletedResultV1>;
+  onSnapshot?: (snapshot: GeneralSemPlsJobSnapshotV1) => void;
+  wait?: () => Promise<void>;
+  signal?: AbortSignal;
+}): Promise<GeneralSemCbsemMonitorOutcomeV1> {
+  const wait = input.wait ?? (() => new Promise<void>((resolve) => globalThis.setTimeout(resolve, 250)));
+  let snapshot = input.initial;
+  input.onSnapshot?.(snapshot);
+  while (snapshot.state === "queued" || snapshot.state === "running" || snapshot.state === "cancelling") {
+    if (input.signal?.aborted) return { status: "aborted", snapshot };
+    await wait();
+    if (input.signal?.aborted) return { status: "aborted", snapshot };
+    snapshot = await input.getStatus(snapshot.jobId);
+    input.onSnapshot?.(snapshot);
+  }
+  if (snapshot.state !== "completed") return { status: "terminal_without_result", snapshot };
+  if (input.signal?.aborted) return { status: "aborted", snapshot };
+  return { status: "completed", snapshot, completed: await input.getResult(snapshot.jobId) };
+}
+
+function generalSemResultPublicationCapabilityCellV1(
+  completed: GeneralSemCompletedResultV1,
+): CapabilityCellReferenceV2 {
+  const results = completed.canonicalDocument.general_sem_results;
+  return results?.cbsem_bootstrap_receipt?.capability_cell
+    ?? results?.inference_receipt?.capability_cell
+    ?? completed.canonicalDocument.provenance.capability_cell;
+}
+
 export async function appendGeneralSemResultV1(
-  completed: GeneralSemPlsCompletedResultV1,
+  completed: GeneralSemCompletedResultV1,
   append: (request: InternalProjectSchema6ResultAppendRequestV1) => Promise<InternalProjectSchema6ResultAppendOutcomeV1>,
+  capabilityCell: CapabilityCellReferenceV2 = generalSemResultPublicationCapabilityCellV1(completed),
 ): Promise<InternalProjectSchema6ResultAppendOutcomeV1> {
   return append({
     surface: "internal_labs",
     experimentalLabsEnabled: true,
     archivePath: completed.archiveIdentity.archivePath,
     expectedSourceSha256: completed.archiveIdentity.archiveSha256,
+    capabilityCell,
     canonicalDocument: completed.canonicalDocument,
   });
 }
 
 export async function reopenGeneralSemResultV1(
-  completed: GeneralSemPlsCompletedResultV1,
+  completed: GeneralSemCompletedResultV1,
   updatedArchiveSha256: string,
   read: (request: InternalProjectSchema6ResultReadRequestV1) => Promise<InternalProjectSchema6ResultReadOutcomeV1>,
+  capabilityCell: CapabilityCellReferenceV2 = generalSemResultPublicationCapabilityCellV1(completed),
 ): Promise<{ outcome: InternalProjectSchema6ResultReadOutcomeV1; entry: InternalProjectSchema6CanonicalResultEntryV1 | null }> {
   const outcome = await read({
     surface: "internal_labs",
     experimentalLabsEnabled: true,
     archivePath: completed.archiveIdentity.archivePath,
     expectedSourceSha256: updatedArchiveSha256,
+    capabilityCell,
   });
   if (outcome.status === "blocked") return { outcome, entry: null };
   const entry = outcome.value.documents.find((candidate) => candidate.documentId === completed.canonicalDocument.document_id) ?? null;
@@ -1735,19 +2306,38 @@ export async function reopenGeneralSemResultV1(
 
 export function nativeGeneralSemPreflightRequestV1(
   snapshot: InternalProjectArchiveV6ReadSnapshotV1,
-  model: SemModelV4,
+  modelId: string,
   config: GeneralSemConfigV1,
+  capabilityCell: CapabilityCellReferenceV2,
 ) {
   return {
     surface: "internal_labs" as const,
     experimentalLabsEnabled: true as const,
+    capabilityCell,
     project: snapshot.project,
-    model,
+    modelId,
     config,
   };
 }
 
 export function generalSemFailureV1(error: unknown): GeneralSemPlsJobFailureV1 {
+  if (typeof error === "string" && error.trim()) {
+    try {
+      const parsed = JSON.parse(error) as unknown;
+      if (parsed && typeof parsed === "object") return generalSemFailureV1(parsed);
+    } catch {
+      // Native Result<T, String> rejections are retained as actionable text.
+    }
+    return {
+      schemaVersion: 1,
+      stage: "integrity",
+      subject: "general_sem",
+      code: "general_sem.native_rejection",
+      message: error.trim(),
+      correctiveAction: "Preserve the marked project, review the native rejection, and retry only after its stated condition is corrected.",
+      issues: [],
+    };
+  }
   if (error && typeof error === "object") {
     const candidate = error as Partial<GeneralSemPlsJobFailureV1>;
     if (candidate.schemaVersion === 1 && typeof candidate.code === "string" && typeof candidate.message === "string" && typeof candidate.correctiveAction === "string" && typeof candidate.subject === "string") {

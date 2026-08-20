@@ -1,26 +1,28 @@
-import { useId, useMemo } from "react";
-import type { GeneralSemConfigV1 } from "../domain/generalSemConfigV1";
+import { useId } from "react";
 import {
   GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
   GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
-  preflightGeneralSemCbsemV1,
-  preflightGeneralSemPlsV1,
 } from "../domain/generalSemCapabilityPreflightV1";
+import type { GeneralSemEstimatorParameterTableAuthorityV2 } from "../domain/internalRecipeV4GeneralSemWorkspace";
 import type {
   SemCapabilityDecisionV1,
   SemCapabilityDiagnosticV1,
 } from "../domain/semCapabilityDecisionV1";
-import type { SemModelV4 } from "../domain/semModelV4";
 
 export type GeneralSemEstimatorIdV1 =
   | typeof GENERAL_SEM_PLS_ESTIMATOR_ID_V1
   | typeof GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1;
 
 export interface GeneralSemEstimatorCompatibilityPanelProps {
-  model: SemModelV4;
-  config: GeneralSemConfigV1;
+  decisions: {
+    readonly pls: SemCapabilityDecisionV1;
+    readonly cbsem: SemCapabilityDecisionV1;
+  };
+  authority: GeneralSemEstimatorParameterTableAuthorityV2;
   onSelectEstimator: (estimatorId: GeneralSemEstimatorIdV1) => void;
   selectedEstimatorId?: GeneralSemEstimatorIdV1 | null;
+  /** A marked project executes only its resident RecipeV4 method. */
+  selectionLocked?: boolean;
 }
 
 interface EstimatorOption {
@@ -36,11 +38,12 @@ export interface GeneralSemEstimatorSelectionButtonProps {
   selected: boolean;
   descriptionId: string;
   blockedReason: string;
+  selectionLocked?: boolean;
   onSelectEstimator: (estimatorId: GeneralSemEstimatorIdV1) => void;
 }
 
 export function isRunnableGeneralSemDecisionV1(decision: SemCapabilityDecisionV1): boolean {
-  return decision.status === "supported" || decision.status === "experimental";
+  return decision.status === "experimental";
 }
 
 /** A native button preserves Enter/Space behavior and exposes no blocked callback. */
@@ -51,24 +54,32 @@ export function GeneralSemEstimatorSelectionButton({
   selected,
   descriptionId,
   blockedReason,
+  selectionLocked = false,
   onSelectEstimator,
 }: GeneralSemEstimatorSelectionButtonProps) {
   const runnable = isRunnableGeneralSemDecisionV1(decision);
-  const isSelected = runnable && selected;
+  const isSelected = selected;
+  const selectionDisabled = !runnable || selectionLocked;
   return <button
     type="button"
-    className={isSelected ? "primary" : undefined}
-    disabled={!runnable}
-    aria-disabled={!runnable}
+    className={isSelected && runnable ? "primary" : undefined}
+    disabled={selectionDisabled}
+    aria-disabled={selectionDisabled}
     aria-describedby={descriptionId}
     aria-pressed={runnable ? isSelected : undefined}
     title={runnable
-      ? isSelected ? `${estimatorLabel} is selected.` : `Select ${estimatorLabel}.`
+      ? selectionLocked ? `${estimatorLabel} is fixed by the resident RecipeV4.` : isSelected ? `${estimatorLabel} is selected.` : `Select ${estimatorLabel}.`
       : blockedReason}
     data-general-sem-estimator-select={estimatorId}
-    onClick={runnable ? () => onSelectEstimator(estimatorId) : undefined}
+    onClick={runnable && !selectionLocked ? () => onSelectEstimator(estimatorId) : undefined}
   >
-    {isSelected ? `Selected ${estimatorLabel}` : runnable ? `Select ${estimatorLabel}` : `${estimatorLabel} unavailable`}
+    {isSelected && selectionLocked
+      ? runnable ? `Resident ${estimatorLabel}` : `Resident ${estimatorLabel} blocked`
+      : isSelected
+        ? `Selected ${estimatorLabel}`
+        : runnable && !selectionLocked
+          ? `Select ${estimatorLabel}`
+          : `${estimatorLabel} unavailable`}
   </button>;
 }
 
@@ -94,11 +105,13 @@ function EstimatorCard({
   selectedEstimatorId,
   idPrefix,
   onSelectEstimator,
+  selectionLocked,
 }: {
   option: EstimatorOption;
   selectedEstimatorId?: GeneralSemEstimatorIdV1 | null;
   idPrefix: string;
   onSelectEstimator: (estimatorId: GeneralSemEstimatorIdV1) => void;
+  selectionLocked: boolean;
 }) {
   const { decision, estimatorId, label } = option;
   const runnable = isRunnableGeneralSemDecisionV1(decision);
@@ -106,7 +119,9 @@ function EstimatorCard({
   const explanationId = `${idPrefix}-explanation`;
   const blockedReasonId = `${idPrefix}-blocked-reason`;
   const selectionDescriptionId = runnable ? explanationId : blockedReasonId;
-  const blockingReason = firstBlockingReason(decision);
+  const blockingReason = decision.status === "supported"
+    ? "This workflow accepts only Registry-authorized Experimental Labs decisions; Standard status cannot authorize a Labs execution action."
+    : firstBlockingReason(decision);
   const capabilitySummary = decision.capability_cells
     .map((capability) => `${capability.cell_id} (${capability.capability_version})`)
     .join("; ");
@@ -167,40 +182,46 @@ function EstimatorCard({
         selected={selectedEstimatorId === estimatorId}
         descriptionId={selectionDescriptionId}
         blockedReason={blockingReason}
+        selectionLocked={selectionLocked}
         onSelectEstimator={onSelectEstimator}
       />
       {!runnable ? <p id={blockedReasonId} className="nd-method-availability-message" role="note">
         <strong>Cannot select:</strong> {blockingReason}
+      </p> : null}
+      {runnable && selectionLocked ? <p className="nd-method-availability-message" role="note">
+        The estimator is fixed by the resident RecipeV4. Publish a new General SEM archive to change methods.
       </p> : null}
     </footer>
   </article>;
 }
 
 /**
- * Provides a deterministic client-side compatibility preview for both
- * estimator boundaries. This component does not invoke native preflight or
- * execute a General SEM calculation.
+ * Renders only the native decision bound to the resident schema-6 SemModelV4
+ * parameter table. This component neither reconstructs a model from canvas
+ * nodes/edges. Selection remains preference-only until the workspace verifies
+ * the same resident recipe, exact cell, and archive identity at execution.
  */
 export function GeneralSemEstimatorCompatibilityPanel({
-  model,
-  config,
+  decisions,
+  authority,
   onSelectEstimator,
   selectedEstimatorId = null,
+  selectionLocked = false,
 }: GeneralSemEstimatorCompatibilityPanelProps) {
   const instanceId = useId().replaceAll(":", "");
   const headingId = `${instanceId}-general-sem-estimator-heading`;
-  const options: readonly EstimatorOption[] = useMemo(() => [
+  const options: readonly EstimatorOption[] = [
     {
       estimatorId: GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
       label: "PLS-SEM General v3",
-      decision: preflightGeneralSemPlsV1(model, config),
+      decision: decisions.pls,
     },
     {
       estimatorId: GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
       label: "CB-SEM General v3",
-      decision: preflightGeneralSemCbsemV1(model, config),
+      decision: decisions.cbsem,
     },
-  ], [config, model]);
+  ];
   const selected = options.find((option) => (
     option.estimatorId === selectedEstimatorId
     && isRunnableGeneralSemDecisionV1(option.decision)
@@ -212,12 +233,13 @@ export function GeneralSemEstimatorCompatibilityPanel({
     data-general-sem-estimator-compatibility="v1"
   >
     <header>
-      <h2 id={headingId}>Estimator compatibility preview</h2>
-      <p>Review which estimator passes the current client-side compiler qualification for the authored General SEM request.</p>
-      <p role="note">Compile-qualification preview only: this panel does not run a calculation or invoke native General SEM execution.</p>
+      <h2 id={headingId}>Estimator compatibility</h2>
+      <p>Native preflight from the active resident schema-6 SemModelV4 parameter table.</p>
+      <p role="note">Authority: {authority.parameterCount} parameters ({authority.freeParameterCount} free, {authority.fixedParameterCount} fixed, {authority.derivedParameterCount} derived); table SHA-256 {authority.parameterTableSha256}.</p>
+      <p role="note">Compatibility inspection only: a blocked or unpublished candidate has no calculation action.</p>
     </header>
     <p className="nd-form-status" role="status" aria-live="polite" aria-atomic="true">
-      Estimator compatibility preview: {options.map((option) => `${option.label}: ${option.decision.status_label}`).join("; ")}.
+      Native estimator compatibility: {options.map((option) => `${option.label}: ${option.decision.status_label}`).join("; ")}.
       {selected ? ` Selected: ${selected.label}.` : " No compile-qualified estimator selected."}
     </p>
     <div className="nd-method-details-list">
@@ -227,6 +249,7 @@ export function GeneralSemEstimatorCompatibilityPanel({
         selectedEstimatorId={selectedEstimatorId}
         idPrefix={`${instanceId}-general-sem-estimator-${index + 1}`}
         onSelectEstimator={onSelectEstimator}
+        selectionLocked={selectionLocked}
       />)}
     </div>
   </section>;

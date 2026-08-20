@@ -38,17 +38,41 @@ function recursivePlsModel(): SemModelV4 {
   }, "pls_composite");
 }
 
+const authority = {
+  source: "resident_schema6_sem_model_v4_parameter_table" as const,
+  modelId: "model:compatibility-panel",
+  modelScientificSha256: "a".repeat(64),
+  parameterTableSha256: "b".repeat(64),
+  parameterCount: 24,
+  freeParameterCount: 20,
+  fixedParameterCount: 4,
+  derivedParameterCount: 0,
+  equalityLabeledParameterCount: 2,
+  boundedParameterCount: 3,
+  explicitConstraintCount: 0,
+};
+
+function decisions(config = defaultGeneralSemConfigV1()) {
+  const model = recursivePlsModel();
+  return {
+    pls: preflightGeneralSemPlsV1(model, config),
+    cbsem: preflightGeneralSemCbsemV1(model, config),
+  };
+}
+
 describe("GeneralSemEstimatorCompatibilityPanel", () => {
   it("renders both exact estimator decisions with visible live status and full recovery text", () => {
     const html = renderToStaticMarkup(<GeneralSemEstimatorCompatibilityPanel
-      model={recursivePlsModel()}
-      config={defaultGeneralSemConfigV1()}
+      decisions={decisions()}
+      authority={authority}
       onSelectEstimator={() => undefined}
     />);
 
     expect(html).toContain('data-general-sem-estimator-compatibility="v1"');
-    expect(html).toContain("Estimator compatibility preview");
-    expect(html).toContain("Compile-qualification preview only: this panel does not run a calculation or invoke native General SEM execution.");
+    expect(html).toContain("Estimator compatibility");
+    expect(html).toContain("Native preflight from the active resident schema-6 SemModelV4 parameter table.");
+    expect(html).toContain("24 parameters (20 free, 4 fixed, 0 derived)");
+    expect(html).toContain("Compatibility inspection only: a blocked or unpublished candidate has no calculation action.");
     expect(html).not.toContain("likely to calculate");
     expect(html).not.toContain("before calculation");
     expect(html.match(/data-general-sem-estimator-card=/g)).toHaveLength(2);
@@ -71,8 +95,8 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
 
   it("exposes selected state as text and aria-pressed without selecting a blocked estimator", () => {
     const selectedHtml = renderToStaticMarkup(<GeneralSemEstimatorCompatibilityPanel
-      model={recursivePlsModel()}
-      config={defaultGeneralSemConfigV1()}
+      decisions={decisions()}
+      authority={authority}
       selectedEstimatorId={GENERAL_SEM_PLS_ESTIMATOR_ID_V1}
       onSelectEstimator={() => undefined}
     />);
@@ -80,8 +104,8 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
     expect(selectedHtml).toMatch(/<button(?=[^>]*data-general-sem-estimator-select="qpls\.pls_sem\.v3")(?=[^>]*aria-pressed="true")[^>]*>Selected PLS-SEM General v3<\/button>/);
 
     const blockedSelectedHtml = renderToStaticMarkup(<GeneralSemEstimatorCompatibilityPanel
-      model={recursivePlsModel()}
-      config={defaultGeneralSemConfigV1()}
+      decisions={decisions()}
+      authority={authority}
       selectedEstimatorId={GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1}
       onSelectEstimator={() => undefined}
     />);
@@ -100,8 +124,8 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
       tail: "two_sided",
     };
     const html = renderToStaticMarkup(<GeneralSemEstimatorCompatibilityPanel
-      model={recursivePlsModel()}
-      config={config}
+      decisions={decisions(config)}
+      authority={authority}
       onSelectEstimator={() => undefined}
     />);
 
@@ -110,7 +134,7 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
     expect(html).toContain("qpls3.pls.mediation (pls_mediation_v1)");
     expect(html).toContain("qpls3.pls.general_sem_multiple_mediation_bootstrap (general_sem_pls_full_model_case_bootstrap_v1)");
     expect(html).toContain("Runtime inference must carry a matching complete-model re-estimation receipt before publication.");
-    expect(html).toContain("Compile-qualification preview only: this panel does not run a calculation or invoke native General SEM execution.");
+    expect(html).toContain("Compatibility inspection only: a blocked or unpublished candidate has no calculation action.");
     expect(html.match(/<button[^>]*disabled=""[^>]*data-general-sem-estimator-select=/g)).toHaveLength(1);
     expect(html).toMatch(/<button(?=[^>]*data-general-sem-estimator-select="qpls\.pls_sem\.v3")(?![^>]*disabled="")[^>]*>Select PLS-SEM General v3<\/button>/);
     expect(html).toContain('aria-disabled="true"');

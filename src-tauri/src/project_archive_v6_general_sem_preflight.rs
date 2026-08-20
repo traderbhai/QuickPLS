@@ -3,17 +3,24 @@
 //! The frontend may provide a fast preview, but only this bridge evaluates the
 //! exact Rust compiler contracts. It never mutates or persists project data.
 
+use crate::general_sem_registry_access_v1::{
+    GENERAL_SEM_INTERNAL_LABS_SURFACE as INTERNAL_LABS_SURFACE, GeneralSemRegistryAccessErrorV1,
+    authorize_general_sem_registry_access_v1,
+    decision_declares_general_sem_execution_cell_v1, is_general_sem_execution_cell_v1,
+    is_rank3_general_sem_cbsem_execution_cell_v1,
+    selected_general_sem_cbsem_execution_cell_v1, selected_general_sem_execution_cell_v1,
+};
 use qpls_core::{
-    GeneralSemConfigV1, SemCapabilityDecisionV1, SemDataBindingV4, SemModelV4, SemVariableV4,
-    preflight_general_sem_cbsem_v1, preflight_general_sem_pls_v1,
+    CapabilityCellReferenceV2, GeneralSemConfigV1, SemCapabilityDecisionV1, SemDataBindingV4,
+    SemModelV4, SemParameterV4, SemVariableV4, preflight_general_sem_cbsem_v1,
+    preflight_general_sem_pls_v1, sha256_serialized,
 };
 use qpls_data::{ColumnType, DataKind, ScaleType};
 use qpls_project::{ProjectArchiveDocumentV6, ProjectModelPayloadV6, ProjectModelRecordV6};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-const INTERNAL_LABS_SURFACE: &str = "internal_labs";
-const GENERAL_SEM_PREFLIGHT_RESULT_SCHEMA_VERSION: u32 = 1;
+const GENERAL_SEM_PREFLIGHT_RESULT_SCHEMA_VERSION: u32 = 2;
 const DIAGNOSTIC_CODE_PREFIX: &str = "schema6_general_sem_preflight";
 
 #[derive(Debug, Clone, Deserialize)]
@@ -21,8 +28,9 @@ const DIAGNOSTIC_CODE_PREFIX: &str = "schema6_general_sem_preflight";
 pub(crate) struct GeneralSemEstimatorPreflightRequestV1 {
     surface: String,
     experimental_labs_enabled: bool,
+    capability_cell: CapabilityCellReferenceV2,
     project: ProjectArchiveDocumentV6,
-    model: SemModelV4,
+    model_id: String,
     config: GeneralSemConfigV1,
 }
 
@@ -32,6 +40,23 @@ pub(crate) struct GeneralSemEstimatorPreflightResultV1 {
     schema_version: u32,
     pls: SemCapabilityDecisionV1,
     cbsem: SemCapabilityDecisionV1,
+    authority: GeneralSemEstimatorPreflightAuthorityV2,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct GeneralSemEstimatorPreflightAuthorityV2 {
+    source: String,
+    model_id: String,
+    model_scientific_sha256: String,
+    parameter_table_sha256: String,
+    parameter_count: usize,
+    free_parameter_count: usize,
+    fixed_parameter_count: usize,
+    derived_parameter_count: usize,
+    equality_labeled_parameter_count: usize,
+    bounded_parameter_count: usize,
+    explicit_constraint_count: usize,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -71,23 +96,94 @@ fn blocked(
     }
 }
 
-fn model_from_record(record: &ProjectModelRecordV6) -> Option<&SemModelV4> {
+fn promoted_model_from_record(record: &ProjectModelRecordV6) -> Option<(&SemModelV4, &str)> {
     match &record.payload {
-        ProjectModelPayloadV6::SemModelV4 { model, .. }
-        | ProjectModelPayloadV6::SemModelV4Draft { model, .. } => Some(model),
-        ProjectModelPayloadV6::LegacyEstimandUnspecified { .. } => None,
+        ProjectModelPayloadV6::SemModelV4 {
+            model,
+            scientific_sha256,
+        } => Some((model, scientific_sha256)),
+        ProjectModelPayloadV6::SemModelV4Draft { .. }
+        | ProjectModelPayloadV6::LegacyEstimandUnspecified { .. } => None,
+    }
+}
+
+fn parameter_table_authority(
+    model: &SemModelV4,
+    scientific_sha256: &str,
+) -> GeneralSemEstimatorPreflightAuthorityV2 {
+    let mut free_parameter_count = 0;
+    let mut fixed_parameter_count = 0;
+    let mut derived_parameter_count = 0;
+    let mut equality_labeled_parameter_count = 0;
+    let mut bounded_parameter_count = 0;
+    for parameter in &model.parameters {
+        match parameter {
+            SemParameterV4::Free {
+                lower,
+                upper,
+                equality_label,
+                ..
+            } => {
+                free_parameter_count += 1;
+                equality_labeled_parameter_count += usize::from(equality_label.is_some());
+                bounded_parameter_count += usize::from(lower.is_some() || upper.is_some());
+            }
+            SemParameterV4::Fixed { .. } => fixed_parameter_count += 1,
+            SemParameterV4::Derived { .. } => derived_parameter_count += 1,
+        }
+    }
+    GeneralSemEstimatorPreflightAuthorityV2 {
+        source: "resident_schema6_sem_model_v4_parameter_table".into(),
+        model_id: model.id.clone(),
+        model_scientific_sha256: scientific_sha256.into(),
+        parameter_table_sha256: sha256_serialized(&model.parameters),
+        parameter_count: model.parameters.len(),
+        free_parameter_count,
+        fixed_parameter_count,
+        derived_parameter_count,
+        equality_labeled_parameter_count,
+        bounded_parameter_count,
+        explicit_constraint_count: model.constraints.len(),
     }
 }
 
 fn preflight_general_sem_estimators(
     request: GeneralSemEstimatorPreflightRequestV1,
 ) -> GeneralSemEstimatorPreflightOutcomeV1 {
-    if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
+    if !is_general_sem_execution_cell_v1(&request.capability_cell) {
         return blocked(
-            "internal_labs_required",
-            "General SEM estimator preflight is available only through the internal Experimental Labs boundary.",
-            "Enable Experimental Labs and use a newly created General SEM project.",
+            "capability_cell_not_general_sem_execution",
+            "The requested Registry cell does not own a bounded General SEM execution workflow.",
+            "Refresh estimator compatibility and use the exact cell selected for the resident model and inference settings.",
         );
+    }
+    if let Err(error) = authorize_general_sem_registry_access_v1(
+        &request.surface,
+        request.experimental_labs_enabled,
+        &request.capability_cell,
+    ) {
+        return match error {
+            GeneralSemRegistryAccessErrorV1::RegistryInvalid(detail) => blocked(
+                "capability_registry_invalid",
+                format!("Capability Registry V2 is invalid: {detail}"),
+                "Keep the project unchanged and restore the embedded Registry before preflight.",
+            ),
+            GeneralSemRegistryAccessErrorV1::CapabilityUnavailable => blocked(
+                "capability_unavailable",
+                "The exact requested General SEM execution cell is not uniquely available in Capability Registry V2.",
+                "Refresh capability access; do not substitute a neighboring CB-SEM or PLS cell.",
+            ),
+            GeneralSemRegistryAccessErrorV1::StandardSurfaceRequired => blocked(
+                "standard_surface_required",
+                "The exact requested General SEM execution cell is qualified for the Standard surface.",
+                "Refresh capability access and rerun preflight through Standard.",
+            ),
+            GeneralSemRegistryAccessErrorV1::InternalLabsRequired => blocked(
+                "internal_labs_required",
+                "The exact requested General SEM execution cell is available only through Experimental Labs.",
+                "Enable Experimental Labs and rerun exact-cell preflight.",
+            ),
+        };
     }
     if let Err(error) = request.project.ensure_valid() {
         return blocked(
@@ -108,7 +204,7 @@ fn preflight_general_sem_estimators(
         .project
         .models
         .iter()
-        .find(|record| record.model_id == request.model.id)
+        .find(|record| record.model_id == request.model_id)
     else {
         return blocked(
             "model_not_bound",
@@ -116,21 +212,15 @@ fn preflight_general_sem_estimators(
             "Refresh the project and select a current General SEM model before preflight.",
         );
     };
-    let Some(authoritative_model) = model_from_record(record) else {
+    let Some((authoritative_model, scientific_sha256)) = promoted_model_from_record(record) else {
         return blocked(
             "sem_model_v4_required",
-            "The selected project record is legacy estimand-unspecified authority, not SemModelV4.",
-            "Author a new SemModelV4 model in the General SEM project.",
+            "The selected project record is not a promoted SemModelV4 scientific authority.",
+            "Finish parameter-table authoring and promote the exact resident SemModelV4 before estimator preflight.",
         );
     };
-    if authoritative_model != &request.model {
-        return blocked(
-            "model_authority_mismatch",
-            "The requested model content differs from the exact model stored in the schema-6 project.",
-            "Refresh the model from the strict project authority and rerun estimator preflight.",
-        );
-    }
-    if let SemDataBindingV4::Raw { dataset_id, .. } = &request.model.data_binding {
+    let authority = parameter_table_authority(authoritative_model, scientific_sha256);
+    if let SemDataBindingV4::Raw { dataset_id, .. } = &authoritative_model.data_binding {
         let Ok(dataset_id) = Uuid::parse_str(dataset_id) else {
             return blocked(
                 "dataset_binding_invalid",
@@ -157,7 +247,7 @@ fn preflight_general_sem_estimators(
                 "Choose a raw dataset; retain matrix input for a qualified CB-SEM cell.",
             );
         }
-        for variable in &request.model.variables {
+        for variable in &authoritative_model.variables {
             let SemVariableV4::Observed { source_column, .. } = variable else {
                 continue;
             };
@@ -189,7 +279,7 @@ fn preflight_general_sem_estimators(
         }
     }
 
-    let pls = match preflight_general_sem_pls_v1(&request.model, &request.config) {
+    let pls = match preflight_general_sem_pls_v1(authoritative_model, &request.config) {
         Ok(decision) => decision,
         Err(error) => {
             return blocked(
@@ -199,7 +289,7 @@ fn preflight_general_sem_estimators(
             );
         }
     };
-    let cbsem = match preflight_general_sem_cbsem_v1(&request.model, &request.config) {
+    let cbsem = match preflight_general_sem_cbsem_v1(authoritative_model, &request.config) {
         Ok(decision) => decision,
         Err(error) => {
             return blocked(
@@ -209,11 +299,40 @@ fn preflight_general_sem_estimators(
             );
         }
     };
+    let selected = if is_rank3_general_sem_cbsem_execution_cell_v1(&request.capability_cell) {
+        let selected = selected_general_sem_cbsem_execution_cell_v1(&request.config);
+        if !decision_declares_general_sem_execution_cell_v1(&cbsem, &selected) {
+            return blocked(
+                "capability_decision_missing_selected_cell",
+                "The CB-SEM capability decision did not declare its exact point-or-bootstrap execution owner.",
+                "Keep the model unchanged and report this internal authority error.",
+            );
+        }
+        selected
+    } else {
+        let selected = selected_general_sem_execution_cell_v1(authoritative_model, &request.config);
+        if !decision_declares_general_sem_execution_cell_v1(&pls, &selected) {
+            return blocked(
+                "capability_decision_missing_selected_cell",
+                "The PLS capability decision did not declare its exact point-or-bootstrap execution owner.",
+                "Keep the model unchanged and report this internal authority error.",
+            );
+        }
+        selected
+    };
+    if selected != request.capability_cell {
+        return blocked(
+            "capability_cell_mismatch",
+            "The requested option cell differs from the exact estimator and inference owner selected from the resident model authority.",
+            "Refresh the unchanged schema-6 project and rerun estimator compatibility before calculation.",
+        );
+    }
     GeneralSemEstimatorPreflightOutcomeV1::Ok {
         value: GeneralSemEstimatorPreflightResultV1 {
             schema_version: GENERAL_SEM_PREFLIGHT_RESULT_SCHEMA_VERSION,
             pls,
             cbsem,
+            authority,
         },
     }
 }
@@ -238,6 +357,7 @@ mod tests {
     use qpls_project::{
         ProjectArchiveDocumentV6, ProjectOriginV6, ProjectUpgradeLineageV6,
         SourcePreservationPolicyV6, UpgradeWritePolicyV6, insert_sem_model_v4_draft_v6,
+        promote_sem_model_v4_draft_v6,
     };
     use uuid::Uuid;
 
@@ -305,7 +425,14 @@ mod tests {
             Utc.with_ymd_and_hms(2026, 8, 18, 12, 0, 0).unwrap(),
         );
         project.datasets.push(DatasetDescriptor::from(&dataset));
+        let model_document_sha256 = model.model_document_sha256().unwrap();
         let project = insert_sem_model_v4_draft_v6(&project, model.clone()).unwrap();
+        let project = promote_sem_model_v4_draft_v6(
+            &project,
+            &model.id,
+            &model_document_sha256,
+        )
+        .unwrap();
         (project, model)
     }
 
@@ -314,8 +441,9 @@ mod tests {
         GeneralSemEstimatorPreflightRequestV1 {
             surface: INTERNAL_LABS_SURFACE.into(),
             experimental_labs_enabled: true,
+            capability_cell: qpls_core::cbsem_general_sem_ml_capability_cell_v1(),
             project,
-            model,
+            model_id: model.id,
             config: GeneralSemConfigV1::default(),
         }
     }
@@ -336,6 +464,16 @@ mod tests {
             SemCapabilityDecisionStatusV1::Experimental
         );
         assert_eq!(value.cbsem.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert_eq!(
+            value.authority.source,
+            "resident_schema6_sem_model_v4_parameter_table"
+        );
+        assert_eq!(value.authority.model_id, request().model_id);
+        assert_eq!(value.authority.parameter_count, value.authority.free_parameter_count
+            + value.authority.fixed_parameter_count
+            + value.authority.derived_parameter_count);
+        assert_eq!(value.authority.explicit_constraint_count, 0);
+        assert_eq!(value.authority.parameter_table_sha256.len(), 64);
     }
 
     #[test]
@@ -379,22 +517,18 @@ mod tests {
     }
 
     #[test]
-    fn unbound_and_tampered_model_content_fail_closed() {
+    fn unbound_model_and_caller_supplied_model_payload_fail_closed() {
         let mut unbound = request();
-        unbound.model.id = "model:not-in-project".into();
+        unbound.model_id = "model:not-in-project".into();
         assert!(matches!(
             preflight_general_sem_estimators(unbound),
             GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic }
                 if diagnostic.code.ends_with("model_not_bound")
         ));
 
-        let mut tampered = request();
-        tampered.model.name = "Changed outside project authority".into();
-        assert!(matches!(
-            preflight_general_sem_estimators(tampered),
-            GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic }
-                if diagnostic.code.ends_with("model_authority_mismatch")
-        ));
+        let mut wire = serde_json::to_value(request()).unwrap();
+        wire["model"] = serde_json::to_value(model()).unwrap();
+        assert!(serde_json::from_value::<GeneralSemEstimatorPreflightRequestV1>(wire).is_err());
     }
 
     #[test]

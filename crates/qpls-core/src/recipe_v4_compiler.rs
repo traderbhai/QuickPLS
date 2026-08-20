@@ -17,7 +17,7 @@ use crate::{
     cbsem_general_sem_ml_capability_cell_v1, cbsem_recursive_sem_bootstrap_capability_cell_v1,
     compile_cbsem_plan_v2, compile_cbsem_plan_v3, compile_cbsem_product_indicator_plan_v1,
     compile_pls_plan_v2, ensure_cbsem_ml_exact_parameter_table_v4_capability_v2,
-    resolve_weight_declaration_v1,
+    resolve_weight_declaration_v1, validate_cbsem_general_sem_parameter_semantics_v1,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -1043,10 +1043,9 @@ fn ensure_cbsem_general_sem_v1_scope(
             "feedback/nonrecursive topology is outside the v1 execution predicate".into(),
         ));
     }
-    if !plan.base_plan().constraints().is_empty() {
+    if let Some(issue) = validate_cbsem_general_sem_parameter_semantics_v1(plan).first() {
         return Err(RecipeV4CompilationError::CbsemGeneralSemScope(
-            "explicit constraint objects are unsupported; use fixed/free rows, equality_label, and finite row bounds"
-                .into(),
+            format!("{} [{}]: {}", issue.code, issue.subject, issue.message),
         ));
     }
     let general_sem = recipe
@@ -1077,13 +1076,9 @@ fn ensure_cbsem_general_sem_v1_scope(
             "compiled capability-cell set does not match the exact inference request".into(),
         ));
     }
-    if matches!(
-        general_sem.inference,
-        GeneralSemInferenceV1::CaseBootstrap { .. }
-    ) && plan.base_plan().regressions().is_empty()
-    {
+    if plan.base_plan().regressions().is_empty() {
         return Err(RecipeV4CompilationError::CbsemGeneralSemScope(
-            "the recursive-SEM bootstrap cell requires at least one structural regression; CFA keeps its existing bootstrap cell"
+            "the General SEM CB-SEM V3 point and bootstrap cells require at least one structural regression; CFA keeps its existing qualified cells"
                 .into(),
         ));
     }
@@ -3562,6 +3557,15 @@ mod tests {
         let (mut cfa_recipe, cfa_model) = cbsem_cfa_recipe_and_model();
         cfa_recipe.settings.preprocessing = crate::Preprocessing::Unstandardized;
         cfa_recipe.general_sem_config = Some(crate::GeneralSemConfigV1::default());
+        assert!(matches!(
+            compile_analysis_recipe_v4(
+                &cfa_recipe,
+                Some(&cfa_model),
+                target,
+                cbsem_general_sem_ml_capability_cell_v1(),
+            ),
+            Err(RecipeV4CompilationError::CbsemGeneralSemScope(_))
+        ));
         enable_cbsem_v3_recursive_bootstrap(&mut cfa_recipe, 500);
         assert!(matches!(
             compile_analysis_recipe_v4(

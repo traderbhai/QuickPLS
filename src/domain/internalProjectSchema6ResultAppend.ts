@@ -1,4 +1,4 @@
-import type { CanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
+import type { CanonicalResultDocumentV2, CapabilityCellReferenceV2 } from "./canonicalResultDocumentV2";
 import type { AnalysisRecipeV4, AnalysisRecipeV4MissingDataPolicy } from "./internalRecipeV4PlsExecution";
 
 export const INTERNAL_PROJECT_SCHEMA6_RESULT_APPEND_SURFACE = "internal_labs" as const;
@@ -9,6 +9,8 @@ export interface InternalProjectSchema6ResultAppendRequestV1 {
   experimentalLabsEnabled: boolean;
   archivePath: string;
   expectedSourceSha256: string;
+  /** Required by General SEM; optional only for older non-General internal callers. */
+  capabilityCell?: CapabilityCellReferenceV2;
   recipe?: AnalysisRecipeV4<AnalysisRecipeV4MissingDataPolicy>;
   canonicalDocument: CanonicalResultDocumentV2;
 }

@@ -208,10 +208,14 @@ const services = {
   cancel: vi.fn(),
   dismiss: vi.fn(),
   result: vi.fn(),
+  startCbsem: vi.fn(),
+  statusCbsem: vi.fn(),
+  cancelCbsem: vi.fn(),
+  dismissCbsem: vi.fn(),
+  resultCbsem: vi.fn(),
   append: vi.fn(),
   read: vi.fn(),
   invalidateDraft: vi.fn(),
-  exportXlsx: vi.fn(),
   selectDestination: vi.fn(),
 } as unknown as NativeRecipeV4GeneralSemWorkspaceServices;
 
@@ -434,7 +438,24 @@ describe("General SEM native workspace accessibility", () => {
     const model = setReadyModerationWorkspace();
     const config = generalSemConfigFromEngineV1(defaultGeneralSemPlsEngineOptionsV1());
     const decision = preflightGeneralSemPlsV1(model, config);
-    const preflight = { authorityKey: "authority:current", decision };
+    const preflight = {
+      authorityKey: "authority:current",
+      pls: decision,
+      cbsem: decision,
+      authority: {
+        source: "resident_schema6_sem_model_v4_parameter_table" as const,
+        modelId: model.id,
+        modelScientificSha256: "a".repeat(64),
+        parameterTableSha256: "b".repeat(64),
+        parameterCount: model.parameters.length,
+        freeParameterCount: model.parameters.filter((parameter) => parameter.kind === "free").length,
+        fixedParameterCount: model.parameters.filter((parameter) => parameter.kind === "fixed").length,
+        derivedParameterCount: model.parameters.filter((parameter) => parameter.kind === "derived").length,
+        equalityLabeledParameterCount: 0,
+        boundedParameterCount: 0,
+        explicitConstraintCount: model.constraints.length,
+      },
+    };
 
     expect(selectCurrentGeneralSemNativePlsDecisionV1(preflight, "authority:current"))
       .toBe(decision);

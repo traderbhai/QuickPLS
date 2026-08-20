@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-21T00:00:00Z",
+    "manifest_path": "validation/methods/cbsem_recursive_sem_case_bootstrap_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.cbsem.bootstrap.recursive_sem",
+    "label": "CB-SEM General SEM V3 Recursive Case Bootstrap",
+    "method_version": "cbsem_exact_recursive_sem_case_bootstrap_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"
+  },
+  "claim": {
+    "supported_scope": "Experimental Labs full-ML case bootstrap for the exact CB-SEM General SEM V3 point scope, with at least one recursive structural regression, 500 through 10,000 deterministic indexed no-retry refits, fixed two-sided 95 percent percentile Type-7 inference, and a 90 percent usable-refit gate.",
+    "estimand": "The empirical case-resampling distribution, sample standard error, percentile interval, and eligible zero-null probability for each supported free loading, regression, covariance, or variance parameter in the exact resident recursive SEM.",
+    "assumptions": [
+      "Rows are independent sampling units and the listwise-complete frame is bound to the resident dataset and Recipe V4.",
+      "Every replicate refits the complete ordinary-ML recursive SEM from its exact indexed draw without retry substitution.",
+      "Point and bootstrap capability cells, parameter identities, failure ledger, and archive authority remain unchanged through publication."
+    ],
+    "exclusions": [
+      "CFA bootstrap, BCa, studentized, basic, one-sided, parametric, residual, robust, weighted, clustered, stratified, multilevel, and Bollen-Stine procedures are excluded.",
+      "Feedback, groups, categorical indicators, mean structures, derived rows, explicit constraints, derived effects, conditional probes, and unsupported point-estimation semantics are excluded."
+    ],
+    "warnings": [
+      "Engine-only Labs availability does not establish recursive-SEM interval coverage, null calibration, independent numerical parity, packaged acceptance, release qualification, or Standard support.",
+      "Inference is conditional on the frozen usable-refit threshold; failed attempts remain visible and are never silently replaced."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "percentile_case_bootstrap",
+        "expression": "CI_0.95(theta) = [Q_type7(0.025, theta_star), Q_type7(0.975, theta_star)]",
+        "variables": ["CI_0.95", "theta", "theta_star", "Q_type7"],
+        "source_reference_id": "efron_1979"
+      }
+    ],
+    "references": [
+      {
+        "id": "efron_1979",
+        "kind": "primary_paper",
+        "citation": "Efron (1979), Bootstrap Methods: Another Look at the Jackknife",
+        "locator": "https://doi.org/10.1214/aos/1176344552",
+        "independence_group": "published_bootstrap",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_exact_bootstrap_contract",
+        "kind": "independent_python",
+        "citation": "Existing validation-only indexed Type-7 and exact-refit bootstrap contract sources",
+        "locator": "validation/cbsem_exact_case_bootstrap_v1_contract_matrix.py",
+        "independence_group": "independent_stdlib_bootstrap_contract",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "recursive_sem_bootstrap_engine_foundation",
+        "purpose": "coverage",
+        "design": "Existing exact-CFA bootstrap interval and ledger sources are reused only as scheduler and arithmetic foundations; recursive structural-SEM coverage remains pending.",
+        "seed_policy": "Frozen scenario-indexed seeds and indexed draws with every attempted fit retained.",
+        "metrics": ["interval_coverage", "null_rejection", "usable_rate", "failure_rate"],
+        "acceptance_rule": "The future Rank 3 evidence report must hash and pass the exact frozen sources; this manifest alone records no passing result."
+      }
+    ],
+    "boundaries": [
+      {"id": "insufficient_usable_refits", "category": "data_pathology", "case": "Refits are singular, nonconvergent, nonfinite, inadmissible, or below the 90 percent threshold.", "expected_behavior": "Retain indexed failures and publish no inferential result below the threshold."},
+      {"id": "unsupported_bootstrap_shape", "category": "unsupported_scope", "case": "The request differs from the exact recursive raw-listwise 95 percent two-sided percentile contract.", "expected_behavior": "Fail closed before estimation without substituting another bootstrap method."},
+      {"id": "indexed_partition_reorder", "category": "metamorphic", "case": "The same indexed draw ledger is processed in a different worker partition or completion order.", "expected_behavior": "Restored parameter distributions, intervals, probabilities, and failure accounting remain identical."},
+      {"id": "seed_worker_repeat", "category": "determinism", "case": "The same archive, seed, resample count, and supported worker count execute repeatedly.", "expected_behavior": "The indexed scientific payload is worker invariant apart from operational identifiers and timestamps."},
+      {"id": "bootstrap_authority_tamper", "category": "tamper", "case": "Any point cell, bootstrap cell, draw index, count, parameter identity, interval, failure, or archive digest is altered.", "expected_behavior": "Strict validation rejects the result before display, append, readback, or export."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 4,
+      "result_schema_version": 2,
+      "payload_kind": "canonical_result_document_v2_general_sem_cbsem_bootstrap_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject CFA, point-only, historical, or neighboring bootstrap cells."},
+        {"category": "method_version", "expected_behavior": "Reject altered point, bootstrap, scheduler, interval, or adapter versions."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a changed sampling frame or dataset fingerprint."},
+        {"category": "checksum", "expected_behavior": "Reject stale archive, model, recipe, plan, ledger, or canonical-result digests."},
+        {"category": "malformed_payload", "expected_behavior": "Reject unknown fields, nonfinite arithmetic, missing or duplicate indices, inconsistent counts, or incoherent inference rows."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never relabel CFA bootstrap or historical preview output as recursive General SEM bootstrap evidence."}
+      ],
+      "legacy_policy": "Only newly created general_sem_v1 archives with the exact point dependency and recursive bootstrap cell may own this payload."
+    },
+    "native": {
+      "setup_controls": ["Recursive CB-SEM resident recipe", "500 through 10000 resamples", "Fixed 95 percent percentile inference", "Seed and workers"],
+      "applicability_blockers": ["Missing point or bootstrap Registry cell", "Unsupported resident semantics", "Stale or dirty archive authority", "Another active analysis", "Insufficient usable refits"],
+      "result_surfaces": ["Point parameters", "Bootstrap summary", "Parameter inference", "Indexed failures", "Run and archive provenance"],
+      "gui_cli_parity_rule": "Every surface must consume the same canonical result for the identical resident archive, indexed draw ledger, complete-model refits, adapter, and exact point-plus-bootstrap cell set.",
+      "accessibility_rules": ["Every interval, count, warning, failure, and unavailable reason has a text and table representation.", "Progress, cancellation, and recovery actions do not rely on color or pointer-only interaction."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html", "pdf", "svg", "png"],
+      "tables": ["CB-SEM parameters", "Bootstrap inference", "Failure ledger", "Fit and identification evidence", "Provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "engine_only",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/CBSEM_GENERAL_SEM_V3.md"],
+      "independent_reference": ["validation/cbsem_exact_case_bootstrap_v1_contract_matrix.py", "validation/cbsem_lavaan_reference.py"],
+      "simulation_report": ["validation/cbsem_exact_cfa_interval_coverage_v1.py", "validation/cbsem_exact_case_bootstrap_v1_contract_matrix.py"],
+      "boundary_report": ["validation/cbsem_exact_case_bootstrap_v1_source_gate.py", "crates/qpls-core/src/general_sem_capability_preflight_v1.rs", "crates/qpls-runner/src/recipe_v4_cbsem_general_sem_bootstrap_execution.rs"],
+      "persistence_report": ["validation/cbsem_ml_v1_persistence_gate.py", "src-tauri/src/project_schema6_result_append.rs", "src-tauri/src/project_schema6_result_read.rs"],
+      "frontend_report": ["src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx", "src/native/GeneralSemEstimatorCompatibilityPanel.test.tsx"],
+      "export_report": ["src/domain/canonicalResultCrossFormatExportV2.ts", "src/native/CanonicalResultExportPanelV2.tsx"],
+      "method_audit": ["validation/cbsem_publication_audit.py"],
+      "packaged_acceptance": ["validation/run_cbsem_exact_case_bootstrap_v1_native_acceptance.ps1"]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/cbsem_recursive_sem_case_bootstrap_v1/engine_evidence.identity.json",
+          "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [],
+      "native_qualified": [],
+      "release_qualified": []
+    }
+  }
+}

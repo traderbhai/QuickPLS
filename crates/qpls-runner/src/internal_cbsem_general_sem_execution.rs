@@ -1,8 +1,8 @@
-//! Private product-integration bridge for the unqualified CB-SEM V3 cells.
+//! Bounded product-integration bridge for the CB-SEM V3 Experimental Labs cells.
 //!
-//! This module deliberately has no Registry or native-command integration.
-//! It exists only so the native archive/job layer can exercise the source-only
-//! Rank 3 adapters without making either candidate cell product reachable.
+//! Registry, surface, archive, and resident-recipe authorization remain owned
+//! by the native job boundary. This runner accepts no caller-selected method or
+//! capability override and therefore cannot promote a neighboring CB-SEM cell.
 
 use qpls_core::{
     AnalysisRecipeV4, CanonicalGeneralSemResultsV1, CapabilityCellReferenceV2,
@@ -74,7 +74,7 @@ pub enum InternalCbsemGeneralSemExecutionErrorV1 {
     Bootstrap(String),
 }
 
-/// Runs exactly one private V3 point or recursive-bootstrap adapter selected
+/// Runs exactly one V3 point or recursive-bootstrap adapter selected
 /// by the strict resident recipe. No caller-provided method/cell override is
 /// accepted, which prevents an internal native caller from relabelling output.
 pub fn run_internal_cbsem_general_sem_v3(

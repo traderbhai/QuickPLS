@@ -14,13 +14,17 @@ import {
 import {
   bindGeneralSemPlsModelToDatasetV1,
   appendGeneralSemResultV1,
+  buildGeneralSemCbsemRecipeV3,
   buildGeneralSemRecipeV1,
   defaultGeneralSemPlsEngineOptionsV1,
+  GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
   generalSemConfigFromEngineV1,
+  generalSemCbsemJobRequestFromReceiptV1,
   generalSemJobRequestFromReceiptV1,
   monitorGeneralSemPlsJobV1,
   parseGeneralSemPlsCompletedResultV1,
@@ -29,6 +33,7 @@ import {
   preflightGeneralSemWorkspaceV1,
   rehydrateGeneralSemExecutionAuthorityV1,
   reopenGeneralSemResultV1,
+  selectGeneralSemCbsemExecutionCapabilityV1,
   selectGeneralSemPlsExecutionCapabilityV1,
   validateGeneralSemPlsCompletedExecutionV1,
   type GeneralSemPlsCompletedResultV1,
@@ -36,7 +41,10 @@ import {
   type GeneralSemPlsJobSnapshotV1,
   type GeneralSemProjectBootstrapReceiptV1,
 } from "./internalRecipeV4GeneralSemWorkspace";
-import { preflightGeneralSemPlsV1 } from "./generalSemCapabilityPreflightV1";
+import {
+  GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
+  preflightGeneralSemPlsV1,
+} from "./generalSemCapabilityPreflightV1";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "./internalProjectArchiveV6Read";
 import { convertLegacyBasicModelV4, type SemModelV4 } from "./semModelV4";
 import { sha256HexBytesV1, sha256HexUtf8V1 } from "./sha256V1";
@@ -799,6 +807,117 @@ function canonicalCompletedInteractionEffects(
 }
 
 describe("General SEM Recipe-v4 workspace contract", () => {
+  it("builds distinct resident CB-SEM point and recursive-bootstrap recipes with exact Labs ownership", () => {
+    const dataset = rawDataset();
+    const model = convertLegacyBasicModelV4({
+      id: "model:general-sem-cbsem",
+      name: "Recursive common-factor SEM",
+      constructs: ["x", "m1", "m2", "y"].map((id) => ({
+        id,
+        name: id.toUpperCase(),
+        short_name: id.toUpperCase(),
+        mode: "reflective" as const,
+        indicators: id === "m1" ? ["m11", "m12"] : id === "m2" ? ["m21", "m22"] : [`${id}1`, `${id}2`],
+      })),
+      paths: [
+        { source: "x", target: "m1" },
+        { source: "m1", target: "y" },
+        { source: "x", target: "m2" },
+        { source: "m2", target: "y" },
+      ],
+    }, "cbsem_common_factor");
+    model.data_binding = {
+      kind: "raw",
+      dataset_id: dataset.id,
+      missing_data: "listwise_deletion",
+      weight: null,
+      cluster_variable: null,
+      strata_variable: null,
+    };
+    const pointConfig = generalSemConfigFromEngineV1(defaultGeneralSemPlsEngineOptionsV1());
+    const pointRecipe = buildGeneralSemCbsemRecipeV3({
+      recipeId: RECIPE_ID,
+      createdAt: "2026-08-21T00:00:00Z",
+      dataset,
+      model,
+      nativeScientificSha256: DIGEST_C,
+      config: pointConfig,
+      engine: defaultGeneralSemPlsEngineOptionsV1(),
+    });
+    expect(pointRecipe.settings).toMatchObject({
+      method: "cbsem",
+      preprocessing: "unstandardized",
+      bootstrap_samples: 0,
+    });
+    expect(pointRecipe.method_config).toStrictEqual({
+      kind: "cbsem",
+      model_type: "sem",
+      estimator: "ml",
+      input: "raw",
+      mean_structure: false,
+      bootstrap_samples: 0,
+    });
+    expect(pointRecipe.metadata.execution_surface).toBe("native_general_sem_cbsem_labs_v1");
+
+    const bootstrapEngine = {
+      ...defaultGeneralSemPlsEngineOptionsV1(),
+      inference: "percentile_case_bootstrap" as const,
+      bootstrapSamples: 500,
+      confidenceLevel: 0.95,
+    };
+    const bootstrapConfig = generalSemConfigFromEngineV1(bootstrapEngine);
+    const bootstrapRecipe = buildGeneralSemCbsemRecipeV3({
+      recipeId: RECIPE_ID,
+      createdAt: "2026-08-21T00:00:00Z",
+      dataset,
+      model,
+      nativeScientificSha256: DIGEST_C,
+      config: bootstrapConfig,
+      engine: bootstrapEngine,
+    });
+    expect(bootstrapRecipe.method_config).toMatchObject({
+      kind: "cbsem",
+      model_type: "sem",
+      bootstrap_samples: 500,
+      bootstrap_v2: {
+        algorithm: "case_resampling_full_ml",
+        interval: "percentile_type7",
+      },
+    });
+
+    const decision = {
+      schema_version: 1 as const,
+      status: "experimental" as const,
+      status_label: "Experimental" as const,
+      estimator_id: GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
+      capability_cells: [
+        GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1,
+        GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1,
+      ],
+      diagnostics: [],
+      evidence: [
+        GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1,
+        GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1,
+      ].map((cell) => ({
+        evidence_id: `capability_registry_v2:${cell.capability_id}:${cell.cell_id}:${cell.capability_version}`,
+        description: "Exact Registry-owned Experimental Labs cell.",
+      })),
+      summary: "Exact CB-SEM recursive bootstrap is available in Experimental Labs.",
+      explanation: "The resident RecipeV4 and exact capability cells are unchanged.",
+    };
+    const execution = selectGeneralSemCbsemExecutionCapabilityV1({
+      config: bootstrapConfig,
+      decision,
+    });
+    expect(execution.capabilityCell).toStrictEqual(GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1);
+    expect(generalSemCbsemJobRequestFromReceiptV1(receipt(), bootstrapConfig, decision))
+      .toMatchObject({
+        surface: "internal_labs",
+        experimentalLabsEnabled: true,
+        capabilityCell: GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1,
+      });
+  });
+
   it("selects the exact point and multiple-mediation bootstrap cells from the frozen inference config", () => {
     const mediationModel = multipleMediationModel();
     const point = generalSemConfigFromEngineV1(defaultGeneralSemPlsEngineOptionsV1());
@@ -1513,6 +1632,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     const append = vi.fn().mockResolvedValue({ status: "ok" });
     await appendGeneralSemResultV1(completed, append);
     expect(append).toHaveBeenCalledWith(expect.objectContaining({
+      capabilityCell: GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
       canonicalDocument: completed.canonicalDocument,
     }));
 
@@ -1536,6 +1656,9 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       },
     });
     const reopened = await reopenGeneralSemResultV1(completed, "8".repeat(64), read);
+    expect(read).toHaveBeenCalledWith(expect.objectContaining({
+      capabilityCell: GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+    }));
     expect(reopened.entry?.canonicalDocument.general_sem_results?.inference_receipt)
       .toStrictEqual(completed.canonicalDocument.general_sem_results?.inference_receipt);
     expect(reopened.entry?.canonicalDocument.general_sem_results?.interaction_effects?.[0]

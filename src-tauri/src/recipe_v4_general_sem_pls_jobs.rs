@@ -214,7 +214,7 @@ fn notify_worker_checkpoint(
     }
 }
 
-fn failure(
+pub(crate) fn general_sem_job_failure_v1(
     stage: InternalLabsGeneralSemPlsFailureStageV1,
     subject: impl Into<String>,
     code: impl Into<String>,
@@ -230,6 +230,16 @@ fn failure(
         corrective_action: corrective_action.into(),
         issues: Vec::new(),
     }
+}
+
+fn failure(
+    stage: InternalLabsGeneralSemPlsFailureStageV1,
+    subject: impl Into<String>,
+    code: impl Into<String>,
+    message: impl Into<String>,
+    corrective_action: impl Into<String>,
+) -> InternalLabsGeneralSemPlsFailureV1 {
+    general_sem_job_failure_v1(stage, subject, code, message, corrective_action)
 }
 
 fn now_utc() -> String {
@@ -249,7 +259,7 @@ fn validate_access(
     // This must remain the first decision. Denied callers cannot inspect or
     // hash any filesystem path.
     if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
-        return Err(failure(
+        return Err(general_sem_job_failure_v1(
             InternalLabsGeneralSemPlsFailureStageV1::Access,
             "experimentalLabsEnabled",
             "general_sem_pls.internal_labs_required",
@@ -2505,6 +2515,9 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_point_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2537,6 +2550,9 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_point_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2588,6 +2604,9 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_point_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2604,6 +2623,9 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_point_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2639,6 +2661,9 @@ mod tests {
                 ProjectSchema6ResultReadRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_point_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: receipt.updated_document_sha256.clone(),
                 },
@@ -2728,6 +2753,9 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2753,6 +2781,9 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2783,6 +2814,9 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2799,6 +2833,9 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2818,6 +2855,9 @@ mod tests {
                 ProjectSchema6ResultReadRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: append_receipt.updated_document_sha256.clone(),
                 },

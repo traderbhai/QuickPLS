@@ -22,6 +22,7 @@ import {
   type InternalRecipeV4CbsemJobSnapshotV1,
 } from "../domain/internalRecipeV4CbsemExecution";
 import {
+  parseGeneralSemCbsemCompletedResultV1,
   parseGeneralSemEstimatorPreflightOutcomeV1,
   parseGeneralSemPlsCompletedResultV1,
   parseGeneralSemPlsJobSnapshotV1,
@@ -29,6 +30,7 @@ import {
   type GeneralSemPlsJobRequestV1,
   type GeneralSemProjectBootstrapRequestV1,
 } from "../domain/internalRecipeV4GeneralSemWorkspace";
+import type { CapabilityCellReferenceV2 } from "../domain/canonicalResultDocumentV2";
 import type { GeneralSemConfigV1 } from "../domain/generalSemConfigV1";
 import type { InternalProjectArchiveV6Wire } from "../domain/internalProjectArchiveV6Wire";
 import type {
@@ -441,8 +443,9 @@ export async function bootstrapInternalGeneralSemProjectArchiveV6(
 /** Native Rust capability authority for an already populated marked project. */
 export async function preflightInternalGeneralSemEstimatorsV1(input: {
   project: InternalProjectArchiveV6Wire;
-  model: SemModelV4;
+  modelId: string;
   config: GeneralSemConfigV1;
+  capabilityCell: CapabilityCellReferenceV2;
 }) {
   const response = await invoke<unknown>(
     "preflight_internal_general_sem_estimators_v1",
@@ -485,6 +488,38 @@ export async function dismissInternalLabsGeneralSemPlsJobV1(jobId: string) {
 export async function getInternalLabsGeneralSemPlsJobResultV1(jobId: string) {
   return parseGeneralSemPlsCompletedResultV1(await invoke<unknown>(
     "result_internal_labs_general_sem_pls_job_v1",
+    { jobId },
+  ));
+}
+
+export async function startInternalLabsGeneralSemCbsemJobV1(request: GeneralSemPlsJobRequestV1) {
+  return parseGeneralSemPlsJobSnapshotV1(await invoke<unknown>(
+    "start_internal_labs_general_sem_cbsem_job_v1",
+    { request },
+  ));
+}
+
+export async function getInternalLabsGeneralSemCbsemJobV1(jobId: string) {
+  return parseGeneralSemPlsJobSnapshotV1(await invoke<unknown>(
+    "status_internal_labs_general_sem_cbsem_job_v1",
+    { jobId },
+  ));
+}
+
+export async function cancelInternalLabsGeneralSemCbsemJobV1(jobId: string) {
+  return parseGeneralSemPlsJobSnapshotV1(await invoke<unknown>(
+    "cancel_internal_labs_general_sem_cbsem_job_v1",
+    { jobId },
+  ));
+}
+
+export async function dismissInternalLabsGeneralSemCbsemJobV1(jobId: string) {
+  return invoke<null>("dismiss_internal_labs_general_sem_cbsem_job_v1", { jobId });
+}
+
+export async function getInternalLabsGeneralSemCbsemJobResultV1(jobId: string) {
+  return parseGeneralSemCbsemCompletedResultV1(await invoke<unknown>(
+    "result_internal_labs_general_sem_cbsem_job_v1",
     { jobId },
   ));
 }

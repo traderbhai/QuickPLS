@@ -1,4 +1,4 @@
-//! Canonical projection for the private, unqualified CB-SEM V3 adapters.
+//! Canonical projection for bounded CB-SEM V3 Experimental Labs execution.
 
 use qpls_core::{
     AnalysisRecipeV4, CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION,

@@ -98,10 +98,10 @@ struct RecursiveBootstrapRequestV1 {
     workers: usize,
 }
 
-/// Internal source-only adapter. It is intentionally absent from public
-/// exports and Registry/native dispatch. The established indexed no-retry CFA
-/// scheduler owns replicate planning and cancellation; the existing exact V2
-/// optimizer remains the only numerical refit kernel.
+/// Bounded adapter reached only through the Registry-authorized archive job
+/// boundary. It cannot select or promote a cell. The established indexed
+/// no-retry scheduler owns replicate planning and cancellation; the existing
+/// exact V2 optimizer remains the sole numerical refit kernel.
 pub(crate) fn run_compiled_cbsem_general_sem_recursive_bootstrap_v1(
     dataset: &Dataset,
     recipe: &AnalysisRecipeV4,

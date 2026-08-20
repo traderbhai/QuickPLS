@@ -4,7 +4,6 @@ import {
   Archive,
   CheckCircle2,
   CircleStop,
-  Download,
   FlaskConical,
   FolderOpen,
   Play,
@@ -14,24 +13,35 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   appendGeneralSemResultV1,
   bindGeneralSemPlsModelToDatasetV1,
-  buildGeneralSemRecipeV1,
+  buildGeneralSemEstimatorRecipeV1,
   defaultGeneralSemPlsEngineOptionsV1,
   generalSemConfigFromEngineV1,
   generalSemFailureV1,
-  generalSemJobRequestFromReceiptV1,
+  generalSemJobRequestForEstimatorFromReceiptV1,
+  generalSemRequestedCapabilityCellV1,
+  monitorGeneralSemCbsemJobV1,
   monitorGeneralSemPlsJobV1,
   preflightGeneralSemWorkspaceV1,
   rehydrateGeneralSemExecutionAuthorityV1,
   reopenGeneralSemResultV1,
+  selectGeneralSemCbsemExecutionCapabilityV1,
   selectGeneralSemPlsExecutionCapabilityV1,
+  validateGeneralSemCbsemCompletedExecutionV1,
   validateGeneralSemPlsCompletedExecutionV1,
-  type GeneralSemPlsCompletedResultV1,
+  type GeneralSemCbsemMonitorOutcomeV1,
+  type GeneralSemCompletedResultV1,
+  type GeneralSemEstimatorIdV1,
   type GeneralSemPlsEngineOptionsV1,
   type GeneralSemPlsJobFailureV1,
   type GeneralSemPlsJobSnapshotV1,
   type GeneralSemPlsMonitorOutcomeV1,
   type GeneralSemProjectBootstrapReceiptV1,
+  type GeneralSemEstimatorParameterTableAuthorityV2,
 } from "../domain/internalRecipeV4GeneralSemWorkspace";
+import {
+  GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
+  GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
+} from "../domain/generalSemCapabilityPreflightV1";
 import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
 import type { SemCapabilityDecisionV1 } from "../domain/semCapabilityDecisionV1";
 import { supportsGeneralSemV1 } from "../domain/internalProjectArchiveV6Wire";
@@ -48,15 +58,19 @@ import { inspectInternalProjectArchiveV6At } from "../services/internalProjectAr
 import {
   appendInternalProjectSchema6CanonicalResultV2,
   bootstrapInternalGeneralSemProjectArchiveV6,
+  cancelInternalLabsGeneralSemCbsemJobV1,
   cancelInternalLabsGeneralSemPlsJobV1,
+  dismissInternalLabsGeneralSemCbsemJobV1,
   dismissInternalLabsGeneralSemPlsJobV1,
-  exportNativeXlsxTables,
+  getInternalLabsGeneralSemCbsemJobResultV1,
+  getInternalLabsGeneralSemCbsemJobV1,
   getInternalLabsGeneralSemPlsJobResultV1,
   getInternalLabsGeneralSemPlsJobV1,
   getInternalSemModelV4ScientificSha256,
   invalidateNativeGeneralSemFreshDraftAuthorityV1,
   preflightInternalGeneralSemEstimatorsV1,
   readInternalProjectSchema6CanonicalResultsV2,
+  startInternalLabsGeneralSemCbsemJobV1,
   startInternalLabsGeneralSemPlsJobV1,
 } from "../services/projectService";
 import { useWorkspace } from "../store";
@@ -64,8 +78,8 @@ import { GeneralSemEstimatorCompatibilityPanel } from "./GeneralSemEstimatorComp
 import { observedSemanticsForParameterTable } from "./NativeSemParameterTable";
 import {
   CanonicalResultDocumentV2View,
-  canonicalResultDocumentV2ExportTables,
 } from "./NativeRecipeV4CbsemWorkspace";
+import { CanonicalResultExportPanelV2 } from "./CanonicalResultExportPanelV2";
 
 export interface NativeRecipeV4GeneralSemWorkspaceServices {
   scientificDigest: typeof getInternalSemModelV4ScientificSha256;
@@ -77,10 +91,14 @@ export interface NativeRecipeV4GeneralSemWorkspaceServices {
   cancel: typeof cancelInternalLabsGeneralSemPlsJobV1;
   dismiss: typeof dismissInternalLabsGeneralSemPlsJobV1;
   result: typeof getInternalLabsGeneralSemPlsJobResultV1;
+  startCbsem: typeof startInternalLabsGeneralSemCbsemJobV1;
+  statusCbsem: typeof getInternalLabsGeneralSemCbsemJobV1;
+  cancelCbsem: typeof cancelInternalLabsGeneralSemCbsemJobV1;
+  dismissCbsem: typeof dismissInternalLabsGeneralSemCbsemJobV1;
+  resultCbsem: typeof getInternalLabsGeneralSemCbsemJobResultV1;
   append: typeof appendInternalProjectSchema6CanonicalResultV2;
   read: typeof readInternalProjectSchema6CanonicalResultsV2;
   invalidateDraft: typeof invalidateNativeGeneralSemFreshDraftAuthorityV1;
-  exportXlsx: typeof exportNativeXlsxTables;
   selectDestination: (suggestedName: string) => Promise<string | null>;
 }
 
@@ -94,10 +112,14 @@ const defaultServices: NativeRecipeV4GeneralSemWorkspaceServices = {
   cancel: cancelInternalLabsGeneralSemPlsJobV1,
   dismiss: dismissInternalLabsGeneralSemPlsJobV1,
   result: getInternalLabsGeneralSemPlsJobResultV1,
+  startCbsem: startInternalLabsGeneralSemCbsemJobV1,
+  statusCbsem: getInternalLabsGeneralSemCbsemJobV1,
+  cancelCbsem: cancelInternalLabsGeneralSemCbsemJobV1,
+  dismissCbsem: dismissInternalLabsGeneralSemCbsemJobV1,
+  resultCbsem: getInternalLabsGeneralSemCbsemJobResultV1,
   append: appendInternalProjectSchema6CanonicalResultV2,
   read: readInternalProjectSchema6CanonicalResultsV2,
   invalidateDraft: invalidateNativeGeneralSemFreshDraftAuthorityV1,
-  exportXlsx: exportNativeXlsxTables,
   selectDestination: async (suggestedName) => {
     const selected = await save({
       defaultPath: suggestedName,
@@ -137,16 +159,25 @@ export function selectGeneralSemDisplayedDocumentV1<T>(
   return reopenedDocument ?? completedDocument;
 }
 
-export interface GeneralSemNativePlsPreflightAuthorityV1 {
+export interface GeneralSemNativeEstimatorPreflightAuthorityV2 {
   readonly authorityKey: string;
-  readonly decision: SemCapabilityDecisionV1;
+  readonly pls: SemCapabilityDecisionV1;
+  readonly cbsem: SemCapabilityDecisionV1;
+  readonly authority: GeneralSemEstimatorParameterTableAuthorityV2;
+}
+
+export function selectCurrentGeneralSemNativeEstimatorPreflightV2(
+  preflight: GeneralSemNativeEstimatorPreflightAuthorityV2 | null,
+  authorityKey: string,
+): GeneralSemNativeEstimatorPreflightAuthorityV2 | null {
+  return preflight?.authorityKey === authorityKey ? preflight : null;
 }
 
 export function selectCurrentGeneralSemNativePlsDecisionV1(
-  preflight: GeneralSemNativePlsPreflightAuthorityV1 | null,
+  preflight: GeneralSemNativeEstimatorPreflightAuthorityV2 | null,
   authorityKey: string,
 ): SemCapabilityDecisionV1 | null {
-  return preflight?.authorityKey === authorityKey ? preflight.decision : null;
+  return selectCurrentGeneralSemNativeEstimatorPreflightV2(preflight, authorityKey)?.pls ?? null;
 }
 
 export interface GeneralSemCanonicalModerationInventoryV1 {
@@ -187,7 +218,11 @@ export function generalSemCanonicalModerationInventoryV1(
 export function generalSemCalculationActionLabelV1(
   interactionPlan: boolean,
   bootstrap: boolean,
+  estimatorId: GeneralSemEstimatorIdV1 = GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
 ): string {
+  if (estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1) {
+    return bootstrap ? "Calculate CB-SEM recursive bootstrap" : "Calculate CB-SEM ML estimates";
+  }
   if (!interactionPlan) return "Calculate PLS effects";
   return bootstrap ? "Calculate moderation bootstrap" : "Calculate moderation point estimates";
 }
@@ -332,6 +367,7 @@ export async function activateGeneralSemProjectArchiveV1(
 }
 
 function generalSemAuthorityKeyV1(input: {
+  estimatorId: GeneralSemEstimatorIdV1;
   sourceProjectId: string | null;
   datasetId: string;
   datasetFingerprint: string | undefined;
@@ -347,7 +383,10 @@ function safeFileStem(value: string): string {
   return stem || "QuickPLS-General-SEM";
 }
 
-function currentGeneralSemDraftPublicationKeyV1(fallbackModelName: string): string {
+function currentGeneralSemDraftPublicationKeyV1(
+  fallbackModelName: string,
+  estimatorId: GeneralSemEstimatorIdV1,
+): string {
   const state = useWorkspace.getState();
   const activeName = state.projectModels.find((candidate) => candidate.id === state.activeModelId)?.name
     ?? fallbackModelName;
@@ -372,6 +411,7 @@ function currentGeneralSemDraftPublicationKeyV1(fallbackModelName: string): stri
   if (!adapted.ok) throw new Error("The fresh General SEM canvas no longer has a valid scientific model authority.");
   const bound = bindGeneralSemPlsModelToDatasetV1(adapted.model, state.dataset);
   return JSON.stringify({
+    estimatorId,
     projectId: state.projectId,
     projectPath: state.projectPath,
     draft: state.generalSemProjectDraftMode,
@@ -431,6 +471,12 @@ export function NativeRecipeV4GeneralSemWorkspace({
       return { status: "blocked" as const, failure: generalSemFailureV1(error) };
     }
   }, [generalSemSession, markedGeneralSemProjectMode]);
+  const [draftEstimatorId, setDraftEstimatorId] = useState<GeneralSemEstimatorIdV1>(
+    GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
+  );
+  const selectedEstimatorId = markedGeneralSemProjectMode && rehydratedExecution?.status === "ok"
+    ? rehydratedExecution.value.estimatorId
+    : draftEstimatorId;
   const [engine, setEngine] = useState<GeneralSemPlsEngineOptionsV1>(() => ({
     ...(rehydratedExecution?.status === "ok" ? rehydratedExecution.value.engine : {
       ...defaultGeneralSemPlsEngineOptionsV1(),
@@ -451,9 +497,9 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const [archiveSnapshot, setArchiveSnapshot] = useState<InternalProjectArchiveV6ReadSnapshotV1 | null>(
     markedGeneralSemProjectMode ? generalSemSession?.snapshot ?? null : null,
   );
-  const [nativePlsPreflight, setNativePlsPreflight] = useState<GeneralSemNativePlsPreflightAuthorityV1 | null>(null);
+  const [nativeEstimatorPreflight, setNativeEstimatorPreflight] = useState<GeneralSemNativeEstimatorPreflightAuthorityV2 | null>(null);
   const [snapshot, setSnapshot] = useState<GeneralSemPlsJobSnapshotV1 | null>(null);
-  const [completed, setCompleted] = useState<GeneralSemPlsCompletedResultV1 | null>(null);
+  const [completed, setCompleted] = useState<GeneralSemCompletedResultV1 | null>(null);
   const [failure, setFailure] = useState<GeneralSemPlsJobFailureV1 | null>(null);
   const [appendOutcome, setAppendOutcome] = useState<InternalProjectSchema6ResultAppendOutcomeV1 | null>(null);
   const [currentArchiveSha256, setCurrentArchiveSha256] = useState<string | null>(
@@ -464,7 +510,6 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const [resultIntegrityInvalid, setResultIntegrityInvalid] = useState(false);
   const [jobRecoveryRequired, setJobRecoveryRequired] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [exportFeedback, setExportFeedback] = useState<string | null>(null);
   const activeJobIdRef = useRef<string | null>(null);
   const monitorAbortRef = useRef<AbortController | null>(null);
   const capturedAuthorityKeyRef = useRef<string | null>(null);
@@ -554,6 +599,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     model,
     config,
     engine: effectiveEngine,
+    estimatorId: selectedEstimatorId,
   }) : {
     ready: false,
     decision: null,
@@ -563,37 +609,58 @@ export function NativeRecipeV4GeneralSemWorkspace({
       message: "The General SEM configuration is invalid.",
       correctiveAction: "Correct the bounded inference and output settings.",
     }],
-  }, [config, dataset, effectiveEngine, experimentalLabsEnabled, freshGeneralSemDraftMode, markedGeneralSemProjectMode, model, projectActivationConnected, rehydratedExecution, sourceProjectId, strictAuthority]);
+  }, [config, dataset, effectiveEngine, experimentalLabsEnabled, freshGeneralSemDraftMode, markedGeneralSemProjectMode, model, projectActivationConnected, rehydratedExecution, selectedEstimatorId, sourceProjectId, strictAuthority]);
   const modelScientificInput = useMemo(() => {
     if (!model) return "";
     try { return scientificSemModelV4HashInput(model); } catch { return ""; }
   }, [model]);
   const authorityKey = useMemo(() => generalSemAuthorityKeyV1({
+    estimatorId: selectedEstimatorId,
     sourceProjectId,
     datasetId: dataset.id,
     datasetFingerprint: dataset.fingerprint,
     modelScientificInput,
     config,
     engine: effectiveEngine,
-  }), [config, dataset.fingerprint, dataset.id, effectiveEngine, modelScientificInput, sourceProjectId]);
+  }), [config, dataset.fingerprint, dataset.id, effectiveEngine, modelScientificInput, selectedEstimatorId, sourceProjectId]);
   latestAuthorityKeyRef.current = authorityKey;
-  const nativePlsDecision = selectCurrentGeneralSemNativePlsDecisionV1(
-    nativePlsPreflight,
+  const currentNativeEstimatorPreflight = selectCurrentGeneralSemNativeEstimatorPreflightV2(
+    nativeEstimatorPreflight,
     authorityKey,
   );
+  const nativeEstimatorDecision = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+    ? currentNativeEstimatorPreflight?.cbsem ?? null
+    : currentNativeEstimatorPreflight?.pls ?? null;
+  const selectedCapabilityCell = useMemo(() => {
+    if (!model || !config) return null;
+    return generalSemRequestedCapabilityCellV1(selectedEstimatorId, model, config);
+  }, [config, model, selectedEstimatorId]);
   const nativePlsExecution = useMemo(() => {
-    if (!nativePlsDecision || !model || !config) return null;
+    if (selectedEstimatorId !== GENERAL_SEM_PLS_ESTIMATOR_ID_V1
+      || !nativeEstimatorDecision || !model || !config) return null;
     try {
       return selectGeneralSemPlsExecutionCapabilityV1({
         model,
         config,
-        decision: nativePlsDecision,
+        decision: nativeEstimatorDecision,
       });
     } catch {
       return null;
     }
-  }, [config, model, nativePlsDecision]);
-  const nativePreflightReady = nativePlsExecution !== null;
+  }, [config, model, nativeEstimatorDecision, selectedEstimatorId]);
+  const nativeCbsemExecution = useMemo(() => {
+    if (selectedEstimatorId !== GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+      || !nativeEstimatorDecision || !config) return null;
+    try {
+      return selectGeneralSemCbsemExecutionCapabilityV1({
+        config,
+        decision: nativeEstimatorDecision,
+      });
+    } catch {
+      return null;
+    }
+  }, [config, nativeEstimatorDecision, selectedEstimatorId]);
+  const nativePreflightReady = nativePlsExecution !== null || nativeCbsemExecution !== null;
   const archiveCurrent = Boolean(receipt && currentArchiveSha256 && capturedAuthorityKeyRef.current === authorityKey);
   const resultAuthorityCurrent = Boolean(
     archiveCurrent
@@ -619,14 +686,26 @@ export function NativeRecipeV4GeneralSemWorkspace({
     resultIntegrityInvalid,
   });
   const operationBusy = busy || generalSemPublicationPending;
+  const startJob = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+    ? services.startCbsem
+    : services.start;
+  const statusJob = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+    ? services.statusCbsem
+    : services.status;
+  const cancelJob = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+    ? services.cancelCbsem
+    : services.cancel;
+  const dismissJob = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+    ? services.dismissCbsem
+    : services.dismiss;
 
   useEffect(() => {
     if (!markedGeneralSemProjectMode || !generalSemSession) {
-      setNativePlsPreflight(null);
+      setNativeEstimatorPreflight(null);
       return;
     }
-    if (rehydratedExecution?.status !== "ok" || !model || !config) {
-      setNativePlsPreflight(null);
+    if (rehydratedExecution?.status !== "ok" || !model || !config || !selectedCapabilityCell) {
+      setNativeEstimatorPreflight(null);
       if (rehydratedExecution?.status === "blocked") setFailure(rehydratedExecution.failure);
       return;
     }
@@ -636,47 +715,51 @@ export function NativeRecipeV4GeneralSemWorkspace({
     setCurrentArchiveSha256(generalSemSession.snapshot.archiveSha256);
     capturedAuthorityKeyRef.current = authorityKey;
     latestAuthorityKeyRef.current = authorityKey;
-    setNativePlsPreflight(null);
+    setNativeEstimatorPreflight(null);
     const requestedAuthorityKey = authorityKey;
     let live = true;
     void services.nativePreflight({
       project: generalSemSession.project,
-      model,
+      modelId: model.id,
       config,
+      capabilityCell: selectedCapabilityCell,
     }).then((outcome) => {
       if (!live || latestAuthorityKeyRef.current !== requestedAuthorityKey) return;
       if (outcome.status === "ok") {
         try {
-          selectGeneralSemPlsExecutionCapabilityV1({
-            model,
-            config,
-            decision: outcome.value.pls,
-          });
-          setNativePlsPreflight({
+          if (outcome.value.authority.modelId !== rehydrated.receipt.residentModelId
+            || outcome.value.authority.modelScientificSha256 !== rehydrated.receipt.residentModelScientificSha256) {
+            throw new Error("Native estimator preflight returned a different resident SemModelV4 parameter-table authority.");
+          }
+          setNativeEstimatorPreflight({
             authorityKey: requestedAuthorityKey,
-            decision: outcome.value.pls,
+            pls: outcome.value.pls,
+            cbsem: outcome.value.cbsem,
+            authority: outcome.value.authority,
           });
+          setFailure(null);
         } catch (error) {
-          setNativePlsPreflight(null);
+          setNativeEstimatorPreflight(null);
           setFailure(generalSemFailureV1(error));
         }
         return;
       }
-      setNativePlsPreflight(null);
+      setNativeEstimatorPreflight(null);
       setFailure({ schemaVersion: 1, stage: "capability", subject: "preflight", ...outcome.diagnostic, issues: [] });
     }).catch((error) => {
       if (live && latestAuthorityKeyRef.current === requestedAuthorityKey) {
-        setNativePlsPreflight(null);
+        setNativeEstimatorPreflight(null);
         setFailure(generalSemFailureV1(error));
       }
     });
     return () => { live = false; };
-  }, [authorityKey, config, generalSemSession, markedGeneralSemProjectMode, model, rehydratedExecution, services]);
+  }, [authorityKey, config, generalSemSession, markedGeneralSemProjectMode, model, rehydratedExecution, selectedCapabilityCell, services]);
 
   useEffect(() => {
     if (!markedGeneralSemProjectMode
       || !generalSemSession
-      || rehydratedExecution?.status !== "ok") return;
+      || rehydratedExecution?.status !== "ok"
+      || !selectedCapabilityCell) return;
     let live = true;
     const currentReceipt = rehydratedExecution.value.receipt;
     void services.read({
@@ -684,6 +767,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       experimentalLabsEnabled: true,
       archivePath: generalSemSession.snapshot.archivePath,
       expectedSourceSha256: generalSemSession.snapshot.archiveSha256,
+      capabilityCell: selectedCapabilityCell,
     }).then((outcome) => {
       if (!live) return;
       if (outcome.status === "blocked") {
@@ -718,7 +802,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       setFailure(generalSemFailureV1(error));
     });
     return () => { live = false; };
-  }, [generalSemSession, markedGeneralSemProjectMode, rehydratedExecution, services]);
+  }, [generalSemSession, markedGeneralSemProjectMode, rehydratedExecution, selectedCapabilityCell, services]);
 
   useEffect(() => {
     if (generalSemPublicationPending || (!completed && !reopenedEntry) || resultAuthorityCurrent) return;
@@ -746,14 +830,14 @@ export function NativeRecipeV4GeneralSemWorkspace({
       correctiveAction: "The job is being cancelled. Save a new calculation project from the intended canvas model and dataset.",
       issues: [],
     });
-    void services.cancel(activeJobIdRef.current).then(setSnapshot).catch(() => undefined);
-  }, [authorityKey, running, services]);
+    void cancelJob(activeJobIdRef.current).then(setSnapshot).catch(() => undefined);
+  }, [authorityKey, cancelJob, running]);
 
   useEffect(() => () => {
     monitorAbortRef.current?.abort();
     const activeJobId = activeJobIdRef.current;
     if (activeJobId) {
-      void services.cancel(activeJobId)
+      void cancelJob(activeJobId)
         .then((cancelled) => {
           if (!ACTIVE_STATES.has(cancelled.state)) {
             useWorkspace.getState().setGeneralSemTransientWorkBlocker(null);
@@ -761,7 +845,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         })
         .catch(() => undefined);
     }
-  }, [services]);
+  }, [cancelJob]);
 
   const clearResults = () => {
     setCompleted(null);
@@ -769,7 +853,6 @@ export function NativeRecipeV4GeneralSemWorkspace({
     setPersistedArchiveSha256(null);
     setReopenedEntry(null);
     setResultIntegrityInvalid(false);
-    setExportFeedback(null);
     setJobRecoveryRequired(false);
     setGeneralSemTransientWorkBlocker(null);
   };
@@ -779,14 +862,14 @@ export function NativeRecipeV4GeneralSemWorkspace({
       document.getElementById("nd-general-sem-preflight")?.focus();
       return;
     }
-    const draftPublicationKey = currentGeneralSemDraftPublicationKeyV1(modelName);
+    const draftPublicationKey = currentGeneralSemDraftPublicationKeyV1(modelName, selectedEstimatorId);
     const assertDraftPublicationCurrent = () => {
       const current = useWorkspace.getState();
       if (!current.generalSemPublicationPending
         || current.projectId !== sourceProjectId
         || current.projectPath !== null
         || current.generalSemProjectDraftMode?.sourceProjectId !== sourceProjectId
-        || currentGeneralSemDraftPublicationKeyV1(modelName) !== draftPublicationKey) {
+         || currentGeneralSemDraftPublicationKeyV1(modelName, selectedEstimatorId) !== draftPublicationKey) {
         throw new Error("The fresh General SEM project authority changed while its marked archive was being published.");
       }
     };
@@ -803,7 +886,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       const createdAt = new Date().toISOString();
       const nativeScientificSha256 = await services.scientificDigest(model);
       assertDraftPublicationCurrent();
-      const recipe = buildGeneralSemRecipeV1({
+      const recipe = buildGeneralSemEstimatorRecipeV1(selectedEstimatorId, {
         recipeId: globalThis.crypto.randomUUID(),
         createdAt,
         dataset,
@@ -840,16 +923,25 @@ export function NativeRecipeV4GeneralSemWorkspace({
         || inspected.value.project.sem_generation !== "general_sem_v1") {
         throw new Error("The saved QuickPLS project file could not be verified against its creation receipt.");
       }
-      const authoritative = await services.nativePreflight({ project: inspected.value.project, model, config });
+      const capabilityCell = generalSemRequestedCapabilityCellV1(
+        selectedEstimatorId,
+        model,
+        config,
+      );
+      const authoritative = await services.nativePreflight({
+        project: inspected.value.project,
+        modelId: model.id,
+        config,
+        capabilityCell,
+      });
       if (authoritative.status === "blocked") {
         throw { schemaVersion: 1, stage: "capability", subject: "preflight", ...authoritative.diagnostic, issues: [] } satisfies GeneralSemPlsJobFailureV1;
       }
       assertDraftPublicationCurrent();
-      selectGeneralSemPlsExecutionCapabilityV1({
-        model,
-        config,
-        decision: authoritative.value.pls,
-      });
+      if (authoritative.value.authority.modelId !== outcome.value.receipt.residentModelId
+        || authoritative.value.authority.modelScientificSha256 !== outcome.value.receipt.residentModelScientificSha256) {
+        throw new Error("Native estimator preflight did not bind the newly promoted resident SemModelV4 parameter table.");
+      }
       const createdReceipt = outcome.value.receipt;
       await activateGeneralSemProjectArchiveV1(inspected.value, createdReceipt, {
         openSnapshot: (snapshot) => useInternalProjectArchiveV6Session.getState().open(async () => ({ status: "ok", value: snapshot })),
@@ -863,6 +955,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         readWorkspace: () => useWorkspace.getState(),
       });
       const activatedAuthorityKey = generalSemAuthorityKeyV1({
+        estimatorId: selectedEstimatorId,
         sourceProjectId: createdReceipt.projectId,
         datasetId: dataset.id,
         datasetFingerprint: dataset.fingerprint,
@@ -875,9 +968,11 @@ export function NativeRecipeV4GeneralSemWorkspace({
       setReceipt(createdReceipt);
       setCurrentArchiveSha256(createdReceipt.destinationArchiveSha256);
       setArchiveSnapshot(inspected.value);
-      setNativePlsPreflight({
+      setNativeEstimatorPreflight({
         authorityKey: activatedAuthorityKey,
-        decision: authoritative.value.pls,
+        pls: authoritative.value.pls,
+        cbsem: authoritative.value.cbsem,
+        authority: authoritative.value.authority,
       });
       setSnapshot(null);
     } catch (error) {
@@ -907,12 +1002,17 @@ export function NativeRecipeV4GeneralSemWorkspace({
     }
   };
 
-  const applyMonitorOutcome = (outcome: GeneralSemPlsMonitorOutcomeV1): boolean => {
+  const applyMonitorOutcome = (
+    outcome: GeneralSemPlsMonitorOutcomeV1 | GeneralSemCbsemMonitorOutcomeV1,
+  ): boolean => {
     if (outcome.status === "completed" && generalSemCompletionMatchesLatestAuthorityV1(
       capturedAuthorityKeyRef.current,
       latestAuthorityKeyRef.current ?? "",
     )) {
-      if (!nativePlsExecution) {
+      const executionAvailable = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+        ? nativeCbsemExecution !== null
+        : nativePlsExecution !== null;
+      if (!executionAvailable) {
         setGeneralSemTransientWorkBlocker(null);
         setResultIntegrityInvalid(true);
         setFailure({
@@ -927,7 +1027,17 @@ export function NativeRecipeV4GeneralSemWorkspace({
         return true;
       }
       try {
-        validateGeneralSemPlsCompletedExecutionV1(outcome.completed, nativePlsExecution);
+        if (selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1) {
+          if (!("adapterVersion" in outcome.completed) || !nativeCbsemExecution) {
+            throw new Error("The completed job did not return the exact CB-SEM V3 result contract.");
+          }
+          validateGeneralSemCbsemCompletedExecutionV1(outcome.completed, nativeCbsemExecution);
+        } else {
+          if (!("analyticalResult" in outcome.completed) || !nativePlsExecution) {
+            throw new Error("The completed job did not return the exact General SEM PLS result contract.");
+          }
+          validateGeneralSemPlsCompletedExecutionV1(outcome.completed, nativePlsExecution);
+        }
       } catch (error) {
         setGeneralSemTransientWorkBlocker(null);
         setResultIntegrityInvalid(true);
@@ -969,13 +1079,21 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const monitorStartedJob = async (
     initial: GeneralSemPlsJobSnapshotV1,
     controller: AbortController,
-  ): Promise<boolean> => applyMonitorOutcome(await monitorGeneralSemPlsJobV1({
-    initial,
-    getStatus: services.status,
-    getResult: services.result,
-    onSnapshot: setSnapshot,
-    signal: controller.signal,
-  }));
+  ): Promise<boolean> => selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+    ? applyMonitorOutcome(await monitorGeneralSemCbsemJobV1({
+      initial,
+      getStatus: services.statusCbsem,
+      getResult: services.resultCbsem,
+      onSnapshot: setSnapshot,
+      signal: controller.signal,
+    }))
+    : applyMonitorOutcome(await monitorGeneralSemPlsJobV1({
+      initial,
+      getStatus: services.status,
+      getResult: services.result,
+      onSnapshot: setSnapshot,
+      signal: controller.signal,
+    }));
 
   const retainRecoverableJobFailure = (error: unknown) => {
     const diagnostic = generalSemFailureV1(error);
@@ -988,7 +1106,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
   };
 
   const start = async () => {
-    if (!receipt || !currentArchiveSha256 || !model || !config || !nativePlsDecision || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty || running || generalSemTransientWorkBlocker) return;
+    if (!receipt || !currentArchiveSha256 || !model || !config || !nativeEstimatorDecision || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty || running || generalSemTransientWorkBlocker) return;
     const expectedArchiveSha256 = currentArchiveSha256;
     let started = false;
     let terminalKnown = false;
@@ -1000,13 +1118,14 @@ export function NativeRecipeV4GeneralSemWorkspace({
     monitorAbortRef.current?.abort();
     monitorAbortRef.current = controller;
     try {
-      const initial = await services.start(generalSemJobRequestFromReceiptV1(
+      const initial = await startJob(generalSemJobRequestForEstimatorFromReceiptV1({
+        estimatorId: selectedEstimatorId,
         receipt,
         model,
         config,
-        nativePlsDecision,
+        decision: nativeEstimatorDecision,
         expectedArchiveSha256,
-      ));
+      }));
       started = true;
       activeJobIdRef.current = initial.jobId;
       setSnapshot(initial);
@@ -1036,7 +1155,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     monitorAbortRef.current?.abort();
     monitorAbortRef.current = controller;
     try {
-      const current = await services.status(jobId);
+      const current = await statusJob(jobId);
       setSnapshot(current);
       terminalKnown = await monitorStartedJob(current, controller);
     } catch (error) {
@@ -1050,7 +1169,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const cancel = async () => {
     if (!activeJobIdRef.current) return;
     try {
-      const cancelled = await services.cancel(activeJobIdRef.current);
+      const cancelled = await cancelJob(activeJobIdRef.current);
       setSnapshot(cancelled);
       if (!ACTIVE_STATES.has(cancelled.state) && cancelled.state !== "completed") {
         activeJobIdRef.current = null;
@@ -1068,7 +1187,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     if (!jobId || !jobRecoveryRequired) return;
     setBusy(true);
     try {
-      const cancelled = await services.cancel(jobId);
+      const cancelled = await cancelJob(jobId);
       if (ACTIVE_STATES.has(cancelled.state)) {
         setSnapshot(cancelled);
         setFailure({
@@ -1083,7 +1202,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         setBusy(false);
         return;
       }
-      try { await services.dismiss(jobId); } catch { /* A consumed or expired terminal job is already gone. */ }
+      try { await dismissJob(jobId); } catch { /* A consumed or expired terminal job is already gone. */ }
     } catch {
       // Explicit abandonment is also the recovery path when result parsing
       // consumed the one-shot native job before rejecting its payload.
@@ -1098,7 +1217,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
 
   const clearTerminal = async () => {
     if (snapshot && !ACTIVE_STATES.has(snapshot.state) && snapshot.state !== "completed") {
-      try { await services.dismiss(snapshot.jobId); } catch { /* Expired jobs are already clear. */ }
+      try { await dismissJob(snapshot.jobId); } catch { /* Expired jobs are already clear. */ }
     }
     setSnapshot(null);
     activeJobIdRef.current = null;
@@ -1172,12 +1291,16 @@ export function NativeRecipeV4GeneralSemWorkspace({
       }
       return;
     }
-    if (!completed) return;
+    if (!completed || !selectedCapabilityCell) return;
     setBusy(true);
     setGeneralSemPublicationPending(true);
     setFailure(null);
     try {
-      const outcome = await appendGeneralSemResultV1(completed, services.append);
+      const outcome = await appendGeneralSemResultV1(
+        completed,
+        services.append,
+        selectedCapabilityCell,
+      );
       if (outcome.status === "ok") {
         // Record the successful append before verification. A later inspect or
         // reanchor failure must retry verification, never append a duplicate.
@@ -1201,13 +1324,18 @@ export function NativeRecipeV4GeneralSemWorkspace({
   };
 
   const retryPersistedVerification = async () => {
-    if (!persistedArchiveSha256 || !completed || !resultAuthorityCurrent || generalSemPublicationPending) return;
+    if (!persistedArchiveSha256 || !completed || !selectedCapabilityCell || !resultAuthorityCurrent || generalSemPublicationPending) return;
     setBusy(true);
     setGeneralSemPublicationPending(true);
     setFailure(null);
     try {
       await verifyAndReanchorPersistedArchive(persistedArchiveSha256);
-      const reopened = await reopenGeneralSemResultV1(completed, persistedArchiveSha256, services.read);
+      const reopened = await reopenGeneralSemResultV1(
+        completed,
+        persistedArchiveSha256,
+        services.read,
+        selectedCapabilityCell,
+      );
       if (reopened.outcome.status === "blocked" || !reopened.entry) {
         throw reopened.outcome.status === "blocked"
           ? { schemaVersion: 1, stage: "archive_authority", subject: "archive", ...reopened.outcome.diagnostic, issues: [] } satisfies GeneralSemPlsJobFailureV1
@@ -1227,11 +1355,16 @@ export function NativeRecipeV4GeneralSemWorkspace({
   };
 
   const reopenResult = async () => {
-    if (!completed || !persistedArchiveSha256 || !resultAuthorityCurrent) return;
+    if (!completed || !persistedArchiveSha256 || !selectedCapabilityCell || !resultAuthorityCurrent) return;
     setBusy(true);
     setFailure(null);
     try {
-      const reopened = await reopenGeneralSemResultV1(completed, persistedArchiveSha256, services.read);
+      const reopened = await reopenGeneralSemResultV1(
+        completed,
+        persistedArchiveSha256,
+        services.read,
+        selectedCapabilityCell,
+      );
       if (reopened.outcome.status === "blocked") {
         setResultIntegrityInvalid(true);
         setReopenedEntry(null);
@@ -1259,15 +1392,6 @@ export function NativeRecipeV4GeneralSemWorkspace({
       setFailure(generalSemFailureV1(error));
     }
     finally { setBusy(false); }
-  };
-
-  const exportDisplayed = async () => {
-    if (!displayedDocument) return;
-    setExportFeedback(null);
-    try {
-      const path = await services.exportXlsx(canonicalResultDocumentV2ExportTables(displayedDocument));
-      setExportFeedback(path ? `Saved ${path}.` : "Export cancelled. No file was created.");
-    } catch (error) { setExportFeedback(`Export failed: ${generalSemFailureV1(error).message}`); }
   };
 
   const closeGeneralSemProject = async () => {
@@ -1300,7 +1424,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       setReceipt(null);
       setArchiveSnapshot(null);
       setCurrentArchiveSha256(null);
-      setNativePlsPreflight(null);
+      setNativeEstimatorPreflight(null);
       setSnapshot(null);
       setFailure(null);
       clearResults();
@@ -1321,7 +1445,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     || markedGeneralSemProjectMode;
 
   return <section id="nd-model-general-sem-labs-panel" className="nd-cbsem-v4-workspace nd-general-sem-workspace" role="tabpanel" aria-labelledby="nd-model-general-sem-labs-tab">
-    <header className="nd-cbsem-v4-header"><div><h2>General SEM in QuickPLS</h2><p>One QuickPLS canvas · explicit General SEM project authority · PLS-first Experimental Labs</p></div><FlaskConical size={24} aria-hidden="true" /></header>
+    <header className="nd-cbsem-v4-header"><div><h2>General SEM in QuickPLS</h2><p>One QuickPLS canvas · resident RecipeV4 authority · Registry-gated PLS and CB-SEM Experimental Labs</p></div><FlaskConical size={24} aria-hidden="true" /></header>
     <p className="nd-inline-warning" role="note"><AlertTriangle size={16} aria-hidden="true" /><span>{freshGeneralSemDraftMode
       ? "This is a fresh General SEM draft inside QuickPLS. Only this newly created canvas may be adapted; ordinary projects are never converted. Standard Save is blocked until Save and activate creates the marked schema-6 authority."
       : markedGeneralSemProjectMode
@@ -1334,26 +1458,65 @@ export function NativeRecipeV4GeneralSemWorkspace({
         <p className="nd-cbsem-v4-summary"><strong>Project mode</strong><span>{freshGeneralSemDraftMode ? "Fresh General SEM draft" : markedGeneralSemProjectMode ? "General SEM (general_sem_v1)" : "Ordinary QuickPLS project — calculation blocked"}</span></p>
         <p className="nd-cbsem-v4-summary"><strong>Model</strong><span>{model ? `${modelName} (${model.id})` : freshGeneralSemDraftMode ? "Resolve this new canvas model first" : "Create or activate a General SEM project first"}</span></p>
         <p className="nd-cbsem-v4-summary"><strong>Dataset</strong><span>{dataset.name} · {dataset.rowCount ?? dataset.rows.length} cases</span></p>
+        <label htmlFor="nd-general-sem-estimator-recipe">Estimator recipe
+          <select
+            id="nd-general-sem-estimator-recipe"
+            value={selectedEstimatorId}
+            disabled={running || operationBusy || markedGeneralSemProjectMode || !freshGeneralSemDraftMode}
+            onChange={(event) => {
+              if (markedGeneralSemProjectMode) return;
+              const next = event.target.value as GeneralSemEstimatorIdV1;
+              setDraftEstimatorId(next);
+              if (next === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1) {
+                setEngine((current) => ({
+                  ...current,
+                  bootstrapSamples: Math.max(current.bootstrapSamples, 500),
+                  confidenceLevel: 0.95,
+                }));
+              }
+              setReceipt(null); setArchiveSnapshot(null); setNativeEstimatorPreflight(null); setFailure(null); clearResults();
+            }}
+          >
+            <option value={GENERAL_SEM_PLS_ESTIMATOR_ID_V1}>PLS-SEM General v3</option>
+            <option value={GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1}>CB-SEM General v3 (ML)</option>
+          </select>
+        </label>
+        <p className="nd-inline-warning" role="note">For a fresh draft this chooses which immutable resident RecipeV4 will be published. It does not authorize calculation. Only a matching native <strong>Experimental</strong> decision with exact Registry evidence enables the action; Standard status is never reused here.</p>
         <fieldset className="nd-cbsem-v4-scales"><legend>Inference</legend>
-          <label className="nd-checkbox-row" htmlFor="nd-general-sem-bootstrap"><input id="nd-general-sem-bootstrap" type="checkbox" checked={bootstrap} disabled={moderationBootstrapInputDisabled} aria-describedby={interactionPlan ? "nd-general-sem-moderation-inference-note" : undefined} onChange={(event) => {
+          <label className="nd-checkbox-row" htmlFor="nd-general-sem-bootstrap"><input id="nd-general-sem-bootstrap" type="checkbox" checked={bootstrap} disabled={moderationBootstrapInputDisabled} aria-describedby={interactionPlan && selectedEstimatorId === GENERAL_SEM_PLS_ESTIMATOR_ID_V1 ? "nd-general-sem-moderation-inference-note" : undefined} onChange={(event) => {
             if (markedGeneralSemProjectMode) return;
-            setEngine((current) => ({ ...current, inference: event.target.checked ? "percentile_case_bootstrap" : "none" }));
-            setReceipt(null); setArchiveSnapshot(null); setNativePlsPreflight(null); clearResults();
+            setEngine((current) => ({
+              ...current,
+              inference: event.target.checked ? "percentile_case_bootstrap" : "none",
+              bootstrapSamples: selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+                ? Math.max(current.bootstrapSamples, 500)
+                : current.bootstrapSamples,
+              confidenceLevel: selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+                ? 0.95
+                : current.confidenceLevel,
+            }));
+            setReceipt(null); setArchiveSnapshot(null); setNativeEstimatorPreflight(null); setFailure(null); clearResults();
           }} />Full-model percentile case bootstrap</label>
-          {interactionPlan ? <p id="nd-general-sem-moderation-inference-note" className="nd-inline-warning" role="status">
+          {interactionPlan && selectedEstimatorId === GENERAL_SEM_PLS_ESTIMATOR_ID_V1 ? <p id="nd-general-sem-moderation-inference-note" className="nd-inline-warning" role="status">
             {bootstrap
               ? "Full-model case bootstrap reports percentile inference only for each scientific rescaled interaction gamma. Standardized-product coefficients, joint-stage coefficients, fixed -1/0/+1 slopes, and interaction plots remain point estimates; plots do not include confidence bands."
               : "Optional full-model case bootstrap is available for scientific rescaled interaction gamma. Standardized-product coefficients, joint-stage coefficients, fixed -1/0/+1 slopes, and interaction plots remain point-only."}
           </p> : null}
           {bootstrap ? <>
-            <label htmlFor="nd-general-sem-bootstrap-samples">Replicates<input id="nd-general-sem-bootstrap-samples" type="number" min={2} max={10_000} step={100} value={effectiveEngine.bootstrapSamples} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => setEngine((current) => ({ ...current, bootstrapSamples: Number(event.target.value) }))} /></label>
-            <label htmlFor="nd-general-sem-confidence">Confidence level<input id="nd-general-sem-confidence" type="number" min={0.8} max={0.999} step={0.01} value={effectiveEngine.confidenceLevel} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => setEngine((current) => ({ ...current, confidenceLevel: Number(event.target.value) }))} /></label>
+            <label htmlFor="nd-general-sem-bootstrap-samples">Replicates<input id="nd-general-sem-bootstrap-samples" type="number" min={selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1 ? 500 : 2} max={10_000} step={100} value={effectiveEngine.bootstrapSamples} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => setEngine((current) => ({ ...current, bootstrapSamples: Number(event.target.value) }))} /></label>
+            <label htmlFor="nd-general-sem-confidence">Confidence level<input id="nd-general-sem-confidence" type="number" min={0.8} max={0.999} step={0.01} value={effectiveEngine.confidenceLevel} disabled={running || operationBusy || markedGeneralSemProjectMode || selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1} onChange={(event) => setEngine((current) => ({ ...current, confidenceLevel: Number(event.target.value) }))} /></label>
           </> : null}
           <label htmlFor="nd-general-sem-seed">Seed<input id="nd-general-sem-seed" type="number" min={0} step={1} value={effectiveEngine.seed} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => setEngine((current) => ({ ...current, seed: Number(event.target.value) }))} /></label>
           <label htmlFor="nd-general-sem-workers">Workers<input id="nd-general-sem-workers" type="number" min={1} max={64} step={1} value={effectiveEngine.workers} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => setEngine((current) => ({ ...current, workers: Number(event.target.value) }))} /></label>
         </fieldset>
         {markedGeneralSemProjectMode ? <p className="nd-cbsem-v4-summary"><strong>Recipe authority</strong><span>Settings are restored from the resident RecipeV4 and remain immutable for this calculation identity.</span></p> : null}
-        {model && config ? <GeneralSemEstimatorCompatibilityPanel model={model} config={config} onSelectEstimator={() => undefined} selectedEstimatorId="qpls.pls_sem.v3" /> : null}
+        {currentNativeEstimatorPreflight ? <GeneralSemEstimatorCompatibilityPanel
+          decisions={{ pls: currentNativeEstimatorPreflight.pls, cbsem: currentNativeEstimatorPreflight.cbsem }}
+          authority={currentNativeEstimatorPreflight.authority}
+          onSelectEstimator={() => undefined}
+          selectedEstimatorId={selectedEstimatorId}
+          selectionLocked
+        /> : <p className="nd-inline-warning" role="status">Estimator cards appear only after native preflight binds the promoted resident schema-6 SemModelV4 parameter table. Canvas nodes and edges are not reconstructed for CB-SEM compatibility.</p>}
       </section>
 
       <section id="nd-general-sem-preflight" className="nd-cbsem-v4-card" tabIndex={-1} aria-labelledby="nd-general-sem-preflight-heading">
@@ -1361,11 +1524,11 @@ export function NativeRecipeV4GeneralSemWorkspace({
         <ol className="nd-cbsem-v4-preflight-list">
           <li className={localPreflight.ready ? "ready" : "blocked"}><span aria-hidden="true">{localPreflight.ready ? "✓" : "!"}</span><div><strong>General SEM project and model authority</strong><small>{localPreflight.ready ? "Ready for QuickPLS engine verification" : `${localPreflight.issues.length} issue${localPreflight.issues.length === 1 ? "" : "s"}`}</small>{localPreflight.issues.map((item) => <p key={`${item.code}:${item.subject}`}><strong>{item.message}</strong> {item.correctiveAction} <code>{item.code}</code></p>)}</div></li>
           <li className={receipt ? "ready" : "blocked"}><span aria-hidden="true">{receipt ? "✓" : "2"}</span><div><strong>Safe QuickPLS project file</strong><small>{receipt ? `Verified ${receipt.destinationArchivePath}` : "Save the current dataset, canvas model, and analysis settings in one calculation file"}</small>{receipt && !archiveCurrent ? <p>The canvas or settings changed. Keep the saved file unchanged and create a fresh calculation project from the current canvas.</p> : null}</div></li>
-          <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? nativePlsExecution?.kind === "multiple_two_way_moderation_bootstrap" ? "Exact simultaneous two-way moderation gamma-bootstrap cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_point" ? "Exact simultaneous two-way moderation point cell verified" : "Experimental PLS support verified" : "Pending final engine verification"}</small></div></li>
+          <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? nativeCbsemExecution?.kind === "recursive_sem_bootstrap" ? "Exact CB-SEM V3 recursive case-bootstrap Labs cell verified" : nativeCbsemExecution?.kind === "recursive_sem_point" ? "Exact CB-SEM V3 ML point Labs cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_bootstrap" ? "Exact simultaneous two-way moderation gamma-bootstrap cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_point" ? "Exact simultaneous two-way moderation point cell verified" : "Experimental PLS support verified" : "Selected resident estimator remains blocked pending its exact native Labs decision"}</small></div></li>
         </ol>
         <div className="nd-cbsem-v4-actions">
           <button ref={createButtonRef} type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !freshGeneralSemDraftMode || !localPreflight.ready} title={!freshGeneralSemDraftMode ? "Start a new General SEM project to create its marked authority; existing projects cannot enter this path." : !localPreflight.ready ? "Resolve every compatibility issue first." : "Save and activate this new General SEM project as the current QuickPLS canvas authority."} onClick={() => void createCalculationProject()}><Archive size={15} aria-hidden="true" />Save and activate project…</button>
-          <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />{generalSemCalculationActionLabelV1(interactionPlan, bootstrap)}</button>
+          <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : !nativePreflightReady ? "The resident estimator requires an exact Registry-authorized Experimental Labs decision." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />{generalSemCalculationActionLabelV1(interactionPlan, bootstrap, selectedEstimatorId)}</button>
           <button type="button" className="danger" disabled={!activeJobIdRef.current || snapshot?.state === "cancelling" || snapshot?.state === "completed"} onClick={() => void cancel()}><CircleStop size={15} aria-hidden="true" />Cancel</button>
           {markedGeneralSemProjectMode ? <button type="button" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || unpersistedCompletedResult} title={unpersistedCompletedResult ? "Save and strictly reopen the completed result, or dismiss it explicitly, before closing." : undefined} onClick={() => void closeGeneralSemProject()}><FolderOpen size={15} aria-hidden="true" />Close General SEM project</button> : null}
         </div>
@@ -1382,14 +1545,12 @@ export function NativeRecipeV4GeneralSemWorkspace({
       <div className="nd-cbsem-v4-actions">
         <button type="button" className="primary" disabled={operationBusy || appendOutcome?.status === "ok" || !resultAuthorityCurrent || generalSemSessionDirty} onClick={() => void appendResult()}><Archive size={15} aria-hidden="true" />Save result to project</button>
         <button type="button" disabled={operationBusy || !persistedArchiveSha256 || !resultAuthorityCurrent || generalSemSessionDirty} onClick={() => void (resultIntegrityInvalid ? retryPersistedVerification() : reopenResult())}><FolderOpen size={15} aria-hidden="true" />{resultIntegrityInvalid && appendOutcome?.status === "ok" ? "Verify and reanchor saved result" : "Reopen and verify"}</button>
-        <button type="button" disabled={!displayedDocument} onClick={() => void exportDisplayed()}><Download size={15} aria-hidden="true" />Export XLSX</button>
         {unpersistedCompletedResult ? <button type="button" className="danger" disabled={operationBusy} onClick={clearResults}>Dismiss temporary result</button> : null}
       </div>
       {appendOutcome?.status === "ok" ? <p className="nd-cbsem-v4-success" role="status"><CheckCircle2 size={15} aria-hidden="true" />Saved result {appendOutcome.value.canonical_document_id}.</p> : null}
       {reopenedEntry ? <p className="nd-cbsem-v4-success" role="status"><CheckCircle2 size={15} aria-hidden="true" />Reopened and verified result {reopenedEntry.documentId}.</p> : null}
-      {exportFeedback ? <p role="status" aria-live="polite">{exportFeedback}</p> : null}
     </section> : null}
-    {!completed && reopenedEntry ? <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-general-sem-reopened-result-heading"><h3 id="nd-general-sem-reopened-result-heading"><CheckCircle2 size={16} aria-hidden="true" />Verified project result</h3><p>QuickPLS restored the latest matching General SEM result from strict archive readback.</p><div className="nd-cbsem-v4-actions"><button type="button" disabled={!displayedDocument} onClick={() => void exportDisplayed()}><Download size={15} aria-hidden="true" />Export XLSX</button></div><p className="nd-cbsem-v4-success" role="status">Verified result {reopenedEntry.documentId}.</p>{exportFeedback ? <p role="status" aria-live="polite">{exportFeedback}</p> : null}</section> : null}
+    {!completed && reopenedEntry ? <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-general-sem-reopened-result-heading"><h3 id="nd-general-sem-reopened-result-heading"><CheckCircle2 size={16} aria-hidden="true" />Verified project result</h3><p>QuickPLS restored the latest matching General SEM result from strict archive readback.</p><p className="nd-cbsem-v4-success" role="status">Verified result {reopenedEntry.documentId}.</p></section> : null}
 
     {moderationInventory ? <p className="nd-cbsem-v4-success" role="status" aria-live="polite">
       Verified canonical moderation output: {moderationInventory.interactionEffectCount} interaction effect{moderationInventory.interactionEffectCount === 1 ? "" : "s"}, {moderationInventory.conditionalSlopeCount} conditional slope{moderationInventory.conditionalSlopeCount === 1 ? "" : "s"}, and {moderationInventory.interactionPlotCount} interaction plot{moderationInventory.interactionPlotCount === 1 ? "" : "s"} with {moderationInventory.interactionPlotPointCount} persisted point{moderationInventory.interactionPlotPointCount === 1 ? "" : "s"}. {moderationInventory.gammaInferenceCount > 0
@@ -1397,6 +1558,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         : "QuickPLS displays and exports the native canonical point values without adding inference."}
     </p> : null}
     {displayedDocument ? <CanonicalResultDocumentV2View document={displayedDocument} reopened={Boolean(reopenedEntry)} headingRef={resultHeadingRef} compilationReceipt={null} /> : null}
+    {displayedDocument ? <CanonicalResultExportPanelV2 document={displayedDocument} /> : null}
     {archiveSnapshot ? <details className="nd-cbsem-v4-run-details"><summary>Calculation project receipt</summary><dl><div><dt>Project</dt><dd>{archiveSnapshot.project.project_id}</dd></div><div><dt>File SHA-256</dt><dd>{currentArchiveSha256 ?? archiveSnapshot.archiveSha256}</dd></div><div><dt>Model</dt><dd>{receipt?.residentModelId}</dd></div><div><dt>Recipe</dt><dd>{receipt?.residentRecipeId}</dd></div></dl></details> : null}
   </section>;
 }

@@ -1,4 +1,5 @@
 mod capability_registry_command;
+mod general_sem_registry_access_v1;
 #[cfg(test)]
 mod pls_algorithm_current_product_qualification;
 mod pls_model_comparison_jobs;

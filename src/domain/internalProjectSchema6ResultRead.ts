@@ -2,6 +2,7 @@ import {
   canonicalResultDocumentJson,
   validateCanonicalResultDocumentV2,
   type CanonicalResultDocumentV2,
+  type CapabilityCellReferenceV2,
   type CanonicalResultCell,
   type CanonicalResultTable,
 } from "./canonicalResultDocumentV2";
@@ -39,6 +40,8 @@ export interface InternalProjectSchema6ResultReadRequestV1 {
   experimentalLabsEnabled: boolean;
   archivePath: string;
   expectedSourceSha256: string;
+  /** Exact Registry owner for General SEM readback authorization. */
+  capabilityCell?: CapabilityCellReferenceV2;
 }
 
 export interface InternalProjectSchema6CanonicalResultEntryV1 {

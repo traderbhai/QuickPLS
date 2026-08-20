@@ -30,28 +30,33 @@ Phase 5 is complete, or that expanded CB-SEM competitor claims are admissible.
 The v1 bootstrap, multigroup, and invariance payloads are ineligible previews.
 They must never be relabeled, migrated, or cited as v2 evidence.
 
-## Rank 3 General SEM candidate isolation
+## Rank 3 General SEM Labs source path
 
-Two additive schema-6 candidate identities now have a private source-only
-integration path:
+Two additive schema-6 candidate identities now have a bounded product-path
+implementation prepared for Registry-authorized Experimental Labs:
 
 - `qpls3.cbsem.general_sem_ml / cbsem_general_sem_ml_v1`
 - `qpls3.cbsem.bootstrap.recursive_sem / cbsem_exact_recursive_sem_case_bootstrap_v1`
 
-The internal native job recompiles the strict resident `SemModelV4` and
+The native job source recompiles the strict resident `SemModelV4` and
 `AnalysisRecipeV4`, reuses the qualified V2 ML optimizer and the existing
 indexed no-retry bootstrap scheduler, and projects one typed canonical
 parameter/fit/identification/inference authority. The same deterministic table
 projection is used during schema-6 append and fresh reopen, so payload/table,
 plan, model, recipe, dataset, cell, and receipt drift fails closed. Cancellation
-is checked before canonicalization, before job publication, and by the atomic
-rollback-aware append path.
+is checked before canonicalization and job publication. Exact-cell schema-6
+append/readback, the General SEM estimator service and workspace, canonical
+tables, and the shared provenance-bound cross-format exporter are wired in
+source.
 
-This is not a product or release claim. Both cells remain absent from the
-Capability Registry, have no frontend route, have no registered Tauri command,
-and are intentionally unavailable to users until the remaining scientific,
-preflight, UI, qualification, performance, accessibility, export, and packaged
-Windows gates pass. Existing `qpls3.cbsem.ml` and
+This is not a release claim. In this checkpoint both cells remain absent from
+the Capability Registry and the five CB-SEM job commands plus shared export
+handler remain unregistered, so the frontend path intentionally fails closed.
+Activation must add the two exact Labs cells, managed job state, bounded
+handlers, and fresh compact engine identity reports atomically. Independent
+scientific qualification, performance and soak evidence, accessibility/export
+qualification, method audit, and packaged Windows acceptance remain pending;
+no Standard promotion is authorized. Existing `qpls3.cbsem.ml` and
 `qpls3.cbsem.bootstrap` identities and results are unchanged.
 
 ## Fail-closed dependency plan

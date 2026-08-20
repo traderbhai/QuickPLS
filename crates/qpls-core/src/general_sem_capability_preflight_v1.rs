@@ -1,12 +1,16 @@
 use crate::{
-    CompiledCbsemExecutionDispositionV3, CompiledCbsemStructuralFormV3,
-    CompiledPlsInteractionV3Error, CompiledPlsPlanV3, CompiledPlsPlanV3Error,
+    CapabilityRegistryV2, CbsemMlExactCapabilityProfileV2, CompiledCbsemExecutionDispositionV3,
+    CompiledCbsemPlanV3,
+    CompiledCbsemStructuralFormV3, CompiledPlsInteractionV3Error, CompiledPlsPlanV3,
+    CompiledPlsPlanV3Error,
     GeneralSemBootstrapIntervalV1, GeneralSemConfigV1, GeneralSemInferenceTailV1,
     GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicyV4,
     ObservedScaleV4, SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
     SemCapabilityDecisionV1ValidationError, SemCapabilityDiagnosticSeverityV1,
     SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1, SemDataBindingV4, SemDerivedTermV4,
     SemGroupV4, SemModelV4, SemVariableV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
+    validate_cbsem_general_sem_parameter_semantics_v1,
+    validate_cbsem_ml_exact_parameter_table_v4_capability_v2,
 };
 
 pub const GENERAL_SEM_PLS_ESTIMATOR_ID_V1: &str = "qpls.pls_sem.v3";
@@ -173,51 +177,36 @@ pub fn preflight_general_sem_pls_v1(
     )
 }
 
-/// CB-SEM v3 currently compiles a complete parameter table and conservative
-/// identification evidence, but its General SEM runtime adapter is not yet
-/// connected. The decision therefore remains blocked even for recursive plans.
+/// Exact Registry-governed preflight for the bounded General SEM CB-SEM v3
+/// adapter. Predicate compatibility and product authority remain separate:
+/// compatible requests are runnable only when every exact execution cell is
+/// currently exposed by the embedded Registry as Labs-available.
 pub fn preflight_general_sem_cbsem_v1(
     model: &SemModelV4,
     config: &GeneralSemConfigV1,
 ) -> Result<SemCapabilityDecisionV1, SemCapabilityDecisionV1ValidationError> {
-    let cell = cbsem_cell()?;
-    let evidence = vec![
+    let capability_cells = cbsem_candidate_cells(config)?;
+    let mut evidence = vec![
         SemCapabilityEvidenceV1::new(
-            "capability_registry_v2:smartpls.cbsem:qpls3.cbsem.ml:cbsem_ml_v1",
-            "Capability Registry V2 is the exact authority for the bounded CB-SEM ML cell.",
+            "compiler:recipe_v4_to_compiled_cbsem_plan_v3_v1",
+            "The V3 compiler binds the complete SemModelV4 parameter table, recursive topology, identification evidence, data binding, GeneralSemConfig, and proven V2 plan digests.",
         )?,
         SemCapabilityEvidenceV1::new(
-            "compiler:compiled_cbsem_plan_v3",
-            "CB-SEM v3 preserves the complete v2 parameter table and adds SCC and identification evidence without implying execution support.",
+            "adapter:cbsem_general_sem_point_v1",
+            "The bounded point adapter reuses the qualified V2 ML and fit kernel and projects typed parameter, fit, and identification rows under an exact Registry-owned Labs cell.",
         )?,
     ];
+    if matches!(config.inference, GeneralSemInferenceV1::CaseBootstrap { .. }) {
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "adapter:cbsem_recursive_sem_case_bootstrap_v1",
+            "The bounded recursive adapter reuses the indexed no-retry full-ML case-refit scheduler under an exact Registry-owned Labs cell.",
+        )?);
+    }
     let mut diagnostics = Vec::new();
     match compile_cbsem_plan_v3(model, config) {
-        Ok(plan)
-            if plan.identification_evidence().structural_form()
-                == CompiledCbsemStructuralFormV3::Feedback
-                || plan.identification_evidence().execution_disposition()
-                    == CompiledCbsemExecutionDispositionV3::FeedbackExecutionBlocked =>
-        {
-            diagnostics.push(SemCapabilityDiagnosticV1::new(
-                "sem.capability.cbsem.feedback_execution_blocked",
-                SemCapabilityDiagnosticSeverityV1::Error,
-                None,
-                "The reciprocal block is preserved, but the current CB-SEM executor is not qualified to estimate feedback systems.",
-                vec![
-                    "Remove the reciprocal path to create a recursive model, or retain the model until the identified feedback capability is qualified.".into(),
-                ],
-            )?);
+        Ok(plan) => {
+            diagnostics.extend(cbsem_candidate_scope_diagnostics(&plan, model, config)?);
         }
-        Ok(_) => diagnostics.push(SemCapabilityDiagnosticV1::new(
-            "sem.capability.cbsem.general_runtime_not_connected",
-            SemCapabilityDiagnosticSeverityV1::Error,
-            None,
-            "The CB-SEM v3 parameter and identification plan is available, but the General SEM runtime adapter is not connected.",
-            vec![
-                "Use the currently qualified bounded CB-SEM workflow, or keep this request in Labs until the v3 adapter is qualified.".into(),
-            ],
-        )?),
         Err(error) => diagnostics.push(SemCapabilityDiagnosticV1::new(
             "sem.capability.cbsem.compile_blocked",
             SemCapabilityDiagnosticSeverityV1::Error,
@@ -228,15 +217,223 @@ pub fn preflight_general_sem_cbsem_v1(
             ],
         )?),
     }
+    let predicate_compatible = diagnostics
+        .iter()
+        .all(|diagnostic| diagnostic.severity() != SemCapabilityDiagnosticSeverityV1::Error);
+    if predicate_compatible {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.cbsem.parameter_table_predicate_compatible",
+            SemCapabilityDiagnosticSeverityV1::Info,
+            Some(model.id.clone()),
+            "The exact resident parameter-table predicate accepts fixed values, ordinary free rows, compatible equality_label groups, and finite open row bounds.",
+            Vec::new(),
+        )?);
+    }
+    let registry_available = match CapabilityRegistryV2::embedded() {
+        Ok(registry) => {
+            let all_available = capability_cells.iter().all(|requested| {
+                let matches = registry
+                    .option_cells()
+                    .filter(|cell| {
+                        cell.capability_id == requested.capability_id()
+                            && cell.cell_id == requested.cell_id()
+                            && cell.capability_version == requested.capability_version()
+                    })
+                    .collect::<Vec<_>>();
+                matches.as_slice() {
+                    [cell] => cell.labs_available(),
+                    _ => false,
+                }
+            });
+            if all_available {
+                for cell in &capability_cells {
+                    evidence.push(SemCapabilityEvidenceV1::new(
+                        format!(
+                            "capability_registry_v2:{}:{}:{}",
+                            cell.capability_id(),
+                            cell.cell_id(),
+                            cell.capability_version()
+                        ),
+                        "Capability Registry V2 exposes this exact bounded CB-SEM execution cell in Experimental Labs without making a Standard or release-qualified claim.",
+                    )?);
+                }
+            }
+            all_available
+        }
+        Err(error) => {
+            diagnostics.push(SemCapabilityDiagnosticV1::new(
+                "sem.capability.cbsem.registry_invalid",
+                SemCapabilityDiagnosticSeverityV1::Error,
+                None,
+                format!("Capability Registry V2 cannot authorize this CB-SEM request: {error}"),
+                vec!["Restore the embedded Registry to a valid, exact-cell contract before retrying.".into()],
+            )?);
+            false
+        }
+    };
+    if predicate_compatible && registry_available {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.cbsem.experimental_labs",
+            SemCapabilityDiagnosticSeverityV1::Info,
+            None,
+            match config.inference {
+                GeneralSemInferenceV1::None => {
+                    "Bounded General SEM CB-SEM ML point estimation passes the exact Experimental Labs compiler and Registry preflight."
+                }
+                GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                    "Bounded recursive General SEM CB-SEM percentile case-bootstrap inference passes the exact Experimental Labs compiler and Registry preflight."
+                }
+            },
+            Vec::new(),
+        )?);
+        return SemCapabilityDecisionV1::new(
+            SemCapabilityDecisionStatusV1::Experimental,
+            GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
+            capability_cells,
+            diagnostics,
+            evidence,
+            "CB-SEM can compile this exact request in Experimental Labs.",
+            "Execution remains bound to the resident SemModelV4, Recipe V4 config, exact Labs capability cell, and runtime archive authority. No Standard or release-qualified claim is implied.",
+        );
+    }
+    if predicate_compatible
+        && !registry_available
+        && !diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code() == "sem.capability.cbsem.registry_invalid")
+    {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.cbsem.candidate_cell_unavailable",
+            SemCapabilityDiagnosticSeverityV1::Error,
+            None,
+            "The exact General SEM CB-SEM execution cell is not currently Labs-available in Capability Registry V2.",
+            vec![
+                "Retain this request until the exact candidate cell has engine evidence and an atomic Registry entry; do not substitute a neighboring CB-SEM cell.".into(),
+            ],
+        )?);
+    }
     SemCapabilityDecisionV1::new(
         SemCapabilityDecisionStatusV1::Blocked,
         GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
-        vec![cell],
+        capability_cells,
         diagnostics,
         evidence,
         "CB-SEM cannot calculate this exact General SEM request yet.",
-        "Compilation and identification diagnostics remain visible, while execution stays disabled until the exact runtime cell is qualified.",
+        "Native V3 compiler and Registry diagnostics are shown from the authored SemModelV4 authority. Resolve every blocking condition without silently changing the model.",
     )
+}
+
+fn cbsem_candidate_scope_diagnostics(
+    plan: &CompiledCbsemPlanV3,
+    model: &SemModelV4,
+    config: &GeneralSemConfigV1,
+) -> Result<Vec<SemCapabilityDiagnosticV1>, SemCapabilityDecisionV1ValidationError> {
+    let mut diagnostics = Vec::new();
+    if plan.identification_evidence().structural_form() == CompiledCbsemStructuralFormV3::Feedback
+        || plan.identification_evidence().execution_disposition()
+            == CompiledCbsemExecutionDispositionV3::FeedbackExecutionBlocked
+    {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.cbsem.feedback_execution_blocked",
+            SemCapabilityDiagnosticSeverityV1::Error,
+            None,
+            "The reciprocal block is preserved, but the bounded CB-SEM candidate does not estimate feedback systems.",
+            vec![
+                "Remove the reciprocal path to create a recursive model, or retain the model for a future identified nonrecursive capability.".into(),
+            ],
+        )?);
+    }
+    match plan.base_plan().input() {
+        crate::CompiledCbsemInputV2::Raw {
+            missing_data: MissingDataPolicyV4::ListwiseDeletion,
+            weight: None,
+            cluster_variable: None,
+            strata_variable: None,
+            ..
+        } => {}
+        _ => diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.cbsem.raw_listwise_single_sample_required",
+            SemCapabilityDiagnosticSeverityV1::Error,
+            Some(model.id.clone()),
+            "The General SEM CB-SEM v1 candidate requires unweighted raw continuous data with listwise deletion and no cluster or strata binding.",
+            vec![
+                "Select a resident raw dataset and listwise deletion, or use a separately qualified matrix-input, weighted, clustered, or missing-data cell.".into(),
+            ],
+        )?),
+    }
+    for issue in validate_cbsem_ml_exact_parameter_table_v4_capability_v2(
+        plan.base_plan(),
+        CbsemMlExactCapabilityProfileV2::CovarianceStructure,
+    ) {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            format!("sem.capability.cbsem.{}", issue.code),
+            SemCapabilityDiagnosticSeverityV1::Error,
+            Some(issue.subject),
+            issue.message,
+            vec!["Keep the authored semantics intact and select an exact capability that executes them, or revise the parameter table explicitly.".into()],
+        )?);
+    }
+    for issue in validate_cbsem_general_sem_parameter_semantics_v1(plan) {
+        let correction = match issue.code.as_str() {
+            "explicit_equality_constraint_object_unsupported" => {
+                "Move this equality restriction to matching equality_label values on compatible free rows."
+            }
+            "explicit_bound_constraint_object_unsupported" => {
+                "Move this restriction to finite lower/upper values on the free parameter row."
+            }
+            _ => "Revise the reported parameter-table semantics without silently deleting the authored restriction.",
+        };
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            format!("sem.capability.cbsem.{}", issue.code),
+            SemCapabilityDiagnosticSeverityV1::Error,
+            Some(issue.subject),
+            issue.message,
+            vec![correction.into()],
+        )?);
+    }
+    if !config.requested_effect_estimands.is_empty()
+        || !config.conditional_effect_probes.is_empty()
+    {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.cbsem.derived_effect_inference_unsupported",
+            SemCapabilityDiagnosticSeverityV1::Error,
+            None,
+            "Derived indirect/total effects and conditional probes are not executed by the point or recursive-bootstrap v1 candidate cells.",
+            vec!["Clear derived-effect requests for this cell; the authored structural regressions remain unchanged.".into()],
+        )?);
+    }
+    if plan.base_plan().regressions().is_empty() {
+        diagnostics.push(SemCapabilityDiagnosticV1::new(
+            "sem.capability.cbsem.recursive_sem_requires_regression",
+            SemCapabilityDiagnosticSeverityV1::Error,
+            None,
+            "The General SEM CB-SEM V3 point and bootstrap cells require at least one structural regression; CFA retains its existing qualified identities.",
+            vec!["Use the existing exact CFA cell, or add the scientifically intended recursive structural relation.".into()],
+        )?);
+    }
+    if let GeneralSemInferenceV1::CaseBootstrap {
+        resamples,
+        confidence_level,
+        interval,
+        tail,
+        ..
+    } = config.inference
+    {
+        if !(500..=10_000).contains(&resamples)
+            || confidence_level.to_bits() != 0.95_f64.to_bits()
+            || interval != GeneralSemBootstrapIntervalV1::Percentile
+            || tail != GeneralSemInferenceTailV1::TwoSided
+        {
+            diagnostics.push(SemCapabilityDiagnosticV1::new(
+                "sem.capability.cbsem.recursive_bootstrap_contract_unsupported",
+                SemCapabilityDiagnosticSeverityV1::Error,
+                None,
+                "Recursive-SEM bootstrap requires 500-10,000 refits, fixed 95% confidence, two-sided inference, and percentile Type-7 intervals.",
+                vec!["Choose the exact bounded bootstrap settings or set inference to none.".into()],
+            )?);
+        }
+    }
+    Ok(diagnostics)
 }
 
 fn execution_scope_diagnostics(
@@ -556,8 +753,24 @@ fn pls_cells(
     Ok(cells)
 }
 
-fn cbsem_cell() -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
-    SemCapabilityCellIdV1::new(2, "smartpls.cbsem", "qpls3.cbsem.ml", "cbsem_ml_v1")
+fn cbsem_candidate_cells(
+    config: &GeneralSemConfigV1,
+) -> Result<Vec<SemCapabilityCellIdV1>, SemCapabilityDecisionV1ValidationError> {
+    let mut cells = vec![SemCapabilityCellIdV1::new(
+        2,
+        "smartpls.cbsem",
+        "qpls3.cbsem.general_sem_ml",
+        "cbsem_general_sem_ml_v1",
+    )?];
+    if matches!(config.inference, GeneralSemInferenceV1::CaseBootstrap { .. }) {
+        cells.push(SemCapabilityCellIdV1::new(
+            2,
+            "smartpls.cbsem_bootstrapping",
+            "qpls3.cbsem.bootstrap.recursive_sem",
+            "cbsem_exact_recursive_sem_case_bootstrap_v1",
+        )?);
+    }
+    Ok(cells)
 }
 
 #[cfg(test)]

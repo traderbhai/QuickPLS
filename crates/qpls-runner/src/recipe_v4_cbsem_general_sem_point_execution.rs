@@ -109,9 +109,9 @@ pub(crate) enum RecipeV4CbsemGeneralSemPointExecutionErrorV1 {
     },
 }
 
-/// Internal source-only adapter. It is intentionally not re-exported from the
-/// runner crate and therefore cannot be reached by Registry/native dispatch.
-/// The existing qualified V2 runner remains the only numerical execution path.
+/// Bounded adapter reached only through the Registry-authorized archive job
+/// boundary. It cannot select or promote a cell; the existing qualified V2
+/// runner remains the sole numerical execution path.
 pub(crate) fn run_compiled_cbsem_general_sem_point_v1(
     dataset: &Dataset,
     recipe: &AnalysisRecipeV4,
@@ -257,7 +257,7 @@ fn ensure_point_v3_authority(
             .is_empty()
     {
         return Err(RecipeV4CbsemGeneralSemPointExecutionErrorV1::Authority(
-            "point adapter requires recursive provisional V3 evidence with no explicit constraints"
+            "point adapter requires recursive provisional V3 evidence with no explicit SemConstraintV4 objects; fixed/free rows, equality_label groups, and finite row bounds remain executable"
                 .into(),
         ));
     }
@@ -469,6 +469,13 @@ fn canonical_parameter_rows_v1(
                 equality_label,
                 ..
             } => {
+                let effective_lower = if authority.role()
+                    == qpls_core::CompiledCbsemParameterRoleV2::Variance
+                {
+                    Some(lower.unwrap_or(0.0).max(0.0))
+                } else {
+                    *lower
+                };
                 let (Some(standard_error), Some(z_value), Some(p_value)) = (
                     point.standard_error,
                     point.z_statistic,
@@ -492,11 +499,11 @@ fn canonical_parameter_rows_v1(
                         .is_some_and(|label| label.trim().is_empty())
                     || lower.is_some_and(|value| !value.is_finite())
                     || upper.is_some_and(|value| !value.is_finite())
-                    || lower
+                    || effective_lower
                         .zip(*upper)
-                        .is_some_and(|(lower, upper)| lower > upper)
-                    || lower.is_some_and(|lower| point.estimate < lower)
-                    || upper.is_some_and(|upper| point.estimate > upper)
+                        .is_some_and(|(lower, upper)| lower >= upper)
+                    || effective_lower.is_some_and(|lower| point.estimate <= lower)
+                    || upper.is_some_and(|upper| point.estimate >= upper)
                 {
                     return Err(RecipeV4CbsemGeneralSemPointExecutionErrorV1::Authority(
                         format!("free parameter {} has invalid uncertainty", authority.id()),
