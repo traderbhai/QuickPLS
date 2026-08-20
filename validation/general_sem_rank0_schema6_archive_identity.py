@@ -64,7 +64,7 @@ def inspect_archive(path: Path) -> dict[str, Any]:
         raise ArchiveIdentityError("project.json is not strict schema version 6")
     if document.get("sem_generation") != "general_sem_v1":
         raise ArchiveIdentityError("project.json is not general_sem_v1")
-    attachments = document.get("canonical_result_documents")
+    attachments = document.get("canonical_result_documents", [])
     if not isinstance(attachments, list):
         raise ArchiveIdentityError("schema-6 canonical_result_documents is not an array")
     return {
