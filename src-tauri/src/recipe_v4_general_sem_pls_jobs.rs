@@ -1,7 +1,14 @@
-//! Archive-bound job lifecycle for the General SEM PLS mediation and moderation Labs slices.
+//! Archive-bound job lifecycle for bounded General SEM PLS mediation and moderation cells.
 
 use crate::{
     DesktopJobs, InternalRecipeV4ExecutionFailureV1,
+    general_sem_registry_access_v1::{
+        GENERAL_SEM_INTERNAL_LABS_SURFACE as INTERNAL_LABS_SURFACE,
+        GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1,
+        GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+        GENERAL_SEM_STANDARD_SURFACE as STANDARD_SURFACE, GeneralSemRegistryAccessErrorV1,
+        authorize_general_sem_registry_access_v1, general_sem_recipe_execution_surface_v1,
+    },
     recipe_v4_general_sem_canonical_result::{
         build_recipe_v4_general_sem_pls_canonical_result_v1,
         general_sem_multiple_mediation_bootstrap_capability_cell_v1,
@@ -19,6 +26,8 @@ use qpls_core::{
     pls_general_recursive_effects_capability_cell_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1,
     preflight_general_sem_pls_v1, sha256_serialized,
+    pls_general_higher_order_bootstrap_capability_cell_v1,
+    pls_general_higher_order_point_capability_cell_v1,
 };
 use qpls_data::{ColumnType, DataKind, Dataset, ScaleType};
 use qpls_project::{
@@ -44,7 +53,6 @@ use std::{
 use tauri::State;
 use uuid::Uuid;
 
-const INTERNAL_LABS_SURFACE: &str = "internal_labs";
 const GENERAL_SEM_JOB_SCHEMA_VERSION: u32 = 1;
 const MAXIMUM_RETAINED_GENERAL_SEM_JOBS: usize = 255;
 
@@ -202,6 +210,8 @@ enum GeneralSemPlsWorkerCheckpointV1 {
     DuringModerationBootstrapLate,
     DuringModeratedMediationBootstrapMid,
     DuringModeratedMediationBootstrapLate,
+    DuringHocBootstrapMid,
+    DuringHocBootstrapLate,
     AfterExecutionBeforeCanonicalization,
     AfterCanonicalizationBeforePublication,
 }
@@ -252,15 +262,41 @@ fn validate_access(
 ) -> Result<(), InternalLabsGeneralSemPlsFailureV1> {
     // This must remain the first decision. Denied callers cannot inspect or
     // hash any filesystem path.
-    if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
-        return Err(failure(
+    authorize_general_sem_registry_access_v1(
+        &request.surface,
+        request.experimental_labs_enabled,
+        &request.capability_cell,
+    )
+    .map_err(|error| match error {
+        GeneralSemRegistryAccessErrorV1::RegistryInvalid(detail) => failure(
+            InternalLabsGeneralSemPlsFailureStageV1::Access,
+            "capabilityCell",
+            "general_sem_pls.capability_registry_invalid",
+            format!("Capability Registry V2 is invalid: {detail}"),
+            "Keep the archive unchanged and repair the embedded registry before execution.",
+        ),
+        GeneralSemRegistryAccessErrorV1::CapabilityUnavailable => failure(
+            InternalLabsGeneralSemPlsFailureStageV1::Access,
+            "capabilityCell",
+            "general_sem_pls.capability_unavailable",
+            "The exact requested General SEM option cell is not uniquely executable in Standard or Labs.",
+            "Use an exact available Capability Registry V2 cell and rerun estimator preflight.",
+        ),
+        GeneralSemRegistryAccessErrorV1::StandardSurfaceRequired => failure(
+            InternalLabsGeneralSemPlsFailureStageV1::Access,
+            "surface",
+            "general_sem_pls.standard_surface_required",
+            "The exact requested General SEM option cell is qualified for the Standard surface.",
+            "Refresh capability preflight and run the cell through the Standard surface.",
+        ),
+        GeneralSemRegistryAccessErrorV1::InternalLabsRequired => failure(
             InternalLabsGeneralSemPlsFailureStageV1::Access,
             "experimentalLabsEnabled",
             "general_sem_pls.internal_labs_required",
-            "General SEM PLS execution is available only through Experimental Labs.",
-            "Enable Experimental Labs and use the General SEM workspace.",
-        ));
-    }
+            "The exact requested General SEM option cell is available only through Experimental Labs.",
+            "Enable Experimental Labs and rerun exact capability preflight, or choose a Standard-qualified cell.",
+        ),
+    })?;
     let archive_path = Path::new(&request.archive_path);
     if request.archive_path.trim().is_empty()
         || request.archive_path != request.archive_path.trim()
@@ -629,6 +665,42 @@ fn validate_exact_capability_and_data(
             "Create a bound General SEM RecipeV4 before execution.",
         )
     })?;
+    let expected_recipe_surface = general_sem_recipe_execution_surface_v1(&request.surface)
+        .ok_or_else(|| {
+            failure(
+                InternalLabsGeneralSemPlsFailureStageV1::Access,
+                "surface",
+                "general_sem_pls.execution_surface_invalid",
+                "The requested General SEM execution surface has no frozen RecipeV4 identity.",
+                "Refresh exact capability access before starting a calculation.",
+            )
+        })?;
+    if resolved
+        .recipe
+        .metadata
+        .get("execution_surface")
+        .map(String::as_str)
+        != Some(expected_recipe_surface)
+        || resolved
+            .recipe
+            .metadata
+            .get("general_sem_generation")
+            .map(String::as_str)
+            != Some("general_sem_v1")
+    {
+        return Err(failure(
+            InternalLabsGeneralSemPlsFailureStageV1::ArchiveAuthority,
+            "recipeId",
+            "general_sem_pls.recipe_execution_surface_mismatch",
+            "The resident RecipeV4 surface identity differs from the exact Registry-authorized execution request.",
+            "Keep the archive unchanged. Historical Labs recipes remain readable, while new execution requires an exactly bound recipe surface.",
+        ));
+    }
+    let has_higher_order = resolved
+        .model
+        .derived_terms
+        .iter()
+        .any(|term| matches!(term, qpls_core::SemDerivedTermV4::HigherOrder { .. }));
     let decision = preflight_general_sem_pls_v1(&resolved.model, config).map_err(|error| {
         failure(
             InternalLabsGeneralSemPlsFailureStageV1::Capability,
@@ -678,7 +750,14 @@ fn validate_exact_capability_and_data(
         .plan()
         .two_way_moderated_mediation_target()
         .is_some();
-    let expected_cell = if has_moderated_mediation {
+    let expected_cell = if has_higher_order {
+        match config.inference {
+            GeneralSemInferenceV1::None => pls_general_higher_order_point_capability_cell_v1(),
+            GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                pls_general_higher_order_bootstrap_capability_cell_v1()
+            }
+        }
+    } else if has_moderated_mediation {
         moderated_mediation_cell.clone()
     } else if has_interactions {
         match config.inference {
@@ -698,7 +777,9 @@ fn validate_exact_capability_and_data(
         }
     };
     let compiled_primary_cell = artifact.capability_cell();
-    let compiled_cell_matches = if has_interactions {
+    let compiled_cell_matches = if has_higher_order {
+        compiled_primary_cell == &pls_general_higher_order_point_capability_cell_v1()
+    } else if has_interactions {
         compiled_primary_cell == &general_sem_multiple_moderation_point_capability_cell_v1()
     } else {
         compiled_primary_cell == &pls_general_recursive_effects_capability_cell_v1()
@@ -718,7 +799,7 @@ fn validate_exact_capability_and_data(
             "capabilityCell",
             "general_sem_pls.capability_cell_mismatch",
             "The selected option cell differs from the resident compiled model and inference request.",
-            "Use the exact General SEM mediation point/bootstrap cell or simultaneous two-way moderation point/supplemental-bootstrap Labs cell selected by preflight.",
+            "Use the exact General SEM mediation point/bootstrap cell or simultaneous two-way moderation point/supplemental-bootstrap cell selected by preflight.",
         ));
     }
     if has_moderated_mediation
@@ -759,10 +840,9 @@ fn validate_exact_capability_and_data(
             "Repair Capability Registry V2 before running this recipe.",
         ));
     }
-
     let found = artifact.plan().topology().specific_directed_paths().len();
     match config.inference {
-        GeneralSemInferenceV1::None if !has_interactions && found == 0 => {
+        GeneralSemInferenceV1::None if !has_higher_order && !has_interactions && found == 0 => {
             return Err(failure(
                 InternalLabsGeneralSemPlsFailureStageV1::Capability,
                 "modelId",
@@ -771,12 +851,14 @@ fn validate_exact_capability_and_data(
                 "Author a supported mediator path, or use the existing ordinary PLS workflow for a direct-only recursive model.",
             ));
         }
-        GeneralSemInferenceV1::CaseBootstrap { .. } if !has_interactions && found < 2 => {
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+            if !has_higher_order && !has_interactions && found < 2 =>
+        {
             return Err(failure(
                 InternalLabsGeneralSemPlsFailureStageV1::Capability,
                 "modelId",
                 "general_sem_pls.multiple_mediation_required",
-                "This Labs cell requires at least two distinct compiled indirect paths.",
+                "This exact mediation cell requires at least two distinct compiled indirect paths.",
                 "Author parallel, serial, or mixed multiple mediation with at least two indirect paths.",
             ));
         }
@@ -809,7 +891,7 @@ fn validate_dataset_predicate(
         || dataset.schema.kind != DataKind::Raw
     {
         return Err(data_predicate_failure(
-            "The exact Labs cell requires raw unweighted single-level data with listwise deletion.",
+            "The exact General SEM cell requires raw unweighted single-level data with listwise deletion.",
         ));
     }
     for variable in &model.variables {
@@ -826,7 +908,7 @@ fn validate_dataset_predicate(
                 SemVariableV4::Composite { .. } | SemVariableV4::Derived { .. }
             ) {
                 return Err(data_predicate_failure(
-                    "The exact Labs cell accepts observed indicators, composite constructs, and compiler-bound derived interaction outputs only.",
+                    "The exact General SEM cell accepts observed indicators, composite constructs, and compiler-bound derived interaction outputs only.",
                 ));
             }
             continue;
@@ -848,7 +930,7 @@ fn validate_dataset_predicate(
             || metadata.scale_type != ScaleType::Continuous
         {
             return Err(data_predicate_failure(format!(
-                "Observed source column {source_column} must be continuous numeric data for this exact Labs cell. Missing rows are handled by the declared listwise-deletion policy."
+                "Observed source column {source_column} must be continuous numeric data for this exact General SEM cell. Missing rows are handled by the declared listwise-deletion policy."
             )));
         }
     }
@@ -1069,6 +1151,24 @@ fn run_worker_with_checkpoint_hook(
                     notify_worker_checkpoint(
                         &checkpoint_hook,
                         GeneralSemPlsWorkerCheckpointV1::DuringModeratedMediationBootstrapLate,
+                    );
+                }
+                if progress.phase == "general_sem_hoc_bootstrap"
+                    && progress.total_units > 1
+                    && progress.completed_units == progress.total_units / 2
+                {
+                    notify_worker_checkpoint(
+                        &checkpoint_hook,
+                        GeneralSemPlsWorkerCheckpointV1::DuringHocBootstrapMid,
+                    );
+                }
+                if progress.phase == "general_sem_hoc_bootstrap"
+                    && progress.total_units > 1
+                    && progress.completed_units == progress.total_units - 1
+                {
+                    notify_worker_checkpoint(
+                        &checkpoint_hook,
+                        GeneralSemPlsWorkerCheckpointV1::DuringHocBootstrapLate,
                     );
                 }
                 if progress.phase == "general_sem_moderation_bootstrap"
@@ -1458,6 +1558,8 @@ mod tests {
     use qpls_core::{
         AnalysisRecipeModelBindingV4, GeneralSemBootstrapIntervalV1, GeneralSemConfigV1,
         GeneralSemEffectEstimandV1, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
+        CompositeWeightingV4,
+        HigherOrderConstructionApproachV4, HigherOrderMeasurementTypeV4,
         InteractionHierarchyPolicyV2, InteractionMethodV4, PlsBootstrapTestTail, SemDerivedTermV4,
         SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
         StructuralRelationRoleV4,
@@ -1474,10 +1576,36 @@ mod tests {
     }
 
     fn published_fixture_from(
-        fixture: GeneralSemNativeFixtureV1,
+        mut fixture: GeneralSemNativeFixtureV1,
         file_name: &str,
         capability_cell: CapabilityCellReferenceV2,
     ) -> PublishedFixtureV1 {
+        let registry = CapabilityRegistryV2::embedded().unwrap();
+        let cell = registry
+            .option_cells()
+            .find(|cell| {
+                cell.capability_id == capability_cell.capability_id
+                    && cell.cell_id == capability_cell.cell_id
+                    && cell.capability_version == capability_cell.capability_version
+            })
+            .unwrap();
+        let (surface, experimental_labs_enabled, recipe_surface) = if cell.standard_available() {
+            (
+                STANDARD_SURFACE,
+                false,
+                GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+            )
+        } else {
+            (
+                INTERNAL_LABS_SURFACE,
+                true,
+                GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1,
+            )
+        };
+        fixture
+            .recipe
+            .metadata
+            .insert("execution_surface".into(), recipe_surface.into());
         let directory = tempfile::tempdir().unwrap();
         let destination = directory.path().join(file_name);
         let receipt = create_populated_general_sem_project_archive_v6(
@@ -1493,8 +1621,8 @@ mod tests {
         PublishedFixtureV1 {
             _directory: directory,
             request: InternalLabsGeneralSemPlsJobRequestV1 {
-                surface: INTERNAL_LABS_SURFACE.into(),
-                experimental_labs_enabled: true,
+                surface: surface.into(),
+                experimental_labs_enabled,
                 archive_path: receipt.destination_archive_path,
                 expected_archive_sha256: receipt.destination_archive_sha256,
                 project_id: receipt.project_id.to_string(),
@@ -1594,6 +1722,155 @@ mod tests {
             },
             ..GeneralSemConfigV1::default()
         });
+        fixture.recipe.ensure_valid().unwrap();
+        fixture
+    }
+
+    fn disjoint_hoc_fixture(
+        measurement_type: HigherOrderMeasurementTypeV4,
+        bootstrap: bool,
+    ) -> GeneralSemNativeFixtureV1 {
+        let mut fixture = general_sem_native_fixture_v1();
+        let components = ["construct:m1", "construct:m2"];
+        let mode_b = matches!(
+            measurement_type,
+            HigherOrderMeasurementTypeV4::FormativeReflective
+                | HigherOrderMeasurementTypeV4::FormativeFormative
+        );
+        let mut removed_parameter_ids = std::collections::BTreeSet::new();
+        fixture.model.relations.retain(|relation| match relation {
+            SemRelationV4::Structural {
+                source,
+                target,
+                parameter,
+                ..
+            } if components.contains(&source.as_str()) || components.contains(&target.as_str()) => {
+                removed_parameter_ids.insert(parameter.clone());
+                false
+            }
+            _ => true,
+        });
+        fixture
+            .model
+            .parameters
+            .retain(|parameter| !removed_parameter_ids.contains(parameter.id()));
+        if mode_b {
+            for variable in &mut fixture.model.variables {
+                if let SemVariableV4::Composite { id, weighting, .. } = variable
+                    && components.contains(&id.as_str())
+                {
+                    *weighting = CompositeWeightingV4::ModeB;
+                }
+            }
+            for relation in &mut fixture.model.relations {
+                if let SemRelationV4::MeasurementEffect {
+                    id,
+                    construct,
+                    indicator,
+                    parameter,
+                } = relation.clone()
+                    && components.contains(&construct.as_str())
+                {
+                    *relation = SemRelationV4::MeasurementCausal {
+                        id,
+                        indicator,
+                        composite: construct,
+                        parameter,
+                    };
+                }
+            }
+            for parameter in &mut fixture.model.parameters {
+                if let SemParameterV4::Free { target, .. } = parameter
+                    && let SemParameterTargetV4::Loading {
+                        construct,
+                        indicator,
+                    } = target.clone()
+                    && components.contains(&construct.as_str())
+                {
+                    *target = SemParameterTargetV4::Weight {
+                        indicator,
+                        composite: construct,
+                    };
+                }
+            }
+        }
+
+        let output = "derived:hoc".to_string();
+        fixture.model.variables.push(SemVariableV4::Derived {
+            id: output.clone(),
+            label: "Higher order".into(),
+        });
+        for (id, parameter, source, target) in [
+            (
+                "relation:x_hoc",
+                "parameter:x_hoc",
+                "construct:x",
+                output.as_str(),
+            ),
+            (
+                "relation:hoc_y",
+                "parameter:hoc_y",
+                output.as_str(),
+                "construct:y",
+            ),
+        ] {
+            fixture.model.relations.push(SemRelationV4::Structural {
+                id: id.into(),
+                source: source.into(),
+                target: target.into(),
+                parameter: parameter.into(),
+                role: StructuralRelationRoleV4::Structural,
+                intercept_parameter: None,
+            });
+            fixture.model.parameters.push(SemParameterV4::Free {
+                id: parameter.into(),
+                label: format!("{source} -> {target}"),
+                target: SemParameterTargetV4::Regression {
+                    source: source.into(),
+                    target: target.into(),
+                },
+                start: None,
+                lower: None,
+                upper: None,
+                equality_label: None,
+                group_overrides: Vec::new(),
+            });
+        }
+        fixture
+            .model
+            .derived_terms
+            .push(SemDerivedTermV4::HigherOrder {
+                id: "term:hoc".into(),
+                output,
+                components: components.into_iter().map(str::to_string).collect(),
+                approach: HigherOrderConstructionApproachV4::DisjointTwoStage,
+                measurement_type,
+            });
+        fixture.model.ensure_valid().unwrap();
+        fixture.recipe.model_binding = AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+            model_id: fixture.model.id.clone(),
+            scientific_sha256: fixture.model.scientific_sha256().unwrap(),
+        };
+        if bootstrap {
+            fixture.recipe.settings.bootstrap_samples = 20;
+            fixture.recipe.settings.seed = 7_301;
+            fixture.recipe.settings.confidence_level = 0.95;
+            fixture.recipe.settings.bootstrap_test_tail = PlsBootstrapTestTail::TwoSided;
+            fixture.recipe.settings.studentized_inner_samples = 0;
+            fixture.recipe.settings.workers = 1;
+            fixture.recipe.general_sem_config = Some(GeneralSemConfigV1 {
+                inference: GeneralSemInferenceV1::CaseBootstrap {
+                    resamples: 20,
+                    seed: 7_301,
+                    confidence_level: 0.95,
+                    interval: GeneralSemBootstrapIntervalV1::Percentile,
+                    tail: GeneralSemInferenceTailV1::TwoSided,
+                },
+                ..GeneralSemConfigV1::default()
+            });
+        } else {
+            fixture.recipe.general_sem_config = Some(GeneralSemConfigV1::default());
+        }
         fixture.recipe.ensure_valid().unwrap();
         fixture
     }
@@ -1843,9 +2120,18 @@ mod tests {
             state.0.clone(),
             admission(job_id),
         );
+        let snapshot = state
+            .0
+            .lock()
+            .unwrap()
+            .get(&job_id)
+            .unwrap()
+            .snapshot
+            .clone();
         assert_eq!(
-            state.0.lock().unwrap().get(&job_id).unwrap().snapshot.state,
-            InternalLabsGeneralSemPlsJobStateV1::Completed
+            snapshot.state,
+            InternalLabsGeneralSemPlsJobStateV1::Completed,
+            "General SEM job failed: {snapshot:?}"
         );
         take_completed_result(job_id, &state).unwrap()
     }
@@ -1918,6 +2204,59 @@ mod tests {
             InternalLabsGeneralSemPlsJobStateV1::Completed
         );
         take_completed_result(job_id, &state).unwrap()
+    }
+
+    fn completed_disjoint_hoc_job(
+        measurement_type: HigherOrderMeasurementTypeV4,
+        bootstrap: bool,
+        job_id: Uuid,
+    ) -> (
+        PublishedFixtureV1,
+        InternalLabsGeneralSemPlsCompletedResultV1,
+    ) {
+        let published = published_fixture_from(
+            disjoint_hoc_fixture(measurement_type, bootstrap),
+            if bootstrap {
+                "general-sem-disjoint-hoc-bootstrap.qpls"
+            } else {
+                "general-sem-disjoint-hoc-point.qpls"
+            },
+            if bootstrap {
+                pls_general_higher_order_bootstrap_capability_cell_v1()
+            } else {
+                pls_general_higher_order_point_capability_cell_v1()
+            },
+        );
+        let resolved = resolve_archive_authority(&published.request).unwrap();
+        let cancellation = Arc::new(AtomicBool::new(false));
+        let state = job_state(
+            job_id,
+            cancellation.clone(),
+            resolved.archive_identity.clone(),
+        );
+        run_worker(
+            job_id,
+            published.request.clone(),
+            resolved,
+            cancellation,
+            state.0.clone(),
+            admission(job_id),
+        );
+        let snapshot = state
+            .0
+            .lock()
+            .unwrap()
+            .get(&job_id)
+            .unwrap()
+            .snapshot
+            .clone();
+        assert_eq!(
+            snapshot.state,
+            InternalLabsGeneralSemPlsJobStateV1::Completed,
+            "HOC job failed: {snapshot:?}"
+        );
+        let completed = take_completed_result(job_id, &state).unwrap();
+        (published, completed)
     }
 
     fn assert_moderation_result_surface_identity(document: &qpls_core::CanonicalResultDocumentV2) {
@@ -2385,6 +2724,24 @@ mod tests {
     }
 
     #[test]
+    fn standard_recipe_cannot_be_relabelled_for_labs_execution() {
+        let published = published_fixture();
+        let mut relabelled = published.request.clone();
+        relabelled.surface = INTERNAL_LABS_SURFACE.into();
+        relabelled.experimental_labs_enabled = true;
+
+        let failure = match resolve_archive_authority(&relabelled) {
+            Err(failure) => failure,
+            Ok(_) => panic!("a Standard cell was accepted on the Labs execution surface"),
+        };
+        assert_eq!(
+            failure.stage,
+            InternalLabsGeneralSemPlsFailureStageV1::Access
+        );
+        assert_eq!(failure.code, "general_sem_pls.standard_surface_required");
+    }
+
+    #[test]
     fn point_job_accepts_one_indirect_path_while_the_bootstrap_cell_stays_narrow() {
         let published = published_fixture();
         let mut resolved = resolve_archive_authority(&published.request).unwrap();
@@ -2614,6 +2971,193 @@ mod tests {
     }
 
     #[test]
+    fn disjoint_hoc_native_point_jobs_publish_all_four_exact_hcm_contracts() {
+        for (index, measurement_type) in [
+            HigherOrderMeasurementTypeV4::ReflectiveReflective,
+            HigherOrderMeasurementTypeV4::ReflectiveFormative,
+            HigherOrderMeasurementTypeV4::FormativeReflective,
+            HigherOrderMeasurementTypeV4::FormativeFormative,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let (_, completed) = completed_disjoint_hoc_job(
+                measurement_type.clone(),
+                false,
+                Uuid::from_u128(0x73a0 + index as u128),
+            );
+            let document = &completed.canonical_document;
+            let results = document.general_sem_results.as_ref().unwrap();
+            assert_eq!(results.higher_order_stages.len(), 2);
+            assert!(results.higher_order_inference_receipt.is_none());
+            let final_stage = results
+                .higher_order_stages
+                .iter()
+                .find(|stage| {
+                    stage.kind == qpls_core::CanonicalHocStageKindV1::HigherOrderEstimation
+                })
+                .unwrap();
+            assert_eq!(
+                final_stage.measurement_type.as_ref(),
+                Some(&measurement_type)
+            );
+            assert_eq!(
+                final_stage.approach.as_ref(),
+                Some(&HigherOrderConstructionApproachV4::DisjointTwoStage)
+            );
+            let expected_component_kind = match measurement_type {
+                HigherOrderMeasurementTypeV4::ReflectiveReflective
+                | HigherOrderMeasurementTypeV4::FormativeReflective => {
+                    qpls_core::CanonicalHocRelationKindV1::ComponentLoading
+                }
+                HigherOrderMeasurementTypeV4::ReflectiveFormative
+                | HigherOrderMeasurementTypeV4::FormativeFormative => {
+                    qpls_core::CanonicalHocRelationKindV1::ComponentWeight
+                }
+            };
+            assert_eq!(
+                final_stage
+                    .relation_estimates
+                    .iter()
+                    .filter(|relation| relation.kind == Some(expected_component_kind))
+                    .count(),
+                2
+            );
+            assert!(document.tables.iter().any(|table| {
+                table.id == "general_sem_higher_order_stages" && table.rows.len() == 2
+            }));
+            assert!(document.tables.iter().any(|table| {
+                table.id == "general_sem_higher_order_targets"
+                    && table.rows.len() == final_stage.relation_estimates.len()
+            }));
+            assert!(
+                document
+                    .tables
+                    .iter()
+                    .all(|table| table.id != "general_sem_higher_order_bootstrap_receipt")
+            );
+        }
+    }
+
+    #[test]
+    fn disjoint_hoc_bootstrap_appends_reopens_and_rejects_table_or_receipt_tampering() {
+        let (published, completed) = completed_disjoint_hoc_job(
+            HigherOrderMeasurementTypeV4::ReflectiveReflective,
+            true,
+            Uuid::from_u128(0x73b0),
+        );
+        let archive_path = PathBuf::from(&published.request.archive_path);
+        let before_bytes = fs::read(&archive_path).unwrap();
+        let results = completed
+            .canonical_document
+            .general_sem_results
+            .as_ref()
+            .unwrap();
+        let receipt = results.higher_order_inference_receipt.as_ref().unwrap();
+        assert_eq!(receipt.target_ids.len(), 4);
+        assert_eq!(
+            results
+                .higher_order_stages
+                .iter()
+                .flat_map(|stage| stage.relation_estimates.iter())
+                .filter(|relation| relation.value.standard_error.is_some())
+                .count(),
+            receipt.target_ids.len()
+        );
+        let archive_document = serde_json::from_value::<qpls_project::CanonicalResultDocumentV2>(
+            serde_json::to_value(&completed.canonical_document).unwrap(),
+        )
+        .unwrap();
+
+        let mut table_tamper = serde_json::to_value(&archive_document).unwrap();
+        let target_table = table_tamper["tables"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|table| table["id"] == "general_sem_higher_order_targets")
+            .unwrap();
+        let estimate = target_table["rows"][0]["cells"][5]["value"]
+            .as_f64()
+            .unwrap();
+        target_table["rows"][0]["cells"][5]["value"] = serde_json::json!(estimate + 0.1);
+        let table_tamper = serde_json::from_value(table_tamper).unwrap();
+        assert!(matches!(
+            append_internal_project_schema6_canonical_result_v2(
+                ProjectSchema6ResultAppendRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1(),),
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                    recipe: None,
+                    canonical_document: table_tamper,
+                }
+            ),
+            ProjectSchema6ResultAppendOutcomeV1::Blocked { .. }
+        ));
+        assert_eq!(fs::read(&archive_path).unwrap(), before_bytes);
+
+        let mut receipt_tamper = archive_document.clone();
+        receipt_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .higher_order_inference_receipt
+            .as_mut()
+            .unwrap()
+            .target_identity_set_sha256 = "a".repeat(64);
+        assert!(matches!(
+            append_internal_project_schema6_canonical_result_v2(
+                ProjectSchema6ResultAppendRequestV1 {
+                    surface: INTERNAL_LABS_SURFACE.into(),
+                    experimental_labs_enabled: true,
+                    capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1(),),
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                    recipe: None,
+                    canonical_document: receipt_tamper,
+                }
+            ),
+            ProjectSchema6ResultAppendOutcomeV1::Blocked { .. }
+        ));
+        assert_eq!(fs::read(&archive_path).unwrap(), before_bytes);
+
+        let append = append_internal_project_schema6_canonical_result_v2(
+            ProjectSchema6ResultAppendRequestV1 {
+                surface: INTERNAL_LABS_SURFACE.into(),
+                experimental_labs_enabled: true,
+                capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1()),
+                archive_path: published.request.archive_path.clone(),
+                expected_source_sha256: published.request.expected_archive_sha256.clone(),
+                recipe: None,
+                canonical_document: archive_document.clone(),
+            },
+        );
+        let append_receipt = match append {
+            ProjectSchema6ResultAppendOutcomeV1::Ok { value } => value,
+            ProjectSchema6ResultAppendOutcomeV1::Blocked { diagnostic } => {
+                panic!("HOC append blocked: {diagnostic:?}")
+            }
+        };
+        let reopened =
+            read_internal_project_schema6_canonical_results_v2(ProjectSchema6ResultReadRequestV1 {
+                surface: INTERNAL_LABS_SURFACE.into(),
+                experimental_labs_enabled: true,
+                capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1()),
+                archive_path: published.request.archive_path.clone(),
+                expected_source_sha256: append_receipt.updated_document_sha256,
+            });
+        let snapshot = match reopened {
+            ProjectSchema6ResultReadOutcomeV1::Ok { value } => value,
+            ProjectSchema6ResultReadOutcomeV1::Blocked { diagnostic } => {
+                panic!("HOC reopen blocked: {diagnostic:?}")
+            }
+        };
+        assert_eq!(snapshot.documents.len(), 1);
+        assert_eq!(snapshot.documents[0].canonical_document, archive_document);
+    }
+
+    #[test]
     fn moderation_bootstrap_admission_requires_the_supplemental_cell_while_compilation_stays_point_primary()
      {
         let published = published_fixture_from(
@@ -2728,8 +3272,11 @@ mod tests {
             stale_method.provenance.method_version = "stale_moderation_method".into();
             let stale_method_append = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_point_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2760,8 +3307,11 @@ mod tests {
                     .unwrap();
             let mismatched_append = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_point_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2811,8 +3361,11 @@ mod tests {
             .unwrap();
             let coherent_focal_append = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_point_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2827,8 +3380,11 @@ mod tests {
 
             let append = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_point_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2860,10 +3416,31 @@ mod tests {
                 receipt.updated_document_sha256
             );
 
+            let wrong_owner_read = read_internal_project_schema6_canonical_results_v2(
+                ProjectSchema6ResultReadRequestV1 {
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
+                    archive_path: published.request.archive_path.clone(),
+                    expected_source_sha256: receipt.updated_document_sha256.clone(),
+                },
+            );
+            assert!(matches!(
+                wrong_owner_read,
+                ProjectSchema6ResultReadOutcomeV1::Blocked { diagnostic }
+                    if diagnostic.code == "schema6_result_read.capability_archive_mismatch"
+            ));
+            assert_eq!(fs::read(&archive_path).unwrap(), after_bytes);
+
             let reopened = read_internal_project_schema6_canonical_results_v2(
                 ProjectSchema6ResultReadRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_point_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: receipt.updated_document_sha256.clone(),
                 },
@@ -2951,8 +3528,11 @@ mod tests {
             stale_method.provenance.method_version = "stale_moderation_bootstrap_method".into();
             let stale_method_outcome = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2976,8 +3556,11 @@ mod tests {
                 .capability_cell = general_sem_multiple_moderation_point_capability_cell_v1();
             let capability_outcome = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -3006,8 +3589,11 @@ mod tests {
                     .unwrap();
             let table_outcome = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -3022,8 +3608,11 @@ mod tests {
 
             let append = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -3041,8 +3630,11 @@ mod tests {
 
             let reopened = read_internal_project_schema6_canonical_results_v2(
                 ProjectSchema6ResultReadRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
+                    capability_cell: Some(
+                        general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
+                    ),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: append_receipt.updated_document_sha256.clone(),
                 },
@@ -3448,6 +4040,78 @@ mod tests {
                 .len();
             let resolved = resolve_archive_authority(&published.request).unwrap();
             let job_id = Uuid::from_u128(0x7370 + checkpoint_index);
+            let cancellation = Arc::new(AtomicBool::new(false));
+            let checkpoint_seen = Arc::new(AtomicBool::new(false));
+            let cancellation_for_hook = cancellation.clone();
+            let checkpoint_seen_by_hook = checkpoint_seen.clone();
+            let hook: GeneralSemPlsWorkerCheckpointHookV1 = Arc::new(move |observed| {
+                if observed == checkpoint {
+                    checkpoint_seen_by_hook.store(true, Ordering::Release);
+                    cancellation_for_hook.store(true, Ordering::Release);
+                }
+            });
+            let state = job_state(
+                job_id,
+                cancellation.clone(),
+                resolved.archive_identity.clone(),
+            );
+            run_worker_with_checkpoint_hook(
+                job_id,
+                published.request,
+                resolved,
+                cancellation,
+                state.0.clone(),
+                admission(job_id),
+                Some(hook),
+            );
+
+            assert!(checkpoint_seen.load(Ordering::Acquire));
+            let jobs = state.0.lock().unwrap();
+            let job = jobs.get(&job_id).unwrap();
+            assert_eq!(
+                job.snapshot.state,
+                InternalLabsGeneralSemPlsJobStateV1::Cancelled
+            );
+            assert!(job.result.is_none());
+            drop(jobs);
+            assert_eq!(fs::read(&archive_path).unwrap(), before_bytes);
+            assert_eq!(
+                load_project_archive_v6(&archive_path)
+                    .unwrap()
+                    .document
+                    .canonical_result_documents
+                    .len(),
+                before_result_count
+            );
+        }
+    }
+
+    #[test]
+    fn disjoint_hoc_bootstrap_mid_and_late_cancellation_never_publishes_or_mutates_archive() {
+        for (checkpoint, checkpoint_index) in [
+            (
+                GeneralSemPlsWorkerCheckpointV1::DuringHocBootstrapMid,
+                0_u128,
+            ),
+            (
+                GeneralSemPlsWorkerCheckpointV1::DuringHocBootstrapLate,
+                1_u128,
+            ),
+        ] {
+            let published = published_fixture_from(
+                disjoint_hoc_fixture(HigherOrderMeasurementTypeV4::ReflectiveReflective, true),
+                &format!("general-sem-hoc-bootstrap-cancel-{checkpoint_index}.qpls"),
+                pls_general_higher_order_bootstrap_capability_cell_v1(),
+            );
+            let archive_path = PathBuf::from(&published.request.archive_path);
+            let before_bytes = fs::read(&archive_path).unwrap();
+            let before_result_count = load_project_archive_v6(&archive_path)
+                .unwrap()
+                .document
+                .canonical_result_documents
+                .len();
+            let resolved = resolve_archive_authority(&published.request).unwrap();
+            let job_id = Uuid::from_u128(0x73c0 + checkpoint_index);
             let cancellation = Arc::new(AtomicBool::new(false));
             let checkpoint_seen = Arc::new(AtomicBool::new(false));
             let cancellation_for_hook = cancellation.clone();

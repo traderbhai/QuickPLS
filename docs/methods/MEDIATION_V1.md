@@ -1,6 +1,12 @@
 # Mediation V1
 
-`pls_mediation_v1` is validated for the documented QuickPLS v1.2.1 PLS mediation scope. It reports direct, indirect, total, VAF, and descriptive mediation classification from the validated PLS path/effect matrix.
+`pls_mediation_v1` implements the documented QuickPLS PLS mediation scope. It
+reports direct, indirect, total, VAF, and descriptive mediation classification
+from the PLS path/effect matrix. The exact cell currently remains
+`partial / engine_only / labs` with `qualification_ready=false`; no Standard
+claim is made until all QualificationSpec V2 receipts pass.
+
+Its canonical publication contract covers CSV, XLSX, HTML, PDF, SVG, and PNG.
 
 Supported interpretation requires the relevant indirect effect to be paired with validated QuickPLS bootstrap or permutation inference. The scope excludes PROCESS-style observed-variable workflows, moderated mediation, unvalidated experimental base estimators, and unsupported model shapes.
 

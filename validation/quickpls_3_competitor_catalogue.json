@@ -639,15 +639,17 @@
       "priority": "P0",
       "target_release": "current",
       "competitor_scope": true,
-      "quickpls_scope": "One bounded reflective-reflective disjoint two-stage higher-order construct with at least two measured lower-order components and one measured outcome.",
+      "quickpls_scope": "The historical Standard cell remains one reflective-reflective disjoint two-stage point HOC. General SEM adds one non-nested second-order HOC across the exact repeated, extended-repeated, embedded, and disjoint approach/HCM matrix with point and full-model case-bootstrap cells.",
       "quickpls_capability_ids": [
-        "qpls3.pls.higher_order_two_stage"
+        "qpls3.pls.higher_order_two_stage",
+        "qpls3.pls.general_sem_higher_order_point",
+        "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap"
       ],
       "implementation_evidence": [],
       "dependencies": [
         "smartpls.pls_algorithm"
       ],
-      "remaining_gap": "Refresh current-cohort source and packaged receipts after the coordinated binary is frozen; repeated-indicator, hybrid, formative, nested, multiple-HOC, incoming-HOC-path, and HOC resampling workflows remain excluded."
+      "remaining_gap": "Hybrid, nested or multiple HOCs, HOC interactions, feedback, groups, case weights, PLSc, matrix input, BCa, studentized inference, and permutation remain excluded."
     },
     {
       "id": "smartpls.endogeneity_gaussian_copulas",

@@ -1,0 +1,852 @@
+{
+  "schema_version": 1,
+  "report_kind": "general_sem_rank0_streamlined_standard_finalization_v1",
+  "qualification_profile_id": "rank0_streamlined_plan4b_v1",
+  "representative_evidence_acknowledged": true,
+  "passed": true,
+  "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+  "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+  "aggregate": {
+    "path": "validation/results/general_sem_rank0_qualification_v1/aggregates/aggregate-0ceacb1f1036dd5e30c329069417549c01da6a9d272153ab95cdbfcd705b6580.json",
+    "size": 2499335,
+    "sha256": "c7535482250d9bbc2e603b494d4368145f998117cf236c9a5a61ae7033b80c2b"
+  },
+  "streamlined_release_report": {
+    "path": "validation/results/general_sem_rank0_standard_v1/streamlined-release-evidence.json",
+    "size": 4873,
+    "sha256": "fbf0b137b6788ea4edf18ee1a97e063a5de6042e0ad26b389a019fd35dfd68b8"
+  },
+  "spec_reports": [
+    {
+      "passed": true,
+      "qualification_ready": true,
+      "schema_valid": true,
+      "semantic_valid": true,
+      "registry_verified": true,
+      "receipts_verified": true,
+      "receipt_payload_contract_id": "quickpls.general_sem.rank0.receipt_payload.v1",
+      "receipt_payload_contract_verified": true,
+      "qualification_id": "qpls3.pls.mediation.qualification_v2",
+      "capability_id": "smartpls.mediation",
+      "cell_id": "qpls3.pls.mediation",
+      "method_version": "pls_mediation_v1",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "passed": true,
+      "qualification_ready": true,
+      "schema_valid": true,
+      "semantic_valid": true,
+      "registry_verified": true,
+      "receipts_verified": true,
+      "receipt_payload_contract_id": "quickpls.general_sem.rank0.receipt_payload.v1",
+      "receipt_payload_contract_verified": true,
+      "qualification_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap.qualification_v2",
+      "capability_id": "smartpls.mediation",
+      "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+      "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "passed": true,
+      "qualification_ready": true,
+      "schema_valid": true,
+      "semantic_valid": true,
+      "registry_verified": true,
+      "receipts_verified": true,
+      "receipt_payload_contract_id": "quickpls.general_sem.rank0.receipt_payload.v1",
+      "receipt_payload_contract_verified": true,
+      "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point.qualification_v2",
+      "capability_id": "smartpls.moderation",
+      "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+      "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "passed": true,
+      "qualification_ready": true,
+      "schema_valid": true,
+      "semantic_valid": true,
+      "registry_verified": true,
+      "receipts_verified": true,
+      "receipt_payload_contract_id": "quickpls.general_sem.rank0.receipt_payload.v1",
+      "receipt_payload_contract_verified": true,
+      "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+      "capability_id": "smartpls.moderation",
+      "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+      "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+      "errors": [],
+      "warnings": []
+    }
+  ],
+  "manifest_reports": [
+    {
+      "passed": true,
+      "feature_id": "qpls3.pls.mediation",
+      "method_version": "pls_mediation_v1",
+      "catalogue_snapshot_date": "2026-08-12",
+      "declared_state": "release_qualified",
+      "target_state": "release_qualified",
+      "derived_state": "release_qualified",
+      "stage_results": [
+        {
+          "state": "engine_only",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "method_spec",
+                "independent_reference",
+                "simulation_report",
+                "boundary_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "archive_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "persistence_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "native_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "frontend_report",
+                "export_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "release_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "method_audit",
+                "packaged_acceptance"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "path": "D:\\QuickPLS-sem-upgrade\\validation\\methods\\mediation_v1.manifest.json"
+    },
+    {
+      "passed": true,
+      "feature_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+      "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+      "catalogue_snapshot_date": "2026-08-19",
+      "declared_state": "release_qualified",
+      "target_state": "release_qualified",
+      "derived_state": "release_qualified",
+      "stage_results": [
+        {
+          "state": "engine_only",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "method_spec",
+                "independent_reference",
+                "simulation_report",
+                "boundary_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "archive_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "persistence_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "native_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "frontend_report",
+                "export_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "release_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "method_audit",
+                "packaged_acceptance"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "path": "D:\\QuickPLS-sem-upgrade\\validation\\methods\\general_sem_pls_multiple_mediation_bootstrap_v1.manifest.json"
+    },
+    {
+      "passed": true,
+      "feature_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+      "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+      "catalogue_snapshot_date": "2026-08-19",
+      "declared_state": "release_qualified",
+      "target_state": "release_qualified",
+      "derived_state": "release_qualified",
+      "stage_results": [
+        {
+          "state": "engine_only",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "method_spec",
+                "independent_reference",
+                "simulation_report",
+                "boundary_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "archive_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "persistence_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "native_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "frontend_report",
+                "export_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "release_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "method_audit",
+                "packaged_acceptance"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "path": "D:\\QuickPLS-sem-upgrade\\validation\\methods\\general_sem_pls_multiple_moderation_point_v1.manifest.json"
+    },
+    {
+      "passed": true,
+      "feature_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+      "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+      "catalogue_snapshot_date": "2026-08-19",
+      "declared_state": "release_qualified",
+      "target_state": "release_qualified",
+      "derived_state": "release_qualified",
+      "stage_results": [
+        {
+          "state": "engine_only",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "method_spec",
+                "independent_reference",
+                "simulation_report",
+                "boundary_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "archive_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "persistence_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "native_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "frontend_report",
+                "export_report"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        },
+        {
+          "state": "release_qualified",
+          "passed": true,
+          "missing_roles": [],
+          "artifacts": [
+            {
+              "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+              "roles": [
+                "method_audit",
+                "packaged_acceptance"
+              ],
+              "passed": true,
+              "errors": []
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "path": "D:\\QuickPLS-sem-upgrade\\validation\\methods\\general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json"
+    }
+  ],
+  "promotion": {
+    "schema_version": 1,
+    "report_kind": "quickpls_general_sem_rank0_standard_promotion_audit",
+    "passed": true,
+    "cell_atomic": true,
+    "required_cell_count": 4,
+    "standard_active_cell_ids": [
+      "qpls3.pls.mediation",
+      "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+      "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+      "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap"
+    ],
+    "promotion_candidate_cell_ids": [],
+    "blocked_cell_ids": [],
+    "cells": [
+      {
+        "key": "mediation_point",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "capability_version": "pls_mediation_v1",
+        "state": "standard_active",
+        "evidence_ready": true,
+        "registry_standard": true,
+        "qualification": {
+          "passed": true,
+          "qualification_ready": true,
+          "schema_valid": true,
+          "semantic_valid": true,
+          "registry_verified": true,
+          "receipts_verified": true,
+          "receipt_payload_contract_id": "quickpls.general_sem.rank0.receipt_payload.v1",
+          "receipt_payload_contract_verified": true,
+          "qualification_id": "qpls3.pls.mediation.qualification_v2",
+          "capability_id": "smartpls.mediation",
+          "cell_id": "qpls3.pls.mediation",
+          "method_version": "pls_mediation_v1",
+          "errors": [],
+          "warnings": []
+        },
+        "method_manifest": {
+          "passed": true,
+          "feature_id": "qpls3.pls.mediation",
+          "method_version": "pls_mediation_v1",
+          "catalogue_snapshot_date": "2026-08-12",
+          "declared_state": "release_qualified",
+          "target_state": "release_qualified",
+          "derived_state": "release_qualified",
+          "stage_results": [
+            {
+              "state": "engine_only",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "method_spec",
+                    "independent_reference",
+                    "simulation_report",
+                    "boundary_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "archive_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "persistence_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "native_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "frontend_report",
+                    "export_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "release_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/mediation_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "method_audit",
+                    "packaged_acceptance"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            }
+          ],
+          "errors": [],
+          "path": "D:\\QuickPLS-sem-upgrade\\validation\\methods\\mediation_v1.manifest.json"
+        },
+        "registry": {
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard"
+        },
+        "errors": []
+      },
+      {
+        "key": "mediation_bootstrap",
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+        "capability_version": "general_sem_pls_full_model_case_bootstrap_v1",
+        "state": "standard_active",
+        "evidence_ready": true,
+        "registry_standard": true,
+        "qualification": {
+          "passed": true,
+          "qualification_ready": true,
+          "schema_valid": true,
+          "semantic_valid": true,
+          "registry_verified": true,
+          "receipts_verified": true,
+          "receipt_payload_contract_id": "quickpls.general_sem.rank0.receipt_payload.v1",
+          "receipt_payload_contract_verified": true,
+          "qualification_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap.qualification_v2",
+          "capability_id": "smartpls.mediation",
+          "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+          "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+          "errors": [],
+          "warnings": []
+        },
+        "method_manifest": {
+          "passed": true,
+          "feature_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+          "method_version": "general_sem_pls_full_model_case_bootstrap_v1",
+          "catalogue_snapshot_date": "2026-08-19",
+          "declared_state": "release_qualified",
+          "target_state": "release_qualified",
+          "derived_state": "release_qualified",
+          "stage_results": [
+            {
+              "state": "engine_only",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "method_spec",
+                    "independent_reference",
+                    "simulation_report",
+                    "boundary_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "archive_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "persistence_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "native_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "frontend_report",
+                    "export_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "release_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_mediation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "method_audit",
+                    "packaged_acceptance"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            }
+          ],
+          "errors": [],
+          "path": "D:\\QuickPLS-sem-upgrade\\validation\\methods\\general_sem_pls_multiple_mediation_bootstrap_v1.manifest.json"
+        },
+        "registry": {
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard"
+        },
+        "errors": []
+      },
+      {
+        "key": "moderation_point",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+        "capability_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+        "state": "standard_active",
+        "evidence_ready": true,
+        "registry_standard": true,
+        "qualification": {
+          "passed": true,
+          "qualification_ready": true,
+          "schema_valid": true,
+          "semantic_valid": true,
+          "registry_verified": true,
+          "receipts_verified": true,
+          "receipt_payload_contract_id": "quickpls.general_sem.rank0.receipt_payload.v1",
+          "receipt_payload_contract_verified": true,
+          "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point.qualification_v2",
+          "capability_id": "smartpls.moderation",
+          "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+          "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+          "errors": [],
+          "warnings": []
+        },
+        "method_manifest": {
+          "passed": true,
+          "feature_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+          "method_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+          "catalogue_snapshot_date": "2026-08-19",
+          "declared_state": "release_qualified",
+          "target_state": "release_qualified",
+          "derived_state": "release_qualified",
+          "stage_results": [
+            {
+              "state": "engine_only",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "method_spec",
+                    "independent_reference",
+                    "simulation_report",
+                    "boundary_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "archive_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "persistence_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "native_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "frontend_report",
+                    "export_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "release_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_point_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "method_audit",
+                    "packaged_acceptance"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            }
+          ],
+          "errors": [],
+          "path": "D:\\QuickPLS-sem-upgrade\\validation\\methods\\general_sem_pls_multiple_moderation_point_v1.manifest.json"
+        },
+        "registry": {
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard"
+        },
+        "errors": []
+      },
+      {
+        "key": "moderation_bootstrap",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "capability_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "state": "standard_active",
+        "evidence_ready": true,
+        "registry_standard": true,
+        "qualification": {
+          "passed": true,
+          "qualification_ready": true,
+          "schema_valid": true,
+          "semantic_valid": true,
+          "registry_verified": true,
+          "receipts_verified": true,
+          "receipt_payload_contract_id": "quickpls.general_sem.rank0.receipt_payload.v1",
+          "receipt_payload_contract_verified": true,
+          "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+          "capability_id": "smartpls.moderation",
+          "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+          "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+          "errors": [],
+          "warnings": []
+        },
+        "method_manifest": {
+          "passed": true,
+          "feature_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+          "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+          "catalogue_snapshot_date": "2026-08-19",
+          "declared_state": "release_qualified",
+          "target_state": "release_qualified",
+          "derived_state": "release_qualified",
+          "stage_results": [
+            {
+              "state": "engine_only",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "method_spec",
+                    "independent_reference",
+                    "simulation_report",
+                    "boundary_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "archive_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "persistence_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "native_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "frontend_report",
+                    "export_report"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            },
+            {
+              "state": "release_qualified",
+              "passed": true,
+              "missing_roles": [],
+              "artifacts": [
+                {
+                  "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+                  "roles": [
+                    "method_audit",
+                    "packaged_acceptance"
+                  ],
+                  "passed": true,
+                  "errors": []
+                }
+              ]
+            }
+          ],
+          "errors": [],
+          "path": "D:\\QuickPLS-sem-upgrade\\validation\\methods\\general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json"
+        },
+        "registry": {
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard"
+        },
+        "errors": []
+      }
+    ]
+  }
+}

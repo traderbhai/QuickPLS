@@ -1,4 +1,12 @@
 import type { CapabilityCellReferenceV2 } from "./canonicalResultDocumentV2";
+import {
+  GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CELL_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CELL_V1,
+} from "./generalSemHigherOrderContractV1";
+import type {
+  HigherOrderConstructionApproachV4,
+  HigherOrderMeasurementTypeV4,
+} from "./semModelV4";
 import { sha256HexBytesV1, sha256HexUtf8V1 } from "./sha256V1";
 
 export const CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION = 1 as const;
@@ -20,6 +28,11 @@ export const GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1 = "comp
 export const GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1 = "qpls.general-sem-pls.two-stage-product.sample-standardized.v1" as const;
 export const GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1 = "qpls.general-sem-pls.simple-slope.other-moderators-zero.v1" as const;
 export const GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1 = "qpls.general-sem-pls.interaction-hierarchy.strong.v1" as const;
+export const GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_OPERATION_VERSION_V1 = "general_sem_pls_higher_order_full_model_case_bootstrap_operation_v1" as const;
+export const GENERAL_SEM_PLS_DISJOINT_HOC_SIGN_ALIGNMENT_VERSION_V1 = "sampled_original_construct_score_covariance_v1" as const;
+export const GENERAL_SEM_PLS_DISJOINT_HOC_TARGET_VERSION_V1 = "compiled_hoc_component_and_structural_relation_target_v1" as const;
+export const GENERAL_SEM_PLS_HIGHER_ORDER_POINT_STAGE_RECEIPT_VERSION_V1 = "general_sem_pls_higher_order_point_stage_receipt_v1" as const;
+export const GENERAL_SEM_PLS_DISJOINT_HOC_SCORE_DATASET_RECEIPT_VERSION_V1 = "general_sem_pls_disjoint_hoc_score_dataset_receipt_v1" as const;
 
 export interface CanonicalGeneralSemResultTraceV1 {
   model_id: string;
@@ -330,11 +343,73 @@ export type CanonicalHocStageKindV1 =
   | "lower_order_score_estimation"
   | "higher_order_estimation";
 
+export type CanonicalHocRelationKindV1 =
+  | "component_loading"
+  | "component_weight"
+  | "authored_structural"
+  | "authored_control"
+  | "technical_structural"
+  | "extended_indirect_effect"
+  | "extended_total_effect";
+
+export type CompiledPlsHocComponentRelationInterpretationV1 =
+  | "loading"
+  | "weight_and_collinearity";
+
+export type CompiledPlsHocStageRoleV1 =
+  | "repeated_indicator_estimation"
+  | "extended_repeated_indicator_estimation"
+  | "embedded_repeated_indicator_estimation"
+  | "disjoint_lower_order_score_estimation"
+  | "higher_order_from_lower_order_scores";
+
+export interface CanonicalHocGeneratedVariableMappingV1 {
+  component_id: string;
+  generated_score_variable_id: string;
+  generated_component_relation_id: string;
+  generated_component_parameter_id: string;
+  component_relation_source_id: string;
+  component_relation_target_id: string;
+  relation_interpretation: CompiledPlsHocComponentRelationInterpretationV1;
+}
+
+export interface CanonicalHocGeneratedScoreColumnReceiptV1 {
+  component_id: string;
+  generated_score_variable_id: string;
+  observation_count: number;
+  values_sha256: string;
+}
+
+export interface CanonicalHocGeneratedScoreDatasetReceiptV1 {
+  receipt_version: string;
+  source_dataset_fingerprint: string;
+  complete_case_row_count: number;
+  omitted_row_count: number;
+  complete_case_rows_sha256: string;
+  generated_score_columns: CanonicalHocGeneratedScoreColumnReceiptV1[];
+}
+
+export interface CanonicalHocPointStageReceiptV1 {
+  receipt_version: string;
+  stage_number: number;
+  role: CompiledPlsHocStageRoleV1;
+  projection_identity_sha256: string;
+  model_scientific_sha256: string;
+  compiled_plan_sha256: string;
+  dataset_fingerprint: string;
+  used_observations: number;
+  omitted_observations: number;
+  generated_score_dataset?: CanonicalHocGeneratedScoreDatasetReceiptV1 | null;
+}
+
 export interface CanonicalHocRelationEstimateV1 {
   relation_id: string;
+  parameter_id?: string | null;
   source_id: string;
   target_id: string;
+  kind?: CanonicalHocRelationKindV1 | null;
   value: CanonicalGeneralSemEstimateV1;
+  collinearity_vif?: number | null;
 }
 
 export interface CanonicalHocStageResultV1 {
@@ -345,7 +420,91 @@ export interface CanonicalHocStageResultV1 {
   kind: CanonicalHocStageKindV1;
   input_construct_ids: string[];
   output_variable_ids: string[];
+  approach?: HigherOrderConstructionApproachV4 | null;
+  measurement_type?: HigherOrderMeasurementTypeV4 | null;
+  generated_variable_mappings?: CanonicalHocGeneratedVariableMappingV1[];
+  receipt?: CanonicalHocPointStageReceiptV1 | null;
   relation_estimates?: CanonicalHocRelationEstimateV1[];
+}
+
+export type CanonicalHocBootstrapTargetKindV1 =
+  | "component_loading"
+  | "component_weight"
+  | "hoc_structural_path"
+  | "extended_total_effect";
+
+export interface CanonicalHocBootstrapTargetIdentityV1 {
+  kind: CanonicalHocBootstrapTargetKindV1;
+  target_version: string;
+  target_id: string;
+  relation_id: string;
+  parameter_id: string;
+  source_id: string;
+  target_variable_id: string;
+  point_method_version: string;
+}
+
+export type CanonicalHocBootstrapFailureReasonV1 =
+  | "insufficient_observations"
+  | "constant_indicator"
+  | "stage_one_rank_deficient"
+  | "isolated_construct"
+  | "stage_one_nonconvergence"
+  | "indeterminate_score_sign"
+  | "constant_component_score"
+  | "stage_two_rank_deficient"
+  | "stage_two_nonconvergence"
+  | "component_collinearity"
+  | "numerical_failure";
+
+export interface CanonicalHocBootstrapFailedReplicateV1 {
+  replicate_index: number;
+  reason_code: CanonicalHocBootstrapFailureReasonV1;
+  message: string;
+}
+
+export interface CanonicalHocBootstrapReceiptV1 {
+  schema_version: 1;
+  capability_cell: CapabilityCellReferenceV2;
+  method_version: string;
+  point_method_version: string;
+  resampling_operation_version: string;
+  resampling_stream_version: string;
+  quantile_method_version: string;
+  standard_error_method_version: string;
+  summation_method_version: string;
+  p_value_method_version: string;
+  failure_policy_version: string;
+  sign_alignment_method_version: string;
+  target_version: string;
+  general_sem_config_sha256: string;
+  compiled_plan_sha256: string;
+  hoc_stage_plan_sha256: string;
+  model_scientific_sha256: string;
+  stage_one_model_scientific_sha256: string;
+  stage_two_model_scientific_sha256: string;
+  source_dataset_fingerprint: string;
+  complete_case_frame_sha256: string;
+  usable_replicate_indices_sha256: string;
+  target_identity_set_sha256: string;
+  target_ids: string[];
+  target_identities: CanonicalHocBootstrapTargetIdentityV1[];
+  interval: CanonicalGeneralSemBootstrapIntervalV1;
+  tail: CanonicalGeneralSemInferenceTailV1;
+  confidence_level: number;
+  resamples_requested: number;
+  resamples_usable: number;
+  minimum_usable_resamples: number;
+  seed: string;
+  workers: number;
+  complete_model_reestimated_per_replicate: boolean;
+  stage_one_reestimated_per_replicate: boolean;
+  generated_component_values_recalculated_per_replicate: boolean;
+  stage_one_scores_sign_aligned_per_replicate: boolean;
+  stage_two_reestimated_per_replicate: boolean;
+  stage_two_scores_sign_aligned_per_replicate: boolean;
+  complete_point_contract_validated_per_replicate: boolean;
+  failed_replicates: CanonicalHocBootstrapFailedReplicateV1[];
 }
 
 export interface CanonicalGeneralSemIntervalV1 {
@@ -407,6 +566,7 @@ export interface CanonicalGeneralSemResultsV1 {
   moderated_mediation_indices?: CanonicalModeratedMediationIndexResultV1[];
   interaction_plots?: CanonicalInteractionPlotResultV1[];
   higher_order_stages?: CanonicalHocStageResultV1[];
+  higher_order_inference_receipt?: CanonicalHocBootstrapReceiptV1 | null;
   cbsem_fit?: CanonicalCbsemFitResultV1[];
   identification_diagnostics?: CanonicalIdentificationDiagnosticV1[];
 }
@@ -981,6 +1141,7 @@ function wireGeneralSemDecimalSafeSeed(value: unknown, path: string): string {
 
 function validateGeneralSemInferenceReceiptV1(
   receiptValue: unknown,
+  hocReceiptValue: unknown,
   specific: readonly unknown[],
   aggregate: readonly unknown[],
   jointStage: readonly unknown[],
@@ -1071,12 +1232,18 @@ function validateGeneralSemInferenceReceiptV1(
       || moderatedMediationDerivedEffectValues.some(generalSemEstimateHasInference)
       || standardizedProductInference
       || jointStageInference
-      || conditionalInference
-      || higherOrderInference) {
+      || conditionalInference) {
       wireFail(
         "document.invalid",
         "general_sem_results.inference_receipt",
         "general_sem_results inference fields require inference_receipt.",
+      );
+    }
+    if (higherOrderInference && hocReceiptValue == null) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.higher_order_inference_receipt",
+        "higher-order inference fields require higher_order_inference_receipt.",
       );
     }
     return;
@@ -1572,6 +1739,228 @@ function validateGeneralSemInferenceReceiptV1(
   }
 }
 
+function validateHocInferenceReceiptV1(
+  receiptValue: unknown,
+  ordinaryReceiptValue: unknown,
+  hocStages: readonly unknown[],
+  context: GeneralSemWireContext,
+): void {
+  const relations = new Map<string, { relation: StrictWireRecord; path: string }>();
+  hocStages.forEach((stageValue, stageIndex) => {
+    const stagePath = `general_sem_results.higher_order_stages[${stageIndex}]`;
+    const stage = strictWireRecord(stageValue, stagePath);
+    optionalWireArray(stage, "relation_estimates", stagePath).forEach((relationValue, relationIndex) => {
+      const relationPath = `${stagePath}.relation_estimates[${relationIndex}]`;
+      const relation = strictWireRecord(relationValue, relationPath);
+      const relationId = wireStableId(relation.relation_id, `${relationPath}.relation_id`);
+      relations.set(relationId, { relation, path: relationPath });
+    });
+  });
+  const inferred = [...relations.values()].filter(({ relation }) => (
+    generalSemEstimateHasInference(relation.value)
+  ));
+  if (receiptValue == null) {
+    if (inferred.length > 0) {
+      wireFail(
+        "document.invalid",
+        "general_sem_results.higher_order_inference_receipt",
+        "higher-order inference fields require higher_order_inference_receipt.",
+      );
+    }
+    return;
+  }
+  const path = "general_sem_results.higher_order_inference_receipt";
+  if (ordinaryReceiptValue != null) {
+    wireFail(
+      "document.invalid",
+      path,
+      `${path} is mutually exclusive with inference_receipt.`,
+    );
+  }
+  const receipt = exactWireRecord(receiptValue, [
+    "schema_version", "capability_cell", "method_version", "point_method_version",
+    "resampling_operation_version", "resampling_stream_version", "quantile_method_version",
+    "standard_error_method_version", "summation_method_version", "p_value_method_version",
+    "failure_policy_version", "sign_alignment_method_version", "target_version",
+    "general_sem_config_sha256", "compiled_plan_sha256", "hoc_stage_plan_sha256",
+    "model_scientific_sha256", "stage_one_model_scientific_sha256",
+    "stage_two_model_scientific_sha256", "source_dataset_fingerprint",
+    "complete_case_frame_sha256", "usable_replicate_indices_sha256",
+    "target_identity_set_sha256", "target_ids", "target_identities", "interval", "tail",
+    "confidence_level", "resamples_requested", "resamples_usable",
+    "minimum_usable_resamples", "seed", "workers",
+    "complete_model_reestimated_per_replicate", "stage_one_reestimated_per_replicate",
+    "generated_component_values_recalculated_per_replicate",
+    "stage_one_scores_sign_aligned_per_replicate", "stage_two_reestimated_per_replicate",
+    "stage_two_scores_sign_aligned_per_replicate",
+    "complete_point_contract_validated_per_replicate", "failed_replicates",
+  ], [], path);
+  if (receipt.schema_version !== 1) {
+    wireFail("schema.version_unsupported", `${path}.schema_version`, `${path}.schema_version must equal 1.`);
+  }
+  const capability = validateWireCapabilityCell(receipt.capability_cell, `${path}.capability_cell`);
+  if (capabilityCellIdentity(capability)
+    !== capabilityCellIdentity(GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CELL_V1)) {
+    wireFail("document.invalid", `${path}.capability_cell`, `${path}.capability_cell is not the exact HOC bootstrap cell.`);
+  }
+  if (!context.capabilityIds.has(capabilityCellIdentity(capability))) {
+    wireFail("document.invalid", `${path}.capability_cell`, `${path}.capability_cell is not declared by the document.`);
+  }
+  const pointVersion = GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CELL_V1.capability_version;
+  const bootstrapVersion = GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CELL_V1.capability_version;
+  if (receipt.method_version !== bootstrapVersion || receipt.point_method_version !== pointVersion
+    || receipt.resampling_operation_version !== GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_OPERATION_VERSION_V1
+    || receipt.resampling_stream_version !== GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1
+    || receipt.quantile_method_version !== GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1
+    || receipt.standard_error_method_version !== GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1
+    || receipt.summation_method_version !== GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1
+    || receipt.p_value_method_version !== GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1
+    || receipt.failure_policy_version !== GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1
+    || receipt.sign_alignment_method_version !== GENERAL_SEM_PLS_DISJOINT_HOC_SIGN_ALIGNMENT_VERSION_V1
+    || receipt.target_version !== GENERAL_SEM_PLS_DISJOINT_HOC_TARGET_VERSION_V1) {
+    wireFail("document.invalid", path, `${path} contains a non-v1 HOC algorithm identity.`);
+  }
+  for (const key of [
+    "general_sem_config_sha256", "compiled_plan_sha256", "hoc_stage_plan_sha256",
+    "model_scientific_sha256", "stage_one_model_scientific_sha256",
+    "stage_two_model_scientific_sha256", "complete_case_frame_sha256",
+    "usable_replicate_indices_sha256", "target_identity_set_sha256",
+  ] as const) {
+    wireGeneralSemSha256(receipt[key], `${path}.${key}`);
+  }
+  if (receipt.model_scientific_sha256 !== context.modelDigest) {
+    wireFail("document.invalid", `${path}.model_scientific_sha256`, `${path}.model_scientific_sha256 must equal provenance.model_digest.`);
+  }
+  if (wireGeneralSemDatasetFingerprint(receipt.source_dataset_fingerprint, `${path}.source_dataset_fingerprint`)
+    !== context.datasetFingerprint) {
+    wireFail("document.invalid", `${path}.source_dataset_fingerprint`, `${path}.source_dataset_fingerprint must equal provenance.dataset_fingerprint.`);
+  }
+  wireEnum(receipt.interval, ["percentile_type7"] as const, `${path}.interval`);
+  wireEnum(receipt.tail, ["two_sided"] as const, `${path}.tail`);
+  const confidence = wireFinite(receipt.confidence_level, `${path}.confidence_level`);
+  if (confidence <= 0 || confidence >= 1) {
+    wireFail("document.invalid", `${path}.confidence_level`, `${path}.confidence_level must be between zero and one.`);
+  }
+  const requested = wireU32(receipt.resamples_requested, `${path}.resamples_requested`);
+  const usable = wireU32(receipt.resamples_usable, `${path}.resamples_usable`);
+  const minimum = wireU32(receipt.minimum_usable_resamples, `${path}.minimum_usable_resamples`);
+  if (requested < 2 || requested > 10_000 || minimum !== Math.max(2, Math.ceil(requested * 0.9))
+    || usable < minimum || usable > requested) {
+    wireFail("document.invalid", path, `${path} violates the exact 90 percent usable gate.`);
+  }
+  const seed = wireGeneralSemDecimalSafeSeed(receipt.seed, `${path}.seed`);
+  if (context.seed == null || seed !== String(context.seed)) {
+    wireFail("document.invalid", `${path}.seed`, `${path}.seed must equal provenance.seed.`);
+  }
+  const workers = wireU32(receipt.workers, `${path}.workers`);
+  if (workers < 1 || workers > 64 || workers !== context.workers) {
+    wireFail("document.invalid", `${path}.workers`, `${path}.workers must equal the bounded provenance worker count.`);
+  }
+  for (const key of [
+    "complete_model_reestimated_per_replicate", "stage_one_reestimated_per_replicate",
+    "generated_component_values_recalculated_per_replicate",
+    "stage_one_scores_sign_aligned_per_replicate", "stage_two_reestimated_per_replicate",
+    "stage_two_scores_sign_aligned_per_replicate",
+    "complete_point_contract_validated_per_replicate",
+  ] as const) {
+    if (receipt[key] !== true) {
+      wireFail("document.invalid", `${path}.${key}`, `${path}.${key} must be true.`);
+    }
+  }
+
+  const targetIds = validateStableIdArray(receipt.target_ids, `${path}.target_ids`, { minimum: 1, canonical: true });
+  const identityValues = wireArray(receipt.target_identities, `${path}.target_identities`);
+  const identities = identityValues.map((identityValue, index) => {
+    const identityPath = `${path}.target_identities[${index}]`;
+    const identity = exactWireRecord(identityValue, [
+      "kind", "target_version", "target_id", "relation_id", "parameter_id", "source_id",
+      "target_variable_id", "point_method_version",
+    ], [], identityPath);
+    const normalized: CanonicalHocBootstrapTargetIdentityV1 = {
+      kind: wireEnum(identity.kind, [
+        "component_loading", "component_weight", "hoc_structural_path", "extended_total_effect",
+      ] as const, `${identityPath}.kind`),
+      target_version: wireText(identity.target_version, `${identityPath}.target_version`),
+      target_id: wireStableId(identity.target_id, `${identityPath}.target_id`),
+      relation_id: wireStableId(identity.relation_id, `${identityPath}.relation_id`),
+      parameter_id: wireStableId(identity.parameter_id, `${identityPath}.parameter_id`),
+      source_id: wireStableId(identity.source_id, `${identityPath}.source_id`),
+      target_variable_id: wireStableId(identity.target_variable_id, `${identityPath}.target_variable_id`),
+      point_method_version: wireText(identity.point_method_version, `${identityPath}.point_method_version`),
+    };
+    if (normalized.target_version !== GENERAL_SEM_PLS_DISJOINT_HOC_TARGET_VERSION_V1
+      || normalized.point_method_version !== pointVersion
+      || normalized.target_id !== normalized.relation_id) {
+      wireFail("document.invalid", identityPath, `${identityPath} differs from the exact HOC target contract.`);
+    }
+    return normalized;
+  });
+  if (identities.length !== targetIds.length
+    || identities.some((identity, index) => identity.target_id !== targetIds[index])) {
+    wireFail("document.invalid", `${path}.target_identities`, `${path}.target_identities must exactly follow target_ids.`);
+  }
+  if (receipt.target_identity_set_sha256 !== generalSemSerializedSha256(identities)) {
+    wireFail("document.invalid", `${path}.target_identity_set_sha256`, `${path}.target_identity_set_sha256 does not match target_identities.`);
+  }
+  identities.forEach((identity, index) => {
+    const bound = relations.get(identity.relation_id);
+    const identityPath = `${path}.target_identities[${index}]`;
+    if (!bound) wireFail("document.invalid", identityPath, `${identityPath} references a missing HOC relation.`);
+    const relation = bound.relation;
+    const relationKind = wireEnum(relation.kind, [
+      "component_loading", "component_weight", "authored_structural", "authored_control",
+      "technical_structural", "extended_indirect_effect", "extended_total_effect",
+    ] as const, `${bound.path}.kind`);
+    const expectedKind = identity.kind === "hoc_structural_path" ? "authored_structural" : identity.kind;
+    if (relationKind !== expectedKind || relation.parameter_id !== identity.parameter_id
+      || relation.source_id !== identity.source_id || relation.target_id !== identity.target_variable_id
+      || !generalSemEstimateHasInference(relation.value)) {
+      wireFail("document.invalid", identityPath, `${identityPath} differs from its typed HOC relation.`);
+    }
+    const estimate = strictWireRecord(relation.value, `${bound.path}.value`);
+    const relationUsable = optionalWireU32(estimate, "bootstrap_usable_replicates", `${bound.path}.value`);
+    const exceedances = optionalWireU32(estimate, "bootstrap_two_sided_exceedances", `${bound.path}.value`);
+    const pValue = optionalWireFinite(estimate, "p_value", `${bound.path}.value`);
+    if (relationUsable !== usable || exceedances == null || exceedances > usable
+      || pValue == null || !approximatelyEqualGeneralSem(pValue, (exceedances + 1) / (usable + 1))) {
+      wireFail("document.invalid", `${bound.path}.value`, `${bound.path}.value contradicts the shared bootstrap ledger.`);
+    }
+  });
+  const targetSet = new Set(targetIds);
+  if (inferred.some(({ relation }) => !targetSet.has(String(relation.relation_id)))) {
+    wireFail("document.invalid", path, `${path} leaves inferred relations outside target_ids.`);
+  }
+
+  const failures = wireArray(receipt.failed_replicates, `${path}.failed_replicates`);
+  if (usable + failures.length !== requested) {
+    wireFail("document.invalid", path, `${path} requested count must equal usable plus failed replicates.`);
+  }
+  const failedIndices = new Set<number>();
+  let previous = -1;
+  failures.forEach((failureValue, index) => {
+    const failurePath = `${path}.failed_replicates[${index}]`;
+    const failure = exactWireRecord(failureValue, ["replicate_index", "reason_code", "message"], [], failurePath);
+    const replicateIndex = wireU32(failure.replicate_index, `${failurePath}.replicate_index`);
+    if (replicateIndex >= requested || replicateIndex <= previous) {
+      wireFail("document.invalid", `${failurePath}.replicate_index`, `${path}.failed_replicates must be strictly ordered within the requested frame.`);
+    }
+    previous = replicateIndex;
+    failedIndices.add(replicateIndex);
+    wireEnum(failure.reason_code, [
+      "insufficient_observations", "constant_indicator", "stage_one_rank_deficient",
+      "isolated_construct", "stage_one_nonconvergence", "indeterminate_score_sign",
+      "constant_component_score", "stage_two_rank_deficient", "stage_two_nonconvergence",
+      "component_collinearity", "numerical_failure",
+    ] as const, `${failurePath}.reason_code`);
+    wireText(failure.message, `${failurePath}.message`);
+  });
+  const usableIndices = Array.from({ length: requested }, (_, index) => index)
+    .filter((index) => !failedIndices.has(index));
+  if (receipt.usable_replicate_indices_sha256 !== generalSemSerializedSha256(usableIndices)) {
+    wireFail("document.invalid", `${path}.usable_replicate_indices_sha256`, `${path}.usable_replicate_indices_sha256 contradicts the failure ledger.`);
+  }
+}
+
 function validateConditionalProbeValues(value: unknown, path: string): number[] {
   const record = strictWireRecord(value, path);
   const kind = wireEnum(record.kind, ["data_derived_mean_plus_minus_one_sd", "explicit"] as const, `${path}.kind`);
@@ -1618,6 +2007,7 @@ export function parseCanonicalGeneralSemResultsV1(
       "moderated_mediation_indices",
       "interaction_plots",
       "higher_order_stages",
+      "higher_order_inference_receipt",
       "cbsem_fit",
       "identification_diagnostics",
     ],
@@ -2624,28 +3014,133 @@ export function parseCanonicalGeneralSemResultsV1(
     const stage = exactWireRecord(item, [
       "stage_id", "trace", "higher_order_construct_id", "stage_number", "kind",
       "input_construct_ids", "output_variable_ids",
-    ], ["relation_estimates"], path);
+    ], [
+      "approach", "measurement_type", "generated_variable_mappings", "receipt",
+      "relation_estimates",
+    ], path);
     wireStableId(stage.stage_id, `${path}.stage_id`);
     validateGeneralSemTrace(stage.trace, `${path}.trace`, wireContext);
     const hocId = wireStableId(stage.higher_order_construct_id, `${path}.higher_order_construct_id`);
     const stageNumber = wireU32(stage.stage_number, `${path}.stage_number`);
     const kind = wireEnum(stage.kind, ["lower_order_score_estimation", "higher_order_estimation"] as const, `${path}.kind`);
-    const expectedStage = kind === "lower_order_score_estimation" ? 1 : 2;
-    if (stageNumber !== expectedStage) wireFail("document.invalid", `${path}.stage_number`, `${path}.stage_number contradicts its stage kind.`);
     const signature = `${hocId}\0${stageNumber}`;
     if (hocSignatures.has(signature)) wireFail("document.invalid", path, `${path} duplicates a higher-order construct stage.`);
     hocSignatures.add(signature);
     validateStableIdArray(stage.input_construct_ids, `${path}.input_construct_ids`, { minimum: 1, canonical: true });
     validateStableIdArray(stage.output_variable_ids, `${path}.output_variable_ids`, { minimum: 1, canonical: true });
+    const approach = stage.approach == null ? null : wireEnum(stage.approach, [
+      "repeated_indicators", "extended_repeated_indicators", "embedded_two_stage",
+      "disjoint_two_stage", "hybrid",
+    ] as const, `${path}.approach`);
+    const measurementType = stage.measurement_type == null ? null : wireEnum(stage.measurement_type, [
+      "reflective_reflective", "reflective_formative", "formative_reflective",
+      "formative_formative",
+    ] as const, `${path}.measurement_type`);
+    if ((approach == null) !== (measurementType == null)) {
+      wireFail("document.invalid", path, `${path}.approach and measurement_type must be present together.`);
+    }
+    const additiveOneStageHigherOrder = stageNumber === 1
+      && kind === "higher_order_estimation"
+      && (approach === "repeated_indicators" || approach === "extended_repeated_indicators");
+    const historicalStageShape = (stageNumber === 1 && kind === "lower_order_score_estimation")
+      || (stageNumber === 2 && kind === "higher_order_estimation");
+    if (!historicalStageShape && !additiveOneStageHigherOrder) {
+      wireFail("document.invalid", `${path}.stage_number`, `${path}.stage_number contradicts its stage kind.`);
+    }
+    const mappings = optionalWireArray(stage, "generated_variable_mappings", path);
+    validateCanonicalWireIds(mappings, "component_id", `${path}.generated_variable_mappings`);
+    mappings.forEach((mappingValue, mappingIndex) => {
+      const mappingPath = `${path}.generated_variable_mappings[${mappingIndex}]`;
+      const mapping = exactWireRecord(mappingValue, [
+        "component_id", "generated_score_variable_id", "generated_component_relation_id",
+        "generated_component_parameter_id", "component_relation_source_id",
+        "component_relation_target_id", "relation_interpretation",
+      ], [], mappingPath);
+      for (const key of [
+        "component_id", "generated_score_variable_id", "generated_component_relation_id",
+        "generated_component_parameter_id", "component_relation_source_id",
+        "component_relation_target_id",
+      ] as const) wireStableId(mapping[key], `${mappingPath}.${key}`);
+      wireEnum(mapping.relation_interpretation, ["loading", "weight_and_collinearity"] as const, `${mappingPath}.relation_interpretation`);
+    });
+    if (stage.receipt != null) {
+      const receiptPath = `${path}.receipt`;
+      const receipt = exactWireRecord(stage.receipt, [
+        "receipt_version", "stage_number", "role", "projection_identity_sha256",
+        "model_scientific_sha256", "compiled_plan_sha256", "dataset_fingerprint",
+        "used_observations", "omitted_observations",
+      ], ["generated_score_dataset"], receiptPath);
+      if (receipt.receipt_version !== GENERAL_SEM_PLS_HIGHER_ORDER_POINT_STAGE_RECEIPT_VERSION_V1
+        || wireU32(receipt.stage_number, `${receiptPath}.stage_number`) !== stageNumber) {
+        wireFail("document.invalid", receiptPath, `${receiptPath} differs from the exact point-stage receipt contract.`);
+      }
+      wireEnum(receipt.role, [
+        "repeated_indicator_estimation", "extended_repeated_indicator_estimation",
+        "embedded_repeated_indicator_estimation", "disjoint_lower_order_score_estimation",
+        "higher_order_from_lower_order_scores",
+      ] as const, `${receiptPath}.role`);
+      for (const key of [
+        "projection_identity_sha256", "model_scientific_sha256", "compiled_plan_sha256",
+      ] as const) wireGeneralSemSha256(receipt[key], `${receiptPath}.${key}`);
+      wireGeneralSemDatasetFingerprint(receipt.dataset_fingerprint, `${receiptPath}.dataset_fingerprint`);
+      const used = wireU32(receipt.used_observations, `${receiptPath}.used_observations`);
+      wireU32(receipt.omitted_observations, `${receiptPath}.omitted_observations`);
+      if (used === 0) wireFail("document.invalid", `${receiptPath}.used_observations`, `${receiptPath}.used_observations must be positive.`);
+      if (receipt.generated_score_dataset != null) {
+        const scorePath = `${receiptPath}.generated_score_dataset`;
+        const score = exactWireRecord(receipt.generated_score_dataset, [
+          "receipt_version", "source_dataset_fingerprint", "complete_case_row_count",
+          "omitted_row_count", "complete_case_rows_sha256", "generated_score_columns",
+        ], [], scorePath);
+        if (score.receipt_version !== GENERAL_SEM_PLS_DISJOINT_HOC_SCORE_DATASET_RECEIPT_VERSION_V1) {
+          wireFail("document.invalid", `${scorePath}.receipt_version`, `${scorePath}.receipt_version is not the exact disjoint score receipt.`);
+        }
+        wireGeneralSemDatasetFingerprint(score.source_dataset_fingerprint, `${scorePath}.source_dataset_fingerprint`);
+        const completeRows = wireU32(score.complete_case_row_count, `${scorePath}.complete_case_row_count`);
+        wireU32(score.omitted_row_count, `${scorePath}.omitted_row_count`);
+        wireGeneralSemSha256(score.complete_case_rows_sha256, `${scorePath}.complete_case_rows_sha256`);
+        const columns = wireArray(score.generated_score_columns, `${scorePath}.generated_score_columns`);
+        validateCanonicalWireIds(columns, "component_id", `${scorePath}.generated_score_columns`);
+        columns.forEach((columnValue, columnIndex) => {
+          const columnPath = `${scorePath}.generated_score_columns[${columnIndex}]`;
+          const column = exactWireRecord(columnValue, [
+            "component_id", "generated_score_variable_id", "observation_count", "values_sha256",
+          ], [], columnPath);
+          wireStableId(column.component_id, `${columnPath}.component_id`);
+          wireStableId(column.generated_score_variable_id, `${columnPath}.generated_score_variable_id`);
+          if (wireU32(column.observation_count, `${columnPath}.observation_count`) !== completeRows) {
+            wireFail("document.invalid", `${columnPath}.observation_count`, `${columnPath}.observation_count contradicts the score receipt.`);
+          }
+          wireGeneralSemSha256(column.values_sha256, `${columnPath}.values_sha256`);
+        });
+      }
+    }
     const relations = optionalWireArray(stage, "relation_estimates", path);
     validateCanonicalWireIds(relations, "relation_id", `${path}.relation_estimates`);
     relations.forEach((relationValue, relationIndex) => {
       const relationPath = `${path}.relation_estimates[${relationIndex}]`;
-      const relation = exactWireRecord(relationValue, ["relation_id", "source_id", "target_id", "value"], [], relationPath);
+      const relation = exactWireRecord(
+        relationValue,
+        ["relation_id", "source_id", "target_id", "value"],
+        ["parameter_id", "kind", "collinearity_vif"],
+        relationPath,
+      );
       wireStableId(relation.relation_id, `${relationPath}.relation_id`);
+      const parameterId = relation.parameter_id == null
+        ? null
+        : wireStableId(relation.parameter_id, `${relationPath}.parameter_id`);
+      const relationKind = relation.kind == null ? null : wireEnum(relation.kind, [
+        "component_loading", "component_weight", "authored_structural", "authored_control",
+        "technical_structural", "extended_indirect_effect", "extended_total_effect",
+      ] as const, `${relationPath}.kind`);
+      if ((parameterId == null) !== (relationKind == null)) {
+        wireFail("document.invalid", relationPath, `${relationPath}.parameter_id and kind must be present together.`);
+      }
       const sourceId = wireStableId(relation.source_id, `${relationPath}.source_id`);
       const targetId = wireStableId(relation.target_id, `${relationPath}.target_id`);
       if (sourceId === targetId) wireFail("document.invalid", relationPath, `${relationPath} requires distinct source_id and target_id.`);
+      const vif = optionalWireFinite(relation, "collinearity_vif", relationPath);
+      if (vif != null && vif <= 0) wireFail("document.invalid", `${relationPath}.collinearity_vif`, `${relationPath}.collinearity_vif must be positive.`);
       validateGeneralSemEstimate(relation.value, `${relationPath}.value`);
     });
   });
@@ -2699,6 +3194,7 @@ export function parseCanonicalGeneralSemResultsV1(
 
   validateGeneralSemInferenceReceiptV1(
     results.inference_receipt,
+    results.higher_order_inference_receipt,
     specific,
     aggregate,
     jointStageCoefficients,
@@ -2707,6 +3203,12 @@ export function parseCanonicalGeneralSemResultsV1(
     conditionalIndirect,
     moderatedMediationIndices,
     plots,
+    hocStages,
+    wireContext,
+  );
+  validateHocInferenceReceiptV1(
+    results.higher_order_inference_receipt,
+    results.inference_receipt,
     hocStages,
     wireContext,
   );

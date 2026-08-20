@@ -16,9 +16,14 @@ use qpls_core::{
     AnalysisRecipeModelBindingV4, CapabilityCellReferenceV2,
     CompiledPlsTwoWayModeratedMediationTargetV1, GeneralSemEffectEstimandV1,
     GeneralSemPlsRecipeCompilationErrorV1, InteractionHierarchyPolicyV2, InteractionMethodV4,
-    SemDerivedTermV4, SemModelV4, SemParameterTargetV4, SemParameterV4, SemRelationV4,
-    SemVariableV4, StructuralRelationRoleV4, capability_cell_reference_identity_v2,
+    HigherOrderConstructionApproachV4, HigherOrderMeasurementTypeV4, SemDerivedTermV4, SemModelV4,
+    SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
+    StructuralRelationRoleV4, capability_cell_reference_identity_v2,
     compile_general_sem_pls_recipe_v1,
+    pls_general_higher_order_bootstrap_capability_cell_v1,
+    pls_general_higher_order_point_capability_cell_v1,
+    pls_general_multiple_moderation_bootstrap_capability_cell_v1,
+    pls_general_multiple_moderation_point_capability_cell_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1, sha256_serialized,
     specific_directed_path_identity_v1,
 };
@@ -37,6 +42,9 @@ pub const GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_V1_LAYOUT_KEY: &str =
 pub const GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_V2_SCHEMA_VERSION: u32 = 2;
 pub const GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_V2_LAYOUT_KEY: &str =
     "general_sem_execution_authority_revision_v2";
+pub const GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1: &str = "native_general_sem_pls_labs_v1";
+pub const GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1: &str =
+    "native_general_sem_pls_standard_v1";
 const MAX_SAFE_REVISION_NUMBER: u64 = 9_007_199_254_740_991;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -57,7 +65,7 @@ pub enum GeneralSemRevisionHierarchyPolicyV1 {
     Strong,
 }
 
-/// The only scientific mutation accepted by revision schema v1.
+/// Additive scientific mutations accepted by revision schema v1.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum GeneralSemExecutionAuthorityRevisionIntentV1 {
@@ -71,6 +79,24 @@ pub enum GeneralSemExecutionAuthorityRevisionIntentV1 {
         method: GeneralSemRevisionInteractionMethodV1,
         hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1,
     },
+    AddHigherOrder {
+        term_id: String,
+        output_id: String,
+        label: String,
+        components: Vec<String>,
+        approach: HigherOrderConstructionApproachV4,
+        measurement_type: HigherOrderMeasurementTypeV4,
+        initial_path: GeneralSemRevisionHigherOrderPathV1,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct GeneralSemRevisionHigherOrderPathV1 {
+    pub relation_id: String,
+    pub source: String,
+    pub target: String,
+    pub label: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -101,6 +127,8 @@ pub struct GeneralSemExecutionAuthorityRevisionRequestV1 {
     pub source: GeneralSemExecutionAuthoritySourcePinV1,
     pub revision: GeneralSemExecutionAuthorityRevisionIdentityV1,
     pub intent: GeneralSemExecutionAuthorityRevisionIntentV1,
+    pub expected_capability_cell: CapabilityCellReferenceV2,
+    pub recipe_execution_surface: String,
 }
 
 /// Revision-v2 changes no hidden estimator state. It forks the exact resident
@@ -386,8 +414,8 @@ fn create_general_sem_execution_authority_revision_windows_v1(
     let mut revised_model = source_model.clone();
     revised_model.id = request.revision.model_id.clone();
     revised_model.name = request.revision.model_name.clone();
-    let (interaction_term_id, interaction_output_id) =
-        apply_interaction_v2_revision(&mut revised_model, &request.intent)?;
+    let (created_term_id, created_output_id) =
+        apply_general_sem_revision_intent(&mut revised_model, &request.intent)?;
     revised_model
         .ensure_valid()
         .map_err(|error| GeneralSemExecutionAuthorityRevisionErrorV1::Model(error.to_string()))?;
@@ -406,7 +434,59 @@ fn create_general_sem_execution_authority_revision_windows_v1(
         model_id: revised_model.id.clone(),
         scientific_sha256: revised_model_scientific_sha256.clone(),
     };
+    revised_recipe.metadata.insert(
+        "execution_surface".into(),
+        request.recipe_execution_surface.clone(),
+    );
+    revised_recipe
+        .metadata
+        .insert("general_sem_generation".into(), "general_sem_v1".into());
+    let higher_order_revision = matches!(
+        &request.intent,
+        GeneralSemExecutionAuthorityRevisionIntentV1::AddHigherOrder { .. }
+    );
+    let selected_execution_cell = match (
+        higher_order_revision,
+        revised_recipe
+            .general_sem_config
+            .as_ref()
+            .map(|config| config.inference),
+    ) {
+        (true, Some(qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. })) => {
+            pls_general_higher_order_bootstrap_capability_cell_v1()
+        }
+        (true, Some(qpls_core::GeneralSemInferenceV1::None)) => {
+            pls_general_higher_order_point_capability_cell_v1()
+        }
+        (false, Some(qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. })) => {
+            pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+        }
+        (false, Some(qpls_core::GeneralSemInferenceV1::None)) => {
+            pls_general_multiple_moderation_point_capability_cell_v1()
+        }
+        (_, None) => {
+            return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+                "revised RecipeV4 must retain one GeneralSemConfigV1 inference authority".into(),
+            ));
+        }
+    };
+    if selected_execution_cell != request.expected_capability_cell {
+        return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+            "expected execution cell differs from the exact revised RecipeV4 inference selection"
+                .into(),
+        ));
+    }
     let compiled = compile_general_sem_pls_recipe_v1(&revised_recipe, Some(&revised_model))?;
+    let expected_primary_cell = if higher_order_revision {
+        pls_general_higher_order_point_capability_cell_v1()
+    } else {
+        pls_general_multiple_moderation_point_capability_cell_v1()
+    };
+    if compiled.capability_cell() != &expected_primary_cell {
+        return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+            "revised compilation primary capability differs from the exact scientific editor intent".into(),
+        ));
+    }
     let revised_recipe_document_sha256 = sha256_serialized(&revised_recipe);
     let compilation = GeneralSemRevisionCompilationIdentityV1 {
         compiler_version: compiled.compiler_version().to_owned(),
@@ -528,8 +608,10 @@ fn create_general_sem_execution_authority_revision_windows_v1(
         general_sem_config_sha256: compilation.general_sem_config_sha256,
         compiled_plan_sha256: compilation.compiled_plan_sha256,
         compiled_artifact_identity_sha256: compilation.compiled_artifact_identity_sha256,
-        interaction_term_id,
-        interaction_output_id,
+        // Historical receipt field names are retained for wire compatibility;
+        // they identify the created derived term/output for either supported intent.
+        interaction_term_id: created_term_id,
+        interaction_output_id: created_output_id,
     })
 }
 
@@ -903,6 +985,14 @@ fn validate_new_identity_parts(
             "revision project, model, and recipe identities must all be new".into(),
         ));
     }
+    if request.recipe_execution_surface != GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+        && request.recipe_execution_surface != GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+    {
+        return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+            "recipe execution surface must be an exact General SEM Labs or Standard v1 identity"
+                .into(),
+        ));
+    }
     Ok(())
 }
 
@@ -1160,6 +1250,35 @@ fn sole_source_recipe(
     Ok(recipe)
 }
 
+fn apply_general_sem_revision_intent(
+    model: &mut SemModelV4,
+    intent: &GeneralSemExecutionAuthorityRevisionIntentV1,
+) -> Result<(String, String), GeneralSemExecutionAuthorityRevisionErrorV1> {
+    match intent {
+        GeneralSemExecutionAuthorityRevisionIntentV1::AddGeneralSemInteractionV2 { .. } => {
+            apply_interaction_v2_revision(model, intent)
+        }
+        GeneralSemExecutionAuthorityRevisionIntentV1::AddHigherOrder {
+            term_id,
+            output_id,
+            label,
+            components,
+            approach,
+            measurement_type,
+            initial_path,
+        } => apply_higher_order_revision(
+            model,
+            term_id,
+            output_id,
+            label,
+            components,
+            approach,
+            measurement_type,
+            initial_path,
+        ),
+    }
+}
+
 fn apply_interaction_v2_revision(
     model: &mut SemModelV4,
     intent: &GeneralSemExecutionAuthorityRevisionIntentV1,
@@ -1173,7 +1292,10 @@ fn apply_interaction_v2_revision(
         outcome,
         method,
         hierarchy_policy,
-    } = intent;
+    } = intent
+    else {
+        return Err(unsupported_intent("interaction revision intent required"));
+    };
     if *intent_version != 1
         || *sem_generation != GeneralSemRevisionGenerationV1::GeneralSemV1
         || *method != GeneralSemRevisionInteractionMethodV1::TwoStage
@@ -1327,6 +1449,121 @@ fn apply_interaction_v2_revision(
         "Interaction effect",
     )?;
     Ok((term_id, output_id))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn apply_higher_order_revision(
+    model: &mut SemModelV4,
+    term_id: &str,
+    output_id: &str,
+    label: &str,
+    components: &[String],
+    approach: &HigherOrderConstructionApproachV4,
+    measurement_type: &HigherOrderMeasurementTypeV4,
+    initial_path: &GeneralSemRevisionHigherOrderPathV1,
+) -> Result<(String, String), GeneralSemExecutionAuthorityRevisionErrorV1> {
+    for (field, value) in [
+        ("term id", term_id),
+        ("output id", output_id),
+        ("label", label),
+        (
+            "initial path relation id",
+            initial_path.relation_id.as_str(),
+        ),
+        ("initial path source", initial_path.source.as_str()),
+        ("initial path target", initial_path.target.as_str()),
+        ("initial path label", initial_path.label.as_str()),
+    ] {
+        if value.is_empty() || value.trim() != value {
+            return Err(unsupported_intent(format!(
+                "higher-order {field} must be nonempty without surrounding whitespace"
+            )));
+        }
+    }
+    if components.len() < 2 {
+        return Err(unsupported_intent(
+            "higher-order revision requires at least two lower-order components",
+        ));
+    }
+    let component_set = components.iter().collect::<std::collections::BTreeSet<_>>();
+    if component_set.len() != components.len() {
+        return Err(unsupported_intent(
+            "higher-order components must be distinct",
+        ));
+    }
+    if model.derived_terms.iter().any(|term| term.id() == term_id)
+        || model
+            .variables
+            .iter()
+            .any(|variable| variable.id() == output_id)
+        || model
+            .derived_terms
+            .iter()
+            .any(|term| matches!(term, SemDerivedTermV4::HigherOrder { .. }))
+    {
+        return Err(unsupported_intent(
+            "higher-order term/output identity already exists or the model already contains a HOC",
+        ));
+    }
+    for component in components {
+        if !matches!(
+            model
+                .variables
+                .iter()
+                .find(|variable| variable.id() == component),
+            Some(SemVariableV4::Composite { .. })
+        ) {
+            return Err(unsupported_intent(format!(
+                "higher-order component {component} is not an ordinary composite"
+            )));
+        }
+    }
+    let other_endpoint = match (
+        initial_path.source.as_str() == output_id,
+        initial_path.target.as_str() == output_id,
+    ) {
+        (true, false) => initial_path.target.as_str(),
+        (false, true) => initial_path.source.as_str(),
+        _ => {
+            return Err(unsupported_intent(
+                "higher-order initial path must use the new HOC output as exactly one endpoint",
+            ));
+        }
+    };
+    if components
+        .iter()
+        .any(|component| component == other_endpoint)
+        || !matches!(
+            model
+                .variables
+                .iter()
+                .find(|variable| variable.id() == other_endpoint),
+            Some(SemVariableV4::Composite { .. })
+        )
+    {
+        return Err(unsupported_intent(
+            "higher-order initial path must connect to an ordinary composite outside the component set",
+        ));
+    }
+    model.variables.push(SemVariableV4::Derived {
+        id: output_id.to_owned(),
+        label: label.to_owned(),
+    });
+    model.derived_terms.push(SemDerivedTermV4::HigherOrder {
+        id: term_id.to_owned(),
+        output: output_id.to_owned(),
+        components: components.to_vec(),
+        approach: approach.clone(),
+        measurement_type: measurement_type.clone(),
+    });
+    add_structural_relation(
+        model,
+        initial_path.relation_id.clone(),
+        initial_path.source.clone(),
+        initial_path.target.clone(),
+        &initial_path.label,
+    )?;
+    Ok((term_id.to_owned(), output_id.to_owned()))
 }
 
 fn add_structural_relation(
@@ -1553,6 +1790,65 @@ mod tests {
         assert_eq!(model, before);
     }
 
+    #[test]
+    fn higher_order_revision_adds_the_hoc_and_initial_path_atomically() {
+        let composite = |id: &str| SemVariableV4::Composite {
+            id: id.into(),
+            label: id.to_uppercase(),
+            weighting: qpls_core::CompositeWeightingV4::ModeA,
+        };
+        let mut model = SemModelV4 {
+            schema_version: 4,
+            id: "model:hoc-revision".into(),
+            name: "HOC revision".into(),
+            variables: vec![composite("a"), composite("b"), composite("y")],
+            relations: Vec::new(),
+            parameters: Vec::new(),
+            constraints: Vec::new(),
+            derived_terms: Vec::new(),
+            group: qpls_core::SemGroupV4::SingleGroup,
+            data_binding: qpls_core::SemDataBindingV4::Raw {
+                dataset_id: Uuid::from_u128(1).to_string(),
+                missing_data: qpls_core::MissingDataPolicyV4::ListwiseDeletion,
+                weight: None,
+                cluster_variable: None,
+                strata_variable: None,
+            },
+            annotations: Vec::new(),
+            presentation: qpls_core::SemPresentationV4::None,
+        };
+        let intent = GeneralSemExecutionAuthorityRevisionIntentV1::AddHigherOrder {
+            term_id: "hoc:term".into(),
+            output_id: "hoc:output".into(),
+            label: "Higher order".into(),
+            components: vec!["a".into(), "b".into()],
+            approach: HigherOrderConstructionApproachV4::DisjointTwoStage,
+            measurement_type: HigherOrderMeasurementTypeV4::ReflectiveReflective,
+            initial_path: GeneralSemRevisionHigherOrderPathV1 {
+                relation_id: "hoc:path".into(),
+                source: "hoc:output".into(),
+                target: "y".into(),
+                label: "HOC -> Y".into(),
+            },
+        };
+
+        let created = apply_general_sem_revision_intent(&mut model, &intent).unwrap();
+
+        assert_eq!(created, ("hoc:term".into(), "hoc:output".into()));
+        assert!(model.derived_terms.iter().any(|term| matches!(
+            term,
+            SemDerivedTermV4::HigherOrder { id, output, components, .. }
+                if id == "hoc:term"
+                    && output == "hoc:output"
+                    && components.iter().map(String::as_str).eq(["a", "b"])
+        )));
+        assert!(model.relations.iter().any(|relation| matches!(
+            relation,
+            SemRelationV4::Structural { id, source, target, .. }
+                if id == "hoc:path" && source == "hoc:output" && target == "y"
+        )));
+    }
+
     #[cfg(windows)]
     mod windows {
         use super::super::*;
@@ -1691,10 +1987,26 @@ mod tests {
             format!("{:x}", Sha256::digest(bytes))
         }
 
-        fn write_source(directory: &Path) -> SourceFixture {
+        fn write_source_with_bootstrap(directory: &Path, bootstrap: bool) -> SourceFixture {
             let source = directory.join("general-sem-source.qpls");
             let destination = directory.join("general-sem-revision.qpls");
-            let (dataset, recipe, model) = fixture_recipe_and_model();
+            let (dataset, mut recipe, model) = fixture_recipe_and_model();
+            if bootstrap {
+                recipe.general_sem_config.as_mut().unwrap().inference =
+                    GeneralSemInferenceV1::CaseBootstrap {
+                        resamples: 500,
+                        seed: 7,
+                        confidence_level: 0.95,
+                        interval: GeneralSemBootstrapIntervalV1::Percentile,
+                        tail: GeneralSemInferenceTailV1::TwoSided,
+                    };
+                recipe.settings.bootstrap_samples = 500;
+                recipe.settings.bootstrap_test_tail = PlsBootstrapTestTail::TwoSided;
+                recipe.settings.studentized_inner_samples = 0;
+                recipe.settings.seed = 7;
+                recipe.settings.confidence_level = 0.95;
+                recipe.ensure_valid().unwrap();
+            }
             let source_project_id = Uuid::from_u128(0x7265_7669_7369_6f6e_5f70_726f_6a65_6301);
             create_populated_general_sem_project_archive_v6(
                 &source,
@@ -1745,6 +2057,12 @@ mod tests {
                     method: GeneralSemRevisionInteractionMethodV1::TwoStage,
                     hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
                 },
+                expected_capability_cell: if bootstrap {
+                    qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+                } else {
+                    qpls_core::pls_general_multiple_moderation_point_capability_cell_v1()
+                },
+                recipe_execution_surface: GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1.into(),
             };
             SourceFixture {
                 source,
@@ -1972,6 +2290,10 @@ mod tests {
             }
         }
 
+        fn write_source(directory: &Path) -> SourceFixture {
+            write_source_with_bootstrap(directory, false)
+        }
+
         fn assert_source_unchanged(fixture: &SourceFixture) {
             let observed = fs::read(&fixture.source).unwrap();
             assert_eq!(observed, fixture.source_bytes);
@@ -2078,6 +2400,7 @@ mod tests {
                         && operands[1] == "construct:w"
                         && focal_relation == match &fixture.request.intent {
                             GeneralSemExecutionAuthorityRevisionIntentV1::AddGeneralSemInteractionV2 { focal_relation, .. } => focal_relation,
+                            GeneralSemExecutionAuthorityRevisionIntentV1::AddHigherOrder { .. } => unreachable!("interaction fixture"),
                         })
             }));
 
@@ -2146,6 +2469,48 @@ mod tests {
         }
 
         #[test]
+        fn bootstrap_revision_authorizes_supplemental_cell_but_preserves_point_primary_compilation()
+        {
+            let directory = tempfile::tempdir().unwrap();
+            let fixture = write_source_with_bootstrap(directory.path(), true);
+            assert_eq!(
+                fixture.request.expected_capability_cell,
+                qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+            );
+
+            let receipt = create_general_sem_execution_authority_revision_v1(
+                &fixture.source,
+                &fixture.source_sha256,
+                &fixture.destination,
+                fixture.request.clone(),
+            )
+            .unwrap();
+
+            assert_source_unchanged(&fixture);
+            assert_eq!(
+                receipt.capability_cell,
+                qpls_core::pls_general_multiple_moderation_point_capability_cell_v1()
+            );
+            let reopened = load_project_archive_v6(&fixture.destination).unwrap();
+            let revised_recipe = &reopened.document.recipes[0];
+            assert!(matches!(
+                revised_recipe
+                    .general_sem_config
+                    .as_ref()
+                    .map(|config| config.inference),
+                Some(GeneralSemInferenceV1::CaseBootstrap { .. })
+            ));
+            assert_eq!(revised_recipe.settings.bootstrap_samples, 500);
+            assert_eq!(
+                revised_recipe
+                    .metadata
+                    .get("execution_surface")
+                    .map(String::as_str),
+                Some(GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1)
+            );
+        }
+
+        #[test]
         fn stale_source_digest_fails_closed_without_destination_or_temporary() {
             let directory = tempfile::tempdir().unwrap();
             let fixture = write_source(directory.path());
@@ -2180,7 +2545,10 @@ mod tests {
             let GeneralSemExecutionAuthorityRevisionIntentV1::AddGeneralSemInteractionV2 {
                 intent_version,
                 ..
-            } = &mut fixture.request.intent;
+            } = &mut fixture.request.intent
+            else {
+                unreachable!("interaction fixture")
+            };
             *intent_version = 2;
 
             let result = create_general_sem_execution_authority_revision_v1(

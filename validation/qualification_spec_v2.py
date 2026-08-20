@@ -38,7 +38,6 @@ MANDATORY_SCENARIO_AXES = frozenset(
         "missingness",
         "input_type",
         "workload",
-        "workers",
     }
 )
 MANDATORY_ARCHIVE_CORRUPTION_CASES = frozenset(
@@ -110,6 +109,7 @@ class QualificationIdentity(TypedDict):
     potentially_long_running: bool
     spec_frozen_at_utc: str
     capability_cell: CapabilityCellRef
+    analytical_method_version: NotRequired[str]
 
 
 class MigrationSpec(TypedDict):
@@ -250,6 +250,7 @@ ComparisonRule = Literal[
     "subspace",
     "label_permutation",
     "monte_carlo_interval",
+    "bounded_moment",
 ]
 
 
@@ -270,6 +271,9 @@ class OutputComparisonSpec(TypedDict):
     confidence_level: NotRequired[float]
     maximum_half_width: NotRequired[float]
     acceptance_interval: NotRequired[list[float]]
+    statistic: NotRequired[Literal["absolute_bias", "rmse"]]
+    maximum: NotRequired[float]
+    grouping_keys: NotRequired[list[str]]
 
 
 class ComparisonContractSpec(TypedDict):
@@ -375,12 +379,14 @@ class ReceiptDescriptor(TypedDict):
     capability_id: str
     cell_id: str
     method_version: str
+    analytical_method_version: NotRequired[str]
     path: str
     size_bytes: int
     sha256: str
     generated_at_utc: str
     source_set_sha256: str
     scenario_set_sha256: str
+    qualification_contract_sha256: NotRequired[str]
     build_fingerprint: str
     hardware_fingerprint: HardwareFingerprint
 
@@ -391,6 +397,7 @@ class ReceiptContractSpec(TypedDict):
     source_descriptors_required: Literal[True]
     hardware_fingerprint_required: Literal[True]
     scenario_set_hash_required: Literal[True]
+    payload_contract: NotRequired[dict[str, str | int]]
 
 
 class EvidenceContractSpec(TypedDict):
@@ -433,6 +440,8 @@ class QualificationValidationReport:
     semantic_valid: bool
     registry_verified: bool
     receipts_verified: bool
+    receipt_payload_contract_id: str | None
+    receipt_payload_contract_verified: bool
     qualification_id: str | None
     capability_id: str | None
     cell_id: str | None
@@ -714,7 +723,10 @@ def _scenario_errors(document: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     contract = document["scenario_contract"]
     axes = _unique_rows(contract["axes"], "scenario axis", errors)
-    missing_axes = sorted(MANDATORY_SCENARIO_AXES - set(axes))
+    required_axes = set(MANDATORY_SCENARIO_AXES)
+    if document["identity"]["execution_kind"] == "stochastic":
+        required_axes.add("workers")
+    missing_axes = sorted(required_axes - set(axes))
     if missing_axes:
         errors.append(f"missing mandatory scenario axes: {', '.join(missing_axes)}")
     axis_values: dict[str, set[str]] = {}
@@ -919,9 +931,10 @@ def _scenario_errors(document: dict[str, Any]) -> list[str]:
     compound_rows = [
         row for row in combinations_by_id.values() if row["coverage"] == "compound"
     ]
-    if (
-        profiles.get("compound_stress", {}).get("applicability") == "required"
-        and not any(row["profile_id"] == "compound_stress" for row in compound_rows)
+    if profiles.get("compound_stress", {}).get(
+        "applicability"
+    ) == "required" and not any(
+        row["profile_id"] == "compound_stress" for row in compound_rows
     ):
         errors.append(
             "compound_stress requires an explicit compound mandatory combination"
@@ -942,6 +955,9 @@ _COMPARISON_PARAMETERS = frozenset(
         "confidence_level",
         "maximum_half_width",
         "acceptance_interval",
+        "statistic",
+        "maximum",
+        "grouping_keys",
     }
 )
 
@@ -1003,6 +1019,10 @@ def _comparison_errors(document: dict[str, Any]) -> list[str]:
             {"confidence_level", "maximum_half_width", "acceptance_interval"},
             {"confidence_level", "maximum_half_width", "acceptance_interval"},
         ),
+        "bounded_moment": (
+            {"statistic", "maximum", "grouping_keys"},
+            {"statistic", "maximum", "grouping_keys"},
+        ),
     }
     for output_id, row in rows.items():
         present = set(row) & _COMPARISON_PARAMETERS
@@ -1032,6 +1052,11 @@ def _comparison_errors(document: dict[str, Any]) -> list[str]:
             if row["maximum_half_width"] > policy["maximum_half_width"]:
                 errors.append(
                     f"comparison {output_id!r} half-width exceeds the scenario Monte Carlo policy"
+                )
+        if row["rule"] == "bounded_moment" and "grouping_keys" in row:
+            if row["grouping_keys"] != ["family", "target_id"]:
+                errors.append(
+                    f"comparison {output_id!r} bounded moment grouping keys must be exactly family, target_id"
                 )
     return errors
 
@@ -1209,6 +1234,70 @@ def _evidence_errors(document: dict[str, Any]) -> list[str]:
     )
     identity = document["identity"]
     cell = identity["capability_cell"]
+    payload_contract = evidence["receipt_contract"].get("payload_contract")
+    if payload_contract is not None:
+        try:
+            from validation.general_sem_rank0_receipt_payload_v1 import (
+                ANALYTICAL_METHOD_BY_CELL,
+                CONTRACT_DESCRIPTOR,
+                RANK0_REQUIRED_ROLES,
+                ROLE_STAGE,
+                qualification_contract_sha256,
+            )
+        except ModuleNotFoundError:
+            from general_sem_rank0_receipt_payload_v1 import (
+                ANALYTICAL_METHOD_BY_CELL,
+                CONTRACT_DESCRIPTOR,
+                RANK0_REQUIRED_ROLES,
+                ROLE_STAGE,
+                qualification_contract_sha256,
+            )
+        if payload_contract != CONTRACT_DESCRIPTOR:
+            errors.append(
+                "receipt payload contract is not the supported exact Rank 0 contract"
+            )
+        analytical = ANALYTICAL_METHOD_BY_CELL.get(
+            (cell["cell_id"], identity["method_version"])
+        )
+        if (
+            analytical is None
+            or identity.get("analytical_method_version") != analytical
+        ):
+            errors.append(
+                "strict Rank 0 qualification identity must bind its exact analytical method"
+            )
+        if required_roles != RANK0_REQUIRED_ROLES:
+            missing = sorted(RANK0_REQUIRED_ROLES - required_roles)
+            extra = sorted(required_roles - RANK0_REQUIRED_ROLES)
+            errors.append(
+                "strict Rank 0 required_roles must equal the exact ten-role contract"
+                + (f"; missing: {', '.join(missing)}" if missing else "")
+                + (f"; unexpected: {', '.join(extra)}" if extra else "")
+            )
+        if (
+            set(document["operational_contract"]["export"]["semantic_readback_formats"])
+            != MANDATORY_EXPORT_FORMATS
+        ):
+            errors.append(
+                "strict Rank 0 semantic read-back formats must equal csv/xlsx/html/svg/pdf/png"
+            )
+        expected_qualification_contract = qualification_contract_sha256(document)
+        for receipt in evidence["receipts"]:
+            if receipt.get("analytical_method_version") != analytical:
+                errors.append(
+                    f"receipt {receipt['role']!r} does not bind the exact analytical method"
+                )
+            if (
+                receipt.get("qualification_contract_sha256")
+                != expected_qualification_contract
+            ):
+                errors.append(
+                    f"receipt {receipt['role']!r} does not bind the immutable QualificationSpec contract"
+                )
+            if ROLE_STAGE.get(receipt["role"]) != receipt["stage"]:
+                errors.append(
+                    f"receipt {receipt['role']!r} stage is not the exact Rank 0 role mapping"
+                )
     expected_identity = {
         "qualification_id": identity["qualification_id"],
         "capability_id": cell["capability_id"],
@@ -1242,8 +1331,11 @@ def _evidence_errors(document: dict[str, Any]) -> list[str]:
                     f"expected {expected!r}, found {receipt[field]!r}"
                 )
     receipts = evidence["receipts"]
-    for field in ("source_set_sha256", "scenario_set_sha256", "build_fingerprint"):
-        values = {receipt[field] for receipt in receipts}
+    shared_fields = ["source_set_sha256", "scenario_set_sha256", "build_fingerprint"]
+    if payload_contract is not None:
+        shared_fields.append("qualification_contract_sha256")
+    for field in shared_fields:
+        values = {receipt.get(field) for receipt in receipts}
         if len(values) > 1:
             errors.append(f"immutable receipts disagree on {field}")
     expected_scenarios = canonical_sha256(document["scenario_contract"])
@@ -1296,7 +1388,12 @@ def _evidence_errors(document: dict[str, Any]) -> list[str]:
                 + f"; missing: {', '.join(sorted(MANDATORY_RECEIPT_STAGES - receipt_stages))}"
             )
         identities = set(evidence["receipt_contract"]["identity_fields"])
-        if identities != MANDATORY_RECEIPT_IDENTITY_FIELDS:
+        expected_identities = MANDATORY_RECEIPT_IDENTITY_FIELDS
+        if payload_contract is not None:
+            expected_identities = expected_identities | {
+                "qualification_contract_sha256"
+            }
+        if identities != expected_identities:
             errors.append("receipt identity fields must be the complete mandatory set")
     return errors
 
@@ -1354,8 +1451,16 @@ def _registry_links(
                 if not isinstance(cell, Mapping):
                     continue
                 specification = cell.get("qualification_spec")
-                links = specification.get("links") if isinstance(specification, Mapping) else None
-                if not isinstance(links, list) or len(links) != 1 or not isinstance(links[0], Mapping):
+                links = (
+                    specification.get("links")
+                    if isinstance(specification, Mapping)
+                    else None
+                )
+                if (
+                    not isinstance(links, list)
+                    or len(links) != 1
+                    or not isinstance(links[0], Mapping)
+                ):
                     continue
                 rows.append((links[0], capability.get("capability_id"), cell))
     return rows
@@ -1390,7 +1495,9 @@ def _registry_errors(document: dict[str, Any], registry: Any) -> list[str]:
             or cell.get("cell_id") != link.get("cell_id")
             or cell.get("capability_version") != link.get("capability_version")
         ):
-            errors.append("Capability Registry option-cell identity does not match its qualification link")
+            errors.append(
+                "Capability Registry option-cell identity does not match its qualification link"
+            )
     matches = [
         link
         for link, _owner_id, _cell in links
@@ -1407,15 +1514,23 @@ def _registry_errors(document: dict[str, Any], registry: Any) -> list[str]:
             continue
         row_links = capability.get("qualification_links")
         if not isinstance(row_links, list):
-            errors.append("Capability Registry compatibility qualification_links must be a list")
+            errors.append(
+                "Capability Registry compatibility qualification_links must be a list"
+            )
             continue
         for link in row_links:
             if not isinstance(link, Mapping) or set(link) != CAPABILITY_LINK_FIELDS:
-                errors.append("Capability Registry contains a malformed compatibility qualification link")
+                errors.append(
+                    "Capability Registry contains a malformed compatibility qualification link"
+                )
                 continue
-            compatibility.add(tuple(link.get(field) for field in sorted(CAPABILITY_LINK_FIELDS)))
+            compatibility.add(
+                tuple(link.get(field) for field in sorted(CAPABILITY_LINK_FIELDS))
+            )
     if compatibility != authoritative:
-        errors.append("Capability Registry compatibility qualification_links drift from option cells")
+        errors.append(
+            "Capability Registry compatibility qualification_links drift from option cells"
+        )
     if len(matches) != 1:
         errors.append(
             "Capability Registry must contain exactly one qualification link "
@@ -1449,6 +1564,10 @@ def _stream_sha256(path: Path) -> tuple[int, str]:
 def _receipt_verification_errors(document: dict[str, Any], root: Path) -> list[str]:
     errors: list[str] = []
     migration_ready = document["migration"]["status"] in {"native", "completed"}
+    payload_contract = document["evidence_contract"]["receipt_contract"].get(
+        "payload_contract"
+    )
+    strict_rank0_payload = payload_contract is not None
     for receipt in document["evidence_contract"]["receipts"]:
         path = _safe_repository_path(root, receipt["path"])
         if path is None:
@@ -1468,6 +1587,29 @@ def _receipt_verification_errors(document: dict[str, Any], root: Path) -> list[s
             errors.append(f"receipt {receipt['role']!r} size mismatch")
         if digest != receipt["sha256"]:
             errors.append(f"receipt {receipt['role']!r} SHA-256 mismatch")
+        if strict_rank0_payload:
+            if path.suffix.casefold() != ".json":
+                errors.append(
+                    f"receipt {receipt['role']!r} strict payload must be JSON"
+                )
+                continue
+            try:
+                from validation.general_sem_rank0_receipt_payload_v1 import (
+                    validate_payload_path,
+                )
+            except ModuleNotFoundError:
+                from general_sem_rank0_receipt_payload_v1 import validate_payload_path
+            payload_errors = validate_payload_path(
+                path,
+                receipt=receipt,
+                specification=document,
+                repository_root=root,
+            )
+            errors.extend(
+                f"receipt {receipt['role']!r} payload: {problem}"
+                for problem in payload_errors
+            )
+            continue
         if (
             migration_ready
             and path.suffix.casefold() == ".json"
@@ -1510,7 +1652,15 @@ def validate_spec_document(
     warnings: list[str] = []
     registry_verified = False
     receipts_verified = False
+    receipt_payload_contract_id: str | None = None
+    receipt_payload_contract_verified = False
     if schema_valid:
+        selected_payload_contract = document["evidence_contract"][
+            "receipt_contract"
+        ].get("payload_contract")
+        if isinstance(selected_payload_contract, Mapping):
+            value = selected_payload_contract.get("contract_id")
+            receipt_payload_contract_id = value if isinstance(value, str) else None
         errors.extend(_migration_errors(document))
         errors.extend(_scientific_errors(document))
         errors.extend(_scenario_errors(document))
@@ -1540,6 +1690,9 @@ def validate_spec_document(
                 )
                 errors.extend(receipt_problems)
                 receipts_verified = not receipt_problems
+                receipt_payload_contract_verified = bool(
+                    selected_payload_contract is not None and not receipt_problems
+                )
         else:
             warnings.append(
                 "immutable receipt bytes were not verified in this validation pass"
@@ -1561,6 +1714,8 @@ def validate_spec_document(
         semantic_valid=semantic_valid,
         registry_verified=registry_verified,
         receipts_verified=receipts_verified,
+        receipt_payload_contract_id=receipt_payload_contract_id,
+        receipt_payload_contract_verified=receipt_payload_contract_verified,
         qualification_id=identity.get("qualification_id")
         if isinstance(identity, dict)
         else None,
@@ -1602,6 +1757,8 @@ def validate_spec_path(
             semantic_valid=False,
             registry_verified=False,
             receipts_verified=False,
+            receipt_payload_contract_id=None,
+            receipt_payload_contract_verified=False,
             qualification_id=None,
             capability_id=None,
             cell_id=None,

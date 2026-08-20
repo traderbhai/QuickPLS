@@ -37,8 +37,7 @@ pub const CBSEM_ML_CELL_ID: &str = "qpls3.cbsem.ml";
 pub const CBSEM_ML_CAPABILITY_VERSION: &str = "cbsem_ml_v1";
 pub const CBSEM_EXACT_BOOTSTRAP_CAPABILITY_ID: &str = "smartpls.cbsem_bootstrapping";
 pub const CBSEM_EXACT_BOOTSTRAP_CELL_ID: &str = "qpls3.cbsem.bootstrap";
-pub const CBSEM_EXACT_BOOTSTRAP_CAPABILITY_VERSION: &str =
-    "cbsem_exact_case_bootstrap_v1";
+pub const CBSEM_EXACT_BOOTSTRAP_CAPABILITY_VERSION: &str = "cbsem_exact_case_bootstrap_v1";
 pub const CBSEM_PRODUCT_INDICATOR_CAPABILITY_ID: &str = "smartpls.cbsem_moderator";
 pub const CBSEM_PRODUCT_INDICATOR_CELL_ID: &str = "qpls3.cbsem.moderator.product_indicator";
 pub const CBSEM_PRODUCT_INDICATOR_CAPABILITY_VERSION: &str = "cbsem_product_indicator_v1";
@@ -1111,7 +1110,10 @@ fn ensure_capability_cell_for_recipe(
     // They remain valid under their stored identity, while current desktop
     // requests are required to use the method-scoped bootstrap cell.
     let historical = exact_cbsem_bootstrap && *actual == target.capability_cell();
-    if !current && !historical && *actual != target.capability_cell_for_method(recipe.settings.method) {
+    if !current
+        && !historical
+        && *actual != target.capability_cell_for_method(recipe.settings.method)
+    {
         return Err(RecipeV4CompilationError::CapabilityCellMismatch);
     }
     Ok(())
@@ -2144,13 +2146,9 @@ mod tests {
             let mut recipe = point_recipe.clone();
             enable_exact_cbsem_cfa_case_bootstrap_v2(&mut recipe, samples);
             let exact_cell = cbsem_exact_bootstrap_capability_cell_v1();
-            let compiled = compile_analysis_recipe_v4(
-                &recipe,
-                Some(&model),
-                target,
-                exact_cell.clone(),
-            )
-            .unwrap();
+            let compiled =
+                compile_analysis_recipe_v4(&recipe, Some(&model), target, exact_cell.clone())
+                    .unwrap();
             assert_eq!(compiled.receipt().capability_cell(), &exact_cell);
             assert_eq!(compiled.plan(), point.plan());
             assert_ne!(

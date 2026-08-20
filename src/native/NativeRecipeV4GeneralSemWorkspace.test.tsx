@@ -8,6 +8,7 @@ import {
   buildGeneralSemRecipeV1,
   defaultGeneralSemPlsEngineOptionsV1,
   generalSemConfigFromEngineV1,
+  generalSemPlsRequestedCapabilityCellV1,
   type GeneralSemProjectBootstrapReceiptV1,
 } from "../domain/internalRecipeV4GeneralSemWorkspace";
 import { preflightGeneralSemPlsV1 } from "../domain/generalSemCapabilityPreflightV1";
@@ -379,6 +380,8 @@ function setMarkedGeneralSemSession(modelId: string): void {
     nativeScientificSha256: "e".repeat(64),
     config,
     engine,
+    capabilityCell: generalSemPlsRequestedCapabilityCellV1(recipeModel, config),
+    experimentalLabsEnabled: true,
   });
   const project = {
     schema_version: 6,
@@ -389,7 +392,14 @@ function setMarkedGeneralSemSession(modelId: string): void {
     origin: { kind: "new_project" },
     sem_generation: "general_sem_v1",
     datasets: [{ id: resident.id, fingerprint: resident.fingerprint }],
-    models: [{ model_id: modelId, payload: { kind: "sem_model_v4", scientific_sha256: "e".repeat(64) } }],
+    models: [{
+      model_id: modelId,
+      payload: {
+        kind: "sem_model_v4",
+        model: recipeModel,
+        scientific_sha256: "e".repeat(64),
+      },
+    }],
     recipes: [recipe],
     canonical_result_documents: [],
   };
@@ -647,7 +657,8 @@ describe("General SEM native workspace accessibility", () => {
     expect(html).toContain('role="tabpanel"');
     expect(html).toContain('aria-labelledby="nd-model-general-sem-labs-tab"');
     expect(html).toContain("General SEM in QuickPLS");
-    expect(html).toContain("One QuickPLS canvas · explicit General SEM project authority · PLS-first Experimental Labs");
+    expect(html).toContain("One QuickPLS canvas · explicit General SEM project authority · Registry-authorized PLS-SEM estimation");
+    expect(html).not.toContain("PLS-first Experimental Labs");
     expect(html).toContain('role="note"');
     expect(html).toContain("This is a fresh General SEM draft inside QuickPLS.");
     expect(html).toContain("Only this newly created canvas may be adapted; ordinary projects are never converted.");
@@ -689,6 +700,8 @@ describe("General SEM native workspace accessibility", () => {
     expect(generalSemCalculationActionLabelV1(true, true)).toBe("Calculate moderation bootstrap");
     expect(generalSemCalculationActionLabelV1(true, false)).toBe("Calculate moderation point estimates");
     expect(generalSemCalculationActionLabelV1(false, true)).toBe("Calculate PLS effects");
+    expect(generalSemCalculationActionLabelV1(false, false, true)).toBe("Calculate HOC point estimates");
+    expect(generalSemCalculationActionLabelV1(false, true, true)).toBe("Calculate HOC bootstrap");
     expect(html).not.toContain("sem.capability.pls.derived_shape_not_executable");
     expect(html).toContain("Ready for QuickPLS engine verification");
 

@@ -2,11 +2,10 @@
 
 ## Status and exact scope
 
-This is an opt-in Experimental Labs capability with `partial` coverage and
-`engine_only` evidence. It is not qualification-ready and must not be exposed
-as Standard. QuickPLS can execute and persist the exact cell in the existing
-General SEM workspace, but a connected runtime is not the same as independent
-scientific, packaged-Windows, export, performance, or release qualification.
+This is a Standard capability with `partial` coverage and release-qualified
+evidence under `rank0_streamlined_plan4b_v1`. Package and performance evidence
+is representative rather than per-cell, as explicitly accepted for this
+profile. The exact predicate and blocked surfaces below remain unchanged.
 
 The executable predicate is deliberately narrow:
 
@@ -112,7 +111,8 @@ intervals, failure ledgers, source pins, or digests.
 
 The presence of native controls, canonical persistence, accessible readback,
 and deterministic engine tests does not promote the cell. Cross-surface golden
-equality, semantic export and report readback, packaged Windows acceptance,
+equality, semantic CSV/XLSX/HTML/PDF/SVG/PNG export and report readback,
+packaged Windows acceptance,
 performance/memory/soak evidence, and independent review remain required.
 
 ## Versioned provenance
@@ -156,4 +156,7 @@ terminology, workflow, and observable-output benchmark. Independent scientific
 references remain mandatory, including Henseler and Chin (2010), DOI
 `10.1080/10705510903439003`.
 
-`qualification_ready=false`; `promotion_allowed=false`.
+`qualification_ready=true`; `promotion_allowed=true` for this exact cell. The
+streamlined release decision does not claim three-way moderation, moderated
+mediation, arbitrary probes, broader data handling, or SmartPLS numerical
+identity.

@@ -1,0 +1,16 @@
+{
+  "cancellation_observation": {
+    "terminal_latency_seconds": 0.2241415000000002,
+    "terminal_state": "cancelled",
+    "no_partial_visible_result": true,
+    "no_partial_committed_result": true,
+    "archive_unchanged": true
+  },
+  "memory_growth_observation": {
+    "accepted_runs": 10,
+    "first_settled_working_set_bytes": 554430464,
+    "last_settled_working_set_bytes": 586371072,
+    "growth_percent": 5.760976366551172,
+    "orphan_processes": 0
+  }
+}

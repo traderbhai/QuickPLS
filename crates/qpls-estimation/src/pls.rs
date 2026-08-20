@@ -34,6 +34,9 @@ use std::{
 };
 use thiserror::Error;
 
+use crate::general_sem_pls_higher_order_v1::{
+    PlsGeneratedScoreColumnSpecV1, append_pls_generated_score_columns_v1,
+};
 use crate::{
     CbsemBootstrapAnalysisV2, CbsemExactCaseBootstrapResultV1,
     CbsemExactCaseBootstrapWithBcaResultV1, CbsemExactCaseBootstrapWithStudentizedResultV1,
@@ -178,9 +181,7 @@ pub enum EstimationError {
     },
     #[error("OLS HC3 covariance is undefined for {subject}: {reason}")]
     OlsHc3Invalid { subject: String, reason: String },
-    #[error(
-        "NCA CR-FDH requires at least two distinct CE-FDH peers; found {peer_count}"
-    )]
+    #[error("NCA CR-FDH requires at least two distinct CE-FDH peers; found {peer_count}")]
     NcaCrFdhInsufficientPeers { peer_count: usize },
     #[error("IPMA performance is undefined for {subject}: {reason}")]
     IpmaInvalidPerformanceRange { subject: String, reason: String },
@@ -3030,6 +3031,20 @@ pub fn estimate_pls_validated_with_control(
     estimate_pls_internal(dataset, effective, None, false, true, &mut control)
 }
 
+/// Trusted schema-6 stage boundary for HOC scoring. Isolated measurement
+/// blocks are intentional in a disjoint stage, while every other recipe and
+/// dataset check remains identical to ordinary validated PLS execution.
+pub fn estimate_pls_validated_allowing_isolated_with_control(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    mut control: impl FnMut(EstimationProgress) -> bool,
+) -> Result<PlsResult, EstimationError> {
+    let effective = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
+    estimate_pls_internal(dataset, effective, None, true, true, &mut control)
+}
+
 /// Executes a validated schema-v3 projection while taking construct-score
 /// semantics exclusively from its compiled SemModelV4 plan. The optional
 /// initialization is the exact typed value from the source recipe-v4 and is
@@ -3052,6 +3067,32 @@ pub fn estimate_pls_validated_with_compiled_plan_v2_with_control(
             initialization,
         }),
         false,
+        true,
+        &mut control,
+    )
+}
+
+/// Compiled-score counterpart of the trusted disjoint-stage boundary above.
+/// It permits isolated blocks but does not relax the compiled plan, recipe,
+/// initialization, dataset, or numerical validation contracts.
+pub fn estimate_pls_validated_with_compiled_plan_v2_allowing_isolated_with_control(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    plan: &CompiledPlsPlanV2,
+    initialization: Option<&PlsAlgorithmConfigV2>,
+    mut control: impl FnMut(EstimationProgress) -> bool,
+) -> Result<PlsResult, EstimationError> {
+    let effective = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
+    estimate_pls_internal(
+        dataset,
+        effective,
+        Some(CompiledScoreExecutionInputV2 {
+            plan,
+            initialization,
+        }),
+        true,
         true,
         &mut control,
     )
@@ -4306,24 +4347,8 @@ fn expand_two_stage_higher_order_dataset(
             "stage-1 used row count does not match construct-score length".into(),
         ));
     }
-    let mut arrays = Vec::<ArrayRef>::new();
-    let mut fields = dataset
-        .batch
-        .schema()
-        .fields()
-        .iter()
-        .map(|field| Field::new(field.name(), field.data_type().clone(), field.is_nullable()))
-        .collect::<Vec<_>>();
-    let mut schema = dataset.schema.clone();
-    for column in dataset.batch.columns() {
-        arrays.push(subset_array(column.as_ref(), used_rows)?);
-    }
-    let existing_fields = fields
-        .iter()
-        .map(|field| field.name().to_string())
-        .collect::<HashSet<_>>();
-    let mut generated_names = HashSet::new();
     let mut stage2_recipe = recipe.clone();
+    let mut generated_score_specs = Vec::new();
 
     for higher_order in &recipe.model.higher_order_constructs {
         if higher_order.method != HigherOrderMethod::TwoStage {
@@ -4342,25 +4367,13 @@ fn expand_two_stage_higher_order_dataset(
                 ));
             }
             let indicator_name = higher_order_component_indicator_name(&higher_order.id, component);
-            if existing_fields.contains(&indicator_name)
-                || !generated_names.insert(indicator_name.clone())
-            {
-                return Err(EstimationError::DuplicateIndicator(indicator_name));
-            }
-            arrays.push(Arc::new(Float64Array::from(scores.clone())) as ArrayRef);
-            fields.push(Field::new(&indicator_name, DataType::Float64, false));
-            schema.columns.push(ColumnMetadata {
-                name: indicator_name.clone(),
-                label: Some(format!(
+            generated_score_specs.push(PlsGeneratedScoreColumnSpecV1 {
+                source_score_id: component.clone(),
+                generated_column_id: indicator_name.clone(),
+                label: format!(
                     "Two-stage HOC component score: {} <- {}",
                     higher_order.id, component
-                )),
-                column_type: ColumnType::Numeric,
-                scale_type: ScaleType::Continuous,
-                missing_markers: Vec::new(),
-                theoretical_min: None,
-                theoretical_max: None,
-                value_labels: BTreeMap::new(),
+                ),
             });
             indicators.push(indicator_name);
         }
@@ -4378,18 +4391,13 @@ fn expand_two_stage_higher_order_dataset(
         .model
         .higher_order_constructs
         .retain(|higher_order| higher_order.method != HigherOrderMethod::TwoStage);
-    let batch = RecordBatch::try_new(Arc::new(Schema::new(fields)), arrays)
-        .map_err(|error| EstimationError::Numerical(error.to_string()))?;
-    Ok((
-        Dataset {
-            id: dataset.id,
-            name: dataset.name.clone(),
-            schema,
-            fingerprint: dataset.fingerprint.clone(),
-            batch,
-        },
-        stage2_recipe,
-    ))
+    let expanded_dataset = append_pls_generated_score_columns_v1(
+        dataset,
+        &stage1.construct_scores,
+        used_rows,
+        &generated_score_specs,
+    )?;
+    Ok((expanded_dataset, stage2_recipe))
 }
 
 fn apply_plsc_correction(
@@ -6114,7 +6122,7 @@ fn expand_two_stage_moderation_dataset(
     Ok((expanded_dataset, stage2_recipe))
 }
 
-fn subset_array(array: &dyn Array, rows: &[usize]) -> Result<ArrayRef, EstimationError> {
+pub(crate) fn subset_array(array: &dyn Array, rows: &[usize]) -> Result<ArrayRef, EstimationError> {
     if let Some(values) = array.as_any().downcast_ref::<Float64Array>() {
         Ok(Arc::new(Float64Array::from(
             rows.iter()
@@ -12339,10 +12347,7 @@ fn robust_covariance_hc3(
     for (row_index, row) in design.iter().enumerate() {
         let leverage = dot(row, &matrix_vector_product(xtx_inv, row));
         let denominator = 1.0 - leverage;
-        if !leverage.is_finite()
-            || !denominator.is_finite()
-            || denominator <= LEVERAGE_TOLERANCE
-        {
+        if !leverage.is_finite() || !denominator.is_finite() || denominator <= LEVERAGE_TOLERANCE {
             return Err(EstimationError::OlsHc3Invalid {
                 subject: subject.into(),
                 reason: format!(
@@ -18631,14 +18636,7 @@ mod tests {
         );
 
         assert_eq!(
-            ols_regression(
-                &[vec![0.0, 1.0]],
-                &[0.0, 1.0],
-                &["x".into()],
-                "y",
-                0.95,
-            )
-            .unwrap_err(),
+            ols_regression(&[vec![0.0, 1.0]], &[0.0, 1.0], &["x".into()], "y", 0.95,).unwrap_err(),
             EstimationError::OlsNonPositiveResidualDegreesOfFreedom {
                 subject: "y".into(),
                 observations: 2,
@@ -18767,11 +18765,14 @@ mod tests {
             )
             .unwrap();
             let error = estimate_pls(&data, &logistic_recipe(&data)).unwrap_err();
-            assert!(matches!(
-                error,
-                EstimationError::Numerical(ref message)
-                    if message == "logistic regression produced extreme fitted probabilities; possible separation or unstable scaling"
-            ), "{name}: {error:?}");
+            assert!(
+                matches!(
+                    error,
+                    EstimationError::Numerical(ref message)
+                        if message == "logistic regression produced extreme fitted probabilities; possible separation or unstable scaling"
+                ),
+                "{name}: {error:?}"
+            );
         }
     }
 
@@ -19005,9 +19006,8 @@ mod tests {
         // production CE-FDH peer/effect helpers.
         fn reference_ce_effect(x: &[f64], y: &[f64]) -> f64 {
             let mut points = x.iter().copied().zip(y.iter().copied()).collect::<Vec<_>>();
-            points.sort_by(|left, right| {
-                left.0.total_cmp(&right.0).then(left.1.total_cmp(&right.1))
-            });
+            points
+                .sort_by(|left, right| left.0.total_cmp(&right.0).then(left.1.total_cmp(&right.1)));
             let mut maxima = Vec::<(f64, f64)>::new();
             for (x_value, y_value) in points {
                 if let Some(last) = maxima.last_mut()
@@ -19069,7 +19069,10 @@ mod tests {
         let exceedances = (0..7)
             .filter(|replicate| {
                 let indices = nca_permutation_indices(complete_y.len(), 77, "ce_fdh", *replicate);
-                let permuted = indices.iter().map(|index| complete_y[*index]).collect::<Vec<_>>();
+                let permuted = indices
+                    .iter()
+                    .map(|index| complete_y[*index])
+                    .collect::<Vec<_>>();
                 reference_ce_effect(&complete_x, &permuted) >= observed - 1e-12
             })
             .count();
@@ -19080,11 +19083,7 @@ mod tests {
         assert_eq!(actual_p.to_bits(), expected_p.to_bits());
 
         for (name, bytes, expected) in [
-            (
-                "constant",
-                &b"x,y\n1,1\n1,2\n1,3\n1,4\n"[..],
-                "constant",
-            ),
+            ("constant", &b"x,y\n1,1\n1,2\n1,3\n1,4\n"[..], "constant"),
             (
                 "insufficient",
                 &b"x,y\n1,1\n2,2\n,3\n4,\n"[..],
@@ -19100,9 +19099,13 @@ mod tests {
             .unwrap();
             let failure = run(&dataset, &recipe(&dataset, NcaCeiling::CeFdh, 3, 9, 1));
             assert!(
-                matches!((&failure, expected),
+                matches!(
+                    (&failure, expected),
                     (Err(EstimationError::ConstantIndicator(_)), "constant")
-                    | (Err(EstimationError::InsufficientObservations), "insufficient")
+                        | (
+                            Err(EstimationError::InsufficientObservations),
+                            "insufficient"
+                        )
                 ),
                 "unexpected {name} result: {failure:?}"
             );
@@ -19115,7 +19118,11 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let ce_only = run(&descending, &recipe(&descending, NcaCeiling::CeFdh, 3, 4, 1)).unwrap();
+        let ce_only = run(
+            &descending,
+            &recipe(&descending, NcaCeiling::CeFdh, 3, 4, 1),
+        )
+        .unwrap();
         assert_eq!(ce_only.nca.unwrap().ce_fdh_peers.len(), 1);
         for ceiling in [NcaCeiling::CrFdh, NcaCeiling::Both] {
             assert_eq!(
@@ -19848,7 +19855,10 @@ mod tests {
         formative_to_formative.model.constructs[0].mode = MeasurementMode::Formative;
         let ff = estimate_pls(&two_block_data, &formative_to_formative).unwrap();
         assert_bounded_point_result(&ff, 1);
-        assert_eq!(ff, estimate_pls(&two_block_data, &formative_to_formative).unwrap());
+        assert_eq!(
+            ff,
+            estimate_pls(&two_block_data, &formative_to_formative).unwrap()
+        );
 
         // A connected recursive model with a mediated path and two predictors
         // of the final target exercises the general predecessor OLS branch.
@@ -20171,12 +20181,10 @@ mod tests {
                 .importance
         };
         assert!(
-            (importance("x") - (path("x", "y") + path("x", "m") * path("m", "y"))).abs()
-                <= 1e-12
+            (importance("x") - (path("x", "y") + path("x", "m") * path("m", "y"))).abs() <= 1e-12
         );
         assert!(
-            (importance("z") - (path("z", "y") + path("z", "m") * path("m", "y"))).abs()
-                <= 1e-12
+            (importance("z") - (path("z", "y") + path("z", "m") * path("m", "y"))).abs() <= 1e-12
         );
         assert!((importance("m") - path("m", "y")).abs() <= 1e-12);
 

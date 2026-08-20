@@ -20,6 +20,7 @@ import {
 } from "./semModelV4";
 import { sha256HexBytesV1 } from "./sha256V1";
 import { capabilityRegistryV2 } from "./capabilityRegistryV2";
+import { preflightGeneralSemHocContractV1 } from "./generalSemHigherOrderContractV1";
 
 export const GENERAL_SEM_PLS_ESTIMATOR_ID_V1 = "qpls.pls_sem.v3" as const;
 export const GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1 = "qpls.cbsem.v3" as const;
@@ -69,7 +70,7 @@ const CBSEM_CELL = {
 const PLS_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
   {
     evidence_id: "capability_registry_v2:smartpls.mediation:qpls3.pls.mediation:pls_mediation_v1",
-    description: "Capability Registry V2 exposes the exact mediation option in Experimental Labs.",
+    description: "Capability Registry V2 exposes the exact bounded mediation option.",
   },
   {
     evidence_id: "compiler:recipe_v4_to_compiled_pls_plan_v3_v1",
@@ -79,7 +80,7 @@ const PLS_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
 
 const PLS_BOOTSTRAP_EVIDENCE: SemCapabilityEvidenceV1 = {
   evidence_id: "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_multiple_mediation_bootstrap:general_sem_pls_full_model_case_bootstrap_v1",
-  description: "Capability Registry V2 exposes this exact multiple-mediation, full-model percentile case-bootstrap combination in Experimental Labs.",
+  description: "Capability Registry V2 exposes this exact multiple-mediation, full-model percentile case-bootstrap combination.",
 };
 
 const PLS_BOOTSTRAP_MECHANISM_EVIDENCE: SemCapabilityEvidenceV1 = {
@@ -99,7 +100,7 @@ const PLS_MULTIPLE_MODERATION_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
   },
   {
     evidence_id: "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_point:general_sem_pls_multiple_two_way_moderation_point_v1",
-    description: "Capability Registry V2 exposes the exact simultaneous interaction_v2 point-estimation option in Experimental Labs.",
+    description: "Capability Registry V2 exposes the exact simultaneous interaction_v2 point-estimation option.",
   },
 ];
 
@@ -110,7 +111,7 @@ const PLS_MULTIPLE_MODERATION_BOOTSTRAP_EVIDENCE: readonly SemCapabilityEvidence
   },
   {
     evidence_id: "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap:general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
-    description: "Capability Registry V2 exposes the exact gamma-only simultaneous interaction_v2 full-model case-bootstrap option in Experimental Labs.",
+    description: "Capability Registry V2 exposes the exact gamma-only simultaneous interaction_v2 full-model case-bootstrap option.",
   },
 ];
 
@@ -366,7 +367,11 @@ function executionScopeDiagnostics(
   return diagnostics;
 }
 
-function plsShapeDiagnostics(model: SemModelV4, hasInteractions: boolean): SemCapabilityDiagnosticV1[] {
+function plsShapeDiagnostics(
+  model: SemModelV4,
+  hasInteractions: boolean,
+  hasHigherOrder: boolean,
+): SemCapabilityDiagnosticV1[] {
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
   if (hasInteractions) {
     for (const term of model.derived_terms) {
@@ -387,7 +392,7 @@ function plsShapeDiagnostics(model: SemModelV4, hasInteractions: boolean): SemCa
       "Use composite constructs for this PLS request, or retain the factor model for a qualified CB-SEM capability cell.",
     ));
   }
-  if (!hasInteractions && (
+  if (!hasInteractions && !hasHigherOrder && (
     model.variables.some((variable) => variable.kind === "derived")
     || model.derived_terms.length > 0
     || model.parameters.some((parameter) => parameter.kind === "derived")
@@ -404,6 +409,25 @@ function plsShapeDiagnostics(model: SemModelV4, hasInteractions: boolean): SemCa
 interface CompiledInteractionProjectionV1 {
   readonly projectedModel: SemModelV4;
   readonly outputIds: ReadonlySet<string>;
+}
+
+function compileHocLowerOrderProjectionV1(model: SemModelV4, outputId: string): SemModelV4 {
+  const removedRelations = model.relations.filter((relation) => relationReferencesVariable(relation, outputId));
+  const removedRelationIds = new Set(removedRelations.map((relation) => relation.id));
+  const removedParameterIds = new Set(removedRelations.flatMap((relation) => (
+    relation.kind === "structural" && relation.intercept_parameter
+      ? [relation.parameter, relation.intercept_parameter]
+      : [relation.parameter]
+  )));
+  return canonicalizeSemModelV4({
+    ...structuredClone(model),
+    variables: model.variables.filter((variable) => variable.id !== outputId),
+    relations: model.relations.filter((relation) => !removedRelationIds.has(relation.id)),
+    parameters: model.parameters.filter((parameter) => !removedParameterIds.has(parameter.id)),
+    derived_terms: [],
+    annotations: [],
+    presentation: { kind: "none" },
+  });
 }
 
 function constraintReferencesParameter(model: SemModelV4, parameterId: string): boolean {
@@ -824,36 +848,43 @@ export function preflightGeneralSemPlsV1(
 ): SemCapabilityDecisionV1 {
   const validatedConfig = parseGeneralSemConfigV1(config);
   const hasInteractions = model.derived_terms.some((term) => term.kind === "interaction_v2");
+  const hasHigherOrder = model.derived_terms.some((term) => term.kind === "higher_order");
   const bootstrapRequested = validatedConfig.inference.kind === "case_bootstrap";
   const requestsModeratedMediation = hasInteractions
     && bootstrapRequested
     && validatedConfig.requested_effect_estimands.length > 0;
-  const capabilityCells = [
-    hasInteractions ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1 : PLS_CELL,
-    ...(bootstrapRequested
-      ? [hasInteractions
-        ? requestsModeratedMediation
-          ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1
-          : GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1
-        : PLS_BOOTSTRAP_CELL]
-      : []),
-  ];
+  const hocContract = preflightGeneralSemHocContractV1(model, bootstrapRequested);
+  const capabilityCells = hasHigherOrder
+    ? hocContract.capabilityCells
+    : [
+      hasInteractions ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1 : PLS_CELL,
+      ...(bootstrapRequested
+        ? [hasInteractions
+          ? requestsModeratedMediation
+            ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1
+            : GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1
+          : PLS_BOOTSTRAP_CELL]
+        : []),
+    ];
   const evidence = [
     PLS_EVIDENCE.find((item) => item.evidence_id === "compiler:recipe_v4_to_compiled_pls_plan_v3_v1")!,
-    ...(hasInteractions ? PLS_MULTIPLE_MODERATION_EVIDENCE : PLS_EVIDENCE.filter((item) => (
+    ...(hasHigherOrder ? hocContract.evidence : hasInteractions ? PLS_MULTIPLE_MODERATION_EVIDENCE : PLS_EVIDENCE.filter((item) => (
       item.evidence_id !== "compiler:recipe_v4_to_compiled_pls_plan_v3_v1"
     ))),
     ...(bootstrapRequested ? [
-      ...(hasInteractions
-        ? requestsModeratedMediation
-          ? PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EVIDENCE
-          : PLS_MULTIPLE_MODERATION_BOOTSTRAP_EVIDENCE
+      ...(hasHigherOrder
+        ? []
+        : hasInteractions
+          ? requestsModeratedMediation
+            ? PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EVIDENCE
+            : PLS_MULTIPLE_MODERATION_BOOTSTRAP_EVIDENCE
         : [PLS_BOOTSTRAP_COMPILER_EVIDENCE, PLS_BOOTSTRAP_EVIDENCE]),
       PLS_BOOTSTRAP_MECHANISM_EVIDENCE,
     ] : []),
   ];
   const diagnostics = executionScopeDiagnostics(validatedConfig, hasInteractions);
-  diagnostics.push(...plsShapeDiagnostics(model, hasInteractions));
+  diagnostics.push(...plsShapeDiagnostics(model, hasInteractions, hasHigherOrder));
+  if (hasHigherOrder) diagnostics.push(...hocContract.diagnostics);
   diagnostics.push(...plsDataScopeDiagnostics(model));
 
   let modelIsValid = false;
@@ -887,7 +918,12 @@ export function preflightGeneralSemPlsV1(
     && item.code !== "sem.capability.pls.derived_shape_not_executable"
   ))) {
     try {
-      if (hasInteractions) {
+      if (hasHigherOrder) {
+        if (hocContract.contractCompiles && hocContract.outputId) {
+          compilePlsPlanV2(compileHocLowerOrderProjectionV1(model, hocContract.outputId));
+          basePlanCompiles = true;
+        }
+      } else if (hasInteractions) {
         const compiled = compileInteractionProjectionV1(model);
         diagnostics.push(...compiled.diagnostics);
         if (compiled.value) {
@@ -925,13 +961,13 @@ export function preflightGeneralSemPlsV1(
       if (hasInteractions) {
         diagnostics.push(...interactionScopeDiagnostics(model, validatedConfig, eligiblePaths));
         diagnostics.push(...requestedEffectDiagnostics(model, validatedConfig, eligiblePaths));
-      } else if (!bootstrapRequested && eligiblePaths.length === 0) {
+      } else if (!hasHigherOrder && !bootstrapRequested && eligiblePaths.length === 0) {
         diagnostics.push(errorDiagnostic(
           "sem.capability.pls.mediation_requires_indirect_path",
           "The PLS mediation point cell requires at least one compiled specific indirect path; this graph has none.",
           "Add a supported mediator path, or use the existing ordinary PLS workflow for a direct-only recursive model.",
         ));
-      } else if (bootstrapRequested && eligiblePaths.length < 2) {
+      } else if (!hasHigherOrder && bootstrapRequested && eligiblePaths.length < 2) {
         diagnostics.push(errorDiagnostic(
           "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
           `The exact multiple-mediation bootstrap cell requires at least two compiled specific indirect paths; this graph has ${eligiblePaths.length}.`,
@@ -962,24 +998,32 @@ export function preflightGeneralSemPlsV1(
       code: "sem.capability.pls.experimental_labs",
       severity: "info",
       subject: null,
-      message: hasInteractions
+      message: hasHigherOrder
+        ? bootstrapRequested
+          ? "General SEM higher-order full-model percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+          : "General SEM higher-order point estimation passes the bounded exact-cell compiler preflight."
+        : hasInteractions
         ? bootstrapRequested
           ? requestsModeratedMediation
             ? "General SEM two-way moderated-mediation five-target percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
-            : "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
-          : "General SEM simultaneous two-way moderation point estimation passes the Experimental Labs compiler preflight."
+            : "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+          : "General SEM simultaneous two-way moderation point estimation passes the bounded exact-cell compiler preflight."
         : bootstrapRequested
-          ? "General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
-          : "General recursive PLS point estimation and path-specific effects pass the Experimental Labs compiler preflight.",
+          ? "General recursive PLS percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+          : "General recursive PLS point estimation and path-specific effects pass the bounded exact-cell compiler preflight.",
       corrections: [],
     }],
     evidence,
-    summary: "PLS-SEM can compile this exact request in Experimental Labs.",
-    explanation: hasInteractions
+    summary: "PLS-SEM can compile this exact Registry-governed request.",
+    explanation: hasHigherOrder
+      ? bootstrapRequested
+        ? "The exact HOC point cell remains the primary artifact authority and the supplemental HOC cell authorizes indexed raw-case resampling with every compiled stage refitted before bounded target inference is published."
+        : "The compiler binds the authored HOC to its approach-specific stages, generated identities, component loading-or-weight interpretation, authored paths, and canonical stage receipts."
+      : hasInteractions
       ? bootstrapRequested
         ? requestsModeratedMediation
           ? "The point moderation cell remains the primary artifact authority and the exact Registry-authorized Labs cell adds scientific gamma, fixed -1/0/+1 conditional indirect effects, and the index of moderated mediation from one shared full-model replicate ledger. Runtime validation remains authoritative before publication."
-          : "The point moderation cell remains the primary artifact authority and the supplemental Labs cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
+          : "The point moderation cell remains the primary artifact authority and the supplemental exact cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
         : "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
       : bootstrapRequested
       ? "The compiler binds percentile, two-sided case resampling to the exact multiple-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."

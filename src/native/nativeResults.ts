@@ -286,6 +286,9 @@ const MEDIATION_IDS = [
 ] as const;
 
 const HIGHER_ORDER_IDS = [
+  "general_sem_higher_order_targets",
+  "general_sem_higher_order_stages",
+  "general_sem_higher_order_bootstrap_receipt",
   "hoc_component_relationships",
   "hoc_structural_paths",
   "hoc_scope",

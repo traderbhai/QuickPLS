@@ -1,4 +1,4 @@
-//! Internal/Labs bootstrap for a runnable schema-6 General SEM project.
+//! Registry-driven bootstrap for a runnable schema-6 General SEM project.
 //!
 //! A backend-authorized fresh General SEM draft contributes exactly one
 //! already-resident dataset. The caller supplies a newly authored SemModelV4
@@ -6,9 +6,20 @@
 //! publishes a new `general_sem_v1` archive atomically. No source model, recipe,
 //! result, layout, or project identity is migrated.
 
-use crate::DesktopProject;
+use crate::{
+    DesktopProject,
+    general_sem_registry_access_v1::{
+        GENERAL_SEM_INTERNAL_LABS_SURFACE as INTERNAL_LABS_SURFACE,
+        GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+        GENERAL_SEM_STANDARD_SURFACE as STANDARD_SURFACE, GeneralSemRegistryAccessErrorV1,
+        authorize_general_sem_registry_access_v1, decision_declares_general_sem_execution_cell_v1,
+        general_sem_recipe_execution_surface_v1, selected_general_sem_execution_cell_v1,
+    },
+};
 use chrono::{DateTime, Utc};
-use qpls_core::{AnalysisRecipeV4, SemModelV4};
+use qpls_core::{
+    AnalysisRecipeV4, CapabilityCellReferenceV2, SemModelV4, preflight_general_sem_pls_v1,
+};
 use qpls_project::{
     GeneralSemPopulatedProjectArchiveCreationReceiptV1, GeneralSemProjectArchiveCreationErrorV1,
     Project, ProjectArchiveV6SaveCopyError, ProjectDatasetVersionOperationV1,
@@ -22,7 +33,6 @@ use std::{
 use tauri::State;
 use uuid::Uuid;
 
-const INTERNAL_LABS_SURFACE: &str = "internal_labs";
 const GENERAL_SEM_BOOTSTRAP_RESULT_SCHEMA_VERSION: u32 = 1;
 const DIAGNOSTIC_CODE_PREFIX: &str = "schema6_general_sem_bootstrap";
 const GENERAL_SEM_FRESH_DRAFT_UNMARKED_SAVE_BLOCKER: &str = "This fresh General SEM draft cannot be saved or autosaved as an unmarked project. Use General SEM > Save and activate project.";
@@ -207,6 +217,7 @@ impl Drop for GeneralSemFreshDraftClaimV1<'_> {
 pub(crate) struct GeneralSemProjectArchiveBootstrapRequestV1 {
     surface: String,
     experimental_labs_enabled: bool,
+    capability_cell: CapabilityCellReferenceV2,
     destination_path: String,
     project_id: String,
     name: String,
@@ -310,7 +321,7 @@ fn publication_error(
         | ProjectArchiveV6SaveCopyError::PublicationFailed(_) => (
             "commit_validation_failed",
             "The project archive could not pass safe publication validation.",
-            "Keep the Labs session open and retry with a new local destination filename.",
+            "Keep the General SEM draft unchanged and retry with a new local destination filename.",
         ),
         ProjectArchiveV6SaveCopyError::Io(_) => (
             "io_failed",
@@ -325,24 +336,94 @@ fn publication_error(
         | ProjectArchiveV6SaveCopyError::Json(_) => (
             "write_failed",
             "The General SEM project archive could not be created.",
-            "Keep the Labs session open and retry with a new local destination filename.",
+            "Keep the General SEM draft unchanged and retry with a new local destination filename.",
         ),
     };
     blocked(code_suffix, message, corrective_action)
 }
 
-fn labs_access_block(
+fn registry_access_block(
     request: &GeneralSemProjectArchiveBootstrapRequestV1,
 ) -> Option<GeneralSemProjectArchiveBootstrapOutcomeV1> {
-    if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
-        Some(blocked(
-            "internal_labs_required",
-            "Runnable General SEM project bootstrap is available only through Experimental Labs.",
-            "Enable Experimental Labs and use the internal General SEM new-project action.",
-        ))
-    } else {
-        None
+    if let Err(error) = authorize_general_sem_registry_access_v1(
+        &request.surface,
+        request.experimental_labs_enabled,
+        &request.capability_cell,
+    ) {
+        return Some(match error {
+            GeneralSemRegistryAccessErrorV1::RegistryInvalid(detail) => blocked(
+                "capability_registry_invalid",
+                format!("Capability Registry V2 is invalid: {detail}"),
+                "Keep the draft unchanged and repair the embedded registry before publication.",
+            ),
+            GeneralSemRegistryAccessErrorV1::CapabilityUnavailable => blocked(
+                "capability_unavailable",
+                "The exact requested General SEM option cell is not executable in Standard or Labs.",
+                "Refresh the exact capability selection before publishing this project.",
+            ),
+            GeneralSemRegistryAccessErrorV1::StandardSurfaceRequired => blocked(
+                "standard_surface_required",
+                "The exact requested General SEM option cell is qualified for the Standard surface.",
+                "Refresh capability access and publish through the Standard surface.",
+            ),
+            GeneralSemRegistryAccessErrorV1::InternalLabsRequired => blocked(
+                "internal_labs_required",
+                "The exact requested General SEM option cell is available only through Experimental Labs.",
+                "Enable Experimental Labs, or choose a Standard-qualified General SEM cell.",
+            ),
+        });
     }
+    let expected_recipe_surface = general_sem_recipe_execution_surface_v1(&request.surface)
+        .expect("Registry authorization accepted one of the two General SEM surfaces");
+    if request
+        .recipe
+        .metadata
+        .get("execution_surface")
+        .map(String::as_str)
+        != Some(expected_recipe_surface)
+        || request
+            .recipe
+            .metadata
+            .get("general_sem_generation")
+            .map(String::as_str)
+            != Some("general_sem_v1")
+    {
+        return Some(blocked(
+            "recipe_execution_surface_mismatch",
+            "The RecipeV4 execution-surface metadata disagrees with the exact Registry-authorized request.",
+            "Rebuild the recipe from the unchanged model, configuration, and exact selected cell.",
+        ));
+    }
+    let Some(config) = request.recipe.general_sem_config.as_ref() else {
+        return Some(blocked(
+            "capability_cell_mismatch",
+            "The bound RecipeV4 does not contain a General SEM configuration.",
+            "Rebuild the recipe from the current marked General SEM draft.",
+        ));
+    };
+    let decision = match preflight_general_sem_pls_v1(&request.model, config) {
+        Ok(decision) => decision,
+        Err(error) => {
+            return Some(blocked(
+                "capability_decision_invalid",
+                format!("The exact PLS capability decision is invalid: {error}"),
+                "Keep the draft unchanged and report this capability-contract error.",
+            ));
+        }
+    };
+    // Point provenance and supplemental bootstrap ownership are independent of
+    // the capability decision's canonical cell ordering.
+    let selected = selected_general_sem_execution_cell_v1(&request.model, config);
+    if !decision_declares_general_sem_execution_cell_v1(&decision, &selected)
+        || selected != request.capability_cell
+    {
+        return Some(blocked(
+            "capability_cell_mismatch",
+            "The requested option cell differs from the exact native model and RecipeV4 decision.",
+            "Refresh the unchanged draft and rerun exact capability preflight.",
+        ));
+    }
+    None
 }
 
 fn claim_fresh_general_sem_draft<'a>(
@@ -365,7 +446,7 @@ fn claim_fresh_general_sem_draft<'a>(
         return Err(blocked(
             "fresh_draft_authority_required",
             "The active project was not created as a fresh General SEM draft.",
-            "Use New General SEM Project in Experimental Labs before importing data or authoring the model.",
+            "Use New General SEM Project before importing data or authoring the model.",
         ));
     };
     if authorization.claim_id.is_some() {
@@ -440,7 +521,7 @@ fn bootstrap_general_sem_project_archive(
     request: GeneralSemProjectArchiveBootstrapRequestV1,
     active_project: Arc<Mutex<Project>>,
 ) -> GeneralSemProjectArchiveBootstrapOutcomeV1 {
-    // The command wrapper evaluates the Labs gate before cloning or locking
+    // The command wrapper evaluates Registry access before cloning or locking
     // project state and before any destination-path inspection.
     if request.destination_path.is_empty()
         || request.destination_path != request.destination_path.trim()
@@ -564,7 +645,7 @@ fn bootstrap_general_sem_project_archive(
         }) {
             return blocked(
                 "source_dataset_transformation_lineage_unsupported",
-                "This exact General SEM Labs cell does not accept a derived or transformed dataset authority.",
+                "This exact General SEM execution cell does not accept a derived or transformed dataset authority.",
                 "Import the original raw dataset as a new resident dataset and rebuild the General SEM project.",
             );
         }
@@ -597,7 +678,7 @@ pub(crate) async fn bootstrap_internal_general_sem_project_archive_v6(
     fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
 ) -> Result<GeneralSemProjectArchiveBootstrapOutcomeV1, String> {
     // Denied callers cannot lock project state or trigger destination lookup.
-    if let Some(blocked) = labs_access_block(&request) {
+    if let Some(blocked) = registry_access_block(&request) {
         return Ok(blocked);
     }
     let project = project.0.clone();
@@ -612,7 +693,7 @@ pub(crate) async fn bootstrap_internal_general_sem_project_archive_v6(
             Err(_) => blocked(
                 "worker_failed",
                 "The General SEM project bootstrap worker stopped before returning an outcome.",
-                "Keep the Labs session open and retry with a new destination filename.",
+                "Keep the General SEM draft unchanged and retry with a new destination filename.",
             ),
         },
     )
@@ -624,7 +705,8 @@ pub(crate) mod tests {
     use chrono::TimeZone;
     use qpls_core::{
         ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe,
-        AnalysisRecipeModelBindingV4, AnalysisSettings, Construct, GeneralSemConfigV1,
+        AnalysisRecipeModelBindingV4, AnalysisSettings, Construct, GeneralSemBootstrapIntervalV1,
+        GeneralSemConfigV1, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
         LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig, ModelSpec,
         SemDataBindingV4, StructuralPath, confirm_legacy_recipe_estimand_v4,
         migrate_analysis_recipe_to_v4_pending,
@@ -709,6 +791,13 @@ pub(crate) mod tests {
             scientific_sha256: model.scientific_sha256().unwrap(),
         };
         recipe.general_sem_config = Some(GeneralSemConfigV1::default());
+        recipe.metadata.insert(
+            "execution_surface".into(),
+            GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
+        );
+        recipe
+            .metadata
+            .insert("general_sem_generation".into(), "general_sem_v1".into());
 
         let mut project = Project::new("Native General SEM source");
         project.datasets.push(dataset.clone());
@@ -725,8 +814,9 @@ pub(crate) mod tests {
         fixture: &GeneralSemNativeFixtureV1,
     ) -> GeneralSemProjectArchiveBootstrapRequestV1 {
         GeneralSemProjectArchiveBootstrapRequestV1 {
-            surface: INTERNAL_LABS_SURFACE.into(),
-            experimental_labs_enabled: true,
+            surface: STANDARD_SURFACE.into(),
+            experimental_labs_enabled: false,
+            capability_cell: qpls_core::pls_general_recursive_effects_capability_cell_v1(),
             destination_path: destination.to_string_lossy().into_owned(),
             project_id: "60000002-0000-4000-8000-000000000001".into(),
             name: "Populated General SEM project".into(),
@@ -743,8 +833,9 @@ pub(crate) mod tests {
     fn bootstrap_request_wire_is_strict_camel_case_and_denies_unknown_fields() {
         let fixture = general_sem_native_fixture_v1();
         let valid = serde_json::json!({
-            "surface": "internal_labs",
-            "experimentalLabsEnabled": true,
+            "surface": "standard",
+            "experimentalLabsEnabled": false,
+            "capabilityCell": qpls_core::pls_general_recursive_effects_capability_cell_v1(),
             "destinationPath": r"D:\projects\general-sem.qpls",
             "projectId": "60000002-0000-4000-8000-000000000001",
             "name": "General SEM",
@@ -789,24 +880,27 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn labs_denial_precedes_destination_or_project_action() {
+    fn registry_denial_precedes_destination_or_project_action() {
         let directory = tempfile::tempdir().unwrap();
         let fixture = general_sem_native_fixture_v1();
-        for (index, (surface, enabled)) in [("standard", true), (INTERNAL_LABS_SURFACE, false)]
-            .into_iter()
-            .enumerate()
+        for (index, (surface, enabled)) in [
+            (INTERNAL_LABS_SURFACE, true),
+            (INTERNAL_LABS_SURFACE, false),
+        ]
+        .into_iter()
+        .enumerate()
         {
             let destination = directory.path().join(format!("blocked-{index}.qpls"));
             let mut denied = request(&destination, &fixture);
             denied.surface = surface.into();
             denied.experimental_labs_enabled = enabled;
             denied.destination_path = format!(" {} ", destination.to_string_lossy());
-            let outcome = labs_access_block(&denied).expect("Labs gate must deny first");
+            let outcome = registry_access_block(&denied).expect("registry gate must deny first");
             assert!(matches!(
                 &outcome,
                 GeneralSemProjectArchiveBootstrapOutcomeV1::Blocked { diagnostic }
                     if diagnostic.code
-                        == "schema6_general_sem_bootstrap.internal_labs_required"
+                        == "schema6_general_sem_bootstrap.standard_surface_required"
             ));
             let wire = serde_json::to_value(&outcome).unwrap();
             assert_eq!(wire["status"], "blocked");
@@ -814,6 +908,41 @@ pub(crate) mod tests {
             assert!(wire["diagnostic"].get("corrective_action").is_none());
             assert!(!destination.exists());
         }
+        assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn bootstrap_requires_supplemental_cell_for_bootstrap_inference_before_path_access() {
+        let directory = tempfile::tempdir().unwrap();
+        let mut fixture = general_sem_native_fixture_v1();
+        fixture
+            .recipe
+            .general_sem_config
+            .as_mut()
+            .unwrap()
+            .inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 7,
+            confidence_level: 0.95,
+            interval: GeneralSemBootstrapIntervalV1::Percentile,
+            tail: GeneralSemInferenceTailV1::TwoSided,
+        };
+        let mut wrong = request(&directory.path().join("must-not-open.qpls"), &fixture);
+        wrong.capability_cell = qpls_core::pls_general_recursive_effects_capability_cell_v1();
+        wrong.destination_path = " relative-and-unreachable ".into();
+        let outcome = registry_access_block(&wrong).expect("point cell must not own bootstrap");
+        assert!(matches!(
+            outcome,
+            GeneralSemProjectArchiveBootstrapOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code
+                    == "schema6_general_sem_bootstrap.capability_cell_mismatch"
+        ));
+        let mut exact = wrong;
+        exact.capability_cell = qpls_core::pls_general_bootstrap_capability_cell_v1();
+        assert!(
+            registry_access_block(&exact).is_none(),
+            "the supplemental mediation bootstrap cell owns the operation regardless of canonical decision order"
+        );
         assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
     }
 

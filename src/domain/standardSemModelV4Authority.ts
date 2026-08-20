@@ -79,6 +79,22 @@ export interface AddGeneralSemInteractionV2EditorIntentV1 {
   readonly hierarchy_policy: "strong";
 }
 
+export interface AddGeneralSemHigherOrderEditorIntentV1 {
+  readonly kind: "add_higher_order";
+  readonly term_id: string;
+  readonly output_id: string;
+  readonly label: string;
+  readonly components: string[];
+  readonly approach: HigherOrderConstructionApproachV4;
+  readonly measurement_type: HigherOrderMeasurementTypeV4;
+  readonly initial_path?: {
+    readonly relation_id: string;
+    readonly source: string;
+    readonly target: string;
+    readonly label: string;
+  };
+}
+
 export type StandardSemModelV4EditorIntentV1 =
   | { kind: "set_model_name"; name: string }
   | { kind: "replace_complete_model"; model: SemModelV4 }
@@ -128,15 +144,7 @@ export type StandardSemModelV4EditorIntentV1 =
   | AddGeneralSemInteractionV2EditorIntentV1
   | { kind: "add_polynomial"; term_id: string; output_id: string; label: string; source: string; degree: number }
   | { kind: "replace_polynomial"; term_id: string; source: string; degree: number }
-  | {
-    kind: "add_higher_order";
-    term_id: string;
-    output_id: string;
-    label: string;
-    components: string[];
-    approach: HigherOrderConstructionApproachV4;
-    measurement_type: HigherOrderMeasurementTypeV4;
-  }
+  | AddGeneralSemHigherOrderEditorIntentV1
   | {
     kind: "replace_higher_order";
     term_id: string;
@@ -921,6 +929,32 @@ function addHigherOrder(model: MutableModel, intent: Extract<StandardSemModelV4E
   if (model.derived_terms.some((term) => term.id === termId) || model.variables.some((variable) => variable.id === outputId)) duplicate("higher-order term", termId);
   model.variables.push({ kind: "derived", id: outputId, label: requiredText(intent.label, "intent.label") });
   model.derived_terms.push({ kind: "higher_order", id: termId, output: outputId, components, approach: intent.approach, measurement_type: intent.measurement_type });
+  if (intent.initial_path) {
+    const path = intent.initial_path;
+    const other = path.source === outputId
+      ? path.target
+      : path.target === outputId
+        ? path.source
+        : fail(
+          "standard_sem_authority.higher_order_initial_path_invalid",
+          path.relation_id,
+          "The initial HOC path must use the new HOC output as exactly one endpoint.",
+          "Choose one ordinary construct and an incoming or outgoing HOC direction.",
+        );
+    if (components.includes(other)) fail(
+      "standard_sem_authority.higher_order_initial_path_invalid",
+      path.relation_id,
+      "The initial HOC structural path cannot connect the HOC to one of its lower-order components.",
+      "Choose an ordinary construct outside the component set.",
+    );
+    structuralVariable(model, other, path.source === other ? "source" : "target");
+    addRelationship(model, stableId(path.relation_id, "intent.initial_path.relation_id"), {
+      kind: "structural",
+      source: path.source,
+      target: path.target,
+      label: requiredText(path.label, "intent.initial_path.label"),
+    });
+  }
 }
 
 function replaceHigherOrder(model: MutableModel, intent: Extract<StandardSemModelV4EditorIntentV1, { kind: "replace_higher_order" }>) {

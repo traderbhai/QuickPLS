@@ -1,9 +1,19 @@
+use crate::general_sem_registry_access_v1::{
+    GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_read_access_v1,
+    decision_declares_general_sem_execution_cell_v1, general_sem_recipe_execution_surface_v1,
+    is_general_sem_execution_cell_v1, selected_general_sem_execution_cell_v1,
+};
 use crate::recipe_v4_canonical_result::validate_archived_recipe_v4_pls_method_identity;
 use crate::recipe_v4_cbsem_canonical_result::validate_archived_recipe_v4_cbsem_method_identity;
 use crate::recipe_v4_general_sem_canonical_result::validate_archived_general_sem_pls_method_identity_v1;
+use qpls_core::{
+    AnalysisRecipeModelBindingV4, CapabilityCellReferenceV2, SemModelV4,
+    preflight_general_sem_pls_v1,
+};
 use qpls_project::{
-    CanonicalResultDocumentAttachmentV2, CanonicalResultDocumentV2,
-    canonical_result_document_v2_json, deserialize_project_document_v6, load_project_archive_v6,
+    CanonicalResultDocumentAttachmentV2, CanonicalResultDocumentV2, ProjectArchiveDocumentV6,
+    ProjectModelPayloadV6, canonical_result_document_v2_json, deserialize_project_document_v6,
+    load_project_archive_v6,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -18,6 +28,8 @@ const RESULT_READ_SCHEMA_VERSION: u32 = 1;
 pub(crate) struct ProjectSchema6ResultReadRequestV1 {
     pub(crate) surface: String,
     pub(crate) experimental_labs_enabled: bool,
+    #[serde(default)]
+    pub(crate) capability_cell: Option<CapabilityCellReferenceV2>,
     pub(crate) archive_path: String,
     pub(crate) expected_source_sha256: String,
 }
@@ -113,18 +125,157 @@ fn canonical_result_entry(
     })
 }
 
-fn read_schema6_results(
-    request: &ProjectSchema6ResultReadRequestV1,
+fn registry_access_block(
+    error: GeneralSemRegistryAccessErrorV1,
 ) -> ProjectSchema6ResultReadOutcomeV1 {
+    match error {
+        GeneralSemRegistryAccessErrorV1::RegistryInvalid(detail) => blocked(
+            "schema6_result_read.capability_registry_invalid",
+            format!("Capability Registry V2 is invalid: {detail}"),
+            "Keep the archive unchanged and repair the embedded registry before reopening results.",
+        ),
+        GeneralSemRegistryAccessErrorV1::CapabilityUnavailable => blocked(
+            "schema6_result_read.capability_unavailable",
+            "The exact General SEM execution cell is not available in Capability Registry V2.",
+            "Refresh exact estimator access before reopening this result archive.",
+        ),
+        GeneralSemRegistryAccessErrorV1::StandardSurfaceRequired => blocked(
+            "schema6_result_read.standard_surface_required",
+            "The exact General SEM execution cell requires the Standard surface.",
+            "Refresh capability access and reopen through Standard without relabelling stored results.",
+        ),
+        GeneralSemRegistryAccessErrorV1::InternalLabsRequired => blocked(
+            "schema6_result_read.internal_labs_required",
+            "The recognized General SEM result cell belongs to the historical Labs read surface.",
+            "Reopen it read-only through its stored Labs surface; Experimental Labs opt-in is not required for reading.",
+        ),
+    }
+}
+
+fn general_sem_recipe_model<'a>(
+    document: &'a ProjectArchiveDocumentV6,
+    binding: &'a AnalysisRecipeModelBindingV4,
+) -> Option<&'a SemModelV4> {
+    match binding {
+        AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 { model, .. } => Some(model),
+        AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference { model_id, .. } => document
+            .models
+            .iter()
+            .find(|record| record.model_id == *model_id)
+            .and_then(|record| match &record.payload {
+                ProjectModelPayloadV6::SemModelV4 { model, .. } => Some(model),
+                ProjectModelPayloadV6::SemModelV4Draft { .. }
+                | ProjectModelPayloadV6::LegacyEstimandUnspecified { .. } => None,
+            }),
+        AnalysisRecipeModelBindingV4::LegacyEstimandUnspecified { .. } => None,
+    }
+}
+
+fn validate_exact_general_sem_archive_read_authority(
+    request: &ProjectSchema6ResultReadRequestV1,
+    document: &ProjectArchiveDocumentV6,
+) -> Result<(), ProjectSchema6ResultReadOutcomeV1> {
+    let Some(requested_cell) = request.capability_cell.as_ref() else {
+        return Ok(());
+    };
+    let matching_recipes = document
+        .recipes
+        .iter()
+        .filter(|recipe| recipe.general_sem_config.is_some())
+        .collect::<Vec<_>>();
+    let [recipe] = matching_recipes.as_slice() else {
+        return Err(blocked(
+            "schema6_result_read.general_sem_recipe_authority_mismatch",
+            "Exact-cell General SEM readback requires one resident GeneralSemConfigV1 RecipeV4 authority.",
+            "Keep the archive unchanged and reopen it through its exact strict General SEM authority.",
+        ));
+    };
+    let expected_surface = general_sem_recipe_execution_surface_v1(&request.surface);
+    if recipe.metadata.get("execution_surface").map(String::as_str) != expected_surface
+        || recipe
+            .metadata
+            .get("general_sem_generation")
+            .map(String::as_str)
+            != Some("general_sem_v1")
+    {
+        return Err(blocked(
+            "schema6_result_read.recipe_execution_surface_mismatch",
+            "The exact read surface differs from the resident RecipeV4 surface identity.",
+            "Reopen read-only through the recipe's stored surface without relabelling the archive.",
+        ));
+    }
+    let Some(model) = general_sem_recipe_model(document, &recipe.model_binding) else {
+        return Err(blocked(
+            "schema6_result_read.general_sem_model_authority_mismatch",
+            "The resident General SEM RecipeV4 does not resolve to one executable SemModelV4 authority.",
+            "Keep the archive unchanged and restore its exact resident model authority.",
+        ));
+    };
+    let decision = preflight_general_sem_pls_v1(
+        model,
+        recipe
+            .general_sem_config
+            .as_ref()
+            .expect("matching recipe has GeneralSemConfigV1"),
+    )
+    .map_err(|error| {
+        blocked(
+            "schema6_result_read.capability_decision_invalid",
+            format!("The resident General SEM capability decision is invalid: {error}"),
+            "Keep the archive unchanged and report this authority-contract failure.",
+        )
+    })?;
+    let selected = selected_general_sem_execution_cell_v1(
+        model,
+        recipe
+            .general_sem_config
+            .as_ref()
+            .expect("matching recipe has GeneralSemConfigV1"),
+    );
+    if !decision_declares_general_sem_execution_cell_v1(&decision, &selected)
+        || &selected != requested_cell
+    {
+        return Err(blocked(
+            "schema6_result_read.capability_archive_mismatch",
+            "The requested read cell differs from the resident RecipeV4 point-or-supplemental execution owner.",
+            "Rehydrate exact read access from the unchanged resident recipe and retry.",
+        ));
+    }
+    Ok(())
+}
+
+fn read_schema6_results_using<F>(
+    request: &ProjectSchema6ResultReadRequestV1,
+    authorize: F,
+) -> ProjectSchema6ResultReadOutcomeV1
+where
+    F: Fn(&str, bool, &CapabilityCellReferenceV2) -> Result<(), GeneralSemRegistryAccessErrorV1>,
+{
     let historical_internal =
-        request.surface == INTERNAL_LABS_SURFACE && request.experimental_labs_enabled;
-    let current_exact_cbsem =
-        request.surface == STANDARD_EXACT_CBSEM_SURFACE && !request.experimental_labs_enabled;
-    if !historical_internal && !current_exact_cbsem {
+        request.capability_cell.is_none() && request.surface == INTERNAL_LABS_SURFACE;
+    let current_exact_cbsem = request.capability_cell.is_none()
+        && request.surface == STANDARD_EXACT_CBSEM_SURFACE
+        && !request.experimental_labs_enabled;
+    let exact_general_sem = if let Some(cell) = request.capability_cell.as_ref() {
+        if !is_general_sem_execution_cell_v1(cell) {
+            return blocked(
+                "schema6_result_read.capability_unavailable",
+                "The selected cell is not one of the exact General SEM result-reopen cells.",
+                "Refresh exact General SEM estimator access before reading the archive.",
+            );
+        }
+        if let Err(error) = authorize(&request.surface, request.experimental_labs_enabled, cell) {
+            return registry_access_block(error);
+        }
+        true
+    } else {
+        false
+    };
+    if !historical_internal && !current_exact_cbsem && !exact_general_sem {
         return blocked(
             "schema6_result_read.surface_mismatch",
-            "Schema-6 saved-result reopening requires the historical internal-Labs boundary or the current exact-CB-SEM Standard boundary.",
-            "Use standard_exact_cbsem with Experimental Labs disabled when reopening results from the Exact CB-SEM workspace.",
+            "Schema-6 saved-result reopening requires historical Labs access, exact Registry-authorized General SEM access, or the exact-CB-SEM Standard boundary.",
+            "Select the exact execution cell and matching surface before reopening results.",
         );
     }
     let archive_path = Path::new(request.archive_path.trim());
@@ -228,6 +379,9 @@ fn read_schema6_results(
             "Reinspect the current project and retry after other writers finish.",
         );
     }
+    if let Err(outcome) = validate_exact_general_sem_archive_read_authority(request, &document) {
+        return outcome;
+    }
 
     let documents = match document
         .canonical_result_documents
@@ -255,6 +409,14 @@ fn read_schema6_results(
             source_rechecked_unchanged: true,
         },
     }
+}
+
+fn read_schema6_results(
+    request: &ProjectSchema6ResultReadRequestV1,
+) -> ProjectSchema6ResultReadOutcomeV1 {
+    read_schema6_results_using(request, |surface, _labs_enabled, cell| {
+        authorize_general_sem_registry_read_access_v1(surface, cell)
+    })
 }
 
 #[tauri::command]
@@ -291,6 +453,7 @@ mod tests {
         ProjectSchema6ResultReadRequestV1 {
             surface: INTERNAL_LABS_SURFACE.into(),
             experimental_labs_enabled: true,
+            capability_cell: None,
             archive_path: path.to_string_lossy().into_owned(),
             expected_source_sha256: digest,
         }
@@ -783,6 +946,47 @@ mod tests {
             read_schema6_results(&invalid),
             ProjectSchema6ResultReadOutcomeV1::Blocked { diagnostic }
                 if diagnostic.code == "schema6_result_read.invalid_archive"
+        ));
+    }
+
+    #[test]
+    fn read_only_labs_compatibility_and_standard_authorization_run_before_path_access() {
+        let relative = Path::new("historical-general-sem.qpls");
+        let mut historical = request(relative, "a".repeat(64));
+        historical.experimental_labs_enabled = false;
+        historical.capability_cell =
+            Some(qpls_core::pls_general_recursive_effects_capability_cell_v1());
+        assert!(matches!(
+            read_schema6_results(&historical),
+            ProjectSchema6ResultReadOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code == "schema6_result_read.absolute_path_required"
+        ));
+
+        let mut standard = historical.clone();
+        standard.surface = "standard".into();
+        assert!(matches!(
+            read_schema6_results_using(&standard, |surface, enabled, _cell| {
+                assert_eq!(surface, "standard");
+                assert!(!enabled);
+                Ok(())
+            }),
+            ProjectSchema6ResultReadOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code == "schema6_result_read.absolute_path_required"
+        ));
+
+        let mut tampered = standard;
+        tampered
+            .capability_cell
+            .as_mut()
+            .unwrap()
+            .capability_version
+            .push_str(".tampered");
+        assert!(matches!(
+            read_schema6_results_using(&tampered, |_surface, _enabled, _cell| {
+                panic!("unknown cells must be rejected before Registry authorization or path access")
+            }),
+            ProjectSchema6ResultReadOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code == "schema6_result_read.capability_unavailable"
         ));
     }
 }

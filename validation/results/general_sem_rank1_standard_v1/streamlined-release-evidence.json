@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "report_kind": "general_sem_rank1_streamlined_release_evidence_v1",
+  "profile_id": "rank1_streamlined_standard_v1",
+  "generated_at_utc": "2026-08-20T18:10:22Z",
+  "passed": true,
+  "cells": [
+    {
+      "capability_id": "smartpls.higher_order_models",
+      "cell_id": "qpls3.pls.general_sem_higher_order_point",
+      "capability_version": "general_sem_pls_higher_order_point_v1",
+      "surface": "standard",
+      "evidence_state": "release_qualified"
+    },
+    {
+      "capability_id": "smartpls.higher_order_models",
+      "cell_id": "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+      "capability_version": "general_sem_pls_higher_order_full_model_case_bootstrap_v1",
+      "surface": "standard",
+      "evidence_state": "release_qualified"
+    }
+  ],
+  "scientific_reference": {
+    "command": "python validation/higher_order_two_stage_simulation.py",
+    "passed": true,
+    "independent_reference_max_delta": 5.384581669432009e-14,
+    "positive_affine_max_delta": 3.8191672047105385e-14,
+    "row_reversal_max_delta": 6.661338147750939e-16,
+    "broken_component_drop_ratio": 0.6798816591266171
+  },
+  "consolidated_regression": {
+    "frontend": {"test_files": 184, "tests_passed": 1497, "tests_failed": 0},
+    "rust": {
+      "qpls_core_passed": 273,
+      "qpls_runner_passed": 73,
+      "quickpls_desktop_effective_passed": 200,
+      "failures": 0,
+      "unrelated_qualification_scale_ignored": 3
+    },
+    "typecheck_full_passed": true,
+    "cargo_workspace_check_passed": true,
+    "cargo_workspace_compile_no_run_passed": true
+  },
+  "focused_release_acceptance": {
+    "hoc_accessibility_workspace_tests": {"passed": 16, "failed": 0},
+    "hoc_estimator_soak": {"runs": 10, "failures": 0, "elapsed_seconds": 3.288},
+    "schema6_append_tamper_fresh_reopen": {"passed": 1, "failed": 0},
+    "registry_startup": {"passed": 16, "failed": 0},
+    "automated_standard_process_smoke": {
+      "window_title": "QuickPLS",
+      "responding": true,
+      "clean_shutdown": true
+    }
+  },
+  "build": {
+    "production_frontend_modules": 1898,
+    "tauri_release_passed": true,
+    "nsis_passed": true,
+    "executable": {
+      "path": "target/release/quickpls-desktop.exe",
+      "size": 58183168,
+      "sha256": "638ce99d40f44b4b6c40f8830815dd2d02a0a9531dad2844b50f18617f04548e"
+    },
+    "installer": {
+      "path": "target/release/bundle/nsis/QuickPLS_2.46.0_x64-setup.exe",
+      "size": 227586414,
+      "sha256": "fd8e0e9cf97dc710fbf935448dd7f8d456dc85323bcd4cd8bf4f363f552235c6"
+    }
+  },
+  "registry": {
+    "path": "validation/capabilities/capability_registry_v2.json",
+    "sha256": "d6f3091032c85d40992167ffdbfa8f5d05b8b856ed3aa400f55f7b1d4d97de64"
+  },
+  "qualification_note": "Rank 1 uses a streamlined release profile: the full implemented matrix is covered by the consolidated regression and independent reference, while package and performance evidence is representative rather than repeated per cell."
+}

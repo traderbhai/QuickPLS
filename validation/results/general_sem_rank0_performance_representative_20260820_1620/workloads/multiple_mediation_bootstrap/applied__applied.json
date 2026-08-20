@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "workload_kind": "general_sem_rank0_performance_workload",
+  "variant_id": "multiple_mediation_bootstrap",
+  "capability_reference": {
+    "registry_schema_version": 2,
+    "capability_id": "smartpls.mediation",
+    "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+    "capability_version": "general_sem_pls_full_model_case_bootstrap_v1"
+  },
+  "qualification_spec": {
+    "path": "validation/qualification_v2/general_sem_pls_multiple_mediation_bootstrap_v1.qualification.json",
+    "qualification_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap.qualification_v2",
+    "spec_frozen_at_utc": "2026-08-19T00:00:00Z",
+    "qualification_contract_sha256": "2125ec5e68a99bbc8f622fef93e3cdd8d8638d8bb22d0765b0316855ae70c32b"
+  },
+  "profile_id": "applied",
+  "case_id": "applied",
+  "mandatory_combination_id": "applied_pairwise_matrix",
+  "workload": {
+    "candidate_models": 1,
+    "constructs": 10,
+    "groups": 1,
+    "indicators": 40,
+    "resamples": 5000,
+    "rows": 1000
+  },
+  "workload_fingerprint": "9e1bcd7ffe9ce478e8c0c5fa4c9349170d2bcded107a8e7212f792e0ad175149"
+}

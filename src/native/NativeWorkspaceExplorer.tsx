@@ -506,8 +506,8 @@ function ExplorerDetail({
       </> : null}
       {kind === "model" && selectedModel ? <>
         <div><dt>Name</dt><dd>{selectedModel.name}</dd></div>
-        <div><dt>Constructs</dt><dd>{selectedModel.constructs.length}</dd></div>
-        <div><dt>Relationships</dt><dd>{selectedModel.paths.length + selectedModel.controls.length}</dd></div>
+        <div><dt>Constructs</dt><dd>{selectedModel.constructs?.length ?? 0}</dd></div>
+        <div><dt>Relationships</dt><dd>{(selectedModel.paths?.length ?? 0) + (selectedModel.controls?.length ?? 0)}</dd></div>
       </> : null}
       {kind === "reports" ? <>
         <div><dt>Saved reports</dt><dd>{reportCount}</dd></div>

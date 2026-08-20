@@ -66,6 +66,11 @@ COMPARISON_RULES: dict[str, dict[str, Any]] = {
         "maximum_half_width": 0.02,
         "acceptance_interval": [0.9, 1.0],
     },
+    "bounded_moment": {
+        "statistic": "absolute_bias",
+        "maximum": 0.05,
+        "grouping_keys": ["family", "target_id"],
+    },
 }
 
 
@@ -224,6 +229,8 @@ class QualificationSpecV2Tests(unittest.TestCase):
 
         self.assertTrue(strict["passed"], strict)
         self.assertTrue(strict["qualification_ready"], strict)
+        self.assertIsNone(strict["receipt_payload_contract_id"])
+        self.assertFalse(strict["receipt_payload_contract_verified"])
 
     def test_report_only_adapter_never_promotes_legacy_release_qualified(self) -> None:
         # The live legacy manifest is evidence-reconciled and may truthfully be
@@ -328,6 +335,25 @@ class QualificationSpecV2Tests(unittest.TestCase):
         recovery["confidence_level"] = 0.9
         self.assertRejected(monte_carlo, "must match the scenario Monte Carlo policy")
 
+        bounded = deepcopy(self.document)
+        convergence = next(
+            row
+            for row in bounded["comparison_contract"]["outputs"]
+            if row["output_id"] == "convergence_status"
+        )
+        convergence.clear()
+        convergence.update(
+            {
+                "output_id": "convergence_status",
+                "rule": "bounded_moment",
+                "rationale": "Recovery moment grouped by the frozen target identity.",
+                "statistic": "rmse",
+                "maximum": 0.05,
+                "grouping_keys": ["target_id", "family"],
+            }
+        )
+        self.assertRejected(bounded, "schema")
+
         unexplained = deepcopy(self.document)
         unexplained["comparison_contract"]["outputs"][0]["rationale"] = "   "
         self.assertRejected(unexplained, "schema")
@@ -389,8 +415,29 @@ class QualificationSpecV2Tests(unittest.TestCase):
             if row["id"] == "workers"
         )
         workers["id"] = "worker_count"
+        missing_axis["identity"]["execution_kind"] = "stochastic"
         self._rebind_scenario_receipts(missing_axis)
         self.assertRejected(missing_axis, "missing mandatory scenario axes")
+
+        iterative_without_workers = deepcopy(self.document)
+        iterative_without_workers["scenario_contract"]["axes"] = [
+            row
+            for row in iterative_without_workers["scenario_contract"]["axes"]
+            if row["id"] != "workers"
+        ]
+        for row in iterative_without_workers["scenario_contract"][
+            "mandatory_combinations"
+        ]:
+            row["selections"].pop("workers")
+        self._rebind_scenario_receipts(iterative_without_workers)
+        iterative_result = self._result(iterative_without_workers)
+        self.assertTrue(iterative_result["passed"], iterative_result)
+
+        stochastic_without_workers = deepcopy(iterative_without_workers)
+        stochastic_without_workers["identity"]["execution_kind"] = "stochastic"
+        self.assertRejected(
+            stochastic_without_workers, "missing mandatory scenario axes: workers"
+        )
 
         duplicate_profile = deepcopy(self.document)
         duplicate_profile["scenario_contract"]["complexity_profiles"][2]["id"] = (

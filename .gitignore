@@ -31,5 +31,16 @@ validation/results/*.console.txt
 validation/results/v2*_audit.json
 validation/results/v2*_smoke.json
 validation/results/v247_tauri_native_acceptance.pre-*.json
+
+# Rank 0 General SEM qualification execution cache. The deterministic plan,
+# raw resumable shards, claims, and product payloads are reproducible; only
+# compact reviewed reports/receipts outside these paths are evidence-worthy.
+validation/results/general_sem_rank0_qualification_v1/plan.json
+validation/results/general_sem_rank0_qualification_v1/shards/
+validation/results/general_sem_rank0_qualification_v1/claims/
+validation/results/general_sem_rank0_qualification_v1/product_requests/
+validation/results/general_sem_rank0_qualification_v1/product_bundles/
+validation/results/general_sem_rank0_qualification_v1/product_execution_receipts/
+validation/results/general_sem_rank0_qualification_v1/stale-*/
 docs/screenshots/v2/
 .DS_Store

@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "general_sem_rank0_streamlined_release_evidence_v1",
+  "qualification_profile_id": "rank0_streamlined_plan4b_v1",
+  "passed": true,
+  "representative_evidence_acknowledged": true,
+  "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+  "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+  "hardware_fingerprint": {
+    "os": "windows_11",
+    "architecture": "x86_64",
+    "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+    "logical_cores": 12,
+    "memory_gib": 15.314
+  },
+  "capability_cells": [
+    {
+      "capability_id": "smartpls.mediation",
+      "capability_version": "pls_mediation_v1",
+      "cell_id": "qpls3.pls.mediation",
+      "registry_schema_version": 2
+    },
+    {
+      "capability_id": "smartpls.mediation",
+      "capability_version": "general_sem_pls_full_model_case_bootstrap_v1",
+      "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+      "registry_schema_version": 2
+    },
+    {
+      "capability_id": "smartpls.moderation",
+      "capability_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
+      "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+      "registry_schema_version": 2
+    },
+    {
+      "capability_id": "smartpls.moderation",
+      "capability_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+      "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+      "registry_schema_version": 2
+    }
+  ],
+  "qualification_contracts": {
+    "qpls3.pls.mediation": "c294c9916f463d394a4c636425c576cbe9ca47d6f71000e6d58db2e7a215de01",
+    "qpls3.pls.general_sem_multiple_mediation_bootstrap": "93b40121282c102f84596fd7bf0201fc5381191ef62ce16b11c0fe8003be8986",
+    "qpls3.pls.general_sem_multiple_two_way_moderation_point": "5033e085b2f8c075df1aef53ddd27bedc7186e00f38379ae2e762eb81a7d4c81",
+    "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be"
+  },
+  "packaged": {
+    "workflow_summary": {
+      "path": "validation/results/general_sem_rank0_packaged/20260820-150809736/installed-portable-workflow.json",
+      "size": 2237,
+      "sha256": "83b69d0d278196ca56590123b68b5d892dcf74a900d836f1d91cc2e68b47f557"
+    },
+    "reopen_observations": [
+      {
+        "path": "validation/results/general_sem_rank0_packaged/20260820-150809736/installed/mediation_point/raw-reopen-100.json",
+        "size": 22352,
+        "sha256": "b4dade669a9b37eefa9c05dcfe46fbaa80b9f2c67f51c960f7da839fd2439e88"
+      },
+      {
+        "path": "validation/results/general_sem_rank0_packaged/20260820-150809736/portable/mediation_point/raw-reopen-100.json",
+        "size": 22350,
+        "sha256": "80b128fb9a68f8908cf7e3efc5de100875241d479bfc8cf399c588f31b716620"
+      }
+    ],
+    "cleanup_observations": [
+      {
+        "path": "validation/results/general_sem_rank0_packaged/20260820-150809736/installed/mediation_point/raw-process-cleanup.json",
+        "size": 11126,
+        "sha256": "ec24e2ad5a9438f15e0d599e557d31dc19bc04e09d7c527eea869ccd6234f8af"
+      },
+      {
+        "path": "validation/results/general_sem_rank0_packaged/20260820-150809736/portable/mediation_point/raw-process-cleanup.json",
+        "size": 10937,
+        "sha256": "c74849150e40e7c1120f7586a2dec07d20deff6718af93bd635181fede0aed10"
+      }
+    ]
+  },
+  "exports": {
+    "formats": [
+      "csv",
+      "xlsx",
+      "html",
+      "pdf",
+      "svg",
+      "png"
+    ],
+    "csv_user_verified": true,
+    "canonical_contract_tests": {
+      "passed": 30,
+      "total": 30
+    },
+    "same_canonical_pipeline": true
+  },
+  "frontend": {
+    "accessible_export_panel": true,
+    "typecheck_passed": true
+  },
+  "regression": {
+    "rust_passed": true,
+    "frontend_passed": true,
+    "typecheck_passed": true,
+    "bundle_passed": true
+  },
+  "performance": {
+    "representative_workload": {
+      "path": "validation/results/general_sem_rank0_performance_representative_20260820_1620/workloads/multiple_mediation_bootstrap/applied__applied.json",
+      "size": 1128,
+      "sha256": "108358a2d72076c41739a28a10712c23422b3f156fb9c6155cc50a57de7e2eec"
+    },
+    "representative_result": {
+      "path": "validation/results/general_sem_rank0_performance_representative_20260820_1620/results/multiple_mediation_bootstrap/lean-representative.json",
+      "size": 2253,
+      "sha256": "f8d0636af6c15e6e35c1e37cb4dc7126d70e9d51d8d744ec17d96c75d4b3f297"
+    },
+    "soak_observation": {
+      "path": "validation/results/general_sem_rank0_performance_representative_20260820_1620/observations/multiple_mediation_bootstrap/applied__applied.json",
+      "size": 466,
+      "sha256": "fcea8d626afc7aa4c2d6e3878bc7057739ccbb65983af224e0bff336e2c62245"
+    }
+  }
+}

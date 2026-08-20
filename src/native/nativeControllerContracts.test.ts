@@ -29,7 +29,7 @@ describe("native controller release contracts", () => {
   });
 
   it("binds General SEM only to a fresh native project and blocks unmarked persistence", () => {
-    expect(app).toContain('uiPreferences.experimentalLabsEnabled && isNativeDesktop()');
+    expect(app).toContain('generalSemWorkspaceProductAccessV1(uiPreferences.experimentalLabsEnabled)');
     expect(app).toContain('commandEvent("new-project", { name, projectMode })');
     expect(controller).toContain('detail?.projectMode === "general_sem_v1"');
     expect(controller).toContain('useWorkspace.getState().uiPreferences.experimentalLabsEnabled');
