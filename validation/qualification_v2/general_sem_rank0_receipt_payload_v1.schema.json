@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/general_sem_rank0_receipt_payload_v1.schema.json",
+  "title": "QuickPLS General SEM Rank 0 qualification receipt payload V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "contract_id",
+    "qualification_profile_id",
+    "passed",
+    "role",
+    "stage",
+    "qualification_id",
+    "capability_cell",
+    "method_version",
+    "analytical_method_version",
+    "generated_at_utc",
+    "source_descriptors",
+    "source_set_sha256",
+    "scenario_set_sha256",
+    "qualification_contract_sha256",
+    "build_fingerprint",
+    "hardware_fingerprint",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "kind": { "const": "general_sem_rank0_qualification_receipt_payload_v1" },
+    "contract_id": { "const": "quickpls.general_sem.rank0.receipt_payload.v1" },
+    "qualification_profile_id": { "const": "rank0_streamlined_plan4b_v1" },
+    "passed": { "const": true },
+    "role": { "$ref": "#/$defs/token" },
+    "stage": {
+      "enum": [
+        "contract",
+        "kernel",
+        "oracle",
+        "generative",
+        "adversarial",
+        "persistence_export",
+        "packaged_windows",
+        "scale_reliability"
+      ]
+    },
+    "qualification_id": { "$ref": "#/$defs/token" },
+    "capability_cell": { "$ref": "#/$defs/capability_cell" },
+    "method_version": { "$ref": "#/$defs/token" },
+    "analytical_method_version": { "$ref": "#/$defs/token" },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "source_descriptors": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "source_set_sha256": { "$ref": "#/$defs/sha256" },
+    "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+    "qualification_contract_sha256": { "$ref": "#/$defs/sha256" },
+    "build_fingerprint": { "$ref": "#/$defs/sha256" },
+    "hardware_fingerprint": { "$ref": "#/$defs/hardware_fingerprint" },
+    "evidence": {
+      "oneOf": [
+        { "$ref": "#/$defs/method_audit" },
+        { "$ref": "#/$defs/scientific_product" },
+        { "$ref": "#/$defs/archive_evidence" },
+        { "$ref": "#/$defs/export_frontend_evidence" },
+        { "$ref": "#/$defs/packaged_windows_evidence" },
+        { "$ref": "#/$defs/performance_evidence" }
+      ]
+    }
+  },
+  "$defs": {
+    "token": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "repository_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/repository_path" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "capability_cell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry_schema_version",
+        "capability_id",
+        "cell_id",
+        "capability_version"
+      ],
+      "properties": {
+        "registry_schema_version": { "const": 2 },
+        "capability_id": { "$ref": "#/$defs/token" },
+        "cell_id": { "$ref": "#/$defs/token" },
+        "capability_version": { "$ref": "#/$defs/token" }
+      }
+    },
+    "hardware_fingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "architecture", "cpu", "logical_cores", "memory_gib"],
+      "properties": {
+        "os": { "type": "string", "minLength": 1 },
+        "architecture": { "const": "x86_64" },
+        "cpu": { "type": "string", "minLength": 1 },
+        "logical_cores": { "type": "integer", "minimum": 1 },
+        "memory_gib": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "method_audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "manifest", "manifest_contract_sha256"],
+      "properties": {
+        "kind": { "const": "general_sem_rank0_method_audit_v1" },
+        "manifest": { "$ref": "#/$defs/artifact" },
+        "manifest_contract_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "scientific_product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "plan",
+        "aggregate",
+        "smart_fix",
+        "product_source_set_sha256"
+      ],
+      "properties": {
+        "kind": { "const": "general_sem_rank0_scientific_product_v1" },
+        "plan": { "$ref": "#/$defs/artifact" },
+        "continuation_policy": { "$ref": "#/$defs/artifact" },
+        "aggregate": { "$ref": "#/$defs/artifact" },
+        "smart_fix": { "$ref": "#/$defs/artifact" },
+        "product_source_set_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "archive_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "packaged_report"],
+      "properties": {
+        "kind": { "const": "general_sem_rank0_archive_evidence_v1" },
+        "packaged_report": { "$ref": "#/$defs/artifact" }
+      }
+    },
+    "export_frontend_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "facet", "packaged_report"],
+      "properties": {
+        "kind": { "const": "general_sem_rank0_export_frontend_evidence_v1" },
+        "facet": { "enum": ["cross_format_export", "frontend_contract"] },
+        "packaged_report": { "$ref": "#/$defs/artifact" }
+      }
+    },
+    "packaged_windows_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "packaged_report"],
+      "properties": {
+        "kind": { "const": "general_sem_rank0_packaged_windows_evidence_v1" },
+        "packaged_report": { "$ref": "#/$defs/artifact" }
+      }
+    },
+    "performance_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "performance_index"],
+      "properties": {
+        "kind": { "const": "general_sem_rank0_performance_evidence_v1" },
+        "performance_index": { "$ref": "#/$defs/artifact" }
+      }
+    }
+  }
+}

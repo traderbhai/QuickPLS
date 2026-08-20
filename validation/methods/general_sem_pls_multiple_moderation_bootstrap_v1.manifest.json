@@ -40,19 +40,44 @@
       {
         "id": "sample_standardized_two_stage_product",
         "expression": "p_i = z(x_i) z(w_i); z(p_i) = (p_i - mean(p)) / sd_sample(p)",
-        "variables": ["p_i", "x_i", "w_i", "z(p_i)", "mean(p)", "sd_sample(p)"],
+        "variables": [
+          "p_i",
+          "x_i",
+          "w_i",
+          "z(p_i)",
+          "mean(p)",
+          "sd_sample(p)"
+        ],
         "source_reference_id": "henseler_chin_2010"
       },
       {
         "id": "replicate_joint_stage_and_scientific_gamma",
         "expression": "eta_y = sum_r beta_r eta_r + sum_j beta_product_j z(p_j) + epsilon_y; gamma_j = beta_product_j / sd_sample(p_j)",
-        "variables": ["eta_y", "beta_r", "eta_r", "beta_product_j", "z(p_j)", "epsilon_y", "gamma_j", "sd_sample(p_j)"],
+        "variables": [
+          "eta_y",
+          "beta_r",
+          "eta_r",
+          "beta_product_j",
+          "z(p_j)",
+          "epsilon_y",
+          "gamma_j",
+          "sd_sample(p_j)"
+        ],
         "source_reference_id": "henseler_chin_2010"
       },
       {
         "id": "gamma_only_bootstrap_summary",
         "expression": "CI = [Type7(alpha/2), Type7(1-alpha/2)]; SE = sqrt(sum((gamma_b-mean)^2)/(U-1)); p = (count(|gamma_b-gamma_0| >= |gamma_0|)+1)/(U+1); U >= max(2,ceil(0.9B))",
-        "variables": ["alpha", "gamma_b", "gamma_0", "U", "B", "CI", "SE", "p"],
+        "variables": [
+          "alpha",
+          "gamma_b",
+          "gamma_0",
+          "U",
+          "B",
+          "CI",
+          "SE",
+          "p"
+        ],
         "source_reference_id": "independent_observed_score_reference"
       }
     ],
@@ -88,7 +113,19 @@
         "purpose": "recovery",
         "design": "Two deterministic 80-row observed-score proxy systems with two simultaneous interactions each: one same-focal equation and one different-focal equation. Each system uses 199 independently indexed case resamples; every replicate restandardizes score proxies, resolves deterministic artificial sign ambiguity before products, rebuilds and rescales products, refits the complete joint OLS equation, and validates all ordinary, interaction, gamma, fixed-probe, and normal-equation values. Only four scientific gamma targets are summarized as inference, and production QuickPLS code is never imported, called, or compared.",
         "seed_policy": "Frozen SHA-256 scenario/replicate/draw indexed case positions with forward-versus-reverse evaluation replay; this independent stream deliberately makes no production-stream identity claim.",
-        "metrics": ["same_focal_completion", "different_focal_completion", "gamma_target_inventory", "type7_microcase", "sample_standard_error_microcase", "plus_one_probability_microcase", "product_scale_variation", "sign_corrections", "normal_equation_error", "evaluation_order_replay", "usable_gate_boundary"],
+        "metrics": [
+          "same_focal_completion",
+          "different_focal_completion",
+          "gamma_target_inventory",
+          "type7_microcase",
+          "sample_standard_error_microcase",
+          "plus_one_probability_microcase",
+          "product_scale_variation",
+          "sign_corrections",
+          "normal_equation_error",
+          "evaluation_order_replay",
+          "usable_gate_boundary"
+        ],
         "acceptance_rule": "Every frozen check passes; all 398 observed-score refits per replay are usable, four and only four scientific gamma targets receive inference, replay error and joint normal-equation error are at most 1e-10, every interaction product scale varies across indexed replicates, deterministic sign corrections occur before products, Type-7/B-minus-one/plus-one microcases are exact within 1e-10, and the gate accepts 18 of 20 but rejects 17 of 20. This is an engine smoke, not a full PLS or release-qualification simulation."
       },
       {
@@ -96,7 +133,15 @@
         "purpose": "coverage",
         "design": "A fully independent indicator-level PLS implementation over same-focal and different-focal simultaneous interactions across loading, path, moderator correlation, sample size, reliability, unequal scale, nonnormality, missingness, collinearity, sign ambiguity, and controlled stage-one and joint-stage failure axes.",
         "seed_policy": "Pending frozen scenario-indexed data and independent case-resampling streams with every failed fit retained in the requested denominator.",
-        "metrics": ["point_gamma_bias", "bootstrap_gamma_bias", "standard_error_bias", "percentile_coverage", "failure_classification", "usable_fraction", "worker_replay"],
+        "metrics": [
+          "point_gamma_bias",
+          "bootstrap_gamma_bias",
+          "standard_error_bias",
+          "percentile_coverage",
+          "failure_classification",
+          "usable_fraction",
+          "worker_replay"
+        ],
         "acceptance_rule": "Pending independent full-PLS qualification; the observed-score reference does not claim that this gate has run."
       },
       {
@@ -104,7 +149,14 @@
         "purpose": "type_i_error",
         "design": "Null, positive, negative, unequal-scale, correlated-predictor, nonnormal, boundary-sample, rank-deficient, sign-indeterminate, and controlled-failure full PLS populations for simultaneous same-focal and different-focal interactions.",
         "seed_policy": "Pending frozen indexed scenarios with failed replicates retained and exact seed/worker replay.",
-        "metrics": ["null_rejection", "interval_coverage", "gamma_recovery", "endpoint_equality", "failure_rate", "failure_code_accuracy"],
+        "metrics": [
+          "null_rejection",
+          "interval_coverage",
+          "gamma_recovery",
+          "endpoint_equality",
+          "failure_rate",
+          "failure_code_accuracy"
+        ],
         "acceptance_rule": "Pending qualification-scale calibration and independent review; no nominal error-rate claim is made by this manifest."
       }
     ],
@@ -148,62 +200,158 @@
       "result_schema_version": 2,
       "payload_kind": "canonical_result_document_v2_general_sem_results_v1",
       "tamper_tests": [
-        {"category": "feature_identity", "expected_behavior": "Reject a result whose exact supplemental moderation-bootstrap cell differs from its recipe, point primary cell, compiled plan, or receipt."},
-        {"category": "method_version", "expected_behavior": "Reject a result relabeled with another point, bootstrap, stream, quantile, standard-error, probability, failure, sign-alignment, product-scale, or gamma-target version."},
-        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose resident dataset fingerprint or complete-case frame identity differs."},
-        {"category": "checksum", "expected_behavior": "Reject a changed archive member, compiled-plan digest, gamma-target identity-set digest, usable-index digest, or canonical attachment digest."},
-        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, nonfinite values, unordered targets or failures, incoherent counts, non-gamma inference rows, or contradictory full-model execution flags."},
-        {"category": "legacy_reinterpretation", "expected_behavior": "Never attach this capability to an ordinary or historical project without newly created schema-6 general_sem_v1 authority."}
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose exact supplemental moderation-bootstrap cell differs from its recipe, point primary cell, compiled plan, or receipt."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a result relabeled with another point, bootstrap, stream, quantile, standard-error, probability, failure, sign-alignment, product-scale, or gamma-target version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose resident dataset fingerprint or complete-case frame identity differs."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject a changed archive member, compiled-plan digest, gamma-target identity-set digest, usable-index digest, or canonical attachment digest."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, nonfinite values, unordered targets or failures, incoherent counts, non-gamma inference rows, or contradictory full-model execution flags."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never attach this capability to an ordinary or historical project without newly created schema-6 general_sem_v1 authority."
+        }
       ],
       "legacy_policy": "This exact capability applies only to newly created schema-6 general_sem_v1 projects; no legacy migration or upgrade-copy route is provided."
     },
     "native": {
-      "setup_controls": ["Exact simultaneous two-way interaction model", "Case-resample count from 2 through 10000", "Two-sided Type-7 percentile confidence level", "Fixed unsigned seed", "Supported worker count"],
-      "applicability_blockers": ["Missing schema-6 general_sem_v1 authority", "Unsupported interaction, topology, estimator, data, group, or inference predicate", "Stale recipe, model, dataset, compiled plan, point primary cell, or target identity", "Failed point fit or fewer than max(2, ceil(0.9B)) usable replicates"],
-      "result_surfaces": ["Scientific rescaled gamma bootstrap table", "Bootstrap mean, bias, B-minus-one standard error, Type-7 interval, and plus-one probability", "Requested/usable counts and ordered typed failures", "Method, target, compiled-plan, dataset, and resampling provenance", "Point-only joint coefficients, fixed probes, and plots from the primary point artifact"],
+      "setup_controls": [
+        "Exact simultaneous two-way interaction model",
+        "Case-resample count from 2 through 10000",
+        "Two-sided Type-7 percentile confidence level",
+        "Fixed unsigned seed",
+        "Supported worker count"
+      ],
+      "applicability_blockers": [
+        "Missing schema-6 general_sem_v1 authority",
+        "Unsupported interaction, topology, estimator, data, group, or inference predicate",
+        "Stale recipe, model, dataset, compiled plan, point primary cell, or target identity",
+        "Failed point fit or fewer than max(2, ceil(0.9B)) usable replicates"
+      ],
+      "result_surfaces": [
+        "Scientific rescaled gamma bootstrap table",
+        "Bootstrap mean, bias, B-minus-one standard error, Type-7 interval, and plus-one probability",
+        "Requested/usable counts and ordered typed failures",
+        "Method, target, compiled-plan, dataset, and resampling provenance",
+        "Point-only joint coefficients, fixed probes, and plots from the primary point artifact"
+      ],
       "gui_cli_parity_rule": "For identical resident recipe, model, data, compiled plan, seed, workers, point artifact, and supplemental capability identity, every product surface must read the same canonical result. The same-app native execution and schema-6 append/reopen paths are connected, but independent cross-surface, semantic-export, packaged, and release qualification remain pending.",
-      "accessibility_rules": ["Every gamma estimate, interval, probability, usable/failure count, typed failure, and unavailable reason is available without relying on color, canvas position, or pointer-only interaction.", "Point-only slopes and plots remain explicitly distinguished from gamma inference in visible and programmatic labels."]
+      "accessibility_rules": [
+        "Every gamma estimate, interval, probability, usable/failure count, typed failure, and unavailable reason is available without relying on color, canvas position, or pointer-only interaction.",
+        "Point-only slopes and plots remain explicitly distinguished from gamma inference in visible and programmatic labels."
+      ]
     },
     "export": {
-      "formats": ["csv", "xlsx", "html", "svg", "pdf", "png"],
-      "tables": ["Scientific gamma bootstrap inference", "Ordered replicate failures", "Run and target provenance", "Point-only interaction and conditional-effect companion tables"],
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "pdf",
+        "svg",
+        "png"
+      ],
+      "tables": [
+        "Scientific gamma bootstrap inference",
+        "Ordered replicate failures",
+        "Run and target provenance",
+        "Point-only interaction and conditional-effect companion tables"
+      ],
       "same_run_required": true,
       "provenance_required": true
     },
     "packaged": {
-      "platforms": ["windows"],
-      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
-      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
       "offline_required": true,
       "cancellation_required": true,
       "process_cleanup_required": true
     },
     "audit": {
-      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
       "source_hashes_required": true,
       "freshness_required": true,
       "reports_must_pass": true
     }
   },
   "qualification": {
-    "declared_state": "engine_only",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
-      "method_spec": ["docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_V1.md"],
-      "independent_reference": ["validation/general_sem_pls_multiple_moderation_bootstrap_v1_reference.py"],
-      "simulation_report": ["validation/general_sem_pls_multiple_moderation_bootstrap_v1_reference.py"],
-      "boundary_report": ["validation/general_sem_pls_multiple_moderation_bootstrap_v1_reference.py", "validation/capabilities/general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1.cell.manifest.json"],
-      "persistence_report": ["validation/general_sem_pls_multiple_moderation_bootstrap_v1_persistence_gate.py"],
-      "frontend_report": ["src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx"],
-      "export_report": ["validation/general_sem_pls_multiple_moderation_bootstrap_v1_export_gate.py"],
-      "method_audit": ["validation/general_sem_pls_multiple_moderation_bootstrap_v1_method_audit.py"],
-      "packaged_acceptance": ["validation/run_general_sem_pls_multiple_moderation_bootstrap_v1_native_acceptance.ps1"]
+      "method_spec": [
+        "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_V1.md"
+      ],
+      "independent_reference": [
+        "validation/general_sem_rank0_csem_oracle.py",
+        "validation/general_sem_rank0_csem_oracle.R"
+      ],
+      "simulation_report": [
+        "validation/general_sem_rank0_qualification_runner.py"
+      ],
+      "boundary_report": [
+        "validation/general_sem_rank0_qualification.py"
+      ],
+      "persistence_report": [
+        "validation/general_sem_rank0_packaged_acceptance.py"
+      ],
+      "frontend_report": [
+        "src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx"
+      ],
+      "export_report": [
+        "src/domain/canonicalResultCrossFormatExportV2.test.ts"
+      ],
+      "method_audit": [
+        "validation/moderation_method_promotion_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_general_sem_rank0_packaged_acceptance.ps1"
+      ]
     },
     "evidence": {
       "engine_only": [
         {
-          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/engine_evidence.identity.json",
-          "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
           "verification": {
             "kind": "identity_report",
             "identity_pointers": {
@@ -217,9 +365,65 @@
           }
         }
       ],
-      "archive_qualified": [],
-      "native_qualified": [],
-      "release_qualified": []
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_multiple_moderation_bootstrap_v1/rank0_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "method_audit",
+            "packaged_acceptance"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
     }
   }
 }

@@ -222,7 +222,7 @@ describe("General SEM capability preflight v1", () => {
       .toBe(`qpls_pls_product_v1_${digest.digest("hex")}`);
   });
 
-  it("admits only the recursive composite PLS point-estimation slice to the exact Labs cell", () => {
+  it("admits only the recursive composite PLS point-estimation slice to the exact Registry cell", () => {
     const inputModel = model();
     const config = defaultGeneralSemConfigV1();
     const modelBefore = structuredClone(inputModel);
@@ -415,7 +415,8 @@ describe("General SEM capability preflight v1", () => {
         GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
       ]);
       expect(codes(decision)).toEqual(["sem.capability.pls.experimental_labs"]);
-      expect(decision.summary).toContain("Experimental Labs");
+      expect(decision.summary).toContain("Registry-governed");
+      expect(decision.summary).not.toContain("Experimental Labs");
       expect(decision.explanation).toContain("joint stage-two solve");
       expect(inputModel).toStrictEqual(before);
     },

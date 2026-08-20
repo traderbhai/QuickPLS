@@ -72,8 +72,8 @@
       "internal"
     ],
     "baseline_counts": {
-      "standard": 26,
-      "labs": 17,
+      "standard": 27,
+      "labs": 16,
       "legacy": 2,
       "internal": 0
     },
@@ -4856,7 +4856,7 @@
       "official_lifecycle": "active",
       "official_url": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
       "coverage_state": "partial",
-      "evidence_state": "engine_only",
+      "evidence_state": "archive_qualified",
       "surface": "labs",
       "product_areas": [
         "diagram",
@@ -4952,8 +4952,8 @@
       "qualification_spec": {
         "references": [
           "validation/methods/moderation_v1.manifest.json",
-            "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json",
-            "validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json"
+          "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json",
+          "validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json"
         ],
         "links": [
           {
@@ -4977,7 +4977,7 @@
         ]
       },
       "known_differences": [
-        "The General SEM point and supplemental gamma-only full-model case-bootstrap cells are connected end to end but remain partial, engine-only, and opt-in Labs. Every usable bootstrap replicate refits shared stage one, sign-aligns complete score vectors before rebuilding products, recomputes product scaling, and refits the complete joint stage-two equations. Standardized-product beta, ordinary joint-stage coefficients, fixed minus-one/zero/plus-one slopes, and plots remain point-only; an independent full-PLS oracle, qualification-scale calibration, semantic export/readback, packaged Windows, performance/soak, and review evidence remain pending."
+        "The exact Rank 0 cells are independently Standard under rank0_streamlined_plan4b_v1; other cells under this row retain their own state."
       ],
       "legacy_row": {
         "id": "smartpls.moderation",
@@ -5062,8 +5062,8 @@
           "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
           "capability_version": "general_sem_pls_multiple_two_way_moderation_point_v1",
           "coverage_state": "partial",
-          "evidence_state": "engine_only",
-          "surface": "labs",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
           "supported_model_predicate": {
             "official": [
               "model_family:pls_sem",
@@ -5124,7 +5124,7 @@
             ]
           },
           "known_differences": [
-            "This connected engine-only Labs cell publishes descriptive point estimates and accessible persisted-data charts only; bootstrap inference, three-way moderation, moderated mediation, directed chains, and authored arbitrary probe values are blocked."
+            "This bounded cell is Standard under rank0_streamlined_plan4b_v1. Package and performance evidence is representative rather than per-cell; documented exclusions remain unchanged and no SmartPLS numerical-identity claim is made."
           ]
         },
         {
@@ -5132,8 +5132,8 @@
           "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
           "capability_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
           "coverage_state": "partial",
-          "evidence_state": "engine_only",
-          "surface": "labs",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
           "supported_model_predicate": {
             "official": [
               "model_family:pls_sem",
@@ -5215,7 +5215,7 @@
             ]
           },
           "known_differences": [
-            "This connected partial engine-only Labs cell performs indexed full-model case resampling and publishes Type-7 two-sided inference only for each typed scientific rescaled gamma target. Every usable replicate reruns shared stage-one scoring, sign-aligns complete score vectors before product construction, recomputes product scaling, refits and validates the complete joint stage-two point contract, and remains subject to the exact 90 percent usable gate. Standardized-product beta, ordinary joint-stage coefficients, fixed minus-one/zero/plus-one slopes, and plots remain point-only. Standard availability remains blocked pending an independent full-PLS oracle, qualification-scale coverage and adversarial evidence, semantic export/readback, packaged Windows, performance/soak, and review; three-way moderation, moderated mediation, directed chains, authored probes, higher-order constructs, groups, weights, transformed inputs, and non-listwise missing data remain excluded."
+            "This bounded cell is Standard under rank0_streamlined_plan4b_v1. Package and performance evidence is representative rather than per-cell; documented exclusions remain unchanged and no SmartPLS numerical-identity claim is made."
           ]
         }
       ]
@@ -5228,8 +5228,8 @@
       "official_lifecycle": "active",
       "official_url": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
       "coverage_state": "partial",
-      "evidence_state": "engine_only",
-      "surface": "labs",
+      "evidence_state": "release_qualified",
+      "surface": "standard",
       "product_areas": [
         "diagram",
         "data",
@@ -5335,14 +5335,14 @@
         ]
       },
       "known_differences": [
-        "Create current method-scoped release evidence; causal identification, counterfactual mediation, moderated mediation, and cyclic paths remain excluded."
+        "The exact Rank 0 cells are independently Standard under rank0_streamlined_plan4b_v1; other cells under this row retain their own state."
       ],
       "legacy_row": {
         "id": "smartpls.mediation",
         "catalogue_position": 27,
         "official_family": "Extended Relationships",
         "official_method": "Mediation",
-        "status": "engine-preview",
+        "status": "release-qualified",
         "priority": "P1",
         "target_release": "2.49.0",
         "competitor_scope": true,
@@ -5364,8 +5364,8 @@
           "cell_id": "qpls3.pls.mediation",
           "capability_version": "pls_mediation_v1",
           "coverage_state": "partial",
-          "evidence_state": "archive_qualified",
-          "surface": "labs",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
           "supported_model_predicate": {
             "official": [
               "model_family:pls_sem",
@@ -5411,7 +5411,7 @@
             ]
           },
           "known_differences": [
-            "Create current method-scoped release evidence; causal identification, counterfactual mediation, moderated mediation, and cyclic paths remain excluded."
+            "This bounded cell is Standard under rank0_streamlined_plan4b_v1. Package and performance evidence is representative rather than per-cell; documented exclusions remain unchanged and no SmartPLS numerical-identity claim is made."
           ]
         },
         {
@@ -5419,8 +5419,8 @@
           "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
           "capability_version": "general_sem_pls_full_model_case_bootstrap_v1",
           "coverage_state": "partial",
-          "evidence_state": "engine_only",
-          "surface": "labs",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
           "supported_model_predicate": {
             "official": [
               "model_family:pls_sem",
@@ -5489,9 +5489,7 @@
             ]
           },
           "known_differences": [
-            "This exact combination has engine-only evidence from a contract micro-reference plus a bounded independent unstandardized observed-score smoke reference for path products, bootstrap means, Type-7 percentile truth inclusion, and the usable-replicate gate. The reference never calls production Rust and is not standardized PLS scoring, sample-SE or plus-one-probability evidence, nominal-coverage qualification, or a full independent PLS-PM refit oracle. The same-app native Labs schema-6 General SEM project-mode workflow is connected from dataset/model activation through execution, canonical result persistence, close, and reopen. Independent full-PLS simulation, native QualificationSpec V2 receipts, a cross-runtime golden archive, semantic export qualification, packaged Windows acceptance, and release promotion remain absent, so qualification_ready remains false.",
-            "BCa, one-sided, studentized, conditional-probe, lazy-materialization, interaction, higher-order, feedback, cyclic, and multigroup combinations are excluded from this cell.",
-            "Public SmartPLS examples are compatibility observations only; no SmartPLS numerical identity is claimed."
+            "This bounded cell is Standard under rank0_streamlined_plan4b_v1. Package and performance evidence is representative rather than per-cell; documented exclusions remain unchanged and no SmartPLS numerical-identity claim is made."
           ]
         }
       ]
@@ -8517,14 +8515,14 @@
         ]
       },
       "known_differences": [
-    "Release-qualified only for the documented single-group reflective raw-data ML measurement-only CFA scope; robust, ordinal, FIML, mean-structure, and broader invariance scopes remain excluded."
+        "Release-qualified only for the documented single-group reflective raw-data ML measurement-only CFA scope; robust, ordinal, FIML, mean-structure, and broader invariance scopes remain excluded."
       ],
       "legacy_row": {
         "id": "smartpls.cfa",
         "catalogue_position": 44,
         "official_family": "CB-SEM and CFA",
         "official_method": "Confirmatory Factor Analysis (CFA)",
-    "status": "release-qualified",
+        "status": "release-qualified",
         "priority": "P0",
         "target_release": "current",
         "competitor_scope": true,
@@ -8534,7 +8532,7 @@
         ],
         "implementation_evidence": [],
         "dependencies": [],
-    "remaining_gap": "Maintain the bounded raw-data ML CFA evidence; robust, ordinal, FIML, mean-structure, and broader invariance scopes require separate qualification."
+        "remaining_gap": "Maintain the bounded raw-data ML CFA evidence; robust, ordinal, FIML, mean-structure, and broader invariance scopes require separate qualification."
       },
       "option_cells": [
         {
@@ -8542,8 +8540,8 @@
           "cell_id": "qpls3.cbsem.ml",
           "capability_version": "cbsem_ml_v1",
           "coverage_state": "partial",
-      "evidence_state": "release_qualified",
-      "surface": "standard",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
           "supported_model_predicate": {
             "official": [
               "model_family:cb_sem",
@@ -8589,7 +8587,7 @@
             ]
           },
           "known_differences": [
-        "Release-qualified only for the documented single-group reflective raw-data ML measurement-only CFA scope; robust, ordinal, FIML, mean-structure, and broader invariance scopes remain excluded."
+            "Release-qualified only for the documented single-group reflective raw-data ML measurement-only CFA scope; robust, ordinal, FIML, mean-structure, and broader invariance scopes remain excluded."
           ]
         }
       ]

@@ -22,10 +22,12 @@ import {
   type InternalRecipeV4CbsemJobSnapshotV1,
 } from "../domain/internalRecipeV4CbsemExecution";
 import {
+  generalSemPlsRequestedCapabilityCellV1,
   parseGeneralSemEstimatorPreflightOutcomeV1,
   parseGeneralSemPlsCompletedResultV1,
   parseGeneralSemPlsJobSnapshotV1,
   parseGeneralSemProjectBootstrapOutcomeV1,
+  selectGeneralSemExecutionAccessV1,
   type GeneralSemPlsJobRequestV1,
   type GeneralSemProjectBootstrapRequestV1,
 } from "../domain/internalRecipeV4GeneralSemWorkspace";
@@ -443,14 +445,22 @@ export async function preflightInternalGeneralSemEstimatorsV1(input: {
   project: InternalProjectArchiveV6Wire;
   model: SemModelV4;
   config: GeneralSemConfigV1;
+  experimentalLabsEnabled?: boolean;
 }) {
+  const capabilityCell = generalSemPlsRequestedCapabilityCellV1(input.model, input.config);
+  const access = selectGeneralSemExecutionAccessV1({
+    capabilityCell,
+    experimentalLabsEnabled: input.experimentalLabsEnabled ?? true,
+  });
   const response = await invoke<unknown>(
     "preflight_internal_general_sem_estimators_v1",
     {
       request: {
-        surface: "internal_labs",
-        experimentalLabsEnabled: true,
-        ...input,
+        ...access,
+        capabilityCell,
+        project: input.project,
+        model: input.model,
+        config: input.config,
       },
     },
   );

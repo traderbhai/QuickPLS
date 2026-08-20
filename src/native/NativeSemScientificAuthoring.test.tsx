@@ -97,18 +97,19 @@ describe("Experimental SemModelV4 scientific authoring UI", () => {
     expect(html).toContain("disabled=\"\"");
   });
 
-  it("keeps scientific authoring and the Parameter Table in Labs while exposing Exact CB-SEM in Standard", () => {
+  it("routes General SEM and its Parameter Table from exact Registry availability while keeping expert inspector fields Labs-scoped", () => {
     const app = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
     const modelInspector = readFileSync("src/native/NativeModelInspector.tsx", "utf8");
     const legacyInspector = readFileSync("src/components/Inspector.tsx", "utf8");
     const standardInspector = renderToStaticMarkup(<NativeModelInspector initialTab="parameter" />);
     expect(app).toContain("state.uiPreferences.experimentalLabsEnabled");
+    expect(app).toContain("generalSemWorkspaceProductAccessV1(experimentalSemAuthoringEnabled)");
     expect(app).toContain("<NativeModelInspector readiness={readiness} />");
-    expect(app).toContain("experimentalSemAuthoringEnabled ? <button");
-    expect(app).toContain("if (view === \"parameters\" && !experimentalSemAuthoringEnabled) return;");
+    expect(app).toContain("generalSemViewAvailable ? <button");
+    expect(app).toContain('if ((view === "parameters" || view === "general_sem_labs") && !generalSemViewAvailable) return;');
     expect(app).toContain('["canvas", "parameters", "general_sem_labs", "cbsem_labs"]');
     expect(app).toContain('id="nd-model-general-sem-labs-tab"');
-    expect(app).toContain('<NativeRecipeV4GeneralSemWorkspace modelName={modelName} experimentalLabsEnabled projectActivationConnected />');
+    expect(app).toContain('<NativeRecipeV4GeneralSemWorkspace modelName={modelName} experimentalLabsEnabled={experimentalSemAuthoringEnabled} projectActivationConnected />');
     expect(app).toContain('id="nd-model-cbsem-labs-tab"');
     expect(app).toContain('<NativeRecipeV4CbsemWorkspace modelName={modelName} experimentalLabsEnabled={false} />');
     expect(modelInspector).toContain('mode === "expert" && experimentalSemAuthoringEnabled ? <NativeSemConstructAuthoringFields');

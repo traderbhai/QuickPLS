@@ -1,4 +1,9 @@
-//! Internal/Labs bridge for versioned General SEM authority revisions.
+//! Registry-driven bridge for versioned General SEM authority revisions.
+
+use crate::general_sem_registry_access_v1::{
+    GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_access_v1,
+    general_sem_recipe_execution_surface_v1, is_rank0_general_sem_execution_cell_v1,
+};
 
 use qpls_project::{
     GeneralSemExecutionAuthorityRevisionErrorV1, GeneralSemExecutionAuthorityRevisionReceiptV1,
@@ -8,7 +13,6 @@ use qpls_project::{
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-const INTERNAL_LABS_SURFACE: &str = "internal_labs";
 const DIAGNOSTIC_PREFIX: &str = "schema6_general_sem_revision";
 
 #[derive(Debug, Clone, Deserialize)]
@@ -74,7 +78,7 @@ fn map_revision_error(
         GeneralSemExecutionAuthorityRevisionErrorV1::UnsupportedPlatform => blocked(
             "windows_desktop_required",
             "General SEM authority revision requires the installed Windows desktop writer.",
-            "Use the installed QuickPLS Windows application with Experimental Labs enabled.",
+            "Use the installed QuickPLS Windows application through the Registry-authorized General SEM workflow.",
         ),
         GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(message) => blocked(
             "request_invalid",
@@ -118,6 +122,33 @@ fn map_revision_error(
             "lineage_invalid",
             error.to_string(),
             "Preserve the source unchanged and reopen a revision with valid version-1 lineage.",
+        ),
+    }
+}
+
+fn registry_access_block(
+    error: GeneralSemRegistryAccessErrorV1,
+) -> GeneralSemExecutionAuthorityRevisionOutcomeV1 {
+    match error {
+        GeneralSemRegistryAccessErrorV1::RegistryInvalid(detail) => blocked(
+            "capability_registry_invalid",
+            format!("Capability Registry V2 is invalid: {detail}"),
+            "Keep the source unchanged and repair the embedded registry before creating a revision.",
+        ),
+        GeneralSemRegistryAccessErrorV1::CapabilityUnavailable => blocked(
+            "capability_unavailable",
+            "The exact revised General SEM moderation cell is not executable.",
+            "Refresh exact estimator access and rebuild the revision from the unchanged source.",
+        ),
+        GeneralSemRegistryAccessErrorV1::StandardSurfaceRequired => blocked(
+            "standard_surface_required",
+            "The exact revised General SEM moderation cell requires the Standard surface.",
+            "Refresh capability access and retry through Standard without changing the source.",
+        ),
+        GeneralSemRegistryAccessErrorV1::InternalLabsRequired => blocked(
+            "internal_labs_required",
+            "The exact revised General SEM moderation cell requires Experimental Labs opt-in.",
+            "Enable Experimental Labs or use a Standard-qualified moderation cell.",
         ),
     }
 }
@@ -197,14 +228,41 @@ fn map_publication_error(
     }
 }
 
-fn revise(
+fn revise_using<F>(
     request: GeneralSemExecutionAuthorityRevisionCommandRequestV1,
-) -> GeneralSemExecutionAuthorityRevisionOutcomeV1 {
-    if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
+    authorize: F,
+) -> GeneralSemExecutionAuthorityRevisionOutcomeV1
+where
+    F: Fn(
+        &str,
+        bool,
+        &qpls_core::CapabilityCellReferenceV2,
+    ) -> Result<(), GeneralSemRegistryAccessErrorV1>,
+{
+    let capability_cell = &request.revision.expected_capability_cell;
+    if !is_rank0_general_sem_execution_cell_v1(capability_cell)
+        || capability_cell.capability_id != "smartpls.moderation"
+    {
         return blocked(
-            "internal_labs_required",
-            "General SEM authority revision is available only through Experimental Labs.",
-            "Enable Experimental Labs and use the marked General SEM moderation workflow.",
+            "capability_unavailable",
+            "General SEM interaction revision requires an exact bounded moderation point or bootstrap cell.",
+            "Refresh the marked General SEM moderation workflow before choosing a destination.",
+        );
+    }
+    if let Err(error) = authorize(
+        &request.surface,
+        request.experimental_labs_enabled,
+        capability_cell,
+    ) {
+        return registry_access_block(error);
+    }
+    if general_sem_recipe_execution_surface_v1(&request.surface)
+        != Some(request.revision.recipe_execution_surface.as_str())
+    {
+        return blocked(
+            "recipe_execution_surface_mismatch",
+            "The revised RecipeV4 execution-surface identity disagrees with its Registry-authorized command surface.",
+            "Refresh exact capability access and rebuild the revision request from the unchanged source.",
         );
     }
     for (field, value) in [
@@ -240,6 +298,12 @@ fn revise(
     }
 }
 
+fn revise(
+    request: GeneralSemExecutionAuthorityRevisionCommandRequestV1,
+) -> GeneralSemExecutionAuthorityRevisionOutcomeV1 {
+    revise_using(request, authorize_general_sem_registry_access_v1)
+}
+
 #[tauri::command]
 pub(crate) async fn revise_internal_general_sem_execution_authority_v1(
     request: GeneralSemExecutionAuthorityRevisionCommandRequestV1,
@@ -267,12 +331,14 @@ mod tests {
     };
     use uuid::Uuid;
 
-    #[test]
-    fn labs_gate_blocks_before_any_path_access() {
-        let outcome = revise(GeneralSemExecutionAuthorityRevisionCommandRequestV1 {
-            surface: "standard".into(),
-            experimental_labs_enabled: false,
-            source_archive_path: "not-a-path".into(),
+    fn request(
+        surface: &str,
+        recipe_execution_surface: &str,
+    ) -> GeneralSemExecutionAuthorityRevisionCommandRequestV1 {
+        GeneralSemExecutionAuthorityRevisionCommandRequestV1 {
+            surface: surface.into(),
+            experimental_labs_enabled: surface == "internal_labs",
+            source_archive_path: " not-a-path ".into(),
             expected_source_archive_sha256: "x".into(),
             destination_archive_path: "not-a-path".into(),
             revision: GeneralSemExecutionAuthorityRevisionRequestV1 {
@@ -302,12 +368,50 @@ mod tests {
                     method: GeneralSemRevisionInteractionMethodV1::TwoStage,
                     hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
                 },
+                expected_capability_cell:
+                    qpls_core::pls_general_multiple_moderation_point_capability_cell_v1(),
+                recipe_execution_surface: recipe_execution_surface.into(),
             },
-        });
+        }
+    }
+
+    #[test]
+    fn labs_gate_blocks_before_any_path_access() {
+        let outcome = revise_using(
+            request(
+                "internal_labs",
+                qpls_project::GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1,
+            ),
+            |_surface, _enabled, _cell| Err(GeneralSemRegistryAccessErrorV1::InternalLabsRequired),
+        );
         assert!(matches!(
             outcome,
             GeneralSemExecutionAuthorityRevisionOutcomeV1::Blocked { diagnostic }
                 if diagnostic.code.ends_with("internal_labs_required")
+        ));
+    }
+
+    #[test]
+    fn standard_authorized_revision_reaches_validation_without_labs_or_filesystem_access() {
+        let outcome = revise_using(
+            request(
+                "standard",
+                qpls_project::GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+            ),
+            |surface, enabled, cell| {
+                assert_eq!(surface, "standard");
+                assert!(!enabled);
+                assert_eq!(
+                    cell,
+                    &qpls_core::pls_general_multiple_moderation_point_capability_cell_v1()
+                );
+                Ok(())
+            },
+        );
+        assert!(matches!(
+            outcome,
+            GeneralSemExecutionAuthorityRevisionOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code.ends_with("path_invalid")
         ));
     }
 }

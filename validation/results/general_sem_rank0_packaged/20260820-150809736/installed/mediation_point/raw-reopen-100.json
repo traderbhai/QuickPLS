@@ -1,0 +1,717 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "general_sem_rank0_fresh_reopen",
+  "package_kind": "installed",
+  "variant_id": "mediation_point",
+  "phase": "reopen",
+  "process_id": 55596,
+  "started_at_utc": "2026-08-20T09:38:56.882Z",
+  "steps": {},
+  "console_errors": [],
+  "failures": [],
+  "identity": {
+    "documentId": "result_abd96579-7c47-4381-bf38-ee8ec6c17645",
+    "runId": "abd96579-7c47-4381-bf38-ee8ec6c17645",
+    "methodVersion": "general_sem_effects_v1",
+    "datasetFingerprint": "v2:59d0df75fb3c2e7ee7be534648710e20d3f1fb0a339255643183aeb70481931c",
+    "tableIds": [
+      "estimation_summary",
+      "point_estimate_attribution",
+      "algorithm_convergence_receipt",
+      "algorithm_block_order",
+      "outer_model",
+      "structural_paths",
+      "effects",
+      "r_squared",
+      "general_sem_specific_indirect_effects",
+      "general_sem_aggregate_effects"
+    ],
+    "chartIds": [
+      "quickpls_export_specific_indirect_effect_estimates_v2"
+    ]
+  },
+  "expectedIdentity": {
+    "documentId": "result_abd96579-7c47-4381-bf38-ee8ec6c17645",
+    "runId": "abd96579-7c47-4381-bf38-ee8ec6c17645",
+    "methodVersion": "general_sem_effects_v1",
+    "datasetFingerprint": "v2:59d0df75fb3c2e7ee7be534648710e20d3f1fb0a339255643183aeb70481931c",
+    "tableIds": [
+      "estimation_summary",
+      "point_estimate_attribution",
+      "algorithm_convergence_receipt",
+      "algorithm_block_order",
+      "outer_model",
+      "structural_paths",
+      "effects",
+      "r_squared",
+      "general_sem_specific_indirect_effects",
+      "general_sem_aggregate_effects"
+    ],
+    "chartIds": [
+      "quickpls_export_specific_indirect_effect_estimates_v2"
+    ]
+  },
+  "projectArchive": {
+    "path": "D:\\QuickPLS-sem-upgrade\\validation\\results\\general_sem_rank0_packaged\\20260820-150809736\\installed\\mediation_point\\rank0-general-sem.qpls",
+    "size": 6090764,
+    "sha256": "4e585663bca609dc9dd2b1a67e40fd3ec47b9dca57443913bc74f2752b2bf336"
+  },
+  "scalePercent": 100,
+  "cells": [
+    {
+      "scale_percent": 100,
+      "viewport": "1024x700",
+      "resize": {
+        "targetId": "320DC59282FAFEC5BF87C032D78C4DB0",
+        "windowId": 1408404355,
+        "anchor": {
+          "left": 0,
+          "top": 29,
+          "width": 1920,
+          "height": 991,
+          "windowState": "normal"
+        },
+        "outerBounds": {
+          "left": 0,
+          "top": 58,
+          "width": 1024,
+          "height": 700,
+          "windowState": "normal"
+        },
+        "domInnerDimensions": {
+          "innerWidth": 1024,
+          "innerHeight": 700
+        },
+        "attempts": [
+          {
+            "attempt": 1,
+            "requestedOuterBounds": {
+              "width": 1024,
+              "height": 700,
+              "left": 0,
+              "top": 29
+            },
+            "observedOuterBounds": {
+              "left": 0,
+              "top": 58,
+              "width": 1024,
+              "height": 700,
+              "windowState": "normal"
+            },
+            "observedDomInnerDimensions": {
+              "innerWidth": 1024,
+              "innerHeight": 700
+            }
+          }
+        ]
+      },
+      "snapshot": {
+        "origin": "http://tauri.localhost",
+        "tauriRuntime": true,
+        "surface": "model",
+        "innerWidth": 1024,
+        "innerHeight": 700,
+        "devicePixelRatio": 1,
+        "documentNoHorizontalOverflow": true,
+        "appNoHorizontalOverflow": true,
+        "tableCount": 11,
+        "accessibleTableCount": 11,
+        "chartCount": 1,
+        "accessibleChartCount": 1
+      },
+      "keyboard": {
+        "sequence": [
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Selected PLS-SEM General v3"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Calculate PLS effects"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Close General SEM project"
+          },
+          {
+            "tag": "div",
+            "id": "nd-canonical-table-706f696e745f657374696d6174655f6174747269627574696f6e",
+            "role": null,
+            "name": "Point-estimate attributionExact preprocessing and scale interpretation for every PLS point-estimate family.ContractPrepr"
+          },
+          {
+            "tag": "div",
+            "id": "nd-canonical-table-616c676f726974686d5f636f6e76657267656e63655f72656365697074",
+            "role": null,
+            "name": "PLS algorithm convergenceExact stopping rule, observed termination, and iteration accounting.ContractWeightingMaximum it"
+          },
+          {
+            "tag": "div",
+            "id": "nd-canonical-table-67656e6572616c5f73656d5f73706563696669635f696e6469726563745f65666665637473",
+            "role": null,
+            "name": "Specific indirect effectsRequested ordered mediation paths with stable relation identities and optional full-model boots"
+          },
+          {
+            "tag": "div",
+            "id": "nd-canonical-table-67656e6572616c5f73656d5f6167677265676174655f65666665637473",
+            "role": null,
+            "name": "Aggregate effectsRequested total-indirect and total effects with their contributing stable path identities.Effect IDEsti"
+          },
+          {
+            "tag": "summary",
+            "id": null,
+            "role": null,
+            "name": "Run and compilation details"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Clear table selection"
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-657374696d6174696f6e5f73756d6d617279",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-6f757465725f6d6f64656c",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-7374727563747572616c5f7061746873",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-65666665637473",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-725f73717561726564",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-706f696e745f657374696d6174655f6174747269627574696f6e",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-616c676f726974686d5f636f6e76657267656e63655f72656365697074",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-616c676f726974686d5f626c6f636b5f6f72646572",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-67656e6572616c5f73656d5f73706563696669635f696e6469726563745f65666665637473",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-67656e6572616c5f73656d5f6167677265676174655f65666665637473",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "select",
+            "id": "nd-canonical-export-v2-chart",
+            "role": null,
+            "name": "Specific indirect effect estimates · derived from canonical table · quickpls_export_specific_indirect_effect_estimates_v"
+          },
+          {
+            "tag": "figure",
+            "id": null,
+            "role": "img",
+            "name": "Specific indirect effect estimatesExport-only visual derived exactly from canonical table general_sem_specific_indirect_"
+          },
+          {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "name": "Specific indirect effect estimates accessible dataExact table fallback in stable chart order.IndexSeriesEffect or point "
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Export CSV"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Export XLSX"
+          }
+        ],
+        "distinctTargets": 24,
+        "reachedInteractiveControl": true
+      },
+      "passed": true
+    },
+    {
+      "scale_percent": 100,
+      "viewport": "1280x720",
+      "resize": {
+        "targetId": "320DC59282FAFEC5BF87C032D78C4DB0",
+        "windowId": 1408404355,
+        "anchor": {
+          "left": 0,
+          "top": 58,
+          "width": 1024,
+          "height": 700,
+          "windowState": "normal"
+        },
+        "outerBounds": {
+          "left": 0,
+          "top": 87,
+          "width": 1280,
+          "height": 720,
+          "windowState": "normal"
+        },
+        "domInnerDimensions": {
+          "innerWidth": 1280,
+          "innerHeight": 720
+        },
+        "attempts": [
+          {
+            "attempt": 1,
+            "requestedOuterBounds": {
+              "width": 1280,
+              "height": 720,
+              "left": 0,
+              "top": 58
+            },
+            "observedOuterBounds": {
+              "left": 0,
+              "top": 87,
+              "width": 1280,
+              "height": 720,
+              "windowState": "normal"
+            },
+            "observedDomInnerDimensions": {
+              "innerWidth": 1280,
+              "innerHeight": 720
+            }
+          }
+        ]
+      },
+      "snapshot": {
+        "origin": "http://tauri.localhost",
+        "tauriRuntime": true,
+        "surface": "model",
+        "innerWidth": 1280,
+        "innerHeight": 720,
+        "devicePixelRatio": 1,
+        "documentNoHorizontalOverflow": true,
+        "appNoHorizontalOverflow": true,
+        "tableCount": 11,
+        "accessibleTableCount": 11,
+        "chartCount": 1,
+        "accessibleChartCount": 1
+      },
+      "keyboard": {
+        "sequence": [
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Selected PLS-SEM General v3"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Calculate PLS effects"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Close General SEM project"
+          },
+          {
+            "tag": "div",
+            "id": "nd-canonical-table-706f696e745f657374696d6174655f6174747269627574696f6e",
+            "role": null,
+            "name": "Point-estimate attributionExact preprocessing and scale interpretation for every PLS point-estimate family.ContractPrepr"
+          },
+          {
+            "tag": "div",
+            "id": "nd-canonical-table-67656e6572616c5f73656d5f73706563696669635f696e6469726563745f65666665637473",
+            "role": null,
+            "name": "Specific indirect effectsRequested ordered mediation paths with stable relation identities and optional full-model boots"
+          },
+          {
+            "tag": "div",
+            "id": "nd-canonical-table-67656e6572616c5f73656d5f6167677265676174655f65666665637473",
+            "role": null,
+            "name": "Aggregate effectsRequested total-indirect and total effects with their contributing stable path identities.Effect IDEsti"
+          },
+          {
+            "tag": "summary",
+            "id": null,
+            "role": null,
+            "name": "Run and compilation details"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Clear table selection"
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-657374696d6174696f6e5f73756d6d617279",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-6f757465725f6d6f64656c",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-7374727563747572616c5f7061746873",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-65666665637473",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-725f73717561726564",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-706f696e745f657374696d6174655f6174747269627574696f6e",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-616c676f726974686d5f636f6e76657267656e63655f72656365697074",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-616c676f726974686d5f626c6f636b5f6f72646572",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-67656e6572616c5f73656d5f73706563696669635f696e6469726563745f65666665637473",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-67656e6572616c5f73656d5f6167677265676174655f65666665637473",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "select",
+            "id": "nd-canonical-export-v2-chart",
+            "role": null,
+            "name": "Specific indirect effect estimates · derived from canonical table · quickpls_export_specific_indirect_effect_estimates_v"
+          },
+          {
+            "tag": "figure",
+            "id": null,
+            "role": "img",
+            "name": "Specific indirect effect estimatesExport-only visual derived exactly from canonical table general_sem_specific_indirect_"
+          },
+          {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "name": "Specific indirect effect estimates accessible dataExact table fallback in stable chart order.IndexSeriesEffect or point "
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Export CSV"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Export XLSX"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Export HTML"
+          }
+        ],
+        "distinctTargets": 24,
+        "reachedInteractiveControl": true
+      },
+      "passed": true
+    },
+    {
+      "scale_percent": 100,
+      "viewport": "1440x900",
+      "resize": {
+        "targetId": "320DC59282FAFEC5BF87C032D78C4DB0",
+        "windowId": 1408404355,
+        "anchor": {
+          "left": 0,
+          "top": 87,
+          "width": 1280,
+          "height": 720,
+          "windowState": "normal"
+        },
+        "outerBounds": {
+          "left": 0,
+          "top": 116,
+          "width": 1440,
+          "height": 900,
+          "windowState": "normal"
+        },
+        "domInnerDimensions": {
+          "innerWidth": 1440,
+          "innerHeight": 900
+        },
+        "attempts": [
+          {
+            "attempt": 1,
+            "requestedOuterBounds": {
+              "width": 1440,
+              "height": 900,
+              "left": 0,
+              "top": 87
+            },
+            "observedOuterBounds": {
+              "left": 0,
+              "top": 116,
+              "width": 1440,
+              "height": 900,
+              "windowState": "normal"
+            },
+            "observedDomInnerDimensions": {
+              "innerWidth": 1440,
+              "innerHeight": 900
+            }
+          }
+        ]
+      },
+      "snapshot": {
+        "origin": "http://tauri.localhost",
+        "tauriRuntime": true,
+        "surface": "model",
+        "innerWidth": 1440,
+        "innerHeight": 900,
+        "devicePixelRatio": 1,
+        "documentNoHorizontalOverflow": true,
+        "appNoHorizontalOverflow": true,
+        "tableCount": 11,
+        "accessibleTableCount": 11,
+        "chartCount": 1,
+        "accessibleChartCount": 1
+      },
+      "keyboard": {
+        "sequence": [
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Selected PLS-SEM General v3"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Calculate PLS effects"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Close General SEM project"
+          },
+          {
+            "tag": "div",
+            "id": "nd-canonical-table-706f696e745f657374696d6174655f6174747269627574696f6e",
+            "role": null,
+            "name": "Point-estimate attributionExact preprocessing and scale interpretation for every PLS point-estimate family.ContractPrepr"
+          },
+          {
+            "tag": "div",
+            "id": "nd-canonical-table-67656e6572616c5f73656d5f73706563696669635f696e6469726563745f65666665637473",
+            "role": null,
+            "name": "Specific indirect effectsRequested ordered mediation paths with stable relation identities and optional full-model boots"
+          },
+          {
+            "tag": "div",
+            "id": "nd-canonical-table-67656e6572616c5f73656d5f6167677265676174655f65666665637473",
+            "role": null,
+            "name": "Aggregate effectsRequested total-indirect and total effects with their contributing stable path identities.Effect IDEsti"
+          },
+          {
+            "tag": "summary",
+            "id": null,
+            "role": null,
+            "name": "Run and compilation details"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Clear table selection"
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-657374696d6174696f6e5f73756d6d617279",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-6f757465725f6d6f64656c",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-7374727563747572616c5f7061746873",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-65666665637473",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-725f73717561726564",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-706f696e745f657374696d6174655f6174747269627574696f6e",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-616c676f726974686d5f636f6e76657267656e63655f72656365697074",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-616c676f726974686d5f626c6f636b5f6f72646572",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-67656e6572616c5f73656d5f73706563696669635f696e6469726563745f65666665637473",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "id": "nd-canonical-export-table-67656e6572616c5f73656d5f6167677265676174655f65666665637473",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "select",
+            "id": "nd-canonical-export-v2-chart",
+            "role": null,
+            "name": "Specific indirect effect estimates · derived from canonical table · quickpls_export_specific_indirect_effect_estimates_v"
+          },
+          {
+            "tag": "figure",
+            "id": null,
+            "role": "img",
+            "name": "Specific indirect effect estimatesExport-only visual derived exactly from canonical table general_sem_specific_indirect_"
+          },
+          {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "name": "Specific indirect effect estimates accessible dataExact table fallback in stable chart order.IndexSeriesEffect or point "
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Export CSV"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Export XLSX"
+          },
+          {
+            "tag": "button",
+            "id": null,
+            "role": null,
+            "name": "Export HTML"
+          }
+        ],
+        "distinctTargets": 24,
+        "reachedInteractiveControl": true
+      },
+      "passed": true
+    }
+  ],
+  "freshProcessReopen": true,
+  "keyboardNavigation": true,
+  "accessibleTableAndChart": true,
+  "viewportScaling": true,
+  "closeProject": true,
+  "offline": {
+    "passed": true,
+    "observedRequestCount": 7,
+    "externalRequestCount": 0,
+    "origins": [
+      "http://ipc.localhost"
+    ],
+    "externalRequests": []
+  },
+  "completed_at_utc": "2026-08-20T09:39:28.681Z",
+  "passed": true
+}

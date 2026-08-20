@@ -1,6 +1,11 @@
 import type { CanonicalResultDocumentV2, CapabilityCellReferenceV2 } from "./canonicalResultDocumentV2";
 import { canonicalResultDocumentJson, validateCanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
 import {
+  capabilityOptionCellAvailabilityV2,
+  capabilityRegistryV2,
+  type CapabilityOptionCellV2,
+} from "./capabilityRegistryV2";
+import {
   defaultGeneralSemConfigV1,
   parseGeneralSemConfigV1,
   type GeneralSemConfigV1,
@@ -130,6 +135,142 @@ export class GeneralSemWorkspaceErrorV1 extends Error {
   }
 }
 
+export interface GeneralSemCapabilityRegistryReaderV1 {
+  requireOptionCell(capabilityId: string, cellId: string): CapabilityOptionCellV2;
+}
+
+export type GeneralSemExecutionAccessV1 =
+  | { readonly surface: "standard"; readonly experimentalLabsEnabled: false }
+  | { readonly surface: "internal_labs"; readonly experimentalLabsEnabled: true };
+
+export type GeneralSemReadAccessV1 = {
+  readonly surface: "standard" | "internal_labs";
+  readonly experimentalLabsEnabled: false;
+};
+
+/**
+ * Immutable RecipeV4 metadata identities. The Labs value is historical and
+ * must remain readable after a cell is promoted; newly built recipes always
+ * use the identity selected from the current exact Registry V2 cell.
+ */
+export const GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1 =
+  "native_general_sem_pls_labs_v1" as const;
+export const GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1 =
+  "native_general_sem_pls_standard_v1" as const;
+export type GeneralSemPlsRecipeExecutionSurfaceV1 =
+  | typeof GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+  | typeof GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1;
+
+function generalSemRecipeExecutionSurfaceV1(
+  access: GeneralSemExecutionAccessV1,
+): GeneralSemPlsRecipeExecutionSurfaceV1 {
+  return access.surface === "standard"
+    ? GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+    : GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1;
+}
+
+/**
+ * Resolves one exact Registry V2 cell to its stable execution surface. The
+ * native command repeats this decision against its embedded registry, so this
+ * frontend selection improves workflow without becoming an authorization
+ * authority.
+ */
+export function selectGeneralSemExecutionAccessV1(input: {
+  capabilityCell: CapabilityCellReferenceV2;
+  experimentalLabsEnabled: boolean;
+  registry?: GeneralSemCapabilityRegistryReaderV1;
+}): GeneralSemExecutionAccessV1 {
+  const registry = input.registry ?? capabilityRegistryV2;
+  let cell: CapabilityOptionCellV2;
+  try {
+    cell = registry.requireOptionCell(
+      input.capabilityCell.capability_id,
+      input.capabilityCell.cell_id,
+    );
+  } catch {
+    throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.access.capability_unavailable",
+      input.capabilityCell.cell_id,
+      "The exact General SEM option cell is absent from Capability Registry V2.",
+      "Refresh the verified capability registry and rerun exact estimator preflight.",
+    );
+  }
+  if (cell.capability_id !== input.capabilityCell.capability_id
+    || cell.cell_id !== input.capabilityCell.cell_id
+    || cell.capability_version !== input.capabilityCell.capability_version
+    || input.capabilityCell.registry_schema_version !== 2) {
+    throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.access.capability_unavailable",
+      input.capabilityCell.cell_id,
+      "The requested General SEM option-cell identity differs from Capability Registry V2.",
+      "Refresh the verified capability registry and rerun exact estimator preflight.",
+    );
+  }
+  const availability = capabilityOptionCellAvailabilityV2(
+    cell,
+    input.experimentalLabsEnabled,
+  );
+  if (availability.reason === "standard_ready") {
+    return { surface: "standard", experimentalLabsEnabled: false };
+  }
+  if (availability.reason === "labs_ready") {
+    return { surface: "internal_labs", experimentalLabsEnabled: true };
+  }
+  if (availability.reason === "labs_disabled") {
+    throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.access.experimental_labs_required",
+      "experimentalLabsEnabled",
+      "The exact General SEM option cell is available only through Experimental Labs.",
+      "Enable Experimental Labs, or choose a Standard-qualified General SEM cell.",
+    );
+  }
+  throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.access.capability_unavailable",
+    input.capabilityCell.cell_id,
+    "The exact General SEM option cell is not executable on its registered surface.",
+    "Keep the project unchanged and use a qualified Capability Registry V2 cell.",
+  );
+}
+
+/** Product-level navigation access; the selected calculation cell is rechecked separately. */
+export function generalSemWorkspaceProductAccessV1(
+  experimentalLabsEnabled: boolean,
+  registry: GeneralSemCapabilityRegistryReaderV1 = capabilityRegistryV2,
+): GeneralSemExecutionAccessV1 | null {
+  const cells = [
+    GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
+    GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1,
+    GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+    GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  ];
+  for (const capabilityCell of cells) {
+    try {
+      const access = selectGeneralSemExecutionAccessV1({
+        capabilityCell,
+        experimentalLabsEnabled: false,
+        registry,
+      });
+      if (access.surface === "standard") return access;
+    } catch {
+      // Product navigation stays fail-closed until at least one exact cell is available.
+    }
+  }
+  if (!experimentalLabsEnabled) return null;
+  for (const capabilityCell of cells) {
+    try {
+      const access = selectGeneralSemExecutionAccessV1({
+        capabilityCell,
+        experimentalLabsEnabled: true,
+        registry,
+      });
+      if (access.surface === "internal_labs") return access;
+    } catch {
+      // Keep searching the bounded General SEM option-cell inventory.
+    }
+  }
+  return null;
+}
+
 const SHA256 = /^[a-f0-9]{64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -195,6 +336,7 @@ export function generalSemConfigFromEngineV1(
 
 export function preflightGeneralSemWorkspaceV1(input: {
   experimentalLabsEnabled: boolean;
+  capabilityRegistry?: GeneralSemCapabilityRegistryReaderV1;
   sourceProjectId: string | null;
   dataset: Dataset | null;
   model: SemModelV4 | null;
@@ -202,12 +344,6 @@ export function preflightGeneralSemWorkspaceV1(input: {
   engine: GeneralSemPlsEngineOptionsV1;
 }): GeneralSemWorkspacePreflightV1 {
   const issues: GeneralSemWorkspaceIssueV1[] = [];
-  if (!input.experimentalLabsEnabled) issues.push(issue(
-    "general_sem.access.experimental_labs_required",
-    "experimentalLabsEnabled",
-    "General SEM calculation is available only in Experimental Labs.",
-    "Enable Experimental Labs in Preferences.",
-  ));
   if (!input.sourceProjectId || !UUID.test(input.sourceProjectId)) issues.push(issue(
     "general_sem.project.stable_identity_required",
     "project",
@@ -296,6 +432,11 @@ export function preflightGeneralSemWorkspaceV1(input: {
   let decision: SemCapabilityDecisionV1 | null = null;
   if (input.model) {
     try {
+      selectGeneralSemExecutionAccessV1({
+        capabilityCell: generalSemPlsRequestedCapabilityCellV1(input.model, input.config),
+        experimentalLabsEnabled: input.experimentalLabsEnabled,
+        registry: input.capabilityRegistry,
+      });
       decision = preflightGeneralSemPlsV1(input.model, input.config);
       for (const diagnostic of decision.diagnostics.filter((item) => item.severity === "error")) issues.push(issue(
         diagnostic.code,
@@ -304,15 +445,22 @@ export function preflightGeneralSemWorkspaceV1(input: {
         diagnostic.corrections[0] ?? "Correct the model or calculation configuration.",
       ));
     } catch (error) {
-      issues.push(issue(
-        "general_sem.preflight.contract_invalid",
-        "preflight",
-        error instanceof Error ? error.message : "The General SEM capability decision could not be validated.",
-        "Keep the model unchanged and retry after reopening the current project.",
-      ));
+      issues.push(error instanceof GeneralSemWorkspaceErrorV1
+        ? issue(error.code, error.subject, error.message, error.correctiveAction)
+        : issue(
+          "general_sem.preflight.contract_invalid",
+          "preflight",
+          error instanceof Error ? error.message : "The General SEM capability decision could not be validated.",
+          "Keep the model unchanged and retry after reopening the current project.",
+        ));
     }
   }
-  return { ready: issues.length === 0 && decision?.status === "experimental", decision, issues };
+  return {
+    ready: issues.length === 0
+      && (decision?.status === "experimental" || decision?.status === "supported"),
+    decision,
+    issues,
+  };
 }
 
 export interface BuildGeneralSemRecipeV1Input {
@@ -323,6 +471,9 @@ export interface BuildGeneralSemRecipeV1Input {
   nativeScientificSha256: string;
   config: GeneralSemConfigV1;
   engine: GeneralSemPlsEngineOptionsV1;
+  capabilityCell: CapabilityCellReferenceV2;
+  experimentalLabsEnabled: boolean;
+  capabilityRegistry?: GeneralSemCapabilityRegistryReaderV1;
 }
 
 export function buildGeneralSemRecipeV1(input: BuildGeneralSemRecipeV1Input): AnalysisRecipeV4 {
@@ -333,6 +484,23 @@ export function buildGeneralSemRecipeV1(input: BuildGeneralSemRecipeV1Input): An
     "general_sem.dataset.binding_mismatch", input.dataset.id, "The model and resident dataset identities differ.", "Rebind the model to the selected dataset.",
   );
   const config = parseGeneralSemConfigV1(input.config);
+  const access = selectGeneralSemExecutionAccessV1({
+    capabilityCell: input.capabilityCell,
+    experimentalLabsEnabled: input.experimentalLabsEnabled,
+    registry: input.capabilityRegistry,
+  });
+  const requestedCell = generalSemPlsRequestedCapabilityCellV1(input.model, config);
+  if (requestedCell.registry_schema_version !== input.capabilityCell.registry_schema_version
+    || requestedCell.capability_id !== input.capabilityCell.capability_id
+    || requestedCell.cell_id !== input.capabilityCell.cell_id
+    || requestedCell.capability_version !== input.capabilityCell.capability_version) {
+    throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.recipe.capability_cell_mismatch",
+      input.capabilityCell.cell_id,
+      "The RecipeV4 capability cell differs from the exact model and General SEM configuration.",
+      "Rerun exact estimator preflight and rebuild the recipe from the unchanged model.",
+    );
+  }
   const bootstrapInference = config.inference.kind === "case_bootstrap" ? config.inference : null;
   const settings: AnalysisRecipeV4Settings<"listwise_deletion"> = {
     method: "pls_pm",
@@ -365,16 +533,15 @@ export function buildGeneralSemRecipeV1(input: BuildGeneralSemRecipeV1Input): An
     method_config: { kind: "pls_algorithm" },
     general_sem_config: config,
     metadata: {
-      execution_surface: "native_general_sem_pls_labs_v1",
+      execution_surface: generalSemRecipeExecutionSurfaceV1(access),
       general_sem_generation: "general_sem_v1",
     },
     legacy_source: null,
   };
 }
 
-export interface GeneralSemProjectBootstrapRequestV1 {
-  surface: "internal_labs";
-  experimentalLabsEnabled: true;
+export type GeneralSemProjectBootstrapRequestV1 = GeneralSemExecutionAccessV1 & {
+  capabilityCell: CapabilityCellReferenceV2;
   destinationPath: string;
   projectId: string;
   name: string;
@@ -384,7 +551,7 @@ export interface GeneralSemProjectBootstrapRequestV1 {
   sourceDatasetFingerprint: string;
   model: SemModelV4;
   recipe: AnalysisRecipeV4;
-}
+};
 
 export interface GeneralSemProjectBootstrapReceiptV1 {
   schemaVersion: 1;
@@ -409,11 +576,21 @@ export interface RehydratedGeneralSemExecutionAuthorityV1 {
   engine: GeneralSemPlsEngineOptionsV1;
   /** Exact resident config; never reconstructed from UI defaults. */
   config: GeneralSemConfigV1;
+  /** Current Registry-selected access for this exact resident cell. */
+  executionAccess: GeneralSemExecutionAccessV1;
+  /** Stored recipe surface used only for immutable strict result readback. */
+  readAccess: GeneralSemReadAccessV1;
+  capabilityCell: CapabilityCellReferenceV2;
+  /** Immutable metadata read from the resident RecipeV4. */
+  recipeExecutionSurface: GeneralSemPlsRecipeExecutionSurfaceV1;
+  /** True only when a historical Labs recipe is read after cell promotion. */
+  legacyLabsRecipeOnStandardCell: boolean;
 }
 
 /** Restores the exact native RecipeV4 authority after remount or process restart. */
 export function rehydrateGeneralSemExecutionAuthorityV1(
   snapshot: InternalProjectArchiveV6ReadSnapshotV1,
+  registry: GeneralSemCapabilityRegistryReaderV1 = capabilityRegistryV2,
 ): RehydratedGeneralSemExecutionAuthorityV1 {
   const authority = snapshot.generalSemExecutionAuthority;
   if (!authority) throw new GeneralSemWorkspaceErrorV1(
@@ -427,6 +604,7 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
     ? parseGeneralSemConfigV1(recipe.general_sem_config)
     : null;
   const methodConfig = recipe.method_config as { kind?: unknown } | undefined;
+  const recipeExecutionSurface = recipe.metadata.execution_surface;
   if (!config
     || recipe.settings.method !== "pls_pm"
     || recipe.settings.weighting_scheme !== "path"
@@ -434,13 +612,43 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
     || recipe.settings.missing_data !== "listwise_deletion"
     || recipe.settings.case_weight_column !== null
     || methodConfig?.kind !== "pls_algorithm"
-    || recipe.metadata.execution_surface !== "native_general_sem_pls_labs_v1"
+    || (recipeExecutionSurface !== GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+      && recipeExecutionSurface !== GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1)
     || recipe.metadata.general_sem_generation !== "general_sem_v1") {
     throw new GeneralSemWorkspaceErrorV1(
       "general_sem.rehydrate.recipe_scope_mismatch",
       authority.recipeId,
       "The resident RecipeV4 is outside the bounded General SEM PLS execution scope.",
       "Keep the archive unchanged and use an estimator cell that explicitly supports its recipe.",
+    );
+  }
+  const modelRecord = snapshot.project.models.find((record) => record.model_id === authority.modelId);
+  if (!modelRecord || modelRecord.payload.kind !== "sem_model_v4") {
+    throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.rehydrate.model_authority_required",
+      authority.modelId,
+      "The resident RecipeV4 model reference does not resolve to one promoted SemModelV4 authority.",
+      "Keep the archive unchanged and reopen it with the matching QuickPLS version.",
+    );
+  }
+  const capabilityCell = generalSemPlsRequestedCapabilityCellV1(modelRecord.payload.model, config);
+  const executionAccess = selectGeneralSemExecutionAccessV1({
+    capabilityCell,
+    // Rehydration is read compatibility, not permission to execute. Discover
+    // the cell's current Registry surface while preserving historical bytes.
+    experimentalLabsEnabled: true,
+    registry,
+  });
+  const expectedRecipeSurface = generalSemRecipeExecutionSurfaceV1(executionAccess);
+  const legacyLabsRecipeOnStandardCell =
+    recipeExecutionSurface === GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+    && executionAccess.surface === "standard";
+  if (recipeExecutionSurface !== expectedRecipeSurface && !legacyLabsRecipeOnStandardCell) {
+    throw new GeneralSemWorkspaceErrorV1(
+      "general_sem.rehydrate.execution_surface_mismatch",
+      authority.recipeId,
+      "The resident RecipeV4 execution-surface identity disagrees with its exact Capability Registry V2 cell.",
+      "Preserve the archive unchanged and report the authority mismatch.",
     );
   }
   const inference = config.inference;
@@ -488,6 +696,16 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
       maxMaterializedSpecificPaths: config.output_policy.max_materialized_specific_paths,
     },
     config,
+    executionAccess,
+    readAccess: {
+      surface: recipeExecutionSurface === GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+        ? "internal_labs"
+        : "standard",
+      experimentalLabsEnabled: false,
+    },
+    capabilityCell,
+    recipeExecutionSurface,
+    legacyLabsRecipeOnStandardCell,
   };
 }
 
@@ -507,9 +725,7 @@ export interface GeneralSemNativePreflightBlockedV1 {
 
 export type GeneralSemEstimatorPreflightOutcomeV1 = GeneralSemNativePreflightOutcomeV1 | GeneralSemNativePreflightBlockedV1;
 
-export interface GeneralSemPlsJobRequestV1 {
-  surface: "internal_labs";
-  experimentalLabsEnabled: true;
+export type GeneralSemPlsJobRequestV1 = GeneralSemExecutionAccessV1 & {
   archivePath: string;
   expectedArchiveSha256: string;
   projectId: string;
@@ -520,7 +736,7 @@ export interface GeneralSemPlsJobRequestV1 {
   recipeId: string;
   recipeDocumentSha256: string;
   capabilityCell: CapabilityCellReferenceV2;
-}
+};
 
 export type GeneralSemPlsJobStateV1 = "queued" | "running" | "cancelling" | "completed" | "failed" | "cancelled";
 export interface GeneralSemPlsJobFailureV1 {
@@ -828,6 +1044,20 @@ export interface GeneralSemPlsExecutionCapabilityV1 {
   readonly focalRelationIds: readonly string[];
 }
 
+export function generalSemPlsRequestedCapabilityCellV1(
+  model: SemModelV4,
+  config: GeneralSemConfigV1,
+): CapabilityCellReferenceV2 {
+  const moderation = model.derived_terms.some((term) => term.kind === "interaction_v2");
+  return moderation
+    ? config.inference.kind === "case_bootstrap"
+      ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
+    : config.inference.kind === "case_bootstrap"
+      ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
+}
+
 interface GeneralSemCompletedInteractionIdentityV1 {
   readonly interactionId: string;
   readonly focalRelationId: string;
@@ -929,15 +1159,9 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
     .slice()
     .sort((left, right) => compareUtf8StringsV1(left.id, right.id));
   const moderation = interactionTerms.length > 0;
-  const capabilityCell = moderation
-    ? input.config.inference.kind === "case_bootstrap"
-      ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
-      : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
-    : input.config.inference.kind === "case_bootstrap"
-      ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
-      : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
+  const capabilityCell = generalSemPlsRequestedCapabilityCellV1(input.model, input.config);
   if (input.decision.estimator_id !== "qpls.pls_sem.v3"
-    || input.decision.status !== "experimental") {
+    || (input.decision.status !== "experimental" && input.decision.status !== "supported")) {
     throw new GeneralSemWorkspaceErrorV1(
       "general_sem.capability.native_preflight_not_runnable",
       input.decision.estimator_id,
@@ -1650,11 +1874,17 @@ export function generalSemJobRequestFromReceiptV1(
   config: GeneralSemConfigV1,
   decision: SemCapabilityDecisionV1,
   expectedArchiveSha256 = receipt.destinationArchiveSha256,
+  experimentalLabsEnabled = true,
+  registry: GeneralSemCapabilityRegistryReaderV1 = capabilityRegistryV2,
 ): GeneralSemPlsJobRequestV1 {
   const execution = selectGeneralSemPlsExecutionCapabilityV1({ model, config, decision });
+  const access = selectGeneralSemExecutionAccessV1({
+    capabilityCell: execution.capabilityCell,
+    experimentalLabsEnabled,
+    registry,
+  });
   return {
-    surface: "internal_labs",
-    experimentalLabsEnabled: true,
+    ...access,
     archivePath: receipt.destinationArchivePath,
     expectedArchiveSha256,
     projectId: receipt.projectId,
@@ -1698,11 +1928,19 @@ export async function monitorGeneralSemPlsJobV1(input: {
 
 export async function appendGeneralSemResultV1(
   completed: GeneralSemPlsCompletedResultV1,
+  execution: GeneralSemPlsExecutionCapabilityV1,
+  experimentalLabsEnabled: boolean,
   append: (request: InternalProjectSchema6ResultAppendRequestV1) => Promise<InternalProjectSchema6ResultAppendOutcomeV1>,
+  registry: GeneralSemCapabilityRegistryReaderV1 = capabilityRegistryV2,
 ): Promise<InternalProjectSchema6ResultAppendOutcomeV1> {
+  const access = selectGeneralSemExecutionAccessV1({
+    capabilityCell: execution.capabilityCell,
+    experimentalLabsEnabled,
+    registry,
+  });
   return append({
-    surface: "internal_labs",
-    experimentalLabsEnabled: true,
+    ...access,
+    capabilityCell: execution.capabilityCell,
     archivePath: completed.archiveIdentity.archivePath,
     expectedSourceSha256: completed.archiveIdentity.archiveSha256,
     canonicalDocument: completed.canonicalDocument,
@@ -1711,12 +1949,22 @@ export async function appendGeneralSemResultV1(
 
 export async function reopenGeneralSemResultV1(
   completed: GeneralSemPlsCompletedResultV1,
+  execution: GeneralSemPlsExecutionCapabilityV1,
   updatedArchiveSha256: string,
   read: (request: InternalProjectSchema6ResultReadRequestV1) => Promise<InternalProjectSchema6ResultReadOutcomeV1>,
+  registry: GeneralSemCapabilityRegistryReaderV1 = capabilityRegistryV2,
 ): Promise<{ outcome: InternalProjectSchema6ResultReadOutcomeV1; entry: InternalProjectSchema6CanonicalResultEntryV1 | null }> {
-  const outcome = await read({
-    surface: "internal_labs",
+  const access = selectGeneralSemExecutionAccessV1({
+    capabilityCell: execution.capabilityCell,
+    // Discover the immutable Registry surface. Native readback uses a
+    // separate non-mutating policy and never grants execution or append.
     experimentalLabsEnabled: true,
+    registry,
+  });
+  const outcome = await read({
+    surface: access.surface,
+    experimentalLabsEnabled: false,
+    capabilityCell: execution.capabilityCell,
     archivePath: completed.archiveIdentity.archivePath,
     expectedSourceSha256: updatedArchiveSha256,
   });
@@ -1737,10 +1985,18 @@ export function nativeGeneralSemPreflightRequestV1(
   snapshot: InternalProjectArchiveV6ReadSnapshotV1,
   model: SemModelV4,
   config: GeneralSemConfigV1,
+  experimentalLabsEnabled = true,
+  registry: GeneralSemCapabilityRegistryReaderV1 = capabilityRegistryV2,
 ) {
+  const capabilityCell = generalSemPlsRequestedCapabilityCellV1(model, config);
+  const access = selectGeneralSemExecutionAccessV1({
+    capabilityCell,
+    experimentalLabsEnabled,
+    registry,
+  });
   return {
-    surface: "internal_labs" as const,
-    experimentalLabsEnabled: true as const,
+    ...access,
+    capabilityCell,
     project: snapshot.project,
     model,
     config,

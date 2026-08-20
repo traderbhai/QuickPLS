@@ -6,6 +6,11 @@ import { execFile, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { chromium } from "playwright";
+import {
+  enumerateQuickPlsCdpPages,
+  inspectQuickPlsCdpPage,
+  setActualTauriClientViewport as resizeActualTauriClientViewport,
+} from "./v247_cdp_package_helpers.mjs";
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -1776,43 +1781,11 @@ try {
 }
 
 async function inspectCdpPage(candidate, index) {
-  const fallbackUrl = candidate.url();
-  try {
-    const inspected = await candidate.evaluate(() => {
-      const shell = document.querySelector(".nd-app[data-native-desktop-shell='true']");
-      const shellStyle = shell ? getComputedStyle(shell) : null;
-      return {
-        title: document.title,
-        shellVisible: Boolean(shell
-          && shellStyle?.display !== "none"
-          && shellStyle?.visibility !== "hidden"
-          && shell.getClientRects().length > 0),
-        tauriRuntime: Boolean(window.__TAURI_INTERNALS__),
-      };
-    });
-    const url = candidate.url();
-    let origin = null;
-    try {
-      origin = new URL(url).origin;
-    } catch {
-      origin = null;
-    }
-    return { index, url, origin, ...inspected };
-  } catch {
-    let origin = null;
-    try {
-      origin = new URL(fallbackUrl).origin;
-    } catch {
-      origin = null;
-    }
-    return { index, url: fallbackUrl, origin, title: "", shellVisible: false, tauriRuntime: false };
-  }
+  return inspectQuickPlsCdpPage(candidate, index);
 }
 
 async function enumerateCdpPages(browserInstance) {
-  const pages = browserInstance.contexts().flatMap((context) => context.pages());
-  const inspected = await Promise.all(pages.map((candidate, index) => inspectCdpPage(candidate, index)));
-  return pages.map((candidate, index) => ({ candidate, state: inspected[index] }));
+  return enumerateQuickPlsCdpPages(browserInstance);
 }
 
 let browser = null;
@@ -1976,63 +1949,7 @@ function windowBoundsEqual(left, right, tolerancePixels = 0) {
 }
 
 async function setActualTauriClientViewport(viewport, reason) {
-  const playwrightViewport = page.viewportSize();
-  if (playwrightViewport !== null) {
-    throw new Error(`${reason} cannot resize the actual Tauri window while Playwright viewport emulation is active: ${JSON.stringify(playwrightViewport)}`);
-  }
-  const cdp = await page.context().newCDPSession(page);
-  try {
-    const target = await cdp.send("Target.getTargetInfo");
-    const targetId = target?.targetInfo?.targetId ?? null;
-    if (!targetId) throw new Error(`${reason} could not resolve the actual WebView2 target identity.`);
-    const window = await cdp.send("Browser.getWindowForTarget", { targetId });
-    if (!Number.isInteger(window?.windowId) || !window?.bounds) {
-      throw new Error(`${reason} could not bind the WebView2 target to an actual desktop window.`);
-    }
-    await cdp.send("Emulation.clearDeviceMetricsOverride");
-    if (window.bounds.windowState !== "normal") {
-      await cdp.send("Browser.setWindowBounds", {
-        windowId: window.windowId,
-        bounds: { windowState: "normal" },
-      });
-      await page.waitForTimeout(250);
-    }
-    const anchor = (await cdp.send("Browser.getWindowBounds", { windowId: window.windowId })).bounds;
-    let requestedLeft = Number.isInteger(anchor.left) ? anchor.left : null;
-    let requestedTop = Number.isInteger(anchor.top) ? anchor.top : null;
-    const attempts = [];
-    for (let attempt = 1; attempt <= 8; attempt += 1) {
-      const dom = await page.evaluate(() => ({ innerWidth, innerHeight }));
-      const current = (await cdp.send("Browser.getWindowBounds", { windowId: window.windowId })).bounds;
-      if (dom.innerWidth === viewport.width && dom.innerHeight === viewport.height) {
-        return { targetId, windowId: window.windowId, anchor, outerBounds: current, domInnerDimensions: dom, attempts };
-      }
-      const requestedOuterBounds = {
-        width: Math.max(300, current.width + viewport.width - dom.innerWidth),
-        height: Math.max(300, current.height + viewport.height - dom.innerHeight),
-      };
-      if (requestedLeft !== null) requestedOuterBounds.left = requestedLeft;
-      if (requestedTop !== null) requestedOuterBounds.top = requestedTop;
-      await cdp.send("Browser.setWindowBounds", { windowId: window.windowId, bounds: requestedOuterBounds });
-      await page.waitForFunction(
-        ([width, height]) => innerWidth === width && innerHeight === height,
-        [viewport.width, viewport.height],
-        { timeout: 1_500 },
-      ).catch(() => undefined);
-      await page.waitForTimeout(150);
-      const observedDom = await page.evaluate(() => ({ innerWidth, innerHeight }));
-      const observedOuter = (await cdp.send("Browser.getWindowBounds", { windowId: window.windowId })).bounds;
-      attempts.push({ attempt, requestedOuterBounds, observedOuterBounds: observedOuter, observedDomInnerDimensions: observedDom });
-      if (requestedLeft !== null && Number.isInteger(observedOuter.left)) requestedLeft += anchor.left - observedOuter.left;
-      if (requestedTop !== null && Number.isInteger(observedOuter.top)) requestedTop += anchor.top - observedOuter.top;
-      if (observedDom.innerWidth === viewport.width && observedDom.innerHeight === viewport.height) {
-        return { targetId, windowId: window.windowId, anchor, outerBounds: observedOuter, domInnerDimensions: observedDom, attempts };
-      }
-    }
-    throw new Error(`${reason} could not reach the exact ${viewport.width}x${viewport.height} actual client viewport: ${JSON.stringify(attempts)}`);
-  } finally {
-    await cdp.detach().catch(() => undefined);
-  }
+  return resizeActualTauriClientViewport(page, viewport, reason);
 }
 
 async function captureActualTauriViewportMatrix({
