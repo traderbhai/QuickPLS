@@ -42,7 +42,7 @@ pub fn preflight_general_sem_pls_v1(
         )?);
         evidence.push(SemCapabilityEvidenceV1::new(
             "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_point:general_sem_pls_higher_order_point_v1",
-            "The compiler reserves the exact bounded General SEM HOC point identity; Registry activation remains pending until a native runner is connected.",
+            "The exact bounded General SEM HOC point identity owns approach-specific staged execution and canonical result authority.",
         )?);
     } else if has_interactions {
         evidence.push(SemCapabilityEvidenceV1::new(
@@ -70,7 +70,7 @@ pub fn preflight_general_sem_pls_v1(
             )?);
             evidence.push(SemCapabilityEvidenceV1::new(
                 "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_full_model_case_bootstrap:general_sem_pls_higher_order_full_model_case_bootstrap_v1",
-                "The compiler reserves the exact bounded HOC bootstrap identity; Registry activation remains pending until staged refitting is connected.",
+                "The exact bounded HOC bootstrap identity owns indexed raw-case resampling and complete approach-specific stage refitting.",
             )?);
         } else if has_interactions {
             evidence.push(SemCapabilityEvidenceV1::new(
@@ -101,15 +101,6 @@ pub fn preflight_general_sem_pls_v1(
         Ok(plan) => {
             if has_higher_order {
                 debug_assert_eq!(plan.higher_order_stage_plans().len(), 1);
-                diagnostics.push(SemCapabilityDiagnosticV1::new(
-                    "sem.capability.pls.higher_order_runtime_not_connected",
-                    SemCapabilityDiagnosticSeverityV1::Error,
-                    None,
-                    "The exact HOC plan compiles, but its staged native estimator is not connected yet.",
-                    vec![
-                        "Keep the request saved until the matching point/bootstrap runner and Registry cell are connected and qualified.".into(),
-                    ],
-                )?);
             } else if has_interactions {
                 diagnostics.extend(interaction_scope_diagnostics(config, &plan)?);
             } else {
@@ -489,6 +480,10 @@ fn pls_compile_diagnostic(
         CompiledPlsPlanV3Error::StructuralFeedback => (
             "sem.capability.pls.feedback_blocked",
             "Remove the reciprocal path for PLS-SEM, or use a future qualified nonrecursive CB-SEM cell.",
+        ),
+        CompiledPlsPlanV3Error::HigherOrderRequestedEffectsNotExecutable => (
+            "sem.capability.pls.higher_order_generic_effect_requests_not_executable",
+            "Clear generic requested effects; HOC loadings, weights, authored HOC paths, and extended-repeated effects are published through the typed HOC stage tables.",
         ),
         CompiledPlsPlanV3Error::UnknownSpecificIndirectPath { .. } => (
             "sem.capability.pls.requested_path_missing",
@@ -1533,17 +1528,17 @@ mod tests {
     }
 
     #[test]
-    fn hoc_preflight_binds_exact_future_cells_but_blocks_until_runner_activation() {
+    fn hoc_preflight_binds_exact_cells_and_reaches_the_connected_runtime() {
         let model = disjoint_higher_order_model();
         let point = preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
-        assert_eq!(point.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert_eq!(point.status(), SemCapabilityDecisionStatusV1::Experimental);
         assert_eq!(point.capability_cells().len(), 1);
         assert_eq!(
             point.capability_cells()[0].cell_id(),
             "qpls3.pls.general_sem_higher_order_point"
         );
-        assert!(point.diagnostics().iter().any(|diagnostic| {
-            diagnostic.code() == "sem.capability.pls.higher_order_runtime_not_connected"
+        assert!(point.diagnostics().iter().all(|diagnostic| {
+            diagnostic.code() != "sem.capability.pls.higher_order_runtime_not_connected"
         }));
         assert!(point.evidence().iter().any(|evidence| {
             evidence.evidence_id()
@@ -1559,12 +1554,14 @@ mod tests {
             tail: GeneralSemInferenceTailV1::TwoSided,
         };
         let bootstrap = preflight_general_sem_pls_v1(&model, &config).unwrap();
-        assert_eq!(bootstrap.status(), SemCapabilityDecisionStatusV1::Blocked);
-        assert_eq!(bootstrap.capability_cells().len(), 2);
         assert_eq!(
-            bootstrap.capability_cells()[1].cell_id(),
-            "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap"
+            bootstrap.status(),
+            SemCapabilityDecisionStatusV1::Experimental
         );
+        assert_eq!(bootstrap.capability_cells().len(), 2);
+        assert!(bootstrap.capability_cells().iter().any(|cell| {
+            cell.cell_id() == "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap"
+        }));
     }
 
     #[test]

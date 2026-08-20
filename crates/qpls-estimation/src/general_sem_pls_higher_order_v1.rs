@@ -105,6 +105,10 @@ pub enum GeneralSemPlsDisjointHocScoreDatasetErrorV1 {
     HigherOrderPlanCardinality,
     #[error("higher-order point-stage preparation currently requires disjoint_two_stage")]
     DisjointTwoStageRequired,
+    #[error(
+        "higher-order score-stage preparation requires embedded_two_stage or disjoint_two_stage"
+    )]
+    ScoreStageRequired,
     #[error("stage-one dataset is missing numeric source column {source_column}")]
     MissingOrNonNumericSourceColumn { source_column: String },
     #[error("fewer than three complete observations remain for higher-order estimation")]
@@ -143,6 +147,84 @@ pub(crate) struct PlsGeneratedScoreColumnSpecV1 {
     pub source_score_id: String,
     pub generated_column_id: String,
     pub label: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PlsAliasColumnSpecV1 {
+    pub source_column_id: String,
+    pub generated_column_id: String,
+    pub label: String,
+}
+
+/// Adds deterministic virtual aliases without changing source values or the
+/// resident dataset fingerprint. Repeated-indicator HOCs use this to satisfy
+/// the ordinary PLS engine's one-source-column-per-indicator invariant.
+pub fn append_pls_alias_columns_v1(
+    dataset: &Dataset,
+    specs: &[PlsAliasColumnSpecV1],
+) -> Result<Dataset, GeneralSemPlsDisjointHocScoreDatasetErrorV1> {
+    let mut arrays = dataset.batch.columns().to_vec();
+    let batch_schema = dataset.batch.schema();
+    let mut fields = batch_schema
+        .fields()
+        .iter()
+        .map(|field| Field::new(field.name(), field.data_type().clone(), field.is_nullable()))
+        .collect::<Vec<_>>();
+    let mut schema = dataset.schema.clone();
+    let mut occupied = fields
+        .iter()
+        .map(|field| field.name().to_string())
+        .collect::<BTreeSet<_>>();
+    for spec in specs {
+        if !occupied.insert(spec.generated_column_id.clone()) {
+            return Err(
+                GeneralSemPlsDisjointHocScoreDatasetErrorV1::GeneratedColumnCollision {
+                    column_id: spec.generated_column_id.clone(),
+                },
+            );
+        }
+        let source_index = batch_schema.index_of(&spec.source_column_id).map_err(|_| {
+            GeneralSemPlsDisjointHocScoreDatasetErrorV1::MissingOrNonNumericSourceColumn {
+                source_column: spec.source_column_id.clone(),
+            }
+        })?;
+        let source = dataset.batch.column(source_index);
+        let source_field = batch_schema.field(source_index);
+        if source.as_any().downcast_ref::<Float64Array>().is_none()
+            && source.as_any().downcast_ref::<Int64Array>().is_none()
+        {
+            return Err(
+                GeneralSemPlsDisjointHocScoreDatasetErrorV1::MissingOrNonNumericSourceColumn {
+                    source_column: spec.source_column_id.clone(),
+                },
+            );
+        }
+        arrays.push(source.clone());
+        fields.push(Field::new(
+            &spec.generated_column_id,
+            source.data_type().clone(),
+            source_field.is_nullable(),
+        ));
+        schema.columns.push(ColumnMetadata {
+            name: spec.generated_column_id.clone(),
+            label: Some(spec.label.clone()),
+            column_type: ColumnType::Numeric,
+            scale_type: ScaleType::Continuous,
+            missing_markers: Vec::new(),
+            theoretical_min: None,
+            theoretical_max: None,
+            value_labels: Default::default(),
+        });
+    }
+    let batch = RecordBatch::try_new(Arc::new(Schema::new(fields)), arrays)
+        .map_err(|error| GeneralSemPlsDisjointHocScoreDatasetErrorV1::Arrow(error.to_string()))?;
+    Ok(Dataset {
+        id: dataset.id,
+        name: dataset.name.clone(),
+        schema,
+        batch,
+        fingerprint: dataset.fingerprint.clone(),
+    })
 }
 
 pub(crate) fn append_pls_generated_score_columns_v1(
@@ -233,8 +315,12 @@ pub fn prepare_general_sem_pls_disjoint_hoc_score_dataset_v1(
     let [hoc] = plan.higher_order_stage_plans() else {
         return Err(GeneralSemPlsDisjointHocScoreDatasetErrorV1::HigherOrderPlanCardinality);
     };
-    if hoc.approach() != &HigherOrderConstructionApproachV4::DisjointTwoStage {
-        return Err(GeneralSemPlsDisjointHocScoreDatasetErrorV1::DisjointTwoStageRequired);
+    if !matches!(
+        hoc.approach(),
+        HigherOrderConstructionApproachV4::EmbeddedTwoStage
+            | HigherOrderConstructionApproachV4::DisjointTwoStage
+    ) {
+        return Err(GeneralSemPlsDisjointHocScoreDatasetErrorV1::ScoreStageRequired);
     }
     let used_rows =
         general_sem_pls_hoc_complete_case_rows_v1(dataset, plan.base_plan(), &mut should_continue)?;
@@ -286,7 +372,7 @@ pub fn prepare_general_sem_pls_disjoint_hoc_score_dataset_v1(
                 source_score_id: mapping.component_id().to_string(),
                 generated_column_id: mapping.generated_score_variable_id().to_string(),
                 label: format!(
-                    "Two-stage HOC component score: {} <- {}",
+                    "HOC component score: {} <- {}",
                     hoc.output_variable_id(),
                     mapping.component_id()
                 ),

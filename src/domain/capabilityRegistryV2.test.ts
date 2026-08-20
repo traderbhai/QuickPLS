@@ -17,9 +17,9 @@ describe("Capability Registry V2 frontend adapter", () => {
       active_row_count: 43,
       coverage: { full: 0, partial: 32, absent: 11, intentionally_excluded: 2 },
       surfaces: { standard: 27, labs: 16, legacy: 2, internal: 0 },
-      option_cell_count: 51,
-      option_cell_coverage: { full: 0, partial: 38, absent: 11, intentionally_excluded: 2 },
-      option_cell_surfaces: { standard: 33, labs: 16, legacy: 2, internal: 0 },
+      option_cell_count: 53,
+      option_cell_coverage: { full: 0, partial: 40, absent: 11, intentionally_excluded: 2 },
+      option_cell_surfaces: { standard: 35, labs: 16, legacy: 2, internal: 0 },
     });
     expect(capabilityRegistryV2.visibleProductCapabilities(false)).toHaveLength(27);
     expect(capabilityRegistryV2.visibleProductCapabilities(true)).toHaveLength(29);

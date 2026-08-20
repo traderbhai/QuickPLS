@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import type { CanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
 import {
   CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_METADATA_ID,
+  CANONICAL_RESULT_DERIVED_HIGHER_ORDER_TARGET_CHART_ID_V2,
+  canonicalResultExportChartsV2,
   dispatchCanonicalResultExportV2,
   prepareCanonicalResultExportV2,
   readPreparedCanonicalResultExportSemanticV2,
@@ -106,6 +108,49 @@ function fixture(): CanonicalResultDocumentV2 {
   };
 }
 
+function higherOrderFixture(): CanonicalResultDocumentV2 {
+  const document = fixture();
+  const capability = {
+    registry_schema_version: 2 as const,
+    capability_id: "smartpls.higher_order_models",
+    cell_id: "qpls3.pls.general_sem_higher_order_point",
+    capability_version: "general_sem_pls_higher_order_point_v1",
+  };
+  document.document_id = "result.general-sem:higher-order-export-v2";
+  document.title = "General SEM higher-order point estimates";
+  document.provenance.capability_cell = capability;
+  document.provenance.method_version = "general_sem_pls_higher_order_point_v1";
+  document.capability_cells = [capability];
+  document.sections = [{
+    id: "general_sem_higher_order",
+    title: "Higher-order construct targets",
+    table_ids: ["general_sem_higher_order_targets"],
+    chart_ids: [],
+    capability_cells: [capability],
+  }];
+  document.tables = [{
+    id: "general_sem_higher_order_targets",
+    title: "Higher-order component and structural targets",
+    columns: [
+      { id: "relation_id", label: "Relation ID", data_type: "text", description: "Stable relation identity.", role: "label" },
+      { id: "estimate", label: "Estimate", data_type: "number", description: "Point estimate.", role: "estimate", default_precision: 4 },
+    ],
+    rows: [
+      { id: "higher_order_target_0000", cells: [{ kind: "text", value: "hoc_component:quality" }, { kind: "number", value: 0.82 }] },
+      { id: "higher_order_target_0001", cells: [{ kind: "text", value: "hoc_path:quality_to_loyalty" }, { kind: "number", value: 0.44 }] },
+    ],
+    footnote_ids: [],
+    capability_cells: [capability],
+  }];
+  document.charts = [];
+  document.notices = [];
+  document.exclusions = [];
+  document.footnotes = [];
+  document.presentation.default_section_id = "general_sem_higher_order";
+  document.presentation.default_table_id = "general_sem_higher_order_targets";
+  return document;
+}
+
 function largePreparationFixture(): CanonicalResultDocumentV2 {
   const document = fixture();
   const table = document.tables[0]!;
@@ -132,6 +177,35 @@ function prepared(request: CanonicalResultExportRequestV2): PreparedCanonicalRes
 }
 
 describe("CanonicalResultDocumentV2 cross-format dispatcher", () => {
+  it("derives the HOC SVG and PNG chart from exact canonical relation IDs and estimates", () => {
+    const document = higherOrderFixture();
+    const charts = canonicalResultExportChartsV2(document);
+    expect(charts).toEqual([{
+      origin: "derived_from_canonical_table",
+      chart: expect.objectContaining({
+        id: CANONICAL_RESULT_DERIVED_HIGHER_ORDER_TARGET_CHART_ID_V2,
+        source_table_id: "general_sem_higher_order_targets",
+        series: [{
+          id: "estimate",
+          label: "Estimate",
+          points: [
+            { x: 1, y: 0.82, label: "hoc_component:quality" },
+            { x: 2, y: 0.44, label: "hoc_path:quality_to_loyalty" },
+          ],
+        }],
+      }),
+    }]);
+    for (const format of ["svg", "png"] as const) {
+      const prepared = prepareCanonicalResultExportV2(document, {
+        format,
+        tableIds: [],
+        chartIds: [CANONICAL_RESULT_DERIVED_HIGHER_ORDER_TARGET_CHART_ID_V2],
+      });
+      expect(prepared).toMatchObject({ ok: true });
+      if (prepared.ok) expect(verifyPreparedCanonicalResultExportV2(document, prepared.artifact).passed).toBe(true);
+    }
+  });
+
   it("round-trips one selected table through deterministic CSV with formula protection and stable IDs", () => {
     const artifact = prepared({ format: "csv", tableIds: ["effects"] });
     if (artifact.format !== "csv") throw new Error("Expected CSV artifact");

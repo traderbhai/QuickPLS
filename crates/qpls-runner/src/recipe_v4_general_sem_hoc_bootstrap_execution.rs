@@ -1,10 +1,10 @@
 use crate::{
     GeneralSemPlsHigherOrderPointErrorV1, GeneralSemPlsHigherOrderPointResultV1,
     GeneralSemPlsHocPointRelationKindV1, GeneralSemPlsHocScoreAlignmentErrorV1,
-    GeneralSemPlsHocScoreAlignmentReferenceV1, RecipeV4PlsExecutionError,
-    RecipeV4PlsExecutionResultV1, align_general_sem_pls_hoc_result_signs_v1,
-    compile_general_sem_pls_disjoint_hoc_point_context_v1,
-    run_compiled_general_sem_pls_disjoint_higher_order_point_with_context_v1,
+    GeneralSemPlsHocScoreAlignmentReferenceV1, GeneralSemPlsHocStageAlignmentReferencesV1,
+    RecipeV4PlsExecutionError, RecipeV4PlsExecutionResultV1,
+    align_general_sem_pls_hoc_result_signs_v1, compile_general_sem_pls_hoc_point_context_v1,
+    extended_effect_identity_v1, run_compiled_general_sem_pls_higher_order_point_with_context_v1,
     run_compiled_pls_recipe_v4_allowing_isolated,
 };
 use qpls_core::{
@@ -50,6 +50,7 @@ pub enum GeneralSemPlsHocBootstrapTargetKindV1 {
     ComponentLoading,
     ComponentWeight,
     HocStructuralPath,
+    ExtendedTotalEffect,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -170,9 +171,9 @@ pub struct GeneralSemPlsDisjointHocBootstrapResultV1 {
 
 impl GeneralSemPlsDisjointHocBootstrapResultV1 {
     pub fn ensure_valid(&self) -> Result<(), GeneralSemPlsDisjointHocBootstrapErrorV1> {
-        let invalid = |message: impl Into<String>| {
+        fn invalid(message: impl Into<String>) -> GeneralSemPlsDisjointHocBootstrapErrorV1 {
             GeneralSemPlsDisjointHocBootstrapErrorV1::InvalidResultContract(message.into())
-        };
+        }
         if self.schema_version != GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_RESULT_SCHEMA_VERSION_V1
             || self.method_version != GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_METHOD_VERSION_V1
             || self.point_method_version
@@ -191,7 +192,7 @@ impl GeneralSemPlsDisjointHocBootstrapResultV1 {
             || self.target_version != GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_TARGET_VERSION_V1
         {
             return Err(invalid(
-                "schema or algorithm version is not the exact disjoint-HOC bootstrap v1 contract",
+                "schema or algorithm version is not the exact HOC bootstrap v1 contract",
             ));
         }
         for (name, digest) in [
@@ -388,21 +389,23 @@ impl GeneralSemPlsDisjointHocBootstrapResultV1 {
                 "compiled plan must contain exactly one HOC",
             ));
         };
-        if hoc.approach() != &HigherOrderConstructionApproachV4::DisjointTwoStage
-            || self.general_sem_config_sha256 != plan.general_sem_config_sha256()
+        if self.general_sem_config_sha256 != plan.general_sem_config_sha256()
             || self.compiled_plan_sha256 != plan.deterministic_sha256()
             || self.hoc_stage_plan_sha256 != sha256_serialized(hoc)
             || self.model_scientific_sha256 != plan.scientific_hash()
             || self.stage_one_model_scientific_sha256 != plan.base_plan().scientific_hash()
             || self.stage_two_model_scientific_sha256
-                != original_point.stages()[1]
+                != original_point
+                    .stages()
+                    .last()
+                    .expect("validated point results always contain a final HOC stage")
                     .receipt()
                     .model_scientific_sha256()
             || self.source_dataset_fingerprint
                 != original_point.stages()[0].receipt().dataset_fingerprint()
         {
             return Err(invalid_contract(
-                "bootstrap provenance differs from the compiled disjoint-HOC plan",
+                "bootstrap provenance differs from the compiled HOC plan",
             ));
         }
         let expected_identities = hoc_bootstrap_target_identities_v1(plan)?;
@@ -438,7 +441,7 @@ pub enum GeneralSemPlsDisjointHocBootstrapErrorV1 {
     InvalidConfig(#[from] GeneralSemConfigV1ValidationError),
     #[error("higher-order bootstrap requires raw observations")]
     RawDataRequired,
-    #[error("higher-order bootstrap requires exactly one disjoint-two-stage HOC")]
+    #[error("higher-order bootstrap requires exactly one bounded HOC")]
     DisjointTwoStageRequired,
     #[error("higher-order bootstrap does not support an interaction plan")]
     InteractionPlanNotSupported,
@@ -517,7 +520,7 @@ struct HocCompleteCaseFrameIdentityV1<'a> {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn bootstrap_general_sem_pls_disjoint_higher_order_v1(
+pub fn bootstrap_general_sem_pls_higher_order_v1(
     dataset: &Dataset,
     recipe: &AnalysisRecipeV4,
     resolved_model: &SemModelV4,
@@ -539,9 +542,6 @@ pub fn bootstrap_general_sem_pls_disjoint_higher_order_v1(
     let [hoc] = plan.higher_order_stage_plans() else {
         return Err(GeneralSemPlsDisjointHocBootstrapErrorV1::DisjointTwoStageRequired);
     };
-    if hoc.approach() != &HigherOrderConstructionApproachV4::DisjointTwoStage {
-        return Err(GeneralSemPlsDisjointHocBootstrapErrorV1::DisjointTwoStageRequired);
-    }
     if !plan.two_way_interactions().is_empty() {
         return Err(GeneralSemPlsDisjointHocBootstrapErrorV1::InteractionPlanNotSupported);
     }
@@ -617,11 +617,10 @@ pub fn bootstrap_general_sem_pls_disjoint_higher_order_v1(
     original_point
         .ensure_valid_against_plan_v1(plan)
         .map_err(GeneralSemPlsDisjointHocBootstrapErrorV1::OriginalPoint)?;
-    let point_context =
-        compile_general_sem_pls_disjoint_hoc_point_context_v1(recipe, resolved_model, plan)
-            .map_err(GeneralSemPlsDisjointHocBootstrapErrorV1::OriginalPointRefit)?;
+    let point_context = compile_general_sem_pls_hoc_point_context_v1(recipe, resolved_model, plan)
+        .map_err(GeneralSemPlsDisjointHocBootstrapErrorV1::OriginalPointRefit)?;
     let independently_refitted_point =
-        run_compiled_general_sem_pls_disjoint_higher_order_point_with_context_v1(
+        run_compiled_general_sem_pls_higher_order_point_with_context_v1(
             dataset,
             plan,
             &independently_refitted_stage_one,
@@ -675,8 +674,9 @@ pub fn bootstrap_general_sem_pls_disjoint_higher_order_v1(
             .values()
             .any(|scores| scores.len() != complete_rows.len())
         || independently_refitted_point
-            .stage_two_construct_scores()
-            .values()
+            .stage_construct_scores()
+            .iter()
+            .flat_map(|scores| scores.values())
             .any(|scores| scores.len() != complete_rows.len())
     {
         return Err(GeneralSemPlsDisjointHocBootstrapErrorV1::OriginalStageOneScoreDomainMismatch);
@@ -692,7 +692,7 @@ pub fn bootstrap_general_sem_pls_disjoint_higher_order_v1(
         .iter()
         .map(|mapping| mapping.generated_score_variable_id().to_string())
         .collect::<BTreeSet<_>>();
-    let original_stage_two_scores = independently_refitted_point.stage_two_construct_scores();
+    let original_stage_scores = independently_refitted_point.stage_construct_scores();
     let bootstrap_plan = BootstrapPlan {
         replicates: resamples,
         master_seed: seed,
@@ -732,20 +732,19 @@ pub fn bootstrap_general_sem_pls_disjoint_higher_order_v1(
                     cancellation,
                 )
                 .map_err(classify_score_alignment_error_v1)?;
-                let point =
-                    run_compiled_general_sem_pls_disjoint_higher_order_point_with_context_v1(
-                        &sampled,
-                        plan,
-                        &stage_one,
-                        &point_context,
-                        Some(GeneralSemPlsHocScoreAlignmentReferenceV1::new(
-                            original_stage_two_scores,
-                            sampled_positions,
-                        )),
-                        cancellation,
-                        |_| {},
-                    )
-                    .map_err(|error| classify_stage_two_error_v1(error, &generated_score_ids))?;
+                let point = run_compiled_general_sem_pls_higher_order_point_with_context_v1(
+                    &sampled,
+                    plan,
+                    &stage_one,
+                    &point_context,
+                    Some(GeneralSemPlsHocStageAlignmentReferencesV1::new(
+                        original_stage_scores,
+                        sampled_positions,
+                    )),
+                    cancellation,
+                    |_| {},
+                )
+                .map_err(|error| classify_stage_two_error_v1(error, &generated_score_ids))?;
                 hoc_bootstrap_target_values_v1(point.result(), &target_identities).map_err(
                     |error| HocBootstrapReplicateRecordV1::Fatal {
                         message: error.to_string(),
@@ -872,7 +871,7 @@ pub fn bootstrap_general_sem_pls_disjoint_higher_order_v1(
         model_scientific_sha256: plan.scientific_hash().into(),
         stage_one_model_scientific_sha256: plan.base_plan().scientific_hash().into(),
         stage_two_model_scientific_sha256: point_context
-            .projection()
+            .final_projection()
             .projected_scientific_sha256()
             .into(),
         source_dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -900,6 +899,38 @@ pub fn bootstrap_general_sem_pls_disjoint_higher_order_v1(
     };
     result.ensure_valid_against_plan_v1(plan, original_point)?;
     Ok(result)
+}
+
+pub fn bootstrap_general_sem_pls_disjoint_higher_order_v1(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipeV4,
+    resolved_model: &SemModelV4,
+    plan: &CompiledPlsPlanV3,
+    original_stage_one: &RecipeV4PlsExecutionResultV1,
+    original_point: &GeneralSemPlsHigherOrderPointResultV1,
+    config: &GeneralSemConfigV1,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<GeneralSemPlsDisjointHocBootstrapResultV1, GeneralSemPlsDisjointHocBootstrapErrorV1> {
+    let [hoc] = plan.higher_order_stage_plans() else {
+        return Err(GeneralSemPlsDisjointHocBootstrapErrorV1::DisjointTwoStageRequired);
+    };
+    if hoc.approach() != &HigherOrderConstructionApproachV4::DisjointTwoStage {
+        return Err(GeneralSemPlsDisjointHocBootstrapErrorV1::DisjointTwoStageRequired);
+    }
+    bootstrap_general_sem_pls_higher_order_v1(
+        dataset,
+        recipe,
+        resolved_model,
+        plan,
+        original_stage_one,
+        original_point,
+        config,
+        workers,
+        is_cancelled,
+        report_progress,
+    )
 }
 
 fn hoc_bootstrap_target_identities_v1(
@@ -952,6 +983,35 @@ fn hoc_bootstrap_target_identities_v1(
                     crate::GENERAL_SEM_PLS_DISJOINT_HIGHER_ORDER_POINT_METHOD_VERSION_V1.into(),
             }),
     );
+    if hoc.approach() == &HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators {
+        for authored_id in hoc
+            .technical_paths()
+            .iter()
+            .map(|path| path.authored_antecedent_relation_id())
+            .collect::<BTreeSet<_>>()
+        {
+            let relation = plan
+                .topology()
+                .structural_relations()
+                .iter()
+                .find(|relation| relation.relation_id() == authored_id)
+                .ok_or_else(|| {
+                    invalid_contract("extended repeated authored relation is absent from topology")
+                })?;
+            let target_id = extended_effect_identity_v1("total", hoc, authored_id);
+            identities.push(GeneralSemPlsHocBootstrapTargetIdentityV1 {
+                kind: GeneralSemPlsHocBootstrapTargetKindV1::ExtendedTotalEffect,
+                target_version: GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_TARGET_VERSION_V1.into(),
+                target_id: target_id.clone(),
+                relation_id: target_id.clone(),
+                parameter_id: format!("{target_id}:estimand"),
+                source_id: relation.source().into(),
+                target_variable_id: relation.target().into(),
+                point_method_version: crate::GENERAL_SEM_PLS_HIGHER_ORDER_POINT_METHOD_VERSION_V1
+                    .into(),
+            });
+        }
+    }
     identities.sort_by(|left, right| left.target_id.cmp(&right.target_id));
     if identities.is_empty()
         || identities
@@ -986,6 +1046,9 @@ fn hoc_bootstrap_target_values_v1(
                 }
                 GeneralSemPlsHocBootstrapTargetKindV1::HocStructuralPath => {
                     GeneralSemPlsHocPointRelationKindV1::AuthoredStructural
+                }
+                GeneralSemPlsHocBootstrapTargetKindV1::ExtendedTotalEffect => {
+                    GeneralSemPlsHocPointRelationKindV1::ExtendedTotalEffect
                 }
             };
             let matches = rows
@@ -1289,10 +1352,10 @@ fn invalid_contract(message: impl Into<String>) -> GeneralSemPlsDisjointHocBoots
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::recipe_v4_general_sem_hoc_point_execution::tests::fixture;
+    use crate::recipe_v4_general_sem_hoc_point_execution::tests::{fixture, fixture_for};
     use qpls_core::{
-        GeneralSemBootstrapIntervalV1, GeneralSemInferenceTailV1, HigherOrderMeasurementTypeV4,
-        compile_pls_plan_v3,
+        GeneralSemBootstrapIntervalV1, GeneralSemInferenceTailV1,
+        HigherOrderConstructionApproachV4, HigherOrderMeasurementTypeV4, compile_pls_plan_v3,
     };
 
     fn bootstrap_fixture(
@@ -1309,7 +1372,49 @@ mod tests {
         GeneralSemConfigV1,
         usize,
     ) {
-        let (dataset, mut recipe, model, stage_one, point) = fixture(measurement_type);
+        let (dataset, recipe, model, stage_one, point) = fixture(measurement_type);
+        finish_bootstrap_fixture(dataset, recipe, model, stage_one, point, workers, resamples)
+    }
+
+    fn bootstrap_fixture_for(
+        measurement_type: HigherOrderMeasurementTypeV4,
+        approach: HigherOrderConstructionApproachV4,
+        endogenous: bool,
+        workers: usize,
+        resamples: u32,
+    ) -> (
+        Dataset,
+        AnalysisRecipeV4,
+        SemModelV4,
+        CompiledPlsPlanV3,
+        RecipeV4PlsExecutionResultV1,
+        GeneralSemPlsHigherOrderPointResultV1,
+        GeneralSemConfigV1,
+        usize,
+    ) {
+        let (dataset, recipe, model, stage_one, point) =
+            fixture_for(measurement_type, approach, endogenous);
+        finish_bootstrap_fixture(dataset, recipe, model, stage_one, point, workers, resamples)
+    }
+
+    fn finish_bootstrap_fixture(
+        dataset: Dataset,
+        mut recipe: AnalysisRecipeV4,
+        model: SemModelV4,
+        stage_one: RecipeV4PlsExecutionResultV1,
+        point: GeneralSemPlsHigherOrderPointResultV1,
+        workers: usize,
+        resamples: u32,
+    ) -> (
+        Dataset,
+        AnalysisRecipeV4,
+        SemModelV4,
+        CompiledPlsPlanV3,
+        RecipeV4PlsExecutionResultV1,
+        GeneralSemPlsHigherOrderPointResultV1,
+        GeneralSemConfigV1,
+        usize,
+    ) {
         let config = GeneralSemConfigV1 {
             inference: GeneralSemInferenceV1::CaseBootstrap {
                 resamples,
@@ -1378,6 +1483,51 @@ mod tests {
             );
             assert!(result.failed_replicates.is_empty());
             assert!(result.complete_point_contract_validated_per_replicate);
+        }
+    }
+
+    #[test]
+    fn every_runtime_approach_refits_its_complete_stage_pipeline() {
+        for (approach, measurement_type, endogenous) in [
+            (
+                HigherOrderConstructionApproachV4::RepeatedIndicators,
+                HigherOrderMeasurementTypeV4::ReflectiveReflective,
+                true,
+            ),
+            (
+                HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators,
+                HigherOrderMeasurementTypeV4::ReflectiveFormative,
+                true,
+            ),
+            (
+                HigherOrderConstructionApproachV4::EmbeddedTwoStage,
+                HigherOrderMeasurementTypeV4::FormativeFormative,
+                true,
+            ),
+        ] {
+            let (dataset, recipe, model, plan, stage_one, point, config, workers) =
+                bootstrap_fixture_for(measurement_type, approach.clone(), endogenous, 1, 2);
+            let result = bootstrap_general_sem_pls_higher_order_v1(
+                &dataset,
+                &recipe,
+                &model,
+                &plan,
+                &stage_one,
+                &point,
+                &config,
+                workers,
+                || false,
+                |_| {},
+            )
+            .unwrap();
+            assert_eq!(point.approach(), &approach);
+            assert_eq!(result.resamples_usable, 2);
+            assert!(result.complete_point_contract_validated_per_replicate);
+            if approach == HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators {
+                assert!(result.targets.iter().any(|target| {
+                    target.target.kind == GeneralSemPlsHocBootstrapTargetKindV1::ExtendedTotalEffect
+                }));
+            }
         }
     }
 

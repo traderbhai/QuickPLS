@@ -726,7 +726,7 @@ describe("General SEM capability preflight v1", () => {
     expect(codes(decision)).toContain("sem.capability.pls.effect_identity_collision");
   });
 
-  it("binds exact HOC identities while keeping execution blocked until the native runner exists", () => {
+  it("binds exact runnable HOC point and bootstrap identities", () => {
     const config = defaultGeneralSemConfigV1();
     config.inference = {
       kind: "case_bootstrap",
@@ -737,12 +737,12 @@ describe("General SEM capability preflight v1", () => {
       tail: "two_sided",
     };
     const decision = preflightGeneralSemPlsV1(disjointHigherOrderModel(), config);
-    expect(decision.status).toBe("blocked");
+    expect(decision.status).toBe("experimental");
     expect(decision.capability_cells.map((cell) => cell.cell_id)).toEqual([
-      "qpls3.pls.general_sem_higher_order_point",
       "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+      "qpls3.pls.general_sem_higher_order_point",
     ]);
-    expect(codes(decision)).toContain("sem.capability.pls.higher_order_runtime_not_connected");
+    expect(codes(decision)).toContain("sem.capability.pls.experimental_labs");
     expect(decision.evidence.map((item) => item.evidence_id)).toContain(
       "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_point:general_sem_pls_higher_order_point_v1",
     );

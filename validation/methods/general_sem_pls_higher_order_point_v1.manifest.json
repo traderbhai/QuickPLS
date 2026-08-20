@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-20T00:00:00Z",
+    "manifest_path": "validation/methods/general_sem_pls_higher_order_point_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.general_sem_higher_order_point",
+    "label": "General SEM PLS Higher-Order Construct Point Estimates",
+    "method_version": "general_sem_pls_higher_order_point_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-20",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/"
+  },
+  "claim": {
+    "supported_scope": "One non-nested second-order HOC in a raw, listwise, standardized, path-weighted, single-group recursive General SEM PLS model, using the exact repeated, extended-repeated, embedded two-stage, or disjoint two-stage approach and HCM-type matrix documented by this method.",
+    "estimand": "Approach-specific HOC component loadings or weights, formative component-score collinearity, authored structural paths touching the HOC, and extended-repeated direct, technical-indirect, and total effects.",
+    "assumptions": [
+      "Every lower-order component is an ordinary Mode A or Mode B composite matching the first term of the HCM type.",
+      "The structural model is recursive and contains exactly one HOC with at least two unique lower-order components.",
+      "Generated aliases, component scores, and technical paths are execution artifacts and remain distinct from researcher-authored hypotheses."
+    ],
+    "exclusions": [
+      "Nested or multiple HOCs, hybrid execution, HOC interactions, feedback, groups, case weights, matrix input, PLSc, and permutation are excluded.",
+      "Disjoint two-stage lower-order components must remain measurement-only in the final substantive graph.",
+      "This point cell makes no resampling-inference or causal claim."
+    ],
+    "warnings": [
+      "Approach and HCM type determine whether component relationships are interpreted as loadings or weights.",
+      "SmartPLS documentation is used for comparable terminology and workflow scope, not as a numerical oracle."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "higher_order_component_model",
+        "expression": "eta_H = sum_j w_j eta_j for formative HOC relationships; eta_j = lambda_j eta_H + epsilon_j for reflective HOC relationships",
+        "variables": ["eta_H", "eta_j", "w_j", "lambda_j", "epsilon_j"],
+        "source_reference_id": "becker_klein_wetzels_2012"
+      }
+    ],
+    "references": [
+      {
+        "id": "becker_klein_wetzels_2012",
+        "kind": "primary_paper",
+        "citation": "Becker, Klein, and Wetzels (2012), Hierarchical Latent Variable Models in PLS-SEM",
+        "locator": "https://doi.org/10.1016/j.lrp.2012.10.001",
+        "independence_group": "published_hoc_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_hoc_reference",
+        "kind": "independent_python",
+        "citation": "Independent validation-only higher-order PLS reference fixtures",
+        "locator": "validation/higher_order_two_stage_reference.py",
+        "independence_group": "python_hoc_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "bounded_hoc_recovery",
+        "purpose": "recovery",
+        "design": "Frozen reflective and formative component fixtures covering the allowed approach/type matrix and mapped HOC paths.",
+        "seed_policy": "Frozen scenario-indexed inputs; the production and independent implementations receive the same rows and declarations.",
+        "metrics": ["component_error", "hoc_path_error", "extended_total_error", "convergence"],
+        "acceptance_rule": "Mapped supported estimates agree within the frozen 1e-6 tolerance and unsupported shapes fail before publication."
+      }
+    ],
+    "boundaries": [
+      {"id": "unsupported_matrix", "category": "unsupported_scope", "case": "The approach, HCM type, or endogenous position is outside the documented matrix.", "expected_behavior": "Preflight preserves the model and returns a corrective blocked decision."},
+      {"id": "degenerate_component", "category": "data_pathology", "case": "A component score is constant, nonfinite, singular, or cannot converge.", "expected_behavior": "Execution publishes no completed result and identifies the failed stage."},
+      {"id": "declaration_reorder", "category": "metamorphic", "case": "Rows, indicators, components, and relations are consistently reordered.", "expected_behavior": "Mapped scientific estimates and stable identities remain equivalent within tolerance."},
+      {"id": "point_replay", "category": "determinism", "case": "The same resident model, recipe, data, and cell are executed again.", "expected_behavior": "The scientific result is identical apart from operational identifiers and timestamps."},
+      {"id": "archive_tamper", "category": "tamper", "case": "A stage, mapping, generated identity, estimate, method, capability, or digest is altered.", "expected_behavior": "Strict schema-6 reopen rejects the result."
+      }
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 4,
+      "result_schema_version": 2,
+      "payload_kind": "canonical_result_document_v2",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose exact HOC point cell differs from its resident plan."},
+        {"category": "method_version", "expected_behavior": "Reject an unsupported HOC compiler, stage, or runner version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result attached to different resident data."},
+        {"category": "checksum", "expected_behavior": "Reject a changed archive member or analytical digest."},
+        {"category": "malformed_payload", "expected_behavior": "Reject unknown, duplicate, nonfinite, unordered, or incomplete HOC rows."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Preserve historical HOC identities without relabeling them as this cell."}
+      ],
+      "legacy_policy": "Existing legacy HOC projects and results retain their original identities; this cell applies only to an exact compiled General SEM v1 authority."
+    },
+    "native": {
+      "setup_controls": ["HOC approach", "HCM type", "eligible lower-order components", "point or percentile-bootstrap inference"],
+      "applicability_blockers": ["unsupported matrix", "multiple or nested HOCs", "HOC interaction", "invalid component mode", "nonrecursive or weighted data"],
+      "result_surfaces": ["HOC stages", "component loadings or weights", "formative VIF", "authored and technical paths", "extended effects"],
+      "gui_cli_parity_rule": "Every surface reads the same canonical result for the same resident model, recipe, data, plan, and exact capability cell.",
+      "accessibility_rules": ["Approach, HCM type, stage role, and loading-versus-weight meaning are available as text.", "Generated technical paths are distinguished from authored hypotheses without relying on color or canvas position."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html", "pdf", "svg", "png"],
+      "tables": ["Higher-order stages", "Higher-order targets", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/general_sem_pls_higher_order_v1.md"],
+      "independent_reference": ["validation/higher_order_two_stage_reference.py"],
+      "simulation_report": ["validation/higher_order_two_stage_simulation.py"],
+      "boundary_report": ["validation/higher_order_two_stage_boundary_gate.py"],
+      "persistence_report": ["validation/higher_order_two_stage_persistence_gate.py"],
+      "frontend_report": ["src/native/nativeHigherOrder.test.ts"],
+      "export_report": ["src/domain/canonicalResultCrossFormatExportV2.test.ts"],
+      "method_audit": ["validation/higher_order_method_promotion_audit.py"],
+      "packaged_acceptance": [
+        "validation/higher_order_v1_packaged_acceptance.py",
+        "validation/run_v247_hoc_native_acceptance.ps1"
+      ]
+    },
+    "evidence": {
+      "engine_only": [{
+        "path": "validation/results/method_factory/general_sem_pls_higher_order_point_v1/rank1_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+        "verification": {
+          "kind": "identity_report",
+          "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+          "source_artifacts_pointer": "/source_artifacts",
+          "generated_at_pointer": "/generated_at_utc"
+        }
+      }],
+      "archive_qualified": [{
+        "path": "validation/results/method_factory/general_sem_pls_higher_order_point_v1/rank1_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["persistence_report"],
+        "verification": {
+          "kind": "identity_report",
+          "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+          "source_artifacts_pointer": "/source_artifacts",
+          "generated_at_pointer": "/generated_at_utc"
+        }
+      }],
+      "native_qualified": [{
+        "path": "validation/results/method_factory/general_sem_pls_higher_order_point_v1/rank1_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["frontend_report", "export_report"],
+        "verification": {
+          "kind": "identity_report",
+          "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+          "source_artifacts_pointer": "/source_artifacts",
+          "generated_at_pointer": "/generated_at_utc"
+        }
+      }],
+      "release_qualified": [{
+        "path": "validation/results/method_factory/general_sem_pls_higher_order_point_v1/rank1_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["method_audit", "packaged_acceptance"],
+        "verification": {
+          "kind": "identity_report",
+          "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+          "source_artifacts_pointer": "/source_artifacts",
+          "generated_at_pointer": "/generated_at_utc"
+        }
+      }]
+    }
+  }
+}

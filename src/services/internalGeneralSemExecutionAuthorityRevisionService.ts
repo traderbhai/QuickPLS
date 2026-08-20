@@ -9,6 +9,7 @@ import {
   parseInternalGeneralSemExecutionAuthorityRevisionNativeOutcomeV1,
   parseInternalGeneralSemExecutionAuthorityRevisionRequestV1,
   type GeneralSemExecutionAuthorityRevisionIdentityV1,
+  type GeneralSemExecutionAuthorityRevisionEditorIntentV1,
   type GeneralSemExecutionAuthorityRevisionReceiptV1,
   type GeneralSemExecutionAuthoritySourcePinV1,
   type InternalGeneralSemExecutionAuthorityRevisionDiagnosticV1,
@@ -18,11 +19,12 @@ import { parseGeneralSemConfigV1 } from "../domain/generalSemConfigV1";
 import {
   GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1,
   selectGeneralSemExecutionAccessV1,
   type GeneralSemCapabilityRegistryReaderV1,
 } from "../domain/internalRecipeV4GeneralSemWorkspace";
 import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
-import type { AddGeneralSemInteractionV2EditorIntentV1 } from "../domain/standardSemModelV4Authority";
 import { inspectInternalProjectArchiveV6At } from "./internalProjectArchiveV6ReadService";
 
 export type InternalGeneralSemExecutionAuthorityRevisionPersistOutcomeV1 =
@@ -142,6 +144,7 @@ export async function reviseInternalGeneralSemExecutionAuthorityAtV1(
 
 export function selectGeneralSemRevisionExecutionV1(input: {
   snapshot: InternalProjectArchiveV6ReadSnapshotV1;
+  intent?: GeneralSemExecutionAuthorityRevisionEditorIntentV1;
   experimentalLabsEnabled: boolean;
   capabilityRegistry?: GeneralSemCapabilityRegistryReaderV1;
 }) {
@@ -150,9 +153,14 @@ export function selectGeneralSemRevisionExecutionV1(input: {
     throw new Error("The strict General SEM revision source has no resident GeneralSemConfigV1 authority.");
   }
   const config = parseGeneralSemConfigV1(authority.recipe.general_sem_config);
-  const expectedCapabilityCell = config.inference.kind === "case_bootstrap"
-    ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
-    : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
+  const higherOrderIntent = input.intent?.kind === "add_higher_order";
+  const expectedCapabilityCell = higherOrderIntent
+    ? config.inference.kind === "case_bootstrap"
+      ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
+    : config.inference.kind === "case_bootstrap"
+      ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
   const access = selectGeneralSemExecutionAccessV1({
     capabilityCell: expectedCapabilityCell,
     experimentalLabsEnabled: input.experimentalLabsEnabled,
@@ -168,7 +176,7 @@ export async function saveGeneralSemExecutionAuthorityRevisionV1(input: {
   snapshot: InternalProjectArchiveV6ReadSnapshotV1;
   source: GeneralSemExecutionAuthoritySourcePinV1;
   revision: GeneralSemExecutionAuthorityRevisionIdentityV1;
-  intent: AddGeneralSemInteractionV2EditorIntentV1;
+  intent: GeneralSemExecutionAuthorityRevisionEditorIntentV1;
   revisionNumberHint?: number;
   experimentalLabsEnabled: boolean;
   capabilityRegistry?: GeneralSemCapabilityRegistryReaderV1;
@@ -176,6 +184,7 @@ export async function saveGeneralSemExecutionAuthorityRevisionV1(input: {
   const { access, expectedCapabilityCell, recipeExecutionSurface } =
     selectGeneralSemRevisionExecutionV1({
     snapshot: input.snapshot,
+    intent: input.intent,
     experimentalLabsEnabled: input.experimentalLabsEnabled,
     capabilityRegistry: input.capabilityRegistry,
   });

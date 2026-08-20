@@ -20,8 +20,8 @@ use qpls_core::{
     GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
     GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1, RecipeV4CompilerTarget, SemModelV4,
     SemParameterV4, StructuralRelationRoleV4, canonical_general_sem_effect_identities_v1,
-    compile_general_sem_pls_recipe_v1, compile_unpublished_general_sem_pls_higher_order_recipe_v1,
-    general_sem_effect_identity_set_sha256_v1, pls_general_bootstrap_capability_cell_v1,
+    compile_general_sem_pls_recipe_v1, general_sem_effect_identity_set_sha256_v1,
+    pls_general_bootstrap_capability_cell_v1,
     pls_general_higher_order_bootstrap_capability_cell_v1,
     pls_general_higher_order_point_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
@@ -137,24 +137,41 @@ pub(crate) fn validate_archived_general_sem_pls_method_identity_v1(
         let results = document.general_sem_results.as_ref().ok_or_else(|| {
             "archived General SEM HOC document omits its typed scientific payload".to_string()
         })?;
+        let approach = results
+            .higher_order_stages
+            .iter()
+            .find_map(|stage| stage.approach.as_ref())
+            .ok_or_else(|| {
+                "archived General SEM HOC document omits its construction approach".to_string()
+            })?;
+        let expected_stage_count = match approach {
+            qpls_core::HigherOrderConstructionApproachV4::RepeatedIndicators
+            | qpls_core::HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators => 1,
+            qpls_core::HigherOrderConstructionApproachV4::EmbeddedTwoStage
+            | qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage => 2,
+            qpls_core::HigherOrderConstructionApproachV4::Hybrid => {
+                return Err(
+                    "archived General SEM HOC document uses compatibility-only hybrid execution"
+                        .into(),
+                );
+            }
+        };
         let inferred = results.higher_order_inference_receipt.is_some();
-        let (expected_method, expected_adapter, expected_title) = if inferred {
+        let (expected_method, expected_adapter) = if inferred {
             (
                 GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_METHOD_VERSION_V1,
                 RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
-                "General SEM disjoint two-stage higher-order PLS bootstrap inference",
             )
         } else {
             (
                 GENERAL_SEM_PLS_DISJOINT_HIGHER_ORDER_POINT_METHOD_VERSION_V1,
                 RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1,
-                "General SEM disjoint two-stage higher-order PLS point estimates",
             )
         };
         if document.provenance.method_version != expected_method
             || document.provenance.engine_version != expected_adapter
-            || document.title != expected_title
-            || results.higher_order_stages.len() != 2
+            || document.title != higher_order_document_title_v1(approach, inferred)
+            || results.higher_order_stages.len() != expected_stage_count
             || results.inference_receipt.is_some()
             || !results.specific_indirect_effects.is_empty()
             || !results.aggregate_effects.is_empty()
@@ -974,7 +991,7 @@ fn build_recipe_v4_general_sem_pls_hoc_canonical_result_v1(
     model: &SemModelV4,
     result: &RecipeV4GeneralSemPlsExecutionResultV1,
 ) -> Result<CanonicalResultDocumentV2, Vec<String>> {
-    let artifact = compile_unpublished_general_sem_pls_higher_order_recipe_v1(recipe, Some(model))
+    let artifact = compile_general_sem_pls_recipe_v1(recipe, Some(model))
         .map_err(|error| vec![format!("General SEM HOC recompilation failed: {error}")])?;
     let [hoc_plan] = artifact.plan().higher_order_stage_plans() else {
         return Err(vec![
@@ -982,15 +999,13 @@ fn build_recipe_v4_general_sem_pls_hoc_canonical_result_v1(
                 .into(),
         ]);
     };
-    if hoc_plan.approach() != &qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage
-        || result.capability_cell() != &pls_general_higher_order_point_capability_cell_v1()
+    if result.capability_cell() != &pls_general_higher_order_point_capability_cell_v1()
         || artifact.capability_cell() != result.capability_cell()
         || result.compiled_plan_sha256() != artifact.plan().deterministic_sha256()
         || result.model_scientific_sha256() != artifact.plan().scientific_hash()
     {
         return Err(vec![
-            "The HOC result differs from the exact disjoint compiled plan or point capability cell"
-                .into(),
+            "The HOC result differs from the exact compiled plan or point capability cell".into(),
         ]);
     }
     let point = result.higher_order_point_estimation().ok_or_else(|| {
@@ -1047,7 +1062,7 @@ fn build_recipe_v4_general_sem_pls_hoc_canonical_result_v1(
         || !general_sem_results.aggregate_effects.is_empty()
         || !general_sem_results.interaction_effects.is_empty()
         || general_sem_results.inference_receipt.is_some()
-        || general_sem_results.higher_order_stages.len() != 2
+        || general_sem_results.higher_order_stages.len() != hoc_plan.stage_projections().len()
         || general_sem_results.higher_order_inference_receipt.is_some()
             != result.higher_order_bootstrap_inference().is_some()
     {
@@ -1061,11 +1076,7 @@ fn build_recipe_v4_general_sem_pls_hoc_canonical_result_v1(
     let bootstrap_cell = pls_general_higher_order_bootstrap_capability_cell_v1();
     let inferred = result.higher_order_bootstrap_inference().is_some();
     document.schema_version = CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION;
-    document.title = if inferred {
-        "General SEM disjoint two-stage higher-order PLS bootstrap inference".into()
-    } else {
-        "General SEM disjoint two-stage higher-order PLS point estimates".into()
-    };
+    document.title = higher_order_document_title_v1(hoc_plan.approach(), inferred);
     document.provenance.model_id = model.id.clone();
     document.provenance.model_digest = result.model_scientific_sha256().into();
     document.provenance.dataset_id = dataset_id.to_string();
@@ -1120,7 +1131,7 @@ fn build_recipe_v4_general_sem_pls_hoc_canonical_result_v1(
         id: GENERAL_SEM_HIGHER_ORDER_SECTION_ID_V1.into(),
         title: "Higher-order construct stages and targets".into(),
         description: Some(
-            "Exact disjoint stage projections, generated score mappings, component loadings or weights, and authored HOC structural paths."
+            "Exact approach-specific stage projections, generated mappings, component loadings or weights, authored HOC paths, and separated technical effects."
                 .into(),
         ),
         table_ids: vec![
@@ -1170,7 +1181,7 @@ fn build_recipe_v4_general_sem_pls_hoc_canonical_result_v1(
             "This checkpoint infers HOC component loadings or weights and authored structural paths touching the HOC; ordinary controls and unrelated paths remain point-only."
                 .into()
         } else {
-            "The resident GeneralSemConfigV1 requested disjoint two-stage HOC point estimation without case bootstrap."
+            "The resident GeneralSemConfigV1 requested bounded higher-order PLS point estimation without case bootstrap."
                 .into()
         },
     }];
@@ -1198,6 +1209,49 @@ fn build_recipe_v4_general_sem_pls_hoc_canonical_result_v1(
         .ensure_valid()
         .map_err(|error| vec![format!("schema-6 HOC canonical validation failed: {error}")])?;
     Ok(document)
+}
+
+fn higher_order_approach_label_v1(
+    approach: &qpls_core::HigherOrderConstructionApproachV4,
+) -> &'static str {
+    match approach {
+        qpls_core::HigherOrderConstructionApproachV4::RepeatedIndicators => "repeated indicators",
+        qpls_core::HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators => {
+            "extended repeated indicators"
+        }
+        qpls_core::HigherOrderConstructionApproachV4::EmbeddedTwoStage => "embedded two-stage",
+        qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage => "disjoint two-stage",
+        qpls_core::HigherOrderConstructionApproachV4::Hybrid => "hybrid",
+    }
+}
+
+fn higher_order_approach_wire_label_v1(
+    approach: &qpls_core::HigherOrderConstructionApproachV4,
+) -> &'static str {
+    match approach {
+        qpls_core::HigherOrderConstructionApproachV4::RepeatedIndicators => "repeated_indicators",
+        qpls_core::HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators => {
+            "extended_repeated_indicators"
+        }
+        qpls_core::HigherOrderConstructionApproachV4::EmbeddedTwoStage => "embedded_two_stage",
+        qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage => "disjoint_two_stage",
+        qpls_core::HigherOrderConstructionApproachV4::Hybrid => "hybrid",
+    }
+}
+
+fn higher_order_document_title_v1(
+    approach: &qpls_core::HigherOrderConstructionApproachV4,
+    inferred: bool,
+) -> String {
+    format!(
+        "General SEM {} higher-order PLS {}",
+        higher_order_approach_label_v1(approach),
+        if inferred {
+            "bootstrap inference"
+        } else {
+            "point estimates"
+        }
+    )
 }
 
 fn higher_order_stage_table_v1(
@@ -1230,12 +1284,7 @@ fn higher_order_stage_table_v1(
                             "higher_order_estimation"
                         }
                     }),
-                    text(match stage.approach.as_ref() {
-                        Some(qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage) => {
-                            "disjoint_two_stage"
-                        }
-                        _ => "unsupported",
-                    }),
+                    text(stage.approach.as_ref().map_or("missing", higher_order_approach_wire_label_v1)),
                     text(match stage.measurement_type.as_ref() {
                         Some(qpls_core::HigherOrderMeasurementTypeV4::ReflectiveReflective) => {
                             "reflective_reflective"
@@ -1252,13 +1301,21 @@ fn higher_order_stage_table_v1(
                         None => "missing",
                     }),
                     text(match receipt.role {
+                        qpls_core::CompiledPlsHocStageRoleV1::RepeatedIndicatorEstimation => {
+                            "repeated_indicator_estimation"
+                        }
+                        qpls_core::CompiledPlsHocStageRoleV1::ExtendedRepeatedIndicatorEstimation => {
+                            "extended_repeated_indicator_estimation"
+                        }
+                        qpls_core::CompiledPlsHocStageRoleV1::EmbeddedRepeatedIndicatorEstimation => {
+                            "embedded_repeated_indicator_estimation"
+                        }
                         qpls_core::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation => {
                             "disjoint_lower_order_score_estimation"
                         }
                         qpls_core::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores => {
                             "higher_order_from_lower_order_scores"
                         }
-                        _ => "unsupported",
                     }),
                     text(stage.input_construct_ids.join(";")),
                     text(stage.output_variable_ids.join(";")),
@@ -1279,7 +1336,7 @@ fn higher_order_stage_table_v1(
         id: GENERAL_SEM_HIGHER_ORDER_STAGES_TABLE_ID_V1.into(),
         title: "Higher-order stage receipts".into(),
         description: Some(
-            "Ordered stage projections and generated-score dataset identities for the disjoint two-stage HOC."
+            "Ordered approach-specific stage projections and generated-score dataset identities for the bounded HOC."
                 .into(),
         ),
         columns: vec![
@@ -1315,8 +1372,8 @@ fn higher_order_target_table_v1(
     let stage = results
         .higher_order_stages
         .iter()
-        .find(|stage| stage.stage_number == 2)
-        .ok_or_else(|| vec!["HOC canonical payload omits stage two".into()])?;
+        .find(|stage| stage.kind == qpls_core::CanonicalHocStageKindV1::HigherOrderEstimation)
+        .ok_or_else(|| vec!["HOC canonical payload omits its final estimation stage".into()])?;
     Ok(CanonicalResultTable {
         id: GENERAL_SEM_HIGHER_ORDER_TARGETS_TABLE_ID_V1.into(),
         title: "Higher-order component and structural targets".into(),
@@ -1362,6 +1419,15 @@ fn higher_order_target_table_v1(
                         }
                         Some(qpls_core::CanonicalHocRelationKindV1::AuthoredControl) => {
                             "authored_control"
+                        }
+                        Some(qpls_core::CanonicalHocRelationKindV1::TechnicalStructural) => {
+                            "technical_structural"
+                        }
+                        Some(qpls_core::CanonicalHocRelationKindV1::ExtendedIndirectEffect) => {
+                            "extended_indirect_effect"
+                        }
+                        Some(qpls_core::CanonicalHocRelationKindV1::ExtendedTotalEffect) => {
+                            "extended_total_effect"
                         }
                         None => "missing",
                     }),

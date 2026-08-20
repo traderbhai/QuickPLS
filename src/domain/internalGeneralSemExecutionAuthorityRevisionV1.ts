@@ -1,6 +1,8 @@
 import type { CapabilityCellReferenceV2 } from "./canonicalResultDocumentV2";
 import {
   GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
@@ -9,7 +11,10 @@ export {
   GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1 as GENERAL_SEM_PLS_LABS_REVISION_RECIPE_EXECUTION_SURFACE_V1,
   GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1 as GENERAL_SEM_PLS_STANDARD_REVISION_RECIPE_EXECUTION_SURFACE_V1,
 } from "./internalRecipeV4GeneralSemWorkspace";
-import type { AddGeneralSemInteractionV2EditorIntentV1 } from "./standardSemModelV4Authority";
+import type {
+  AddGeneralSemHigherOrderEditorIntentV1,
+  AddGeneralSemInteractionV2EditorIntentV1,
+} from "./standardSemModelV4Authority";
 import {
   standardSemGeneralSemInteractionV2OutputIdV1,
   standardSemGeneralSemInteractionV2TermIdV1,
@@ -42,6 +47,10 @@ export interface GeneralSemExecutionAuthorityRevisionIdentityV1 {
   recipeId: string;
 }
 
+export type GeneralSemExecutionAuthorityRevisionEditorIntentV1 =
+  | AddGeneralSemInteractionV2EditorIntentV1
+  | AddGeneralSemHigherOrderEditorIntentV1;
+
 export interface InternalGeneralSemExecutionAuthorityRevisionRequestV1 {
   surface:
     | typeof INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1
@@ -53,7 +62,7 @@ export interface InternalGeneralSemExecutionAuthorityRevisionRequestV1 {
   revision: {
     source: GeneralSemExecutionAuthoritySourcePinV1;
     revision: GeneralSemExecutionAuthorityRevisionIdentityV1;
-    intent: AddGeneralSemInteractionV2EditorIntentV1;
+    intent: GeneralSemExecutionAuthorityRevisionEditorIntentV1;
     expectedCapabilityCell: CapabilityCellReferenceV2;
     recipeExecutionSurface:
       | typeof GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
@@ -178,8 +187,46 @@ function timestampAt(value: unknown, path: string): string {
   return timestamp;
 }
 
-function parseIntent(value: unknown, path: string): AddGeneralSemInteractionV2EditorIntentV1 {
-  const intent = exactRecordAt(value, [
+function parseIntent(value: unknown, path: string): GeneralSemExecutionAuthorityRevisionEditorIntentV1 {
+  const candidate = recordAt(value, path);
+  if (candidate.kind === "add_higher_order") {
+    const intent = exactRecordAt(candidate, [
+      "kind", "term_id", "output_id", "label", "components", "approach", "measurement_type",
+      "initial_path",
+    ], path);
+    if (!Array.isArray(intent.components) || intent.components.length < 2) {
+      fail("schema6_general_sem_revision.components_invalid", `${path}.components`, "A HOC revision requires at least two lower-order components.");
+    }
+    const components = intent.components.map((value, index) => textAt(value, `${path}.components[${index}]`));
+    if (new Set(components).size !== components.length) {
+      fail("schema6_general_sem_revision.components_invalid", `${path}.components`, "HOC components must be distinct.");
+    }
+    const approaches = ["repeated_indicators", "extended_repeated_indicators", "embedded_two_stage", "disjoint_two_stage", "hybrid"] as const;
+    const measurementTypes = ["reflective_reflective", "reflective_formative", "formative_reflective", "formative_formative"] as const;
+    if (!approaches.includes(intent.approach as typeof approaches[number])
+      || !measurementTypes.includes(intent.measurement_type as typeof measurementTypes[number])) {
+      fail("schema6_general_sem_revision.intent_invalid", path, "The HOC approach or measurement type is invalid.");
+    }
+    const initialPath = exactRecordAt(intent.initial_path, [
+      "relation_id", "source", "target", "label",
+    ], `${path}.initial_path`);
+    return {
+      kind: "add_higher_order",
+      term_id: textAt(intent.term_id, `${path}.term_id`),
+      output_id: textAt(intent.output_id, `${path}.output_id`),
+      label: textAt(intent.label, `${path}.label`),
+      components,
+      approach: intent.approach as AddGeneralSemHigherOrderEditorIntentV1["approach"],
+      measurement_type: intent.measurement_type as AddGeneralSemHigherOrderEditorIntentV1["measurement_type"],
+      initial_path: {
+        relation_id: textAt(initialPath.relation_id, `${path}.initial_path.relation_id`),
+        source: textAt(initialPath.source, `${path}.initial_path.source`),
+        target: textAt(initialPath.target, `${path}.initial_path.target`),
+        label: textAt(initialPath.label, `${path}.initial_path.label`),
+      },
+    };
+  }
+  const intent = exactRecordAt(candidate, [
     "kind", "intent_version", "sem_generation", "label", "operands",
     "focal_relation", "outcome", "method", "hierarchy_policy",
   ], path);
@@ -281,17 +328,19 @@ export function parseInternalGeneralSemExecutionAuthorityRevisionRequestV1(
       "Revision recipe execution metadata must match its selected Registry surface.",
     );
   }
-  if (!sameCapabilityCell(
-    parsed.revision.expectedCapabilityCell,
-    GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
-  ) && !sameCapabilityCell(
-    parsed.revision.expectedCapabilityCell,
-    GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
-  )) {
+  const higherOrderIntent = parsed.revision.intent.kind === "add_higher_order";
+  const allowedPoint = higherOrderIntent
+    ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
+    : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
+  const allowedBootstrap = higherOrderIntent
+    ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1
+    : GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1;
+  if (!sameCapabilityCell(parsed.revision.expectedCapabilityCell, allowedPoint)
+    && !sameCapabilityCell(parsed.revision.expectedCapabilityCell, allowedBootstrap)) {
     fail(
       "schema6_general_sem_revision.capability_invalid",
       "request.revision.expectedCapabilityCell",
-      "Interaction revision requires the exact moderation point or supplemental bootstrap execution cell.",
+      "The revision requires the exact point or supplemental bootstrap cell for its scientific editor intent.",
     );
   }
   if (parsed.sourceArchivePath.toLocaleLowerCase() === parsed.destinationArchivePath.toLocaleLowerCase()) {
@@ -388,7 +437,16 @@ function parseReceipt(
     interactionOutputId: textAt(receipt.interactionOutputId, `${path}.interactionOutputId`),
   };
   const { source, revision, intent } = request.revision;
-  const termId = standardSemGeneralSemInteractionV2TermIdV1(intent.focal_relation, intent.operands[0], intent.operands[1]);
+  const higherOrderIntent = intent.kind === "add_higher_order";
+  const termId = higherOrderIntent
+    ? intent.term_id
+    : standardSemGeneralSemInteractionV2TermIdV1(intent.focal_relation, intent.operands[0], intent.operands[1]);
+  const outputId = higherOrderIntent
+    ? intent.output_id
+    : standardSemGeneralSemInteractionV2OutputIdV1(termId);
+  const expectedPrimaryCell = higherOrderIntent
+    ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
+    : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
   if (parsed.sourceArchivePath !== request.sourceArchivePath
     || parsed.sourceArchiveSha256 !== request.expectedSourceArchiveSha256
     || parsed.sourceProjectId !== source.projectId
@@ -406,9 +464,9 @@ function parseReceipt(
     // Compilation receipts retain the point-primary cell. A bootstrap
     // revision is authorized by its supplemental execution cell in the
     // request, without falsely relabelling the compiled point authority.
-    || !sameCapabilityCell(parsed.capabilityCell, GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1)
+    || !sameCapabilityCell(parsed.capabilityCell, expectedPrimaryCell)
     || parsed.interactionTermId !== termId
-    || parsed.interactionOutputId !== standardSemGeneralSemInteractionV2OutputIdV1(termId)) {
+    || parsed.interactionOutputId !== outputId) {
     fail("schema6_general_sem_revision.receipt_request_mismatch", path, "Native revision receipt differs from the exact pinned request.");
   }
   return parsed;

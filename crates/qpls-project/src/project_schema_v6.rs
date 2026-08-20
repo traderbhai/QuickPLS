@@ -38,9 +38,10 @@ use qpls_core::{
     PLS_NONLINEAR_EFFECTS_CAPABILITY_ID, PLS_NONLINEAR_EFFECTS_CAPABILITY_VERSION,
     PLS_NONLINEAR_EFFECTS_CELL_ID, RecipeV4CompilerTarget, SemDerivedTermV4, SemEndpointV4,
     SemModelV4, SemModelV4ValidationError, SemParameterTargetV4, SemVariableV4,
-    compile_analysis_recipe_v4, compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1,
-    compile_general_sem_pls_recipe_v1, compile_pls_disjoint_higher_order_stage_two_projection_v1,
-    compile_unpublished_general_sem_pls_higher_order_recipe_v1, confirm_legacy_recipe_estimand_v4,
+    StructuralRelationRoleV4, compile_analysis_recipe_v4,
+    compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1, compile_general_sem_pls_recipe_v1,
+    compile_pls_higher_order_repeated_stage_projection_v1,
+    compile_pls_higher_order_score_stage_projection_v1, confirm_legacy_recipe_estimand_v4,
     convert_legacy_basic_model_v4, sha256_serialized,
 };
 use qpls_data::DatasetDescriptor;
@@ -1194,12 +1195,7 @@ fn validate_general_sem_result_authority_v1(
         .derived_terms
         .iter()
         .any(|term| matches!(term, SemDerivedTermV4::HigherOrder { .. }));
-    let artifact = (if has_higher_order {
-        compile_unpublished_general_sem_pls_higher_order_recipe_v1(recipe, Some(model))
-    } else {
-        compile_general_sem_pls_recipe_v1(recipe, Some(model))
-    })
-    .map_err(|error| {
+    let artifact = compile_general_sem_pls_recipe_v1(recipe, Some(model)).map_err(|error| {
         invalid_general_sem_authority(format!(
             "resident General SEM Recipe-v4 recompilation failed: {error}"
         ))
@@ -1270,7 +1266,7 @@ fn validate_general_sem_result_authority_v1(
 
     if has_higher_order {
         return validate_general_sem_pls_higher_order_authority_v1(
-            document, results, &artifact, recipe, dataset,
+            document, results, &artifact, recipe, model, dataset,
         );
     }
 
@@ -1441,6 +1437,7 @@ fn validate_general_sem_pls_higher_order_authority_v1(
     results: &qpls_core::CanonicalGeneralSemResultsV1,
     artifact: &qpls_core::CompiledGeneralSemPlsRecipeV1,
     recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
     dataset: &DatasetDescriptor,
 ) -> Result<(), ProjectArchiveV6Error> {
     let [hoc] = artifact.plan().higher_order_stage_plans() else {
@@ -1448,15 +1445,43 @@ fn validate_general_sem_pls_higher_order_authority_v1(
             "the HOC result requires exactly one recompiled higher-order stage plan",
         ));
     };
-    let stage_two_projection =
-        compile_pls_disjoint_higher_order_stage_two_projection_v1(model, artifact.plan())
-            .map_err(|error| {
-                invalid_general_sem_authority(format!(
-                    "resident disjoint-HOC stage-two recompilation failed: {error}"
-                ))
-            })?;
-    if hoc.approach() != &qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage
-        || !artifact.plan().two_way_interactions().is_empty()
+    let repeated_projection = matches!(
+        hoc.approach(),
+        qpls_core::HigherOrderConstructionApproachV4::RepeatedIndicators
+            | qpls_core::HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators
+            | qpls_core::HigherOrderConstructionApproachV4::EmbeddedTwoStage
+    )
+    .then(|| compile_pls_higher_order_repeated_stage_projection_v1(model, artifact.plan()))
+    .transpose()
+    .map_err(|error| {
+        invalid_general_sem_authority(format!(
+            "resident HOC repeated-stage recompilation failed: {error}"
+        ))
+    })?;
+    let score_projection = matches!(
+        hoc.approach(),
+        qpls_core::HigherOrderConstructionApproachV4::EmbeddedTwoStage
+            | qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage
+    )
+    .then(|| compile_pls_higher_order_score_stage_projection_v1(model, artifact.plan()))
+    .transpose()
+    .map_err(|error| {
+        invalid_general_sem_authority(format!(
+            "resident HOC score-stage recompilation failed: {error}"
+        ))
+    })?;
+    let final_projection = score_projection
+        .as_ref()
+        .or(repeated_projection.as_ref())
+        .ok_or_else(|| {
+            invalid_general_sem_authority("the HOC approach has no executable projection")
+        })?;
+    let final_stage_projection_identity = hoc
+        .stage_projections()
+        .last()
+        .ok_or_else(|| invalid_general_sem_authority("the HOC plan has no final stage"))?
+        .projection_identity_sha256();
+    if !artifact.plan().two_way_interactions().is_empty()
         || !results.specific_indirect_effects.is_empty()
         || !results.aggregate_effects.is_empty()
         || !results.joint_stage_structural_coefficients.is_empty()
@@ -1469,7 +1494,7 @@ fn validate_general_sem_pls_higher_order_authority_v1(
         || results.inference_receipt.is_some()
     {
         return Err(invalid_general_sem_authority(
-            "the bounded disjoint-HOC result contains an unsupported approach or non-HOC result section",
+            "the bounded HOC result contains an unsupported non-HOC result section",
         ));
     }
     let point =
@@ -1487,12 +1512,7 @@ fn validate_general_sem_pls_higher_order_authority_v1(
     }
     sort_project_capability_cells_v1(&mut expected_cells);
     if document.capability_cells.as_deref() != Some(expected_cells.as_slice())
-        || document.title
-            != if is_bootstrap {
-                "General SEM disjoint two-stage higher-order PLS bootstrap inference"
-            } else {
-                "General SEM disjoint two-stage higher-order PLS point estimates"
-            }
+        || document.title != higher_order_document_title_v1(hoc.approach(), is_bootstrap)
         || document.presentation.default_section_id.as_deref()
             != Some(if is_bootstrap {
                 GENERAL_SEM_HIGHER_ORDER_BOOTSTRAP_SECTION_ID_V1
@@ -1562,26 +1582,67 @@ fn validate_general_sem_pls_higher_order_authority_v1(
             "the canonical HOC stage count differs from the compiled plan",
         ));
     }
-    for (stage, projection) in results
-        .higher_order_stages
-        .iter()
-        .zip(hoc.stage_projections())
-    {
+    let mut ordered_projections = hoc.stage_projections().iter().collect::<Vec<_>>();
+    ordered_projections.sort_by(|left, right| {
+        left.projection_identity_sha256()
+            .cmp(right.projection_identity_sha256())
+    });
+    for (stage, projection) in results.higher_order_stages.iter().zip(ordered_projections) {
         let receipt = stage.receipt.as_ref().ok_or_else(|| {
             invalid_general_sem_authority("a canonical HOC stage omits its point receipt")
         })?;
         let expected_kind = match projection.role() {
-            qpls_core::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation => {
+            qpls_core::CompiledPlsHocStageRoleV1::EmbeddedRepeatedIndicatorEstimation
+            | qpls_core::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation => {
                 qpls_core::CanonicalHocStageKindV1::LowerOrderScoreEstimation
             }
-            qpls_core::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores => {
+            qpls_core::CompiledPlsHocStageRoleV1::RepeatedIndicatorEstimation
+            | qpls_core::CompiledPlsHocStageRoleV1::ExtendedRepeatedIndicatorEstimation
+            | qpls_core::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores => {
                 qpls_core::CanonicalHocStageKindV1::HigherOrderEstimation
             }
-            _ => {
-                return Err(invalid_general_sem_authority(
-                    "the canonical checkpoint contains a non-disjoint HOC stage role",
-                ));
-            }
+        };
+        let (expected_model_sha256, expected_plan_sha256, expects_score_receipt) =
+            match projection.role() {
+                qpls_core::CompiledPlsHocStageRoleV1::RepeatedIndicatorEstimation
+                | qpls_core::CompiledPlsHocStageRoleV1::ExtendedRepeatedIndicatorEstimation
+                | qpls_core::CompiledPlsHocStageRoleV1::EmbeddedRepeatedIndicatorEstimation => {
+                    let projected = repeated_projection.as_ref().ok_or_else(|| {
+                        invalid_general_sem_authority(
+                            "a repeated HOC stage has no resident repeated-stage projection",
+                        )
+                    })?;
+                    (
+                        projected.projected_scientific_sha256(),
+                        qpls_core::sha256_serialized(projected.projected_plan()),
+                        false,
+                    )
+                }
+                qpls_core::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation => (
+                    artifact.plan().base_plan().scientific_hash(),
+                    qpls_core::sha256_serialized(artifact.plan().base_plan()),
+                    false,
+                ),
+                qpls_core::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores => {
+                    let projected = score_projection.as_ref().ok_or_else(|| {
+                        invalid_general_sem_authority(
+                            "a score-based HOC stage has no resident score-stage projection",
+                        )
+                    })?;
+                    (
+                        projected.projected_scientific_sha256(),
+                        qpls_core::sha256_serialized(projected.projected_plan()),
+                        true,
+                    )
+                }
+            };
+        let is_final = projection.projection_identity_sha256() == final_stage_projection_identity;
+        let expected_outputs = if projection.role()
+            == qpls_core::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation
+        {
+            hoc.component_ids().to_vec()
+        } else {
+            vec![hoc.output_variable_id().to_string()]
         };
         if stage.stage_id
             != format!(
@@ -1601,44 +1662,31 @@ fn validate_general_sem_pls_higher_order_authority_v1(
             || receipt.role != projection.role()
             || receipt.projection_identity_sha256 != projection.projection_identity_sha256()
             || receipt.dataset_fingerprint != dataset.fingerprint.0
+            || receipt.model_scientific_sha256 != expected_model_sha256
+            || receipt.compiled_plan_sha256 != expected_plan_sha256
+            || receipt.generated_score_dataset.is_some() != expects_score_receipt
+            || stage.input_construct_ids != hoc.component_ids()
+            || stage.output_variable_ids != expected_outputs
+            || stage.relation_estimates.is_empty() == is_final
         {
             return Err(invalid_general_sem_authority(
                 "a canonical HOC stage differs from its compiled projection or resident dataset",
             ));
         }
     }
-    let stage_one = &results.higher_order_stages[0];
-    let stage_two = &results.higher_order_stages[1];
-    if stage_one.input_construct_ids != hoc.component_ids()
-        || stage_one.output_variable_ids != hoc.component_ids()
-        || !stage_one.relation_estimates.is_empty()
-        || stage_one.receipt.as_ref().is_some_and(|receipt| {
-            receipt.generated_score_dataset.is_some()
-                || receipt.model_scientific_sha256 != artifact.plan().base_plan().scientific_hash()
-                || receipt.compiled_plan_sha256
-                    != qpls_core::sha256_serialized(artifact.plan().base_plan())
+    let final_stage = results
+        .higher_order_stages
+        .iter()
+        .find(|stage| {
+            stage.receipt.as_ref().is_some_and(|receipt| {
+                receipt.projection_identity_sha256 == final_stage_projection_identity
+            })
         })
-        || stage_two.input_construct_ids != hoc.component_ids()
-        || stage_two.output_variable_ids.len() != 1
-        || stage_two.output_variable_ids[0] != hoc.output_variable_id()
-        || stage_two.receipt.as_ref().is_some_and(|receipt| {
-            receipt.model_scientific_sha256
-                != stage_two_projection.projected_scientific_sha256()
-                || receipt.compiled_plan_sha256
-                    != qpls_core::sha256_serialized(stage_two_projection.projected_plan())
-        })
-    {
-        return Err(invalid_general_sem_authority(
-            "the canonical HOC stage contents differ from the disjoint projection",
-        ));
-    }
-    let generated_receipt = stage_two
+        .ok_or_else(|| invalid_general_sem_authority("the HOC result omits its final stage"))?;
+    let generated_receipt = final_stage
         .receipt
         .as_ref()
-        .and_then(|receipt| receipt.generated_score_dataset.as_ref())
-        .ok_or_else(|| {
-            invalid_general_sem_authority("disjoint HOC stage two omits generated-score authority")
-        })?;
+        .and_then(|receipt| receipt.generated_score_dataset.as_ref());
     let expected_mappings = hoc
         .component_mappings()
         .iter()
@@ -1658,43 +1706,63 @@ fn validate_general_sem_pls_higher_order_authority_v1(
             },
         )
         .collect::<Vec<_>>();
-    if stage_two.generated_variable_mappings != expected_mappings
-        || generated_receipt.source_dataset_fingerprint != dataset.fingerprint.0
-        || generated_receipt.receipt_version
-            != GENERAL_SEM_DISJOINT_HOC_SCORE_DATASET_RECEIPT_VERSION_V1
-        || generated_receipt.complete_case_row_count
-            != stage_two
-                .receipt
-                .as_ref()
-                .map_or(0, |receipt| receipt.used_observations)
-        || generated_receipt.omitted_row_count
-            != stage_two
-                .receipt
-                .as_ref()
-                .map_or(0, |receipt| receipt.omitted_observations)
-        || generated_receipt.generated_score_columns.len() != hoc.component_mappings().len()
-        || generated_receipt
-            .generated_score_columns
-            .iter()
-            .zip(hoc.component_mappings())
-            .any(|(score, mapping)| {
-                score.component_id != mapping.component_id()
-                    || score.generated_score_variable_id != mapping.generated_score_variable_id()
-                    || score.observation_count != generated_receipt.complete_case_row_count
-            })
-    {
+    if final_stage.generated_variable_mappings != expected_mappings {
         return Err(invalid_general_sem_authority(
             "the canonical HOC generated-variable mapping differs from the compiled plan",
         ));
     }
+    if let Some(generated_receipt) = generated_receipt {
+        if score_projection.is_none()
+            || generated_receipt.source_dataset_fingerprint != dataset.fingerprint.0
+            || generated_receipt.receipt_version
+                != GENERAL_SEM_DISJOINT_HOC_SCORE_DATASET_RECEIPT_VERSION_V1
+            || generated_receipt.complete_case_row_count
+                != final_stage
+                    .receipt
+                    .as_ref()
+                    .map_or(0, |receipt| receipt.used_observations)
+            || generated_receipt.omitted_row_count
+                != final_stage
+                    .receipt
+                    .as_ref()
+                    .map_or(0, |receipt| receipt.omitted_observations)
+            || generated_receipt.generated_score_columns.len() != hoc.component_mappings().len()
+            || generated_receipt
+                .generated_score_columns
+                .iter()
+                .zip(hoc.component_mappings())
+                .any(|(score, mapping)| {
+                    score.component_id != mapping.component_id()
+                        || score.generated_score_variable_id
+                            != mapping.generated_score_variable_id()
+                        || score.observation_count != generated_receipt.complete_case_row_count
+                })
+        {
+            return Err(invalid_general_sem_authority(
+                "the canonical HOC generated-score receipt differs from the compiled plan",
+            ));
+        }
+    } else if score_projection.is_some() {
+        return Err(invalid_general_sem_authority(
+            "a two-stage HOC final stage omits generated-score authority",
+        ));
+    }
 
-    let persisted_relations = stage_two
+    let persisted_relations = final_stage
         .relation_estimates
         .iter()
         .map(|relation| (relation.relation_id.as_str(), relation))
         .collect::<BTreeMap<_, _>>();
+    let extended_authored_ids = hoc
+        .technical_paths()
+        .iter()
+        .map(|path| path.authored_antecedent_relation_id())
+        .collect::<BTreeSet<_>>();
     if persisted_relations.len()
-        != hoc.component_mappings().len() + artifact.plan().topology().structural_relations().len()
+        != hoc.component_mappings().len()
+            + artifact.plan().topology().structural_relations().len()
+            + hoc.technical_paths().len()
+            + 2 * extended_authored_ids.len()
     {
         return Err(invalid_general_sem_authority(
             "the canonical HOC relation inventory has the wrong cardinality",
@@ -1749,6 +1817,58 @@ fn validate_general_sem_pls_higher_order_authority_v1(
             ));
         }
     }
+    for technical in hoc.technical_paths() {
+        let relation = persisted_relations
+            .get(technical.generated_relation_id())
+            .ok_or_else(|| invalid_general_sem_authority("an HOC technical path is absent"))?;
+        if relation.parameter_id.as_deref() != Some(technical.generated_parameter_id())
+            || relation.source_id != technical.source_id()
+            || relation.target_id != technical.component_id()
+            || relation.kind != Some(qpls_core::CanonicalHocRelationKindV1::TechnicalStructural)
+        {
+            return Err(invalid_general_sem_authority(
+                "a canonical HOC technical path differs from the compiled stage plan",
+            ));
+        }
+    }
+    for authored_id in extended_authored_ids {
+        let direct = artifact
+            .plan()
+            .topology()
+            .structural_relations()
+            .iter()
+            .find(|relation| relation.relation_id() == authored_id)
+            .ok_or_else(|| {
+                invalid_general_sem_authority(
+                    "an extended repeated antecedent has no authored structural relation",
+                )
+            })?;
+        for (effect_kind, canonical_kind) in [
+            (
+                "indirect",
+                qpls_core::CanonicalHocRelationKindV1::ExtendedIndirectEffect,
+            ),
+            (
+                "total",
+                qpls_core::CanonicalHocRelationKindV1::ExtendedTotalEffect,
+            ),
+        ] {
+            let effect_id = hoc_extended_effect_identity_v1(effect_kind, hoc, authored_id);
+            let effect = persisted_relations.get(effect_id.as_str()).ok_or_else(|| {
+                invalid_general_sem_authority("an extended repeated effect row is absent")
+            })?;
+            let expected_parameter_id = format!("{effect_id}:estimand");
+            if effect.parameter_id.as_deref() != Some(expected_parameter_id.as_str())
+                || effect.source_id != direct.source()
+                || effect.target_id != direct.target()
+                || effect.kind != Some(canonical_kind)
+            {
+                return Err(invalid_general_sem_authority(
+                    "an extended repeated effect differs from its compiled antecedent",
+                ));
+            }
+        }
+    }
 
     validate_higher_order_bootstrap_authority_v1(
         results,
@@ -1756,7 +1876,7 @@ fn validate_general_sem_pls_higher_order_authority_v1(
         recipe,
         dataset,
         hoc,
-        &stage_two_projection,
+        final_projection,
         &bootstrap,
     )?;
     validate_higher_order_tables_v1(document, results, &point, &bootstrap, is_bootstrap)?;
@@ -1785,7 +1905,7 @@ fn validate_higher_order_bootstrap_authority_v1(
     recipe: &AnalysisRecipeV4,
     dataset: &DatasetDescriptor,
     hoc: &qpls_core::CompiledPlsHigherOrderStagePlanV1,
-    stage_two_projection: &qpls_core::CompiledPlsDisjointHocStageTwoProjectionV1,
+    final_projection: &qpls_core::CompiledPlsHocExecutionProjectionV1,
     bootstrap_cell: &crate::CapabilityCellReferenceV2,
 ) -> Result<(), ProjectArchiveV6Error> {
     let config = recipe.general_sem_config.as_ref().ok_or_else(|| {
@@ -1815,6 +1935,34 @@ fn validate_higher_order_bootstrap_authority_v1(
                 tail: GeneralSemInferenceTailV1::TwoSided,
             },
         ) => {
+            let extended_total_targets = hoc
+                .technical_paths()
+                .iter()
+                .map(|path| path.authored_antecedent_relation_id())
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .filter_map(|authored_id| {
+                    artifact
+                        .plan()
+                        .topology()
+                        .structural_relations()
+                        .iter()
+                        .find(|relation| relation.relation_id() == authored_id)
+                        .map(|relation| {
+                            let target_id =
+                                hoc_extended_effect_identity_v1("total", hoc, authored_id);
+                            qpls_core::CanonicalHocBootstrapTargetIdentityV1 {
+                                kind: qpls_core::CanonicalHocBootstrapTargetKindV1::ExtendedTotalEffect,
+                                target_version: "compiled_hoc_component_and_structural_relation_target_v1".into(),
+                                target_id: target_id.clone(),
+                                relation_id: target_id.clone(),
+                                parameter_id: format!("{target_id}:estimand"),
+                                source_id: relation.source().into(),
+                                target_variable_id: relation.target().into(),
+                                point_method_version: qpls_core::PLS_GENERAL_HIGHER_ORDER_POINT_CAPABILITY_VERSION_V1.into(),
+                            }
+                        })
+                });
             let mut expected_identities = hoc
                 .component_mappings()
                 .iter()
@@ -1857,6 +2005,7 @@ fn validate_higher_order_bootstrap_authority_v1(
                             point_method_version: qpls_core::PLS_GENERAL_HIGHER_ORDER_POINT_CAPABILITY_VERSION_V1.into(),
                         }),
                 )
+                .chain(extended_total_targets)
                 .collect::<Vec<_>>();
             expected_identities.sort_by(|left, right| left.target_id.cmp(&right.target_id));
             let expected_target_ids = expected_identities
@@ -1888,7 +2037,7 @@ fn validate_higher_order_bootstrap_authority_v1(
                 || receipt.stage_one_model_scientific_sha256
                     != artifact.plan().base_plan().scientific_hash()
                 || receipt.stage_two_model_scientific_sha256
-                    != stage_two_projection.projected_scientific_sha256()
+                    != final_projection.projected_scientific_sha256()
                 || receipt.source_dataset_fingerprint != dataset.fingerprint.0
                 || receipt.target_identities != expected_identities
                 || receipt.target_ids != expected_target_ids
@@ -2049,9 +2198,13 @@ fn validate_higher_order_tables_v1(
 
     let target_table = hoc_table_v1(document, GENERAL_SEM_HIGHER_ORDER_TARGETS_TABLE_ID_V1)?;
     validate_hoc_columns_v1(target_table, GENERAL_SEM_HIGHER_ORDER_TARGET_COLUMNS_V1)?;
-    let stage_two = &results.higher_order_stages[1];
+    let final_stage = results
+        .higher_order_stages
+        .iter()
+        .find(|stage| stage.kind == qpls_core::CanonicalHocStageKindV1::HigherOrderEstimation)
+        .ok_or_else(|| invalid_general_sem_authority("the HOC target table has no final stage"))?;
     if target_table.capability_cells.as_deref() != Some(std::slice::from_ref(point_cell))
-        || target_table.rows.len() != stage_two.relation_estimates.len()
+        || target_table.rows.len() != final_stage.relation_estimates.len()
     {
         return Err(invalid_general_sem_authority(
             "the HOC target table ownership or row inventory has drifted",
@@ -2060,7 +2213,7 @@ fn validate_higher_order_tables_v1(
     for (index, (row, relation)) in target_table
         .rows
         .iter()
-        .zip(stage_two.relation_estimates.iter())
+        .zip(final_stage.relation_estimates.iter())
         .enumerate()
     {
         if row.id != format!("higher_order_target_{index:04}") || row.cells.len() != 15 {
@@ -2355,6 +2508,46 @@ fn hoc_stage_kind_label_v1(kind: qpls_core::CanonicalHocStageKindV1) -> &'static
     }
 }
 
+fn higher_order_document_title_v1(
+    approach: &qpls_core::HigherOrderConstructionApproachV4,
+    inferred: bool,
+) -> String {
+    let approach = match approach {
+        qpls_core::HigherOrderConstructionApproachV4::RepeatedIndicators => "repeated indicators",
+        qpls_core::HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators => {
+            "extended repeated indicators"
+        }
+        qpls_core::HigherOrderConstructionApproachV4::EmbeddedTwoStage => "embedded two-stage",
+        qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage => "disjoint two-stage",
+        qpls_core::HigherOrderConstructionApproachV4::Hybrid => "hybrid",
+    };
+    format!(
+        "General SEM {approach} higher-order PLS {}",
+        if inferred {
+            "bootstrap inference"
+        } else {
+            "point estimates"
+        }
+    )
+}
+
+fn hoc_extended_effect_identity_v1(
+    kind: &str,
+    hoc: &qpls_core::CompiledPlsHigherOrderStagePlanV1,
+    authored_relation_id: &str,
+) -> String {
+    format!(
+        "qpls_hoc_extended_{kind}_v1_{}",
+        qpls_core::sha256_serialized(&(
+            "general_sem_pls_extended_repeated_effect_v1",
+            hoc.authored_term_id(),
+            hoc.output_variable_id(),
+            authored_relation_id,
+            kind,
+        ))
+    )
+}
+
 fn hoc_approach_label_v1(approach: &qpls_core::HigherOrderConstructionApproachV4) -> &'static str {
     match approach {
         qpls_core::HigherOrderConstructionApproachV4::RepeatedIndicators => "repeated_indicators",
@@ -2404,6 +2597,9 @@ fn hoc_relation_kind_label_v1(kind: qpls_core::CanonicalHocRelationKindV1) -> &'
         qpls_core::CanonicalHocRelationKindV1::ComponentWeight => "component_weight",
         qpls_core::CanonicalHocRelationKindV1::AuthoredStructural => "authored_structural",
         qpls_core::CanonicalHocRelationKindV1::AuthoredControl => "authored_control",
+        qpls_core::CanonicalHocRelationKindV1::TechnicalStructural => "technical_structural",
+        qpls_core::CanonicalHocRelationKindV1::ExtendedIndirectEffect => "extended_indirect_effect",
+        qpls_core::CanonicalHocRelationKindV1::ExtendedTotalEffect => "extended_total_effect",
     }
 }
 
@@ -12891,6 +13087,10 @@ mod tests {
                 kind: qpls_core::CanonicalHocStageKindV1::LowerOrderScoreEstimation,
                 input_construct_ids: vec!["construct:x".into()],
                 output_variable_ids: vec!["score:foreign_x".into()],
+                approach: None,
+                measurement_type: None,
+                generated_variable_mappings: Vec::new(),
+                receipt: None,
                 relation_estimates: Vec::new(),
             });
         results

@@ -219,19 +219,18 @@ pub fn compile_general_sem_pls_recipe_v1(
     recipe: &AnalysisRecipeV4,
     resolved_model: Option<&SemModelV4>,
 ) -> Result<CompiledGeneralSemPlsRecipeV1, GeneralSemPlsRecipeCompilationErrorV1> {
-    compile_general_sem_pls_recipe_with_capability_policy_v1(recipe, resolved_model, false)
+    compile_general_sem_pls_recipe_with_capability_policy_v1(recipe, resolved_model)
 }
 
-/// Internal checkpoint compiler for a bounded HOC whose exact cells are
-/// intentionally absent from Registry V2. Callers must not use this as a
-/// product-availability decision; public compilation remains registry-gated.
+/// Historical internal entry point retained for source compatibility. HOC
+/// compilation is now governed by the same Registry check as every other
+/// General SEM execution.
 #[doc(hidden)]
 pub fn compile_unpublished_general_sem_pls_higher_order_recipe_v1(
     recipe: &AnalysisRecipeV4,
     resolved_model: Option<&SemModelV4>,
 ) -> Result<CompiledGeneralSemPlsRecipeV1, GeneralSemPlsRecipeCompilationErrorV1> {
-    let artifact =
-        compile_general_sem_pls_recipe_with_capability_policy_v1(recipe, resolved_model, true)?;
+    let artifact = compile_general_sem_pls_recipe_v1(recipe, resolved_model)?;
     if artifact.plan().higher_order_stage_plans().is_empty() {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::CapabilityUnavailable);
     }
@@ -241,7 +240,6 @@ pub fn compile_unpublished_general_sem_pls_higher_order_recipe_v1(
 fn compile_general_sem_pls_recipe_with_capability_policy_v1(
     recipe: &AnalysisRecipeV4,
     resolved_model: Option<&SemModelV4>,
-    allow_unpublished_higher_order: bool,
 ) -> Result<CompiledGeneralSemPlsRecipeV1, GeneralSemPlsRecipeCompilationErrorV1> {
     let config = recipe
         .general_sem_config
@@ -252,9 +250,7 @@ fn compile_general_sem_pls_recipe_with_capability_policy_v1(
     ensure_higher_order_recipe_scope(recipe, model)?;
     let plan = compile_pls_plan_v3(model, config)?;
     ensure_interaction_compilation_scope(config, &plan)?;
-    if !allow_unpublished_higher_order || plan.higher_order_stage_plans().is_empty() {
-        ensure_capabilities_available(config, &plan)?;
-    }
+    ensure_capabilities_available(config, &plan)?;
 
     let target = RecipeV4CompilerTarget::PlsPlanV2;
     let (base_recipe, base_model) = project_general_sem_pls_stage_one_recipe_v1(recipe, model)?;
@@ -347,11 +343,7 @@ pub fn validate_compiled_general_sem_pls_recipe_v1(
         &base_recipe,
         Some(&base_model),
     )?;
-    let expected = if expected_plan.higher_order_stage_plans().is_empty() {
-        compile_general_sem_pls_recipe_v1(recipe, resolved_model)?
-    } else {
-        compile_unpublished_general_sem_pls_higher_order_recipe_v1(recipe, resolved_model)?
-    };
+    let expected = compile_general_sem_pls_recipe_v1(recipe, resolved_model)?;
     if *artifact != expected {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::ArtifactMismatch);
     }

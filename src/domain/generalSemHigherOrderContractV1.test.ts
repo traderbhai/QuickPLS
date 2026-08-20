@@ -95,13 +95,11 @@ describe("General SEM HOC compiler contract v1", () => {
     }
   });
 
-  it("reserves exact point/bootstrap cells but stays blocked until the runner exists", () => {
+  it("binds the exact runnable point/bootstrap cells", () => {
     const point = preflightGeneralSemHocContractV1(hocModel(), false);
     expect(point.contractCompiles).toBe(true);
     expect(point.capabilityCells).toEqual([GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CELL_V1]);
-    expect(point.diagnostics.map((item) => item.code)).toEqual([
-      "sem.capability.pls.higher_order_runtime_not_connected",
-    ]);
+    expect(point.diagnostics).toEqual([]);
 
     const bootstrap = preflightGeneralSemHocContractV1(hocModel(), true);
     expect(bootstrap.capabilityCells).toEqual([
@@ -111,6 +109,7 @@ describe("General SEM HOC compiler contract v1", () => {
     expect(bootstrap.evidence.map((item) => item.evidence_id)).toContain(
       "compiler:recipe_v4_to_compiled_pls_plan_v3_higher_order_full_model_case_bootstrap_v1",
     );
+    expect(bootstrap.diagnostics).toEqual([]);
   });
 
   it("returns corrective diagnostics for unsupported topology and LOC modes", () => {

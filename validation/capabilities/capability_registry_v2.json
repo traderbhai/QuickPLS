@@ -5733,7 +5733,7 @@
           "scope:bounded"
         ]
       },
-      "scope_statement": "One bounded reflective-reflective disjoint two-stage higher-order construct with at least two measured lower-order components and one measured outcome.",
+      "scope_statement": "The historical Standard cell remains one reflective-reflective disjoint two-stage point HOC. General SEM adds one non-nested second-order HOC across the exact repeated, extended-repeated, embedded, and disjoint approach/HCM matrix with point and full-model case-bootstrap cells.",
       "settings_references": [
         "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/"
       ],
@@ -5752,7 +5752,9 @@
       },
       "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/",
       "qualification_references": [
-        "validation/methods/higher_order_v1.manifest.json"
+        "validation/methods/higher_order_v1.manifest.json",
+        "validation/methods/general_sem_pls_higher_order_point_v1.manifest.json",
+        "validation/methods/general_sem_pls_higher_order_bootstrap_v1.manifest.json"
       ],
       "qualification_links": [
         {
@@ -5760,11 +5762,25 @@
           "capability_id": "smartpls.higher_order_models",
           "cell_id": "qpls3.pls.higher_order_two_stage",
           "capability_version": "pls_pm_v1"
+        },
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.higher_order_models",
+          "cell_id": "qpls3.pls.general_sem_higher_order_point",
+          "capability_version": "general_sem_pls_higher_order_point_v1"
+        },
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.higher_order_models",
+          "cell_id": "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+          "capability_version": "general_sem_pls_higher_order_full_model_case_bootstrap_v1"
         }
       ],
       "qualification_spec": {
         "references": [
-          "validation/methods/higher_order_v1.manifest.json"
+          "validation/methods/higher_order_v1.manifest.json",
+          "validation/methods/general_sem_pls_higher_order_point_v1.manifest.json",
+          "validation/methods/general_sem_pls_higher_order_bootstrap_v1.manifest.json"
         ],
         "links": [
           {
@@ -5772,11 +5788,23 @@
             "capability_id": "smartpls.higher_order_models",
             "cell_id": "qpls3.pls.higher_order_two_stage",
             "capability_version": "pls_pm_v1"
+          },
+          {
+            "registry_schema_version": 2,
+            "capability_id": "smartpls.higher_order_models",
+            "cell_id": "qpls3.pls.general_sem_higher_order_point",
+            "capability_version": "general_sem_pls_higher_order_point_v1"
+          },
+          {
+            "registry_schema_version": 2,
+            "capability_id": "smartpls.higher_order_models",
+            "cell_id": "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+            "capability_version": "general_sem_pls_higher_order_full_model_case_bootstrap_v1"
           }
         ]
       },
       "known_differences": [
-        "The Standard workflow covers exactly one reflective-reflective disjoint two-stage point-estimate HOC and one HOC-to-measured-outcome path; repeated-indicator, hybrid, formative, nested, multiple-HOC, incoming-HOC-path, and HOC resampling workflows remain excluded."
+        "The General SEM cells remain bounded to one non-nested HOC and the exact documented approach/type/topology matrix; hybrid, HOC interactions, groups, weights, feedback, PLSc, matrix input, BCa, studentized inference, and permutation remain excluded."
       ],
       "legacy_row": {
         "id": "smartpls.higher_order_models",
@@ -5787,15 +5815,17 @@
         "priority": "P0",
         "target_release": "current",
         "competitor_scope": true,
-        "quickpls_scope": "One bounded reflective-reflective disjoint two-stage higher-order construct with at least two measured lower-order components and one measured outcome.",
+        "quickpls_scope": "The historical Standard cell remains one reflective-reflective disjoint two-stage point HOC. General SEM adds one non-nested second-order HOC across the exact repeated, extended-repeated, embedded, and disjoint approach/HCM matrix with point and full-model case-bootstrap cells.",
         "quickpls_capability_ids": [
-          "qpls3.pls.higher_order_two_stage"
+          "qpls3.pls.higher_order_two_stage",
+          "qpls3.pls.general_sem_higher_order_point",
+          "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap"
         ],
         "implementation_evidence": [],
         "dependencies": [
           "smartpls.pls_algorithm"
         ],
-        "remaining_gap": "Refresh current-cohort source and packaged receipts after the coordinated binary is frozen; repeated-indicator, hybrid, formative, nested, multiple-HOC, incoming-HOC-path, and HOC resampling workflows remain excluded."
+        "remaining_gap": "Hybrid, nested or multiple HOCs, HOC interactions, feedback, groups, case weights, PLSc, matrix input, BCa, studentized inference, and permutation remain excluded."
       },
       "option_cells": [
         {
@@ -5851,6 +5881,131 @@
           },
           "known_differences": [
             "The Standard workflow covers exactly one reflective-reflective disjoint two-stage point-estimate HOC and one HOC-to-measured-outcome path; repeated-indicator, hybrid, formative, nested, multiple-HOC, incoming-HOC-path, and HOC resampling workflows remain excluded."
+          ]
+        },
+        {
+          "capability_id": "smartpls.higher_order_models",
+          "cell_id": "qpls3.pls.general_sem_higher_order_point",
+          "capability_version": "general_sem_pls_higher_order_point_v1",
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
+          "supported_model_predicate": {
+            "official": [
+              "model_family:pls_sem",
+              "model_shape:higher_order"
+            ],
+            "quickpls": [
+              "authority:sem_model_v4",
+              "hoc_count:1",
+              "hoc_level:second_order_non_nested",
+              "approaches:repeated_extended_embedded_disjoint",
+              "hcm_types:rr_rf_fr_ff_exact_matrix",
+              "groups:single",
+              "graph:recursive",
+              "interactions:none"
+            ]
+          },
+          "supported_data_predicate": {
+            "official": [
+              "input:raw_numeric",
+              "missing_data:listwise"
+            ],
+            "quickpls": [
+              "input:raw_continuous",
+              "weights:none",
+              "preprocessing:standardized"
+            ]
+          },
+          "settings_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/",
+              "docs/GENERAL_SEM_PLS_HIGHER_ORDER_V1.md"
+            ]
+          },
+          "result_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/",
+              "docs/GENERAL_SEM_PLS_HIGHER_ORDER_V1.md"
+            ]
+          },
+          "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/",
+          "qualification_spec": {
+            "references": [
+              "validation/methods/general_sem_pls_higher_order_point_v1.manifest.json"
+            ],
+            "links": [
+              {
+                "registry_schema_version": 2,
+                "capability_id": "smartpls.higher_order_models",
+                "cell_id": "qpls3.pls.general_sem_higher_order_point",
+                "capability_version": "general_sem_pls_higher_order_point_v1"
+              }
+            ]
+          },
+          "known_differences": [
+            "Hybrid, nested or multiple HOCs, HOC interactions, groups, weights, feedback, PLSc, and matrix input remain excluded."
+          ]
+        },
+        {
+          "capability_id": "smartpls.higher_order_models",
+          "cell_id": "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+          "capability_version": "general_sem_pls_higher_order_full_model_case_bootstrap_v1",
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
+          "supported_model_predicate": {
+            "official": [
+              "model_family:pls_sem",
+              "model_shape:higher_order",
+              "inference:bootstrap"
+            ],
+            "quickpls": [
+              "point_dependency:qpls3.pls.general_sem_higher_order_point",
+              "resampling:full_model_case_refit",
+              "targets:components_hoc_paths_extended_totals",
+              "usable_gate:0.9"
+            ]
+          },
+          "supported_data_predicate": {
+            "official": [
+              "input:raw_numeric",
+              "missing_data:listwise"
+            ],
+            "quickpls": [
+              "input:raw_continuous",
+              "sampling:indexed_case",
+              "workers:deterministic"
+            ]
+          },
+          "settings_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/",
+              "docs/GENERAL_SEM_PLS_HIGHER_ORDER_V1.md"
+            ]
+          },
+          "result_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/",
+              "docs/GENERAL_SEM_PLS_HIGHER_ORDER_V1.md"
+            ]
+          },
+          "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/",
+          "qualification_spec": {
+            "references": [
+              "validation/methods/general_sem_pls_higher_order_bootstrap_v1.manifest.json"
+            ],
+            "links": [
+              {
+                "registry_schema_version": 2,
+                "capability_id": "smartpls.higher_order_models",
+                "cell_id": "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+                "capability_version": "general_sem_pls_higher_order_full_model_case_bootstrap_v1"
+              }
+            ]
+          },
+          "known_differences": [
+            "Inference excludes ordinary unrelated paths, control paths, VIF, BCa, studentized intervals, permutation, and hybrid HOCs."
           ]
         }
       ]

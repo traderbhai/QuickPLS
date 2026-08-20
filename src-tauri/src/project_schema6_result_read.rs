@@ -1,7 +1,7 @@
 use crate::general_sem_registry_access_v1::{
     GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_read_access_v1,
     decision_declares_general_sem_execution_cell_v1, general_sem_recipe_execution_surface_v1,
-    is_rank0_general_sem_execution_cell_v1, selected_general_sem_execution_cell_v1,
+    is_general_sem_execution_cell_v1, selected_general_sem_execution_cell_v1,
 };
 use crate::recipe_v4_canonical_result::validate_archived_recipe_v4_pls_method_identity;
 use crate::recipe_v4_cbsem_canonical_result::validate_archived_recipe_v4_cbsem_method_identity;
@@ -257,7 +257,7 @@ where
         && request.surface == STANDARD_EXACT_CBSEM_SURFACE
         && !request.experimental_labs_enabled;
     let exact_general_sem = if let Some(cell) = request.capability_cell.as_ref() {
-        if !is_rank0_general_sem_execution_cell_v1(cell) {
+        if !is_general_sem_execution_cell_v1(cell) {
             return blocked(
                 "schema6_result_read.capability_unavailable",
                 "The selected cell is not one of the exact General SEM result-reopen cells.",

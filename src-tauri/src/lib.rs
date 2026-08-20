@@ -1,5 +1,5 @@
-mod capability_registry_command;
 mod canonical_result_export_publication_v2;
+mod capability_registry_command;
 mod general_sem_registry_access_v1;
 #[cfg(test)]
 mod pls_algorithm_current_product_qualification;
@@ -27,8 +27,8 @@ mod standard_sem_model_v4_authority;
 mod wave1_diagram_cbsem_roundtrip;
 
 use arrow::array::{Array, BooleanArray, Float64Array, Int64Array, StringArray};
-use capability_registry_command::capability_registry_v2;
 use canonical_result_export_publication_v2::publish_canonical_result_export_v2;
+use capability_registry_command::capability_registry_v2;
 use chrono::{SecondsFormat, Utc};
 use pls_model_comparison_jobs::{
     DesktopPlsModelComparisonJobsV1, cancel_internal_labs_pls_model_comparison_job,

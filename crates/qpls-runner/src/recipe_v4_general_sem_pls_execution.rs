@@ -3,9 +3,8 @@ use crate::{
     GeneralSemPlsHigherOrderPointErrorV1, GeneralSemPlsHigherOrderPointResultV1,
     GeneralSemPlsHocBootstrapFailureCodeV1, GeneralSemPlsHocBootstrapTargetKindV1,
     GeneralSemPlsHocPointRelationKindV1, RecipeV4PlsExecutionError, RecipeV4PlsExecutionResultV1,
-    RunnerProgress, bootstrap_general_sem_pls_disjoint_higher_order_v1,
-    project_pls_plan_to_current_recipe,
-    run_compiled_general_sem_pls_disjoint_higher_order_point_v1, run_compiled_pls_recipe_v4,
+    RunnerProgress, bootstrap_general_sem_pls_higher_order_v1, project_pls_plan_to_current_recipe,
+    run_compiled_general_sem_pls_higher_order_point_v1, run_compiled_pls_recipe_v4,
     run_compiled_pls_recipe_v4_allowing_isolated,
 };
 use qpls_core::{
@@ -451,29 +450,25 @@ fn canonical_higher_order_stages_v1(
                 .collect::<BTreeMap<_, _>>()
         })
         .unwrap_or_default();
-    higher_order
+    let mut stages = higher_order
         .stages()
         .iter()
         .map(|stage| {
             let kind = match stage.receipt().role() {
-                qpls_core::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation => {
+                qpls_core::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation
+                | qpls_core::CompiledPlsHocStageRoleV1::EmbeddedRepeatedIndicatorEstimation => {
                     CanonicalHocStageKindV1::LowerOrderScoreEstimation
                 }
-                qpls_core::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores => {
+                qpls_core::CompiledPlsHocStageRoleV1::RepeatedIndicatorEstimation
+                | qpls_core::CompiledPlsHocStageRoleV1::ExtendedRepeatedIndicatorEstimation
+                | qpls_core::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores => {
                     CanonicalHocStageKindV1::HigherOrderEstimation
-                }
-                _ => {
-                    return Err(
-                        RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
-                            "disjoint HOC point payload contains an unsupported stage role".into(),
-                        ),
-                    );
                 }
             };
             let generated_score_dataset = stage
                 .receipt()
                 .generated_score_dataset()
-                .map(|receipt| {
+                .map(|receipt| -> Result<_, RecipeV4GeneralSemPlsExecutionErrorV1> {
                     Ok(CanonicalHocGeneratedScoreDatasetReceiptV1 {
                         receipt_version: receipt.receipt_version().to_string(),
                         source_dataset_fingerprint: receipt
@@ -505,21 +500,6 @@ fn canonical_higher_order_stages_v1(
             let generated_variable_mappings = if kind
                 == CanonicalHocStageKindV1::HigherOrderEstimation
             {
-                let score_ids = generated_score_dataset
-                    .as_ref()
-                    .map(|receipt| {
-                        receipt
-                            .generated_score_columns
-                            .iter()
-                            .map(|column| {
-                                (
-                                    column.component_id.as_str(),
-                                    column.generated_score_variable_id.as_str(),
-                                )
-                            })
-                            .collect::<BTreeMap<_, _>>()
-                    })
-                    .unwrap_or_default();
                 let mut mappings = stage
                     .relation_estimates()
                     .iter()
@@ -539,21 +519,27 @@ fn canonical_higher_order_stages_v1(
                         } else {
                             relation.target_id()
                         };
-                        Some(CanonicalHocGeneratedVariableMappingV1 {
+                        let generated_score_variable_id = match relation
+                            .generated_score_variable_id()
+                        {
+                            Some(value) => value,
+                            None => {
+                                return Some(Err(hoc_projection_error(
+                                    "a component loading/weight is missing its generated score identity",
+                                )))
+                            }
+                        };
+                        Some(Ok(CanonicalHocGeneratedVariableMappingV1 {
                             component_id: component_id.to_string(),
-                            generated_score_variable_id: score_ids
-                                .get(component_id)
-                                .copied()
-                                .unwrap_or_default()
-                                .to_string(),
+                            generated_score_variable_id: generated_score_variable_id.to_string(),
                             generated_component_relation_id: relation.relation_id().to_string(),
                             generated_component_parameter_id: relation.parameter_id().to_string(),
                             component_relation_source_id: relation.source_id().to_string(),
                             component_relation_target_id: relation.target_id().to_string(),
                             relation_interpretation: interpretation,
-                        })
+                        }))
                     })
-                    .collect::<Vec<_>>();
+                    .collect::<Result<Vec<_>, RecipeV4GeneralSemPlsExecutionErrorV1>>()?;
                 mappings.sort_by(|left, right| left.component_id.cmp(&right.component_id));
                 mappings
             } else {
@@ -611,6 +597,15 @@ fn canonical_higher_order_stages_v1(
                             GeneralSemPlsHocPointRelationKindV1::AuthoredControl => {
                                 CanonicalHocRelationKindV1::AuthoredControl
                             }
+                            GeneralSemPlsHocPointRelationKindV1::TechnicalStructural => {
+                                CanonicalHocRelationKindV1::TechnicalStructural
+                            }
+                            GeneralSemPlsHocPointRelationKindV1::ExtendedIndirectEffect => {
+                                CanonicalHocRelationKindV1::ExtendedIndirectEffect
+                            }
+                            GeneralSemPlsHocPointRelationKindV1::ExtendedTotalEffect => {
+                                CanonicalHocRelationKindV1::ExtendedTotalEffect
+                            }
                         }),
                         value: inference_by_relation
                             .get(relation.relation_id())
@@ -635,7 +630,9 @@ fn canonical_higher_order_stages_v1(
                     .collect(),
             })
         })
-        .collect()
+        .collect::<Result<Vec<_>, RecipeV4GeneralSemPlsExecutionErrorV1>>()?;
+    stages.sort_by(|left, right| left.stage_id.cmp(&right.stage_id));
+    Ok(stages)
 }
 
 fn hoc_projection_error(message: impl Into<String>) -> RecipeV4GeneralSemPlsExecutionErrorV1 {
@@ -661,6 +658,9 @@ fn canonical_higher_order_bootstrap_receipt_v1(
                 }
                 GeneralSemPlsHocBootstrapTargetKindV1::HocStructuralPath => {
                     CanonicalHocBootstrapTargetKindV1::HocStructuralPath
+                }
+                GeneralSemPlsHocBootstrapTargetKindV1::ExtendedTotalEffect => {
+                    CanonicalHocBootstrapTargetKindV1::ExtendedTotalEffect
                 }
             },
             target_version: inference.target.target_version.clone(),
@@ -1551,7 +1551,7 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
     }
     let higher_order_point_estimation = if has_higher_order {
         Some(
-            run_compiled_general_sem_pls_disjoint_higher_order_point_v1(
+            run_compiled_general_sem_pls_higher_order_point_v1(
                 dataset,
                 recipe,
                 resolved_model,
@@ -1621,7 +1621,7 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
             hoc_projection_error("higher-order bootstrap requires its validated point result")
         })?;
         Some(
-            bootstrap_general_sem_pls_disjoint_higher_order_v1(
+            bootstrap_general_sem_pls_higher_order_v1(
                 dataset,
                 recipe,
                 resolved_model,

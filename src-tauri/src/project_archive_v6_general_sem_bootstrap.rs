@@ -10,9 +10,10 @@ use crate::{
     DesktopProject,
     general_sem_registry_access_v1::{
         GENERAL_SEM_INTERNAL_LABS_SURFACE as INTERNAL_LABS_SURFACE,
-        GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_access_v1,
-        decision_declares_general_sem_execution_cell_v1, general_sem_recipe_execution_surface_v1,
-        selected_general_sem_execution_cell_v1,
+        GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+        GENERAL_SEM_STANDARD_SURFACE as STANDARD_SURFACE, GeneralSemRegistryAccessErrorV1,
+        authorize_general_sem_registry_access_v1, decision_declares_general_sem_execution_cell_v1,
+        general_sem_recipe_execution_surface_v1, selected_general_sem_execution_cell_v1,
     },
 };
 use chrono::{DateTime, Utc};
@@ -792,8 +793,7 @@ pub(crate) mod tests {
         recipe.general_sem_config = Some(GeneralSemConfigV1::default());
         recipe.metadata.insert(
             "execution_surface".into(),
-            crate::general_sem_registry_access_v1::GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
-                .into(),
+            GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
         );
         recipe
             .metadata
@@ -814,8 +814,8 @@ pub(crate) mod tests {
         fixture: &GeneralSemNativeFixtureV1,
     ) -> GeneralSemProjectArchiveBootstrapRequestV1 {
         GeneralSemProjectArchiveBootstrapRequestV1 {
-            surface: INTERNAL_LABS_SURFACE.into(),
-            experimental_labs_enabled: true,
+            surface: STANDARD_SURFACE.into(),
+            experimental_labs_enabled: false,
             capability_cell: qpls_core::pls_general_recursive_effects_capability_cell_v1(),
             destination_path: destination.to_string_lossy().into_owned(),
             project_id: "60000002-0000-4000-8000-000000000001".into(),
@@ -833,8 +833,8 @@ pub(crate) mod tests {
     fn bootstrap_request_wire_is_strict_camel_case_and_denies_unknown_fields() {
         let fixture = general_sem_native_fixture_v1();
         let valid = serde_json::json!({
-            "surface": "internal_labs",
-            "experimentalLabsEnabled": true,
+            "surface": "standard",
+            "experimentalLabsEnabled": false,
             "capabilityCell": qpls_core::pls_general_recursive_effects_capability_cell_v1(),
             "destinationPath": r"D:\projects\general-sem.qpls",
             "projectId": "60000002-0000-4000-8000-000000000001",
@@ -883,9 +883,12 @@ pub(crate) mod tests {
     fn registry_denial_precedes_destination_or_project_action() {
         let directory = tempfile::tempdir().unwrap();
         let fixture = general_sem_native_fixture_v1();
-        for (index, (surface, enabled)) in [("standard", true), (INTERNAL_LABS_SURFACE, false)]
-            .into_iter()
-            .enumerate()
+        for (index, (surface, enabled)) in [
+            (INTERNAL_LABS_SURFACE, true),
+            (INTERNAL_LABS_SURFACE, false),
+        ]
+        .into_iter()
+        .enumerate()
         {
             let destination = directory.path().join(format!("blocked-{index}.qpls"));
             let mut denied = request(&destination, &fixture);
@@ -897,7 +900,7 @@ pub(crate) mod tests {
                 &outcome,
                 GeneralSemProjectArchiveBootstrapOutcomeV1::Blocked { diagnostic }
                     if diagnostic.code
-                        == "schema6_general_sem_bootstrap.internal_labs_required"
+                        == "schema6_general_sem_bootstrap.standard_surface_required"
             ));
             let wire = serde_json::to_value(&outcome).unwrap();
             assert_eq!(wire["status"], "blocked");

@@ -103,6 +103,27 @@ describe("General SEM revision persistence service", () => {
       recipeExecutionSurface: "native_general_sem_pls_standard_v1",
     });
 
+    expect(selectGeneralSemRevisionExecutionV1({
+      snapshot: point,
+      intent: {
+        kind: "add_higher_order",
+        term_id: "term:hoc",
+        output_id: "derived:hoc",
+        label: "HOC",
+        components: ["construct:a", "construct:b"],
+        approach: "disjoint_two_stage",
+        measurement_type: "reflective_reflective",
+        initial_path: {
+          relation_id: "relation:hoc_y",
+          source: "derived:hoc",
+          target: "construct:y",
+          label: "HOC effect",
+        },
+      },
+      experimentalLabsEnabled: false,
+      capabilityRegistry: standardRegistry,
+    }).expectedCapabilityCell.cell_id).toBe("qpls3.pls.general_sem_higher_order_point");
+
     const bootstrap = structuredClone(point);
     bootstrap.generalSemExecutionAuthority!.recipe.general_sem_config = {
       ...defaultGeneralSemConfigV1(),

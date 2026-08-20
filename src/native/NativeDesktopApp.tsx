@@ -1550,20 +1550,66 @@ export function NativeDesktopApp() {
       {dialog === "higher-order" ? <Suspense fallback={<UtilityDialogLoading label="Opening higher-order construct setup" />}><NativeHigherOrderDialog
         nodes={nodes}
         edges={edges}
+        requireInitialPath={Boolean(strictAuthority)}
         selectedComponentIds={nodes.filter((node) => node.selected || node.id === selectedNodeId).map((node) => node.id)}
         create={(draft) => {
           if (strictAuthority) {
             const termId = nextStrictIntentId("higher-order-term");
             const outputId = nextStrictIntentId("higher-order-output");
-            commitStrictDesktopIntent({
+            const intent = {
               kind: "add_higher_order",
               term_id: termId,
               output_id: outputId,
               label: draft.name,
               components: draft.components,
-              approach: "disjoint_two_stage",
-              measurement_type: "reflective_reflective",
-            }, "Higher-order construct");
+              approach: draft.approach ?? "disjoint_two_stage",
+              measurement_type: draft.measurementType ?? "reflective_reflective",
+              initial_path: draft.initialPath
+                ? {
+                  relation_id: nextStrictIntentId("higher-order-path"),
+                  source: draft.initialPath.direction === "hoc_to_construct"
+                    ? outputId
+                    : draft.initialPath.constructId,
+                  target: draft.initialPath.direction === "hoc_to_construct"
+                    ? draft.initialPath.constructId
+                    : outputId,
+                  label: draft.initialPath.direction === "hoc_to_construct"
+                    ? `${draft.name} effect`
+                    : `${draft.name} antecedent`,
+                }
+                : undefined,
+            } as const;
+            if (strictGeneralSemRevisionRequired) {
+              pushToast({
+                tone: "info",
+                title: "Save General SEM revision",
+                detail: "Choose a new .qpls filename. QuickPLS will preserve the current archive and revise the HOC model and RecipeV4 together.",
+              });
+              void useInternalProjectArchiveV6Session.getState()
+                .reviseGeneralSemExecutionAuthority({ intent })
+                .then((result) => {
+                  const state = useInternalProjectArchiveV6Session.getState();
+                  if (result === "saved") pushToast({
+                    tone: "success",
+                    title: "General SEM HOC revision activated",
+                    detail: state.revisionForkStatusMessage,
+                  });
+                  else if (result === "cancelled") pushToast({
+                    tone: "info",
+                    title: "General SEM HOC revision cancelled",
+                    detail: state.revisionForkStatusMessage,
+                  });
+                  else pushToast({
+                    tone: "error",
+                    title: "General SEM HOC revision blocked",
+                    detail: state.revisionForkFailure
+                      ? `${state.revisionForkFailure.message} ${state.revisionForkFailure.correctiveAction}`
+                      : state.revisionForkStatusMessage,
+                  });
+                });
+            } else {
+              commitStrictDesktopIntent(intent, "Higher-order construct");
+            }
             return { status: "created", constructId: outputId };
           }
           const result = addHigherOrderConstruct(draft);

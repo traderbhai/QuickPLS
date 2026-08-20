@@ -4,8 +4,10 @@ use crate::{
     DesktopJobs, InternalRecipeV4ExecutionFailureV1,
     general_sem_registry_access_v1::{
         GENERAL_SEM_INTERNAL_LABS_SURFACE as INTERNAL_LABS_SURFACE,
-        GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_access_v1,
-        general_sem_recipe_execution_surface_v1,
+        GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1,
+        GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+        GENERAL_SEM_STANDARD_SURFACE as STANDARD_SURFACE, GeneralSemRegistryAccessErrorV1,
+        authorize_general_sem_registry_access_v1, general_sem_recipe_execution_surface_v1,
     },
     recipe_v4_general_sem_canonical_result::{
         build_recipe_v4_general_sem_pls_canonical_result_v1,
@@ -20,8 +22,7 @@ use qpls_core::{
     AnalysisRecipeModelBindingV4, AnalysisRecipeV4, CapabilityCellReferenceV2,
     CapabilityRegistryV2, GeneralSemInferenceV1, MissingDataPolicyV4, ObservedScaleV4,
     SemCapabilityDecisionStatusV1, SemDataBindingV4, SemModelV4, SemVariableV4,
-    compile_general_sem_pls_recipe_v1, compile_unpublished_general_sem_pls_higher_order_recipe_v1,
-    pls_general_higher_order_bootstrap_capability_cell_v1,
+    compile_general_sem_pls_recipe_v1, pls_general_higher_order_bootstrap_capability_cell_v1,
     pls_general_higher_order_point_capability_cell_v1,
     pls_general_recursive_effects_capability_cell_v1, preflight_general_sem_pls_v1,
     sha256_serialized,
@@ -705,7 +706,7 @@ fn validate_exact_capability_and_data(
             "Keep the archive unchanged and report this capability-contract error.",
         )
     })?;
-    if !has_higher_order && decision.status() == SemCapabilityDecisionStatusV1::Blocked {
+    if decision.status() == SemCapabilityDecisionStatusV1::Blocked {
         let issues = decision
             .diagnostics()
             .iter()
@@ -728,23 +729,16 @@ fn validate_exact_capability_and_data(
     }
 
     validate_dataset_predicate(&resolved.dataset, &resolved.model)?;
-    let artifact = (if has_higher_order {
-        compile_unpublished_general_sem_pls_higher_order_recipe_v1(
-            &resolved.recipe,
-            Some(&resolved.model),
-        )
-    } else {
-        compile_general_sem_pls_recipe_v1(&resolved.recipe, Some(&resolved.model))
-    })
-    .map_err(|error| {
-        failure(
-            InternalLabsGeneralSemPlsFailureStageV1::Compilation,
-            "recipeId",
-            "general_sem_pls.compilation_failed",
-            format!("The resident General SEM recipe could not compile: {error}"),
-            "Correct the resident model/config and create a new General SEM project archive.",
-        )
-    })?;
+    let artifact = compile_general_sem_pls_recipe_v1(&resolved.recipe, Some(&resolved.model))
+        .map_err(|error| {
+            failure(
+                InternalLabsGeneralSemPlsFailureStageV1::Compilation,
+                "recipeId",
+                "general_sem_pls.compilation_failed",
+                format!("The resident General SEM recipe could not compile: {error}"),
+                "Correct the resident model/config and create a new General SEM project archive.",
+            )
+        })?;
     let has_interactions = !artifact.plan().two_way_interactions().is_empty();
     let expected_cell = if has_higher_order {
         match config.inference {
@@ -805,25 +799,23 @@ fn validate_exact_capability_and_data(
             "Keep the archive unchanged and repair the embedded registry before execution.",
         )
     })?;
-    if !has_higher_order {
-        let matching_cells = registry
-            .option_cells()
-            .filter(|cell| {
-                cell.capability_id == expected_cell.capability_id
-                    && cell.cell_id == expected_cell.cell_id
-                    && cell.capability_version == expected_cell.capability_version
-            })
-            .collect::<Vec<_>>();
-        if !matches!(matching_cells.as_slice(), [cell] if cell.labs_available() || cell.standard_available())
-        {
-            return Err(failure(
-                InternalLabsGeneralSemPlsFailureStageV1::Capability,
-                "capabilityCell",
-                "general_sem_pls.capability_unavailable",
-                "The exact General SEM option cell is not uniquely available in Labs or Standard.",
-                "Repair Capability Registry V2 before running this recipe.",
-            ));
-        }
+    let matching_cells = registry
+        .option_cells()
+        .filter(|cell| {
+            cell.capability_id == expected_cell.capability_id
+                && cell.cell_id == expected_cell.cell_id
+                && cell.capability_version == expected_cell.capability_version
+        })
+        .collect::<Vec<_>>();
+    if !matches!(matching_cells.as_slice(), [cell] if cell.labs_available() || cell.standard_available())
+    {
+        return Err(failure(
+            InternalLabsGeneralSemPlsFailureStageV1::Capability,
+            "capabilityCell",
+            "general_sem_pls.capability_unavailable",
+            "The exact General SEM option cell is not uniquely available in Labs or Standard.",
+            "Repair Capability Registry V2 before running this recipe.",
+        ));
     }
     let found = artifact.plan().topology().specific_directed_paths().len();
     match config.inference {
@@ -1537,10 +1529,36 @@ mod tests {
     }
 
     fn published_fixture_from(
-        fixture: GeneralSemNativeFixtureV1,
+        mut fixture: GeneralSemNativeFixtureV1,
         file_name: &str,
         capability_cell: CapabilityCellReferenceV2,
     ) -> PublishedFixtureV1 {
+        let registry = CapabilityRegistryV2::embedded().unwrap();
+        let cell = registry
+            .option_cells()
+            .find(|cell| {
+                cell.capability_id == capability_cell.capability_id
+                    && cell.cell_id == capability_cell.cell_id
+                    && cell.capability_version == capability_cell.capability_version
+            })
+            .unwrap();
+        let (surface, experimental_labs_enabled, recipe_surface) = if cell.standard_available() {
+            (
+                STANDARD_SURFACE,
+                false,
+                GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+            )
+        } else {
+            (
+                INTERNAL_LABS_SURFACE,
+                true,
+                GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1,
+            )
+        };
+        fixture
+            .recipe
+            .metadata
+            .insert("execution_surface".into(), recipe_surface.into());
         let directory = tempfile::tempdir().unwrap();
         let destination = directory.path().join(file_name);
         let receipt = create_populated_general_sem_project_archive_v6(
@@ -1556,8 +1574,8 @@ mod tests {
         PublishedFixtureV1 {
             _directory: directory,
             request: InternalLabsGeneralSemPlsJobRequestV1 {
-                surface: INTERNAL_LABS_SURFACE.into(),
-                experimental_labs_enabled: true,
+                surface: surface.into(),
+                experimental_labs_enabled,
                 archive_path: receipt.destination_archive_path,
                 expected_archive_sha256: receipt.destination_archive_sha256,
                 project_id: receipt.project_id.to_string(),
@@ -1938,9 +1956,18 @@ mod tests {
             state.0.clone(),
             admission(job_id),
         );
+        let snapshot = state
+            .0
+            .lock()
+            .unwrap()
+            .get(&job_id)
+            .unwrap()
+            .snapshot
+            .clone();
         assert_eq!(
-            state.0.lock().unwrap().get(&job_id).unwrap().snapshot.state,
-            InternalLabsGeneralSemPlsJobStateV1::Completed
+            snapshot.state,
+            InternalLabsGeneralSemPlsJobStateV1::Completed,
+            "General SEM job failed: {snapshot:?}"
         );
         take_completed_result(job_id, &state).unwrap()
     }
@@ -2016,9 +2043,18 @@ mod tests {
             state.0.clone(),
             admission(job_id),
         );
+        let snapshot = state
+            .0
+            .lock()
+            .unwrap()
+            .get(&job_id)
+            .unwrap()
+            .snapshot
+            .clone();
         assert_eq!(
-            state.0.lock().unwrap().get(&job_id).unwrap().snapshot.state,
-            InternalLabsGeneralSemPlsJobStateV1::Completed
+            snapshot.state,
+            InternalLabsGeneralSemPlsJobStateV1::Completed,
+            "HOC job failed: {snapshot:?}"
         );
         let completed = take_completed_result(job_id, &state).unwrap();
         (published, completed)
@@ -2489,22 +2525,21 @@ mod tests {
     }
 
     #[test]
-    fn historical_labs_recipe_cannot_be_relabelled_for_standard_execution() {
+    fn standard_recipe_cannot_be_relabelled_for_labs_execution() {
         let published = published_fixture();
-        let resolved = resolve_archive_authority(&published.request).unwrap();
         let mut relabelled = published.request.clone();
-        relabelled.surface = "standard".into();
-        relabelled.experimental_labs_enabled = false;
+        relabelled.surface = INTERNAL_LABS_SURFACE.into();
+        relabelled.experimental_labs_enabled = true;
 
-        let failure = validate_exact_capability_and_data(&relabelled, &resolved).unwrap_err();
+        let failure = match resolve_archive_authority(&relabelled) {
+            Err(failure) => failure,
+            Ok(_) => panic!("a Standard cell was accepted on the Labs execution surface"),
+        };
         assert_eq!(
             failure.stage,
-            InternalLabsGeneralSemPlsFailureStageV1::ArchiveAuthority
+            InternalLabsGeneralSemPlsFailureStageV1::Access
         );
-        assert_eq!(
-            failure.code,
-            "general_sem_pls.recipe_execution_surface_mismatch"
-        );
+        assert_eq!(failure.code, "general_sem_pls.standard_surface_required");
     }
 
     #[test]
@@ -2756,12 +2791,19 @@ mod tests {
             let results = document.general_sem_results.as_ref().unwrap();
             assert_eq!(results.higher_order_stages.len(), 2);
             assert!(results.higher_order_inference_receipt.is_none());
+            let final_stage = results
+                .higher_order_stages
+                .iter()
+                .find(|stage| {
+                    stage.kind == qpls_core::CanonicalHocStageKindV1::HigherOrderEstimation
+                })
+                .unwrap();
             assert_eq!(
-                results.higher_order_stages[1].measurement_type.as_ref(),
+                final_stage.measurement_type.as_ref(),
                 Some(&measurement_type)
             );
             assert_eq!(
-                results.higher_order_stages[1].approach.as_ref(),
+                final_stage.approach.as_ref(),
                 Some(&HigherOrderConstructionApproachV4::DisjointTwoStage)
             );
             let expected_component_kind = match measurement_type {
@@ -2775,7 +2817,7 @@ mod tests {
                 }
             };
             assert_eq!(
-                results.higher_order_stages[1]
+                final_stage
                     .relation_estimates
                     .iter()
                     .filter(|relation| relation.kind == Some(expected_component_kind))
@@ -2787,7 +2829,7 @@ mod tests {
             }));
             assert!(document.tables.iter().any(|table| {
                 table.id == "general_sem_higher_order_targets"
-                    && table.rows.len() == results.higher_order_stages[1].relation_estimates.len()
+                    && table.rows.len() == final_stage.relation_estimates.len()
             }));
             assert!(
                 document
@@ -2815,9 +2857,10 @@ mod tests {
         let receipt = results.higher_order_inference_receipt.as_ref().unwrap();
         assert_eq!(receipt.target_ids.len(), 4);
         assert_eq!(
-            results.higher_order_stages[1]
-                .relation_estimates
+            results
+                .higher_order_stages
                 .iter()
+                .flat_map(|stage| stage.relation_estimates.iter())
                 .filter(|relation| relation.value.standard_error.is_some())
                 .count(),
             receipt.target_ids.len()
@@ -2844,6 +2887,7 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1(),),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2868,6 +2912,7 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1(),),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -2882,6 +2927,7 @@ mod tests {
             ProjectSchema6ResultAppendRequestV1 {
                 surface: INTERNAL_LABS_SURFACE.into(),
                 experimental_labs_enabled: true,
+                capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1()),
                 archive_path: published.request.archive_path.clone(),
                 expected_source_sha256: published.request.expected_archive_sha256.clone(),
                 recipe: None,
@@ -2898,6 +2944,7 @@ mod tests {
             read_internal_project_schema6_canonical_results_v2(ProjectSchema6ResultReadRequestV1 {
                 surface: INTERNAL_LABS_SURFACE.into(),
                 experimental_labs_enabled: true,
+                capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1()),
                 archive_path: published.request.archive_path.clone(),
                 expected_source_sha256: append_receipt.updated_document_sha256,
             });
@@ -3000,8 +3047,8 @@ mod tests {
             stale_method.provenance.method_version = "stale_moderation_method".into();
             let stale_method_append = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_point_capability_cell_v1(),
                     ),
@@ -3035,8 +3082,8 @@ mod tests {
                     .unwrap();
             let mismatched_append = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_point_capability_cell_v1(),
                     ),
@@ -3089,8 +3136,8 @@ mod tests {
             .unwrap();
             let coherent_focal_append = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_point_capability_cell_v1(),
                     ),
@@ -3108,8 +3155,8 @@ mod tests {
 
             let append = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_point_capability_cell_v1(),
                     ),
@@ -3146,7 +3193,7 @@ mod tests {
 
             let wrong_owner_read = read_internal_project_schema6_canonical_results_v2(
                 ProjectSchema6ResultReadRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
+                    surface: STANDARD_SURFACE.into(),
                     experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
@@ -3164,7 +3211,7 @@ mod tests {
 
             let reopened = read_internal_project_schema6_canonical_results_v2(
                 ProjectSchema6ResultReadRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
+                    surface: STANDARD_SURFACE.into(),
                     experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_point_capability_cell_v1(),
@@ -3256,8 +3303,8 @@ mod tests {
             stale_method.provenance.method_version = "stale_moderation_bootstrap_method".into();
             let stale_method_outcome = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
                     ),
@@ -3284,8 +3331,8 @@ mod tests {
                 .capability_cell = general_sem_multiple_moderation_point_capability_cell_v1();
             let capability_outcome = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
                     ),
@@ -3317,8 +3364,8 @@ mod tests {
                     .unwrap();
             let table_outcome = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
                     ),
@@ -3336,8 +3383,8 @@ mod tests {
 
             let append = append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_bootstrap_capability_cell_v1(),
                     ),
@@ -3358,7 +3405,7 @@ mod tests {
 
             let reopened = read_internal_project_schema6_canonical_results_v2(
                 ProjectSchema6ResultReadRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
+                    surface: STANDARD_SURFACE.into(),
                     experimental_labs_enabled: false,
                     capability_cell: Some(
                         general_sem_multiple_moderation_bootstrap_capability_cell_v1(),

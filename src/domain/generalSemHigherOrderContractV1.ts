@@ -63,9 +63,9 @@ function derivedKind(term: SemDerivedTermV4): string {
 }
 
 /**
- * Frontend mirror of the compiler-only HOC predicate. It reserves exact cell
- * identities and recovery diagnostics, but deliberately blocks execution
- * until the native staged runner and Registry entries exist.
+ * Frontend mirror of the bounded HOC compiler/runtime predicate. Exact cell
+ * identities are returned only when the resident model fits the supported
+ * approach/type/topology matrix.
  */
 export function preflightGeneralSemHocContractV1(
   model: SemModelV4,
@@ -94,14 +94,14 @@ export function preflightGeneralSemHocContractV1(
     description: "The bounded compiler binds one SemModelV4 HOC to explicit Mode A/B semantics, stable generated identities, and ordered approach-specific stages.",
   }, {
     evidence_id: "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_point:general_sem_pls_higher_order_point_v1",
-    description: "The exact HOC point identity is reserved; Registry activation remains pending until the native staged runner is connected.",
+    description: "The exact HOC point identity owns approach-specific staged PLS execution and canonical result authority.",
   }];
   if (bootstrapRequested) evidence.push({
     evidence_id: "compiler:recipe_v4_to_compiled_pls_plan_v3_higher_order_full_model_case_bootstrap_v1",
     description: "The supplemental HOC bootstrap compiler binds indexed raw-case resampling to complete approach-specific stage refitting.",
   }, {
     evidence_id: "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_full_model_case_bootstrap:general_sem_pls_higher_order_full_model_case_bootstrap_v1",
-    description: "The exact HOC bootstrap identity is reserved; Registry activation remains pending until complete staged refitting is connected.",
+    description: "The exact HOC bootstrap identity owns indexed full-model case refitting across every compiled HOC stage.",
   });
 
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
@@ -185,14 +185,6 @@ export function preflightGeneralSemHocContractV1(
   }
 
   const contractCompiles = diagnostics.length === 0;
-  if (contractCompiles) {
-    diagnostics.push(diagnostic(
-      "sem.capability.pls.higher_order_runtime_not_connected",
-      hoc.id,
-      "The exact HOC contract compiles, but its staged native estimator is not connected yet.",
-      "Keep the request saved until the matching runner and Registry cell are connected and qualified.",
-    ));
-  }
   return {
     present: true,
     contractCompiles,

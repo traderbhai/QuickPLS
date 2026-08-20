@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "1034cd11-a098-445c-920e-1c008f547fe1",
+  "id": "008d2d98-bfbb-4612-8474-557627b64001",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000083",
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-08-18T00:38:15.757380200Z",
-    "completed_at": "2026-08-18T00:38:15.772459200Z"
+    "started_at": "2026-08-20T17:05:32.165010400Z",
+    "completed_at": "2026-08-20T17:05:32.171571Z"
   },
   "diagnostics": [
     {

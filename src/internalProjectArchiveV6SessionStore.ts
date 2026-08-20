@@ -39,10 +39,10 @@ import { parseStandardSemModelV4AuthorityRecordV1 } from "./domain/standardSemMo
 import type { StandardSemModelV4AuthorityResolveResultV1 } from "./domain/standardSemModelV4AuthorityCas";
 import {
   reduceStandardSemModelV4AuthorityV1,
-  type AddGeneralSemInteractionV2EditorIntentV1,
 } from "./domain/standardSemModelV4Authority";
 import type {
   GeneralSemExecutionAuthorityRevisionIdentityV1,
+  GeneralSemExecutionAuthorityRevisionEditorIntentV1,
   GeneralSemExecutionAuthoritySourcePinV1,
   InternalGeneralSemExecutionAuthorityRevisionDiagnosticV1,
 } from "./domain/internalGeneralSemExecutionAuthorityRevisionV1";
@@ -163,7 +163,7 @@ export interface InternalProjectArchiveV6GeneralSemRevisionExecutorInputV1 {
   snapshot: InternalProjectArchiveV6ReadSnapshotV1;
   source: GeneralSemExecutionAuthoritySourcePinV1;
   revision: GeneralSemExecutionAuthorityRevisionIdentityV1;
-  intent: AddGeneralSemInteractionV2EditorIntentV1;
+  intent: GeneralSemExecutionAuthorityRevisionEditorIntentV1;
   revisionNumberHint: number;
   experimentalLabsEnabled: boolean;
 }
@@ -173,7 +173,7 @@ export type InternalProjectArchiveV6GeneralSemRevisionExecutorV1 = (
 ) => Promise<InternalGeneralSemExecutionAuthorityRevisionPersistOutcomeV1 | null>;
 
 export interface InternalProjectArchiveV6GeneralSemRevisionOptionsV1 {
-  intent: AddGeneralSemInteractionV2EditorIntentV1;
+  intent: GeneralSemExecutionAuthorityRevisionEditorIntentV1;
   projectId?: string;
   projectName?: string;
   modelId?: string;
@@ -657,7 +657,7 @@ export const useInternalProjectArchiveV6Session =
           set({
             revisionForkFailure: {
               code: "schema6_general_sem_revision.revised_model_not_ready",
-              message: "The atomic interaction edit would not produce a calculation-ready SemModelV4.",
+              message: "The atomic scientific edit would not produce a calculation-ready SemModelV4.",
               correctiveAction: "Resolve the reported model readiness issues before saving a General SEM revision.",
               authoringIssues: [],
               readinessIssues: [...preview.readiness_issues],

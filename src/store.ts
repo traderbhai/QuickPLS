@@ -35,7 +35,14 @@ import {
 } from "./domain/semModelV4Authoring";
 import { buildNativeRecipeModel } from "./native/nativeAnalysisRecipe";
 import { currentNativeModelPresentation, nativeModelSnapshotFromCanonical } from "./native/nativeCanonicalProject";
-import { nativeHigherOrderCreationBlocker, nativeHigherOrderDraftProblems, type NativeHigherOrderDraft } from "./native/nativeHigherOrder";
+import {
+  nativeHigherOrderCreationBlocker,
+  nativeHigherOrderDraftApproach,
+  nativeHigherOrderDraftMeasurementType,
+  nativeHigherOrderDraftProblems,
+  nativeHigherOrderHocMode,
+  type NativeHigherOrderDraft,
+} from "./native/nativeHigherOrder";
 import { compareAndSwapStandardSemModelV4Authority } from "./services/standardSemModelV4AuthorityService";
 import type { StandardSemModelV4AuthorityCasDiagnosticV1, StandardSemModelV4AuthorityCasOutcomeV1 } from "./domain/standardSemModelV4AuthorityCas";
 import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, GeneralSemProjectDraftModeV1, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeProcessGraphRelationshipConfig, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, SemModelV4AuthoringEndpoint, SemModelV4ConstructAuthoring, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
@@ -1442,7 +1449,14 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         };
         return state;
       }
-      const scopeBlocker = nativeHigherOrderCreationBlocker(state.nodes, state.edges);
+      const approach = nativeHigherOrderDraftApproach(draft);
+      const measurementType = nativeHigherOrderDraftMeasurementType(draft);
+      const scopeBlocker = nativeHigherOrderCreationBlocker(
+        state.nodes,
+        state.edges,
+        approach,
+        measurementType,
+      );
       if (scopeBlocker) {
         result = { status: "blocked", reason: "scope_unavailable", detail: scopeBlocker };
         return state;
@@ -1471,13 +1485,17 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
             data: {
               label: draft.name.trim(),
               shortName: draft.shortName.trim(),
-              mode: "reflective",
+              mode: nativeHigherOrderHocMode(measurementType),
               indicators: [],
               semantic: "higher_order",
               higherOrder: {
                 id,
                 components: [...draft.components],
-                method: "two_stage",
+                method: approach === "repeated_indicators" || approach === "extended_repeated_indicators"
+                  ? "repeated_indicators"
+                  : "two_stage",
+                canonicalApproach: approach,
+                measurementType,
                 stage_one_recipe: null,
               },
             },
@@ -1495,7 +1513,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       return node.data.semantic === "interaction"
         ? { ...node, data: { ...data, mode: "formative", indicators: [], semantic: "interaction", interaction: node.data.interaction } }
         : node.data.semantic === "higher_order"
-          ? { ...node, data: { ...data, mode: "reflective", indicators: [], semantic: "higher_order", higherOrder: node.data.higherOrder } }
+          ? { ...node, data: { ...data, mode: nativeHigherOrderHocMode(node.data.higherOrder?.measurementType ?? "reflective_reflective"), indicators: [], semantic: "higher_order", higherOrder: node.data.higherOrder } }
         : { ...node, data };
     }),
   })),

@@ -920,7 +920,11 @@ export function preflightGeneralSemPlsV1(
       code: "sem.capability.pls.experimental_labs",
       severity: "info",
       subject: null,
-      message: hasInteractions
+      message: hasHigherOrder
+        ? bootstrapRequested
+          ? "General SEM higher-order full-model percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+          : "General SEM higher-order point estimation passes the bounded exact-cell compiler preflight."
+        : hasInteractions
         ? bootstrapRequested
           ? "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
           : "General SEM simultaneous two-way moderation point estimation passes the bounded exact-cell compiler preflight."
@@ -931,7 +935,11 @@ export function preflightGeneralSemPlsV1(
     }],
     evidence,
     summary: "PLS-SEM can compile this exact Registry-governed request.",
-    explanation: hasInteractions
+    explanation: hasHigherOrder
+      ? bootstrapRequested
+        ? "The exact HOC point cell remains the primary artifact authority and the supplemental HOC cell authorizes indexed raw-case resampling with every compiled stage refitted before bounded target inference is published."
+        : "The compiler binds the authored HOC to its approach-specific stages, generated identities, component loading-or-weight interpretation, authored paths, and canonical stage receipts."
+      : hasInteractions
       ? bootstrapRequested
         ? "The point moderation cell remains the primary artifact authority and the supplemental exact cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
         : "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."

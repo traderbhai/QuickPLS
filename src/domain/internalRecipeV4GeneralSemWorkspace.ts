@@ -31,6 +31,10 @@ import {
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
   preflightGeneralSemPlsV1,
 } from "./generalSemCapabilityPreflightV1";
+import {
+  GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CELL_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CELL_V1,
+} from "./generalSemHigherOrderContractV1";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "./internalProjectArchiveV6Read";
 import type {
   InternalProjectSchema6CanonicalResultEntryV1,
@@ -75,6 +79,12 @@ export const GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1 =
 export const GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1 =
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1;
 
+export const GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1 =
+  GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CELL_V1;
+
+export const GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1 =
+  GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CELL_V1;
+
 const GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1 = Object.freeze({
   registry_schema_version: 2,
   capability_id: "smartpls.pls_algorithm",
@@ -87,6 +97,8 @@ const GENERAL_SEM_PLS_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recip
 const GENERAL_SEM_PLS_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1" as const;
 const GENERAL_SEM_PLS_MODERATION_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1" as const;
 const GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_percentile_bootstrap_execution_v1" as const;
+const GENERAL_SEM_PLS_HIGHER_ORDER_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_disjoint_higher_order_point_execution_v1" as const;
+const GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_disjoint_higher_order_bootstrap_execution_v1" as const;
 
 export interface GeneralSemPlsEngineOptionsV1 {
   tolerance: number;
@@ -242,6 +254,8 @@ export function generalSemWorkspaceProductAccessV1(
     GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1,
     GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
     GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+    GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1,
+    GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1,
   ];
   for (const capabilityCell of cells) {
     try {
@@ -1035,7 +1049,9 @@ export type GeneralSemPlsExecutionKindV1 =
   | "mediation_point"
   | "mediation_bootstrap"
   | "multiple_two_way_moderation_point"
-  | "multiple_two_way_moderation_bootstrap";
+  | "multiple_two_way_moderation_bootstrap"
+  | "higher_order_point"
+  | "higher_order_bootstrap";
 
 export interface GeneralSemPlsExecutionCapabilityV1 {
   readonly kind: GeneralSemPlsExecutionKindV1;
@@ -1049,6 +1065,12 @@ export function generalSemPlsRequestedCapabilityCellV1(
   config: GeneralSemConfigV1,
 ): CapabilityCellReferenceV2 {
   const moderation = model.derived_terms.some((term) => term.kind === "interaction_v2");
+  const higherOrder = model.derived_terms.some((term) => term.kind === "higher_order");
+  if (higherOrder) {
+    return config.inference.kind === "case_bootstrap"
+      ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1;
+  }
   return moderation
     ? config.inference.kind === "case_bootstrap"
       ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
@@ -1159,6 +1181,7 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
     .slice()
     .sort((left, right) => compareUtf8StringsV1(left.id, right.id));
   const moderation = interactionTerms.length > 0;
+  const higherOrder = input.model.derived_terms.some((term) => term.kind === "higher_order");
   const capabilityCell = generalSemPlsRequestedCapabilityCellV1(input.model, input.config);
   if (input.decision.estimator_id !== "qpls.pls_sem.v3"
     || (input.decision.status !== "experimental" && input.decision.status !== "supported")) {
@@ -1170,11 +1193,17 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
     );
   }
   const expectedCapabilityCells = [
-    moderation ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1 : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
+    higherOrder
+      ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
+      : moderation
+        ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
+        : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
     ...(input.config.inference.kind === "case_bootstrap"
-      ? [moderation
-        ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
-        : GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1]
+      ? [higherOrder
+        ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1
+        : moderation
+          ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+          : GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1]
       : []),
   ].sort(compareCapabilityCellsV1);
   if (input.decision.capability_cells.length !== expectedCapabilityCells.length
@@ -1189,7 +1218,11 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
     );
   }
   return {
-    kind: moderation
+    kind: higherOrder
+      ? input.config.inference.kind === "case_bootstrap"
+        ? "higher_order_bootstrap"
+        : "higher_order_point"
+      : moderation
       ? input.config.inference.kind === "case_bootstrap"
         ? "multiple_two_way_moderation_bootstrap"
         : "multiple_two_way_moderation_point"
@@ -1656,6 +1689,7 @@ export function validateGeneralSemPlsCompletedExecutionV1(
     "stage_one_model_scientific_sha256", "source_dataset_fingerprint",
     "general_sem_config_sha256", "point_estimation", "requested_effects",
     "interaction_point_estimation", "bootstrap_inference", "moderation_bootstrap_inference",
+    "higher_order_point_estimation", "higher_order_bootstrap_inference",
   ], "completed.analyticalResult");
   if (analytical.schema_version !== 1) completedExecutionMismatchV1("completed.analyticalResult.schema_version", "The analytical result schema is not General SEM execution result v1.");
   const analyticalCell = capabilityCellAtV1(analytical.capability_cell, "completed.analyticalResult.capability_cell");
@@ -1705,13 +1739,26 @@ export function validateGeneralSemPlsCompletedExecutionV1(
     analytical,
     "moderation_bootstrap_inference",
   ) && analytical.moderation_bootstrap_inference !== null;
+  const hasHigherOrderPointResult = Object.prototype.hasOwnProperty.call(
+    analytical,
+    "higher_order_point_estimation",
+  ) && analytical.higher_order_point_estimation !== null;
+  const hasHigherOrderBootstrapResult = Object.prototype.hasOwnProperty.call(
+    analytical,
+    "higher_order_bootstrap_inference",
+  ) && analytical.higher_order_bootstrap_inference !== null;
   const expectedInteractionResult = execution.kind === "multiple_two_way_moderation_point"
     || execution.kind === "multiple_two_way_moderation_bootstrap";
   const expectedBootstrapResult = execution.kind === "mediation_bootstrap";
   const expectedModerationBootstrapResult = execution.kind === "multiple_two_way_moderation_bootstrap";
+  const expectedHigherOrderPointResult = execution.kind === "higher_order_point"
+    || execution.kind === "higher_order_bootstrap";
+  const expectedHigherOrderBootstrapResult = execution.kind === "higher_order_bootstrap";
   if (hasInteractionResult !== expectedInteractionResult
     || hasBootstrapResult !== expectedBootstrapResult
-    || hasModerationBootstrapResult !== expectedModerationBootstrapResult) {
+    || hasModerationBootstrapResult !== expectedModerationBootstrapResult
+    || hasHigherOrderPointResult !== expectedHigherOrderPointResult
+    || hasHigherOrderBootstrapResult !== expectedHigherOrderBootstrapResult) {
     completedExecutionMismatchV1("completed.analyticalResult", "The analytical interaction/bootstrap payload shape contradicts the selected execution kind.");
   }
 
@@ -1730,6 +1777,21 @@ export function validateGeneralSemPlsCompletedExecutionV1(
     && generalSemResults.interaction_effects !== undefined
     && generalSemResults.interaction_effects !== null,
   );
+  const hasCanonicalHigherOrderPayload = Boolean(
+    generalSemResults
+    && Array.isArray(generalSemResults.higher_order_stages)
+    && generalSemResults.higher_order_stages.length > 0,
+  );
+
+  if (expectedHigherOrderPointResult) {
+    if (!hasCanonicalHigherOrderPayload || expectedInteractionIds.length > 0 || expectedFocalRelationIds.length > 0) {
+      completedExecutionMismatchV1(
+        "completed.canonicalDocument.general_sem_results.higher_order_stages",
+        "A higher-order execution requires its canonical staged payload and no interaction identities.",
+      );
+    }
+    return;
+  }
 
   if (!expectedInteractionResult) {
     if (expectedInteractionIds.length > 0 || expectedFocalRelationIds.length > 0) {
@@ -1808,13 +1870,18 @@ export function validateGeneralSemPlsCompletedExecutionV1(
 function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKindV1) {
   const moderation = kind === "multiple_two_way_moderation_point"
     || kind === "multiple_two_way_moderation_bootstrap";
-  const primaryDocumentCell = moderation
-    ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
-    : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
+  const higherOrder = kind === "higher_order_point" || kind === "higher_order_bootstrap";
+  const primaryDocumentCell = higherOrder
+    ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
+    : moderation
+      ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
   const requestCell = kind === "mediation_bootstrap"
     ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
     : kind === "multiple_two_way_moderation_bootstrap"
       ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+    : kind === "higher_order_bootstrap"
+      ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1
     : primaryDocumentCell;
   const documentCells = [
     GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1,
@@ -1823,6 +1890,8 @@ function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKind
       ? [GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1]
       : kind === "multiple_two_way_moderation_bootstrap"
         ? [GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1]
+        : kind === "higher_order_bootstrap"
+          ? [GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1]
         : []),
   ].sort(compareCapabilityCellsV1);
   return {
@@ -1836,6 +1905,10 @@ function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKind
         ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
       : kind === "mediation_bootstrap"
         ? GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1
+      : kind === "higher_order_bootstrap"
+        ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1.capability_version
+      : kind === "higher_order_point"
+        ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1.capability_version
         : GENERAL_SEM_PLS_POINT_METHOD_VERSION_V1,
     adapterVersion: kind === "multiple_two_way_moderation_bootstrap"
       ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_ADAPTER_VERSION_V1
@@ -1843,6 +1916,10 @@ function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKind
         ? GENERAL_SEM_PLS_MODERATION_POINT_ADAPTER_VERSION_V1
       : kind === "mediation_bootstrap"
         ? GENERAL_SEM_PLS_BOOTSTRAP_ADAPTER_VERSION_V1
+      : kind === "higher_order_bootstrap"
+        ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_ADAPTER_VERSION_V1
+      : kind === "higher_order_point"
+        ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_ADAPTER_VERSION_V1
         : GENERAL_SEM_PLS_POINT_ADAPTER_VERSION_V1,
   } as const;
 }

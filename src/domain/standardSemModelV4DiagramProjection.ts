@@ -282,6 +282,7 @@ function constructData(
     : term.approach === "hybrid" ? "hybrid" : "two_stage";
   return {
     ...base,
+    mode: term.measurement_type.endsWith("_reflective") ? "reflective" : "formative",
     semantic: "higher_order",
     higherOrder: {
       id: term.id,

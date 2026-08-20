@@ -45,9 +45,9 @@ class ComplexityPerformanceContractV2Tests(unittest.TestCase):
         report = self.context()
         self.assertTrue(report["contract_valid"], report["errors"])
         self.assertEqual(report["active_row_count"], 43)
-        self.assertEqual(report["active_option_cell_count"], 49)
-        self.assertEqual(report["resolved_capability_count"], 49)
-        self.assertEqual(report["resolved_budget_count"], 490)
+        self.assertEqual(report["active_option_cell_count"], 51)
+        self.assertEqual(report["resolved_capability_count"], 51)
+        self.assertEqual(report["resolved_budget_count"], 510)
         self.assertEqual(report["expected_capability_current_measurements"], 784)
         self.assertEqual(report["expected_ui_current_measurements"], 8)
 

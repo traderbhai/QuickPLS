@@ -4,7 +4,8 @@
 //! exact Rust compiler contracts. It never mutates or persists project data.
 
 use crate::general_sem_registry_access_v1::{
-    GENERAL_SEM_INTERNAL_LABS_SURFACE as INTERNAL_LABS_SURFACE, GeneralSemRegistryAccessErrorV1,
+    GENERAL_SEM_INTERNAL_LABS_SURFACE as INTERNAL_LABS_SURFACE,
+    GENERAL_SEM_STANDARD_SURFACE as STANDARD_SURFACE, GeneralSemRegistryAccessErrorV1,
     authorize_general_sem_registry_access_v1, decision_declares_general_sem_execution_cell_v1,
     selected_general_sem_execution_cell_v1,
 };
@@ -351,8 +352,8 @@ mod tests {
     fn request() -> GeneralSemEstimatorPreflightRequestV1 {
         let (project, model) = marked_project_and_model();
         GeneralSemEstimatorPreflightRequestV1 {
-            surface: INTERNAL_LABS_SURFACE.into(),
-            experimental_labs_enabled: true,
+            surface: STANDARD_SURFACE.into(),
+            experimental_labs_enabled: false,
             capability_cell: qpls_core::pls_general_recursive_effects_capability_cell_v1(),
             project,
             model,
@@ -381,11 +382,12 @@ mod tests {
     #[test]
     fn labs_gate_unmarked_and_upgraded_projects_fail_closed() {
         let mut denied = request();
-        denied.experimental_labs_enabled = false;
+        denied.surface = INTERNAL_LABS_SURFACE.into();
+        denied.experimental_labs_enabled = true;
         assert!(matches!(
             preflight_general_sem_estimators(denied),
             GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic }
-                if diagnostic.code.ends_with("internal_labs_required")
+                if diagnostic.code.ends_with("standard_surface_required")
         ));
 
         let mut unmarked = request();

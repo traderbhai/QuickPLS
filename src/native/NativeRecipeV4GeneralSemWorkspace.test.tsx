@@ -696,6 +696,8 @@ describe("General SEM native workspace accessibility", () => {
     expect(generalSemCalculationActionLabelV1(true, true)).toBe("Calculate moderation bootstrap");
     expect(generalSemCalculationActionLabelV1(true, false)).toBe("Calculate moderation point estimates");
     expect(generalSemCalculationActionLabelV1(false, true)).toBe("Calculate PLS effects");
+    expect(generalSemCalculationActionLabelV1(false, false, true)).toBe("Calculate HOC point estimates");
+    expect(generalSemCalculationActionLabelV1(false, true, true)).toBe("Calculate HOC bootstrap");
     expect(html).not.toContain("sem.capability.pls.derived_shape_not_executable");
     expect(html).toContain("Ready for QuickPLS engine verification");
 

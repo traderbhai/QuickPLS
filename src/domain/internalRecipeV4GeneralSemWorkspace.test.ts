@@ -21,7 +21,6 @@ import {
   GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
-  GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1,
   GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
   generalSemConfigFromEngineV1,
   generalSemJobRequestFromReceiptV1,
@@ -1319,7 +1318,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       method_config: { kind: "pls_algorithm" },
       general_sem_config: config,
       metadata: {
-        execution_surface: "native_general_sem_pls_labs_v1",
+        execution_surface: "native_general_sem_pls_standard_v1",
         general_sem_generation: "general_sem_v1",
       },
     });
@@ -1387,15 +1386,15 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     expect(restored.engine).toStrictEqual(engine);
     expect(restored.receipt.residentRecipeDocumentSha256).toBe(nativeRecipeDocumentSha256);
     expect(restored.executionAccess).toStrictEqual({
-      surface: "internal_labs",
-      experimentalLabsEnabled: true,
+      surface: "standard",
+      experimentalLabsEnabled: false,
     });
     expect(restored.readAccess).toStrictEqual({
-      surface: "internal_labs",
+      surface: "standard",
       experimentalLabsEnabled: false,
     });
     expect(restored.capabilityCell).toStrictEqual(GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1);
-    expect(restored.recipeExecutionSurface).toBe(GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1);
+    expect(restored.recipeExecutionSurface).toBe(GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1);
     expect(restored.legacyLabsRecipeOnStandardCell).toBe(false);
     const promoted = rehydrateGeneralSemExecutionAuthorityV1(snapshot, registryWithPointCell({
       surface: "standard",
@@ -1407,11 +1406,11 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       experimentalLabsEnabled: false,
     });
     expect(promoted.readAccess).toStrictEqual({
-      surface: "internal_labs",
+      surface: "standard",
       experimentalLabsEnabled: false,
     });
-    expect(promoted.recipeExecutionSurface).toBe(GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1);
-    expect(promoted.legacyLabsRecipeOnStandardCell).toBe(true);
+    expect(promoted.recipeExecutionSurface).toBe(GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1);
+    expect(promoted.legacyLabsRecipeOnStandardCell).toBe(false);
   });
 
   it("builds a new Standard recipe from the exact Registry cell and never relabels a historical Labs recipe", () => {
@@ -1604,7 +1603,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     })).toThrowError(expect.objectContaining({ code: "general_sem.wire.canonical_invalid" }));
   });
 
-  it("reopens an existing Labs archive without relabelling its archive access contract", async () => {
+  it("reopens an existing result through its current exact-cell read authorization", async () => {
     const canonical = moderationCanonicalDocument();
     expect(validateCanonicalResultDocumentV2(canonical)).toEqual({ passed: true, errors: [] });
     const completed = parseGeneralSemPlsCompletedResultV1({
@@ -1660,7 +1659,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       }],
     });
     expect(read).toHaveBeenCalledWith(expect.objectContaining({
-      surface: "internal_labs",
+      surface: "standard",
       experimentalLabsEnabled: false,
       capabilityCell: GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
       expectedSourceSha256: "8".repeat(64),
@@ -1699,7 +1698,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     const append = vi.fn().mockResolvedValue({ status: "ok" });
     await appendGeneralSemResultV1(completed, fixture.execution, true, append);
     expect(append).toHaveBeenCalledWith(expect.objectContaining({
-      surface: "internal_labs",
+      surface: "standard",
       capabilityCell: GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
       canonicalDocument: completed.canonicalDocument,
     }));

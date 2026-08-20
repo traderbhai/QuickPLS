@@ -181,9 +181,7 @@ pub enum EstimationError {
     },
     #[error("OLS HC3 covariance is undefined for {subject}: {reason}")]
     OlsHc3Invalid { subject: String, reason: String },
-    #[error(
-        "NCA CR-FDH requires at least two distinct CE-FDH peers; found {peer_count}"
-    )]
+    #[error("NCA CR-FDH requires at least two distinct CE-FDH peers; found {peer_count}")]
     NcaCrFdhInsufficientPeers { peer_count: usize },
     #[error("IPMA performance is undefined for {subject}: {reason}")]
     IpmaInvalidPerformanceRange { subject: String, reason: String },
@@ -12349,10 +12347,7 @@ fn robust_covariance_hc3(
     for (row_index, row) in design.iter().enumerate() {
         let leverage = dot(row, &matrix_vector_product(xtx_inv, row));
         let denominator = 1.0 - leverage;
-        if !leverage.is_finite()
-            || !denominator.is_finite()
-            || denominator <= LEVERAGE_TOLERANCE
-        {
+        if !leverage.is_finite() || !denominator.is_finite() || denominator <= LEVERAGE_TOLERANCE {
             return Err(EstimationError::OlsHc3Invalid {
                 subject: subject.into(),
                 reason: format!(
@@ -18641,14 +18636,7 @@ mod tests {
         );
 
         assert_eq!(
-            ols_regression(
-                &[vec![0.0, 1.0]],
-                &[0.0, 1.0],
-                &["x".into()],
-                "y",
-                0.95,
-            )
-            .unwrap_err(),
+            ols_regression(&[vec![0.0, 1.0]], &[0.0, 1.0], &["x".into()], "y", 0.95,).unwrap_err(),
             EstimationError::OlsNonPositiveResidualDegreesOfFreedom {
                 subject: "y".into(),
                 observations: 2,
@@ -18777,11 +18765,14 @@ mod tests {
             )
             .unwrap();
             let error = estimate_pls(&data, &logistic_recipe(&data)).unwrap_err();
-            assert!(matches!(
-                error,
-                EstimationError::Numerical(ref message)
-                    if message == "logistic regression produced extreme fitted probabilities; possible separation or unstable scaling"
-            ), "{name}: {error:?}");
+            assert!(
+                matches!(
+                    error,
+                    EstimationError::Numerical(ref message)
+                        if message == "logistic regression produced extreme fitted probabilities; possible separation or unstable scaling"
+                ),
+                "{name}: {error:?}"
+            );
         }
     }
 
@@ -19015,9 +19006,8 @@ mod tests {
         // production CE-FDH peer/effect helpers.
         fn reference_ce_effect(x: &[f64], y: &[f64]) -> f64 {
             let mut points = x.iter().copied().zip(y.iter().copied()).collect::<Vec<_>>();
-            points.sort_by(|left, right| {
-                left.0.total_cmp(&right.0).then(left.1.total_cmp(&right.1))
-            });
+            points
+                .sort_by(|left, right| left.0.total_cmp(&right.0).then(left.1.total_cmp(&right.1)));
             let mut maxima = Vec::<(f64, f64)>::new();
             for (x_value, y_value) in points {
                 if let Some(last) = maxima.last_mut()
@@ -19079,7 +19069,10 @@ mod tests {
         let exceedances = (0..7)
             .filter(|replicate| {
                 let indices = nca_permutation_indices(complete_y.len(), 77, "ce_fdh", *replicate);
-                let permuted = indices.iter().map(|index| complete_y[*index]).collect::<Vec<_>>();
+                let permuted = indices
+                    .iter()
+                    .map(|index| complete_y[*index])
+                    .collect::<Vec<_>>();
                 reference_ce_effect(&complete_x, &permuted) >= observed - 1e-12
             })
             .count();
@@ -19090,11 +19083,7 @@ mod tests {
         assert_eq!(actual_p.to_bits(), expected_p.to_bits());
 
         for (name, bytes, expected) in [
-            (
-                "constant",
-                &b"x,y\n1,1\n1,2\n1,3\n1,4\n"[..],
-                "constant",
-            ),
+            ("constant", &b"x,y\n1,1\n1,2\n1,3\n1,4\n"[..], "constant"),
             (
                 "insufficient",
                 &b"x,y\n1,1\n2,2\n,3\n4,\n"[..],
@@ -19110,9 +19099,13 @@ mod tests {
             .unwrap();
             let failure = run(&dataset, &recipe(&dataset, NcaCeiling::CeFdh, 3, 9, 1));
             assert!(
-                matches!((&failure, expected),
+                matches!(
+                    (&failure, expected),
                     (Err(EstimationError::ConstantIndicator(_)), "constant")
-                    | (Err(EstimationError::InsufficientObservations), "insufficient")
+                        | (
+                            Err(EstimationError::InsufficientObservations),
+                            "insufficient"
+                        )
                 ),
                 "unexpected {name} result: {failure:?}"
             );
@@ -19125,7 +19118,11 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let ce_only = run(&descending, &recipe(&descending, NcaCeiling::CeFdh, 3, 4, 1)).unwrap();
+        let ce_only = run(
+            &descending,
+            &recipe(&descending, NcaCeiling::CeFdh, 3, 4, 1),
+        )
+        .unwrap();
         assert_eq!(ce_only.nca.unwrap().ce_fdh_peers.len(), 1);
         for ceiling in [NcaCeiling::CrFdh, NcaCeiling::Both] {
             assert_eq!(
@@ -19858,7 +19855,10 @@ mod tests {
         formative_to_formative.model.constructs[0].mode = MeasurementMode::Formative;
         let ff = estimate_pls(&two_block_data, &formative_to_formative).unwrap();
         assert_bounded_point_result(&ff, 1);
-        assert_eq!(ff, estimate_pls(&two_block_data, &formative_to_formative).unwrap());
+        assert_eq!(
+            ff,
+            estimate_pls(&two_block_data, &formative_to_formative).unwrap()
+        );
 
         // A connected recursive model with a mediated path and two predictors
         // of the final target exercises the general predecessor OLS branch.
@@ -20181,12 +20181,10 @@ mod tests {
                 .importance
         };
         assert!(
-            (importance("x") - (path("x", "y") + path("x", "m") * path("m", "y"))).abs()
-                <= 1e-12
+            (importance("x") - (path("x", "y") + path("x", "m") * path("m", "y"))).abs() <= 1e-12
         );
         assert!(
-            (importance("z") - (path("z", "y") + path("z", "m") * path("m", "y"))).abs()
-                <= 1e-12
+            (importance("z") - (path("z", "y") + path("z", "m") * path("m", "y"))).abs() <= 1e-12
         );
         assert!((importance("m") - path("m", "y")).abs() <= 1e-12);
 

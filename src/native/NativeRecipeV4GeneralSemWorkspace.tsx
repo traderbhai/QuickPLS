@@ -185,7 +185,11 @@ export function generalSemCanonicalModerationInventoryV1(
 export function generalSemCalculationActionLabelV1(
   interactionPlan: boolean,
   bootstrap: boolean,
+  higherOrderPlan = false,
 ): string {
+  if (higherOrderPlan) {
+    return bootstrap ? "Calculate HOC bootstrap" : "Calculate HOC point estimates";
+  }
   if (!interactionPlan) return "Calculate PLS effects";
   return bootstrap ? "Calculate moderation bootstrap" : "Calculate moderation point estimates";
 }
@@ -1349,6 +1353,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const progressValue = Math.min(snapshot?.completedUnits ?? 0, progressMaximum);
   const bootstrap = effectiveEngine.inference === "percentile_case_bootstrap";
   const interactionPlan = Boolean(model?.derived_terms.some((term) => term.kind === "interaction_v2"));
+  const higherOrderPlan = Boolean(model?.derived_terms.some((term) => term.kind === "higher_order"));
   const moderationBootstrapInputDisabled = running
     || operationBusy
     || markedGeneralSemProjectMode;
@@ -1377,6 +1382,10 @@ export function NativeRecipeV4GeneralSemWorkspace({
             {bootstrap
               ? "Full-model case bootstrap reports percentile inference only for each scientific rescaled interaction gamma. Standardized-product coefficients, joint-stage coefficients, fixed -1/0/+1 slopes, and interaction plots remain point estimates; plots do not include confidence bands."
               : "Optional full-model case bootstrap is available for scientific rescaled interaction gamma. Standardized-product coefficients, joint-stage coefficients, fixed -1/0/+1 slopes, and interaction plots remain point-only."}
+          </p> : higherOrderPlan ? <p className="nd-inline-warning" role="status">
+            {bootstrap
+              ? "Full-model case bootstrap reruns every required HOC stage and infers component loadings or weights, authored HOC paths, and extended-repeated total effects."
+              : "Point estimation reports the approach-specific HOC stages, component loadings or weights, formative VIF, and authored structural paths."}
           </p> : null}
           {bootstrap ? <>
             <label htmlFor="nd-general-sem-bootstrap-samples">Replicates<input id="nd-general-sem-bootstrap-samples" type="number" min={2} max={10_000} step={100} value={effectiveEngine.bootstrapSamples} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => setEngine((current) => ({ ...current, bootstrapSamples: Number(event.target.value) }))} /></label>
@@ -1398,7 +1407,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         </ol>
         <div className="nd-cbsem-v4-actions">
           <button ref={createButtonRef} type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !freshGeneralSemDraftMode || !localPreflight.ready} title={!freshGeneralSemDraftMode ? "Start a new General SEM project to create its marked authority; existing projects cannot enter this path." : !localPreflight.ready ? "Resolve every compatibility issue first." : "Save and activate this new General SEM project as the current QuickPLS canvas authority."} onClick={() => void createCalculationProject()}><Archive size={15} aria-hidden="true" />Save and activate project…</button>
-          <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />{generalSemCalculationActionLabelV1(interactionPlan, bootstrap)}</button>
+          <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />{generalSemCalculationActionLabelV1(interactionPlan, bootstrap, higherOrderPlan)}</button>
           <button type="button" className="danger" disabled={!activeJobIdRef.current || snapshot?.state === "cancelling" || snapshot?.state === "completed"} onClick={() => void cancel()}><CircleStop size={15} aria-hidden="true" />Cancel</button>
           {markedGeneralSemProjectMode ? <button type="button" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || unpersistedCompletedResult} title={unpersistedCompletedResult ? "Save and strictly reopen the completed result, or dismiss it explicitly, before closing." : undefined} onClick={() => void closeGeneralSemProject()}><FolderOpen size={15} aria-hidden="true" />Close General SEM project</button> : null}
         </div>

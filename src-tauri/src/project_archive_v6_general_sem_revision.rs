@@ -2,7 +2,7 @@
 
 use crate::general_sem_registry_access_v1::{
     GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_access_v1,
-    general_sem_recipe_execution_surface_v1, is_rank0_general_sem_execution_cell_v1,
+    general_sem_recipe_execution_surface_v1, is_general_sem_execution_cell_v1,
 };
 
 use qpls_project::{
@@ -240,13 +240,16 @@ where
     ) -> Result<(), GeneralSemRegistryAccessErrorV1>,
 {
     let capability_cell = &request.revision.expected_capability_cell;
-    if !is_rank0_general_sem_execution_cell_v1(capability_cell)
-        || capability_cell.capability_id != "smartpls.moderation"
+    if !is_general_sem_execution_cell_v1(capability_cell)
+        || !matches!(
+            capability_cell.capability_id.as_str(),
+            "smartpls.moderation" | "smartpls.higher_order_models"
+        )
     {
         return blocked(
             "capability_unavailable",
-            "General SEM interaction revision requires an exact bounded moderation point or bootstrap cell.",
-            "Refresh the marked General SEM moderation workflow before choosing a destination.",
+            "General SEM scientific revision requires an exact bounded moderation or higher-order point/bootstrap cell.",
+            "Refresh the marked General SEM workflow before choosing a destination.",
         );
     }
     if let Err(error) = authorize(

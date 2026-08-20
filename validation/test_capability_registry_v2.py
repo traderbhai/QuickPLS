@@ -59,7 +59,7 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertEqual(report["active_row_count"], 43)
         self.assertEqual(report["coverage_counts"], EXPECTED_COVERAGE_COUNTS)
         self.assertEqual(report["qualification_link_count"], 51)
-        self.assertEqual(report["option_cell_count"], 51)
+        self.assertEqual(report["option_cell_count"], 53)
         self.assertEqual(
             report["option_cell_coverage_counts"],
             {"full": 0, "partial": 38, "absent": 11, "intentionally_excluded": 2},
@@ -68,20 +68,20 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
             report["evidence_counts"],
             {
                 "absent": 16,
-                "engine_only": 3,
-                "archive_qualified": 0,
+                "engine_only": 1,
+                "archive_qualified": 1,
                 "native_qualified": 0,
-                "release_qualified": 26,
+                "release_qualified": 27,
             },
         )
         self.assertEqual(
             report["option_cell_evidence_counts"],
             {
                 "absent": 16,
-                "engine_only": 4,
-                "archive_qualified": 2,
+                "engine_only": 1,
+                "archive_qualified": 1,
                 "native_qualified": 0,
-                "release_qualified": 29,
+                "release_qualified": 35,
             },
         )
         self.assertTrue(report["manifest_evidence_check"]["passed"])
@@ -99,11 +99,11 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         )
         self.assertEqual(
             report["surface_counts"],
-            {"standard": 26, "labs": 17, "legacy": 2, "internal": 0},
+            {"standard": 27, "labs": 16, "legacy": 2, "internal": 0},
         )
         self.assertEqual(
             report["option_cell_surface_counts"],
-            {"standard": 29, "labs": 20, "legacy": 2, "internal": 0},
+            {"standard": 35, "labs": 16, "legacy": 2, "internal": 0},
         )
 
     def test_general_sem_multiple_mediation_bootstrap_is_exact_labs_engine_cell(self):

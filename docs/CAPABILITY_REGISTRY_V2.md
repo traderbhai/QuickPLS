@@ -91,34 +91,32 @@ Evidence is a separate internal axis:
 | Evidence state | Count |
 | --- | ---: |
 | `absent` | 16 |
-| `engine_only` | 3 |
-| `archive_qualified` | 0 |
+| `engine_only` | 1 |
+| `archive_qualified` | 1 |
 | `native_qualified` | 0 |
-| `release_qualified` | 26 |
+| `release_qualified` | 27 |
 
 These labels are governance data, not customer copy.
 
-The authoritative inventory contains 51 option cells: 49 active and two
-legacy. Their baseline coverage counts are 0 full, 38 partial, 11 absent, and
+The authoritative inventory contains 53 option cells: 51 active and two
+legacy. Their baseline coverage counts are 0 full, 40 partial, 11 absent, and
 2 intentionally excluded. The different cell count is expected because the
 sample-size/power, moderation, mediation, and permutation catalogue rows contain
 separately governed option cells. The frozen 45-row counts above remain the conservative
 compatibility projection used by historical reports.
 
-Option-cell evidence is 16 absent, four engine-only, two archive-qualified,
-zero native-qualified, and 29 release-qualified. Row evidence is 16 absent,
-three engine-only, zero archive-qualified, zero native-qualified, and 26
+Option-cell evidence is 16 absent, one engine-only, one archive-qualified,
+zero native-qualified, and 35 release-qualified. Row evidence is 16 absent,
+one engine-only, one archive-qualified, zero native-qualified, and 27
 release-qualified; the row projection remains conservative when independently
 governed cells on one official row differ.
 
-The General SEM simultaneous-moderation bootstrap is one of those engine-only
-cells. Its supplemental runtime is connected for full-model indexed case
-resampling and scientific rescaled gamma inference only, while the companion
-point cell remains the primary artifact authority. The live qualification link
-is `validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json`;
-the capability-cell contract remains an exact predicate and product-boundary
-reference, not a substitute for source-bound method evidence. Both cells stay
-opt-in Labs until their independent full-PLS and release gates are complete.
+The two bounded General SEM higher-order cells are independently
+release-qualified Standard options. The point cell owns approach-specific HOC
+stages; the supplemental bootstrap cell reruns the complete stage pipeline and
+infers only its frozen target inventory. Hybrid, nested or multiple HOCs, HOC
+interactions, groups, weights, feedback, PLSc, matrix input, BCa, studentized
+inference, and permutation remain outside these exact cells.
 
 ## Coverage and lifecycle rules
 
@@ -162,7 +160,7 @@ observed-variable NCA, OLS, binary logistic regression, regression
 bootstrapping, graph-defined PROCESS v2, and its dedicated PROCESS bootstrap
 plus the coupled exactly-two-group MICOM/permutation-MGA v4 workflow, the
 single-model fixed-score Structural Path Randomization v1 workflow, the
-one-HOC reflective-reflective disjoint two-stage point-estimate workflow, and
+historical one-HOC reflective-reflective disjoint two-stage point-estimate workflow, and
 the inference-aware post-hoc technical minimum sample-size v2 cell and the
 independently qualified bounded prospective sample-size/power v2 workflow to Standard
 through release-qualified scoped option cells. Other active rows
@@ -190,8 +188,10 @@ resampling inference, alternative representations, NCA integration, or cIPMA;
 MICOM/permutation-MGA does not claim more than two simultaneous groups,
 parametric, bootstrap, one-tailed, omnibus, or multiplicity-adjusted MGA,
 consistent PLS, case weights, interactions, or higher-order constructs;
-the Standard HOC workflow does not claim repeated-indicator, hybrid, formative,
-nested, multiple-HOC, incoming-HOC-path, or HOC resampling workflows;
+the General SEM HOC option cells add the exact bounded repeated, extended-repeated,
+embedded and disjoint matrix plus full-model percentile case bootstrap, but do not
+claim hybrid, nested or multiple HOCs, HOC interactions, groups, weights, feedback,
+PLSc, matrix input, permutation, BCa, or studentized inference;
 PLSpredict/CVPAT v2 covers reflective endogenous indicator targets and one fitted model assessed against IA and LM benchmarks; saved competing-model comparison, formative targets, time-series validation, grouped leakage controls, and broader model shapes remain excluded;
 NCA does not claim multiple conditions,
 latent scores, cIPMA, or theoretical-range workflows; OLS and logistic do not

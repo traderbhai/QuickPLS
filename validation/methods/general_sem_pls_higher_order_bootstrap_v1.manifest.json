@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-20T00:00:00Z",
+    "manifest_path": "validation/methods/general_sem_pls_higher_order_bootstrap_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+    "label": "General SEM PLS Higher-Order Full-Model Case Bootstrap",
+    "method_version": "general_sem_pls_higher_order_full_model_case_bootstrap_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-20",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/bootstrapping/"
+  },
+  "claim": {
+    "supported_scope": "Percentile Type-7 case-bootstrap inference for the exact bounded General SEM HOC point cell, with every compiled HOC stage refitted for each indexed complete-case sample.",
+    "estimand": "Bootstrap mean, bias, sample standard error, two-sided percentile interval, and plus-one probability for HOC component loadings or weights, authored structural paths touching the HOC, and extended-repeated total effects.",
+    "assumptions": [
+      "The resident request satisfies the exact HOC point-cell predicate and its point result validates before resampling.",
+      "Every replicate reruns all required stages, aligns score directions, regenerates derived values, and validates the complete point target inventory.",
+      "All targets share one ordered success/failure ledger and the same usable replicate set."
+    ],
+    "exclusions": [
+      "Inference for VIF, technical paths, controls, or unrelated ordinary structural paths is excluded.",
+      "BCa, studentized, one-sided, permutation, group, weighted, nested, multiple-HOC, hybrid, and HOC-interaction requests are excluded.",
+      "A partial replicate is never summarized and fewer than max(2, ceil(0.9B)) usable refits produces no inference."
+    ],
+    "warnings": [
+      "Bootstrap intervals describe the bounded PLS procedure and are not causal guarantees.",
+      "Worker count is operational metadata; indexed replicate identities determine scientific replay."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "hoc_case_bootstrap_summary",
+        "expression": "SE = sqrt(sum_b(theta_b - mean(theta))^2/(B_u-1)); CI = Type7(theta, alpha/2, 1-alpha/2)",
+        "variables": ["SE", "theta_b", "mean(theta)", "B_u", "CI", "alpha"],
+        "source_reference_id": "efron_tibshirani_1993"
+      }
+    ],
+    "references": [
+      {
+        "id": "efron_tibshirani_1993",
+        "kind": "primary_paper",
+        "citation": "Efron and Tibshirani (1993), An Introduction to the Bootstrap",
+        "locator": "https://doi.org/10.1201/9780429246593",
+        "independence_group": "published_bootstrap_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_hoc_bootstrap_reference",
+        "kind": "independent_python",
+        "citation": "Independent validation-only higher-order case-bootstrap fixtures",
+        "locator": "validation/higher_order_two_stage_simulation.py",
+        "independence_group": "python_hoc_bootstrap_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "bounded_hoc_bootstrap_replay",
+        "purpose": "coverage",
+        "design": "Frozen HOC fixtures replay indexed full-model case refits across representative reflective and formative targets and supported worker counts.",
+        "seed_policy": "Frozen scenario and replicate indexed draws; failed refits remain in the requested denominator.",
+        "metrics": ["target_inventory", "interval_replay", "worker_replay", "usable_fraction", "failure_classification"],
+        "acceptance_rule": "Target identities, summaries, ordered failures, and usable indices replay exactly across supported workers and the usable gate is enforced."
+      }
+    ],
+    "boundaries": [
+      {"id": "insufficient_usable", "category": "data_pathology", "case": "Fewer than max(2, ceil(0.9B)) complete refits are usable.", "expected_behavior": "Publish no inference and retain the typed failure ledger."},
+      {"id": "unsupported_inference", "category": "unsupported_scope", "case": "The request uses a non-percentile interval, unsupported tail, or excluded target.", "expected_behavior": "Preflight blocks the request without changing the model."},
+      {"id": "declaration_reorder", "category": "metamorphic", "case": "Eligible declarations are consistently reordered.", "expected_behavior": "Mapped target summaries and failure identities remain equivalent."},
+      {"id": "seed_worker_replay", "category": "determinism", "case": "The same seed is run with supported worker counts.", "expected_behavior": "Scientific summaries, usable indices, and ordered failures are identical."},
+      {"id": "bootstrap_tamper", "category": "tamper", "case": "A target, summary, failed replicate, count, stage digest, method, capability, or receipt is altered.", "expected_behavior": "Canonical and schema-6 validation reject the result."
+      }
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 4,
+      "result_schema_version": 2,
+      "payload_kind": "canonical_result_document_v2",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose supplemental bootstrap cell or point dependency differs."},
+        {"category": "method_version", "expected_behavior": "Reject a different bootstrap, stream, quantile, standard-error, or failure-policy version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result bound to a different complete-case source."},
+        {"category": "checksum", "expected_behavior": "Reject a changed target-set, usable-index, plan, or attachment digest."},
+        {"category": "malformed_payload", "expected_behavior": "Reject unknown, duplicate, nonfinite, unordered, partial, or contradictory bootstrap rows."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never relabel historical HOC or point-only output as this bootstrap cell."}
+      ],
+      "legacy_policy": "This supplemental cell applies only beside its exact General SEM HOC point authority; existing projects retain their original identities."
+    },
+    "native": {
+      "setup_controls": ["case-resample count", "confidence level", "fixed seed", "worker count", "exact HOC point dependency"],
+      "applicability_blockers": ["invalid HOC point model", "unsupported interval or tail", "stale plan or data", "failed point fit", "insufficient usable refits"],
+      "result_surfaces": ["HOC target inference", "ordered failed replicates", "usable counts", "bootstrap receipt", "point companion stages"],
+      "gui_cli_parity_rule": "For the same resident authority, seed, and worker-independent indexed schedule, every product surface reads the same canonical bootstrap result.",
+      "accessibility_rules": ["Intervals, probabilities, usable counts, and failures are available as accessible text and tables.", "Point-only and inferred HOC rows are explicitly distinguished without relying on color."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html", "pdf", "svg", "png"],
+      "tables": ["Higher-order target inference", "Higher-order bootstrap receipt", "Higher-order stages", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/general_sem_pls_higher_order_v1.md"],
+      "independent_reference": ["validation/higher_order_two_stage_reference.py"],
+      "simulation_report": ["validation/higher_order_two_stage_simulation.py"],
+      "boundary_report": ["validation/higher_order_two_stage_boundary_gate.py"],
+      "persistence_report": ["validation/higher_order_two_stage_persistence_gate.py"],
+      "frontend_report": ["src/native/nativeHigherOrder.test.ts"],
+      "export_report": ["src/domain/canonicalResultCrossFormatExportV2.test.ts"],
+      "method_audit": ["validation/higher_order_method_promotion_audit.py"],
+      "packaged_acceptance": [
+        "validation/higher_order_v1_packaged_acceptance.py",
+        "validation/run_v247_hoc_native_acceptance.ps1"
+      ]
+    },
+    "evidence": {
+      "engine_only": [{
+        "path": "validation/results/method_factory/general_sem_pls_higher_order_full_model_case_bootstrap_v1/rank1_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
+        "verification": {
+          "kind": "identity_report",
+          "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+          "source_artifacts_pointer": "/source_artifacts",
+          "generated_at_pointer": "/generated_at_utc"
+        }
+      }],
+      "archive_qualified": [{
+        "path": "validation/results/method_factory/general_sem_pls_higher_order_full_model_case_bootstrap_v1/rank1_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["persistence_report"],
+        "verification": {
+          "kind": "identity_report",
+          "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+          "source_artifacts_pointer": "/source_artifacts",
+          "generated_at_pointer": "/generated_at_utc"
+        }
+      }],
+      "native_qualified": [{
+        "path": "validation/results/method_factory/general_sem_pls_higher_order_full_model_case_bootstrap_v1/rank1_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["frontend_report", "export_report"],
+        "verification": {
+          "kind": "identity_report",
+          "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+          "source_artifacts_pointer": "/source_artifacts",
+          "generated_at_pointer": "/generated_at_utc"
+        }
+      }],
+      "release_qualified": [{
+        "path": "validation/results/method_factory/general_sem_pls_higher_order_full_model_case_bootstrap_v1/rank1_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["method_audit", "packaged_acceptance"],
+        "verification": {
+          "kind": "identity_report",
+          "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+          "source_artifacts_pointer": "/source_artifacts",
+          "generated_at_pointer": "/generated_at_utc"
+        }
+      }]
+    }
+  }
+}

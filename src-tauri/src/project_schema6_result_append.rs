@@ -1,6 +1,6 @@
 use crate::general_sem_registry_access_v1::{
     GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_access_v1,
-    is_rank0_general_sem_execution_cell_v1,
+    is_general_sem_execution_cell_v1,
 };
 use crate::recipe_v4_canonical_result::validate_archived_recipe_v4_pls_method_identity;
 use crate::recipe_v4_cbsem_canonical_result::validate_archived_recipe_v4_cbsem_method_identity;
@@ -90,13 +90,13 @@ fn live_capability_cell(archived: &ArchivedCapabilityCellReferenceV2) -> Capabil
 
 fn is_general_sem_document(document: &CanonicalResultDocumentV2) -> bool {
     document.general_sem_results.is_some()
-        || is_rank0_general_sem_execution_cell_v1(&live_capability_cell(
+        || is_general_sem_execution_cell_v1(&live_capability_cell(
             &document.provenance.capability_cell,
         ))
         || document.capability_cells.as_ref().is_some_and(|cells| {
             cells
                 .iter()
-                .any(|cell| is_rank0_general_sem_execution_cell_v1(&live_capability_cell(cell)))
+                .any(|cell| is_general_sem_execution_cell_v1(&live_capability_cell(cell)))
         })
 }
 
@@ -110,8 +110,18 @@ fn selected_general_sem_execution_cell(
         document
             .general_sem_results
             .as_ref()
-            .and_then(|results| results.inference_receipt.as_ref())
-            .map(|receipt| receipt.capability_cell.clone())
+            .and_then(|results| {
+                results
+                    .inference_receipt
+                    .as_ref()
+                    .map(|receipt| receipt.capability_cell.clone())
+                    .or_else(|| {
+                        results
+                            .higher_order_inference_receipt
+                            .as_ref()
+                            .map(|receipt| receipt.capability_cell.clone())
+                    })
+            })
             .unwrap_or_else(|| live_capability_cell(&document.provenance.capability_cell)),
     )
 }
@@ -176,7 +186,7 @@ where
                 | ("smartpls.cbsem_bootstrapping", "qpls3.cbsem.bootstrap")
         );
     let exact_general_sem = if let Some(cell) = request.capability_cell.as_ref() {
-        if !is_rank0_general_sem_execution_cell_v1(cell) {
+        if !is_general_sem_execution_cell_v1(cell) {
             return Err(blocked(
                 "schema6_result_append.capability_unavailable",
                 "The selected cell is not one of the exact General SEM result-publication cells.",

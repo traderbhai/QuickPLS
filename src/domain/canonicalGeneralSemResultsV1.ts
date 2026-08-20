@@ -280,7 +280,10 @@ export type CanonicalHocRelationKindV1 =
   | "component_loading"
   | "component_weight"
   | "authored_structural"
-  | "authored_control";
+  | "authored_control"
+  | "technical_structural"
+  | "extended_indirect_effect"
+  | "extended_total_effect";
 
 export type CompiledPlsHocComponentRelationInterpretationV1 =
   | "loading"
@@ -360,7 +363,8 @@ export interface CanonicalHocStageResultV1 {
 export type CanonicalHocBootstrapTargetKindV1 =
   | "component_loading"
   | "component_weight"
-  | "hoc_structural_path";
+  | "hoc_structural_path"
+  | "extended_total_effect";
 
 export interface CanonicalHocBootstrapTargetIdentityV1 {
   kind: CanonicalHocBootstrapTargetKindV1;
@@ -1584,7 +1588,9 @@ function validateHocInferenceReceiptV1(
       "target_variable_id", "point_method_version",
     ], [], identityPath);
     const normalized: CanonicalHocBootstrapTargetIdentityV1 = {
-      kind: wireEnum(identity.kind, ["component_loading", "component_weight", "hoc_structural_path"] as const, `${identityPath}.kind`),
+      kind: wireEnum(identity.kind, [
+        "component_loading", "component_weight", "hoc_structural_path", "extended_total_effect",
+      ] as const, `${identityPath}.kind`),
       target_version: wireText(identity.target_version, `${identityPath}.target_version`),
       target_id: wireStableId(identity.target_id, `${identityPath}.target_id`),
       relation_id: wireStableId(identity.relation_id, `${identityPath}.relation_id`),
@@ -1614,6 +1620,7 @@ function validateHocInferenceReceiptV1(
     const relation = bound.relation;
     const relationKind = wireEnum(relation.kind, [
       "component_loading", "component_weight", "authored_structural", "authored_control",
+      "technical_structural", "extended_indirect_effect", "extended_total_effect",
     ] as const, `${bound.path}.kind`);
     const expectedKind = identity.kind === "hoc_structural_path" ? "authored_structural" : identity.kind;
     if (relationKind !== expectedKind || relation.parameter_id !== identity.parameter_id
@@ -2373,8 +2380,6 @@ export function parseCanonicalGeneralSemResultsV1(
     const hocId = wireStableId(stage.higher_order_construct_id, `${path}.higher_order_construct_id`);
     const stageNumber = wireU32(stage.stage_number, `${path}.stage_number`);
     const kind = wireEnum(stage.kind, ["lower_order_score_estimation", "higher_order_estimation"] as const, `${path}.kind`);
-    const expectedStage = kind === "lower_order_score_estimation" ? 1 : 2;
-    if (stageNumber !== expectedStage) wireFail("document.invalid", `${path}.stage_number`, `${path}.stage_number contradicts its stage kind.`);
     const signature = `${hocId}\0${stageNumber}`;
     if (hocSignatures.has(signature)) wireFail("document.invalid", path, `${path} duplicates a higher-order construct stage.`);
     hocSignatures.add(signature);
@@ -2390,6 +2395,14 @@ export function parseCanonicalGeneralSemResultsV1(
     ] as const, `${path}.measurement_type`);
     if ((approach == null) !== (measurementType == null)) {
       wireFail("document.invalid", path, `${path}.approach and measurement_type must be present together.`);
+    }
+    const additiveOneStageHigherOrder = stageNumber === 1
+      && kind === "higher_order_estimation"
+      && (approach === "repeated_indicators" || approach === "extended_repeated_indicators");
+    const historicalStageShape = (stageNumber === 1 && kind === "lower_order_score_estimation")
+      || (stageNumber === 2 && kind === "higher_order_estimation");
+    if (!historicalStageShape && !additiveOneStageHigherOrder) {
+      wireFail("document.invalid", `${path}.stage_number`, `${path}.stage_number contradicts its stage kind.`);
     }
     const mappings = optionalWireArray(stage, "generated_variable_mappings", path);
     validateCanonicalWireIds(mappings, "component_id", `${path}.generated_variable_mappings`);
@@ -2475,6 +2488,7 @@ export function parseCanonicalGeneralSemResultsV1(
         : wireStableId(relation.parameter_id, `${relationPath}.parameter_id`);
       const relationKind = relation.kind == null ? null : wireEnum(relation.kind, [
         "component_loading", "component_weight", "authored_structural", "authored_control",
+        "technical_structural", "extended_indirect_effect", "extended_total_effect",
       ] as const, `${relationPath}.kind`);
       if ((parameterId == null) !== (relationKind == null)) {
         wireFail("document.invalid", relationPath, `${relationPath}.parameter_id and kind must be present together.`);

@@ -24,6 +24,10 @@ pub const COMPILED_PLS_HIGHER_ORDER_PROJECTION_V1_VERSION: &str =
     "qpls.compiled-pls-higher-order-lower-order-projection.v1";
 pub const COMPILED_PLS_DISJOINT_HIGHER_ORDER_STAGE_TWO_PROJECTION_V1_VERSION: &str =
     "qpls.compiled-pls-disjoint-higher-order-stage-two-projection.v1";
+pub const COMPILED_PLS_HIGHER_ORDER_REPEATED_PROJECTION_V1_VERSION: &str =
+    "qpls.compiled-pls-higher-order-repeated-projection.v1";
+pub const COMPILED_PLS_HIGHER_ORDER_SCORE_STAGE_PROJECTION_V1_VERSION: &str =
+    "qpls.compiled-pls-higher-order-score-stage-projection.v1";
 
 pub const PLS_GENERAL_HIGHER_ORDER_CAPABILITY_ID_V1: &str = "smartpls.higher_order_models";
 pub const PLS_GENERAL_HIGHER_ORDER_POINT_CELL_ID_V1: &str =
@@ -204,6 +208,11 @@ pub struct CompiledPlsDisjointHocStageTwoProjectionV1 {
     projected_plan: CompiledPlsPlanV2,
 }
 
+/// Shared projected-model envelope used by every bounded Rank-1 HOC
+/// approach. The historical disjoint name remains as the serialized Rust
+/// type so existing internal callers and archived identities are unchanged.
+pub type CompiledPlsHocExecutionProjectionV1 = CompiledPlsDisjointHocStageTwoProjectionV1;
+
 impl CompiledPlsDisjointHocStageTwoProjectionV1 {
     pub fn contract_version(&self) -> &str {
         &self.contract_version
@@ -356,6 +365,14 @@ pub enum CompiledPlsHigherOrderV1Error {
     CompiledPlanMismatch,
     #[error("the point-stage executor currently requires disjoint_two_stage construction")]
     DisjointStageTwoRequired,
+    #[error(
+        "the repeated-indicator projection requires repeated, extended-repeated, or embedded-two-stage construction"
+    )]
+    RepeatedStageRequired,
+    #[error(
+        "the generated-score projection requires embedded_two_stage or disjoint_two_stage construction"
+    )]
+    ScoreStageRequired,
     #[error(
         "disjoint two-stage checkpoint requires measurement-only lower-order component {component_id}; authored structural relation {relation_id} is outside this checkpoint"
     )]
@@ -795,6 +812,10 @@ pub enum CompiledPlsPlanV3Error {
     LazySpecificPathMaterializationNotImplemented,
     #[error("PLS v3 requires an acyclic structural topology")]
     StructuralFeedback,
+    #[error(
+        "General SEM HOC v1 publishes effects through its typed HOC stages and does not accept generic requested-effect estimands"
+    )]
+    HigherOrderRequestedEffectsNotExecutable,
     #[error("aggregate estimand id {estimand_id} collides with a canonical specific-path identity")]
     AggregateEstimandIdCollidesWithSpecificPathIdentity { estimand_id: String },
     #[error("requested specific indirect estimand {estimand_id} is not an exact compiled path")]
@@ -860,12 +881,18 @@ pub fn compile_pls_plan_v3(
                 Some(projection.projected_scientific_sha256().to_string()),
             )
         };
-    let auto_selected_effects = config.requested_effect_estimands.is_empty();
+    if !higher_order_stage_plans.is_empty() && !config.requested_effect_estimands.is_empty() {
+        return Err(CompiledPlsPlanV3Error::HigherOrderRequestedEffectsNotExecutable);
+    }
+    let auto_selected_effects =
+        higher_order_stage_plans.is_empty() && config.requested_effect_estimands.is_empty();
     let interaction_outputs = two_way_interactions
         .iter()
         .map(|interaction| interaction.output_variable_id().to_string())
         .collect::<BTreeSet<_>>();
-    let effect_estimands = if auto_selected_effects {
+    let effect_estimands = if !higher_order_stage_plans.is_empty() {
+        Vec::new()
+    } else if auto_selected_effects {
         compile_all_effect_estimands(&topology, &interaction_outputs)
     } else {
         compile_requested_effect_estimands(&topology, config, &interaction_outputs)?
@@ -1188,29 +1215,33 @@ pub fn compile_pls_higher_order_stage_plans_v1(
                     source_relation_id.as_str(),
                     indicator_id.as_str(),
                 ];
+                let generated_variable_id = reserve_hoc_generated_identity_v1(
+                    "virtual_indicator",
+                    &identity_parts,
+                    &mut occupied_identities,
+                )?;
+                let generated_source_column_id = reserve_hoc_generated_identity_v1(
+                    "virtual_source_column",
+                    &identity_parts,
+                    &mut occupied_identities,
+                )?;
+                let generated_relation_id = reserve_hoc_generated_identity_v1(
+                    "virtual_relation",
+                    &identity_parts,
+                    &mut occupied_identities,
+                )?;
+                let generated_parameter_id = reserve_hoc_generated_identity_v1(
+                    "virtual_parameter",
+                    &identity_parts,
+                    &mut occupied_identities,
+                )?;
                 virtual_indicators.push(CompiledPlsHocVirtualIndicatorV1 {
                     source_indicator_variable_id: indicator_id,
                     source_column,
-                    generated_variable_id: reserve_hoc_generated_identity_v1(
-                        "virtual_indicator",
-                        &identity_parts,
-                        &mut occupied_identities,
-                    )?,
-                    generated_source_column_id: reserve_hoc_generated_identity_v1(
-                        "virtual_source_column",
-                        &identity_parts,
-                        &mut occupied_identities,
-                    )?,
-                    generated_relation_id: reserve_hoc_generated_identity_v1(
-                        "virtual_relation",
-                        &identity_parts,
-                        &mut occupied_identities,
-                    )?,
-                    generated_parameter_id: reserve_hoc_generated_identity_v1(
-                        "virtual_parameter",
-                        &identity_parts,
-                        &mut occupied_identities,
-                    )?,
+                    generated_variable_id,
+                    generated_source_column_id,
+                    generated_relation_id,
+                    generated_parameter_id,
                 });
             }
         }
@@ -1353,12 +1384,170 @@ pub fn compile_pls_higher_order_lower_order_projection_v1(
     })
 }
 
-/// Compiles the exact second-stage schema-6 authority for the first executable
-/// Rank-1 checkpoint. LOCs are measurement-only in this checkpoint: they are
-/// scored by the embedded stage-one plan, removed from the substantive stage-
-/// two graph, and represented only by deterministic generated score columns.
-/// No legacy `ModelSpec` or legacy HOC declaration is created here.
-pub fn compile_pls_disjoint_higher_order_stage_two_projection_v1(
+/// Compiles the repeated-indicator model used directly by repeated and
+/// extended-repeated HOCs and as stage one for embedded two-stage HOCs.
+/// Source indicators are represented by deterministic virtual aliases so the
+/// ordinary PLS engine keeps its source-column uniqueness invariant while the
+/// scientific SemModelV4 remains the sole authored authority.
+pub fn compile_pls_higher_order_repeated_stage_projection_v1(
+    model: &SemModelV4,
+    plan: &CompiledPlsPlanV3,
+) -> Result<CompiledPlsHocExecutionProjectionV1, CompiledPlsHigherOrderV1Error> {
+    let source_scientific_sha256 = model.scientific_sha256()?;
+    let expected_hoc_plans = compile_pls_higher_order_stage_plans_v1(model)?;
+    let expected_stage_one_projection = compile_pls_higher_order_lower_order_projection_v1(model)?;
+    let expected_base_plan = compile_pls_plan_v2(expected_stage_one_projection.projected_model())?;
+    if plan.scientific_hash() != source_scientific_sha256
+        || plan.higher_order_stage_plans() != expected_hoc_plans.as_slice()
+        || plan.base_plan() != &expected_base_plan
+        || plan.stage_one_projection_scientific_sha256()
+            != Some(expected_stage_one_projection.projected_scientific_sha256())
+        || expected_hoc_plans.len() != 1
+    {
+        return Err(CompiledPlsHigherOrderV1Error::CompiledPlanMismatch);
+    }
+    let hoc = &expected_hoc_plans[0];
+    if !matches!(
+        hoc.approach(),
+        HigherOrderConstructionApproachV4::RepeatedIndicators
+            | HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators
+            | HigherOrderConstructionApproachV4::EmbeddedTwoStage
+    ) {
+        return Err(CompiledPlsHigherOrderV1Error::RepeatedStageRequired);
+    }
+
+    let mut projected_model = model.clone();
+    let output_index = projected_model
+        .variables
+        .iter()
+        .position(|variable| variable.id() == hoc.output_variable_id())
+        .ok_or_else(
+            || CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
+                output_id: hoc.output_variable_id().to_string(),
+            },
+        )?;
+    let (output_id, output_label) = match &projected_model.variables[output_index] {
+        SemVariableV4::Derived { id, label } => (id.clone(), label.clone()),
+        _ => {
+            return Err(CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
+                output_id: hoc.output_variable_id().to_string(),
+            });
+        }
+    };
+    projected_model.variables[output_index] = SemVariableV4::Composite {
+        id: output_id.clone(),
+        label: output_label,
+        weighting: match hoc.hoc_component_mode() {
+            CompiledPlsBlockModeV2::ModeA => CompositeWeightingV4::ModeA,
+            CompiledPlsBlockModeV2::ModeB => CompositeWeightingV4::ModeB,
+        },
+    };
+    projected_model.derived_terms.clear();
+
+    for mapping in hoc.component_mappings() {
+        for indicator in mapping.virtual_indicators() {
+            projected_model.variables.push(SemVariableV4::Observed {
+                id: indicator.generated_variable_id().to_string(),
+                label: format!(
+                    "Repeated indicator for {} from {}",
+                    hoc.output_variable_id(),
+                    mapping.component_id()
+                ),
+                source_column: indicator.generated_source_column_id().to_string(),
+                scale: ObservedScaleV4::Continuous,
+                role: ObservedRoleV4::Indicator,
+                categories: Vec::new(),
+                value_labels: BTreeMap::new(),
+                missing_markers: Vec::new(),
+                transformation_lineage: Vec::new(),
+            });
+            let (relation, target) = match hoc.hoc_component_mode() {
+                CompiledPlsBlockModeV2::ModeA => (
+                    SemRelationV4::MeasurementEffect {
+                        id: indicator.generated_relation_id().to_string(),
+                        construct: output_id.clone(),
+                        indicator: indicator.generated_variable_id().to_string(),
+                        parameter: indicator.generated_parameter_id().to_string(),
+                    },
+                    SemParameterTargetV4::Loading {
+                        construct: output_id.clone(),
+                        indicator: indicator.generated_variable_id().to_string(),
+                    },
+                ),
+                CompiledPlsBlockModeV2::ModeB => (
+                    SemRelationV4::MeasurementCausal {
+                        id: indicator.generated_relation_id().to_string(),
+                        indicator: indicator.generated_variable_id().to_string(),
+                        composite: output_id.clone(),
+                        parameter: indicator.generated_parameter_id().to_string(),
+                    },
+                    SemParameterTargetV4::Weight {
+                        indicator: indicator.generated_variable_id().to_string(),
+                        composite: output_id.clone(),
+                    },
+                ),
+            };
+            projected_model.relations.push(relation);
+            projected_model.parameters.push(SemParameterV4::Free {
+                id: indicator.generated_parameter_id().to_string(),
+                label: format!("Repeated HOC indicator: {}", mapping.component_id()),
+                target,
+                start: None,
+                lower: None,
+                upper: None,
+                equality_label: None,
+                group_overrides: Vec::new(),
+            });
+        }
+    }
+
+    for path in hoc.technical_paths() {
+        projected_model.relations.push(SemRelationV4::Structural {
+            id: path.generated_relation_id().to_string(),
+            source: path.source_id().to_string(),
+            target: path.component_id().to_string(),
+            parameter: path.generated_parameter_id().to_string(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        projected_model.parameters.push(SemParameterV4::Free {
+            id: path.generated_parameter_id().to_string(),
+            label: format!(
+                "Extended repeated technical path: {} -> {}",
+                path.source_id(),
+                path.component_id()
+            ),
+            target: SemParameterTargetV4::Regression {
+                source: path.source_id().to_string(),
+                target: path.component_id().to_string(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+    }
+    projected_model.annotations.clear();
+    projected_model.presentation = SemPresentationV4::None;
+    projected_model = projected_model.canonicalized();
+    projected_model.ensure_valid()?;
+    let projected_scientific_sha256 = projected_model.scientific_sha256()?;
+    let projected_plan = compile_pls_plan_v2(&projected_model)?;
+    Ok(CompiledPlsHocExecutionProjectionV1 {
+        contract_version: COMPILED_PLS_HIGHER_ORDER_REPEATED_PROJECTION_V1_VERSION.into(),
+        source_scientific_sha256,
+        hoc_stage_plan_sha256: sha256_serialized(hoc),
+        projected_scientific_sha256,
+        projected_model,
+        projected_plan,
+    })
+}
+
+/// Compiles the generated-score HOC stage shared by embedded and disjoint
+/// two-stage approaches. Embedded retains LOCs and their substantive paths;
+/// disjoint preserves its historical removal behavior.
+pub fn compile_pls_higher_order_score_stage_projection_v1(
     model: &SemModelV4,
     plan: &CompiledPlsPlanV3,
 ) -> Result<CompiledPlsDisjointHocStageTwoProjectionV1, CompiledPlsHigherOrderV1Error> {
@@ -1376,15 +1565,23 @@ pub fn compile_pls_disjoint_higher_order_stage_two_projection_v1(
         return Err(CompiledPlsHigherOrderV1Error::CompiledPlanMismatch);
     }
     let hoc = &expected_hoc_plans[0];
-    if hoc.approach() != &HigherOrderConstructionApproachV4::DisjointTwoStage {
-        return Err(CompiledPlsHigherOrderV1Error::DisjointStageTwoRequired);
+    if !matches!(
+        hoc.approach(),
+        HigherOrderConstructionApproachV4::EmbeddedTwoStage
+            | HigherOrderConstructionApproachV4::DisjointTwoStage
+    ) {
+        return Err(CompiledPlsHigherOrderV1Error::ScoreStageRequired);
     }
+    let remove_components = hoc.approach() == &HigherOrderConstructionApproachV4::DisjointTwoStage;
     let component_ids = hoc
         .component_ids()
         .iter()
         .map(String::as_str)
         .collect::<BTreeSet<_>>();
     for relation in &model.relations {
+        if !remove_components {
+            break;
+        }
         let SemRelationV4::Structural {
             id, source, target, ..
         } = relation
@@ -1421,11 +1618,15 @@ pub fn compile_pls_disjoint_higher_order_stage_two_projection_v1(
             _ => None,
         })
         .collect::<BTreeSet<_>>();
-    let removed_variable_ids = component_ids
-        .iter()
-        .map(|value| (*value).to_string())
-        .chain(component_indicator_ids.iter().cloned())
-        .collect::<BTreeSet<_>>();
+    let removed_variable_ids = if remove_components {
+        component_ids
+            .iter()
+            .map(|value| (*value).to_string())
+            .chain(component_indicator_ids.iter().cloned())
+            .collect::<BTreeSet<_>>()
+    } else {
+        BTreeSet::new()
+    };
     let removed_relation_ids = model
         .relations
         .iter()
@@ -1550,13 +1751,34 @@ pub fn compile_pls_disjoint_higher_order_stage_two_projection_v1(
         projected_scientific_sha256
     );
     Ok(CompiledPlsDisjointHocStageTwoProjectionV1 {
-        contract_version: COMPILED_PLS_DISJOINT_HIGHER_ORDER_STAGE_TWO_PROJECTION_V1_VERSION.into(),
+        contract_version: if remove_components {
+            COMPILED_PLS_DISJOINT_HIGHER_ORDER_STAGE_TWO_PROJECTION_V1_VERSION
+        } else {
+            COMPILED_PLS_HIGHER_ORDER_SCORE_STAGE_PROJECTION_V1_VERSION
+        }
+        .into(),
         source_scientific_sha256,
         hoc_stage_plan_sha256: sha256_serialized(hoc),
         projected_scientific_sha256,
         projected_model,
         projected_plan,
     })
+}
+
+/// Backward-compatible exact disjoint wrapper retained for existing internal
+/// callers and archived authority checks.
+pub fn compile_pls_disjoint_higher_order_stage_two_projection_v1(
+    model: &SemModelV4,
+    plan: &CompiledPlsPlanV3,
+) -> Result<CompiledPlsDisjointHocStageTwoProjectionV1, CompiledPlsHigherOrderV1Error> {
+    let projection = compile_pls_higher_order_score_stage_projection_v1(model, plan)?;
+    let [hoc] = plan.higher_order_stage_plans() else {
+        return Err(CompiledPlsHigherOrderV1Error::CompiledPlanMismatch);
+    };
+    if hoc.approach() != &HigherOrderConstructionApproachV4::DisjointTwoStage {
+        return Err(CompiledPlsHigherOrderV1Error::DisjointStageTwoRequired);
+    }
+    Ok(projection)
 }
 
 fn hoc_loc_mode_v1(measurement_type: &HigherOrderMeasurementTypeV4) -> CompiledPlsBlockModeV2 {
@@ -3024,6 +3246,19 @@ mod tests {
             plan.stage_one_projection_scientific_sha256(),
             Some(plan.base_plan().scientific_hash())
         );
+        assert!(plan.effect_estimands().is_empty());
+        assert!(!plan.auto_selected_effects());
+
+        let mut requested = GeneralSemConfigV1::default();
+        requested.requested_effect_estimands = vec![GeneralSemEffectEstimandV1::TotalEffect {
+            estimand_id: "effect:hoc".into(),
+            source_id: "construct:x".into(),
+            target_id: "construct:y".into(),
+        }];
+        assert_eq!(
+            compile_pls_plan_v3(&model, &requested),
+            Err(CompiledPlsPlanV3Error::HigherOrderRequestedEffectsNotExecutable)
+        );
 
         let mut reordered = model;
         reordered.variables.reverse();
@@ -3080,11 +3315,11 @@ mod tests {
                 .indicators()
                 .iter()
                 .map(|indicator| indicator.variable_id())
-                .collect::<Vec<_>>(),
+                .collect::<std::collections::BTreeSet<_>>(),
             hoc.component_mappings()
                 .iter()
                 .map(|mapping| mapping.generated_score_variable_id())
-                .collect::<Vec<_>>()
+                .collect::<std::collections::BTreeSet<_>>()
         );
 
         let mut reordered = model;

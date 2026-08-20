@@ -806,6 +806,9 @@ pub enum CanonicalHocRelationKindV1 {
     ComponentWeight,
     AuthoredStructural,
     AuthoredControl,
+    TechnicalStructural,
+    ExtendedIndirectEffect,
+    ExtendedTotalEffect,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -899,6 +902,7 @@ pub enum CanonicalHocBootstrapTargetKindV1 {
     ComponentLoading,
     ComponentWeight,
     HocStructuralPath,
+    ExtendedTotalEffect,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -2035,7 +2039,8 @@ fn validate_hoc_inference_receipt_v1(
             .iter()
             .map(String::as_str)
             .collect::<Vec<_>>()
-        || sha256_serialized(&receipt.target_identities) != receipt.target_identity_set_sha256
+        || crate::sha256_serialized(&receipt.target_identities)
+            != receipt.target_identity_set_sha256
     {
         errors.push(format!(
             "{context} target identities or identity digest contradict target_ids"
@@ -2064,6 +2069,9 @@ fn validate_hoc_inference_receipt_v1(
             }
             CanonicalHocBootstrapTargetKindV1::HocStructuralPath => {
                 CanonicalHocRelationKindV1::AuthoredStructural
+            }
+            CanonicalHocBootstrapTargetKindV1::ExtendedTotalEffect => {
+                CanonicalHocRelationKindV1::ExtendedTotalEffect
             }
         };
         if identity.target_id != identity.relation_id
@@ -2123,7 +2131,7 @@ fn validate_hoc_inference_receipt_v1(
     let usable_indices = (0..receipt.resamples_requested)
         .filter(|index| !failed_indices.contains(index))
         .collect::<Vec<_>>();
-    if sha256_serialized(&usable_indices) != receipt.usable_replicate_indices_sha256 {
+    if crate::sha256_serialized(&usable_indices) != receipt.usable_replicate_indices_sha256 {
         errors.push(format!(
             "{context}.usable_replicate_indices_sha256 contradicts the failure ledger"
         ));
@@ -3028,32 +3036,59 @@ fn validate_general_sem_results_v1(
             &stage.higher_order_construct_id,
             &format!("{item_context}.higher_order_construct_id"),
         );
-        let expected_stage_number = match stage.kind {
-            CanonicalHocStageKindV1::LowerOrderScoreEstimation => 1,
-            CanonicalHocStageKindV1::HigherOrderEstimation => 2,
-        };
-        if stage.stage_number != expected_stage_number {
-            errors.push(format!(
-                "{item_context}.stage_number contradicts its stage kind"
-            ));
-        }
         if stage.approach.is_some() != stage.measurement_type.is_some() {
             errors.push(format!(
                 "{item_context}.approach and measurement_type must be present or absent together"
             ));
         }
+        let expected_role = match (stage.approach.as_ref(), stage.stage_number) {
+            (Some(crate::HigherOrderConstructionApproachV4::RepeatedIndicators), 1) => {
+                Some(crate::CompiledPlsHocStageRoleV1::RepeatedIndicatorEstimation)
+            }
+            (Some(crate::HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators), 1) => {
+                Some(crate::CompiledPlsHocStageRoleV1::ExtendedRepeatedIndicatorEstimation)
+            }
+            (Some(crate::HigherOrderConstructionApproachV4::EmbeddedTwoStage), 1) => {
+                Some(crate::CompiledPlsHocStageRoleV1::EmbeddedRepeatedIndicatorEstimation)
+            }
+            (Some(crate::HigherOrderConstructionApproachV4::DisjointTwoStage), 1) => {
+                Some(crate::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation)
+            }
+            (
+                Some(
+                    crate::HigherOrderConstructionApproachV4::EmbeddedTwoStage
+                    | crate::HigherOrderConstructionApproachV4::DisjointTwoStage,
+                ),
+                2,
+            ) => Some(crate::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores),
+            (None, 1) if stage.kind == CanonicalHocStageKindV1::LowerOrderScoreEstimation => {
+                Some(crate::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation)
+            }
+            (None, 2) if stage.kind == CanonicalHocStageKindV1::HigherOrderEstimation => {
+                Some(crate::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores)
+            }
+            _ => None,
+        };
+        let expected_kind = expected_role.map(|role| match role {
+            crate::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation
+            | crate::CompiledPlsHocStageRoleV1::EmbeddedRepeatedIndicatorEstimation => {
+                CanonicalHocStageKindV1::LowerOrderScoreEstimation
+            }
+            crate::CompiledPlsHocStageRoleV1::RepeatedIndicatorEstimation
+            | crate::CompiledPlsHocStageRoleV1::ExtendedRepeatedIndicatorEstimation
+            | crate::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores => {
+                CanonicalHocStageKindV1::HigherOrderEstimation
+            }
+        });
+        if expected_kind != Some(stage.kind) {
+            errors.push(format!(
+                "{item_context}.stage_number, approach, and stage kind are inconsistent"
+            ));
+        }
         if let Some(receipt) = &stage.receipt {
             if receipt.receipt_version != "general_sem_pls_higher_order_point_stage_receipt_v1"
                 || receipt.stage_number != stage.stage_number
-                || receipt.role
-                    != match stage.kind {
-                        CanonicalHocStageKindV1::LowerOrderScoreEstimation => {
-                            crate::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation
-                        }
-                        CanonicalHocStageKindV1::HigherOrderEstimation => {
-                            crate::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores
-                        }
-                    }
+                || Some(receipt.role) != expected_role
                 || receipt.used_observations == 0
                 || receipt.dataset_fingerprint != provenance.dataset_fingerprint
             {
@@ -5111,7 +5146,13 @@ mod tests {
             .higher_order_stages[1]
             .relation_estimates[0]
             .value = inferred_effect_value(0.31);
-        assert_gamma_only_error(&higher_order);
+        let errors = validate_canonical_result_document_v2(&higher_order).errors;
+        assert!(
+            errors.iter().any(|error| error.contains(
+                "higher_order_inference_receipt is required when higher-order relations contain inference"
+            )),
+            "{errors:?}"
+        );
     }
 
     #[test]
@@ -5450,7 +5491,7 @@ mod tests {
         let validation = validate_canonical_result_document_v2(&document);
         assert!(!validation.passed);
         for expected in [
-            "stage_number contradicts its stage kind",
+            "stage_number, approach, and stage kind are inconsistent",
             "duplicates a higher-order construct stage",
             "chi_square must be finite and nonnegative",
             "chi_square_p_value must be finite and between 0 and 1",
