@@ -655,12 +655,10 @@ pub fn validate_result(
         || result.pls_method_version != PLS_METHOD_VERSION
         || result.resampling_method_version != RESAMPLING_METHOD_VERSION
     {
-        return Err(PlsSampleSizePowerError::InconsistentResult(
-            format!(
-                "stable method or provenance identity differs from the frozen {} contract",
-                identity.version_label
-            ),
-        ));
+        return Err(PlsSampleSizePowerError::InconsistentResult(format!(
+            "stable method or provenance identity differs from the frozen {} contract",
+            identity.version_label
+        )));
     }
     if result.workload != workload {
         return Err(PlsSampleSizePowerError::InconsistentResult(
@@ -825,12 +823,10 @@ pub fn validate_result(
         ));
     }
     if result.exclusions != expected_exclusions(identity) {
-        return Err(PlsSampleSizePowerError::InconsistentResult(
-            format!(
-                "scope exclusions differ from the frozen {} contract",
-                identity.version_label
-            ),
-        ));
+        return Err(PlsSampleSizePowerError::InconsistentResult(format!(
+            "scope exclusions differ from the frozen {} contract",
+            identity.version_label
+        )));
     }
     Ok(())
 }
@@ -1139,14 +1135,17 @@ fn execute_replicate(
         bootstrap_usable_replicates,
         bootstrap_failed_replicates,
         bootstrap_two_sided_exceedances,
-    ) = accounting.map_or((None, None, None, None), |(requested, usable, failed, exceedances)| {
-        (
-            Some(requested),
-            Some(usable),
-            Some(failed),
-            Some(exceedances),
-        )
-    });
+    ) = accounting.map_or(
+        (None, None, None, None),
+        |(requested, usable, failed, exceedances)| {
+            (
+                Some(requested),
+                Some(usable),
+                Some(failed),
+                Some(exceedances),
+            )
+        },
+    );
     PlsPowerReplicateOutcomeV1 {
         sample_size,
         replicate_index,
@@ -1617,10 +1616,7 @@ mod tests {
             stream_digest(&input, 50, 0, b"bootstrap_inference")
         );
         let v2 = recipe_v2();
-        assert_ne!(
-            stream_identity(&input, 50, 0),
-            stream_identity(&v2, 50, 0)
-        );
+        assert_ne!(stream_identity(&input, 50, 0), stream_identity(&v2, 50, 0));
     }
 
     #[test]

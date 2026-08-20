@@ -7,12 +7,16 @@ mod recipe_v4_cbsem_general_sem_point_execution;
 #[doc(hidden)]
 pub mod internal_cbsem_general_sem_execution;
 mod recipe_v4_cbsem_product_indicator_execution;
+mod recipe_v4_general_sem_hoc_bootstrap_execution;
+mod recipe_v4_general_sem_hoc_point_execution;
 mod recipe_v4_general_sem_pls_execution;
 mod recipe_v4_pls_execution;
 
 pub use pls_model_comparison_execution::*;
 pub use recipe_v4_cbsem_execution::*;
 pub use recipe_v4_cbsem_product_indicator_execution::*;
+pub use recipe_v4_general_sem_hoc_bootstrap_execution::*;
+pub use recipe_v4_general_sem_hoc_point_execution::*;
 pub use recipe_v4_general_sem_pls_execution::*;
 pub use recipe_v4_pls_execution::*;
 
@@ -727,9 +731,7 @@ fn run_pls_sample_size_power_analysis(
             "PLS sample-size/power requires its explicit typed method_config".into(),
         ));
     };
-    if config.inference
-        != qpls_core::PlsPowerInference::CaseBootstrapNullCenteredTwoSidedPlusOne
-    {
+    if config.inference != qpls_core::PlsPowerInference::CaseBootstrapNullCenteredTwoSidedPlusOne {
         return Err(RunnerError::Recipe(
             "historical PLS sample-size/power v1 normal-reference recipes are read-only; new execution requires the null-centered two-sided plus-one v2 inference identity".into(),
         ));

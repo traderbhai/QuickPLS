@@ -9,6 +9,24 @@ const sourceRecipeId = "10000000-0000-4000-8000-000000000002";
 const projectId = "10000000-0000-4000-8000-000000000003";
 const recipeId = "10000000-0000-4000-8000-000000000004";
 const sha = (character: string) => character.repeat(64);
+const moderationPointCell = {
+  registry_schema_version: 2 as const,
+  capability_id: "smartpls.moderation",
+  cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+  capability_version: "general_sem_pls_multiple_two_way_moderation_point_v1",
+};
+const moderationBootstrapCell = {
+  registry_schema_version: 2 as const,
+  capability_id: "smartpls.moderation",
+  cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+  capability_version: "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+};
+const higherOrderPointCell = {
+  registry_schema_version: 2 as const,
+  capability_id: "smartpls.higher_order_models",
+  cell_id: "qpls3.pls.general_sem_higher_order_point",
+  capability_version: "general_sem_pls_higher_order_point_v1",
+};
 
 function request() {
   return parseInternalGeneralSemExecutionAuthorityRevisionRequestV1({
@@ -45,6 +63,8 @@ function request() {
         method: "two_stage",
         hierarchy_policy: "strong",
       },
+      expectedCapabilityCell: moderationPointCell,
+      recipeExecutionSurface: "native_general_sem_pls_labs_v1",
     },
   });
 }
@@ -52,7 +72,10 @@ function request() {
 describe("General SEM execution-authority revision v1 wire", () => {
   it("accepts only the exact versioned Labs request", () => {
     const parsed = request();
-    expect(parsed.revision.intent.operands).toEqual(["x", "w"]);
+    expect(parsed.revision.intent).toMatchObject({
+      kind: "add_general_sem_interaction_v2",
+      operands: ["x", "w"],
+    });
     expect(() => parseInternalGeneralSemExecutionAuthorityRevisionRequestV1({
       ...parsed,
       revision: { ...parsed.revision, intent: { ...parsed.revision.intent, kind: "add_interaction" } },
@@ -61,6 +84,40 @@ describe("General SEM execution-authority revision v1 wire", () => {
       ...parsed,
       destinationArchivePath: parsed.sourceArchivePath,
     })).toThrow(/new destination path/);
+  });
+
+  it("accepts a HOC plus its initial structural path as one revision intent", () => {
+    const base = request();
+    const parsed = parseInternalGeneralSemExecutionAuthorityRevisionRequestV1({
+      ...base,
+      revision: {
+        ...base.revision,
+        intent: {
+          kind: "add_higher_order",
+          term_id: "term:hoc",
+          output_id: "derived:hoc",
+          label: "Corporate standing",
+          components: ["construct:a", "construct:b"],
+          approach: "embedded_two_stage",
+          measurement_type: "reflective_formative",
+          initial_path: {
+            relation_id: "relation:hoc_y",
+            source: "derived:hoc",
+            target: "construct:y",
+            label: "Corporate standing effect",
+          },
+        },
+        expectedCapabilityCell: higherOrderPointCell,
+      },
+    });
+    expect(parsed.revision.intent).toMatchObject({
+      kind: "add_higher_order",
+      initial_path: { source: "derived:hoc", target: "construct:y" },
+    });
+    expect(() => parseInternalGeneralSemExecutionAuthorityRevisionRequestV1({
+      ...parsed,
+      revision: { ...parsed.revision, expectedCapabilityCell: moderationPointCell },
+    })).toThrow(/exact point or supplemental bootstrap cell/);
   });
 
   it("pins every authority and deterministic interaction identity in the receipt", () => {
@@ -94,7 +151,7 @@ describe("General SEM execution-authority revision v1 wire", () => {
       residentRecipeId: recipeId,
       residentRecipeDocumentSha256: sha("1"),
       compilerVersion: "general-sem-pls-v1",
-      capabilityCell: { registry_schema_version: 2, capability_id: "smartpls.moderation", cell_id: "pls-two-way", capability_version: "1" },
+      capabilityCell: moderationPointCell,
       recipeAnalyticalSha256: sha("2"),
       generalSemConfigSha256: sha("3"),
       compiledPlanSha256: sha("4"),
@@ -108,6 +165,20 @@ describe("General SEM execution-authority revision v1 wire", () => {
     }, parsedRequest);
     expect(parsed.status).toBe("ok");
     if (parsed.status === "ok") expect(parsed.value.receipt.revisionNumber).toBe(1);
+    const bootstrapRequest = parseInternalGeneralSemExecutionAuthorityRevisionRequestV1({
+      ...parsedRequest,
+      revision: {
+        ...parsedRequest.revision,
+        expectedCapabilityCell: moderationBootstrapCell,
+      },
+    });
+    expect(parseInternalGeneralSemExecutionAuthorityRevisionNativeOutcomeV1({
+      status: "ok",
+      value: { schemaVersion: 1, persistence: "persisted_new_revision", receipt },
+    }, bootstrapRequest)).toMatchObject({
+      status: "ok",
+      value: { receipt: { capabilityCell: moderationPointCell } },
+    });
     expect(() => parseInternalGeneralSemExecutionAuthorityRevisionNativeOutcomeV1({
       status: "ok",
       value: { schemaVersion: 1, persistence: "persisted_new_revision", receipt: { ...receipt, sourceModelScientificSha256: sha("9") } },

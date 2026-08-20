@@ -17,8 +17,10 @@ use qpls_estimation::{
     PLS_SCORE_EXECUTION_CONTRACT_VERSION_V2, PLS_SCORE_EXECUTION_METHOD_VERSION_V2,
     PlsAlgorithmInitializationV1, PlsAlgorithmTerminationReasonV1, PlsAlgorithmUpdateRuleV1,
     PlsConvergenceComparisonV1, PlsPointEstimateAttributionV1, PlsResolvedScoreBlockKindV2,
-    PlsResult, estimate_pls_validated_with_compiled_plan_v2_with_control,
-    estimate_pls_validated_with_control, pls_posthoc_minimum_sample_size_v2,
+    PlsResult, estimate_pls_validated_allowing_isolated_with_control,
+    estimate_pls_validated_with_compiled_plan_v2_allowing_isolated_with_control,
+    estimate_pls_validated_with_compiled_plan_v2_with_control, estimate_pls_validated_with_control,
+    pls_posthoc_minimum_sample_size_v2,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -112,6 +114,19 @@ impl RecipeV4PlsExecutionResultV1 {
     pub fn estimation(&self) -> &PlsResult {
         &self.estimation
     }
+
+    pub(crate) fn estimation_mut(&mut self) -> &mut PlsResult {
+        &mut self.estimation
+    }
+
+    pub(crate) fn retain_source_row_accounting(
+        &mut self,
+        used_observations: usize,
+        omitted_observations: usize,
+    ) {
+        self.estimation.used_observations = used_observations;
+        self.estimation.omitted_observations = omitted_observations;
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -183,6 +198,49 @@ pub fn run_compiled_pls_recipe_v4(
     resolved_model: &SemModelV4,
     artifact: &CompiledAnalysisRecipeV4,
     posthoc_technical_minimum_sample_size: Option<&PlsPosthocTechnicalMinimumSampleSizeConfigV2>,
+    should_cancel: impl Fn() -> bool + Sync,
+    progress: impl Fn(RunnerProgress) + Sync,
+) -> Result<RecipeV4PlsExecutionResultV1, RecipeV4PlsExecutionError> {
+    run_compiled_pls_recipe_v4_with_isolated_policy(
+        dataset,
+        recipe,
+        resolved_model,
+        artifact,
+        posthoc_technical_minimum_sample_size,
+        false,
+        should_cancel,
+        progress,
+    )
+}
+
+pub(crate) fn run_compiled_pls_recipe_v4_allowing_isolated(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipeV4,
+    resolved_model: &SemModelV4,
+    artifact: &CompiledAnalysisRecipeV4,
+    should_cancel: impl Fn() -> bool + Sync,
+    progress: impl Fn(RunnerProgress) + Sync,
+) -> Result<RecipeV4PlsExecutionResultV1, RecipeV4PlsExecutionError> {
+    run_compiled_pls_recipe_v4_with_isolated_policy(
+        dataset,
+        recipe,
+        resolved_model,
+        artifact,
+        None,
+        true,
+        should_cancel,
+        progress,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_compiled_pls_recipe_v4_with_isolated_policy(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipeV4,
+    resolved_model: &SemModelV4,
+    artifact: &CompiledAnalysisRecipeV4,
+    posthoc_technical_minimum_sample_size: Option<&PlsPosthocTechnicalMinimumSampleSizeConfigV2>,
+    allow_isolated_constructs: bool,
     should_cancel: impl Fn() -> bool + Sync,
     progress: impl Fn(RunnerProgress) + Sync,
 ) -> Result<RecipeV4PlsExecutionResultV1, RecipeV4PlsExecutionError> {
@@ -273,11 +331,27 @@ pub fn run_compiled_pls_recipe_v4(
         !should_cancel()
     };
     let mut estimation = if score_execution_v2 {
-        estimate_pls_validated_with_compiled_plan_v2_with_control(
+        if allow_isolated_constructs {
+            estimate_pls_validated_with_compiled_plan_v2_allowing_isolated_with_control(
+                dataset,
+                &execution,
+                plan,
+                source_initialization,
+                &mut report_progress,
+            )
+        } else {
+            estimate_pls_validated_with_compiled_plan_v2_with_control(
+                dataset,
+                &execution,
+                plan,
+                source_initialization,
+                &mut report_progress,
+            )
+        }
+    } else if allow_isolated_constructs {
+        estimate_pls_validated_allowing_isolated_with_control(
             dataset,
             &execution,
-            plan,
-            source_initialization,
             &mut report_progress,
         )
     } else {

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.higher_order_models",
+  "execution_context": "recipe_v4_compiled_pls_plan_v3_general_sem_higher_order_point_execution",
+  "feature": {
+    "id": "qpls3.pls.general_sem_higher_order_point",
+    "label": "General SEM PLS higher-order construct point estimates",
+    "method_version": "general_sem_pls_higher_order_point_v1",
+    "analytical_method_version": "general_sem_pls_higher_order_point_v1",
+    "method_kind": "approach_specific_higher_order_pls_point_estimation"
+  },
+  "coverage_state": "partial",
+  "evidence_state": "release_qualified",
+  "surface": "standard",
+  "availability": "standard",
+  "qualification_ready": true,
+  "promotion_allowed": true,
+  "method_contract": "docs/GENERAL_SEM_PLS_HIGHER_ORDER_V1.md",
+  "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/higher-order/",
+  "exact_predicate": {
+    "schema_generation": "general_sem_v1",
+    "hoc_count": 1,
+    "hoc_level": "second_order_non_nested",
+    "approaches": "repeated_extended_embedded_disjoint_exact_matrix",
+    "hcm_types": "rr_rf_fr_ff_exact_matrix",
+    "input": "raw_continuous",
+    "missing_data": "listwise",
+    "preprocessing": "standardized",
+    "weighting": "path",
+    "groups": "single",
+    "case_weights": "none",
+    "interactions": "none",
+    "feedback": "none",
+    "inference": "point_only"
+  },
+  "implemented_contracts": [
+    "typed approach-specific stage plan and stable generated identities",
+    "repeated, extended-repeated, embedded two-stage, and disjoint two-stage execution",
+    "component loadings or weights, formative VIF, HOC structural paths, and extended effects",
+    "canonical tables, schema-6 append and strict reopen, native results and shared export",
+    "versioned save-as HOC revision with an atomic initial structural path"
+  ],
+  "blocked_contracts": [
+    "hybrid, nested, or multiple HOCs",
+    "HOC interactions, groups, case weights, feedback, PLSc, permutation, and matrix input"
+  ],
+  "remaining_qualification": [
+    "Standard qualification uses the streamlined Rank 1 profile: independent numerical parity, the consolidated Rust/frontend regression, one production Windows build, and one final Standard-access smoke. The exact exclusions in this contract remain in force."
+  ]
+}

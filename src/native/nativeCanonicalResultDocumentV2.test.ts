@@ -25,6 +25,8 @@ import {
   GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+  GENERAL_SEM_PLS_DISJOINT_HOC_SCORE_DATASET_RECEIPT_VERSION_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_POINT_STAGE_RECEIPT_VERSION_V1,
   GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
   GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1,
@@ -776,6 +778,126 @@ describe("CanonicalResultDocumentV2 native runtime adapter", () => {
     ]) {
       expect(Object.prototype.hasOwnProperty.call(pointEstimate, field)).toBe(false);
     }
+  });
+
+  it("strictly preserves typed disjoint HOC stage, mapping, relation, and point receipts", async () => {
+    const built = await canonicalResultDocumentFromAnalysisRunV2(currentPlsRun());
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    const document = structuredClone(built.document);
+    document.general_sem_results = completeGeneralSemResultsFixture(document);
+    const stages = document.general_sem_results.higher_order_stages!;
+    const datasetFingerprint = document.provenance.dataset_fingerprint;
+    stages[0] = {
+      ...stages[0]!,
+      approach: "disjoint_two_stage",
+      measurement_type: "reflective_reflective",
+      receipt: {
+        receipt_version: GENERAL_SEM_PLS_HIGHER_ORDER_POINT_STAGE_RECEIPT_VERSION_V1,
+        stage_number: 1,
+        role: "disjoint_lower_order_score_estimation",
+        projection_identity_sha256: "1".repeat(64),
+        model_scientific_sha256: "2".repeat(64),
+        compiled_plan_sha256: "3".repeat(64),
+        dataset_fingerprint: datasetFingerprint,
+        used_observations: 12,
+        omitted_observations: 0,
+      },
+    };
+    stages[1] = {
+      ...stages[1]!,
+      approach: "disjoint_two_stage",
+      measurement_type: "reflective_reflective",
+      generated_variable_mappings: [
+        {
+          component_id: "construct_a",
+          generated_score_variable_id: "score_a",
+          generated_component_relation_id: "hoc_component_a",
+          generated_component_parameter_id: "parameter_hoc_component_a",
+          component_relation_source_id: "hoc_ab",
+          component_relation_target_id: "construct_a",
+          relation_interpretation: "loading",
+        },
+        {
+          component_id: "construct_b",
+          generated_score_variable_id: "score_b",
+          generated_component_relation_id: "hoc_component_b",
+          generated_component_parameter_id: "parameter_hoc_component_b",
+          component_relation_source_id: "hoc_ab",
+          component_relation_target_id: "construct_b",
+          relation_interpretation: "loading",
+        },
+      ],
+      receipt: {
+        receipt_version: GENERAL_SEM_PLS_HIGHER_ORDER_POINT_STAGE_RECEIPT_VERSION_V1,
+        stage_number: 2,
+        role: "higher_order_from_lower_order_scores",
+        projection_identity_sha256: "4".repeat(64),
+        model_scientific_sha256: "5".repeat(64),
+        compiled_plan_sha256: "6".repeat(64),
+        dataset_fingerprint: datasetFingerprint,
+        used_observations: 12,
+        omitted_observations: 0,
+        generated_score_dataset: {
+          receipt_version: GENERAL_SEM_PLS_DISJOINT_HOC_SCORE_DATASET_RECEIPT_VERSION_V1,
+          source_dataset_fingerprint: datasetFingerprint,
+          complete_case_row_count: 12,
+          omitted_row_count: 0,
+          complete_case_rows_sha256: "7".repeat(64),
+          generated_score_columns: [
+            {
+              component_id: "construct_a",
+              generated_score_variable_id: "score_a",
+              observation_count: 12,
+              values_sha256: "8".repeat(64),
+            },
+            {
+              component_id: "construct_b",
+              generated_score_variable_id: "score_b",
+              observation_count: 12,
+              values_sha256: "9".repeat(64),
+            },
+          ],
+        },
+      },
+      relation_estimates: [
+        {
+          relation_id: "hoc_component_a",
+          parameter_id: "parameter_hoc_component_a",
+          source_id: "hoc_ab",
+          target_id: "construct_a",
+          kind: "component_loading",
+          value: { estimate: 0.81 },
+        },
+        {
+          relation_id: "hoc_component_b",
+          parameter_id: "parameter_hoc_component_b",
+          source_id: "hoc_ab",
+          target_id: "construct_b",
+          kind: "component_loading",
+          value: { estimate: 0.79 },
+        },
+        {
+          ...stages[1]!.relation_estimates![0]!,
+          parameter_id: "parameter_hoc_1",
+          kind: "authored_structural",
+        },
+      ],
+    };
+
+    const encoded = JSON.stringify(document);
+    const readback = parseNativeCanonicalResultDocumentV2(JSON.parse(encoded));
+
+    expect(JSON.stringify(readback)).toBe(encoded);
+    expect(readback.general_sem_results?.higher_order_stages?.[1]).toMatchObject({
+      approach: "disjoint_two_stage",
+      measurement_type: "reflective_reflective",
+      generated_variable_mappings: [{ component_id: "construct_a" }, { component_id: "construct_b" }],
+      receipt: {
+        role: "higher_order_from_lower_order_scores",
+        generated_score_dataset: { complete_case_row_count: 12 },
+      },
+    });
   });
 
   it("reads interaction coefficient provenance and rejects scale or cross-reference tampering", async () => {

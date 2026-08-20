@@ -58,18 +58,18 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertEqual(report["capability_row_count"], 45)
         self.assertEqual(report["active_row_count"], 43)
         self.assertEqual(report["coverage_counts"], EXPECTED_COVERAGE_COUNTS)
-        self.assertEqual(report["qualification_link_count"], 51)
-        self.assertEqual(report["option_cell_count"], 51)
+        self.assertEqual(report["qualification_link_count"], 54)
+        self.assertEqual(report["option_cell_count"], 54)
         self.assertEqual(
             report["option_cell_coverage_counts"],
-            {"full": 0, "partial": 38, "absent": 11, "intentionally_excluded": 2},
+            {"full": 0, "partial": 41, "absent": 11, "intentionally_excluded": 2},
         )
         self.assertEqual(
             report["evidence_counts"],
             {
                 "absent": 16,
-                "engine_only": 3,
-                "archive_qualified": 0,
+                "engine_only": 2,
+                "archive_qualified": 1,
                 "native_qualified": 0,
                 "release_qualified": 26,
             },
@@ -78,15 +78,15 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
             report["option_cell_evidence_counts"],
             {
                 "absent": 16,
-                "engine_only": 4,
-                "archive_qualified": 2,
+                "engine_only": 2,
+                "archive_qualified": 1,
                 "native_qualified": 0,
-                "release_qualified": 29,
+                "release_qualified": 35,
             },
         )
         self.assertTrue(report["manifest_evidence_check"]["passed"])
-        self.assertEqual(report["manifest_evidence_check"]["mapped_cell_count"], 48)
-        self.assertEqual(report["manifest_evidence_check"]["unique_manifest_count"], 42)
+        self.assertEqual(report["manifest_evidence_check"]["mapped_cell_count"], 50)
+        self.assertEqual(report["manifest_evidence_check"]["unique_manifest_count"], 44)
         self.assertEqual(
             report["manifest_evidence_check"]["derived_cell_evidence_counts"],
             {
@@ -94,7 +94,7 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
                 "engine_only": 3,
                 "archive_qualified": 2,
                 "native_qualified": 0,
-                "release_qualified": 25,
+                "release_qualified": 27,
             },
         )
         self.assertEqual(
@@ -103,17 +103,65 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         )
         self.assertEqual(
             report["option_cell_surface_counts"],
-            {"standard": 29, "labs": 20, "legacy": 2, "internal": 0},
+            {"standard": 35, "labs": 17, "legacy": 2, "internal": 0},
         )
 
-    def test_general_sem_multiple_mediation_bootstrap_is_exact_labs_engine_cell(self):
+    def test_general_sem_two_way_moderated_mediation_bootstrap_is_exact_labs_engine_cell(self):
+        cell_id = "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap"
+        cell = lookup_option_cell(self.registry, "smartpls.mediation", cell_id)
+        self.assertIsNotNone(cell)
+        self.assertEqual(
+            cell["capability_version"],
+            "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+        )
+        self.assertEqual(cell["coverage_state"], "partial")
+        self.assertEqual(cell["evidence_state"], "engine_only")
+        self.assertEqual(cell["surface"], "labs")
+        self.assertEqual(
+            cell["qualification_spec"]["references"],
+            [
+                "validation/capabilities/general_sem_pls_two_way_moderated_mediation_bootstrap_v1.cell.manifest.json",
+            ],
+        )
+
+        manifest = load_json(
+            ROOT
+            / "validation/capabilities/general_sem_pls_two_way_moderated_mediation_bootstrap_v1.cell.manifest.json"
+        )
+        self.assertEqual(manifest["contract_kind"], "capability_cell_contract")
+        self.assertEqual(manifest["owner_capability_id"], "smartpls.mediation")
+        self.assertEqual(manifest["feature"]["id"], cell_id)
+        self.assertEqual(
+            manifest["feature"]["method_version"], cell["capability_version"]
+        )
+        self.assertFalse(manifest["qualification_ready"])
+        self.assertFalse(manifest["promotion_allowed"])
+        self.assertEqual(
+            manifest["exact_predicate"]["moderated_stage"],
+            "first_or_second_exactly_one",
+        )
+        self.assertEqual(
+            manifest["exact_predicate"]["published_probe_policy"],
+            "standardized_moderator_minus_one_zero_plus_one_v1",
+        )
+
+        labs = resolve_customer_visibility(
+            self.registry,
+            "smartpls.mediation",
+            cell_id,
+        )
+        self.assertEqual(labs["channel"], "labs")
+        self.assertTrue(labs["requires_opt_in"])
+        self.assertTrue(labs["available"])
+
+    def test_general_sem_multiple_mediation_bootstrap_preserves_rank0_standard_cell(self):
         cell_id = "qpls3.pls.general_sem_multiple_mediation_bootstrap"
         cell = lookup_option_cell(self.registry, "smartpls.mediation", cell_id)
         self.assertIsNotNone(cell)
         self.assertEqual(cell["capability_version"], "general_sem_pls_full_model_case_bootstrap_v1")
         self.assertEqual(cell["coverage_state"], "partial")
-        self.assertEqual(cell["evidence_state"], "engine_only")
-        self.assertEqual(cell["surface"], "labs")
+        self.assertEqual(cell["evidence_state"], "release_qualified")
+        self.assertEqual(cell["surface"], "standard")
         quickpls_predicates = cell["supported_model_predicate"]["quickpls"]
         self.assertIn("indirect_paths:min_2", quickpls_predicates)
         self.assertIn("inference:full_model_case_bootstrap", quickpls_predicates)
@@ -131,16 +179,16 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertIsNotNone(owner)
         self.assertEqual(owner["capability_id"], "smartpls.mediation")
 
-        labs = resolve_customer_visibility(
+        standard = resolve_customer_visibility(
             self.registry,
             "smartpls.mediation",
             cell_id,
         )
-        self.assertEqual(labs["channel"], "labs")
-        self.assertTrue(labs["requires_opt_in"])
-        self.assertTrue(labs["available"])
+        self.assertEqual(standard["channel"], "standard")
+        self.assertFalse(standard["requires_opt_in"])
+        self.assertTrue(standard["available"])
 
-    def test_general_sem_multiple_moderation_point_is_exact_labs_engine_cell(self):
+    def test_general_sem_multiple_moderation_point_preserves_rank0_standard_cell(self):
         cell_id = "qpls3.pls.general_sem_multiple_two_way_moderation_point"
         cell = lookup_option_cell(self.registry, "smartpls.moderation", cell_id)
         self.assertIsNotNone(cell)
@@ -149,8 +197,8 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
             "general_sem_pls_multiple_two_way_moderation_point_v1",
         )
         self.assertEqual(cell["coverage_state"], "partial")
-        self.assertEqual(cell["evidence_state"], "engine_only")
-        self.assertEqual(cell["surface"], "labs")
+        self.assertEqual(cell["evidence_state"], "release_qualified")
+        self.assertEqual(cell["surface"], "standard")
         self.assertEqual(
             cell["supported_model_predicate"]["quickpls"],
             [
@@ -192,8 +240,8 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
             manifest["feature"]["analytical_method_version"],
             "qpls.general-sem-pls.multiple-two-way.point.v1",
         )
-        self.assertFalse(manifest["qualification_ready"])
-        self.assertFalse(manifest["promotion_allowed"])
+        self.assertTrue(manifest["qualification_ready"])
+        self.assertTrue(manifest["promotion_allowed"])
         self.assertEqual(
             manifest["exact_predicate"],
             {
@@ -222,16 +270,16 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
             ],
         )
 
-        labs = resolve_customer_visibility(
+        standard = resolve_customer_visibility(
             self.registry,
             "smartpls.moderation",
             cell_id,
         )
-        self.assertEqual(labs["channel"], "labs")
-        self.assertTrue(labs["requires_opt_in"])
-        self.assertTrue(labs["available"])
+        self.assertEqual(standard["channel"], "standard")
+        self.assertFalse(standard["requires_opt_in"])
+        self.assertTrue(standard["available"])
 
-    def test_general_sem_multiple_moderation_bootstrap_is_exact_supplemental_labs_cell(self):
+    def test_general_sem_multiple_moderation_bootstrap_preserves_rank0_standard_cell(self):
         cell_id = "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap"
         cell = lookup_option_cell(self.registry, "smartpls.moderation", cell_id)
         self.assertIsNotNone(cell)
@@ -240,8 +288,8 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
             "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
         )
         self.assertEqual(cell["coverage_state"], "partial")
-        self.assertEqual(cell["evidence_state"], "engine_only")
-        self.assertEqual(cell["surface"], "labs")
+        self.assertEqual(cell["evidence_state"], "release_qualified")
+        self.assertEqual(cell["surface"], "standard")
         self.assertEqual(
             cell["supported_model_predicate"]["quickpls"],
             [
@@ -306,8 +354,8 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
             manifest["primary_artifact_cell_id"],
             "qpls3.pls.general_sem_multiple_two_way_moderation_point",
         )
-        self.assertFalse(manifest["qualification_ready"])
-        self.assertFalse(manifest["promotion_allowed"])
+        self.assertTrue(manifest["qualification_ready"])
+        self.assertTrue(manifest["promotion_allowed"])
         self.assertEqual(
             manifest["exact_predicate"],
             {
@@ -360,7 +408,10 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertEqual(
             method_manifest["feature"]["method_version"], cell["capability_version"]
         )
-        self.assertEqual(method_manifest["qualification"]["declared_state"], "engine_only")
+        self.assertEqual(
+            method_manifest["qualification"]["declared_state"],
+            "release_qualified",
+        )
         self.assertIn(
             "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_V1.md",
             cell["settings_schema"]["references"],
@@ -372,7 +423,7 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertEqual(
             cell["known_differences"],
             [
-                "This connected partial engine-only Labs cell performs indexed full-model case resampling and publishes Type-7 two-sided inference only for each typed scientific rescaled gamma target. Every usable replicate reruns shared stage-one scoring, sign-aligns complete score vectors before product construction, recomputes product scaling, refits and validates the complete joint stage-two point contract, and remains subject to the exact 90 percent usable gate. Standardized-product beta, ordinary joint-stage coefficients, fixed minus-one/zero/plus-one slopes, and plots remain point-only. Standard availability remains blocked pending an independent full-PLS oracle, qualification-scale coverage and adversarial evidence, semantic export/readback, packaged Windows, performance/soak, and review; three-way moderation, moderated mediation, directed chains, authored probes, higher-order constructs, groups, weights, transformed inputs, and non-listwise missing data remain excluded."
+                "This bounded cell is Standard under rank0_streamlined_plan4b_v1. Package and performance evidence is representative rather than per-cell; documented exclusions remain unchanged and no SmartPLS numerical-identity claim is made."
             ],
         )
         link = cell["qualification_spec"]["links"][0]
@@ -380,14 +431,14 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertEqual(link["capability_version"], cell["capability_version"])
         self.assertIsNotNone(lookup_qualification_link(self.registry, link))
 
-        labs = resolve_customer_visibility(
+        standard = resolve_customer_visibility(
             self.registry,
             "smartpls.moderation",
             cell_id,
         )
-        self.assertEqual(labs["channel"], "labs")
-        self.assertTrue(labs["requires_opt_in"])
-        self.assertTrue(labs["available"])
+        self.assertEqual(standard["channel"], "standard")
+        self.assertFalse(standard["requires_opt_in"])
+        self.assertTrue(standard["available"])
 
     def test_current_status_policy_cannot_delegate_to_the_historical_parity_ledger(self):
         policy = self.registry["comparison_policy"]["status_source_of_truth"]

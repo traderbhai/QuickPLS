@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "report_kind": "general_sem_rank1_streamlined_method_identity_v1",
+  "passed": true,
+  "feature_id": "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+  "method_version": "general_sem_pls_higher_order_full_model_case_bootstrap_v1",
+  "catalogue_snapshot_date": "2026-08-20",
+  "generated_at_utc": "2026-08-20T18:16:16Z",
+  "qualification_profile_id": "rank1_streamlined_standard_v1",
+  "representative_evidence_acknowledged": true,
+  "streamlined_release_report": {
+    "path": "validation/results/general_sem_rank1_standard_v1/streamlined-release-evidence.json",
+    "size": 2989,
+    "sha256": "062de23b6721ad6743525d73ffe75d8847744d3268a0ac2b1370e848ad25d481"
+  },
+  "source_artifacts": [
+    {"path": "docs/methods/general_sem_pls_higher_order_v1.md", "size": 748, "sha256": "386cbff1c1c14154354db7bdc6b6964452f514261708cb1b855d87e8091930da"},
+    {"path": "validation/higher_order_two_stage_reference.py", "size": 11476, "sha256": "67ce784c4445d2a954380d79e78369765268943f7d3b52fdcfc8f03c440b81c2"},
+    {"path": "validation/higher_order_two_stage_simulation.py", "size": 211, "sha256": "cf8e45cd1c9f3a314f201c5f39a2aabbfe9ebc88a1f0148b6f9c94833026c248"},
+    {"path": "validation/higher_order_two_stage_boundary_gate.py", "size": 205, "sha256": "39ef47e724897dddfb4ac9f6c3ce58858a6d81d0bca767e92697b888ec522ee6"},
+    {"path": "validation/higher_order_two_stage_persistence_gate.py", "size": 215, "sha256": "59feff110125c5ea6cd155cbc7b2bd223f80f1a8d11c57300b74a4f1fff4b10e"},
+    {"path": "src/native/nativeHigherOrder.test.ts", "size": 4466, "sha256": "e062bef883327719ccf65670b593efff6d30c0ab562309067427b3c2154da303"},
+    {"path": "src/domain/canonicalResultCrossFormatExportV2.test.ts", "size": 23654, "sha256": "440b6394ce25dba42760e908dfda83bc9a93a7772413a7b0983d328952471cab"},
+    {"path": "validation/higher_order_method_promotion_audit.py", "size": 276, "sha256": "175b25a9bc4af262f83c634141445051f713cc65c16a0280e124ea912d718324"},
+    {"path": "validation/higher_order_v1_packaged_acceptance.py", "size": 19135, "sha256": "fe919a8ff2b338ec4664871c65da1041be1ec5a2ec1b02cccc917d44a767d0c1"},
+    {"path": "validation/run_v247_hoc_native_acceptance.ps1", "size": 9223, "sha256": "abf3060c40798f3531a993c5ffbdf187d9f9e7ec89da416bf7608ff3da5af59c"},
+    {"path": "validation/method_promotion_manifest.py", "size": 34283, "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865"},
+    {"path": "validation/methods/general_sem_pls_higher_order_bootstrap_v1.manifest.json", "size": 11836, "sha256": "c82dfb42b91847ceee56ee7a16f7c88d40d13dd8503bd045bf23bdf5bf9bcc2e"},
+    {"path": "validation/methods/method_promotion_manifest.schema.json", "size": 15836, "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743"},
+    {"path": "validation/test_method_promotion_manifest.py", "size": 21368, "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926"}
+  ]
+}

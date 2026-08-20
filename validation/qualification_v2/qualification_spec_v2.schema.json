@@ -78,6 +78,7 @@
       "properties": {
         "qualification_id": { "$ref": "#/$defs/id" },
         "method_version": { "$ref": "#/$defs/id" },
+        "analytical_method_version": { "$ref": "#/$defs/id" },
         "execution_kind": {
           "enum": ["deterministic", "stochastic", "iterative", "hybrid"]
         },
@@ -368,7 +369,45 @@
       "properties": {
         "confidence_level": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
         "maximum_half_width": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 0.5 },
-        "failed_fits_in_denominator": { "const": true }
+        "failed_fits_in_denominator": { "const": true },
+        "decision_boundary_trial_policy": { "$ref": "#/$defs/decision_boundary_trial_policy" }
+      }
+    },
+    "decision_boundary_trial_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_version",
+        "confidence_method",
+        "selection_rule",
+        "global_worst_case_trials",
+        "metric_budgets",
+        "scenario_trial_overrides"
+      ],
+      "properties": {
+        "policy_version": { "type": "string", "minLength": 1 },
+        "confidence_method": { "const": "wilson_score_two_sided_v1" },
+        "selection_rule": { "const": "fixed_before_plan4b_outcome_review_contiguous_prefix_v1" },
+        "global_worst_case_trials": { "type": "integer", "minimum": 1 },
+        "metric_budgets": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/decision_boundary_metric_budget" }
+        },
+        "scenario_trial_overrides": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "decision_boundary_metric_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_rate", "minimum_trials", "execution_target_trials"],
+      "properties": {
+        "decision_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "minimum_trials": { "type": "integer", "minimum": 1 },
+        "execution_target_trials": { "type": "integer", "minimum": 1 }
       }
     },
     "scenario_contract": {
@@ -378,7 +417,7 @@
       "properties": {
         "axes": {
           "type": "array",
-          "minItems": 7,
+          "minItems": 6,
           "items": { "$ref": "#/$defs/scenario_axis" }
         },
         "complexity_profiles": {
@@ -409,7 +448,8 @@
             "sign_orientation",
             "subspace",
             "label_permutation",
-            "monte_carlo_interval"
+            "monte_carlo_interval",
+            "bounded_moment"
           ]
         },
         "rationale": { "$ref": "#/$defs/non_empty_string" },
@@ -437,6 +477,18 @@
           "minItems": 2,
           "maxItems": 2,
           "items": { "type": "number" }
+        },
+        "statistic": { "enum": ["absolute_bias", "rmse"] },
+        "maximum": { "type": "number", "exclusiveMinimum": 0 },
+        "grouping_keys": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "family" },
+            { "const": "target_id" }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
         }
       }
     },
@@ -728,12 +780,14 @@
         "capability_id": { "$ref": "#/$defs/id" },
         "cell_id": { "$ref": "#/$defs/id" },
         "method_version": { "$ref": "#/$defs/id" },
+        "analytical_method_version": { "$ref": "#/$defs/id" },
         "path": { "$ref": "#/$defs/repository_path" },
         "size_bytes": { "type": "integer", "minimum": 1 },
         "sha256": { "$ref": "#/$defs/sha256" },
         "generated_at_utc": { "type": "string", "format": "date-time" },
         "source_set_sha256": { "$ref": "#/$defs/sha256" },
         "scenario_set_sha256": { "$ref": "#/$defs/sha256" },
+        "qualification_contract_sha256": { "$ref": "#/$defs/sha256" },
         "build_fingerprint": { "$ref": "#/$defs/non_empty_string" },
         "hardware_fingerprint": { "$ref": "#/$defs/hardware_fingerprint" }
       }
@@ -761,13 +815,36 @@
               "method_version",
               "source_set_sha256",
               "scenario_set_sha256",
+              "qualification_contract_sha256",
               "build_fingerprint"
             ]
           }
         },
         "source_descriptors_required": { "const": true },
         "hardware_fingerprint_required": { "const": true },
-        "scenario_set_hash_required": { "const": true }
+        "scenario_set_hash_required": { "const": true },
+        "payload_contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contract_id",
+            "schema_version",
+            "schema_path",
+            "validator_path"
+          ],
+          "properties": {
+            "contract_id": {
+              "const": "quickpls.general_sem.rank0.receipt_payload.v1"
+            },
+            "schema_version": { "const": 1 },
+            "schema_path": {
+              "const": "validation/qualification_v2/general_sem_rank0_receipt_payload_v1.schema.json"
+            },
+            "validator_path": {
+              "const": "validation/general_sem_rank0_receipt_payload_v1.py"
+            }
+          }
+        }
       }
     },
     "evidence_contract": {

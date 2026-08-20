@@ -11,14 +11,18 @@ pub use qpls_core::{
     CanonicalGeneralSemFailedReplicateV1, CanonicalGeneralSemInferenceKindV1,
     CanonicalGeneralSemInferenceReceiptV1, CanonicalGeneralSemInferenceTailV1,
     CanonicalGeneralSemIntervalV1, CanonicalGeneralSemResultTraceV1, CanonicalGeneralSemResultsV1,
-    CanonicalHocRelationEstimateV1, CanonicalHocStageKindV1, CanonicalHocStageResultV1,
-    CanonicalIdentificationDiagnosticV1, CanonicalIdentificationScopeV1,
-    CanonicalIdentificationStatusV1, CanonicalInteractionConstructionMethodV1,
-    CanonicalInteractionEffectResultV1, CanonicalInteractionHierarchyPolicyV1,
-    CanonicalInteractionPlotPointV1, CanonicalInteractionPlotResultV1,
-    CanonicalInteractionPlotSeriesV1, CanonicalJointStageStructuralCoefficientResultV1,
-    CanonicalSpecificIndirectEffectResultV1, CanonicalStructuralEstimateStageV1,
-    CanonicalStructuralRelationRoleV1,
+    CanonicalHocBootstrapFailedReplicateV1, CanonicalHocBootstrapFailureReasonV1,
+    CanonicalHocBootstrapReceiptV1, CanonicalHocBootstrapTargetIdentityV1,
+    CanonicalHocBootstrapTargetKindV1, CanonicalHocGeneratedScoreColumnReceiptV1,
+    CanonicalHocGeneratedScoreDatasetReceiptV1, CanonicalHocGeneratedVariableMappingV1,
+    CanonicalHocPointStageReceiptV1, CanonicalHocRelationEstimateV1, CanonicalHocRelationKindV1,
+    CanonicalHocStageKindV1, CanonicalHocStageResultV1, CanonicalIdentificationDiagnosticV1,
+    CanonicalIdentificationScopeV1, CanonicalIdentificationStatusV1,
+    CanonicalInteractionConstructionMethodV1, CanonicalInteractionEffectResultV1,
+    CanonicalInteractionHierarchyPolicyV1, CanonicalInteractionPlotPointV1,
+    CanonicalInteractionPlotResultV1, CanonicalInteractionPlotSeriesV1,
+    CanonicalJointStageStructuralCoefficientResultV1, CanonicalSpecificIndirectEffectResultV1,
+    CanonicalStructuralEstimateStageV1, CanonicalStructuralRelationRoleV1,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -700,6 +704,20 @@ fn ensure_general_sem_results_finite(
         )?;
         ensure_general_sem_estimate_finite(&effect.value, &format!("{context}.value"))?;
     }
+    for (index, effect) in results.conditional_indirect_effects.iter().enumerate() {
+        let context = format!("general_sem_results.conditional_indirect_effects[{index}]");
+        require_finite(
+            effect.moderator_value,
+            &format!("{context}.moderator_value"),
+        )?;
+        ensure_general_sem_estimate_finite(&effect.value, &format!("{context}.value"))?;
+    }
+    for (index, effect) in results.moderated_mediation_indices.iter().enumerate() {
+        ensure_general_sem_estimate_finite(
+            &effect.value,
+            &format!("general_sem_results.moderated_mediation_indices[{index}].value"),
+        )?;
+    }
     for (plot_index, plot) in results.interaction_plots.iter().enumerate() {
         for (series_index, series) in plot.series.iter().enumerate() {
             let series_context = format!(
@@ -1255,6 +1273,8 @@ mod tests {
                 moderator_value: 0.0,
                 value: estimate(0.4),
             }],
+            conditional_indirect_effects: Vec::new(),
+            moderated_mediation_indices: Vec::new(),
             interaction_plots: vec![CanonicalInteractionPlotResultV1 {
                 plot_id: "plot_1".into(),
                 trace: trace(),
@@ -1316,11 +1336,18 @@ mod tests {
                     kind: CanonicalHocStageKindV1::LowerOrderScoreEstimation,
                     input_construct_ids: vec!["construct:m1".into(), "construct:m2".into()],
                     output_variable_ids: vec!["score:hoc".into()],
+                    approach: None,
+                    measurement_type: None,
+                    generated_variable_mappings: Vec::new(),
+                    receipt: None,
                     relation_estimates: vec![CanonicalHocRelationEstimateV1 {
                         relation_id: "relation_m1_hoc".into(),
+                        parameter_id: None,
                         source_id: "construct:m1".into(),
                         target_id: "construct:hoc".into(),
+                        kind: None,
                         value: estimate(0.8),
+                        collinearity_vif: None,
                     }],
                 },
                 CanonicalHocStageResultV1 {
@@ -1331,14 +1358,22 @@ mod tests {
                     kind: CanonicalHocStageKindV1::HigherOrderEstimation,
                     input_construct_ids: vec!["score:hoc".into()],
                     output_variable_ids: vec!["construct:y".into()],
+                    approach: None,
+                    measurement_type: None,
+                    generated_variable_mappings: Vec::new(),
+                    receipt: None,
                     relation_estimates: vec![CanonicalHocRelationEstimateV1 {
                         relation_id: "relation_hoc_y".into(),
+                        parameter_id: None,
                         source_id: "construct:hoc".into(),
                         target_id: "construct:y".into(),
+                        kind: None,
                         value: estimate(0.6),
+                        collinearity_vif: None,
                     }],
                 },
             ],
+            higher_order_inference_receipt: None,
             cbsem_parameters: Vec::new(),
             cbsem_fit: vec![CanonicalCbsemFitResultV1 {
                 fit_id: "fit_1".into(),
@@ -1399,6 +1434,7 @@ mod tests {
         results.inference_receipt = Some(CanonicalGeneralSemInferenceReceiptV1 {
             kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
             capability_cell: qpls_core::general_sem_pls_bootstrap_capability_cell_v1(),
+            capability_dependencies: Vec::new(),
             method_version: qpls_core::GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1.into(),
             resampling_operation_version:
                 qpls_core::GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1.into(),

@@ -1348,4 +1348,3 @@ mod tests {
         assert!(temporary_files(directory.path()).is_empty());
     }
 }
-

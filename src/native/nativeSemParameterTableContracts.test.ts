@@ -20,7 +20,7 @@ describe("native SEM parameter-table UI contracts", () => {
     expect(table).toContain("projectNativeWorkbenchSemParameterTableV4");
     expect(table).toContain("These edits are not sent to the current calculation engine");
     expect(table).toContain("Experimental");
-    expect(app).toContain("experimentalSemAuthoringEnabled && documentView === \"parameters\"");
+    expect(app).toContain("generalSemViewAvailable && documentView === \"parameters\"");
     expect(table).toContain("NativeSemParameterEditor");
     expect(table).toContain("NativeSemVariableEditor");
     expect(table).not.toContain("contentEditable");

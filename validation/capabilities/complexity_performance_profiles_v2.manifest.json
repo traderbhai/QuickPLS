@@ -7,11 +7,11 @@
     "path": "validation/capabilities/capability_registry_v2.json",
     "registry_schema_version": 2,
     "registry_version": "2.4.0",
-    "registry_sha256": "9f3f73d526e4e58b67015aa8e277a698ff3369bc3ec3303250dcc84ecd7ed015",
+    "registry_sha256": "c7edcbb61ce413a40d15dd5fafba53ef275d112c73f65c2fcbcfb4c0105ce229",
     "selection": "active_option_cells",
     "expected_active_row_count": 43,
-    "expected_active_option_cell_count": 49,
-    "derived_reference_set_sha256": "67ce375151239f90447720bcfcca582bb1b6b437a1e1b918c959175b2db3955a"
+    "expected_active_option_cell_count": 52,
+    "derived_reference_set_sha256": "b6bd1d68b90ff981179d502326bb5494c75fac7cbd497593350f7ba0b70b7135"
   },
   "hardware_profiles": [
     {
@@ -43,7 +43,14 @@
         {
           "case_id": "micro_exact",
           "axis": "combined",
-          "workload": { "rows": 100, "indicators": 12, "constructs": 4, "resamples": 100, "groups": 2, "candidate_models": 2 }
+          "workload": {
+            "rows": 100,
+            "indicators": 12,
+            "constructs": 4,
+            "resamples": 100,
+            "groups": 2,
+            "candidate_models": 2
+          }
         }
       ]
     },
@@ -56,7 +63,14 @@
         {
           "case_id": "applied",
           "axis": "combined",
-          "workload": { "rows": 1000, "indicators": 40, "constructs": 10, "resamples": 500, "groups": 3, "candidate_models": 5 }
+          "workload": {
+            "rows": 1000,
+            "indicators": 40,
+            "constructs": 10,
+            "resamples": 500,
+            "groups": 3,
+            "candidate_models": 5
+          }
         }
       ]
     },
@@ -69,7 +83,14 @@
         {
           "case_id": "large",
           "axis": "combined",
-          "workload": { "rows": 10000, "indicators": 80, "constructs": 20, "resamples": 5000, "groups": 5, "candidate_models": 10 }
+          "workload": {
+            "rows": 10000,
+            "indicators": 80,
+            "constructs": 20,
+            "resamples": 5000,
+            "groups": 5,
+            "candidate_models": 10
+          }
         }
       ]
     },
@@ -82,22 +103,50 @@
         {
           "case_id": "maximum_rows_100000",
           "axis": "rows",
-          "workload": { "rows": 100000, "indicators": 40, "constructs": 10, "resamples": 500, "groups": 3, "candidate_models": 5 }
+          "workload": {
+            "rows": 100000,
+            "indicators": 40,
+            "constructs": 10,
+            "resamples": 500,
+            "groups": 3,
+            "candidate_models": 5
+          }
         },
         {
           "case_id": "maximum_indicators_300",
           "axis": "indicators",
-          "workload": { "rows": 2000, "indicators": 300, "constructs": 20, "resamples": 500, "groups": 3, "candidate_models": 5 }
+          "workload": {
+            "rows": 2000,
+            "indicators": 300,
+            "constructs": 20,
+            "resamples": 500,
+            "groups": 3,
+            "candidate_models": 5
+          }
         },
         {
           "case_id": "maximum_constructs_100",
           "axis": "constructs",
-          "workload": { "rows": 5000, "indicators": 300, "constructs": 100, "resamples": 500, "groups": 3, "candidate_models": 5 }
+          "workload": {
+            "rows": 5000,
+            "indicators": 300,
+            "constructs": 100,
+            "resamples": 500,
+            "groups": 3,
+            "candidate_models": 5
+          }
         },
         {
           "case_id": "maximum_resamples_10000",
           "axis": "resamples",
-          "workload": { "rows": 1000, "indicators": 40, "constructs": 10, "resamples": 10000, "groups": 3, "candidate_models": 5 }
+          "workload": {
+            "rows": 1000,
+            "indicators": 40,
+            "constructs": 10,
+            "resamples": 10000,
+            "groups": 3,
+            "candidate_models": 5
+          }
         }
       ]
     },
@@ -110,21 +159,55 @@
         {
           "case_id": "compound_stress",
           "axis": "combined",
-          "workload": { "rows": 25000, "indicators": 150, "constructs": 50, "resamples": 5000, "groups": 8, "candidate_models": 20 }
+          "workload": {
+            "rows": 25000,
+            "indicators": 150,
+            "constructs": 50,
+            "resamples": 5000,
+            "groups": 8,
+            "candidate_models": 20
+          }
         }
       ]
     }
   ],
   "ui_budgets": [
-    { "scenario_id": "applied_diagram", "maximum_open_seconds": 2, "maximum_edit_response_p95_ms": 100, "minimum_pan_zoom_fps": 45, "maximum_preflight_seconds": null },
-    { "scenario_id": "stress_diagram", "maximum_open_seconds": 10, "maximum_edit_response_p95_ms": 250, "minimum_pan_zoom_fps": 30, "maximum_preflight_seconds": null },
-    { "scenario_id": "typical_preflight", "maximum_open_seconds": null, "maximum_edit_response_p95_ms": null, "minimum_pan_zoom_fps": null, "maximum_preflight_seconds": 0.5 },
-    { "scenario_id": "stress_preflight", "maximum_open_seconds": null, "maximum_edit_response_p95_ms": null, "minimum_pan_zoom_fps": null, "maximum_preflight_seconds": 3 }
+    {
+      "scenario_id": "applied_diagram",
+      "maximum_open_seconds": 2,
+      "maximum_edit_response_p95_ms": 100,
+      "minimum_pan_zoom_fps": 45,
+      "maximum_preflight_seconds": null
+    },
+    {
+      "scenario_id": "stress_diagram",
+      "maximum_open_seconds": 10,
+      "maximum_edit_response_p95_ms": 250,
+      "minimum_pan_zoom_fps": 30,
+      "maximum_preflight_seconds": null
+    },
+    {
+      "scenario_id": "typical_preflight",
+      "maximum_open_seconds": null,
+      "maximum_edit_response_p95_ms": null,
+      "minimum_pan_zoom_fps": null,
+      "maximum_preflight_seconds": 0.5
+    },
+    {
+      "scenario_id": "stress_preflight",
+      "maximum_open_seconds": null,
+      "maximum_edit_response_p95_ms": null,
+      "minimum_pan_zoom_fps": null,
+      "maximum_preflight_seconds": 3
+    }
   ],
   "measurement_policy": {
     "warmup_runs": 1,
     "measured_runs": 5,
-    "gate_statistics": ["median", "p95"],
+    "gate_statistics": [
+      "median",
+      "p95"
+    ],
     "high_percentile": 0.95,
     "percentile_method": "type_7",
     "maximum_runtime_regression_percent": 20,
@@ -157,58 +240,333 @@
     {
       "budget_class_id": "balanced",
       "budgets": [
-        { "hardware_profile_id": "standard_windows_6c16g", "profile_id": "micro_exact", "maximum_median_elapsed_seconds": 2, "maximum_p95_elapsed_seconds": 3, "maximum_median_working_set_bytes": 536870912, "maximum_p95_working_set_bytes": 536870912, "maximum_p95_result_bytes": 10485760 },
-        { "hardware_profile_id": "standard_windows_6c16g", "profile_id": "applied", "maximum_median_elapsed_seconds": 60, "maximum_p95_elapsed_seconds": 90, "maximum_median_working_set_bytes": 2147483648, "maximum_p95_working_set_bytes": 2147483648, "maximum_p95_result_bytes": 104857600 },
-        { "hardware_profile_id": "standard_windows_6c16g", "profile_id": "large", "maximum_median_elapsed_seconds": 600, "maximum_p95_elapsed_seconds": 900, "maximum_median_working_set_bytes": 6442450944, "maximum_p95_working_set_bytes": 6442450944, "maximum_p95_result_bytes": 524288000 },
-        { "hardware_profile_id": "standard_windows_6c16g", "profile_id": "maximum_axis", "maximum_median_elapsed_seconds": 3600, "maximum_p95_elapsed_seconds": 4800, "maximum_median_working_set_bytes": 12884901888, "maximum_p95_working_set_bytes": 12884901888, "maximum_p95_result_bytes": 2147483648 },
-        { "hardware_profile_id": "standard_windows_6c16g", "profile_id": "compound_stress", "maximum_median_elapsed_seconds": 7200, "maximum_p95_elapsed_seconds": 9000, "maximum_median_working_set_bytes": 12884901888, "maximum_p95_working_set_bytes": 12884901888, "maximum_p95_result_bytes": 4294967296 },
-        { "hardware_profile_id": "workstation_windows_12c32g", "profile_id": "micro_exact", "maximum_median_elapsed_seconds": 2, "maximum_p95_elapsed_seconds": 3, "maximum_median_working_set_bytes": 536870912, "maximum_p95_working_set_bytes": 536870912, "maximum_p95_result_bytes": 10485760 },
-        { "hardware_profile_id": "workstation_windows_12c32g", "profile_id": "applied", "maximum_median_elapsed_seconds": 45, "maximum_p95_elapsed_seconds": 75, "maximum_median_working_set_bytes": 3221225472, "maximum_p95_working_set_bytes": 3221225472, "maximum_p95_result_bytes": 104857600 },
-        { "hardware_profile_id": "workstation_windows_12c32g", "profile_id": "large", "maximum_median_elapsed_seconds": 420, "maximum_p95_elapsed_seconds": 600, "maximum_median_working_set_bytes": 10737418240, "maximum_p95_working_set_bytes": 10737418240, "maximum_p95_result_bytes": 524288000 },
-        { "hardware_profile_id": "workstation_windows_12c32g", "profile_id": "maximum_axis", "maximum_median_elapsed_seconds": 2400, "maximum_p95_elapsed_seconds": 3600, "maximum_median_working_set_bytes": 25769803776, "maximum_p95_working_set_bytes": 25769803776, "maximum_p95_result_bytes": 2147483648 },
-        { "hardware_profile_id": "workstation_windows_12c32g", "profile_id": "compound_stress", "maximum_median_elapsed_seconds": 4800, "maximum_p95_elapsed_seconds": 7200, "maximum_median_working_set_bytes": 25769803776, "maximum_p95_working_set_bytes": 25769803776, "maximum_p95_result_bytes": 4294967296 }
+        {
+          "hardware_profile_id": "standard_windows_6c16g",
+          "profile_id": "micro_exact",
+          "maximum_median_elapsed_seconds": 2,
+          "maximum_p95_elapsed_seconds": 3,
+          "maximum_median_working_set_bytes": 536870912,
+          "maximum_p95_working_set_bytes": 536870912,
+          "maximum_p95_result_bytes": 10485760
+        },
+        {
+          "hardware_profile_id": "standard_windows_6c16g",
+          "profile_id": "applied",
+          "maximum_median_elapsed_seconds": 60,
+          "maximum_p95_elapsed_seconds": 90,
+          "maximum_median_working_set_bytes": 2147483648,
+          "maximum_p95_working_set_bytes": 2147483648,
+          "maximum_p95_result_bytes": 104857600
+        },
+        {
+          "hardware_profile_id": "standard_windows_6c16g",
+          "profile_id": "large",
+          "maximum_median_elapsed_seconds": 600,
+          "maximum_p95_elapsed_seconds": 900,
+          "maximum_median_working_set_bytes": 6442450944,
+          "maximum_p95_working_set_bytes": 6442450944,
+          "maximum_p95_result_bytes": 524288000
+        },
+        {
+          "hardware_profile_id": "standard_windows_6c16g",
+          "profile_id": "maximum_axis",
+          "maximum_median_elapsed_seconds": 3600,
+          "maximum_p95_elapsed_seconds": 4800,
+          "maximum_median_working_set_bytes": 12884901888,
+          "maximum_p95_working_set_bytes": 12884901888,
+          "maximum_p95_result_bytes": 2147483648
+        },
+        {
+          "hardware_profile_id": "standard_windows_6c16g",
+          "profile_id": "compound_stress",
+          "maximum_median_elapsed_seconds": 7200,
+          "maximum_p95_elapsed_seconds": 9000,
+          "maximum_median_working_set_bytes": 12884901888,
+          "maximum_p95_working_set_bytes": 12884901888,
+          "maximum_p95_result_bytes": 4294967296
+        },
+        {
+          "hardware_profile_id": "workstation_windows_12c32g",
+          "profile_id": "micro_exact",
+          "maximum_median_elapsed_seconds": 2,
+          "maximum_p95_elapsed_seconds": 3,
+          "maximum_median_working_set_bytes": 536870912,
+          "maximum_p95_working_set_bytes": 536870912,
+          "maximum_p95_result_bytes": 10485760
+        },
+        {
+          "hardware_profile_id": "workstation_windows_12c32g",
+          "profile_id": "applied",
+          "maximum_median_elapsed_seconds": 45,
+          "maximum_p95_elapsed_seconds": 75,
+          "maximum_median_working_set_bytes": 3221225472,
+          "maximum_p95_working_set_bytes": 3221225472,
+          "maximum_p95_result_bytes": 104857600
+        },
+        {
+          "hardware_profile_id": "workstation_windows_12c32g",
+          "profile_id": "large",
+          "maximum_median_elapsed_seconds": 420,
+          "maximum_p95_elapsed_seconds": 600,
+          "maximum_median_working_set_bytes": 10737418240,
+          "maximum_p95_working_set_bytes": 10737418240,
+          "maximum_p95_result_bytes": 524288000
+        },
+        {
+          "hardware_profile_id": "workstation_windows_12c32g",
+          "profile_id": "maximum_axis",
+          "maximum_median_elapsed_seconds": 2400,
+          "maximum_p95_elapsed_seconds": 3600,
+          "maximum_median_working_set_bytes": 25769803776,
+          "maximum_p95_working_set_bytes": 25769803776,
+          "maximum_p95_result_bytes": 2147483648
+        },
+        {
+          "hardware_profile_id": "workstation_windows_12c32g",
+          "profile_id": "compound_stress",
+          "maximum_median_elapsed_seconds": 4800,
+          "maximum_p95_elapsed_seconds": 7200,
+          "maximum_median_working_set_bytes": 25769803776,
+          "maximum_p95_working_set_bytes": 25769803776,
+          "maximum_p95_result_bytes": 4294967296
+        }
       ]
     },
     {
       "budget_class_id": "compute_intensive",
       "budgets": [
-        { "hardware_profile_id": "standard_windows_6c16g", "profile_id": "micro_exact", "maximum_median_elapsed_seconds": 5, "maximum_p95_elapsed_seconds": 8, "maximum_median_working_set_bytes": 1073741824, "maximum_p95_working_set_bytes": 1073741824, "maximum_p95_result_bytes": 52428800 },
-        { "hardware_profile_id": "standard_windows_6c16g", "profile_id": "applied", "maximum_median_elapsed_seconds": 300, "maximum_p95_elapsed_seconds": 420, "maximum_median_working_set_bytes": 4294967296, "maximum_p95_working_set_bytes": 4294967296, "maximum_p95_result_bytes": 524288000 },
-        { "hardware_profile_id": "standard_windows_6c16g", "profile_id": "large", "maximum_median_elapsed_seconds": 3600, "maximum_p95_elapsed_seconds": 4800, "maximum_median_working_set_bytes": 10737418240, "maximum_p95_working_set_bytes": 10737418240, "maximum_p95_result_bytes": 2147483648 },
-        { "hardware_profile_id": "standard_windows_6c16g", "profile_id": "maximum_axis", "maximum_median_elapsed_seconds": 14400, "maximum_p95_elapsed_seconds": 18000, "maximum_median_working_set_bytes": 12884901888, "maximum_p95_working_set_bytes": 12884901888, "maximum_p95_result_bytes": 4294967296 },
-        { "hardware_profile_id": "standard_windows_6c16g", "profile_id": "compound_stress", "maximum_median_elapsed_seconds": 21600, "maximum_p95_elapsed_seconds": 27000, "maximum_median_working_set_bytes": 12884901888, "maximum_p95_working_set_bytes": 12884901888, "maximum_p95_result_bytes": 8589934592 },
-        { "hardware_profile_id": "workstation_windows_12c32g", "profile_id": "micro_exact", "maximum_median_elapsed_seconds": 5, "maximum_p95_elapsed_seconds": 8, "maximum_median_working_set_bytes": 1073741824, "maximum_p95_working_set_bytes": 1073741824, "maximum_p95_result_bytes": 52428800 },
-        { "hardware_profile_id": "workstation_windows_12c32g", "profile_id": "applied", "maximum_median_elapsed_seconds": 240, "maximum_p95_elapsed_seconds": 360, "maximum_median_working_set_bytes": 6442450944, "maximum_p95_working_set_bytes": 6442450944, "maximum_p95_result_bytes": 524288000 },
-        { "hardware_profile_id": "workstation_windows_12c32g", "profile_id": "large", "maximum_median_elapsed_seconds": 2400, "maximum_p95_elapsed_seconds": 3600, "maximum_median_working_set_bytes": 17179869184, "maximum_p95_working_set_bytes": 17179869184, "maximum_p95_result_bytes": 2147483648 },
-        { "hardware_profile_id": "workstation_windows_12c32g", "profile_id": "maximum_axis", "maximum_median_elapsed_seconds": 10800, "maximum_p95_elapsed_seconds": 14400, "maximum_median_working_set_bytes": 25769803776, "maximum_p95_working_set_bytes": 25769803776, "maximum_p95_result_bytes": 4294967296 },
-        { "hardware_profile_id": "workstation_windows_12c32g", "profile_id": "compound_stress", "maximum_median_elapsed_seconds": 18000, "maximum_p95_elapsed_seconds": 21600, "maximum_median_working_set_bytes": 25769803776, "maximum_p95_working_set_bytes": 25769803776, "maximum_p95_result_bytes": 8589934592 }
+        {
+          "hardware_profile_id": "standard_windows_6c16g",
+          "profile_id": "micro_exact",
+          "maximum_median_elapsed_seconds": 5,
+          "maximum_p95_elapsed_seconds": 8,
+          "maximum_median_working_set_bytes": 1073741824,
+          "maximum_p95_working_set_bytes": 1073741824,
+          "maximum_p95_result_bytes": 52428800
+        },
+        {
+          "hardware_profile_id": "standard_windows_6c16g",
+          "profile_id": "applied",
+          "maximum_median_elapsed_seconds": 300,
+          "maximum_p95_elapsed_seconds": 420,
+          "maximum_median_working_set_bytes": 4294967296,
+          "maximum_p95_working_set_bytes": 4294967296,
+          "maximum_p95_result_bytes": 524288000
+        },
+        {
+          "hardware_profile_id": "standard_windows_6c16g",
+          "profile_id": "large",
+          "maximum_median_elapsed_seconds": 3600,
+          "maximum_p95_elapsed_seconds": 4800,
+          "maximum_median_working_set_bytes": 10737418240,
+          "maximum_p95_working_set_bytes": 10737418240,
+          "maximum_p95_result_bytes": 2147483648
+        },
+        {
+          "hardware_profile_id": "standard_windows_6c16g",
+          "profile_id": "maximum_axis",
+          "maximum_median_elapsed_seconds": 14400,
+          "maximum_p95_elapsed_seconds": 18000,
+          "maximum_median_working_set_bytes": 12884901888,
+          "maximum_p95_working_set_bytes": 12884901888,
+          "maximum_p95_result_bytes": 4294967296
+        },
+        {
+          "hardware_profile_id": "standard_windows_6c16g",
+          "profile_id": "compound_stress",
+          "maximum_median_elapsed_seconds": 21600,
+          "maximum_p95_elapsed_seconds": 27000,
+          "maximum_median_working_set_bytes": 12884901888,
+          "maximum_p95_working_set_bytes": 12884901888,
+          "maximum_p95_result_bytes": 8589934592
+        },
+        {
+          "hardware_profile_id": "workstation_windows_12c32g",
+          "profile_id": "micro_exact",
+          "maximum_median_elapsed_seconds": 5,
+          "maximum_p95_elapsed_seconds": 8,
+          "maximum_median_working_set_bytes": 1073741824,
+          "maximum_p95_working_set_bytes": 1073741824,
+          "maximum_p95_result_bytes": 52428800
+        },
+        {
+          "hardware_profile_id": "workstation_windows_12c32g",
+          "profile_id": "applied",
+          "maximum_median_elapsed_seconds": 240,
+          "maximum_p95_elapsed_seconds": 360,
+          "maximum_median_working_set_bytes": 6442450944,
+          "maximum_p95_working_set_bytes": 6442450944,
+          "maximum_p95_result_bytes": 524288000
+        },
+        {
+          "hardware_profile_id": "workstation_windows_12c32g",
+          "profile_id": "large",
+          "maximum_median_elapsed_seconds": 2400,
+          "maximum_p95_elapsed_seconds": 3600,
+          "maximum_median_working_set_bytes": 17179869184,
+          "maximum_p95_working_set_bytes": 17179869184,
+          "maximum_p95_result_bytes": 2147483648
+        },
+        {
+          "hardware_profile_id": "workstation_windows_12c32g",
+          "profile_id": "maximum_axis",
+          "maximum_median_elapsed_seconds": 10800,
+          "maximum_p95_elapsed_seconds": 14400,
+          "maximum_median_working_set_bytes": 25769803776,
+          "maximum_p95_working_set_bytes": 25769803776,
+          "maximum_p95_result_bytes": 4294967296
+        },
+        {
+          "hardware_profile_id": "workstation_windows_12c32g",
+          "profile_id": "compound_stress",
+          "maximum_median_elapsed_seconds": 18000,
+          "maximum_p95_elapsed_seconds": 21600,
+          "maximum_median_working_set_bytes": 25769803776,
+          "maximum_p95_working_set_bytes": 25769803776,
+          "maximum_p95_result_bytes": 8589934592
+        }
       ]
     }
   ],
   "capability_budget_resolution": {
     "family_defaults": [
-      { "official_family": "Estimation & Core Algorithm", "budget_class_id": "balanced" },
-      { "official_family": "Resampling & Inference", "budget_class_id": "compute_intensive" },
-      { "official_family": "Validity, Reliability & Model Fit", "budget_class_id": "balanced" },
-      { "official_family": "Heterogeneity & Multigroup Analysis", "budget_class_id": "compute_intensive" },
-      { "official_family": "Prediction & Segmentation", "budget_class_id": "compute_intensive" },
-      { "official_family": "Extended Relationships", "budget_class_id": "compute_intensive" },
-      { "official_family": "Generalized Structured Component Analysis (GSCA)", "budget_class_id": "balanced" },
-      { "official_family": "Regression, Path Analysis and PROCESS", "budget_class_id": "balanced" },
-      { "official_family": "CB-SEM and CFA", "budget_class_id": "balanced" }
+      {
+        "official_family": "Estimation & Core Algorithm",
+        "budget_class_id": "balanced"
+      },
+      {
+        "official_family": "Resampling & Inference",
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "official_family": "Validity, Reliability & Model Fit",
+        "budget_class_id": "balanced"
+      },
+      {
+        "official_family": "Heterogeneity & Multigroup Analysis",
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "official_family": "Prediction & Segmentation",
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "official_family": "Extended Relationships",
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "official_family": "Generalized Structured Component Analysis (GSCA)",
+        "budget_class_id": "balanced"
+      },
+      {
+        "official_family": "Regression, Path Analysis and PROCESS",
+        "budget_class_id": "balanced"
+      },
+      {
+        "official_family": "CB-SEM and CFA",
+        "budget_class_id": "balanced"
+      }
     ],
     "exact_overrides": [
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.pls_power_analysis", "cell_id": "qpls3.pls.sample_size_power", "capability_version": "pls_sample_size_power_v2" }, "budget_class_id": "compute_intensive" },
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.cta_pls", "cell_id": "qpls3.assessment.cta_pls", "capability_version": "cta_pls_tetrad_v1" }, "budget_class_id": "compute_intensive" },
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.htmt", "cell_id": "qpls3.assessment.htmt", "capability_version": "ringle_et_al_htmt_plus_v1" }, "budget_class_id": "compute_intensive" },
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.model_fit", "cell_id": "qpls3.assessment.model_fit", "capability_version": "pls_model_fit_v2" }, "budget_class_id": "compute_intensive" },
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.process_bootstrapping", "cell_id": "qpls3.standalone.process", "capability_version": "regression_process_v2" }, "budget_class_id": "compute_intensive" },
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.regression_bootstrapping", "cell_id": "qpls3.standalone.regression_bootstrap", "capability_version": "regression_bootstrap_v1" }, "budget_class_id": "compute_intensive" },
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.cbsem_bootstrapping", "cell_id": "qpls3.cbsem.bootstrap", "capability_version": "cbsem_exact_case_bootstrap_v1" }, "budget_class_id": "compute_intensive" },
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.cbsem_model_comparison", "cell_id": "qpls3.cbsem.model_comparison", "capability_version": "cbsem_model_comparison_v1" }, "budget_class_id": "compute_intensive" },
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.cbsem_mga", "cell_id": "qpls3.cbsem.multigroup", "capability_version": "cbsem_multigroup_v2" }, "budget_class_id": "compute_intensive" },
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.cbsem_measurement_invariance", "cell_id": "qpls3.cbsem.measurement_invariance", "capability_version": "cbsem_invariance_v2" }, "budget_class_id": "compute_intensive" },
-      { "reference": { "registry_schema_version": 2, "capability_id": "smartpls.cbsem_moderator", "cell_id": "qpls3.cbsem.moderator", "capability_version": "cbsem_moderator_v1" }, "budget_class_id": "compute_intensive" }
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.pls_power_analysis",
+          "cell_id": "qpls3.pls.sample_size_power",
+          "capability_version": "pls_sample_size_power_v2"
+        },
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.cta_pls",
+          "cell_id": "qpls3.assessment.cta_pls",
+          "capability_version": "cta_pls_tetrad_v1"
+        },
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.htmt",
+          "cell_id": "qpls3.assessment.htmt",
+          "capability_version": "ringle_et_al_htmt_plus_v1"
+        },
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.model_fit",
+          "cell_id": "qpls3.assessment.model_fit",
+          "capability_version": "pls_model_fit_v2"
+        },
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.process_bootstrapping",
+          "cell_id": "qpls3.standalone.process",
+          "capability_version": "regression_process_v2"
+        },
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.regression_bootstrapping",
+          "cell_id": "qpls3.standalone.regression_bootstrap",
+          "capability_version": "regression_bootstrap_v1"
+        },
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.cbsem_bootstrapping",
+          "cell_id": "qpls3.cbsem.bootstrap",
+          "capability_version": "cbsem_exact_case_bootstrap_v1"
+        },
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.cbsem_model_comparison",
+          "cell_id": "qpls3.cbsem.model_comparison",
+          "capability_version": "cbsem_model_comparison_v1"
+        },
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.cbsem_mga",
+          "cell_id": "qpls3.cbsem.multigroup",
+          "capability_version": "cbsem_multigroup_v2"
+        },
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.cbsem_measurement_invariance",
+          "cell_id": "qpls3.cbsem.measurement_invariance",
+          "capability_version": "cbsem_invariance_v2"
+        },
+        "budget_class_id": "compute_intensive"
+      },
+      {
+        "reference": {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.cbsem_moderator",
+          "cell_id": "qpls3.cbsem.moderator",
+          "capability_version": "cbsem_moderator_v1"
+        },
+        "budget_class_id": "compute_intensive"
+      }
     ]
   },
   "measurement_artifacts": []

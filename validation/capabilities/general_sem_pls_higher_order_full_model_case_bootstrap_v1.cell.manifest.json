@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.higher_order_models",
+  "execution_context": "recipe_v4_compiled_pls_plan_v3_general_sem_higher_order_full_model_case_bootstrap_execution",
+  "feature": {
+    "id": "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+    "label": "General SEM PLS higher-order full-model case bootstrap",
+    "method_version": "general_sem_pls_higher_order_full_model_case_bootstrap_v1",
+    "analytical_method_version": "general_sem_pls_higher_order_full_model_case_bootstrap_v1",
+    "method_kind": "indexed_full_model_case_bootstrap"
+  },
+  "coverage_state": "partial",
+  "evidence_state": "release_qualified",
+  "surface": "standard",
+  "availability": "standard",
+  "qualification_ready": true,
+  "promotion_allowed": true,
+  "method_contract": "docs/GENERAL_SEM_PLS_HIGHER_ORDER_V1.md",
+  "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/bootstrapping/",
+  "exact_predicate": {
+    "point_dependency": "qpls3.pls.general_sem_higher_order_point",
+    "resampling": "indexed_raw_case",
+    "stage_refit": "complete_approach_specific_pipeline",
+    "interval": "percentile_type7_two_sided",
+    "usable_gate": 0.9,
+    "targets": "component_loadings_weights_hoc_paths_extended_totals",
+    "workers": "deterministic"
+  },
+  "implemented_contracts": [
+    "one all-or-nothing replicate ledger across every inferential target",
+    "complete stage refit, sign alignment, generated-value reconstruction, and point validation per replicate",
+    "typed percentile interval, sample SE, plus-one probability, failure ledger, and cancellation",
+    "canonical bootstrap receipt, schema-6 persistence and strict reopen, native results and shared export"
+  ],
+  "blocked_contracts": [
+    "VIF, technical-path, control-path, or unrelated-path inference",
+    "BCa, studentized, one-sided, permutation, group, weighted, hybrid, nested, multiple-HOC, or HOC-interaction requests"
+  ],
+  "remaining_qualification": [
+    "Standard qualification uses the streamlined Rank 1 profile: independent numerical parity, the consolidated Rust/frontend regression, one production Windows build, and one final Standard-access smoke. The exact exclusions in this contract remain in force."
+  ]
+}

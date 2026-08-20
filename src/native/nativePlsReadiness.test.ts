@@ -254,8 +254,8 @@ describe("nativePlsReadiness", () => {
     const hocEdges = [{ id: "hoc-outcome", source: "hoc", target: "outcome" }];
     const valid = readiness({ nodes: hocNodes, edges: hocEdges });
     expect(valid.canRun).toBe(true);
-    expect(valid.items.find((item) => item.id === "calculation")?.detail).toContain("disjoint two-stage");
-    expect(readiness({ nodes: hocNodes, edges: hocEdges, settings: { ...settings, method: "bootstrap", bootstrapSamples: 100 } }).canRun).toBe(false);
+    expect(valid.items.find((item) => item.id === "calculation")?.detail).toContain("chosen approach");
+    expect(readiness({ nodes: hocNodes, edges: hocEdges, settings: { ...settings, method: "bootstrap", bootstrapSamples: 100 } }).canRun).toBe(true);
 
     const malformed: Node<ConstructData> = {
       ...higherOrder,

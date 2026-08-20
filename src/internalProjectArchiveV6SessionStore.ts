@@ -31,6 +31,7 @@ import type {
   StandardSemModelV4AuthorityResolveOutcomeV1,
 } from "./domain/standardSemModelV4AuthorityCas";
 import { saveInternalProjectArchiveV6Copy } from "./services/internalProjectArchiveV6SaveCopyService";
+import { inspectInternalProjectArchiveV6At } from "./services/internalProjectArchiveV6ReadService";
 import { appendResolvedInternalProjectArchiveV6ModelRevision } from "./services/internalProjectArchiveV6ModelMutationService";
 import { invalidateNativeGeneralSemFreshDraftAuthorityV1 } from "./services/projectService";
 import { resolveStandardSemModelV4Authority } from "./services/standardSemModelV4AuthorityService";
@@ -39,10 +40,10 @@ import { parseStandardSemModelV4AuthorityRecordV1 } from "./domain/standardSemMo
 import type { StandardSemModelV4AuthorityResolveResultV1 } from "./domain/standardSemModelV4AuthorityCas";
 import {
   reduceStandardSemModelV4AuthorityV1,
-  type AddGeneralSemInteractionV2EditorIntentV1,
 } from "./domain/standardSemModelV4Authority";
 import type {
   GeneralSemExecutionAuthorityRevisionIdentityV1,
+  GeneralSemExecutionAuthorityRevisionEditorIntentV1,
   GeneralSemExecutionAuthoritySourcePinV1,
   InternalGeneralSemExecutionAuthorityRevisionDiagnosticV1,
 } from "./domain/internalGeneralSemExecutionAuthorityRevisionV1";
@@ -50,6 +51,11 @@ import {
   saveGeneralSemExecutionAuthorityRevisionV1,
   type InternalGeneralSemExecutionAuthorityRevisionPersistOutcomeV1,
 } from "./services/internalGeneralSemExecutionAuthorityRevisionService";
+import type { GeneralSemModeratedMediationSelectionReadyV1 } from "./domain/generalSemModeratedMediationAuthoringV1";
+import {
+  saveInternalGeneralSemModeratedMediationRevisionV1,
+  type InternalGeneralSemModeratedMediationRevisionPersistOutcomeV2,
+} from "./services/internalGeneralSemModeratedMediationRevisionV2Service";
 
 export const INTERNAL_PROJECT_ARCHIVE_V6_SESSION_CAPABILITIES = Object.freeze({
   edit: false,
@@ -163,8 +169,9 @@ export interface InternalProjectArchiveV6GeneralSemRevisionExecutorInputV1 {
   snapshot: InternalProjectArchiveV6ReadSnapshotV1;
   source: GeneralSemExecutionAuthoritySourcePinV1;
   revision: GeneralSemExecutionAuthorityRevisionIdentityV1;
-  intent: AddGeneralSemInteractionV2EditorIntentV1;
+  intent: GeneralSemExecutionAuthorityRevisionEditorIntentV1;
   revisionNumberHint: number;
+  experimentalLabsEnabled: boolean;
 }
 
 export type InternalProjectArchiveV6GeneralSemRevisionExecutorV1 = (
@@ -172,7 +179,7 @@ export type InternalProjectArchiveV6GeneralSemRevisionExecutorV1 = (
 ) => Promise<InternalGeneralSemExecutionAuthorityRevisionPersistOutcomeV1 | null>;
 
 export interface InternalProjectArchiveV6GeneralSemRevisionOptionsV1 {
-  intent: AddGeneralSemInteractionV2EditorIntentV1;
+  intent: GeneralSemExecutionAuthorityRevisionEditorIntentV1;
   projectId?: string;
   projectName?: string;
   modelId?: string;
@@ -181,6 +188,34 @@ export interface InternalProjectArchiveV6GeneralSemRevisionOptionsV1 {
   createdAt?: string;
   executor?: InternalProjectArchiveV6GeneralSemRevisionExecutorV1;
   resolver?: InternalProjectArchiveV6StandardAuthorityResolver;
+}
+
+export interface InternalProjectArchiveV6ModeratedMediationRevisionExecutorInputV2 {
+  snapshot: InternalProjectArchiveV6ReadSnapshotV1;
+  source: GeneralSemExecutionAuthoritySourcePinV1;
+  revision: GeneralSemExecutionAuthorityRevisionIdentityV1;
+  selection: GeneralSemModeratedMediationSelectionReadyV1;
+  revisionNumberHint: number;
+  isSourceSessionCurrent: (snapshot: InternalProjectArchiveV6ReadSnapshotV1) => boolean;
+}
+
+export type InternalProjectArchiveV6ModeratedMediationRevisionExecutorV2 = (
+  input: InternalProjectArchiveV6ModeratedMediationRevisionExecutorInputV2,
+) => Promise<InternalGeneralSemModeratedMediationRevisionPersistOutcomeV2 | null>;
+
+export interface InternalProjectArchiveV6ModeratedMediationRevisionOptionsV2 {
+  selection: GeneralSemModeratedMediationSelectionReadyV1;
+  projectId?: string;
+  projectName?: string;
+  modelId?: string;
+  modelName?: string;
+  recipeId?: string;
+  createdAt?: string;
+  executor?: InternalProjectArchiveV6ModeratedMediationRevisionExecutorV2;
+  resolver?: InternalProjectArchiveV6StandardAuthorityResolver;
+  sourceRecoveryInspector?: (
+    archivePath: string,
+  ) => Promise<InternalProjectArchiveV6ReadOutcomeV1>;
 }
 
 export interface InternalProjectArchiveV6SessionState {
@@ -222,6 +257,9 @@ export interface InternalProjectArchiveV6SessionState {
   ) => Promise<InternalProjectArchiveV6SaveCopyApplyResult>;
   reviseGeneralSemExecutionAuthority: (
     options: InternalProjectArchiveV6GeneralSemRevisionOptionsV1,
+  ) => Promise<InternalProjectArchiveV6GeneralSemRevisionResult>;
+  reviseGeneralSemModeratedMediationAuthority: (
+    options: InternalProjectArchiveV6ModeratedMediationRevisionOptionsV2,
   ) => Promise<InternalProjectArchiveV6GeneralSemRevisionResult>;
   reanchorGeneralSemSnapshot: (
     snapshot: InternalProjectArchiveV6ReadSnapshotV1,
@@ -590,6 +628,269 @@ export const useInternalProjectArchiveV6Session =
       }
     },
 
+    reviseGeneralSemModeratedMediationAuthority: async (options) => {
+      const session = get().session;
+      const activation = session?.standardActivation;
+      const workspace = useWorkspace.getState();
+      const activeModelId = workspace.activeModelId;
+      const authority = activeModelId
+        ? workspace.standardSemModelV4Authorities[activeModelId]
+        : null;
+      const nativeAuthority = session?.snapshot.generalSemExecutionAuthority;
+      if (!session || !activation || !supportsGeneralSemV1(session.project)
+        || !activeModelId || !authority || !nativeAuthority) {
+        set({
+          revisionForkFailure: revisionFailure({
+            code: "schema6_general_sem_revision_v2.active_authority_required",
+            message: "An activated, strictly reopened General SEM model and RecipeV4 authority is required.",
+            correctiveAction: "Open and activate the exact marked General SEM archive before selecting a moderated-mediation path.",
+          }),
+          revisionForkStatusMessage: "Moderated-mediation revision blocked because no exact marked authority is active.",
+        });
+        return "inactive";
+      }
+      if (get().standardActivationPending || get().revisionForkPending || get().saveCopyPending) {
+        set({
+          revisionForkFailure: revisionFailure({
+            code: "schema6_general_sem_revision_v2.operation_pending",
+            message: "Another schema-6 authority operation is still running.",
+            correctiveAction: "Wait for the current operation to finish, then save the path revision again.",
+          }),
+          revisionForkStatusMessage: "Moderated-mediation revision was not started while another operation was pending.",
+        });
+        return "blocked";
+      }
+      const sourceRecord = session.project.models.find((record) => record.model_id === activeModelId);
+      const sourceRecipe = session.project.recipes.find((recipe) => recipe.id === nativeAuthority.recipeId);
+      const captured = workspace.captureStandardSemModelV4SaveAuthorities(activation.modelIds);
+      const persistence = workspace.standardSemModelV4Persistence[activeModelId];
+      if (activation.modelIds.length !== 1
+        || sourceRecord?.payload.kind !== "sem_model_v4"
+        || !sourceRecipe
+        || nativeAuthority.projectId !== session.project.project_id
+        || nativeAuthority.modelId !== activeModelId
+        || nativeAuthority.modelScientificSha256 !== sourceRecord.payload.scientific_sha256
+        || persistence?.scientificSha256 !== nativeAuthority.modelScientificSha256
+        || !captured
+        || Object.values(captured).some((entry) => entry.dirty)
+        || get().dirty) {
+        set({
+          revisionForkFailure: revisionFailure({
+            code: "schema6_general_sem_revision_v2.clean_source_required",
+            message: "The active canvas, source model, RecipeV4, or archive digest is stale or unsaved.",
+            correctiveAction: "Restore the exact clean strictly reopened General SEM authority, then choose the path again.",
+          }),
+          revisionForkStatusMessage: "Moderated-mediation revision blocked before native file selection; the source is unchanged.",
+        });
+        return "blocked";
+      }
+
+      const revisionLineage = (
+        session.project.layouts.general_sem_execution_authority_revision_v2
+        ?? session.project.layouts.general_sem_execution_authority_revision_v1
+      ) as Record<string, unknown> | undefined;
+      const currentRevision = Number.isSafeInteger(revisionLineage?.revisionNumber)
+        && (revisionLineage?.revisionNumber as number) > 0
+        ? revisionLineage!.revisionNumber as number
+        : 0;
+      const revisionNumberHint = currentRevision + 1;
+      const revision: GeneralSemExecutionAuthorityRevisionIdentityV1 = {
+        projectId: options.projectId ?? globalThis.crypto.randomUUID(),
+        projectName: options.projectName
+          ?? `${session.project.name} — moderated-mediation revision ${revisionNumberHint}`,
+        createdAt: options.createdAt ?? new Date().toISOString(),
+        modelId: options.modelId ?? `model:general-sem-moderated-mediation:${globalThis.crypto.randomUUID()}`,
+        modelName: options.modelName ?? `${authority.model.name} moderated-mediation revision ${revisionNumberHint}`,
+        recipeId: options.recipeId ?? globalThis.crypto.randomUUID(),
+      };
+      const source: GeneralSemExecutionAuthoritySourcePinV1 = {
+        projectId: nativeAuthority.projectId,
+        modelId: activeModelId,
+        modelDocumentSha256: authority.model_document_sha256,
+        modelScientificSha256: nativeAuthority.modelScientificSha256,
+        recipeId: nativeAuthority.recipeId,
+        recipeDocumentSha256: nativeAuthority.recipeDocumentSha256,
+      };
+      const sourceWorkspaceMeta = {
+        projectName: workspace.projectName,
+        projectPath: workspace.projectPath,
+        projectId: workspace.projectId,
+      };
+      const sourceStillCurrent = (snapshot: InternalProjectArchiveV6ReadSnapshotV1): boolean => {
+        if (snapshot !== session.snapshot || get().session !== session || get().dirty) return false;
+        const currentCaptured = useWorkspace.getState()
+          .captureStandardSemModelV4SaveAuthorities(activation.modelIds);
+        return Boolean(currentCaptured
+          && Object.values(currentCaptured).every((entry) => !entry.dirty)
+          && JSON.stringify(currentCaptured) === JSON.stringify(captured));
+      };
+      const requestEpoch = get().requestEpoch + 1;
+      set({
+        requestEpoch,
+        revisionForkPending: true,
+        revisionForkFailure: null,
+        revisionForkStatusMessage: "Choose a new .qpls destination for the Registry-authorized moderated-mediation revision…",
+      });
+
+      let outcome: InternalGeneralSemModeratedMediationRevisionPersistOutcomeV2 | null;
+      try {
+        outcome = await (options.executor ?? saveInternalGeneralSemModeratedMediationRevisionV1)({
+          snapshot: session.snapshot,
+          source,
+          revision,
+          selection: options.selection,
+          revisionNumberHint,
+          isSourceSessionCurrent: sourceStillCurrent,
+        });
+      } catch (error) {
+        if (get().requestEpoch !== requestEpoch) return "stale";
+        set({
+          revisionForkPending: false,
+          revisionForkFailure: revisionForkFailureFromUnknown(error),
+          revisionForkStatusMessage: "Moderated-mediation revision failed before activation; the source archive and workspace are unchanged.",
+        });
+        return "blocked";
+      }
+      if (get().requestEpoch !== requestEpoch || get().session !== session) return "stale";
+      if (outcome === null) {
+        set({
+          revisionForkPending: false,
+          revisionForkFailure: null,
+          revisionForkStatusMessage: "Moderated-mediation revision cancelled before a native write; the source is unchanged.",
+        });
+        return "cancelled";
+      }
+      if (outcome.status === "blocked") {
+        set({
+          revisionForkPending: false,
+          revisionForkFailure: revisionFailure(outcome.diagnostic),
+          revisionForkStatusMessage: outcome.persistedReceipt
+            ? `Revision ${outcome.persistedReceipt.destinationArchivePath} was persisted but not activated; the clean source remains active.`
+            : "Moderated-mediation revision was blocked; the source archive and workspace are unchanged.",
+        });
+        return "blocked";
+      }
+      const { receipt, snapshot: revisedSnapshot } = outcome.value;
+      if (receipt.sourceArchiveBytes !== session.snapshot.archiveBytes
+        || receipt.revisionNumber !== revisionNumberHint
+        || !sourceStillCurrent(session.snapshot)) {
+        set({
+          revisionForkPending: false,
+          revisionForkFailure: revisionFailure({
+            code: "schema6_general_sem_revision_v2.source_or_version_mismatch",
+            message: "The persisted v2 receipt differs from the current clean source or expected one-step revision.",
+            correctiveAction: `Keep the source active and open ${receipt.destinationArchivePath} explicitly after inspection.`,
+          }),
+          revisionForkStatusMessage: `Revision ${receipt.destinationArchivePath} was persisted but not activated; the source remains active.`,
+        });
+        return "stale";
+      }
+
+      set({ revisionForkPending: false });
+      if (get().closeStandardProject() !== "closed") {
+        set({
+          revisionForkFailure: revisionFailure({
+            code: "schema6_general_sem_revision_v2.source_release_blocked",
+            message: "The verified destination was persisted, but the clean source authority could not be released for activation.",
+            correctiveAction: `Keep the source active and open ${receipt.destinationArchivePath} explicitly later.`,
+          }),
+          revisionForkStatusMessage: `Revision ${receipt.destinationArchivePath} was persisted but not activated; the source remains active.`,
+        });
+        return "blocked";
+      }
+
+      const restoreSource = async (): Promise<boolean> => {
+        const current = get().session;
+        if (current?.standardActivation) get().closeStandardProject();
+        else if (current) get().deactivate();
+        let recoveryOutcome: InternalProjectArchiveV6ReadOutcomeV1;
+        try {
+          recoveryOutcome = await (options.sourceRecoveryInspector ?? inspectInternalProjectArchiveV6At)(
+            session.snapshot.archivePath,
+          );
+        } catch {
+          return false;
+        }
+        if (recoveryOutcome.status !== "ok") return false;
+        const recoveredAuthority = recoveryOutcome.value.generalSemExecutionAuthority;
+        if (recoveryOutcome.value.archiveSha256 !== session.snapshot.archiveSha256
+          || recoveryOutcome.value.archiveBytes !== session.snapshot.archiveBytes
+          || recoveryOutcome.value.project.project_id !== source.projectId
+          || !recoveredAuthority
+          || recoveredAuthority.modelId !== source.modelId
+          || recoveredAuthority.modelScientificSha256 !== source.modelScientificSha256
+          || recoveredAuthority.recipeId !== source.recipeId
+          || recoveredAuthority.recipeDocumentSha256 !== source.recipeDocumentSha256) {
+          return false;
+        }
+        const opened = await get().open(async () => ({ status: "ok", value: recoveryOutcome.value }));
+        if (opened !== "activated") return false;
+        const activated = await get().activateStandardAuthorities(options.resolver);
+        if (activated !== "activated") return false;
+        useWorkspace.getState().setProjectMeta(
+          sourceWorkspaceMeta.projectName,
+          sourceWorkspaceMeta.projectPath,
+          sourceWorkspaceMeta.projectId,
+        );
+        return true;
+      };
+
+      let activated = false;
+      try {
+        const opened = await get().open(async () => ({ status: "ok", value: revisedSnapshot }));
+        if (opened === "activated") {
+          const installed = await get().activateStandardAuthorities(options.resolver);
+          const currentSession = get().session;
+          const currentWorkspace = useWorkspace.getState();
+          activated = installed === "activated"
+            && Boolean(currentSession?.standardActivation)
+            && currentSession?.snapshot.archiveSha256 === receipt.destinationArchiveSha256
+            && currentSession?.project.project_id === receipt.projectId
+            && currentWorkspace.activeModelId === receipt.residentModelId
+            && currentWorkspace.standardSemModelV4Persistence[receipt.residentModelId]?.scientificSha256
+              === receipt.residentModelScientificSha256;
+        }
+      } catch {
+        activated = false;
+      }
+      if (!activated) {
+        const restored = await restoreSource();
+        set({
+          revisionForkFailure: revisionFailure({
+            code: restored
+              ? "schema6_general_sem_revision_v2.activation_failed_source_restored"
+              : "schema6_general_sem_revision_v2.activation_failed_recovery_required",
+            message: restored
+              ? "The saved revision could not become active, so QuickPLS restored the exact clean source authority."
+              : "The saved revision could not become active and automatic source restoration failed.",
+            correctiveAction: restored
+              ? `The revision remains saved at ${receipt.destinationArchivePath}; open it explicitly when ready.`
+              : `Restart QuickPLS and reopen either the unchanged source or ${receipt.destinationArchivePath}.`,
+          }),
+          revisionForkStatusMessage: restored
+            ? `Revision persisted at ${receipt.destinationArchivePath}; source authority restored after activation failure.`
+            : `Revision persisted at ${receipt.destinationArchivePath}; reopen a validated archive before continuing.`,
+        });
+        return "blocked";
+      }
+
+      useWorkspace.getState().setProjectMeta(
+        receipt.name,
+        receipt.destinationArchivePath,
+        receipt.projectId,
+      );
+      set({
+        revisionForkPending: false,
+        revisionForkFailure: null,
+        revisionForkStatusMessage: `Moderated-mediation revision ${receipt.revisionNumber} saved, strictly reopened, and activated at ${receipt.destinationArchivePath}.`,
+        standardActivationFailure: null,
+        standardActivationStatusMessage: "The Registry-authorized revised model and RecipeV4 are the sole active General SEM execution authority.",
+        saveCopyFailure: null,
+        saveCopyStatusMessage: "Moderated-mediation authority revisions use the versioned model-and-Recipe save-as workflow.",
+      });
+      return "saved";
+    },
+
     reviseGeneralSemExecutionAuthority: async (options) => {
       const session = get().session;
       const activation = session?.standardActivation;
@@ -656,7 +957,7 @@ export const useInternalProjectArchiveV6Session =
           set({
             revisionForkFailure: {
               code: "schema6_general_sem_revision.revised_model_not_ready",
-              message: "The atomic interaction edit would not produce a calculation-ready SemModelV4.",
+              message: "The atomic scientific edit would not produce a calculation-ready SemModelV4.",
               correctiveAction: "Resolve the reported model readiness issues before saving a General SEM revision.",
               authoringIssues: [],
               readinessIssues: [...preview.readiness_issues],
@@ -717,6 +1018,7 @@ export const useInternalProjectArchiveV6Session =
           revision,
           intent: options.intent,
           revisionNumberHint,
+          experimentalLabsEnabled: workspace.uiPreferences.experimentalLabsEnabled,
         });
       } catch (error) {
         if (get().requestEpoch !== requestEpoch) return "stale";

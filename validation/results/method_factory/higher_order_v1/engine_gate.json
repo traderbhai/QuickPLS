@@ -21,16 +21,16 @@
     "scientific_failures": {},
     "scope_warning_contract": "the point-only/no-HOC-resampling warning is present and the former generic experimental label is absent"
   },
-  "completed_at_utc": "2026-08-18T00:38:15.831629Z",
+  "completed_at_utc": "2026-08-20T17:05:32.195594Z",
   "kind": "quickpls_phase3_current_engine_gate",
   "method": "higher_order_v1",
   "passed": true,
   "prebuilt_cli": {
     "path": "target/debug/qpls.exe",
-    "sha256": "ad982f935cced0de90627d25d941c38d74adf6b19882364b037ca3b9fb01c8b0",
-    "size": 66081792
+    "sha256": "554d1d2b68c412395897e1d2d52cfd3b63de8b1d13365ef1e80c5612058b5c18",
+    "size": 66114560
   },
   "recipe_policy": "historical fixtures copied to explicit schema v3; source fixtures preserved",
   "schema_version": 1,
-  "started_at_utc": "2026-08-18T00:38:12.107910Z"
+  "started_at_utc": "2026-08-20T17:05:30.538166Z"
 }

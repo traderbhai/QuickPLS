@@ -1,10 +1,11 @@
-//! Authoritative Internal/Labs estimator preflight for schema-6 General SEM.
+//! Authoritative Registry-driven estimator preflight for schema-6 General SEM.
 //!
 //! The frontend may provide a fast preview, but only this bridge evaluates the
 //! exact Rust compiler contracts. It never mutates or persists project data.
 
 use crate::general_sem_registry_access_v1::{
-    GENERAL_SEM_INTERNAL_LABS_SURFACE as INTERNAL_LABS_SURFACE, GeneralSemRegistryAccessErrorV1,
+    GENERAL_SEM_INTERNAL_LABS_SURFACE as INTERNAL_LABS_SURFACE,
+    GENERAL_SEM_STANDARD_SURFACE as STANDARD_SURFACE, GeneralSemRegistryAccessErrorV1,
     authorize_general_sem_registry_access_v1,
     decision_declares_general_sem_execution_cell_v1, is_general_sem_execution_cell_v1,
     is_rank3_general_sem_cbsem_execution_cell_v1,
@@ -166,6 +167,34 @@ fn preflight_general_sem_estimators(
             GeneralSemRegistryAccessErrorV1::RegistryInvalid(detail) => blocked(
                 "capability_registry_invalid",
                 format!("Capability Registry V2 is invalid: {detail}"),
+                "Keep the project unchanged and repair the embedded registry before preflight.",
+            ),
+            GeneralSemRegistryAccessErrorV1::CapabilityUnavailable => blocked(
+                "capability_unavailable",
+                "The exact requested General SEM option cell is not uniquely executable in Standard or Labs.",
+                "Use an exact available Capability Registry V2 cell and rerun estimator preflight.",
+            ),
+            GeneralSemRegistryAccessErrorV1::StandardSurfaceRequired => blocked(
+                "standard_surface_required",
+                "The exact requested General SEM option cell is qualified for the Standard surface.",
+                "Refresh capability access and rerun preflight through the Standard surface.",
+            ),
+            GeneralSemRegistryAccessErrorV1::InternalLabsRequired => blocked(
+                "internal_labs_required",
+                "The exact requested General SEM option cell is available only through Experimental Labs.",
+                "Enable Experimental Labs and rerun preflight, or choose a Standard-qualified cell.",
+            ),
+        };
+    }
+    if let Err(error) = authorize_general_sem_registry_access_v1(
+        &request.surface,
+        request.experimental_labs_enabled,
+        &request.capability_cell,
+    ) {
+        return match error {
+            GeneralSemRegistryAccessErrorV1::RegistryInvalid(detail) => blocked(
+                "capability_registry_invalid",
+                format!("Capability Registry V2 is invalid: {detail}"),
                 "Keep the project unchanged and restore the embedded Registry before preflight.",
             ),
             GeneralSemRegistryAccessErrorV1::CapabilityUnavailable => blocked(
@@ -196,7 +225,7 @@ fn preflight_general_sem_estimators(
         return blocked(
             "general_sem_v1_project_required",
             "Advanced estimator preflight requires a newly created schema-6 general_sem_v1 project.",
-            "Create a new General SEM project in Experimental Labs; upgraded and unmarked projects retain their existing behavior.",
+            "Create a new General SEM project before importing data or authoring the model; upgraded and unmarked projects retain their existing behavior.",
         );
     }
 
@@ -289,6 +318,20 @@ fn preflight_general_sem_estimators(
             );
         }
     };
+    // Capability cells are canonically sorted; exact execution ownership comes
+    // from model topology plus inference, never from collection position.
+    if !is_rank3_general_sem_cbsem_execution_cell_v1(&request.capability_cell) {
+        let selected = selected_general_sem_execution_cell_v1(authoritative_model, &request.config);
+        if !decision_declares_general_sem_execution_cell_v1(&pls, &selected)
+            || selected != request.capability_cell
+        {
+            return blocked(
+                "capability_cell_mismatch",
+                "The requested option cell differs from the exact native PLS decision for this model and config.",
+                "Refresh the unchanged project authority and rerun exact capability preflight.",
+            );
+        }
+    }
     let cbsem = match preflight_general_sem_cbsem_v1(authoritative_model, &request.config) {
         Ok(decision) => decision,
         Err(error) => {
@@ -349,7 +392,8 @@ mod tests {
     use super::*;
     use chrono::{TimeZone, Utc};
     use qpls_core::{
-        Construct, LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec,
+        Construct, GeneralSemBootstrapIntervalV1, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
+        LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec,
         SemCapabilityDecisionStatusV1, SemDataBindingV4, StructuralPath,
         convert_legacy_basic_model_v4,
     };
@@ -439,9 +483,9 @@ mod tests {
     fn request() -> GeneralSemEstimatorPreflightRequestV1 {
         let (project, model) = marked_project_and_model();
         GeneralSemEstimatorPreflightRequestV1 {
-            surface: INTERNAL_LABS_SURFACE.into(),
-            experimental_labs_enabled: true,
-            capability_cell: qpls_core::cbsem_general_sem_ml_capability_cell_v1(),
+            surface: STANDARD_SURFACE.into(),
+            experimental_labs_enabled: false,
+            capability_cell: qpls_core::pls_general_recursive_effects_capability_cell_v1(),
             project,
             model_id: model.id,
             config: GeneralSemConfigV1::default(),
@@ -479,11 +523,12 @@ mod tests {
     #[test]
     fn labs_gate_unmarked_and_upgraded_projects_fail_closed() {
         let mut denied = request();
-        denied.experimental_labs_enabled = false;
+        denied.surface = INTERNAL_LABS_SURFACE.into();
+        denied.experimental_labs_enabled = true;
         assert!(matches!(
             preflight_general_sem_estimators(denied),
             GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic }
-                if diagnostic.code.ends_with("internal_labs_required")
+                if diagnostic.code.ends_with("standard_surface_required")
         ));
 
         let mut unmarked = request();
@@ -529,6 +574,23 @@ mod tests {
         let mut wire = serde_json::to_value(request()).unwrap();
         wire["model"] = serde_json::to_value(model()).unwrap();
         assert!(serde_json::from_value::<GeneralSemEstimatorPreflightRequestV1>(wire).is_err());
+    }
+
+    #[test]
+    fn bootstrap_preflight_rejects_the_point_dependency_as_execution_owner() {
+        let mut wrong = request();
+        wrong.config.inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 7,
+            confidence_level: 0.95,
+            interval: GeneralSemBootstrapIntervalV1::Percentile,
+            tail: GeneralSemInferenceTailV1::TwoSided,
+        };
+        assert!(matches!(
+            preflight_general_sem_estimators(wrong),
+            GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code.ends_with("capability_cell_mismatch")
+        ));
     }
 
     #[test]

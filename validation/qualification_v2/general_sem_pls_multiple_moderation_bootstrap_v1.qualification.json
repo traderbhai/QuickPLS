@@ -1,0 +1,1258 @@
+{
+  "comparison_contract": {
+    "outputs": [
+      {
+        "absolute_tolerance": 1e-06,
+        "orientation_keys": [
+          "construct_id",
+          "anchor_indicator_id"
+        ],
+        "output_id": "outer_weights",
+        "rationale": "Construct solutions are compared only after the frozen deterministic anchor orientation is applied.",
+        "relative_tolerance": 1e-05,
+        "rule": "sign_orientation"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "outer_loadings",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "orientation_keys": [
+          "construct_id",
+          "anchor_indicator_id"
+        ],
+        "output_id": "construct_scores",
+        "rationale": "Construct solutions are compared only after the frozen deterministic anchor orientation is applied.",
+        "relative_tolerance": 1e-05,
+        "rule": "sign_orientation"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "path_coefficients",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "joint_direct_coefficients",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "standardized_product_coefficients",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "scientific_gammas",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "fixed_probe_slopes",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "bootstrap_means",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "bootstrap_biases",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "bootstrap_standard_errors",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "percentile_lower_bounds",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "percentile_upper_bounds",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "absolute_tolerance": 1e-06,
+        "output_id": "plus_one_probabilities",
+        "rationale": "Independent implementations must agree elementwise within frozen absolute and relative floating-point tolerances.",
+        "relative_tolerance": 1e-05,
+        "rule": "abs_relative"
+      },
+      {
+        "output_id": "requested_usable_failed_counts",
+        "rationale": "Indexed execution identities, counts, and typed failures are categorical deterministic contract outputs.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "failure_ledger",
+        "rationale": "Indexed execution identities, counts, and typed failures are categorical deterministic contract outputs.",
+        "rule": "exact"
+      },
+      {
+        "output_id": "usable_index_digest",
+        "rationale": "Indexed execution identities, counts, and typed failures are categorical deterministic contract outputs.",
+        "rule": "exact"
+      },
+      {
+        "acceptance_interval": [
+          0.9,
+          1.0
+        ],
+        "confidence_level": 0.95,
+        "maximum_half_width": 0.01,
+        "output_id": "effect_recovery_rate",
+        "rationale": "A frozen binomial scientific-recovery proportion requires predeclared interval and precision gates with failed fits retained.",
+        "rule": "monte_carlo_interval"
+      },
+      {
+        "grouping_keys": [
+          "family",
+          "target_id"
+        ],
+        "maximum": 0.08,
+        "output_id": "effect_recovery_absolute_bias",
+        "rationale": "Exact per-target n, sum(error), and sum(error squared) are aggregated before applying the preregistered finite-sample recovery bound.",
+        "rule": "bounded_moment",
+        "statistic": "absolute_bias"
+      },
+      {
+        "grouping_keys": [
+          "family",
+          "target_id"
+        ],
+        "maximum": 0.2,
+        "output_id": "effect_recovery_rmse",
+        "rationale": "Exact per-target n, sum(error), and sum(error squared) are aggregated before applying the preregistered finite-sample recovery bound.",
+        "rule": "bounded_moment",
+        "statistic": "rmse"
+      },
+      {
+        "acceptance_interval": [
+          0.9,
+          0.99
+        ],
+        "confidence_level": 0.95,
+        "maximum_half_width": 0.01,
+        "output_id": "empirical_coverage",
+        "rationale": "A frozen binomial scientific-recovery proportion requires predeclared interval and precision gates with failed fits retained.",
+        "rule": "monte_carlo_interval"
+      },
+      {
+        "acceptance_interval": [
+          0.0,
+          0.08
+        ],
+        "confidence_level": 0.95,
+        "maximum_half_width": 0.01,
+        "output_id": "null_rejection_rate",
+        "rationale": "A frozen binomial scientific-recovery proportion requires predeclared interval and precision gates with failed fits retained.",
+        "rule": "monte_carlo_interval"
+      },
+      {
+        "acceptance_interval": [
+          0.95,
+          1.0
+        ],
+        "confidence_level": 0.95,
+        "maximum_half_width": 0.01,
+        "output_id": "failure_classification_rate",
+        "rationale": "A frozen binomial scientific-recovery proportion requires predeclared interval and precision gates with failed fits retained.",
+        "rule": "monte_carlo_interval"
+      },
+      {
+        "acceptance_interval": [
+          0.99,
+          1.0
+        ],
+        "confidence_level": 0.95,
+        "maximum_half_width": 0.01,
+        "output_id": "worker_replay_rate",
+        "rationale": "A frozen binomial scientific-recovery proportion requires predeclared interval and precision gates with failed fits retained.",
+        "rule": "monte_carlo_interval"
+      },
+      {
+        "acceptance_interval": [
+          0.99,
+          1.0
+        ],
+        "confidence_level": 0.95,
+        "maximum_half_width": 0.01,
+        "output_id": "seed_replay_rate",
+        "rationale": "A frozen binomial scientific-recovery proportion requires predeclared interval and precision gates with failed fits retained.",
+        "rule": "monte_carlo_interval"
+      },
+      {
+        "output_id": "metamorphic_invariance_rate",
+        "rationale": "Mapped declaration, row-order, and positive-affine transformations must preserve every compared scientific output.",
+        "rule": "exact"
+      }
+    ]
+  },
+  "evidence_contract": {
+    "receipt_contract": {
+      "hardware_fingerprint_required": true,
+      "hash_algorithm": "sha256",
+      "identity_fields": [
+        "qualification_id",
+        "capability_id",
+        "cell_id",
+        "method_version",
+        "source_set_sha256",
+        "scenario_set_sha256",
+        "qualification_contract_sha256",
+        "build_fingerprint"
+      ],
+      "payload_contract": {
+        "contract_id": "quickpls.general_sem.rank0.receipt_payload.v1",
+        "schema_path": "validation/qualification_v2/general_sem_rank0_receipt_payload_v1.schema.json",
+        "schema_version": 1,
+        "validator_path": "validation/general_sem_rank0_receipt_payload_v1.py"
+      },
+      "scenario_set_hash_required": true,
+      "source_descriptors_required": true
+    },
+    "receipts": [
+      {
+        "role": "method_contract",
+        "stage": "contract",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/moderation_bootstrap/method_contract.receipt.json",
+        "size_bytes": 101020,
+        "sha256": "d58368fb93f704ec56a0daa0ffaf30945e1a768072751d851aecb7cb5ee42749",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "dcb196cb9fcd467ac72c61ef8f890d9edf4992f8ea49be2876450f2c638c4ec7",
+        "qualification_contract_sha256": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "kernel_execution",
+        "stage": "kernel",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/moderation_bootstrap/kernel_execution.receipt.json",
+        "size_bytes": 101762,
+        "sha256": "688eb05136fd47b254f826e6918feae07d154749f053d3a741d20274aabb464a",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "dcb196cb9fcd467ac72c61ef8f890d9edf4992f8ea49be2876450f2c638c4ec7",
+        "qualification_contract_sha256": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "oracle_independence",
+        "stage": "oracle",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/moderation_bootstrap/oracle_independence.receipt.json",
+        "size_bytes": 101765,
+        "sha256": "f047dfc122634347fb7072cf04dc36b0dcd18a7d36771e2ebac255a663bfb966",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "dcb196cb9fcd467ac72c61ef8f890d9edf4992f8ea49be2876450f2c638c4ec7",
+        "qualification_contract_sha256": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "generative_recovery",
+        "stage": "generative",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/moderation_bootstrap/generative_recovery.receipt.json",
+        "size_bytes": 101769,
+        "sha256": "350235e9d73fc02b29a52ffdcfb3ea02599c6dcb60520f1d750bbe2dd3b70504",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "dcb196cb9fcd467ac72c61ef8f890d9edf4992f8ea49be2876450f2c638c4ec7",
+        "qualification_contract_sha256": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "adversarial_boundaries",
+        "stage": "adversarial",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/moderation_bootstrap/adversarial_boundaries.receipt.json",
+        "size_bytes": 101773,
+        "sha256": "1848dd7aa60cf85506d9d7553feae148e68cc572d92e12ee8b398fcb2a05b526",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "dcb196cb9fcd467ac72c61ef8f890d9edf4992f8ea49be2876450f2c638c4ec7",
+        "qualification_contract_sha256": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "archive_persistence",
+        "stage": "persistence_export",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/moderation_bootstrap/archive_persistence.receipt.json",
+        "size_bytes": 100945,
+        "sha256": "868476513da40364e09b43dcae3f4bdf89a376630c999bec58d086b0c771f6f0",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "dcb196cb9fcd467ac72c61ef8f890d9edf4992f8ea49be2876450f2c638c4ec7",
+        "qualification_contract_sha256": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "cross_format_export",
+        "stage": "persistence_export",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/moderation_bootstrap/cross_format_export.receipt.json",
+        "size_bytes": 100989,
+        "sha256": "ee16a930e8e8b1a2e820926963a7b23ec9017db26d4e70c73c7a2568340cb130",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "dcb196cb9fcd467ac72c61ef8f890d9edf4992f8ea49be2876450f2c638c4ec7",
+        "qualification_contract_sha256": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "frontend_contract",
+        "stage": "persistence_export",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/moderation_bootstrap/frontend_contract.receipt.json",
+        "size_bytes": 100985,
+        "sha256": "51dee57f27118a03d94878c23d79a280a3e1db2a4019226d2ebb86a5ec261e20",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "dcb196cb9fcd467ac72c61ef8f890d9edf4992f8ea49be2876450f2c638c4ec7",
+        "qualification_contract_sha256": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "packaged_windows_e2e",
+        "stage": "packaged_windows",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/moderation_bootstrap/packaged_windows_e2e.receipt.json",
+        "size_bytes": 100953,
+        "sha256": "1631edfa4a6112b79eede8437303ac100cf9e1b60a566d3346a2686694dcf805",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "dcb196cb9fcd467ac72c61ef8f890d9edf4992f8ea49be2876450f2c638c4ec7",
+        "qualification_contract_sha256": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      },
+      {
+        "role": "performance_scale",
+        "stage": "scale_reliability",
+        "evidence_class": "qualification",
+        "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+        "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+        "path": "validation/results/general_sem_rank0_standard_v1/moderation_bootstrap/performance_scale.receipt.json",
+        "size_bytes": 100948,
+        "sha256": "41873187abcf6736a840245ebad1b8aefef8421eb3262522f723c70c65e3c9c1",
+        "generated_at_utc": "2026-08-20T12:46:50Z",
+        "source_set_sha256": "02a4d2c266c16538e0e035e0f31966f1d86360c52b5dd48b36e665506916b2f9",
+        "scenario_set_sha256": "dcb196cb9fcd467ac72c61ef8f890d9edf4992f8ea49be2876450f2c638c4ec7",
+        "qualification_contract_sha256": "b294806614fdbfb623c4dc5c9d18c26d736ef43571926dd8d14d1f0decb053be",
+        "build_fingerprint": "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+        "hardware_fingerprint": {
+          "os": "windows_11",
+          "architecture": "x86_64",
+          "cpu": "AMD Ryzen 5 7530U with Radeon Graphics",
+          "logical_cores": 12,
+          "memory_gib": 15.314
+        }
+      }
+    ],
+    "required_roles": [
+      "method_contract",
+      "kernel_execution",
+      "oracle_independence",
+      "generative_recovery",
+      "adversarial_boundaries",
+      "archive_persistence",
+      "cross_format_export",
+      "frontend_contract",
+      "packaged_windows_e2e",
+      "performance_scale"
+    ]
+  },
+  "identity": {
+    "analytical_method_version": "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1",
+    "capability_cell": {
+      "capability_id": "smartpls.moderation",
+      "capability_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+      "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+      "registry_schema_version": 2
+    },
+    "execution_kind": "stochastic",
+    "method_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+    "potentially_long_running": true,
+    "qualification_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap.qualification_v2",
+    "spec_frozen_at_utc": "2026-08-19T00:00:00Z"
+  },
+  "migration": {
+    "source_kind": "qualification_v1_manifest",
+    "source_manifest_path": "validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json",
+    "source_schema_version": 1,
+    "status": "completed",
+    "unresolved_items": []
+  },
+  "operational_contract": {
+    "archive": {
+      "corruption_cases": [
+        "feature_identity",
+        "method_version",
+        "dataset_fingerprint",
+        "checksum",
+        "duplicate_entry",
+        "malformed_payload",
+        "legacy_reinterpretation",
+        "interrupted_save"
+      ],
+      "current_schema_version": 6,
+      "future_schema_policy": "verified_read_only",
+      "readable_schema_versions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "writable_schema_versions": [
+        6
+      ]
+    },
+    "cancellation": {
+      "archive_unchanged": true,
+      "maximum_latency_seconds": 1,
+      "no_partial_committed_result": true,
+      "no_partial_visible_result": true,
+      "phases": [
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "validate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "estimate"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "resample"
+        },
+        {
+          "applicability": "not_applicable",
+          "not_applicable_reason": "Rank 0 estimates one declared model and does not compare candidates.",
+          "phase": "compare"
+        },
+        {
+          "applicability": "required",
+          "not_applicable_reason": null,
+          "phase": "export"
+        }
+      ],
+      "required_for_potentially_long_operations": true,
+      "same_settings_retry": true
+    },
+    "export": {
+      "canonical_projection_id": "canonical_result_document_v2.moderation_bootstrap",
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf",
+        "png"
+      ],
+      "provenance_required": true,
+      "same_run_required": true,
+      "semantic_readback_formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "svg",
+        "pdf",
+        "png"
+      ],
+      "validation_witness_excluded": true
+    },
+    "performance": {
+      "baseline_policy": {
+        "maximum_memory_regression_percent": 20,
+        "maximum_runtime_regression_percent": 20,
+        "measured_runs": 5,
+        "statistic": "median",
+        "warmup_runs": 1
+      },
+      "budgets": [
+        {
+          "hardware_class_id": "standard_windows_6c16g",
+          "maximum_cancellation_latency_seconds": 1,
+          "maximum_elapsed_seconds": 900,
+          "maximum_peak_working_set_bytes": 4294967296,
+          "maximum_result_bytes": 524288000,
+          "profile_id": "applied"
+        }
+      ],
+      "hardware_classes": [
+        {
+          "architecture": "x86_64",
+          "id": "standard_windows_6c16g",
+          "minimum_logical_cores": 6,
+          "minimum_memory_gib": 15,
+          "notes": "Streamlined Rank 0 reference host; nominal 16 GiB Windows hardware may expose approximately 15 GiB usable memory.",
+          "os_family": "windows"
+        }
+      ]
+    },
+    "windows": {
+      "accessible_tables_required": true,
+      "display_scale_percent": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "keyboard_only_required": true,
+      "offline_required": true,
+      "package_kinds": [
+        "installed",
+        "portable"
+      ],
+      "real_pointer_required": true,
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ]
+    }
+  },
+  "scenario_contract": {
+    "axes": [
+      {
+        "id": "model_topology",
+        "label": "General SEM topology",
+        "values": [
+          {
+            "description": "Two interactions share one focal predictor.",
+            "id": "same_focal_simultaneous"
+          },
+          {
+            "description": "Interactions use different focal predictors.",
+            "id": "different_focal_simultaneous"
+          }
+        ]
+      },
+      {
+        "id": "measurement_model",
+        "label": "Measurement model",
+        "values": [
+          {
+            "description": "Every construct is estimated with Mode A.",
+            "id": "all_mode_a"
+          },
+          {
+            "description": "At least one supported Mode B block is combined with Mode A blocks.",
+            "id": "mixed_mode_a_b"
+          }
+        ]
+      },
+      {
+        "id": "data_distribution",
+        "label": "Data distribution",
+        "values": [
+          {
+            "description": "Well-conditioned Gaussian latent and measurement disturbances.",
+            "id": "gaussian"
+          },
+          {
+            "description": "Skewed and heavy-tailed finite disturbances.",
+            "id": "skewed_heavy_tailed"
+          }
+        ]
+      },
+      {
+        "id": "missingness",
+        "label": "Missingness",
+        "values": [
+          {
+            "description": "No missing observations.",
+            "id": "complete"
+          },
+          {
+            "description": "Five percent MCAR rows removed model-wide before fitting.",
+            "id": "listwise_mcar_five_percent"
+          }
+        ]
+      },
+      {
+        "id": "input_type",
+        "label": "Input representation",
+        "values": [
+          {
+            "description": "Supported raw continuous row-level observations.",
+            "id": "raw_rows"
+          },
+          {
+            "description": "Summary matrices are rejected as not applicable.",
+            "id": "summary_matrix_rejection"
+          }
+        ]
+      },
+      {
+        "id": "workload",
+        "label": "Execution workload",
+        "values": [
+          {
+            "description": "All indexed full-model refits are usable.",
+            "id": "full_refit_all_usable"
+          },
+          {
+            "description": "Typed failed refits remain in the requested denominator.",
+            "id": "controlled_failures_retained"
+          }
+        ]
+      },
+      {
+        "id": "metamorphism",
+        "label": "Mapped scientific invariance",
+        "values": [
+          {
+            "description": "Canonical declaration and row order.",
+            "id": "identity"
+          },
+          {
+            "description": "Construct declarations are reversed while identifiers are retained.",
+            "id": "component_declaration_reorder"
+          },
+          {
+            "description": "Path and interaction declarations are reversed while identifiers are retained.",
+            "id": "relation_declaration_reorder"
+          },
+          {
+            "description": "Indicator declarations within every block are reversed while identifiers are retained.",
+            "id": "indicator_declaration_reorder"
+          },
+          {
+            "description": "Observation order is reversed with exact row mapping.",
+            "id": "row_reverse"
+          },
+          {
+            "description": "Every finite indicator receives a deterministic positive affine transform.",
+            "id": "positive_affine_indicators"
+          }
+        ]
+      },
+      {
+        "id": "workers",
+        "label": "Worker scheduling",
+        "values": [
+          {
+            "description": "One indexed bootstrap worker.",
+            "id": "one_worker"
+          },
+          {
+            "description": "Two indexed bootstrap workers.",
+            "id": "two_workers"
+          },
+          {
+            "description": "Four indexed bootstrap workers.",
+            "id": "four_workers"
+          },
+          {
+            "description": "The producer records and uses the runtime maximum available worker count.",
+            "id": "maximum_available_workers"
+          }
+        ]
+      }
+    ],
+    "complexity_profiles": [
+      {
+        "applicability": "not_applicable",
+        "description": "Small hand-checkable exact-contract model.",
+        "id": "micro_exact",
+        "not_applicable_reason": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 5,
+          "groups": 1,
+          "indicators": 15,
+          "resamples": 199,
+          "rows": 80
+        }
+      },
+      {
+        "applicability": "required",
+        "description": "Typical applied General SEM model.",
+        "id": "applied",
+        "not_applicable_reason": null,
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 10,
+          "groups": 1,
+          "indicators": 40,
+          "resamples": 5000,
+          "rows": 1000
+        }
+      },
+      {
+        "applicability": "not_applicable",
+        "description": "Large routine desktop model.",
+        "id": "large",
+        "not_applicable_reason": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 20,
+          "groups": 1,
+          "indicators": 80,
+          "resamples": 5000,
+          "rows": 10000
+        }
+      },
+      {
+        "applicability": "not_applicable",
+        "description": "Declared maximum dimensions, each exercised independently.",
+        "id": "maximum_axis",
+        "not_applicable_reason": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 100,
+          "groups": 1,
+          "indicators": 300,
+          "resamples": 10000,
+          "rows": 100000
+        }
+      },
+      {
+        "applicability": "not_applicable",
+        "description": "Several high dimensions combined for reliability qualification.",
+        "id": "compound_stress",
+        "not_applicable_reason": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "workload": {
+          "candidate_models": 1,
+          "constructs": 50,
+          "groups": 1,
+          "indicators": 150,
+          "resamples": 10000,
+          "rows": 25000
+        }
+      }
+    ],
+    "mandatory_combinations": [
+      {
+        "coverage": "pairwise",
+        "id": "applied_pairwise_matrix",
+        "profile_id": "applied",
+        "purpose": "Deterministic pairwise covering array over every required scenario-axis value.",
+        "selections": {
+          "data_distribution": [
+            "gaussian",
+            "skewed_heavy_tailed"
+          ],
+          "input_type": [
+            "raw_rows",
+            "summary_matrix_rejection"
+          ],
+          "measurement_model": [
+            "all_mode_a",
+            "mixed_mode_a_b"
+          ],
+          "metamorphism": [
+            "identity",
+            "component_declaration_reorder",
+            "relation_declaration_reorder",
+            "indicator_declaration_reorder",
+            "row_reverse",
+            "positive_affine_indicators"
+          ],
+          "missingness": [
+            "complete",
+            "listwise_mcar_five_percent"
+          ],
+          "model_topology": [
+            "same_focal_simultaneous",
+            "different_focal_simultaneous"
+          ],
+          "workers": [
+            "one_worker",
+            "two_workers",
+            "four_workers",
+            "maximum_available_workers"
+          ],
+          "workload": [
+            "full_refit_all_usable",
+            "controlled_failures_retained"
+          ]
+        },
+        "stressed_dimensions": []
+      },
+      {
+        "id": "micro_exact_streamlined_deferred",
+        "profile_id": "micro_exact",
+        "coverage": "pairwise",
+        "purpose": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "stressed_dimensions": [],
+        "selections": {
+          "workload": [
+            "streamlined_deferred"
+          ]
+        }
+      },
+      {
+        "id": "large_streamlined_deferred",
+        "profile_id": "large",
+        "coverage": "pairwise",
+        "purpose": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "stressed_dimensions": [],
+        "selections": {
+          "workload": [
+            "streamlined_deferred"
+          ]
+        }
+      },
+      {
+        "id": "maximum_axis_streamlined_deferred",
+        "profile_id": "maximum_axis",
+        "coverage": "pairwise",
+        "purpose": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "stressed_dimensions": [],
+        "selections": {
+          "workload": [
+            "streamlined_deferred"
+          ]
+        }
+      },
+      {
+        "id": "compound_stress_streamlined_deferred",
+        "profile_id": "compound_stress",
+        "coverage": "pairwise",
+        "purpose": "rank0_streamlined_plan4b_v1 replaces the retired exhaustive performance matrix with one representative applied run and ten-run soak.",
+        "stressed_dimensions": [],
+        "selections": {
+          "workload": [
+            "streamlined_deferred"
+          ]
+        }
+      }
+    ],
+    "monte_carlo_policy": {
+      "confidence_level": 0.95,
+      "decision_boundary_trial_policy": {
+        "confidence_method": "wilson_score_two_sided_v1",
+        "global_worst_case_trials": 9604,
+        "metric_budgets": {
+          "effect_recovery_rate": {
+            "decision_rate": 0.9,
+            "execution_target_trials": 9604,
+            "minimum_trials": 3465
+          },
+          "empirical_coverage": {
+            "decision_rate": 0.9,
+            "execution_target_trials": 3520,
+            "minimum_trials": 3465
+          },
+          "failure_classification_rate": {
+            "decision_rate": 0.95,
+            "execution_target_trials": 9604,
+            "minimum_trials": 1839
+          },
+          "null_rejection_rate": {
+            "decision_rate": 0.08,
+            "execution_target_trials": 2880,
+            "minimum_trials": 2835
+          },
+          "seed_replay_rate": {
+            "decision_rate": 0.99,
+            "execution_target_trials": 1024,
+            "minimum_trials": 473
+          },
+          "worker_replay_rate": {
+            "decision_rate": 0.99,
+            "execution_target_trials": 1024,
+            "minimum_trials": 473
+          }
+        },
+        "policy_version": "general_sem_rank0_decision_boundary_fixed_n_continuation_v1",
+        "scenario_trial_overrides": {
+          "coverage.mediation_bootstrap": 9604,
+          "coverage.moderation_bootstrap": 4480
+        },
+        "selection_rule": "fixed_before_plan4b_outcome_review_contiguous_prefix_v1"
+      },
+      "failed_fits_in_denominator": true,
+      "maximum_half_width": 0.01
+    }
+  },
+  "schema_version": 2,
+  "scientific_contract": {
+    "data_predicates": [
+      {
+        "diagnostic_code": "general_sem.rank0.data.raw_continuous_rows_required",
+        "expression": "Input is unweighted single-group raw continuous row-level data; summary matrices, transformed lineage, and noncontinuous scales are excluded.",
+        "id": "raw_continuous_single_group_rows",
+        "on_violation": "not_applicable"
+      },
+      {
+        "diagnostic_code": "general_sem.rank0.data.complete_case_support_required",
+        "expression": "Listwise filtering retains sufficient finite nonconstant observations for every block and structural equation.",
+        "id": "finite_complete_case_support",
+        "on_violation": "error"
+      }
+    ],
+    "estimands": [
+      {
+        "definition": "Converged Mode A or supported Mode B weights, loadings, oriented scores, and complete joint structural coefficients.",
+        "id": "indicator_level_pls_solution",
+        "label": "Indicator-level PLS solution",
+        "output_ids": [
+          "outer_weights",
+          "outer_loadings",
+          "construct_scores",
+          "path_coefficients"
+        ],
+        "unit": "standardized coefficient or score"
+      },
+      {
+        "definition": "Complete joint-stage direct coefficients, standardized-product coefficients, scientific gamma, and fixed minus-one/zero/plus-one slopes.",
+        "id": "simultaneous_moderation_solution",
+        "label": "Simultaneous two-way moderation effects",
+        "output_ids": [
+          "joint_direct_coefficients",
+          "standardized_product_coefficients",
+          "scientific_gammas",
+          "fixed_probe_slopes"
+        ],
+        "unit": "standardized coefficient, gamma, or conditional slope"
+      },
+      {
+        "definition": "Indexed complete PLS refits with sign alignment, Type-7 intervals, B-minus-one standard errors, plus-one probabilities, and the exact usable gate.",
+        "id": "full_model_case_bootstrap_inference",
+        "label": "Full-model case-bootstrap inference",
+        "output_ids": [
+          "bootstrap_means",
+          "bootstrap_biases",
+          "bootstrap_standard_errors",
+          "percentile_lower_bounds",
+          "percentile_upper_bounds",
+          "plus_one_probabilities"
+        ],
+        "unit": "coefficient, interval endpoint, standard error, or probability"
+      },
+      {
+        "definition": "Requested, usable, and failed counts with ordered typed failures, usable-index identity, and worker-invariant replay.",
+        "id": "bootstrap_execution_accounting",
+        "label": "Bootstrap execution accounting",
+        "output_ids": [
+          "requested_usable_failed_counts",
+          "failure_ledger",
+          "usable_index_digest"
+        ],
+        "unit": "count, categorical reason, digest, or proportion"
+      },
+      {
+        "definition": "Predeclared sign recovery, continuous bias/RMSE recovery, coverage, null calibration, failure classification, mapped invariance, and replay gates with failed fits retained.",
+        "id": "qualification_recovery",
+        "label": "Qualification-scale scientific recovery",
+        "output_ids": [
+          "effect_recovery_rate",
+          "effect_recovery_absolute_bias",
+          "effect_recovery_rmse",
+          "empirical_coverage",
+          "null_rejection_rate",
+          "failure_classification_rate",
+          "worker_replay_rate",
+          "seed_replay_rate",
+          "metamorphic_invariance_rate"
+        ],
+        "unit": "proportion or standardized coefficient-error unit"
+      }
+    ],
+    "model_predicates": [
+      {
+        "diagnostic_code": "general_sem.rank0.model.recursive_composites_required",
+        "expression": "The structural graph is an identified recursive DAG of supported composite Mode A or Mode B blocks.",
+        "id": "recursive_general_sem_composite_model",
+        "on_violation": "error"
+      },
+      {
+        "diagnostic_code": "general_sem.rank0.model.moderation_bootstrap_scope_required",
+        "expression": "The request contains one or more strong-hierarchy two-stage two-way interactions on direct-only outcome equations, without mediation estimands.",
+        "id": "exact_rank0_cell_scope",
+        "on_violation": "not_applicable"
+      }
+    ],
+    "oracle_exception": null,
+    "oracles": [
+      {
+        "citation": "Wold (1982) and Chin, Marcolin, and Newsted (2003), a partial least squares latent variable modeling approach for measuring interaction effects.",
+        "covered_estimand_ids": [
+          "indicator_level_pls_solution",
+          "simultaneous_moderation_solution",
+          "full_model_case_bootstrap_inference",
+          "bootstrap_execution_accounting",
+          "qualification_recovery"
+        ],
+        "id": "general_sem_rank0_primary_methods",
+        "implementation": null,
+        "independence_group": "primary_general_sem_pls_methods",
+        "kind": "primary_literature",
+        "locator": "docs/methods/GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_V1.md",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "citation": "Transparent standard-library indicator-level PLS-PM, effect, moderation, and indexed full-refit bootstrap oracle maintained outside the production estimator.",
+        "covered_estimand_ids": [
+          "indicator_level_pls_solution",
+          "simultaneous_moderation_solution",
+          "full_model_case_bootstrap_inference",
+          "bootstrap_execution_accounting",
+          "qualification_recovery"
+        ],
+        "id": "general_sem_rank0_independent_python_pls_pm",
+        "implementation": {
+          "maintainer": "QuickPLS validation lane; production-independent implementation",
+          "name": "General SEM Rank 0 independent Python PLS-PM oracle",
+          "version": "rank0_v1"
+        },
+        "independence_group": "general_sem_rank0_python_oracle_v1",
+        "kind": "independent_implementation",
+        "locator": "validation/general_sem_rank0_independent_pls_oracle.py",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "cSEM 0.6.1 independently estimates indicator-level PLS-PM; base R independently recomputes oriented mediation and simultaneous-moderation targets, full-model case bootstraps, product rescaling, and frozen summaries.",
+        "covered_estimand_ids": [
+          "indicator_level_pls_solution",
+          "simultaneous_moderation_solution",
+          "full_model_case_bootstrap_inference",
+          "bootstrap_execution_accounting",
+          "qualification_recovery"
+        ],
+        "id": "general_sem_rank0_independent_csem_base_r",
+        "implementation": {
+          "maintainer": "QuickPLS validation lane; production-independent R implementation",
+          "name": "General SEM Rank 0 cSEM and base-R oracle",
+          "version": "csem_0_6_1_base_r_v1"
+        },
+        "independence_group": "general_sem_rank0_csem_base_r_oracle_v1",
+        "kind": "independent_implementation",
+        "locator": "validation/general_sem_rank0_csem_oracle.py",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "citation": "Existing production-independent arithmetic fixture for the bounded method contract; it does not replace either indicator-level oracle.",
+        "covered_estimand_ids": [
+          "simultaneous_moderation_solution",
+          "full_model_case_bootstrap_inference",
+          "bootstrap_execution_accounting",
+          "qualification_recovery"
+        ],
+        "id": "moderation_bootstrap_arithmetic_microreference",
+        "implementation": null,
+        "independence_group": "moderation_bootstrap_existing_arithmetic_reference",
+        "kind": "hand_calculation",
+        "locator": "validation/general_sem_pls_multiple_moderation_bootstrap_v1_reference.py",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "preprocessing": [
+      {
+        "applies_to": [
+          "raw_continuous_rows"
+        ],
+        "id": "model_wide_complete_cases",
+        "operation": "Retain model-wide finite complete rows under the declared listwise policy.",
+        "order": 0,
+        "parameters": {
+          "failed_rows_retained_in_trial_denominator": true,
+          "policy": "listwise_deletion"
+        }
+      },
+      {
+        "applies_to": [
+          "complete_case_indicator_columns"
+        ],
+        "id": "sample_standardization",
+        "operation": "Center every used indicator and scale with sample standard deviation denominator n minus one.",
+        "order": 1,
+        "parameters": {
+          "ddof": 1,
+          "zero_variance": "error"
+        }
+      },
+      {
+        "applies_to": [
+          "standardized_indicator_columns"
+        ],
+        "id": "independent_pls_pm_refit",
+        "operation": "Fit path-weighted Mode A or supported Mode B PLS-PM and orient every block by its first nonzero outer weight.",
+        "order": 2,
+        "parameters": {
+          "mode_a": "covariance",
+          "mode_b": "joint_ols",
+          "weighting": "path"
+        }
+      },
+      {
+        "applies_to": [
+          "oriented_construct_scores",
+          "complete_structural_solution"
+        ],
+        "id": "cell_estimand_projection",
+        "operation": "Rebuild sample-standardized products and fit complete joint outcome equations before scientific-gamma and fixed-probe projection.",
+        "order": 3,
+        "parameters": {
+          "family": "moderation",
+          "isolated_equations": false
+        }
+      },
+      {
+        "applies_to": [
+          "complete_case_sampling_frame"
+        ],
+        "id": "indexed_full_model_case_bootstrap",
+        "operation": "For every fixed case-resample index, refit all PLS blocks, align complete score vectors, rebuild estimands, retain typed failures, and summarize only after the 90 percent usable gate.",
+        "order": 4,
+        "parameters": {
+          "interval": "type7_percentile_two_sided",
+          "minimum_usable_fraction": 0.9,
+          "probability": "null_centered_plus_one_two_sided",
+          "standard_error": "sample_b_minus_one"
+        }
+      }
+    ]
+  }
+}

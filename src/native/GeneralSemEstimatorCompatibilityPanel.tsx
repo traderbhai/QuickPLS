@@ -42,8 +42,14 @@ export interface GeneralSemEstimatorSelectionButtonProps {
   onSelectEstimator: (estimatorId: GeneralSemEstimatorIdV1) => void;
 }
 
-export function isRunnableGeneralSemDecisionV1(decision: SemCapabilityDecisionV1): boolean {
-  return decision.status === "experimental";
+export function isRunnableGeneralSemDecisionV1(
+  decision: SemCapabilityDecisionV1,
+  estimatorId: GeneralSemEstimatorIdV1,
+): boolean {
+  if (estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1) {
+    return decision.status === "experimental";
+  }
+  return decision.status === "supported" || decision.status === "experimental";
 }
 
 /** A native button preserves Enter/Space behavior and exposes no blocked callback. */
@@ -57,7 +63,7 @@ export function GeneralSemEstimatorSelectionButton({
   selectionLocked = false,
   onSelectEstimator,
 }: GeneralSemEstimatorSelectionButtonProps) {
-  const runnable = isRunnableGeneralSemDecisionV1(decision);
+  const runnable = isRunnableGeneralSemDecisionV1(decision, estimatorId);
   const isSelected = selected;
   const selectionDisabled = !runnable || selectionLocked;
   return <button
@@ -114,12 +120,13 @@ function EstimatorCard({
   selectionLocked: boolean;
 }) {
   const { decision, estimatorId, label } = option;
-  const runnable = isRunnableGeneralSemDecisionV1(decision);
+  const runnable = isRunnableGeneralSemDecisionV1(decision, estimatorId);
   const headingId = `${idPrefix}-heading`;
   const explanationId = `${idPrefix}-explanation`;
   const blockedReasonId = `${idPrefix}-blocked-reason`;
   const selectionDescriptionId = runnable ? explanationId : blockedReasonId;
   const blockingReason = decision.status === "supported"
+    && estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
     ? "This workflow accepts only Registry-authorized Experimental Labs decisions; Standard status cannot authorize a Labs execution action."
     : firstBlockingReason(decision);
   const capabilitySummary = decision.capability_cells
@@ -224,7 +231,7 @@ export function GeneralSemEstimatorCompatibilityPanel({
   ];
   const selected = options.find((option) => (
     option.estimatorId === selectedEstimatorId
-    && isRunnableGeneralSemDecisionV1(option.decision)
+    && isRunnableGeneralSemDecisionV1(option.decision, option.estimatorId)
   ));
 
   return <section

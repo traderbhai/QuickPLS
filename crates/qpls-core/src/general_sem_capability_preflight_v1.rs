@@ -1,14 +1,16 @@
 use crate::{
     CapabilityRegistryV2, CbsemMlExactCapabilityProfileV2, CompiledCbsemExecutionDispositionV3,
-    CompiledCbsemPlanV3,
-    CompiledCbsemStructuralFormV3, CompiledPlsInteractionV3Error, CompiledPlsPlanV3,
-    CompiledPlsPlanV3Error,
+    CompiledCbsemPlanV3, CompiledCbsemStructuralFormV3, CompiledPlsHigherOrderV1Error,
+    CompiledPlsInteractionV3Error, CompiledPlsPlanV3, CompiledPlsPlanV3Error,
+    CompiledPlsTwoWayModeratedMediationTargetErrorV1,
     GeneralSemBootstrapIntervalV1, GeneralSemConfigV1, GeneralSemInferenceTailV1,
     GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicyV4,
     ObservedScaleV4, SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
     SemCapabilityDecisionV1ValidationError, SemCapabilityDiagnosticSeverityV1,
     SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1, SemDataBindingV4, SemDerivedTermV4,
     SemGroupV4, SemModelV4, SemVariableV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
+    pls_general_higher_order_bootstrap_capability_cell_v1,
+    pls_general_higher_order_point_capability_cell_v1,
     validate_cbsem_general_sem_parameter_semantics_v1,
     validate_cbsem_ml_exact_parameter_table_v4_capability_v2,
 };
@@ -27,16 +29,41 @@ pub fn preflight_general_sem_pls_v1(
         .derived_terms
         .iter()
         .any(|term| matches!(term, SemDerivedTermV4::InteractionV2 { .. }));
-    let capability_cells = pls_cells(has_interactions, config)?;
+    let requests_moderated_mediation = has_interactions
+        && matches!(
+            config.inference,
+            GeneralSemInferenceV1::CaseBootstrap { .. }
+        )
+        && !config.requested_effect_estimands.is_empty();
+    let has_higher_order = model
+        .derived_terms
+        .iter()
+        .any(|term| matches!(term, SemDerivedTermV4::HigherOrder { .. }));
+    let capability_cells = pls_cells(has_interactions, has_higher_order, config)?;
     let mut evidence = vec![SemCapabilityEvidenceV1::new(
         "compiler:recipe_v4_to_compiled_pls_plan_v3_v1",
         "The versioned PLS v3 compiler preserves the proven v2 scoring plan and adds stable topology and effect identities.",
     )?];
-    if has_interactions {
+    if has_higher_order {
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "compiler:recipe_v4_to_compiled_pls_plan_v3_higher_order_point_v1",
+            "The bounded compiler binds one SemModelV4 HOC to explicit Mode A/B semantics, stable generated identities, and ordered approach-specific stages.",
+        )?);
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_point:general_sem_pls_higher_order_point_v1",
+            "The exact bounded General SEM HOC point identity owns approach-specific staged execution and canonical result authority.",
+        )?);
+    } else if has_interactions {
         evidence.push(SemCapabilityEvidenceV1::new(
             "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1",
             "The bounded compiler projects one shared stage-one score model and jointly solves every qualified two-way interaction in each stage-two equation.",
         )?);
+        if requests_moderated_mediation {
+            evidence.push(SemCapabilityEvidenceV1::new(
+                "compiler:qpls.compiled-pls-two-way-moderated-mediation-target.v1",
+                "The bounded compiler requires one selected two-relation path and one matching strong-hierarchy two-stage interaction, and records base-PLS, moderation-point, and supplemental mediation ownership explicitly.",
+            )?);
+        }
         evidence.push(SemCapabilityEvidenceV1::new(
             "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_point:general_sem_pls_multiple_two_way_moderation_point_v1",
             "Capability Registry V2 exposes the exact simultaneous interaction_v2 point-estimation option in Experimental Labs.",
@@ -51,7 +78,21 @@ pub fn preflight_general_sem_pls_v1(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
     ) {
-        if has_interactions {
+        if has_higher_order {
+            evidence.push(SemCapabilityEvidenceV1::new(
+                "compiler:recipe_v4_to_compiled_pls_plan_v3_higher_order_full_model_case_bootstrap_v1",
+                "The supplemental HOC bootstrap compiler binds indexed raw-case resampling to complete approach-specific stage refitting.",
+            )?);
+            evidence.push(SemCapabilityEvidenceV1::new(
+                "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_full_model_case_bootstrap:general_sem_pls_higher_order_full_model_case_bootstrap_v1",
+                "The exact bounded HOC bootstrap identity owns indexed raw-case resampling and complete approach-specific stage refitting.",
+            )?);
+        } else if requests_moderated_mediation {
+            evidence.push(SemCapabilityEvidenceV1::new(
+                "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap:general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+                "Capability Registry V2 exposes the exact one-path, one-interaction, five-target full-model case-bootstrap combination in Experimental Labs.",
+            )?);
+        } else if has_interactions {
             evidence.push(SemCapabilityEvidenceV1::new(
                 "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_bootstrap_v1",
                 "The supplemental moderation bootstrap compiler binds percentile, two-sided full-model case resampling while preserving the point cell as the compiled artifact's primary authority.",
@@ -78,7 +119,9 @@ pub fn preflight_general_sem_pls_v1(
     let mut diagnostics = execution_scope_diagnostics(model, config, has_interactions)?;
     match compile_pls_plan_v3(model, config) {
         Ok(plan) => {
-            if has_interactions {
+            if has_higher_order {
+                debug_assert_eq!(plan.higher_order_stage_plans().len(), 1);
+            } else if has_interactions {
                 diagnostics.extend(interaction_scope_diagnostics(config, &plan)?);
             } else {
                 let found = plan.topology().specific_directed_paths().len();
@@ -132,13 +175,26 @@ pub fn preflight_general_sem_pls_v1(
             "sem.capability.pls.experimental_labs",
             SemCapabilityDiagnosticSeverityV1::Info,
             None,
-            if has_interactions {
+            if has_higher_order {
+                match config.inference {
+                    GeneralSemInferenceV1::None => {
+                        "General SEM higher-order point estimation passes the bounded Experimental Labs compiler preflight."
+                    }
+                    GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                        "General SEM higher-order full-model percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                    }
+                }
+            } else if has_interactions {
                 match config.inference {
                     GeneralSemInferenceV1::None => {
                         "General SEM simultaneous two-way moderation point estimation passes the Experimental Labs compiler preflight."
                     }
                     GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                        "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                        if requests_moderated_mediation {
+                            "General SEM two-way moderated-mediation five-target percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                        } else {
+                            "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                        }
                     }
                 }
             } else {
@@ -155,13 +211,26 @@ pub fn preflight_general_sem_pls_v1(
         )?],
         evidence,
         "PLS-SEM can compile this exact request in Experimental Labs.",
-        if has_interactions {
+        if has_higher_order {
+            match config.inference {
+                GeneralSemInferenceV1::None => {
+                    "The compiler binds one exact HOC approach/type predicate to stable generated mappings and ordered stage projections. Runtime qualification remains required before Standard promotion."
+                }
+                GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                    "The point HOC cell remains primary authority and the supplemental Labs cell requires every raw-case replicate to rerun all compiled stages under one usable/failure ledger."
+                }
+            }
+        } else if has_interactions {
             match config.inference {
                 GeneralSemInferenceV1::None => {
                     "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
                 }
                 GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                    "The point moderation cell remains the primary artifact authority and the supplemental Labs cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
+                    if requests_moderated_mediation {
+                        "The point moderation cell remains primary while the Registry-authorized conditional-process Labs cell adds scientific gamma, fixed -1/0/+1 conditional indirect effects, and the index of moderated mediation from one shared full-model replicate ledger. Runtime validation remains authoritative before publication."
+                    } else {
+                        "The point moderation cell remains the primary artifact authority and the supplemental Labs cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
+                    }
                 }
             }
         } else {
@@ -600,6 +669,36 @@ fn interaction_scope_diagnostics(
         return Ok(Vec::new());
     }
     let mut diagnostics = Vec::new();
+    if let Some(target) = plan.two_way_moderated_mediation_target() {
+        let registry_authorized = CapabilityRegistryV2::embedded()
+            .ok()
+            .map(|registry| {
+                registry
+                    .option_cells()
+                    .filter(|cell| {
+                        cell.capability_id == target.bootstrap_capability_cell().capability_id
+                            && cell.cell_id == target.bootstrap_capability_cell().cell_id
+                            && cell.capability_version
+                                == target.bootstrap_capability_cell().capability_version
+                            && (cell.labs_available() || cell.standard_available())
+                    })
+                    .count()
+                    == 1
+            })
+            .unwrap_or(false);
+        if !registry_authorized {
+            diagnostics.push(SemCapabilityDiagnosticV1::new(
+                "sem.capability.pls.two_way_moderated_mediation_registry_cell_unavailable",
+                SemCapabilityDiagnosticSeverityV1::Error,
+                None,
+                "The exact combined five-target bootstrap cell is not uniquely available in Capability Registry V2.",
+                vec![
+                    "Keep the authored model and selected path unchanged; restore the exact Labs Registry authority before calculating.".into(),
+                ],
+            )?);
+        }
+        return Ok(diagnostics);
+    }
     if !config.requested_effect_estimands.is_empty() {
         diagnostics.push(SemCapabilityDiagnosticV1::new(
             "sem.capability.pls.multiple_moderation_effect_requests_not_executable",
@@ -632,6 +731,10 @@ fn pls_compile_diagnostic(
         CompiledPlsPlanV3Error::StructuralFeedback => (
             "sem.capability.pls.feedback_blocked",
             "Remove the reciprocal path for PLS-SEM, or use a future qualified nonrecursive CB-SEM cell.",
+        ),
+        CompiledPlsPlanV3Error::HigherOrderRequestedEffectsNotExecutable => (
+            "sem.capability.pls.higher_order_generic_effect_requests_not_executable",
+            "Clear generic requested effects; HOC loadings, weights, authored HOC paths, and extended-repeated effects are published through the typed HOC stage tables.",
         ),
         CompiledPlsPlanV3Error::UnknownSpecificIndirectPath { .. } => (
             "sem.capability.pls.requested_path_missing",
@@ -673,6 +776,75 @@ fn pls_compile_diagnostic(
             _ => (
                 "sem.capability.pls.interaction_shape_not_executable",
                 "Review the interaction output, effect relation, parameter, and generated-column identities in the compatibility inspector.",
+            ),
+        },
+        CompiledPlsPlanV3Error::ModeratedMediationTarget(error) => match error {
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapRequired => (
+                "sem.capability.pls.two_way_moderated_mediation_bootstrap_required",
+                "Choose percentile, two-sided case bootstrap; point-only moderated mediation is outside this exact cell.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapIntervalUnsupported => (
+                "sem.capability.pls.two_way_moderated_mediation_percentile_required",
+                "Choose percentile case-bootstrap intervals; BCa and studentized inference remain separate future cells.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapTailUnsupported => (
+                "sem.capability.pls.two_way_moderated_mediation_two_sided_required",
+                "Choose two-sided case-bootstrap inference; one-sided inference remains outside this exact cell.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::AuthoredConditionalProbesUnsupported => (
+                "sem.capability.pls.two_way_moderated_mediation_authored_probes_blocked",
+                "Remove authored probes; this cell uses locked standardized moderator values -1, 0, and +1.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::RequestedEffectCardinality { .. }
+            | CompiledPlsTwoWayModeratedMediationTargetErrorV1::RequestedEffectMustBeSpecificPath
+            | CompiledPlsTwoWayModeratedMediationTargetErrorV1::SpecificPathLength { .. }
+            | CompiledPlsTwoWayModeratedMediationTargetErrorV1::RequestedPathNotCompiled { .. } => (
+                "sem.capability.pls.two_way_moderated_mediation_path_not_exact",
+                "Select exactly one compiled two-relation X-to-M-to-Y specific path; total, parallel, and longer-path requests remain separate cells.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::InteractionCardinality { .. }
+            | CompiledPlsTwoWayModeratedMediationTargetErrorV1::InteractionDoesNotModerateSelectedPath => (
+                "sem.capability.pls.two_way_moderated_mediation_interaction_not_exact",
+                "Keep exactly one strong-hierarchy two-stage interaction on either X-to-M or M-to-Y of the selected path.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::ModeratorOverlapsPath { .. } => (
+                "sem.capability.pls.two_way_moderated_mediation_moderator_overlap",
+                "Choose a moderator W that differs from X, M, and Y.",
+            ),
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::MissingStageOneProjection => (
+                "sem.capability.pls.two_way_moderated_mediation_stage_one_missing",
+                "Review the interaction projection; the exact target requires an immutable interaction-free stage-one scoring digest.",
+            ),
+        },
+        CompiledPlsPlanV3Error::HigherOrder(error) => match error {
+            CompiledPlsHigherOrderV1Error::HigherOrderCardinality { .. } => (
+                "sem.capability.pls.higher_order_cardinality_not_executable",
+                "Keep exactly one non-nested second-order HOC in this bounded General SEM request.",
+            ),
+            CompiledPlsHigherOrderV1Error::DerivedTermCombination { .. } => (
+                "sem.capability.pls.higher_order_derived_combination_not_executable",
+                "Remove interaction, polynomial, nested, or additional HOC terms from this exact HOC calculation; the authored model remains saved.",
+            ),
+            CompiledPlsHigherOrderV1Error::HybridCompatibilityOnly { .. } => (
+                "sem.capability.pls.higher_order_hybrid_compatibility_only",
+                "Choose repeated indicators, extended repeated indicators, embedded two-stage, or disjoint two-stage; Hybrid remains compatibility-only.",
+            ),
+            CompiledPlsHigherOrderV1Error::UnsupportedApproachTypeTopology { .. } => (
+                "sem.capability.pls.higher_order_approach_type_topology_not_executable",
+                "Use the exact approach/HCM matrix: repeated RR/FR or exogenous RF/FF; endogenous extended RF/FF; embedded/disjoint with any HCM type.",
+            ),
+            CompiledPlsHigherOrderV1Error::NestedOrNonCompositeComponent { .. } => (
+                "sem.capability.pls.higher_order_component_not_executable",
+                "Select at least two ordinary non-nested composite lower-order components.",
+            ),
+            CompiledPlsHigherOrderV1Error::ComponentModeMismatch { .. }
+            | CompiledPlsHigherOrderV1Error::FixedOrCustomScoring { .. } => (
+                "sem.capability.pls.higher_order_measurement_mode_not_executable",
+                "Use Mode A LOCs for reflective-first HCM types and Mode B LOCs for formative-first HCM types; fixed/custom scoring is outside this cell.",
+            ),
+            _ => (
+                "sem.capability.pls.higher_order_shape_not_executable",
+                "Review the HOC output, components, authored structural paths, parameters, and generated-identity diagnostics in the compatibility inspector.",
             ),
         },
         CompiledPlsPlanV3Error::Topology(_) => (
@@ -731,11 +903,46 @@ fn pls_multiple_moderation_bootstrap_cell()
     )
 }
 
+fn pls_two_way_moderated_mediation_bootstrap_cell()
+-> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    SemCapabilityCellIdV1::new(
+        2,
+        "smartpls.mediation",
+        "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
+        "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+    )
+}
+
+fn pls_higher_order_point_cell()
+-> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    let cell = pls_general_higher_order_point_capability_cell_v1();
+    SemCapabilityCellIdV1::new(
+        cell.registry_schema_version,
+        cell.capability_id,
+        cell.cell_id,
+        cell.capability_version,
+    )
+}
+
+fn pls_higher_order_bootstrap_cell()
+-> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    let cell = pls_general_higher_order_bootstrap_capability_cell_v1();
+    SemCapabilityCellIdV1::new(
+        cell.registry_schema_version,
+        cell.capability_id,
+        cell.cell_id,
+        cell.capability_version,
+    )
+}
+
 fn pls_cells(
     has_interactions: bool,
+    has_higher_order: bool,
     config: &GeneralSemConfigV1,
 ) -> Result<Vec<SemCapabilityCellIdV1>, SemCapabilityDecisionV1ValidationError> {
-    let mut cells = if has_interactions {
+    let mut cells = if has_higher_order {
+        vec![pls_higher_order_point_cell()?]
+    } else if has_interactions {
         vec![pls_multiple_moderation_point_cell()?]
     } else {
         vec![pls_cell()?]
@@ -744,7 +951,11 @@ fn pls_cells(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
     ) {
-        cells.push(if has_interactions {
+        cells.push(if has_higher_order {
+            pls_higher_order_bootstrap_cell()?
+        } else if has_interactions && !config.requested_effect_estimands.is_empty() {
+            pls_two_way_moderated_mediation_bootstrap_cell()?
+        } else if has_interactions {
             pls_multiple_moderation_bootstrap_cell()?
         } else {
             pls_bootstrap_cell()?
@@ -778,7 +989,8 @@ mod tests {
     use super::*;
     use crate::{
         Construct, GeneralSemConditionalEffectProbeV1, GeneralSemConditionalProbeValuesV1,
-        GeneralSemEffectEstimandV1, InteractionHierarchyPolicyV2, InteractionMethodV4,
+        GeneralSemEffectEstimandV1, HigherOrderConstructionApproachV4,
+        HigherOrderMeasurementTypeV4, InteractionHierarchyPolicyV2, InteractionMethodV4,
         LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec, ObservedRoleV4,
         ObservedTransformationOperationV4, ObservedTransformationStepV4, SemParameterTargetV4,
         SemParameterV4, SemRelationV4, SemWeightBindingV4, StructuralPath,
@@ -889,6 +1101,47 @@ mod tests {
             &[],
         )
         .unwrap()
+    }
+
+    fn disjoint_higher_order_model() -> SemModelV4 {
+        let mut model = recursive_model();
+        let output = "derived:hoc".to_string();
+        let relation = "relation:hoc_y".to_string();
+        let parameter = "parameter:hoc_y".to_string();
+        model.variables.push(SemVariableV4::Derived {
+            id: output.clone(),
+            label: "Higher order".into(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: relation,
+            source: output.clone(),
+            target: "construct:y".into(),
+            parameter: parameter.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: parameter,
+            label: "HOC -> Y".into(),
+            target: SemParameterTargetV4::Regression {
+                source: output.clone(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::HigherOrder {
+            id: "term:hoc".into(),
+            output,
+            components: vec!["construct:x".into(), "construct:m".into()],
+            approach: HigherOrderConstructionApproachV4::DisjointTwoStage,
+            measurement_type: HigherOrderMeasurementTypeV4::ReflectiveReflective,
+        });
+        model.ensure_valid().unwrap();
+        model
     }
 
     fn add_sampling_control(model: &mut SemModelV4) {
@@ -1256,8 +1509,7 @@ mod tests {
             diagnostic.code() == "sem.capability.pls.conditional_probes_not_executable"
         }));
         assert!(decision.diagnostics().iter().any(|diagnostic| {
-            diagnostic.code()
-                == "sem.capability.pls.multiple_moderation_effect_requests_not_executable"
+            diagnostic.code() == "sem.capability.pls.two_way_moderated_mediation_path_not_exact"
         }));
         assert!(
             decision
@@ -1268,6 +1520,73 @@ mod tests {
                 })
                 .all(|diagnostic| !diagnostic.corrections().is_empty())
         );
+    }
+
+    #[test]
+    fn exact_two_way_moderated_mediation_is_registry_authorized_in_labs() {
+        let mut model = multiple_mediation_model();
+        add_preflight_interaction(
+            &mut model,
+            "interaction:m1_by_m2",
+            "construct:m1",
+            "construct:m2",
+        );
+        let relation_id = |source: &str, target: &str| {
+            model
+                .relations
+                .iter()
+                .find_map(|relation| match relation {
+                    SemRelationV4::Structural {
+                        id,
+                        source: relation_source,
+                        target: relation_target,
+                        ..
+                    } if relation_source == source && relation_target == target => Some(id.clone()),
+                    _ => None,
+                })
+                .unwrap()
+        };
+        let mut config = GeneralSemConfigV1::default();
+        config.requested_effect_estimands = vec![GeneralSemEffectEstimandV1::SpecificPath {
+            estimand_id: "estimand:selected_x_m1_y".into(),
+            ordered_relation_ids: vec![
+                relation_id("construct:x", "construct:m1"),
+                relation_id("construct:m1", "construct:y"),
+            ],
+        }];
+        config.inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 17,
+            confidence_level: 0.95,
+            interval: crate::GeneralSemBootstrapIntervalV1::Percentile,
+            tail: crate::GeneralSemInferenceTailV1::TwoSided,
+        };
+        let scientific_before = model.scientific_sha256().unwrap();
+
+        let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Experimental);
+        assert_eq!(model.scientific_sha256().unwrap(), scientific_before);
+        assert!(decision.capability_cells().iter().any(|cell| {
+            cell.capability_id() == "smartpls.moderation"
+                && cell.cell_id() == "qpls3.pls.general_sem_multiple_two_way_moderation_point"
+        }));
+        assert!(decision.capability_cells().iter().any(|cell| {
+            cell.capability_id() == "smartpls.mediation"
+                && cell.cell_id() == "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap"
+                && cell.capability_version()
+                    == "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1"
+        }));
+        assert!(decision.evidence().iter().any(|evidence| {
+            evidence.evidence_id().contains(
+                "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
+            )
+        }));
+
+        config.inference = GeneralSemInferenceV1::None;
+        let point_only = preflight_general_sem_pls_v1(&model, &config).unwrap();
+        assert!(point_only.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code() == "sem.capability.pls.two_way_moderated_mediation_bootstrap_required"
+        }));
     }
 
     #[test]
@@ -1589,5 +1908,66 @@ mod tests {
                     .all(|diagnostic| !diagnostic.corrections().is_empty())
             );
         }
+    }
+
+    #[test]
+    fn hoc_preflight_binds_exact_cells_and_reaches_the_connected_runtime() {
+        let model = disjoint_higher_order_model();
+        let point = preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
+        assert_eq!(point.status(), SemCapabilityDecisionStatusV1::Experimental);
+        assert_eq!(point.capability_cells().len(), 1);
+        assert_eq!(
+            point.capability_cells()[0].cell_id(),
+            "qpls3.pls.general_sem_higher_order_point"
+        );
+        assert!(point.diagnostics().iter().all(|diagnostic| {
+            diagnostic.code() != "sem.capability.pls.higher_order_runtime_not_connected"
+        }));
+        assert!(point.evidence().iter().any(|evidence| {
+            evidence.evidence_id()
+                == "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_point:general_sem_pls_higher_order_point_v1"
+        }));
+
+        let mut config = GeneralSemConfigV1::default();
+        config.inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 11,
+            confidence_level: 0.95,
+            interval: GeneralSemBootstrapIntervalV1::Percentile,
+            tail: GeneralSemInferenceTailV1::TwoSided,
+        };
+        let bootstrap = preflight_general_sem_pls_v1(&model, &config).unwrap();
+        assert_eq!(
+            bootstrap.status(),
+            SemCapabilityDecisionStatusV1::Experimental
+        );
+        assert_eq!(bootstrap.capability_cells().len(), 2);
+        assert!(bootstrap.capability_cells().iter().any(|cell| {
+            cell.cell_id() == "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap"
+        }));
+    }
+
+    #[test]
+    fn unsupported_hoc_matrix_returns_a_stable_corrective_diagnostic() {
+        let mut model = disjoint_higher_order_model();
+        let SemDerivedTermV4::HigherOrder {
+            approach,
+            measurement_type,
+            ..
+        } = &mut model.derived_terms[0]
+        else {
+            unreachable!()
+        };
+        *approach = HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators;
+        *measurement_type = HigherOrderMeasurementTypeV4::ReflectiveReflective;
+        model.ensure_valid().unwrap();
+        let decision =
+            preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert!(decision.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code()
+                == "sem.capability.pls.higher_order_approach_type_topology_not_executable"
+                && !diagnostic.corrections().is_empty()
+        }));
     }
 }

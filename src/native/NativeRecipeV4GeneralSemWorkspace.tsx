@@ -25,6 +25,7 @@ import {
   rehydrateGeneralSemExecutionAuthorityV1,
   reopenGeneralSemResultV1,
   selectGeneralSemCbsemExecutionCapabilityV1,
+  selectGeneralSemExecutionAccessV1,
   selectGeneralSemPlsExecutionCapabilityV1,
   validateGeneralSemCbsemCompletedExecutionV1,
   validateGeneralSemPlsCompletedExecutionV1,
@@ -56,6 +57,9 @@ import {
 import { useInternalProjectArchiveV6Session } from "../internalProjectArchiveV6SessionStore";
 import { inspectInternalProjectArchiveV6At } from "../services/internalProjectArchiveV6ReadService";
 import {
+  GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_CONNECTED_V1,
+} from "../services/internalGeneralSemModeratedMediationRevisionV2Service";
+import {
   appendInternalProjectSchema6CanonicalResultV2,
   bootstrapInternalGeneralSemProjectArchiveV6,
   cancelInternalLabsGeneralSemCbsemJobV1,
@@ -75,11 +79,12 @@ import {
 } from "../services/projectService";
 import { useWorkspace } from "../store";
 import { GeneralSemEstimatorCompatibilityPanel } from "./GeneralSemEstimatorCompatibilityPanel";
+import { NativeGeneralSemModeratedMediationPanel } from "./NativeGeneralSemModeratedMediationPanel";
+import { CanonicalResultExportPanelV2 } from "./CanonicalResultExportPanelV2";
 import { observedSemanticsForParameterTable } from "./NativeSemParameterTable";
 import {
   CanonicalResultDocumentV2View,
 } from "./NativeRecipeV4CbsemWorkspace";
-import { CanonicalResultExportPanelV2 } from "./CanonicalResultExportPanelV2";
 
 export interface NativeRecipeV4GeneralSemWorkspaceServices {
   scientificDigest: typeof getInternalSemModelV4ScientificSha256;
@@ -188,6 +193,9 @@ export interface GeneralSemCanonicalModerationInventoryV1 {
   readonly interactionPlotPointCount: number;
   readonly bootstrapResamplesRequested: number | null;
   readonly bootstrapResamplesUsable: number | null;
+  readonly conditionalIndirectCount: number;
+  readonly moderatedMediationIndexCount: number;
+  readonly combinedModeratedMediation: boolean;
 }
 
 export function generalSemCanonicalModerationInventoryV1(
@@ -196,8 +204,10 @@ export function generalSemCanonicalModerationInventoryV1(
   const results = document?.general_sem_results;
   const interactionEffectCount = results?.interaction_effects?.length ?? 0;
   if (interactionEffectCount === 0) return null;
-  const moderationBootstrapReceipt = results?.inference_receipt?.capability_cell.cell_id
+  const inferenceCellId = results?.inference_receipt?.capability_cell.cell_id;
+  const moderationBootstrapReceipt = inferenceCellId
     === "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap"
+    || inferenceCellId === "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap"
     ? results.inference_receipt
     : null;
   return {
@@ -212,16 +222,30 @@ export function generalSemCanonicalModerationInventoryV1(
     ), 0) ?? 0,
     bootstrapResamplesRequested: moderationBootstrapReceipt?.resamples_requested ?? null,
     bootstrapResamplesUsable: moderationBootstrapReceipt?.resamples_usable ?? null,
+    conditionalIndirectCount: results?.conditional_indirect_effects?.length ?? 0,
+    moderatedMediationIndexCount: results?.moderated_mediation_indices?.length ?? 0,
+    combinedModeratedMediation: inferenceCellId
+      === "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
   };
 }
 
 export function generalSemCalculationActionLabelV1(
   interactionPlan: boolean,
   bootstrap: boolean,
-  estimatorId: GeneralSemEstimatorIdV1 = GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
+  estimatorOrHigherOrder: GeneralSemEstimatorIdV1 | boolean = GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
+  higherOrderPlan = false,
 ): string {
+  const estimatorId = typeof estimatorOrHigherOrder === "boolean"
+    ? GENERAL_SEM_PLS_ESTIMATOR_ID_V1
+    : estimatorOrHigherOrder;
+  const hasHigherOrderPlan = typeof estimatorOrHigherOrder === "boolean"
+    ? estimatorOrHigherOrder
+    : higherOrderPlan;
   if (estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1) {
     return bootstrap ? "Calculate CB-SEM recursive bootstrap" : "Calculate CB-SEM ML estimates";
+  }
+  if (hasHigherOrderPlan) {
+    return bootstrap ? "Calculate HOC bootstrap" : "Calculate HOC point estimates";
   }
   if (!interactionPlan) return "Calculate PLS effects";
   return bootstrap ? "Calculate moderation bootstrap" : "Calculate moderation point estimates";
@@ -449,6 +473,12 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const analysisSettings = useWorkspace((state) => state.analysisSettings);
   const generalSemSession = useInternalProjectArchiveV6Session((state) => state.session);
   const generalSemSessionDirty = useInternalProjectArchiveV6Session((state) => state.dirty);
+  const generalSemRevisionPending = useInternalProjectArchiveV6Session((state) => state.revisionForkPending);
+  const generalSemRevisionFailure = useInternalProjectArchiveV6Session((state) => state.revisionForkFailure);
+  const generalSemRevisionStatusMessage = useInternalProjectArchiveV6Session((state) => state.revisionForkStatusMessage);
+  const reviseGeneralSemModeratedMediationAuthority = useInternalProjectArchiveV6Session(
+    (state) => state.reviseGeneralSemModeratedMediationAuthority,
+  );
   const markedGeneralSemProjectMode = Boolean(
     generalSemSession?.standardActivation
     && supportsGeneralSemV1(generalSemSession.project)
@@ -474,8 +504,11 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const [draftEstimatorId, setDraftEstimatorId] = useState<GeneralSemEstimatorIdV1>(
     GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
   );
-  const selectedEstimatorId = markedGeneralSemProjectMode && rehydratedExecution?.status === "ok"
+  const residentEstimatorId = rehydratedExecution?.status === "ok"
     ? rehydratedExecution.value.estimatorId
+    : null;
+  const selectedEstimatorId = markedGeneralSemProjectMode && residentEstimatorId
+    ? residentEstimatorId
     : draftEstimatorId;
   const [engine, setEngine] = useState<GeneralSemPlsEngineOptionsV1>(() => ({
     ...(rehydratedExecution?.status === "ok" ? rehydratedExecution.value.engine : {
@@ -583,6 +616,17 @@ export function NativeRecipeV4GeneralSemWorkspace({
       message: rehydratedExecution.failure.message,
       correctiveAction: rehydratedExecution.failure.correctiveAction,
     }],
+  } : markedGeneralSemProjectMode
+    && rehydratedExecution?.status === "ok"
+    && rehydratedExecution.value.legacyLabsRecipeOnStandardCell ? {
+    ready: false,
+    decision: null,
+    issues: [{
+      code: "general_sem.recipe.historical_labs_read_only",
+      subject: rehydratedExecution.value.receipt.residentRecipeId,
+      message: "This historical Labs RecipeV4 remains readable under its stored identity, but it is not relabelled as a Standard execution recipe.",
+      correctiveAction: "Keep the archive unchanged. Use a newly authored Registry-authorized Standard project or an explicit source-preserving revision for new calculations.",
+    }],
   } : markedGeneralSemProjectMode && !strictAuthority ? {
     ready: false,
     decision: null,
@@ -660,7 +704,8 @@ export function NativeRecipeV4GeneralSemWorkspace({
       return null;
     }
   }, [config, nativeEstimatorDecision, selectedEstimatorId]);
-  const nativePreflightReady = nativePlsExecution !== null || nativeCbsemExecution !== null;
+  const nativeExecution = nativeCbsemExecution ?? nativePlsExecution;
+  const nativePreflightReady = nativeExecution !== null;
   const archiveCurrent = Boolean(receipt && currentArchiveSha256 && capturedAuthorityKeyRef.current === authorityKey);
   const resultAuthorityCurrent = Boolean(
     archiveCurrent
@@ -685,17 +730,17 @@ export function NativeRecipeV4GeneralSemWorkspace({
     reopened: Boolean(reopenedEntry),
     resultIntegrityInvalid,
   });
-  const operationBusy = busy || generalSemPublicationPending;
-  const startJob = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+  const operationBusy = busy || generalSemPublicationPending || generalSemRevisionPending;
+  const startJob = residentEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
     ? services.startCbsem
     : services.start;
-  const statusJob = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+  const statusJob = residentEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
     ? services.statusCbsem
     : services.status;
-  const cancelJob = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+  const cancelJob = residentEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
     ? services.cancelCbsem
     : services.cancel;
-  const dismissJob = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+  const dismissJob = residentEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
     ? services.dismissCbsem
     : services.dismiss;
 
@@ -723,6 +768,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       modelId: model.id,
       config,
       capabilityCell: selectedCapabilityCell,
+      experimentalLabsEnabled,
     }).then((outcome) => {
       if (!live || latestAuthorityKeyRef.current !== requestedAuthorityKey) return;
       if (outcome.status === "ok") {
@@ -753,7 +799,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       }
     });
     return () => { live = false; };
-  }, [authorityKey, config, generalSemSession, markedGeneralSemProjectMode, model, rehydratedExecution, selectedCapabilityCell, services]);
+  }, [authorityKey, config, experimentalLabsEnabled, generalSemSession, markedGeneralSemProjectMode, model, rehydratedExecution, selectedCapabilityCell, services]);
 
   useEffect(() => {
     if (!markedGeneralSemProjectMode
@@ -763,8 +809,8 @@ export function NativeRecipeV4GeneralSemWorkspace({
     let live = true;
     const currentReceipt = rehydratedExecution.value.receipt;
     void services.read({
-      surface: "internal_labs",
-      experimentalLabsEnabled: true,
+      ...rehydratedExecution.value.readAccess,
+      capabilityCell: rehydratedExecution.value.capabilityCell,
       archivePath: generalSemSession.snapshot.archivePath,
       expectedSourceSha256: generalSemSession.snapshot.archiveSha256,
       capabilityCell: selectedCapabilityCell,
@@ -886,6 +932,11 @@ export function NativeRecipeV4GeneralSemWorkspace({
       const createdAt = new Date().toISOString();
       const nativeScientificSha256 = await services.scientificDigest(model);
       assertDraftPublicationCurrent();
+      const capabilityCell = generalSemRequestedCapabilityCellV1(
+        selectedEstimatorId,
+        model,
+        config,
+      );
       const recipe = buildGeneralSemEstimatorRecipeV1(selectedEstimatorId, {
         recipeId: globalThis.crypto.randomUUID(),
         createdAt,
@@ -894,10 +945,16 @@ export function NativeRecipeV4GeneralSemWorkspace({
         nativeScientificSha256,
         config,
         engine: effectiveEngine,
+        capabilityCell,
+        experimentalLabsEnabled,
+      });
+      const executionAccess = selectGeneralSemExecutionAccessV1({
+        capabilityCell,
+        experimentalLabsEnabled,
       });
       const outcome = await services.bootstrapArchive({
-        surface: "internal_labs",
-        experimentalLabsEnabled: true,
+        ...executionAccess,
+        capabilityCell,
         destinationPath: destination,
         projectId: globalThis.crypto.randomUUID(),
         name: `${projectName} — General SEM`,
@@ -923,16 +980,12 @@ export function NativeRecipeV4GeneralSemWorkspace({
         || inspected.value.project.sem_generation !== "general_sem_v1") {
         throw new Error("The saved QuickPLS project file could not be verified against its creation receipt.");
       }
-      const capabilityCell = generalSemRequestedCapabilityCellV1(
-        selectedEstimatorId,
-        model,
-        config,
-      );
       const authoritative = await services.nativePreflight({
         project: inspected.value.project,
         modelId: model.id,
         config,
         capabilityCell,
+        experimentalLabsEnabled,
       });
       if (authoritative.status === "blocked") {
         throw { schemaVersion: 1, stage: "capability", subject: "preflight", ...authoritative.diagnostic, issues: [] } satisfies GeneralSemPlsJobFailureV1;
@@ -954,14 +1007,20 @@ export function NativeRecipeV4GeneralSemWorkspace({
         readSession: () => useInternalProjectArchiveV6Session.getState().session,
         readWorkspace: () => useWorkspace.getState(),
       });
+      const activatedExecution = rehydrateGeneralSemExecutionAuthorityV1(inspected.value);
+      const activatedModelAuthority = useWorkspace.getState()
+        .standardSemModelV4Authorities[createdReceipt.residentModelId];
+      if (!activatedModelAuthority) {
+        throw new Error("The newly activated General SEM model authority is unavailable.");
+      }
       const activatedAuthorityKey = generalSemAuthorityKeyV1({
-        estimatorId: selectedEstimatorId,
-        sourceProjectId: createdReceipt.projectId,
-        datasetId: dataset.id,
-        datasetFingerprint: dataset.fingerprint,
-        modelScientificInput: scientificSemModelV4HashInput(model),
-        config,
-        engine: effectiveEngine,
+        estimatorId: activatedExecution.estimatorId,
+        sourceProjectId: activatedExecution.receipt.projectId,
+        datasetId: activatedExecution.receipt.residentDatasetId,
+        datasetFingerprint: activatedExecution.receipt.residentDatasetFingerprint,
+        modelScientificInput: scientificSemModelV4HashInput(activatedModelAuthority.model),
+        config: activatedExecution.config,
+        engine: activatedExecution.engine,
       });
       capturedAuthorityKeyRef.current = activatedAuthorityKey;
       latestAuthorityKeyRef.current = activatedAuthorityKey;
@@ -1009,7 +1068,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       capturedAuthorityKeyRef.current,
       latestAuthorityKeyRef.current ?? "",
     )) {
-      const executionAvailable = selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+      const executionAvailable = residentEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
         ? nativeCbsemExecution !== null
         : nativePlsExecution !== null;
       if (!executionAvailable) {
@@ -1027,7 +1086,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         return true;
       }
       try {
-        if (selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1) {
+        if (residentEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1) {
           if (!("adapterVersion" in outcome.completed) || !nativeCbsemExecution) {
             throw new Error("The completed job did not return the exact CB-SEM V3 result contract.");
           }
@@ -1079,7 +1138,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const monitorStartedJob = async (
     initial: GeneralSemPlsJobSnapshotV1,
     controller: AbortController,
-  ): Promise<boolean> => selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+  ): Promise<boolean> => residentEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
     ? applyMonitorOutcome(await monitorGeneralSemCbsemJobV1({
       initial,
       getStatus: services.statusCbsem,
@@ -1106,7 +1165,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
   };
 
   const start = async () => {
-    if (!receipt || !currentArchiveSha256 || !model || !config || !nativeEstimatorDecision || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty || running || generalSemTransientWorkBlocker) return;
+    if (!receipt || !residentEstimatorId || !currentArchiveSha256 || !model || !config || !nativeEstimatorDecision || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty || running || generalSemTransientWorkBlocker) return;
     const expectedArchiveSha256 = currentArchiveSha256;
     let started = false;
     let terminalKnown = false;
@@ -1119,12 +1178,13 @@ export function NativeRecipeV4GeneralSemWorkspace({
     monitorAbortRef.current = controller;
     try {
       const initial = await startJob(generalSemJobRequestForEstimatorFromReceiptV1({
-        estimatorId: selectedEstimatorId,
+        estimatorId: residentEstimatorId,
         receipt,
         model,
         config,
         decision: nativeEstimatorDecision,
         expectedArchiveSha256,
+        experimentalLabsEnabled,
       }));
       started = true;
       activeJobIdRef.current = initial.jobId;
@@ -1291,15 +1351,16 @@ export function NativeRecipeV4GeneralSemWorkspace({
       }
       return;
     }
-    if (!completed || !selectedCapabilityCell) return;
+    if (!completed || !nativeExecution) return;
     setBusy(true);
     setGeneralSemPublicationPending(true);
     setFailure(null);
     try {
       const outcome = await appendGeneralSemResultV1(
         completed,
+        nativeExecution,
+        experimentalLabsEnabled,
         services.append,
-        selectedCapabilityCell,
       );
       if (outcome.status === "ok") {
         // Record the successful append before verification. A later inspect or
@@ -1324,7 +1385,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
   };
 
   const retryPersistedVerification = async () => {
-    if (!persistedArchiveSha256 || !completed || !selectedCapabilityCell || !resultAuthorityCurrent || generalSemPublicationPending) return;
+    if (!persistedArchiveSha256 || !completed || !nativeExecution || !resultAuthorityCurrent || generalSemPublicationPending) return;
     setBusy(true);
     setGeneralSemPublicationPending(true);
     setFailure(null);
@@ -1332,9 +1393,9 @@ export function NativeRecipeV4GeneralSemWorkspace({
       await verifyAndReanchorPersistedArchive(persistedArchiveSha256);
       const reopened = await reopenGeneralSemResultV1(
         completed,
+        nativeExecution,
         persistedArchiveSha256,
         services.read,
-        selectedCapabilityCell,
       );
       if (reopened.outcome.status === "blocked" || !reopened.entry) {
         throw reopened.outcome.status === "blocked"
@@ -1355,15 +1416,15 @@ export function NativeRecipeV4GeneralSemWorkspace({
   };
 
   const reopenResult = async () => {
-    if (!completed || !persistedArchiveSha256 || !selectedCapabilityCell || !resultAuthorityCurrent) return;
+    if (!completed || !nativeExecution || !persistedArchiveSha256 || !resultAuthorityCurrent) return;
     setBusy(true);
     setFailure(null);
     try {
       const reopened = await reopenGeneralSemResultV1(
         completed,
+        nativeExecution,
         persistedArchiveSha256,
         services.read,
-        selectedCapabilityCell,
       );
       if (reopened.outcome.status === "blocked") {
         setResultIntegrityInvalid(true);
@@ -1440,12 +1501,16 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const progressValue = Math.min(snapshot?.completedUnits ?? 0, progressMaximum);
   const bootstrap = effectiveEngine.inference === "percentile_case_bootstrap";
   const interactionPlan = Boolean(model?.derived_terms.some((term) => term.kind === "interaction_v2"));
+  const moderatedMediationPlan = interactionPlan
+    && bootstrap
+    && (config?.requested_effect_estimands.length ?? 0) === 1;
+  const higherOrderPlan = Boolean(model?.derived_terms.some((term) => term.kind === "higher_order"));
   const moderationBootstrapInputDisabled = running
     || operationBusy
     || markedGeneralSemProjectMode;
 
   return <section id="nd-model-general-sem-labs-panel" className="nd-cbsem-v4-workspace nd-general-sem-workspace" role="tabpanel" aria-labelledby="nd-model-general-sem-labs-tab">
-    <header className="nd-cbsem-v4-header"><div><h2>General SEM in QuickPLS</h2><p>One QuickPLS canvas · resident RecipeV4 authority · Registry-gated PLS and CB-SEM Experimental Labs</p></div><FlaskConical size={24} aria-hidden="true" /></header>
+    <header className="nd-cbsem-v4-header"><div><h2>General SEM in QuickPLS</h2><p>One graphical model authority · Registry-authorized PLS-SEM and CB-SEM Labs · one calculate, progress, results, export, and reopen workflow</p></div><FlaskConical size={24} aria-hidden="true" /></header>
     <p className="nd-inline-warning" role="note"><AlertTriangle size={16} aria-hidden="true" /><span>{freshGeneralSemDraftMode
       ? "This is a fresh General SEM draft inside QuickPLS. Only this newly created canvas may be adapted; ordinary projects are never converted. Standard Save is blocked until Save and activate creates the marked schema-6 authority."
       : markedGeneralSemProjectMode
@@ -1499,8 +1564,14 @@ export function NativeRecipeV4GeneralSemWorkspace({
           }} />Full-model percentile case bootstrap</label>
           {interactionPlan && selectedEstimatorId === GENERAL_SEM_PLS_ESTIMATOR_ID_V1 ? <p id="nd-general-sem-moderation-inference-note" className="nd-inline-warning" role="status">
             {bootstrap
-              ? "Full-model case bootstrap reports percentile inference only for each scientific rescaled interaction gamma. Standardized-product coefficients, joint-stage coefficients, fixed -1/0/+1 slopes, and interaction plots remain point estimates; plots do not include confidence bands."
+              ? moderatedMediationPlan
+                ? "One shared full-model replicate ledger reports scientific gamma, conditional indirect effects at standardized W = -1/0/+1, and the index of moderated mediation. Joint-stage coefficients remain point estimates and no causal interpretation is added."
+                : "Full-model case bootstrap reports percentile inference only for each scientific rescaled interaction gamma. Standardized-product coefficients, joint-stage coefficients, fixed -1/0/+1 slopes, and interaction plots remain point estimates; plots do not include confidence bands."
               : "Optional full-model case bootstrap is available for scientific rescaled interaction gamma. Standardized-product coefficients, joint-stage coefficients, fixed -1/0/+1 slopes, and interaction plots remain point-only."}
+          </p> : higherOrderPlan ? <p className="nd-inline-warning" role="status">
+            {bootstrap
+              ? "Full-model case bootstrap reruns every required HOC stage and infers component loadings or weights, authored HOC paths, and extended-repeated total effects."
+              : "Point estimation reports the approach-specific HOC stages, component loadings or weights, formative VIF, and authored structural paths."}
           </p> : null}
           {bootstrap ? <>
             <label htmlFor="nd-general-sem-bootstrap-samples">Replicates<input id="nd-general-sem-bootstrap-samples" type="number" min={selectedEstimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1 ? 500 : 2} max={10_000} step={100} value={effectiveEngine.bootstrapSamples} disabled={running || operationBusy || markedGeneralSemProjectMode} onChange={(event) => setEngine((current) => ({ ...current, bootstrapSamples: Number(event.target.value) }))} /></label>
@@ -1524,17 +1595,54 @@ export function NativeRecipeV4GeneralSemWorkspace({
         <ol className="nd-cbsem-v4-preflight-list">
           <li className={localPreflight.ready ? "ready" : "blocked"}><span aria-hidden="true">{localPreflight.ready ? "✓" : "!"}</span><div><strong>General SEM project and model authority</strong><small>{localPreflight.ready ? "Ready for QuickPLS engine verification" : `${localPreflight.issues.length} issue${localPreflight.issues.length === 1 ? "" : "s"}`}</small>{localPreflight.issues.map((item) => <p key={`${item.code}:${item.subject}`}><strong>{item.message}</strong> {item.correctiveAction} <code>{item.code}</code></p>)}</div></li>
           <li className={receipt ? "ready" : "blocked"}><span aria-hidden="true">{receipt ? "✓" : "2"}</span><div><strong>Safe QuickPLS project file</strong><small>{receipt ? `Verified ${receipt.destinationArchivePath}` : "Save the current dataset, canvas model, and analysis settings in one calculation file"}</small>{receipt && !archiveCurrent ? <p>The canvas or settings changed. Keep the saved file unchanged and create a fresh calculation project from the current canvas.</p> : null}</div></li>
-          <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? nativeCbsemExecution?.kind === "recursive_sem_bootstrap" ? "Exact CB-SEM V3 recursive case-bootstrap Labs cell verified" : nativeCbsemExecution?.kind === "recursive_sem_point" ? "Exact CB-SEM V3 ML point Labs cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_bootstrap" ? "Exact simultaneous two-way moderation gamma-bootstrap cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_point" ? "Exact simultaneous two-way moderation point cell verified" : "Experimental PLS support verified" : "Selected resident estimator remains blocked pending its exact native Labs decision"}</small></div></li>
+          <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? nativeCbsemExecution?.kind === "recursive_sem_bootstrap" ? "Exact CB-SEM V3 recursive case-bootstrap Labs cell verified" : nativeCbsemExecution?.kind === "recursive_sem_point" ? "Exact CB-SEM V3 ML point Labs cell verified" : nativePlsExecution?.kind === "two_way_moderated_mediation_bootstrap" ? "Exact Registry-authorized two-way moderated-mediation bootstrap cell verified" : nativePlsExecution?.kind === "higher_order_bootstrap" ? "Exact Registry-authorized HOC bootstrap cell verified" : nativePlsExecution?.kind === "higher_order_point" ? "Exact Registry-authorized HOC point cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_bootstrap" ? "Exact simultaneous two-way moderation gamma-bootstrap cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_point" ? "Exact simultaneous two-way moderation point cell verified" : "Exact Registry-authorized PLS capability verified" : "The resident RecipeV4 estimator is pending exact Registry-backed engine verification"}</small></div></li>
         </ol>
         <div className="nd-cbsem-v4-actions">
           <button ref={createButtonRef} type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !freshGeneralSemDraftMode || !localPreflight.ready} title={!freshGeneralSemDraftMode ? "Start a new General SEM project to create its marked authority; existing projects cannot enter this path." : !localPreflight.ready ? "Resolve every compatibility issue first." : "Save and activate this new General SEM project as the current QuickPLS canvas authority."} onClick={() => void createCalculationProject()}><Archive size={15} aria-hidden="true" />Save and activate project…</button>
-          <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : !nativePreflightReady ? "The resident estimator requires an exact Registry-authorized Experimental Labs decision." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />{generalSemCalculationActionLabelV1(interactionPlan, bootstrap, selectedEstimatorId)}</button>
+          <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !residentEstimatorId || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : !nativePreflightReady ? "The resident RecipeV4 estimator requires its exact Registry-authorized decision." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />{moderatedMediationPlan ? "Calculate moderated-mediation bootstrap" : generalSemCalculationActionLabelV1(interactionPlan, bootstrap, residentEstimatorId ?? selectedEstimatorId, higherOrderPlan)}</button>
           <button type="button" className="danger" disabled={!activeJobIdRef.current || snapshot?.state === "cancelling" || snapshot?.state === "completed"} onClick={() => void cancel()}><CircleStop size={15} aria-hidden="true" />Cancel</button>
           {markedGeneralSemProjectMode ? <button type="button" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || unpersistedCompletedResult} title={unpersistedCompletedResult ? "Save and strictly reopen the completed result, or dismiss it explicitly, before closing." : undefined} onClick={() => void closeGeneralSemProject()}><FolderOpen size={15} aria-hidden="true" />Close General SEM project</button> : null}
         </div>
         {generalSemSessionDirty ? <p className="nd-inline-warning" role="status">The canvas presentation differs from the saved archive. Undo those presentation changes before calculating or appending a result.</p> : null}
       </section>
     </div>
+
+    {GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_CONNECTED_V1
+      && experimentalLabsEnabled
+      && markedGeneralSemProjectMode
+      && model
+      && config
+      ? <NativeGeneralSemModeratedMediationPanel
+          connected={GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_CONNECTED_V1}
+          model={model}
+          config={config}
+          revisionPending={generalSemRevisionPending}
+          revisionBlocked={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || generalSemSessionDirty}
+          revisionBlockedReason={generalSemSessionDirty
+            ? "Restore the exact clean saved archive authority before creating a scientific revision."
+            : running
+              ? "Wait for the active calculation to reach a terminal state."
+              : generalSemTransientWorkBlocker
+                ? "Save, strictly reopen, or dismiss the current temporary result before revising its authority."
+                : operationBusy
+                  ? "Wait for the current project operation to finish."
+                  : undefined}
+          revisionFailure={generalSemRevisionFailure}
+          revisionStatusMessage={generalSemRevisionStatusMessage}
+          onSaveAsRevision={async (selection) => {
+            const outcome = await reviseGeneralSemModeratedMediationAuthority({ selection });
+            if (outcome === "saved") {
+              clearResults();
+              setFailure(null);
+              pushToast({
+                tone: "success",
+                title: "Moderated-mediation revision activated",
+                detail: useInternalProjectArchiveV6Session.getState().revisionForkStatusMessage,
+              });
+            }
+          }}
+        />
+      : null}
 
     {snapshot ? <section className="nd-cbsem-v4-card nd-cbsem-v4-monitor" aria-labelledby="nd-general-sem-monitor-heading"><div><h3 id="nd-general-sem-monitor-heading">Calculation progress</h3><span className={`nd-cbsem-v4-state ${snapshot.state}`}>{snapshot.state}</span></div><progress max={progressMaximum} value={progressValue}>{progressValue} of {progressMaximum}</progress><p aria-live="polite" aria-atomic="true">{snapshot.phase}: {snapshot.completedUnits} of {snapshot.totalUnits}</p>{snapshot.state === "failed" || snapshot.state === "cancelled" ? <button type="button" onClick={() => void clearTerminal()}><RotateCcw size={15} aria-hidden="true" />Clear terminal job</button> : null}{jobRecoveryRequired ? <div className="nd-cbsem-v4-actions"><button type="button" className="primary" disabled={busy} onClick={() => void recoverJob()}><RotateCcw size={15} aria-hidden="true" />Retry job recovery</button><button type="button" className="danger" disabled={busy} onClick={() => void abandonJobRecovery()}><CircleStop size={15} aria-hidden="true" />Abandon unrecovered job</button></div> : null}</section> : null}
     {failure ? <div className="nd-cbsem-v4-failure" role="alert"><AlertTriangle size={16} aria-hidden="true" /><div><strong>{failure.message}</strong><p>{failure.correctiveAction}</p><small>{failure.code}</small></div></div> : null}
@@ -1553,8 +1661,10 @@ export function NativeRecipeV4GeneralSemWorkspace({
     {!completed && reopenedEntry ? <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-general-sem-reopened-result-heading"><h3 id="nd-general-sem-reopened-result-heading"><CheckCircle2 size={16} aria-hidden="true" />Verified project result</h3><p>QuickPLS restored the latest matching General SEM result from strict archive readback.</p><p className="nd-cbsem-v4-success" role="status">Verified result {reopenedEntry.documentId}.</p></section> : null}
 
     {moderationInventory ? <p className="nd-cbsem-v4-success" role="status" aria-live="polite">
-      Verified canonical moderation output: {moderationInventory.interactionEffectCount} interaction effect{moderationInventory.interactionEffectCount === 1 ? "" : "s"}, {moderationInventory.conditionalSlopeCount} conditional slope{moderationInventory.conditionalSlopeCount === 1 ? "" : "s"}, and {moderationInventory.interactionPlotCount} interaction plot{moderationInventory.interactionPlotCount === 1 ? "" : "s"} with {moderationInventory.interactionPlotPointCount} persisted point{moderationInventory.interactionPlotPointCount === 1 ? "" : "s"}. {moderationInventory.gammaInferenceCount > 0
-        ? `Scientific gamma inference is complete for ${moderationInventory.gammaInferenceCount} interaction${moderationInventory.gammaInferenceCount === 1 ? "" : "s"} using ${moderationInventory.bootstrapResamplesUsable} of ${moderationInventory.bootstrapResamplesRequested} bootstrap replicates. Standardized-product coefficients, joint-stage coefficients, slopes, and plots remain point estimates; plots have no confidence bands.`
+      Verified canonical moderation output: {moderationInventory.interactionEffectCount} interaction effect{moderationInventory.interactionEffectCount === 1 ? "" : "s"}, {moderationInventory.conditionalSlopeCount} conditional slope{moderationInventory.conditionalSlopeCount === 1 ? "" : "s"}, and {moderationInventory.interactionPlotCount} interaction plot{moderationInventory.interactionPlotCount === 1 ? "" : "s"} with {moderationInventory.interactionPlotPointCount} persisted point{moderationInventory.interactionPlotPointCount === 1 ? "" : "s"}. {moderationInventory.combinedModeratedMediation
+        ? `The shared ledger also verifies ${moderationInventory.conditionalIndirectCount} fixed-probe conditional indirect effects and ${moderationInventory.moderatedMediationIndexCount} index of moderated mediation using ${moderationInventory.bootstrapResamplesUsable} of ${moderationInventory.bootstrapResamplesRequested} replicates.`
+        : moderationInventory.gammaInferenceCount > 0
+          ? `Scientific gamma inference is complete for ${moderationInventory.gammaInferenceCount} interaction${moderationInventory.gammaInferenceCount === 1 ? "" : "s"} using ${moderationInventory.bootstrapResamplesUsable} of ${moderationInventory.bootstrapResamplesRequested} bootstrap replicates. Standardized-product coefficients, joint-stage coefficients, slopes, and plots remain point estimates; plots have no confidence bands.`
         : "QuickPLS displays and exports the native canonical point values without adding inference."}
     </p> : null}
     {displayedDocument ? <CanonicalResultDocumentV2View document={displayedDocument} reopened={Boolean(reopenedEntry)} headingRef={resultHeadingRef} compilationReceipt={null} /> : null}

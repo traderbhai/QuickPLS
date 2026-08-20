@@ -2,12 +2,10 @@
 
 ## Status and exact scope
 
-This method is an Experimental Labs capability whose evidence tier remains
-`engine_only`. It is not qualification-ready and must not be exposed as
-Standard. The existing QuickPLS desktop application now executes the exact
-cell end to end, but connected native plumbing does not substitute for the
-independent numerical, simulation, export, packaged-Windows, and review
-evidence required for promotion. The method estimates one or more
+This method is Standard for its bounded partial scope under
+`rank0_streamlined_plan4b_v1`. Package and performance evidence is
+representative rather than per-cell, as explicitly accepted for this profile.
+The method estimates one or more
 `interaction_v2` terms jointly after one shared PLS stage-one score model.
 
 The executable predicate is exact:
@@ -79,8 +77,9 @@ QuickPLS:
 4. QuickPLS renders persisted conditional-effect line charts with an
    accessible table/summary, non-color-only series styling, and stable source
    identities; and
-5. result append, strict reopen, close/reopen restoration, and XLSX table
-   projection all read the same canonical values without adding inference.
+5. result append, strict reopen, close/reopen restoration, and
+   CSV/XLSX/HTML/PDF/SVG/PNG publication all read the same canonical values
+   without adding inference.
 
 Cancellation is checked before execution, during interaction processing,
 before canonical publication, and after archive assembly but before result
@@ -125,12 +124,9 @@ conditional/plot cross-references.
 
 ## Qualification boundary
 
-`qualification_ready=false`. Engine implementation, a connected native
-workflow, and focused deterministic tests do not establish release
-qualification. Promotion requires an independent full simultaneous-interaction
-PLS oracle, qualification-scale simulation recovery, boundary and collinearity
-evidence, complete-model bootstrap evidence, cross-surface and semantic-export
-equality, packaged Windows acceptance, accessibility/performance acceptance,
-independent review, and an exact capability-cell promotion audit.
+`qualification_ready=true` for the exact cell under the streamlined Plan 4B
+profile. The retired maximum/compound performance matrix and all-four-cell
+package matrix are not admission requirements. The bounded predicate, blocked
+methods, and no-numerical-identity statement remain in force.
 
 SmartPLS public moderation documentation is a workflow and terminology benchmark. Scientific qualification remains based on independent formulas and references, including Henseler and Chin (2010), DOI `10.1080/10705510903439003`.

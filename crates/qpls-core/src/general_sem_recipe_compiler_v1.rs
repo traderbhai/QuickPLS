@@ -1,10 +1,13 @@
 use crate::{
-    AnalysisRecipeModelBindingV4, AnalysisRecipeV4, CapabilityCellReferenceV2,
+    AnalysisMethod, AnalysisRecipeModelBindingV4, AnalysisRecipeV4, CapabilityCellReferenceV2,
     CapabilityRegistryV2, CompiledAnalysisRecipeV4, CompiledPlsPlanV3, CompiledPlsPlanV3Error,
     CompiledRecipePlanV4, GeneralSemBootstrapIntervalV1, GeneralSemInferenceTailV1,
-    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, PlsBootstrapTestTail,
-    RecipeV4CompilationError, RecipeV4CompilerTarget, SemModelV4, compile_analysis_recipe_v4,
-    compile_pls_plan_v3, compile_pls_stage_one_projection_v3, validate_compiled_analysis_recipe_v4,
+    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicy,
+    PlsBootstrapTestTail, Preprocessing, RecipeV4CompilationError, RecipeV4CompilerTarget,
+    SemModelV4, WeightingScheme, compile_analysis_recipe_v4,
+    compile_pls_higher_order_lower_order_projection_v1, compile_pls_plan_v3,
+    compile_pls_stage_one_projection_v3, pls_general_higher_order_bootstrap_capability_cell_v1,
+    pls_general_higher_order_point_capability_cell_v1, validate_compiled_analysis_recipe_v4,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -17,6 +20,12 @@ pub const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_RECIPE_COMPILER_VERSION_V1: 
     "recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_point_v1";
 pub const GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1: &str =
     "recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_bootstrap_v1";
+pub const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_RECIPE_COMPILER_VERSION_V1: &str =
+    "recipe_v4_to_compiled_pls_plan_v3_two_way_moderated_mediation_bootstrap_v1";
+pub const GENERAL_SEM_PLS_HIGHER_ORDER_POINT_RECIPE_COMPILER_VERSION_V1: &str =
+    "recipe_v4_to_compiled_pls_plan_v3_higher_order_point_v1";
+pub const GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1: &str =
+    "recipe_v4_to_compiled_pls_plan_v3_higher_order_full_model_case_bootstrap_v1";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_ID_V1: &str = "smartpls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CELL_ID_V1: &str = "qpls3.pls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_VERSION_V1: &str = "pls_mediation_v1";
@@ -83,6 +92,8 @@ pub struct CompiledGeneralSemPlsRecipeV1 {
     capability_cell: CapabilityCellReferenceV2,
     base_artifact: CompiledAnalysisRecipeV4,
     plan: CompiledPlsPlanV3,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    supplemental_capability_admission: Option<CapabilityCellReferenceV2>,
     recipe_analytical_sha256: String,
     general_sem_config_sha256: String,
     artifact_identity_sha256: String,
@@ -107,6 +118,10 @@ impl CompiledGeneralSemPlsRecipeV1 {
 
     pub fn plan(&self) -> &CompiledPlsPlanV3 {
         &self.plan
+    }
+
+    pub fn supplemental_capability_admission(&self) -> Option<&CapabilityCellReferenceV2> {
+        self.supplemental_capability_admission.as_ref()
     }
 
     pub fn general_sem_config_sha256(&self) -> &str {
@@ -136,6 +151,12 @@ pub enum GeneralSemPlsRecipeCompilationErrorV1 {
         "General SEM PLS interaction_v2 moderation does not yet execute moderated mediation or other directed chains"
     )]
     ModeratedMediationNotYetExecutable,
+    #[error(
+        "the exact two-way moderated-mediation supplemental capability cell was not authorized by Registry V2 or exact replay admission"
+    )]
+    ModeratedMediationSupplementalCapabilityNotAdmitted,
+    #[error("a supplemental capability admission is not valid for this General SEM PLS plan")]
+    UnexpectedSupplementalCapabilityAdmission,
     #[error("General SEM PLS case-bootstrap v1 executes percentile intervals only")]
     BootstrapIntervalNotYetExecutable,
     #[error("General SEM PLS case-bootstrap v1 executes two-sided inference only")]
@@ -170,6 +191,18 @@ pub enum GeneralSemPlsRecipeCompilationErrorV1 {
     BootstrapStudentizedSamplesMismatch { found: u32 },
     #[error("General SEM PLS v1 does not yet implement lazy specific-path materialization")]
     LazySpecificPathMaterializationNotYetExecutable,
+    #[error("General SEM HOC v1 requires PLS-PM estimation")]
+    HigherOrderRequiresPlsPm,
+    #[error("General SEM HOC v1 requires path weighting")]
+    HigherOrderRequiresPathWeighting,
+    #[error("General SEM HOC v1 requires standardized preprocessing")]
+    HigherOrderRequiresStandardizedPreprocessing,
+    #[error("General SEM HOC v1 requires recipe-level listwise deletion")]
+    HigherOrderRequiresListwiseDeletion,
+    #[error("General SEM HOC v1 does not support recipe-level case weighting")]
+    HigherOrderCaseWeightsNotExecutable,
+    #[error("General SEM HOC v1 does not support permutation requests")]
+    HigherOrderPermutationNotExecutable,
     #[error("Capability Registry V2 cannot authorize the required General SEM PLS cells: {0}")]
     CapabilityRegistry(String),
     #[error("a required General SEM PLS capability cell is not available in Labs or Standard")]
@@ -200,15 +233,59 @@ pub fn compile_general_sem_pls_recipe_v1(
     recipe: &AnalysisRecipeV4,
     resolved_model: Option<&SemModelV4>,
 ) -> Result<CompiledGeneralSemPlsRecipeV1, GeneralSemPlsRecipeCompilationErrorV1> {
+    compile_general_sem_pls_recipe_with_admission_v1(recipe, resolved_model, None)
+}
+
+/// Historical internal entry point retained for source compatibility. HOC
+/// compilation is now governed by the same Registry check as every other
+/// General SEM execution.
+#[doc(hidden)]
+pub fn compile_unpublished_general_sem_pls_higher_order_recipe_v1(
+    recipe: &AnalysisRecipeV4,
+    resolved_model: Option<&SemModelV4>,
+) -> Result<CompiledGeneralSemPlsRecipeV1, GeneralSemPlsRecipeCompilationErrorV1> {
+    let artifact = compile_general_sem_pls_recipe_v1(recipe, resolved_model)?;
+    if artifact.plan().higher_order_stage_plans().is_empty() {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::CapabilityUnavailable);
+    }
+    Ok(artifact)
+}
+
+/// Exact admission override retained for deterministic replay and focused
+/// contract tests. Production compilation derives the same supplemental cell
+/// only from the embedded Registry V2 Labs/Standard authority.
+pub fn compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
+    recipe: &AnalysisRecipeV4,
+    resolved_model: Option<&SemModelV4>,
+    supplemental_capability_admission: CapabilityCellReferenceV2,
+) -> Result<CompiledGeneralSemPlsRecipeV1, GeneralSemPlsRecipeCompilationErrorV1> {
+    compile_general_sem_pls_recipe_with_admission_v1(
+        recipe,
+        resolved_model,
+        Some(supplemental_capability_admission),
+    )
+}
+
+fn compile_general_sem_pls_recipe_with_admission_v1(
+    recipe: &AnalysisRecipeV4,
+    resolved_model: Option<&SemModelV4>,
+    supplemental_capability_admission: Option<CapabilityCellReferenceV2>,
+) -> Result<CompiledGeneralSemPlsRecipeV1, GeneralSemPlsRecipeCompilationErrorV1> {
     let config = recipe
         .general_sem_config
         .as_ref()
         .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
     ensure_compilation_scope(recipe, config)?;
     let model = resolved_model_from_recipe(recipe, resolved_model)?;
+    ensure_higher_order_recipe_scope(recipe, model)?;
     let plan = compile_pls_plan_v3(model, config)?;
     ensure_interaction_compilation_scope(config, &plan)?;
-    ensure_capabilities_available(config, &plan)?;
+    let supplemental_capability_admission = if supplemental_capability_admission.is_none() {
+        registry_authorized_moderated_mediation_cell_v1(&plan)?
+    } else {
+        supplemental_capability_admission
+    };
+    ensure_capabilities_available(config, &plan, supplemental_capability_admission.as_ref())?;
 
     let target = RecipeV4CompilerTarget::PlsPlanV2;
     let (base_recipe, base_model) = project_general_sem_pls_stage_one_recipe_v1(recipe, model)?;
@@ -218,7 +295,7 @@ pub fn compile_general_sem_pls_recipe_v1(
         target,
         target.capability_cell_for_method(recipe.settings.method),
     )?;
-    if plan.two_way_interactions().is_empty() {
+    if plan.two_way_interactions().is_empty() && plan.higher_order_stage_plans().is_empty() {
         let found = plan.topology().specific_directed_paths().len();
         match config.inference {
             GeneralSemInferenceV1::None if found == 0 => {
@@ -255,6 +332,7 @@ pub fn compile_general_sem_pls_recipe_v1(
         base_analytical_identity_sha256: base_artifact.receipt().analytical_identity_sha256(),
         plan_sha256: &plan.deterministic_sha256(),
         general_sem_config_sha256: &general_sem_config_sha256,
+        supplemental_capability_admission: supplemental_capability_admission.as_ref(),
     })?;
     Ok(CompiledGeneralSemPlsRecipeV1 {
         schema_version: GENERAL_SEM_PLS_RECIPE_ARTIFACT_SCHEMA_VERSION_V1,
@@ -262,6 +340,7 @@ pub fn compile_general_sem_pls_recipe_v1(
         capability_cell,
         base_artifact,
         plan,
+        supplemental_capability_admission,
         recipe_analytical_sha256,
         general_sem_config_sha256,
         artifact_identity_sha256,
@@ -279,6 +358,7 @@ pub fn validate_compiled_general_sem_pls_recipe_v1(
         .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
     ensure_compilation_scope(recipe, config)?;
     let model = resolved_model_from_recipe(recipe, resolved_model)?;
+    ensure_higher_order_recipe_scope(recipe, model)?;
     let expected_plan = compile_pls_plan_v3(model, config)?;
     ensure_interaction_compilation_scope(config, &expected_plan)?;
     if artifact.schema_version != GENERAL_SEM_PLS_RECIPE_ARTIFACT_SCHEMA_VERSION_V1
@@ -300,7 +380,11 @@ pub fn validate_compiled_general_sem_pls_recipe_v1(
         &base_recipe,
         Some(&base_model),
     )?;
-    let expected = compile_general_sem_pls_recipe_v1(recipe, resolved_model)?;
+    let expected = compile_general_sem_pls_recipe_with_admission_v1(
+        recipe,
+        resolved_model,
+        artifact.supplemental_capability_admission.clone(),
+    )?;
     if *artifact != expected {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::ArtifactMismatch);
     }
@@ -398,6 +482,40 @@ fn ensure_compilation_scope(
     Ok(())
 }
 
+fn ensure_higher_order_recipe_scope(
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
+    let has_higher_order = model
+        .derived_terms
+        .iter()
+        .any(|term| matches!(term, crate::SemDerivedTermV4::HigherOrder { .. }));
+    if !has_higher_order {
+        return Ok(());
+    }
+    if recipe.settings.method != AnalysisMethod::PlsPm {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::HigherOrderRequiresPlsPm);
+    }
+    if recipe.settings.weighting_scheme != WeightingScheme::Path {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::HigherOrderRequiresPathWeighting);
+    }
+    if recipe.settings.preprocessing != Preprocessing::Standardized {
+        return Err(
+            GeneralSemPlsRecipeCompilationErrorV1::HigherOrderRequiresStandardizedPreprocessing,
+        );
+    }
+    if recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::HigherOrderRequiresListwiseDeletion);
+    }
+    if recipe.settings.case_weight_column.is_some() {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::HigherOrderCaseWeightsNotExecutable);
+    }
+    if recipe.settings.permutation_samples != 0 {
+        return Err(GeneralSemPlsRecipeCompilationErrorV1::HigherOrderPermutationNotExecutable);
+    }
+    Ok(())
+}
+
 /// Produces the exact point-scoring recipe that corresponds to a validated
 /// General SEM request. The returned recipe is the only recipe that may be
 /// paired with `CompiledGeneralSemPlsRecipeV1::base_artifact()`; the outer
@@ -421,16 +539,24 @@ pub fn project_general_sem_pls_base_recipe_v1(
     Ok(base_recipe)
 }
 
-/// Projects an interaction-bearing General SEM recipe to the exact ordinary
-/// PLS model used only for shared stage-one construct scoring. The source
-/// recipe/model remain authoritative in the outer compiled artifact.
+/// Projects an interaction- or HOC-bearing General SEM recipe to the exact
+/// ordinary PLS model used only for shared lower-order construct scoring. The
+/// source recipe/model remain authoritative in the outer compiled artifact.
 pub fn project_general_sem_pls_stage_one_recipe_v1(
     recipe: &AnalysisRecipeV4,
     source_model: &SemModelV4,
 ) -> Result<(AnalysisRecipeV4, SemModelV4), GeneralSemPlsRecipeCompilationErrorV1> {
     let mut stage_one_recipe = project_general_sem_pls_base_recipe_v1(recipe)?;
-    let projection =
-        compile_pls_stage_one_projection_v3(source_model).map_err(CompiledPlsPlanV3Error::from)?;
+    let has_higher_order = source_model
+        .derived_terms
+        .iter()
+        .any(|term| matches!(term, crate::SemDerivedTermV4::HigherOrder { .. }));
+    let projection = if has_higher_order {
+        compile_pls_higher_order_lower_order_projection_v1(source_model)
+            .map_err(CompiledPlsPlanV3Error::from)?
+    } else {
+        compile_pls_stage_one_projection_v3(source_model).map_err(CompiledPlsPlanV3Error::from)?
+    };
     if projection.source_scientific_sha256() == projection.projected_scientific_sha256() {
         return Ok((stage_one_recipe, source_model.clone()));
     }
@@ -449,6 +575,19 @@ fn compiler_version_for_plan(
     config: &crate::GeneralSemConfigV1,
     plan: &CompiledPlsPlanV3,
 ) -> &'static str {
+    if !plan.higher_order_stage_plans().is_empty() {
+        return match config.inference {
+            GeneralSemInferenceV1::None => {
+                GENERAL_SEM_PLS_HIGHER_ORDER_POINT_RECIPE_COMPILER_VERSION_V1
+            }
+            GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1
+            }
+        };
+    }
+    if plan.two_way_moderated_mediation_target().is_some() {
+        return GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_RECIPE_COMPILER_VERSION_V1;
+    }
     if !plan.two_way_interactions().is_empty() {
         return match config.inference {
             GeneralSemInferenceV1::None => {
@@ -470,17 +609,43 @@ fn compiler_version_for_plan(
 fn ensure_capabilities_available(
     config: &crate::GeneralSemConfigV1,
     plan: &CompiledPlsPlanV3,
+    supplemental_capability_admission: Option<&CapabilityCellReferenceV2>,
 ) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
     let mut expected_cells = vec![capability_cell_for_plan(plan)];
     if matches!(
         config.inference,
         GeneralSemInferenceV1::CaseBootstrap { .. }
     ) {
-        expected_cells.push(if plan.two_way_interactions().is_empty() {
-            pls_general_bootstrap_capability_cell_v1()
+        if !plan.higher_order_stage_plans().is_empty() {
+            if supplemental_capability_admission.is_some() {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::UnexpectedSupplementalCapabilityAdmission,
+                );
+            }
+            expected_cells.push(pls_general_higher_order_bootstrap_capability_cell_v1());
+        } else if let Some(target) = plan.two_way_moderated_mediation_target() {
+            if supplemental_capability_admission != Some(target.bootstrap_capability_cell()) {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationSupplementalCapabilityNotAdmitted,
+                );
+            }
+            expected_cells.push(target.bootstrap_capability_cell().clone());
         } else {
-            pls_general_multiple_moderation_bootstrap_capability_cell_v1()
-        });
+            if supplemental_capability_admission.is_some() {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::UnexpectedSupplementalCapabilityAdmission,
+                );
+            }
+            expected_cells.push(if plan.two_way_interactions().is_empty() {
+                pls_general_bootstrap_capability_cell_v1()
+            } else {
+                pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+            });
+        }
+    } else if supplemental_capability_admission.is_some() {
+        return Err(
+            GeneralSemPlsRecipeCompilationErrorV1::UnexpectedSupplementalCapabilityAdmission,
+        );
     }
     let registry = CapabilityRegistryV2::embedded().map_err(|error| {
         GeneralSemPlsRecipeCompilationErrorV1::CapabilityRegistry(error.to_string())
@@ -499,8 +664,32 @@ fn ensure_capabilities_available(
     Ok(())
 }
 
+fn registry_authorized_moderated_mediation_cell_v1(
+    plan: &CompiledPlsPlanV3,
+) -> Result<Option<CapabilityCellReferenceV2>, GeneralSemPlsRecipeCompilationErrorV1> {
+    let Some(target) = plan.two_way_moderated_mediation_target() else {
+        return Ok(None);
+    };
+    let expected = target.bootstrap_capability_cell();
+    let registry = CapabilityRegistryV2::embedded().map_err(|error| {
+        GeneralSemPlsRecipeCompilationErrorV1::CapabilityRegistry(error.to_string())
+    })?;
+    let matches = registry
+        .option_cells()
+        .filter(|cell| {
+            cell.capability_id == expected.capability_id
+                && cell.cell_id == expected.cell_id
+                && cell.capability_version == expected.capability_version
+                && (cell.standard_available() || cell.labs_available())
+        })
+        .count();
+    Ok((matches == 1).then(|| expected.clone()))
+}
+
 fn capability_cell_for_plan(plan: &CompiledPlsPlanV3) -> CapabilityCellReferenceV2 {
-    if plan.two_way_interactions().is_empty() {
+    if !plan.higher_order_stage_plans().is_empty() {
+        pls_general_higher_order_point_capability_cell_v1()
+    } else if plan.two_way_interactions().is_empty() {
         pls_general_recursive_effects_capability_cell_v1()
     } else {
         pls_general_multiple_moderation_point_capability_cell_v1()
@@ -512,6 +701,9 @@ fn ensure_interaction_compilation_scope(
     plan: &CompiledPlsPlanV3,
 ) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
     if plan.two_way_interactions().is_empty() {
+        return Ok(());
+    }
+    if plan.two_way_moderated_mediation_target().is_some() {
         return Ok(());
     }
     if !config.requested_effect_estimands.is_empty() {
@@ -549,6 +741,8 @@ struct GeneralSemArtifactIdentityV1<'a> {
     base_analytical_identity_sha256: &'a str,
     plan_sha256: &'a str,
     general_sem_config_sha256: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    supplemental_capability_admission: Option<&'a CapabilityCellReferenceV2>,
 }
 
 fn hash_serializable<T: Serialize>(
@@ -830,6 +1024,12 @@ mod tests {
                 .artifact_identity_sha256(),
             artifact.artifact_identity_sha256()
         );
+        assert!(
+            serde_json::to_value(&artifact)
+                .unwrap()
+                .get("supplemental_capability_admission")
+                .is_none()
+        );
 
         let mut tampered = artifact;
         tampered.artifact_identity_sha256 = "0".repeat(64);
@@ -975,7 +1175,11 @@ mod tests {
         }];
         assert_eq!(
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
-            Err(GeneralSemPlsRecipeCompilationErrorV1::InteractionRequestedEffectsNotYetExecutable)
+            Err(GeneralSemPlsRecipeCompilationErrorV1::PlsPlanV3(
+                CompiledPlsPlanV3Error::ModeratedMediationTarget(
+                    crate::CompiledPlsTwoWayModeratedMediationTargetErrorV1::RequestedEffectMustBeSpecificPath
+                )
+            ))
         );
 
         let (mut recipe, mut model) = interaction_recipe_and_model();
@@ -1008,6 +1212,79 @@ mod tests {
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
             Err(GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationNotYetExecutable)
         );
+    }
+
+    #[test]
+    fn exact_moderated_mediation_recipe_derives_exact_registry_supplemental_admission() {
+        let (mut recipe, mut model) = recipe_and_model();
+        add_compiler_interaction(
+            &mut model,
+            "interaction:m1_by_m2",
+            "construct:m1",
+            "construct:m2",
+        );
+        let relation_id = |source: &str, target: &str| {
+            model
+                .relations
+                .iter()
+                .find_map(|relation| match relation {
+                    SemRelationV4::Structural {
+                        id,
+                        source: relation_source,
+                        target: relation_target,
+                        ..
+                    } if relation_source == source && relation_target == target => Some(id.clone()),
+                    _ => None,
+                })
+                .unwrap()
+        };
+        rebind_recipe_model(&mut recipe, &model);
+        recipe
+            .general_sem_config
+            .as_mut()
+            .unwrap()
+            .requested_effect_estimands = vec![GeneralSemEffectEstimandV1::SpecificPath {
+            estimand_id: "estimand:selected_x_m1_y".into(),
+            ordered_relation_ids: vec![
+                relation_id("construct:x", "construct:m1"),
+                relation_id("construct:m1", "construct:y"),
+            ],
+        }];
+        configure_percentile_bootstrap(&mut recipe);
+        recipe.ensure_valid().unwrap();
+
+        let plan =
+            compile_pls_plan_v3(&model, recipe.general_sem_config.as_ref().unwrap()).unwrap();
+        assert!(plan.two_way_moderated_mediation_target().is_some());
+        let registry_artifact =
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+        let exact_cell =
+            crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+        assert_eq!(
+            registry_artifact.supplemental_capability_admission(),
+            Some(&exact_cell)
+        );
+        assert_eq!(
+            compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
+                &recipe,
+                Some(&model),
+                pls_general_multiple_moderation_bootstrap_capability_cell_v1(),
+            ),
+            Err(
+                GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationSupplementalCapabilityNotAdmitted
+            )
+        );
+        let artifact = compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
+            &recipe,
+            Some(&model),
+            exact_cell.clone(),
+        )
+        .unwrap();
+        assert_eq!(
+            artifact.supplemental_capability_admission(),
+            Some(&exact_cell)
+        );
+        validate_compiled_general_sem_pls_recipe_v1(&artifact, &recipe, Some(&model)).unwrap();
     }
 
     #[test]

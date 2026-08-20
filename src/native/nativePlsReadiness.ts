@@ -820,7 +820,7 @@ function calculationItem(
       : {
           id: "calculation",
           label: "Calculation",
-          detail: `${NATIVE_HIGHER_ORDER_SCOPE_LABEL} estimation is selected. Lower-order scores are generated in stage 1 and become the HOC measurement block in stage 2.`,
+          detail: `${NATIVE_HIGHER_ORDER_SCOPE_LABEL} estimation is selected. The chosen approach runs its exact repeated-indicator and/or generated-score stages${settings.bootstrapSamples > 0 ? " for every indexed case-bootstrap replicate" : ""}.`,
           status: "ready",
         };
   }

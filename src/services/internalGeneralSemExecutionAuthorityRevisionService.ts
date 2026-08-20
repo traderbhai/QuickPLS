@@ -4,16 +4,27 @@ import type { InternalProjectArchiveV6ReadSnapshotV1 } from "../domain/internalP
 import { supportsGeneralSemV1 } from "../domain/internalProjectArchiveV6Wire";
 import {
   INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_COMMAND_V1,
-  INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1,
+  GENERAL_SEM_PLS_LABS_REVISION_RECIPE_EXECUTION_SURFACE_V1,
+  GENERAL_SEM_PLS_STANDARD_REVISION_RECIPE_EXECUTION_SURFACE_V1,
   parseInternalGeneralSemExecutionAuthorityRevisionNativeOutcomeV1,
   parseInternalGeneralSemExecutionAuthorityRevisionRequestV1,
   type GeneralSemExecutionAuthorityRevisionIdentityV1,
+  type GeneralSemExecutionAuthorityRevisionEditorIntentV1,
   type GeneralSemExecutionAuthorityRevisionReceiptV1,
   type GeneralSemExecutionAuthoritySourcePinV1,
   type InternalGeneralSemExecutionAuthorityRevisionDiagnosticV1,
   type InternalGeneralSemExecutionAuthorityRevisionRequestV1,
 } from "../domain/internalGeneralSemExecutionAuthorityRevisionV1";
-import type { AddGeneralSemInteractionV2EditorIntentV1 } from "../domain/standardSemModelV4Authority";
+import { parseGeneralSemConfigV1 } from "../domain/generalSemConfigV1";
+import {
+  GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1,
+  selectGeneralSemExecutionAccessV1,
+  type GeneralSemCapabilityRegistryReaderV1,
+} from "../domain/internalRecipeV4GeneralSemWorkspace";
+import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
 import { inspectInternalProjectArchiveV6At } from "./internalProjectArchiveV6ReadService";
 
 export type InternalGeneralSemExecutionAuthorityRevisionPersistOutcomeV1 =
@@ -111,6 +122,7 @@ export async function reviseInternalGeneralSemExecutionAuthorityAtV1(
     && authority.modelScientificSha256 === receipt.residentModelScientificSha256
     && authority.recipeId === receipt.residentRecipeId
     && authority.recipeDocumentSha256 === receipt.residentRecipeDocumentSha256
+    && authority.recipe.metadata.execution_surface === request.revision.recipeExecutionSurface
     && lineage?.schemaVersion === 1
     && lineage.revisionNumber === receipt.revisionNumber
     && (lineage.revised as Record<string, unknown> | undefined)?.projectId === receipt.projectId
@@ -130,24 +142,68 @@ export async function reviseInternalGeneralSemExecutionAuthorityAtV1(
   };
 }
 
+export function selectGeneralSemRevisionExecutionV1(input: {
+  snapshot: InternalProjectArchiveV6ReadSnapshotV1;
+  intent?: GeneralSemExecutionAuthorityRevisionEditorIntentV1;
+  experimentalLabsEnabled: boolean;
+  capabilityRegistry?: GeneralSemCapabilityRegistryReaderV1;
+}) {
+  const authority = input.snapshot.generalSemExecutionAuthority;
+  if (!authority?.recipe.general_sem_config) {
+    throw new Error("The strict General SEM revision source has no resident GeneralSemConfigV1 authority.");
+  }
+  const config = parseGeneralSemConfigV1(authority.recipe.general_sem_config);
+  const higherOrderIntent = input.intent?.kind === "add_higher_order";
+  const expectedCapabilityCell = higherOrderIntent
+    ? config.inference.kind === "case_bootstrap"
+      ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
+    : config.inference.kind === "case_bootstrap"
+      ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
+  const access = selectGeneralSemExecutionAccessV1({
+    capabilityCell: expectedCapabilityCell,
+    experimentalLabsEnabled: input.experimentalLabsEnabled,
+    registry: input.capabilityRegistry ?? capabilityRegistryV2,
+  });
+  const recipeExecutionSurface = access.surface === "standard"
+    ? GENERAL_SEM_PLS_STANDARD_REVISION_RECIPE_EXECUTION_SURFACE_V1
+    : GENERAL_SEM_PLS_LABS_REVISION_RECIPE_EXECUTION_SURFACE_V1;
+  return { access, expectedCapabilityCell, recipeExecutionSurface } as const;
+}
+
 export async function saveGeneralSemExecutionAuthorityRevisionV1(input: {
   snapshot: InternalProjectArchiveV6ReadSnapshotV1;
   source: GeneralSemExecutionAuthoritySourcePinV1;
   revision: GeneralSemExecutionAuthorityRevisionIdentityV1;
-  intent: AddGeneralSemInteractionV2EditorIntentV1;
+  intent: GeneralSemExecutionAuthorityRevisionEditorIntentV1;
   revisionNumberHint?: number;
+  experimentalLabsEnabled: boolean;
+  capabilityRegistry?: GeneralSemCapabilityRegistryReaderV1;
 }) {
+  const { access, expectedCapabilityCell, recipeExecutionSurface } =
+    selectGeneralSemRevisionExecutionV1({
+    snapshot: input.snapshot,
+    intent: input.intent,
+    experimentalLabsEnabled: input.experimentalLabsEnabled,
+    capabilityRegistry: input.capabilityRegistry,
+  });
   const destinationArchivePath = await save({
     defaultPath: suggestedRevisionPath(input.snapshot.archivePath, input.revisionNumberHint ?? 1),
     filters: [{ name: "QuickPLS General SEM revision", extensions: ["qpls"] }],
   });
   if (!destinationArchivePath) return null;
   return reviseInternalGeneralSemExecutionAuthorityAtV1({
-    surface: INTERNAL_GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_SURFACE_V1,
-    experimentalLabsEnabled: true,
+    ...access,
     sourceArchivePath: input.snapshot.archivePath,
     expectedSourceArchiveSha256: input.snapshot.archiveSha256,
     destinationArchivePath,
-    revision: { source: input.source, revision: input.revision, intent: input.intent },
+    revision: {
+      source: input.source,
+      revision: input.revision,
+      intent: input.intent,
+      expectedCapabilityCell,
+      recipeExecutionSurface,
+    },
   });
 }

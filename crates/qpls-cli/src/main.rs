@@ -859,14 +859,14 @@ fn validate_standalone_power_result_for_export(
             outcome.bootstrap_two_sided_exceedances,
         );
         if is_v2 && outcome.successful {
-            let (Some(requested), Some(usable), Some(failed), Some(exceedances)) = tail_fields else {
+            let (Some(requested), Some(usable), Some(failed), Some(exceedances)) = tail_fields
+            else {
                 bail!(
                     "typed PLS sample-size/power v2 replicate {} omits exact tail accounting",
                     outcome.replicate_index
                 );
             };
-            let expected_probability =
-                (f64::from(exceedances) + 1.0) / (f64::from(usable) + 1.0);
+            let expected_probability = (f64::from(exceedances) + 1.0) / (f64::from(usable) + 1.0);
             if usable.saturating_add(failed) != requested
                 || exceedances > usable
                 || outcome
@@ -8211,10 +8211,7 @@ fn require_cli_capability_availability(
     allow_experimental: bool,
     allow_internal_qualification: bool,
 ) -> Result<()> {
-    require_internal_qualification_build(
-        allow_internal_qualification,
-        cfg!(debug_assertions),
-    )?;
+    require_internal_qualification_build(allow_internal_qualification, cfg!(debug_assertions))?;
     require_cli_capability_availability_after_build_guard(
         recipe,
         allow_experimental,
@@ -8930,11 +8927,9 @@ mod tests {
         cca.settings.method = AnalysisMethod::Cca;
         cca.method_config = Some(MethodConfig::Cca);
 
-        let ordinary = require_cli_capability_availability(&cca, false, false)
-            .unwrap_err()
-            .to_string();
-        assert!(ordinary.contains("qpls3.assessment.cca_residuals is Experimental"));
-        require_cli_capability_availability(&cca, true, false).unwrap();
+        for allow_experimental in [false, true] {
+            require_cli_capability_availability(&cca, allow_experimental, false).unwrap();
+        }
 
         let registry = CapabilityRegistryV2::embedded().unwrap();
         let mut absent_evidence_cell = registry
@@ -8943,6 +8938,7 @@ mod tests {
             .unwrap()
             .clone();
         absent_evidence_cell.evidence_state = qpls_core::EvidenceStateV2::Absent;
+        absent_evidence_cell.surface = ProductSurfaceV2::Labs;
         if cfg!(debug_assertions) {
             assert!(internal_qualification_allows_cell(
                 &cca,
@@ -8960,14 +8956,10 @@ mod tests {
         pls_cell.evidence_state = qpls_core::EvidenceStateV2::Absent;
         pls_cell.surface = ProductSurfaceV2::Labs;
         assert!(internal_qualification_allows_cell_for_build(
-            &plain_pls,
-            &pls_cell,
-            true,
+            &plain_pls, &pls_cell, true,
         ));
         assert!(!internal_qualification_allows_cell_for_build(
-            &plain_pls,
-            &pls_cell,
-            false,
+            &plain_pls, &pls_cell, false,
         ));
 
         let mut wpls = simple_pls_recipe();
@@ -8981,14 +8973,10 @@ mod tests {
         wpls_cell.evidence_state = qpls_core::EvidenceStateV2::Absent;
         wpls_cell.surface = ProductSurfaceV2::Labs;
         assert!(internal_qualification_allows_cell_for_build(
-            &wpls,
-            &wpls_cell,
-            true,
+            &wpls, &wpls_cell, true,
         ));
         assert!(!internal_qualification_allows_cell_for_build(
-            &wpls,
-            &wpls_cell,
-            false,
+            &wpls, &wpls_cell, false,
         ));
         if cfg!(debug_assertions) {
             require_cli_capability_availability(&wpls, false, true).unwrap();
@@ -9041,8 +9029,7 @@ mod tests {
                     qpls_core::PlsPowerDistribution::StandardNormal,
                 indicator_error_distribution: qpls_core::PlsPowerDistribution::StandardNormal,
                 missing_data: qpls_core::PlsPowerMissingData::None,
-                inference:
-                    qpls_core::PlsPowerInference::CaseBootstrapNullCenteredTwoSidedPlusOne,
+                inference: qpls_core::PlsPowerInference::CaseBootstrapNullCenteredTwoSidedPlusOne,
                 sample_size_grid: vec![50, 100],
                 alpha: 0.05,
                 target_power: 0.8,
@@ -9390,17 +9377,17 @@ mod tests {
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.workers = 2;
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
-        let (successful_replicate_witnesses, successful_jackknife_witnesses) =
-            match &result.payload {
-                AnalysisPayload::PlsPmV2 { bootstrap, .. } => (
-                    bootstrap["successful_replicates"].as_array().unwrap().len(),
-                    bootstrap["successful_jackknife_cases"]
-                        .as_array()
-                        .unwrap()
-                        .len(),
-                ),
-                other => panic!("PLSc consistent bootstrap must use a linked v2 payload: {other:?}"),
-            };
+        let (successful_replicate_witnesses, successful_jackknife_witnesses) = match &result.payload
+        {
+            AnalysisPayload::PlsPmV2 { bootstrap, .. } => (
+                bootstrap["successful_replicates"].as_array().unwrap().len(),
+                bootstrap["successful_jackknife_cases"]
+                    .as_array()
+                    .unwrap()
+                    .len(),
+            ),
+            other => panic!("PLSc consistent bootstrap must use a linked v2 payload: {other:?}"),
+        };
 
         let rows = experimental_pls_export_rows(&result).unwrap();
         assert!(rows.iter().any(|row| {
@@ -9764,7 +9751,7 @@ mod tests {
                 .filter_map(|row| row["option_cells"].as_array())
                 .map(Vec::len)
                 .sum::<usize>(),
-            48,
+            53,
         );
     }
 
@@ -10217,11 +10204,9 @@ mod tests {
         };
         analysis["schema_version"] =
             serde_json::json!(PLS_SAMPLE_SIZE_POWER_RESULT_SCHEMA_VERSION_V2);
-        analysis["method_version"] =
-            serde_json::json!(PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2);
+        analysis["method_version"] = serde_json::json!(PLS_SAMPLE_SIZE_POWER_METHOD_VERSION_V2);
         analysis["stream_domain"] = serde_json::json!(PLS_SAMPLE_SIZE_POWER_STREAM_DOMAIN_V2);
-        analysis["inference_method"] =
-            serde_json::json!(PLS_SAMPLE_SIZE_POWER_INFERENCE_METHOD_V2);
+        analysis["inference_method"] = serde_json::json!(PLS_SAMPLE_SIZE_POWER_INFERENCE_METHOD_V2);
         analysis["outcomes"][0]["bootstrap_requested_replicates"] = serde_json::json!(99);
         analysis["outcomes"][0]["bootstrap_usable_replicates"] = serde_json::json!(99);
         analysis["outcomes"][0]["bootstrap_failed_replicates"] = serde_json::json!(0);
@@ -10563,8 +10548,7 @@ mod tests {
         }));
 
         let mut changed_exceedance = result.clone();
-        let AnalysisPayload::PlsSampleSizePowerV2 { analysis } =
-            &mut changed_exceedance.payload
+        let AnalysisPayload::PlsSampleSizePowerV2 { analysis } = &mut changed_exceedance.payload
         else {
             unreachable!()
         };

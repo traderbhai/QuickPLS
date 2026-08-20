@@ -1,3 +1,4 @@
+mod canonical_result_export_publication_v2;
 mod capability_registry_command;
 mod general_sem_registry_access_v1;
 #[cfg(test)]
@@ -30,6 +31,7 @@ mod standard_sem_model_v4_authority;
 mod wave1_diagram_cbsem_roundtrip;
 
 use arrow::array::{Array, BooleanArray, Float64Array, Int64Array, StringArray};
+use canonical_result_export_publication_v2::publish_canonical_result_export_v2;
 use capability_registry_command::capability_registry_v2;
 use chrono::{SecondsFormat, Utc};
 use pls_model_comparison_jobs::{
@@ -43,7 +45,10 @@ use project_archive_v6_general_sem_bootstrap::{
     invalidate_general_sem_fresh_draft_authority_v1,
 };
 use project_archive_v6_general_sem_preflight::preflight_internal_general_sem_estimators_v1;
-use project_archive_v6_general_sem_revision::revise_internal_general_sem_execution_authority_v1;
+use project_archive_v6_general_sem_revision::{
+    revise_internal_general_sem_execution_authority_v1,
+    revise_internal_general_sem_execution_authority_v2,
+};
 use project_archive_v6_model_mutation::mutate_internal_project_archive_v6_model;
 use project_archive_v6_new_general_sem::create_internal_general_sem_project_archive_v6;
 use project_archive_v6_read::{
@@ -7334,6 +7339,7 @@ pub fn run() {
             create_internal_general_sem_project_archive_v6,
             bootstrap_internal_general_sem_project_archive_v6,
             revise_internal_general_sem_execution_authority_v1,
+            revise_internal_general_sem_execution_authority_v2,
             invalidate_general_sem_fresh_draft_authority_v1,
             preflight_internal_general_sem_estimators_v1,
             start_internal_labs_general_sem_pls_job_v1,
@@ -7364,6 +7370,7 @@ pub fn run() {
             preview_dataset_transformation,
             apply_dataset_transformation,
             activate_dataset,
+            publish_canonical_result_export_v2,
             export_xlsx_tables,
             export_text_file,
             open_default_export_folder,

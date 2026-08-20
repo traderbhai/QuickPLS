@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.mediation",
+  "execution_context": "recipe_v4_compiled_pls_plan_v3_general_sem_two_way_moderated_mediation_bootstrap_execution",
+  "feature": {
+    "id": "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
+    "label": "General SEM PLS two-way moderated-mediation full-model case bootstrap",
+    "method_version": "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+    "analytical_method_version": "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+    "method_kind": "two_way_conditional_process_full_model_case_bootstrap"
+  },
+  "coverage_state": "partial",
+  "evidence_state": "engine_only",
+  "surface": "labs",
+  "availability": "experimental_labs_opt_in",
+  "qualification_ready": false,
+  "promotion_allowed": false,
+  "method_contract": "docs/methods/GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_V1.md",
+  "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+  "exact_predicate": {
+    "project_schema": 6,
+    "sem_generation": "general_sem_v1",
+    "estimator": "qpls.pls_sem.v3",
+    "structural_topology": "recursive_dag",
+    "specific_path": "exactly_one_selected_two_relation_x_m_y",
+    "interaction": "exactly_one_two_way_two_stage_strong_hierarchy",
+    "moderated_stage": "first_or_second_exactly_one",
+    "moderator": "distinct_from_x_m_y",
+    "constructs": "composite_only",
+    "higher_order_constructs": "none",
+    "authored_conditional_effect_probes": "none",
+    "published_probe_policy": "standardized_moderator_minus_one_zero_plus_one_v1",
+    "inference": "full_model_indexed_case_bootstrap",
+    "interval": "percentile_type7",
+    "tail": "two_sided",
+    "resamples": "2_through_10000",
+    "usable_replicates": "max_2_ceil_0_9_b",
+    "input": "raw_continuous",
+    "missing_data": "listwise",
+    "weights": "none",
+    "groups": "single"
+  },
+  "implemented_contracts": [
+    "Registry-derived Labs admission with the moderation point cell retained as primary artifact authority",
+    "deterministic compiled target binding one SpecificPath, one moderated stage, one interaction, and five inferential targets",
+    "source-preserving no-replace schema-6 revision v2 with strict destination reopen, lineage reconciliation, activation, and source recovery",
+    "one shared full-model indexed case-bootstrap replicate ledger for scientific gamma, three fixed-probe conditional indirect effects, and one index of moderated mediation",
+    "typed native job start, progress, cancellation, terminal result, canonical table assembly, atomic result append, and strict archive reopen",
+    "canonical result rendering and shared all-table XLSX export without recomputation",
+    "fail-closed Registry, compiler, source pin, compiled target, receipt, lineage, analytical result, canonical result, and archive readback validation"
+  ],
+  "blocked_contracts": [
+    "arbitrary or data-derived moderator probes",
+    "both-stage moderation, multiple interactions, or paths longer than two relations",
+    "causal identification or counterfactual mediation claims",
+    "BCa, studentized, or one-sided intervals",
+    "higher-order constructs, groups, weights, clustering, transformed inputs, and non-listwise missing-data handling"
+  ],
+  "remaining_qualification": [
+    "Record an independent full-PLS numerical oracle and adversarial target-reconciliation evidence for both first-stage and second-stage cases.",
+    "Record simulation recovery and interval-coverage evidence plus worker-invariance, cancellation, performance, memory, and soak evidence.",
+    "Record packaged Windows end-to-end acceptance, accessibility, semantic cross-format export/readback, and independent scientific review.",
+    "The cell must remain Labs and must not be promoted to Standard while qualification_ready is false."
+  ]
+}

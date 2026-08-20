@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "contract_id": "quickpls.general_sem.rank0.packaged_windows_acceptance.v1",
+  "contract_version": "2026-08-19",
+  "target_surface": "standard",
+  "packages": [
+    "installed",
+    "portable"
+  ],
+  "viewports": [
+    "1024x700",
+    "1280x720",
+    "1440x900"
+  ],
+  "windows_scaling_percent": [
+    100,
+    125,
+    150,
+    200
+  ],
+  "common_required_check_ids": [
+    "launch_offline",
+    "create_general_sem_project",
+    "valid_setup",
+    "invalid_setup_fail_closed",
+    "execute_and_monitor",
+    "canonical_result_authority",
+    "cancel_retry_no_partial",
+    "export_cancel_no_partial_file",
+    "export_csv",
+    "export_xlsx",
+    "export_html",
+    "export_pdf",
+    "export_svg",
+    "export_png",
+    "append_result",
+    "close_project",
+    "fresh_process_reopen",
+    "keyboard_navigation",
+    "accessible_table_and_chart",
+    "viewport_scaling",
+    "process_cleanup"
+  ],
+  "bootstrap_required_check_ids": [],
+  "variants": [
+    {
+      "variant_id": "mediation_point",
+      "bootstrap": false,
+      "capability_reference": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.mediation",
+        "capability_version": "pls_mediation_v1"
+      }
+    },
+    {
+      "variant_id": "multiple_mediation_bootstrap",
+      "bootstrap": true,
+      "capability_reference": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.mediation",
+        "cell_id": "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+        "capability_version": "general_sem_pls_full_model_case_bootstrap_v1"
+      }
+    },
+    {
+      "variant_id": "multiple_two_way_moderation_point",
+      "bootstrap": false,
+      "capability_reference": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+        "capability_version": "general_sem_pls_multiple_two_way_moderation_point_v1"
+      }
+    },
+    {
+      "variant_id": "multiple_two_way_moderation_bootstrap",
+      "bootstrap": true,
+      "capability_reference": {
+        "registry_schema_version": 2,
+        "capability_id": "smartpls.moderation",
+        "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "capability_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1"
+      }
+    }
+  ]
+}

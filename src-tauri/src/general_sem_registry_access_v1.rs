@@ -5,13 +5,16 @@
 //! that request to promote, downgrade, or make an unavailable cell executable.
 
 use qpls_core::{
-    CapabilityCellReferenceV2, CapabilityRegistryV2, GeneralSemConfigV1, GeneralSemInferenceV1,
-    SemCapabilityDecisionV1, SemDerivedTermV4, SemModelV4,
     cbsem_general_sem_ml_capability_cell_v1, cbsem_recursive_sem_bootstrap_capability_cell_v1,
     pls_general_bootstrap_capability_cell_v1,
+    pls_general_higher_order_bootstrap_capability_cell_v1,
+    pls_general_higher_order_point_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_point_capability_cell_v1,
     pls_general_recursive_effects_capability_cell_v1,
+    pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1,
+    CapabilityCellReferenceV2, CapabilityRegistryV2, GeneralSemConfigV1, GeneralSemInferenceV1,
+    SemCapabilityDecisionV1, SemDerivedTermV4, SemModelV4,
 };
 
 pub(crate) const GENERAL_SEM_STANDARD_SURFACE: &str = "standard";
@@ -38,9 +41,9 @@ pub(crate) fn general_sem_cbsem_recipe_execution_surface_v1(
         .then_some(GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1)
 }
 
-/// Bounded Rank-0 General SEM execution inventory. The base PLS dependency is
+/// Bounded PLS General SEM execution inventory. The base PLS dependency is
 /// intentionally excluded because it cannot own General SEM persistence.
-pub(crate) fn is_rank0_general_sem_execution_cell_v1(cell: &CapabilityCellReferenceV2) -> bool {
+pub(crate) fn is_pls_general_sem_execution_cell_v1(cell: &CapabilityCellReferenceV2) -> bool {
     matches!(
         (
             cell.registry_schema_version,
@@ -68,6 +71,21 @@ pub(crate) fn is_rank0_general_sem_execution_cell_v1(cell: &CapabilityCellRefere
             "smartpls.moderation",
             "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
             "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1"
+        ) | (
+            2,
+            "smartpls.higher_order_models",
+            "qpls3.pls.general_sem_higher_order_point",
+            "general_sem_pls_higher_order_point_v1"
+        ) | (
+            2,
+            "smartpls.higher_order_models",
+            "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+            "general_sem_pls_higher_order_full_model_case_bootstrap_v1"
+        ) | (
+            2,
+            "smartpls.mediation",
+            "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
+            "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1"
         )
     )
 }
@@ -82,7 +100,7 @@ pub(crate) fn is_rank3_general_sem_cbsem_execution_cell_v1(
 }
 
 pub(crate) fn is_general_sem_execution_cell_v1(cell: &CapabilityCellReferenceV2) -> bool {
-    is_rank0_general_sem_execution_cell_v1(cell)
+    is_pls_general_sem_execution_cell_v1(cell)
         || is_rank3_general_sem_cbsem_execution_cell_v1(cell)
 }
 
@@ -111,6 +129,24 @@ pub(crate) fn selected_general_sem_execution_cell_v1(
         .derived_terms
         .iter()
         .any(|term| matches!(term, SemDerivedTermV4::InteractionV2 { .. }));
+    let has_higher_order = model
+        .derived_terms
+        .iter()
+        .any(|term| matches!(term, SemDerivedTermV4::HigherOrder { .. }));
+    if has_higher_order {
+        return match config.inference {
+            GeneralSemInferenceV1::None => pls_general_higher_order_point_capability_cell_v1(),
+            GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                pls_general_higher_order_bootstrap_capability_cell_v1()
+            }
+        };
+    }
+    if has_two_way_interactions
+        && matches!(&config.inference, GeneralSemInferenceV1::CaseBootstrap { .. })
+        && !config.requested_effect_estimands.is_empty()
+    {
+        return pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+    }
     selected_general_sem_execution_cell_for_topology_v1(has_two_way_interactions, &config.inference)
 }
 
@@ -316,9 +352,22 @@ mod tests {
     fn registry_with_cell_state(surface: &str, evidence_state: &str) -> CapabilityRegistryV2 {
         let mut source: Value = serde_json::from_str(CAPABILITY_REGISTRY_V2_JSON).unwrap();
         let rows = source["capabilities"].as_array_mut().unwrap();
-        let target = rows
+        let row = rows
             .iter_mut()
-            .flat_map(|row| row["option_cells"].as_array_mut().unwrap())
+            .find(|row| {
+                row["option_cells"].as_array().is_some_and(|cells| {
+                    cells.iter().any(|candidate| {
+                        candidate["capability_id"] == json!(CAPABILITY_ID)
+                            && candidate["cell_id"] == json!(CELL_ID)
+                            && candidate["capability_version"] == json!(CAPABILITY_VERSION)
+                    })
+                })
+            })
+            .unwrap();
+        let target = row["option_cells"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
             .find(|candidate| {
                 candidate["capability_id"] == json!(CAPABILITY_ID)
                     && candidate["cell_id"] == json!(CELL_ID)
@@ -327,6 +376,12 @@ mod tests {
             .unwrap();
         target["surface"] = json!(surface);
         target["evidence_state"] = json!(evidence_state);
+        row["surface"] = json!(if surface == "standard" {
+            "standard"
+        } else {
+            "labs"
+        });
+        row["evidence_state"] = json!(evidence_state);
         CapabilityRegistryV2::from_json(&source.to_string()).unwrap()
     }
 

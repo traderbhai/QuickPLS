@@ -366,7 +366,7 @@ mod tests {
             .option_cells()
             .filter(|cell| cell.standard_available())
             .collect();
-        assert_eq!(standard_cells.len(), 29);
+        assert_eq!(standard_cells.len(), 33);
         assert!(standard_cells.iter().all(|cell| {
             matches!(
                 cell.cell_id.as_str(),
@@ -381,6 +381,10 @@ mod tests {
                     | "qpls3.inference.bootstrap"
                     | "qpls3.inference.consistent_bootstrap"
                     | "qpls3.pls.higher_order_two_stage"
+                    | "qpls3.pls.mediation"
+                    | "qpls3.pls.general_sem_multiple_mediation_bootstrap"
+                    | "qpls3.pls.general_sem_multiple_two_way_moderation_point"
+                    | "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap"
                     | "qpls3.groups.micom_permutation_mga"
                     | "qpls3.inference.structural_path_randomization"
                     | "qpls3.prediction.plspredict_cvpat"

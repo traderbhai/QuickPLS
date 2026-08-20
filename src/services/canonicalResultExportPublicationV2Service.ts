@@ -239,4 +239,3 @@ export async function publishNativeCanonicalResultExportV2(
   const response = await invoke<unknown>(NATIVE_CANONICAL_EXPORT_PUBLICATION_COMMAND_V2, { request });
   return parseReceipt(response, request);
 }
-

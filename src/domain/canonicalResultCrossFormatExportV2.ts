@@ -19,6 +19,7 @@ export const CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_FORMAT = "quickpls.canonica
 export const CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_METADATA_ID = "quickpls-canonical-semantic-export-v2" as const;
 export const CANONICAL_RESULT_DERIVED_SPECIFIC_INDIRECT_CHART_ID_V2 = "quickpls_export_specific_indirect_effect_estimates_v2" as const;
 export const CANONICAL_RESULT_DERIVED_AGGREGATE_EFFECT_CHART_ID_V2 = "quickpls_export_aggregate_effect_estimates_v2" as const;
+export const CANONICAL_RESULT_DERIVED_HIGHER_ORDER_TARGET_CHART_ID_V2 = "quickpls_export_higher_order_target_estimates_v2" as const;
 
 export type CanonicalResultExportFormatV2 = "csv" | "xlsx" | "html" | "pdf" | "svg" | "png";
 
@@ -148,45 +149,66 @@ function stableJson(value: unknown): string {
   return JSON.stringify(stableValue(value));
 }
 
-const DERIVED_EFFECT_CHART_SOURCES_V2 = [
+const DERIVED_ESTIMATE_CHART_SOURCES_V2 = [
   {
+    primaryCellId: "qpls3.pls.mediation",
+    primaryCapabilityVersion: "pls_mediation_v1",
     tableId: "general_sem_specific_indirect_effects",
+    identityColumnId: "effect_id",
+    identityLabel: "effect",
+    xAxisLabel: "Effect index",
     chartId: CANONICAL_RESULT_DERIVED_SPECIFIC_INDIRECT_CHART_ID_V2,
     title: "Specific indirect effect estimates",
   },
   {
+    primaryCellId: "qpls3.pls.mediation",
+    primaryCapabilityVersion: "pls_mediation_v1",
     tableId: "general_sem_aggregate_effects",
+    identityColumnId: "effect_id",
+    identityLabel: "effect",
+    xAxisLabel: "Effect index",
     chartId: CANONICAL_RESULT_DERIVED_AGGREGATE_EFFECT_CHART_ID_V2,
     title: "Aggregate effect estimates",
   },
+  {
+    primaryCellId: "qpls3.pls.general_sem_higher_order_point",
+    primaryCapabilityVersion: "general_sem_pls_higher_order_point_v1",
+    tableId: "general_sem_higher_order_targets",
+    identityColumnId: "relation_id",
+    identityLabel: "target",
+    xAxisLabel: "Target index",
+    chartId: CANONICAL_RESULT_DERIVED_HIGHER_ORDER_TARGET_CHART_ID_V2,
+    title: "Higher-order target estimates",
+  },
 ] as const;
 
-function derivedEffectEstimateChartV2(
+function derivedEstimateChartV2(
   table: CanonicalResultTable,
-  chartId: string,
-  title: string,
+  source: (typeof DERIVED_ESTIMATE_CHART_SOURCES_V2)[number],
 ): CanonicalResultChart | null {
-  const effectIdIndex = table.columns.findIndex((column) => column.id === "effect_id" && column.data_type === "text");
+  const identityIndex = table.columns.findIndex((column) => (
+    column.id === source.identityColumnId && column.data_type === "text"
+  ));
   const estimateIndex = table.columns.findIndex((column) => column.id === "estimate" && column.data_type === "number");
-  if (effectIdIndex < 0 || estimateIndex < 0 || table.rows.length === 0) return null;
+  if (identityIndex < 0 || estimateIndex < 0 || table.rows.length === 0) return null;
   const points: CanonicalChartPoint[] = [];
   for (const [index, row] of table.rows.entries()) {
-    const effectId = row.cells[effectIdIndex];
+    const identity = row.cells[identityIndex];
     const estimate = row.cells[estimateIndex];
-    if (effectId?.kind !== "text" || estimate?.kind !== "number" || !Number.isFinite(estimate.value)) return null;
-    points.push({ x: index + 1, y: estimate.value, label: effectId.value });
+    if (identity?.kind !== "text" || estimate?.kind !== "number" || !Number.isFinite(estimate.value)) return null;
+    points.push({ x: index + 1, y: estimate.value, label: identity.value });
   }
   return {
-    id: chartId,
-    title,
-    description: `Export-only visual derived exactly from canonical table ${table.id}. Effect index follows canonical row order; every point retains its effect_id and estimate without creating a new estimand.`,
+    id: source.chartId,
+    title: source.title,
+    description: `Export-only visual derived exactly from canonical table ${table.id}. ${source.identityLabel[0]!.toUpperCase()}${source.identityLabel.slice(1)} index follows canonical row order; every point retains its ${source.identityColumnId} and estimate without creating a new estimand.`,
     kind: "bar",
     series: [{ id: "estimate", label: "Estimate", points }],
     source_table_id: table.id,
     display: {
       show_legend: true,
       show_values: true,
-      x_axis_label: "Effect index",
+      x_axis_label: source.xAxisLabel,
       y_axis_label: "Estimate",
     },
   };
@@ -198,14 +220,13 @@ function exportChartsForProjectionV2(
   if (projection.charts.length > 0) {
     return projection.charts.map((chart) => ({ chart: structuredClone(chart), origin: "persisted" }));
   }
-  if (projection.provenance.capability_cell.cell_id !== "qpls3.pls.mediation"
-    || projection.provenance.capability_cell.capability_version !== "pls_mediation_v1") {
-    return [];
-  }
-  return DERIVED_EFFECT_CHART_SOURCES_V2.flatMap((source) => {
+  const primaryCell = projection.provenance.capability_cell;
+  return DERIVED_ESTIMATE_CHART_SOURCES_V2.flatMap((source) => {
+    if (primaryCell.cell_id !== source.primaryCellId
+      || primaryCell.capability_version !== source.primaryCapabilityVersion) return [];
     const table = projection.tables.find((candidate) => candidate.id === source.tableId);
     if (!table) return [];
-    const chart = derivedEffectEstimateChartV2(table, source.chartId, source.title);
+    const chart = derivedEstimateChartV2(table, source);
     return chart ? [{ chart, origin: "derived_from_canonical_table" as const }] : [];
   });
 }
@@ -1686,4 +1707,3 @@ function bytesEqual(left: Uint8Array, right: Uint8Array): boolean {
   if (left.length !== right.length) return false;
   return left.every((value, index) => value === right[index]);
 }
-

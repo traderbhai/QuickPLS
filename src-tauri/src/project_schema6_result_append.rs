@@ -113,14 +113,23 @@ fn selected_general_sem_execution_cell(
         document
             .general_sem_results
             .as_ref()
-            .and_then(|results| results.cbsem_bootstrap_receipt.as_ref())
-            .map(|receipt| receipt.capability_cell.clone())
-            .or_else(|| {
-                document
-                    .general_sem_results
+            .and_then(|results| {
+                results
+                    .cbsem_bootstrap_receipt
                     .as_ref()
-                    .and_then(|results| results.inference_receipt.as_ref())
                     .map(|receipt| receipt.capability_cell.clone())
+                    .or_else(|| {
+                        results
+                            .inference_receipt
+                            .as_ref()
+                            .map(|receipt| receipt.capability_cell.clone())
+                    })
+                    .or_else(|| {
+                        results
+                            .higher_order_inference_receipt
+                            .as_ref()
+                            .map(|receipt| receipt.capability_cell.clone())
+                    })
             })
             .unwrap_or_else(|| live_capability_cell(&document.provenance.capability_cell)),
     )
@@ -460,7 +469,6 @@ mod tests {
             Err(ProjectSchema6ResultAppendOutcomeV1::Blocked { diagnostic })
                 if diagnostic.code == "schema6_result_append.absolute_path_required"
         ));
-
         let mut cbsem = request("relative-cbsem-general-sem.qpls");
         let cbsem_point = qpls_core::cbsem_general_sem_ml_capability_cell_v1();
         cbsem.canonical_document.provenance.capability_cell =

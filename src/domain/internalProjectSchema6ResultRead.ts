@@ -6,6 +6,7 @@ import {
   type CanonicalResultCell,
   type CanonicalResultTable,
 } from "./canonicalResultDocumentV2";
+import type { CapabilityCellReferenceV2 } from "./canonicalResultDocumentV2";
 import {
   cbsemCfaScoreLmChiSquare1PValueV1,
   cbsemCfaScoreLmNumbersCloseV1,
@@ -36,8 +37,10 @@ const SHA256_HEX = /^[a-f0-9]{64}$/;
 const DATA_FINGERPRINT_V2 = /^v2:([a-f0-9]{64})$/;
 
 export interface InternalProjectSchema6ResultReadRequestV1 {
-  surface: "internal_labs" | "standard_exact_cbsem";
+  surface: "internal_labs" | "standard" | "standard_exact_cbsem";
   experimentalLabsEnabled: boolean;
+  /** Exact selected General SEM cell; absent only on legacy Labs/CB requests. */
+  capabilityCell?: CapabilityCellReferenceV2;
   archivePath: string;
   expectedSourceSha256: string;
   /** Exact Registry owner for General SEM readback authorization. */

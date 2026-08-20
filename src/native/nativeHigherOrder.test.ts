@@ -56,18 +56,44 @@ describe("native higher-order construct scope", () => {
     ]));
   });
 
-  it("accepts only the supported exogenous reflective two-stage PLS shape", () => {
+  it("accepts the bounded disjoint point/bootstrap workflow and incoming or outgoing HOC paths", () => {
     const edges: Edge[] = [{ id: "hoc-y", source: "hoc", target: "y" }];
     expect(nativeHigherOrderScopeProblems([...nodes, hocNode], edges, settings)).toEqual([]);
-    expect(nativeHigherOrderScopeProblems([...nodes, hocNode], edges, { ...settings, method: "bootstrap", bootstrapSamples: 100 })).toContain(
-      "Run the higher-order workflow with PLS-SEM Algorithm only; HOC resampling inference is outside this point-estimate workflow",
-    );
+    expect(nativeHigherOrderScopeProblems([...nodes, hocNode], edges, { ...settings, method: "bootstrap", bootstrapSamples: 500 })).toEqual([]);
     expect(nativeHigherOrderScopeProblems([...nodes, hocNode], [...edges, { id: "x-y", source: "x", target: "y" }], settings)).toContain(
       "Lower-order components must remain measurement-only in the disjoint two-stage model",
     );
-    expect(nativeHigherOrderScopeProblems([...nodes, hocNode], [{ id: "y-hoc", source: "y", target: "hoc" }], settings)).toEqual(expect.arrayContaining([
-      "Use the higher-order construct as an exogenous predictor, not as a structural outcome",
-      "Connect the higher-order construct to at least one measured outcome before calculation",
-    ]));
+    expect(nativeHigherOrderScopeProblems([...nodes, hocNode], [{ id: "y-hoc", source: "y", target: "hoc" }], settings)).toEqual([]);
+  });
+
+  it("applies the exact repeated and extended-repeated topology matrix", () => {
+    const repeated = {
+      ...hocNode,
+      data: {
+        ...hocNode.data,
+        higherOrder: {
+          ...hocNode.data.higherOrder!,
+          canonicalApproach: "repeated_indicators" as const,
+          measurementType: "reflective_formative" as const,
+        },
+        mode: "formative" as const,
+      },
+    };
+    expect(nativeHigherOrderScopeProblems([...nodes, repeated], [{ id: "hoc-y", source: "hoc", target: "y" }], settings)).toEqual([]);
+    expect(nativeHigherOrderScopeProblems([...nodes, repeated], [{ id: "y-hoc", source: "y", target: "hoc" }], settings)).toContain(
+      "The chosen approach/HCM type does not support the higher-order construct's current exogenous/endogenous position",
+    );
+
+    const extended = {
+      ...repeated,
+      data: {
+        ...repeated.data,
+        higherOrder: {
+          ...repeated.data.higherOrder!,
+          canonicalApproach: "extended_repeated_indicators" as const,
+        },
+      },
+    };
+    expect(nativeHigherOrderScopeProblems([...nodes, extended], [{ id: "y-hoc", source: "y", target: "hoc" }], settings)).toEqual([]);
   });
 });

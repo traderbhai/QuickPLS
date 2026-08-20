@@ -178,6 +178,13 @@ fn selected_general_sem_document_cell(
                     .and_then(|results| results.inference_receipt.as_ref())
                     .map(|receipt| receipt.capability_cell.clone())
             })
+            .or_else(|| {
+                document
+                    .general_sem_results
+                    .as_ref()
+                    .and_then(|results| results.higher_order_inference_receipt.as_ref())
+                    .map(|receipt| receipt.capability_cell.clone())
+            })
             .unwrap_or_else(|| live_capability_cell(&document.provenance.capability_cell)),
     )
 }

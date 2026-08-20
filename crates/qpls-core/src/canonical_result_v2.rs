@@ -25,6 +25,10 @@ pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V
     "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1";
 pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
     "general_sem_pls_multiple_two_way_moderation_case_bootstrap_v1";
+pub const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1: &str =
+    "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1";
+pub const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
+    "general_sem_pls_two_way_moderated_mediation_case_bootstrap_v1";
 pub const GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1: &str =
     "qpls.general-sem-pls.two-stage-product.sample-standardized.v1";
 pub const GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1: &str =
@@ -406,6 +410,10 @@ pub enum CanonicalGeneralSemFailedReplicateReasonV1 {
 pub struct CanonicalGeneralSemInferenceReceiptV1 {
     pub kind: CanonicalGeneralSemInferenceKindV1,
     pub capability_cell: CapabilityCellReferenceV2,
+    /// Cross-capability scientific dependencies of a combined operation.
+    /// Historical single-owner receipts omit this collection byte-for-byte.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capability_dependencies: Vec<CapabilityCellReferenceV2>,
     pub method_version: String,
     pub resampling_operation_version: String,
     pub resampling_stream_version: String,
@@ -512,6 +520,32 @@ pub enum CanonicalGeneralSemEffectIdentityV1 {
         product_scale_version: String,
         method_version: String,
     },
+    ConditionalIndirect {
+        effect_id: String,
+        target_id: String,
+        estimand_id: String,
+        moderated_stage: CanonicalModeratedMediationStageV1,
+        interaction_id: String,
+        x_id: String,
+        mediator_id: String,
+        y_id: String,
+        moderator_id: String,
+        ordered_relation_ids: Vec<String>,
+        probe_value_index: u32,
+        moderator_value_bits_hex: String,
+    },
+    ModeratedMediationIndex {
+        effect_id: String,
+        target_id: String,
+        estimand_id: String,
+        moderated_stage: CanonicalModeratedMediationStageV1,
+        interaction_id: String,
+        x_id: String,
+        mediator_id: String,
+        y_id: String,
+        moderator_id: String,
+        ordered_relation_ids: Vec<String>,
+    },
 }
 
 impl CanonicalGeneralSemEffectIdentityV1 {
@@ -520,7 +554,9 @@ impl CanonicalGeneralSemEffectIdentityV1 {
             Self::SpecificIndirect { effect_id, .. }
             | Self::TotalIndirect { effect_id, .. }
             | Self::TotalEffect { effect_id, .. }
-            | Self::InteractionScientificRescaledGamma { effect_id, .. } => effect_id,
+            | Self::InteractionScientificRescaledGamma { effect_id, .. }
+            | Self::ConditionalIndirect { effect_id, .. }
+            | Self::ModeratedMediationIndex { effect_id, .. } => effect_id,
         }
     }
 }
@@ -584,6 +620,36 @@ pub fn canonical_general_sem_effect_identities_v1(
                 stage_one_model_scientific_sha256: effect.stage_one_model_scientific_sha256.clone(),
                 product_scale_version: effect.product_scale_version.clone(),
                 method_version: effect.method_version.clone(),
+            }
+        }))
+        .chain(results.conditional_indirect_effects.iter().map(|effect| {
+            CanonicalGeneralSemEffectIdentityV1::ConditionalIndirect {
+                effect_id: effect.effect_id.clone(),
+                target_id: effect.target_id.clone(),
+                estimand_id: effect.estimand_id.clone(),
+                moderated_stage: effect.moderated_stage,
+                interaction_id: effect.interaction_id.clone(),
+                x_id: effect.x_id.clone(),
+                mediator_id: effect.mediator_id.clone(),
+                y_id: effect.y_id.clone(),
+                moderator_id: effect.moderator_id.clone(),
+                ordered_relation_ids: effect.ordered_relation_ids.clone(),
+                probe_value_index: effect.probe_value_index,
+                moderator_value_bits_hex: format!("{:016x}", effect.moderator_value.to_bits()),
+            }
+        }))
+        .chain(results.moderated_mediation_indices.iter().map(|effect| {
+            CanonicalGeneralSemEffectIdentityV1::ModeratedMediationIndex {
+                effect_id: effect.effect_id.clone(),
+                target_id: effect.target_id.clone(),
+                estimand_id: effect.estimand_id.clone(),
+                moderated_stage: effect.moderated_stage,
+                interaction_id: effect.interaction_id.clone(),
+                x_id: effect.x_id.clone(),
+                mediator_id: effect.mediator_id.clone(),
+                y_id: effect.y_id.clone(),
+                moderator_id: effect.moderator_id.clone(),
+                ordered_relation_ids: effect.ordered_relation_ids.clone(),
             }
         }))
         .collect::<Vec<_>>();
@@ -760,6 +826,53 @@ pub struct CanonicalConditionalEffectResultV1 {
     pub value: CanonicalGeneralSemEstimateV1,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalModeratedMediationStageV1 {
+    FirstStage,
+    SecondStage,
+}
+
+/// One of the three locked standardized-moderator conditional indirect
+/// effects owned by the combined moderated-mediation cell.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalConditionalIndirectEffectResultV1 {
+    pub effect_id: String,
+    pub target_id: String,
+    pub estimand_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub moderated_stage: CanonicalModeratedMediationStageV1,
+    pub interaction_id: String,
+    pub x_id: String,
+    pub mediator_id: String,
+    pub y_id: String,
+    pub moderator_id: String,
+    pub ordered_relation_ids: Vec<String>,
+    pub probe_value_index: u32,
+    pub moderator_value: f64,
+    pub value: CanonicalGeneralSemEstimateV1,
+}
+
+/// The Hayes-style index for the same exact target: scientific gamma times
+/// the unmoderated-stage coefficient.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalModeratedMediationIndexResultV1 {
+    pub effect_id: String,
+    pub target_id: String,
+    pub estimand_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub moderated_stage: CanonicalModeratedMediationStageV1,
+    pub interaction_id: String,
+    pub x_id: String,
+    pub mediator_id: String,
+    pub y_id: String,
+    pub moderator_id: String,
+    pub ordered_relation_ids: Vec<String>,
+    pub value: CanonicalGeneralSemEstimateV1,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct CanonicalInteractionPlotPointV1 {
@@ -803,13 +916,79 @@ pub enum CanonicalHocStageKindV1 {
     HigherOrderEstimation,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalHocRelationKindV1 {
+    ComponentLoading,
+    ComponentWeight,
+    AuthoredStructural,
+    AuthoredControl,
+    TechnicalStructural,
+    ExtendedIndirectEffect,
+    ExtendedTotalEffect,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocGeneratedVariableMappingV1 {
+    pub component_id: String,
+    pub generated_score_variable_id: String,
+    pub generated_component_relation_id: String,
+    pub generated_component_parameter_id: String,
+    pub component_relation_source_id: String,
+    pub component_relation_target_id: String,
+    pub relation_interpretation: crate::CompiledPlsHocComponentRelationInterpretationV1,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocGeneratedScoreColumnReceiptV1 {
+    pub component_id: String,
+    pub generated_score_variable_id: String,
+    pub observation_count: u32,
+    pub values_sha256: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocGeneratedScoreDatasetReceiptV1 {
+    pub receipt_version: String,
+    pub source_dataset_fingerprint: String,
+    pub complete_case_row_count: u32,
+    pub omitted_row_count: u32,
+    pub complete_case_rows_sha256: String,
+    pub generated_score_columns: Vec<CanonicalHocGeneratedScoreColumnReceiptV1>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocPointStageReceiptV1 {
+    pub receipt_version: String,
+    pub stage_number: u32,
+    pub role: crate::CompiledPlsHocStageRoleV1,
+    pub projection_identity_sha256: String,
+    pub model_scientific_sha256: String,
+    pub compiled_plan_sha256: String,
+    pub dataset_fingerprint: String,
+    pub used_observations: u32,
+    pub omitted_observations: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generated_score_dataset: Option<CanonicalHocGeneratedScoreDatasetReceiptV1>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct CanonicalHocRelationEstimateV1 {
     pub relation_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter_id: Option<String>,
     pub source_id: String,
     pub target_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<CanonicalHocRelationKindV1>,
     pub value: CanonicalGeneralSemEstimateV1,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub collinearity_vif: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -822,8 +1001,108 @@ pub struct CanonicalHocStageResultV1 {
     pub kind: CanonicalHocStageKindV1,
     pub input_construct_ids: Vec<String>,
     pub output_variable_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub approach: Option<crate::HigherOrderConstructionApproachV4>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub measurement_type: Option<crate::HigherOrderMeasurementTypeV4>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub generated_variable_mappings: Vec<CanonicalHocGeneratedVariableMappingV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub receipt: Option<CanonicalHocPointStageReceiptV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub relation_estimates: Vec<CanonicalHocRelationEstimateV1>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalHocBootstrapTargetKindV1 {
+    ComponentLoading,
+    ComponentWeight,
+    HocStructuralPath,
+    ExtendedTotalEffect,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocBootstrapTargetIdentityV1 {
+    pub kind: CanonicalHocBootstrapTargetKindV1,
+    pub target_version: String,
+    pub target_id: String,
+    pub relation_id: String,
+    pub parameter_id: String,
+    pub source_id: String,
+    pub target_variable_id: String,
+    pub point_method_version: String,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalHocBootstrapFailureReasonV1 {
+    InsufficientObservations,
+    ConstantIndicator,
+    StageOneRankDeficient,
+    IsolatedConstruct,
+    StageOneNonconvergence,
+    IndeterminateScoreSign,
+    ConstantComponentScore,
+    StageTwoRankDeficient,
+    StageTwoNonconvergence,
+    ComponentCollinearity,
+    NumericalFailure,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocBootstrapFailedReplicateV1 {
+    pub replicate_index: u32,
+    pub reason_code: CanonicalHocBootstrapFailureReasonV1,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocBootstrapReceiptV1 {
+    pub schema_version: u32,
+    pub capability_cell: CapabilityCellReferenceV2,
+    pub method_version: String,
+    pub point_method_version: String,
+    pub resampling_operation_version: String,
+    pub resampling_stream_version: String,
+    pub quantile_method_version: String,
+    pub standard_error_method_version: String,
+    pub summation_method_version: String,
+    pub p_value_method_version: String,
+    pub failure_policy_version: String,
+    pub sign_alignment_method_version: String,
+    pub target_version: String,
+    pub general_sem_config_sha256: String,
+    pub compiled_plan_sha256: String,
+    pub hoc_stage_plan_sha256: String,
+    pub model_scientific_sha256: String,
+    pub stage_one_model_scientific_sha256: String,
+    pub stage_two_model_scientific_sha256: String,
+    pub source_dataset_fingerprint: String,
+    pub complete_case_frame_sha256: String,
+    pub usable_replicate_indices_sha256: String,
+    pub target_identity_set_sha256: String,
+    pub target_ids: Vec<String>,
+    pub target_identities: Vec<CanonicalHocBootstrapTargetIdentityV1>,
+    pub interval: CanonicalGeneralSemBootstrapIntervalV1,
+    pub tail: CanonicalGeneralSemInferenceTailV1,
+    pub confidence_level: f64,
+    pub resamples_requested: u32,
+    pub resamples_usable: u32,
+    pub minimum_usable_resamples: u32,
+    pub seed: String,
+    pub workers: u32,
+    pub complete_model_reestimated_per_replicate: bool,
+    pub stage_one_reestimated_per_replicate: bool,
+    pub generated_component_values_recalculated_per_replicate: bool,
+    pub stage_one_scores_sign_aligned_per_replicate: bool,
+    pub stage_two_reestimated_per_replicate: bool,
+    pub stage_two_scores_sign_aligned_per_replicate: bool,
+    pub complete_point_contract_validated_per_replicate: bool,
+    pub failed_replicates: Vec<CanonicalHocBootstrapFailedReplicateV1>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -1069,9 +1348,15 @@ pub struct CanonicalGeneralSemResultsV1 {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conditional_effects: Vec<CanonicalConditionalEffectResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conditional_indirect_effects: Vec<CanonicalConditionalIndirectEffectResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub moderated_mediation_indices: Vec<CanonicalModeratedMediationIndexResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub interaction_plots: Vec<CanonicalInteractionPlotResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub higher_order_stages: Vec<CanonicalHocStageResultV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub higher_order_inference_receipt: Option<CanonicalHocBootstrapReceiptV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub cbsem_parameters: Vec<CanonicalCbsemParameterResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1446,6 +1731,26 @@ fn validate_general_sem_inference_receipt_v1(
             )
         })
         .collect::<Vec<_>>();
+    let moderated_mediation_derived_effect_values = results
+        .conditional_indirect_effects
+        .iter()
+        .map(|effect| (effect.effect_id.as_str(), &effect.value, &effect.trace))
+        .chain(
+            results
+                .moderated_mediation_indices
+                .iter()
+                .map(|effect| (effect.effect_id.as_str(), &effect.value, &effect.trace)),
+        )
+        .collect::<Vec<_>>();
+    let moderated_mediation_derived_effect_ids = moderated_mediation_derived_effect_values
+        .iter()
+        .map(|(effect_id, _, _)| *effect_id)
+        .collect::<BTreeSet<_>>();
+    let moderated_mediation_effect_values = moderation_effect_values
+        .iter()
+        .copied()
+        .chain(moderated_mediation_derived_effect_values.iter().copied())
+        .collect::<Vec<_>>();
     let point_only_inference = results
         .joint_stage_structural_coefficients
         .iter()
@@ -1456,13 +1761,7 @@ fn validate_general_sem_inference_receipt_v1(
         || results
             .conditional_effects
             .iter()
-            .any(|effect| general_sem_estimate_has_inference(&effect.value))
-        || results.higher_order_stages.iter().any(|stage| {
-            stage
-                .relation_estimates
-                .iter()
-                .any(|relation| general_sem_estimate_has_inference(&relation.value))
-        });
+            .any(|effect| general_sem_estimate_has_inference(&effect.value));
     let interaction_plot_interval_fields = results.interaction_plots.iter().any(|plot| {
         plot.series.iter().any(|series| {
             series
@@ -1477,6 +1776,9 @@ fn validate_general_sem_inference_receipt_v1(
             .iter()
             .any(|(_, value, _)| general_sem_estimate_has_inference(value))
             || moderation_effect_values
+                .iter()
+                .any(|(_, value, _)| general_sem_estimate_has_inference(value))
+            || moderated_mediation_derived_effect_values
                 .iter()
                 .any(|(_, value, _)| general_sem_estimate_has_inference(value))
             || point_only_inference
@@ -1495,12 +1797,16 @@ fn validate_general_sem_inference_receipt_v1(
         receipt.capability_cell == general_sem_pls_bootstrap_capability_cell_v1();
     let moderation_bootstrap = receipt.capability_cell
         == crate::pls_general_multiple_moderation_bootstrap_capability_cell_v1();
-    if !mediation_bootstrap && !moderation_bootstrap {
+    let moderated_mediation_bootstrap = receipt.capability_cell
+        == crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+    if !mediation_bootstrap && !moderation_bootstrap && !moderated_mediation_bootstrap {
         errors.push(format!(
-            "{context}.capability_cell must equal the exact General SEM multiple-mediation full-model bootstrap option cell or the exact General SEM multiple two-way moderation full-model bootstrap option cell"
+            "{context}.capability_cell must equal an exact General SEM mediation, moderation, or two-way moderated-mediation full-model bootstrap option cell"
         ));
     }
-    let effect_values = if moderation_bootstrap {
+    let effect_values = if moderated_mediation_bootstrap {
+        &moderated_mediation_effect_values
+    } else if moderation_bootstrap {
         &moderation_effect_values
     } else {
         &mediation_effect_values
@@ -1512,6 +1818,13 @@ fn validate_general_sem_inference_receipt_v1(
             "{context} moderation bootstrap must not contain mediation effect rows"
         ));
     }
+    if moderated_mediation_bootstrap
+        && (!results.specific_indirect_effects.is_empty() || !results.aggregate_effects.is_empty())
+    {
+        errors.push(format!(
+            "{context} moderated-mediation bootstrap must not contain ordinary mediation effect rows"
+        ));
+    }
     let capability_identity = capability_cell_reference_identity_v2(&receipt.capability_cell);
     match document_capability_ids {
         Some(identities) if !identities.contains(&capability_identity) => errors.push(format!(
@@ -1521,6 +1834,40 @@ fn validate_general_sem_inference_receipt_v1(
             "{context}.capability_cell requires document capability_cells"
         )),
         _ => {}
+    }
+    if moderated_mediation_bootstrap {
+        let dependency_identities = validate_capability_set(
+            errors,
+            &receipt.capability_dependencies,
+            &format!("{context}.capability_dependencies"),
+        );
+        let mut expected_dependencies = vec![
+            RecipeV4CompilerTarget::PlsPlanV2.capability_cell(),
+            crate::pls_general_multiple_moderation_point_capability_cell_v1(),
+        ];
+        expected_dependencies.sort_by_key(capability_cell_reference_identity_v2);
+        let expected_identities = expected_dependencies
+            .iter()
+            .map(capability_cell_reference_identity_v2)
+            .collect::<Vec<_>>();
+        if dependency_identities != expected_identities {
+            errors.push(format!(
+                "{context}.capability_dependencies must exactly declare the base PLS and moderation-point cells"
+            ));
+        }
+        if let Some(document_identities) = document_capability_ids {
+            for dependency_identity in dependency_identities {
+                if !document_identities.contains(&dependency_identity) {
+                    errors.push(format!(
+                        "{context}.capability_dependencies references undeclared option cell {dependency_identity}"
+                    ));
+                }
+            }
+        }
+    } else if !receipt.capability_dependencies.is_empty() {
+        errors.push(format!(
+            "{context}.capability_dependencies must be empty for single-owner v1 bootstrap receipts"
+        ));
     }
 
     for (name, value) in [
@@ -1556,12 +1903,16 @@ fn validate_general_sem_inference_receipt_v1(
     ] {
         require_stable_id(errors, value, &format!("{context}.{name}"));
     }
-    let expected_method_version = if moderation_bootstrap {
+    let expected_method_version = if moderated_mediation_bootstrap {
+        GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
+    } else if moderation_bootstrap {
         GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
     } else {
         GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1
     };
-    let expected_operation_version = if moderation_bootstrap {
+    let expected_operation_version = if moderated_mediation_bootstrap {
+        GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+    } else if moderation_bootstrap {
         GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
     } else {
         GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1
@@ -1666,7 +2017,11 @@ fn validate_general_sem_inference_receipt_v1(
         .collect::<Vec<_>>();
     expected_effect_ids.sort();
     if receipt.effect_ids != expected_effect_ids {
-        errors.push(if moderation_bootstrap {
+        errors.push(if moderated_mediation_bootstrap {
+            format!(
+                "{context}.effect_ids must exactly cover one scientific gamma, three conditional indirect effects, and one moderated-mediation index"
+            )
+        } else if moderation_bootstrap {
             format!(
                 "{context}.effect_ids must exactly cover scientific rescaled gamma interaction rows"
             )
@@ -1678,11 +2033,17 @@ fn validate_general_sem_inference_receipt_v1(
         .into_iter()
         .filter(|identity| match identity {
             CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma { .. } => {
-                moderation_bootstrap
+                moderation_bootstrap || moderated_mediation_bootstrap
+            }
+            CanonicalGeneralSemEffectIdentityV1::ConditionalIndirect { .. }
+            | CanonicalGeneralSemEffectIdentityV1::ModeratedMediationIndex { .. } => {
+                moderated_mediation_bootstrap
             }
             CanonicalGeneralSemEffectIdentityV1::SpecificIndirect { .. }
             | CanonicalGeneralSemEffectIdentityV1::TotalIndirect { .. }
-            | CanonicalGeneralSemEffectIdentityV1::TotalEffect { .. } => !moderation_bootstrap,
+            | CanonicalGeneralSemEffectIdentityV1::TotalEffect { .. } => {
+                !moderation_bootstrap && !moderated_mediation_bootstrap
+            }
         })
         .collect::<Vec<_>>();
     if receipt.effect_identity_set_sha256
@@ -1817,8 +2178,13 @@ fn validate_general_sem_inference_receipt_v1(
         });
     }
     let uncovered_inference = point_only_inference
-        || (moderation_bootstrap && interaction_plot_interval_fields)
-        || if moderation_bootstrap {
+        || ((moderation_bootstrap || moderated_mediation_bootstrap)
+            && interaction_plot_interval_fields)
+        || (!moderated_mediation_bootstrap
+            && moderated_mediation_derived_effect_values
+                .iter()
+                .any(|(_, value, _)| general_sem_estimate_has_inference(value)))
+        || if moderation_bootstrap || moderated_mediation_bootstrap {
             mediation_effect_values
                 .iter()
                 .any(|(_, value, _)| general_sem_estimate_has_inference(value))
@@ -1828,7 +2194,11 @@ fn validate_general_sem_inference_receipt_v1(
                 .any(|(_, value, _)| general_sem_estimate_has_inference(value))
         };
     if uncovered_inference {
-        errors.push(if moderation_bootstrap {
+        errors.push(if moderated_mediation_bootstrap {
+            format!(
+                "{context} moderated-mediation v1 permits inference only for scientific gamma, the three locked conditional indirect effects, and the index"
+            )
+        } else if moderation_bootstrap {
             format!(
                 "{context} moderation v1 permits inference only for scientific_rescaled_gamma; standardized-product, joint-stage, conditional, plot, mediation, and higher-order estimates must remain point-only"
             )
@@ -1838,14 +2208,25 @@ fn validate_general_sem_inference_receipt_v1(
             )
         });
     }
-    let expected_effect_capability = if moderation_bootstrap {
+    let expected_effect_capability = if moderation_bootstrap || moderated_mediation_bootstrap {
         crate::pls_general_multiple_moderation_point_capability_cell_v1()
     } else {
         crate::pls_general_recursive_effects_capability_cell_v1()
     };
     for (effect_id, value, trace) in effect_values {
+        let expected_effect_capability = if moderated_mediation_bootstrap
+            && moderated_mediation_derived_effect_ids.contains(effect_id)
+        {
+            crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1()
+        } else {
+            expected_effect_capability.clone()
+        };
         if trace.capability_cell != expected_effect_capability {
-            errors.push(if moderation_bootstrap {
+            errors.push(if moderated_mediation_bootstrap {
+                format!(
+                    "{context} effect {effect_id} trace.capability_cell does not match its moderation-point or supplemental moderated-mediation owner"
+                )
+            } else if moderation_bootstrap {
                 format!(
                     "{context} effect {effect_id} trace.capability_cell must equal the General SEM multiple two-way moderation point option cell"
                 )
@@ -2319,6 +2700,549 @@ fn validate_cbsem_bootstrap_v1(
     }
 }
 
+
+fn validate_canonical_moderated_mediation_results_v1<'a>(
+    errors: &mut Vec<String>,
+    results: &'a CanonicalGeneralSemResultsV1,
+    document_model_id: &str,
+    document_capability_ids: Option<&HashSet<String>>,
+    effect_ids: &mut BTreeSet<&'a str>,
+) {
+    let context = "general_sem_results";
+    let supplemental_cell =
+        crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+    let combined_receipt = results
+        .inference_receipt
+        .as_ref()
+        .map(|receipt| &receipt.capability_cell)
+        == Some(&supplemental_cell);
+    if results.conditional_indirect_effects.is_empty()
+        && results.moderated_mediation_indices.is_empty()
+        && !combined_receipt
+    {
+        return;
+    }
+    if results.conditional_indirect_effects.len() != 3 {
+        errors.push(format!(
+            "{context}.conditional_indirect_effects must contain exactly the locked -1/0/+1 targets"
+        ));
+    }
+    if results.moderated_mediation_indices.len() != 1 {
+        errors.push(format!(
+            "{context}.moderated_mediation_indices must contain exactly one index"
+        ));
+    }
+    if results.interaction_effects.len() != 1 {
+        errors.push(format!(
+            "{context} two-way moderated mediation requires exactly one interaction effect"
+        ));
+    }
+    if results
+        .inference_receipt
+        .as_ref()
+        .map(|receipt| &receipt.capability_cell)
+        != Some(&supplemental_cell)
+    {
+        errors.push(format!(
+            "{context} moderated-mediation rows require the exact combined bootstrap receipt"
+        ));
+    }
+
+    let mut probe_indices = BTreeSet::new();
+    for (index, effect) in results.conditional_indirect_effects.iter().enumerate() {
+        let item_context = format!("{context}.conditional_indirect_effects[{index}]");
+        if !effect_ids.insert(effect.effect_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.effect_id is duplicated across effect sections"
+            ));
+        }
+        for (name, id) in [
+            ("target_id", effect.target_id.as_str()),
+            ("estimand_id", effect.estimand_id.as_str()),
+            ("interaction_id", effect.interaction_id.as_str()),
+            ("x_id", effect.x_id.as_str()),
+            ("mediator_id", effect.mediator_id.as_str()),
+            ("y_id", effect.y_id.as_str()),
+            ("moderator_id", effect.moderator_id.as_str()),
+        ] {
+            require_stable_id(errors, id, &format!("{item_context}.{name}"));
+        }
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        if effect.trace.capability_cell != supplemental_cell {
+            errors.push(format!(
+                "{item_context}.trace.capability_cell must equal the supplemental two-way moderated-mediation cell"
+            ));
+        }
+        if effect.ordered_relation_ids.len() != 2 {
+            errors.push(format!(
+                "{item_context}.ordered_relation_ids must contain exactly two relations"
+            ));
+        }
+        require_unique_ids(
+            errors,
+            effect.ordered_relation_ids.iter().map(String::as_str),
+            &format!("{item_context}.ordered_relation_ids"),
+        );
+        if effect.probe_value_index > 2 {
+            errors.push(format!(
+                "{item_context}.probe_value_index must be 0, 1, or 2"
+            ));
+        } else {
+            probe_indices.insert(effect.probe_value_index);
+            let expected_probe = crate::GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_PROBES_V1
+                [effect.probe_value_index as usize];
+            if !approximately_equal(effect.moderator_value, expected_probe) {
+                errors.push(format!(
+                    "{item_context}.moderator_value must equal the locked standardized probe"
+                ));
+            }
+        }
+        if effect.effect_id
+            != crate::conditional_indirect_effect_identity_v1(
+                &effect.target_id,
+                effect.probe_value_index,
+            )
+        {
+            errors.push(format!(
+                "{item_context}.effect_id must equal the canonical target/probe identity"
+            ));
+        }
+        validate_general_sem_estimate(errors, &effect.value, &format!("{item_context}.value"));
+    }
+    if probe_indices != BTreeSet::from([0, 1, 2]) {
+        errors.push(format!(
+            "{context}.conditional_indirect_effects must cover probe indices 0, 1, and 2 exactly"
+        ));
+    }
+
+    for (index, effect) in results.moderated_mediation_indices.iter().enumerate() {
+        let item_context = format!("{context}.moderated_mediation_indices[{index}]");
+        if !effect_ids.insert(effect.effect_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.effect_id is duplicated across effect sections"
+            ));
+        }
+        for (name, id) in [
+            ("target_id", effect.target_id.as_str()),
+            ("estimand_id", effect.estimand_id.as_str()),
+            ("interaction_id", effect.interaction_id.as_str()),
+            ("x_id", effect.x_id.as_str()),
+            ("mediator_id", effect.mediator_id.as_str()),
+            ("y_id", effect.y_id.as_str()),
+            ("moderator_id", effect.moderator_id.as_str()),
+        ] {
+            require_stable_id(errors, id, &format!("{item_context}.{name}"));
+        }
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        if effect.trace.capability_cell != supplemental_cell {
+            errors.push(format!(
+                "{item_context}.trace.capability_cell must equal the supplemental two-way moderated-mediation cell"
+            ));
+        }
+        if effect.ordered_relation_ids.len() != 2 {
+            errors.push(format!(
+                "{item_context}.ordered_relation_ids must contain exactly two relations"
+            ));
+        }
+        require_unique_ids(
+            errors,
+            effect.ordered_relation_ids.iter().map(String::as_str),
+            &format!("{item_context}.ordered_relation_ids"),
+        );
+        if effect.effect_id != crate::moderated_mediation_index_identity_v1(&effect.target_id) {
+            errors.push(format!(
+                "{item_context}.effect_id must equal the canonical target index identity"
+            ));
+        }
+        validate_general_sem_estimate(errors, &effect.value, &format!("{item_context}.value"));
+    }
+
+    let (Some(first), Some(index_effect), Some(interaction)) = (
+        results.conditional_indirect_effects.first(),
+        results.moderated_mediation_indices.first(),
+        results.interaction_effects.first(),
+    ) else {
+        return;
+    };
+    for effect in &results.conditional_indirect_effects {
+        if effect.target_id != first.target_id
+            || effect.estimand_id != first.estimand_id
+            || effect.moderated_stage != first.moderated_stage
+            || effect.interaction_id != first.interaction_id
+            || effect.x_id != first.x_id
+            || effect.mediator_id != first.mediator_id
+            || effect.y_id != first.y_id
+            || effect.moderator_id != first.moderator_id
+            || effect.ordered_relation_ids != first.ordered_relation_ids
+        {
+            errors.push(format!(
+                "{context}.conditional_indirect_effects must share one exact compiled target"
+            ));
+            break;
+        }
+    }
+    if index_effect.target_id != first.target_id
+        || index_effect.estimand_id != first.estimand_id
+        || index_effect.moderated_stage != first.moderated_stage
+        || index_effect.interaction_id != first.interaction_id
+        || index_effect.x_id != first.x_id
+        || index_effect.mediator_id != first.mediator_id
+        || index_effect.y_id != first.y_id
+        || index_effect.moderator_id != first.moderator_id
+        || index_effect.ordered_relation_ids != first.ordered_relation_ids
+    {
+        errors.push(format!(
+            "{context}.moderated_mediation_indices must identify the same target as the conditional indirect effects"
+        ));
+    }
+    let distinct_nodes = [
+        first.x_id.as_str(),
+        first.mediator_id.as_str(),
+        first.y_id.as_str(),
+        first.moderator_id.as_str(),
+    ]
+    .into_iter()
+    .collect::<BTreeSet<_>>();
+    if distinct_nodes.len() != 4 {
+        errors.push(format!(
+            "{context} moderated mediation requires distinct X, M, Y, and W identities"
+        ));
+    }
+    if interaction.interaction_id != first.interaction_id
+        || interaction.moderator_id != first.moderator_id
+    {
+        errors.push(format!(
+            "{context} moderated-mediation target must bind the one published interaction effect"
+        ));
+    }
+    if first.ordered_relation_ids.len() != 2 {
+        return;
+    }
+    let (moderated_relation_id, other_relation_id, expected_focal, expected_outcome) =
+        match first.moderated_stage {
+            CanonicalModeratedMediationStageV1::FirstStage => (
+                first.ordered_relation_ids[0].as_str(),
+                first.ordered_relation_ids[1].as_str(),
+                first.x_id.as_str(),
+                first.mediator_id.as_str(),
+            ),
+            CanonicalModeratedMediationStageV1::SecondStage => (
+                first.ordered_relation_ids[1].as_str(),
+                first.ordered_relation_ids[0].as_str(),
+                first.mediator_id.as_str(),
+                first.y_id.as_str(),
+            ),
+        };
+    if interaction.focal_relation_id != moderated_relation_id
+        || interaction.focal_predictor_id != expected_focal
+        || interaction.outcome_id != expected_outcome
+    {
+        errors.push(format!(
+            "{context} interaction effect does not match the declared moderated path stage"
+        ));
+    }
+    let moderated_beta = results
+        .joint_stage_structural_coefficients
+        .iter()
+        .find(|coefficient| coefficient.relation_id == moderated_relation_id)
+        .map(|coefficient| coefficient.estimate.estimate);
+    let other_beta = results
+        .joint_stage_structural_coefficients
+        .iter()
+        .find(|coefficient| coefficient.relation_id == other_relation_id)
+        .map(|coefficient| coefficient.estimate.estimate);
+    let (Some(moderated_beta), Some(other_beta)) = (moderated_beta, other_beta) else {
+        errors.push(format!(
+            "{context} moderated-mediation formulas require both selected path coefficients in the joint-stage ledger"
+        ));
+        return;
+    };
+    let gamma = interaction.scientific_rescaled_gamma.estimate;
+    for effect in &results.conditional_indirect_effects {
+        let expected = (moderated_beta + gamma * effect.moderator_value) * other_beta;
+        if !approximately_equal(effect.value.estimate, expected) {
+            errors.push(format!(
+                "{context} conditional indirect effect {} contradicts the bounded formula",
+                effect.effect_id
+            ));
+        }
+    }
+    let expected_index = gamma * other_beta;
+    if !approximately_equal(index_effect.value.estimate, expected_index) {
+        errors.push(format!(
+            "{context} moderated-mediation index contradicts scientific gamma times the other-stage coefficient"
+        ));
+    }
+}
+
+fn validate_hoc_inference_receipt_v1(
+    errors: &mut Vec<String>,
+    results: &CanonicalGeneralSemResultsV1,
+    provenance: &CanonicalResultProvenanceV2,
+    document_capability_ids: Option<&HashSet<String>>,
+) {
+    let context = "general_sem_results.higher_order_inference_receipt";
+    let inferred_relations = results
+        .higher_order_stages
+        .iter()
+        .flat_map(|stage| stage.relation_estimates.iter())
+        .filter(|relation| general_sem_estimate_has_inference(&relation.value))
+        .collect::<Vec<_>>();
+    let Some(receipt) = &results.higher_order_inference_receipt else {
+        if !inferred_relations.is_empty() {
+            errors.push(format!(
+                "{context} is required when higher-order relations contain inference"
+            ));
+        }
+        return;
+    };
+    if results.inference_receipt.is_some() {
+        errors.push(format!(
+            "{context} is mutually exclusive with the mediation/moderation inference receipt"
+        ));
+    }
+    validate_capability_reference(
+        errors,
+        &receipt.capability_cell,
+        &format!("{context}.capability_cell"),
+    );
+    let receipt_identity = capability_cell_reference_identity_v2(&receipt.capability_cell);
+    if document_capability_ids.is_none_or(|ids| !ids.contains(&receipt_identity)) {
+        errors.push(format!(
+            "{context}.capability_cell must be declared by document capability_cells"
+        ));
+    }
+    if receipt.capability_cell != crate::pls_general_higher_order_bootstrap_capability_cell_v1() {
+        errors.push(format!(
+            "{context}.capability_cell must equal the exact HOC bootstrap cell"
+        ));
+    }
+    if receipt.schema_version != 1
+        || receipt.method_version != crate::PLS_GENERAL_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_VERSION_V1
+        || receipt.point_method_version
+            != crate::PLS_GENERAL_HIGHER_ORDER_POINT_CAPABILITY_VERSION_V1
+        || receipt.resampling_operation_version
+            != "general_sem_pls_higher_order_full_model_case_bootstrap_operation_v1"
+        || receipt.resampling_stream_version != "indexed_case_resampling_v1"
+        || receipt.quantile_method_version != "type7_quantile_v1"
+        || receipt.standard_error_method_version != "sample_standard_error_b_minus_1_v1"
+        || receipt.summation_method_version != "neumaier_compensated_sum_v1"
+        || receipt.p_value_method_version != "null_centered_plus_one_v1"
+        || receipt.failure_policy_version != "minimum_usable_fraction_0_9_v1"
+        || receipt.sign_alignment_method_version != "sampled_original_construct_score_covariance_v1"
+        || receipt.target_version != "compiled_hoc_component_and_structural_relation_target_v1"
+    {
+        errors.push(format!(
+            "{context} schema, point method, or bootstrap method identity is invalid"
+        ));
+    }
+    for (name, digest) in [
+        (
+            "general_sem_config_sha256",
+            receipt.general_sem_config_sha256.as_str(),
+        ),
+        (
+            "compiled_plan_sha256",
+            receipt.compiled_plan_sha256.as_str(),
+        ),
+        (
+            "hoc_stage_plan_sha256",
+            receipt.hoc_stage_plan_sha256.as_str(),
+        ),
+        (
+            "model_scientific_sha256",
+            receipt.model_scientific_sha256.as_str(),
+        ),
+        (
+            "stage_one_model_scientific_sha256",
+            receipt.stage_one_model_scientific_sha256.as_str(),
+        ),
+        (
+            "stage_two_model_scientific_sha256",
+            receipt.stage_two_model_scientific_sha256.as_str(),
+        ),
+        (
+            "complete_case_frame_sha256",
+            receipt.complete_case_frame_sha256.as_str(),
+        ),
+        (
+            "usable_replicate_indices_sha256",
+            receipt.usable_replicate_indices_sha256.as_str(),
+        ),
+        (
+            "target_identity_set_sha256",
+            receipt.target_identity_set_sha256.as_str(),
+        ),
+    ] {
+        if !is_lowercase_sha256(digest) {
+            errors.push(format!("{context}.{name} must be a lowercase SHA-256"));
+        }
+    }
+    if receipt.model_scientific_sha256 != provenance.model_digest
+        || receipt.source_dataset_fingerprint != provenance.dataset_fingerprint
+        || receipt.seed.parse::<i64>().ok() != provenance.seed
+        || i64::from(receipt.workers) != provenance.workers
+    {
+        errors.push(format!(
+            "{context} model, dataset, seed, or worker authority differs from provenance"
+        ));
+    }
+    if receipt.interval != CanonicalGeneralSemBootstrapIntervalV1::PercentileType7
+        || receipt.tail != CanonicalGeneralSemInferenceTailV1::TwoSided
+        || !receipt.confidence_level.is_finite()
+        || !(0.0..1.0).contains(&receipt.confidence_level)
+        || !(2..=10_000).contains(&receipt.resamples_requested)
+    {
+        errors.push(format!(
+            "{context} inference configuration is outside the exact percentile two-sided contract"
+        ));
+    }
+    let expected_minimum = ((f64::from(receipt.resamples_requested) * 0.9).ceil() as u32).max(2);
+    if receipt.minimum_usable_resamples != expected_minimum
+        || receipt.resamples_usable < expected_minimum
+        || receipt.resamples_usable > receipt.resamples_requested
+        || receipt.resamples_usable as usize + receipt.failed_replicates.len()
+            != receipt.resamples_requested as usize
+        || !(1..=64).contains(&receipt.workers)
+        || !receipt.complete_model_reestimated_per_replicate
+        || !receipt.stage_one_reestimated_per_replicate
+        || !receipt.generated_component_values_recalculated_per_replicate
+        || !receipt.stage_one_scores_sign_aligned_per_replicate
+        || !receipt.stage_two_reestimated_per_replicate
+        || !receipt.stage_two_scores_sign_aligned_per_replicate
+        || !receipt.complete_point_contract_validated_per_replicate
+    {
+        errors.push(format!(
+            "{context} usable gate or full two-stage refit flags are invalid"
+        ));
+    }
+    require_canonical_stable_ids(
+        errors,
+        receipt.target_ids.iter().map(String::as_str),
+        &format!("{context}.target_ids"),
+    );
+    let identity_ids = receipt
+        .target_identities
+        .iter()
+        .map(|identity| identity.target_id.as_str())
+        .collect::<Vec<_>>();
+    if identity_ids
+        != receipt
+            .target_ids
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>()
+        || crate::sha256_serialized(&receipt.target_identities)
+            != receipt.target_identity_set_sha256
+    {
+        errors.push(format!(
+            "{context} target identities or identity digest contradict target_ids"
+        ));
+    }
+    let relations = results
+        .higher_order_stages
+        .iter()
+        .flat_map(|stage| stage.relation_estimates.iter())
+        .map(|relation| (relation.relation_id.as_str(), relation))
+        .collect::<BTreeMap<_, _>>();
+    for identity in &receipt.target_identities {
+        let Some(relation) = relations.get(identity.relation_id.as_str()) else {
+            errors.push(format!(
+                "{context} target {} references a missing HOC relation",
+                identity.target_id
+            ));
+            continue;
+        };
+        let expected_kind = match identity.kind {
+            CanonicalHocBootstrapTargetKindV1::ComponentLoading => {
+                CanonicalHocRelationKindV1::ComponentLoading
+            }
+            CanonicalHocBootstrapTargetKindV1::ComponentWeight => {
+                CanonicalHocRelationKindV1::ComponentWeight
+            }
+            CanonicalHocBootstrapTargetKindV1::HocStructuralPath => {
+                CanonicalHocRelationKindV1::AuthoredStructural
+            }
+            CanonicalHocBootstrapTargetKindV1::ExtendedTotalEffect => {
+                CanonicalHocRelationKindV1::ExtendedTotalEffect
+            }
+        };
+        if identity.target_id != identity.relation_id
+            || identity.target_version != receipt.target_version
+            || identity.point_method_version != receipt.point_method_version
+            || relation.parameter_id.as_deref() != Some(identity.parameter_id.as_str())
+            || relation.source_id != identity.source_id
+            || relation.target_id != identity.target_variable_id
+            || relation.kind != Some(expected_kind)
+            || !general_sem_estimate_has_complete_inference(&relation.value)
+            || relation.value.bootstrap_usable_replicates != Some(receipt.resamples_usable)
+        {
+            errors.push(format!(
+                "{context} target {} differs from its typed HOC relation or inference ledger",
+                identity.target_id
+            ));
+        }
+        if let (Some(exceedances), Some(usable), Some(p_value)) = (
+            relation.value.bootstrap_two_sided_exceedances,
+            relation.value.bootstrap_usable_replicates,
+            relation.value.p_value,
+        ) {
+            let expected = f64::from(exceedances + 1) / f64::from(usable + 1);
+            if exceedances > usable || !approximately_equal(p_value, expected) {
+                errors.push(format!(
+                    "{context} target {} contradicts the plus-one probability ledger",
+                    identity.target_id
+                ));
+            }
+        }
+    }
+    let target_ids = receipt
+        .target_ids
+        .iter()
+        .map(String::as_str)
+        .collect::<HashSet<_>>();
+    if inferred_relations
+        .iter()
+        .any(|relation| !target_ids.contains(relation.relation_id.as_str()))
+    {
+        errors.push(format!(
+            "{context} leaves inferred HOC relations outside its exact target inventory"
+        ));
+    }
+    let mut previous_failure = None;
+    let mut failed_indices = BTreeSet::new();
+    for failure in &receipt.failed_replicates {
+        if failure.replicate_index >= receipt.resamples_requested
+            || previous_failure.is_some_and(|previous| previous >= failure.replicate_index)
+            || failure.message.trim().is_empty()
+        {
+            errors.push(format!("{context}.failed_replicates is not canonical"));
+        }
+        previous_failure = Some(failure.replicate_index);
+        failed_indices.insert(failure.replicate_index);
+    }
+    let usable_indices = (0..receipt.resamples_requested)
+        .filter(|index| !failed_indices.contains(index))
+        .collect::<Vec<_>>();
+    if crate::sha256_serialized(&usable_indices) != receipt.usable_replicate_indices_sha256 {
+        errors.push(format!(
+            "{context}.usable_replicate_indices_sha256 contradicts the failure ledger"
+        ));
+    }
+}
+
 fn validate_general_sem_results_v1(
     errors: &mut Vec<String>,
     results: &CanonicalGeneralSemResultsV1,
@@ -2333,12 +3257,15 @@ fn validate_general_sem_results_v1(
         ));
     }
     validate_general_sem_inference_receipt_v1(errors, results, provenance, document_capability_ids);
+    validate_hoc_inference_receipt_v1(errors, results, provenance, document_capability_ids);
     if results.specific_indirect_effects.is_empty()
         && results.aggregate_effects.is_empty()
         && results.joint_stage_structural_coefficients.is_empty()
         && results.interaction_effects.is_empty()
         && results.conditional_effect_probes.is_empty()
         && results.conditional_effects.is_empty()
+        && results.conditional_indirect_effects.is_empty()
+        && results.moderated_mediation_indices.is_empty()
         && results.interaction_plots.is_empty()
         && results.higher_order_stages.is_empty()
         && results.cbsem_parameters.is_empty()
@@ -2399,6 +3326,22 @@ fn validate_general_sem_results_v1(
             .iter()
             .map(|item| item.effect_id.as_str()),
         &format!("{context}.conditional_effects"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .conditional_indirect_effects
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.conditional_indirect_effects"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .moderated_mediation_indices
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.moderated_mediation_indices"),
     );
     require_canonical_stable_ids(
         errors,
@@ -2845,6 +3788,14 @@ fn validate_general_sem_results_v1(
         ));
     }
 
+    validate_canonical_moderated_mediation_results_v1(
+        errors,
+        results,
+        document_model_id,
+        document_capability_ids,
+        &mut effect_ids,
+    );
+
     for (index, probe) in results.conditional_effect_probes.iter().enumerate() {
         let item_context = format!("{context}.conditional_effect_probes[{index}]");
         validate_general_sem_trace(
@@ -3235,14 +4186,165 @@ fn validate_general_sem_results_v1(
             &stage.higher_order_construct_id,
             &format!("{item_context}.higher_order_construct_id"),
         );
-        let expected_stage_number = match stage.kind {
-            CanonicalHocStageKindV1::LowerOrderScoreEstimation => 1,
-            CanonicalHocStageKindV1::HigherOrderEstimation => 2,
-        };
-        if stage.stage_number != expected_stage_number {
+        if stage.approach.is_some() != stage.measurement_type.is_some() {
             errors.push(format!(
-                "{item_context}.stage_number contradicts its stage kind"
+                "{item_context}.approach and measurement_type must be present or absent together"
             ));
+        }
+        let expected_role = match (stage.approach.as_ref(), stage.stage_number) {
+            (Some(crate::HigherOrderConstructionApproachV4::RepeatedIndicators), 1) => {
+                Some(crate::CompiledPlsHocStageRoleV1::RepeatedIndicatorEstimation)
+            }
+            (Some(crate::HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators), 1) => {
+                Some(crate::CompiledPlsHocStageRoleV1::ExtendedRepeatedIndicatorEstimation)
+            }
+            (Some(crate::HigherOrderConstructionApproachV4::EmbeddedTwoStage), 1) => {
+                Some(crate::CompiledPlsHocStageRoleV1::EmbeddedRepeatedIndicatorEstimation)
+            }
+            (Some(crate::HigherOrderConstructionApproachV4::DisjointTwoStage), 1) => {
+                Some(crate::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation)
+            }
+            (
+                Some(
+                    crate::HigherOrderConstructionApproachV4::EmbeddedTwoStage
+                    | crate::HigherOrderConstructionApproachV4::DisjointTwoStage,
+                ),
+                2,
+            ) => Some(crate::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores),
+            (None, 1) if stage.kind == CanonicalHocStageKindV1::LowerOrderScoreEstimation => {
+                Some(crate::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation)
+            }
+            (None, 2) if stage.kind == CanonicalHocStageKindV1::HigherOrderEstimation => {
+                Some(crate::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores)
+            }
+            _ => None,
+        };
+        let expected_kind = expected_role.map(|role| match role {
+            crate::CompiledPlsHocStageRoleV1::DisjointLowerOrderScoreEstimation
+            | crate::CompiledPlsHocStageRoleV1::EmbeddedRepeatedIndicatorEstimation => {
+                CanonicalHocStageKindV1::LowerOrderScoreEstimation
+            }
+            crate::CompiledPlsHocStageRoleV1::RepeatedIndicatorEstimation
+            | crate::CompiledPlsHocStageRoleV1::ExtendedRepeatedIndicatorEstimation
+            | crate::CompiledPlsHocStageRoleV1::HigherOrderFromLowerOrderScores => {
+                CanonicalHocStageKindV1::HigherOrderEstimation
+            }
+        });
+        if expected_kind != Some(stage.kind) {
+            errors.push(format!(
+                "{item_context}.stage_number, approach, and stage kind are inconsistent"
+            ));
+        }
+        if let Some(receipt) = &stage.receipt {
+            if receipt.receipt_version != "general_sem_pls_higher_order_point_stage_receipt_v1"
+                || receipt.stage_number != stage.stage_number
+                || Some(receipt.role) != expected_role
+                || receipt.used_observations == 0
+                || receipt.dataset_fingerprint != provenance.dataset_fingerprint
+            {
+                errors.push(format!(
+                    "{item_context}.receipt contradicts the exact stage identity or row accounting"
+                ));
+            }
+            for (name, digest) in [
+                (
+                    "projection_identity_sha256",
+                    receipt.projection_identity_sha256.as_str(),
+                ),
+                (
+                    "model_scientific_sha256",
+                    receipt.model_scientific_sha256.as_str(),
+                ),
+                (
+                    "compiled_plan_sha256",
+                    receipt.compiled_plan_sha256.as_str(),
+                ),
+            ] {
+                if !is_lowercase_sha256(digest) {
+                    errors.push(format!(
+                        "{item_context}.receipt.{name} must be a lowercase SHA-256"
+                    ));
+                }
+            }
+            if receipt.dataset_fingerprint.trim().is_empty() {
+                errors.push(format!(
+                    "{item_context}.receipt.dataset_fingerprint must be nonempty"
+                ));
+            }
+            if let Some(generated) = &receipt.generated_score_dataset {
+                if generated.receipt_version
+                    != "general_sem_pls_disjoint_hoc_score_dataset_receipt_v1"
+                    || generated.source_dataset_fingerprint != provenance.dataset_fingerprint
+                    || generated.complete_case_row_count != receipt.used_observations
+                    || generated.omitted_row_count != receipt.omitted_observations
+                    || generated.generated_score_columns.is_empty()
+                    || !is_lowercase_sha256(&generated.complete_case_rows_sha256)
+                {
+                    errors.push(format!(
+                        "{item_context}.receipt.generated_score_dataset is incomplete"
+                    ));
+                }
+                require_canonical_stable_ids(
+                    errors,
+                    generated
+                        .generated_score_columns
+                        .iter()
+                        .map(|column| column.component_id.as_str()),
+                    &format!(
+                        "{item_context}.receipt.generated_score_dataset.generated_score_columns"
+                    ),
+                );
+                for column in &generated.generated_score_columns {
+                    require_stable_id(
+                        errors,
+                        &column.generated_score_variable_id,
+                        &format!(
+                            "{item_context}.receipt.generated_score_dataset.generated_score_variable_id"
+                        ),
+                    );
+                    if column.observation_count != generated.complete_case_row_count
+                        || !is_lowercase_sha256(&column.values_sha256)
+                    {
+                        errors.push(format!(
+                            "{item_context}.receipt generated score row count or value digest is invalid"
+                        ));
+                    }
+                }
+            }
+        }
+        require_canonical_stable_ids(
+            errors,
+            stage
+                .generated_variable_mappings
+                .iter()
+                .map(|mapping| mapping.component_id.as_str()),
+            &format!("{item_context}.generated_variable_mappings"),
+        );
+        for mapping in &stage.generated_variable_mappings {
+            for (name, id) in [
+                (
+                    "generated_score_variable_id",
+                    mapping.generated_score_variable_id.as_str(),
+                ),
+                (
+                    "generated_component_relation_id",
+                    mapping.generated_component_relation_id.as_str(),
+                ),
+                (
+                    "generated_component_parameter_id",
+                    mapping.generated_component_parameter_id.as_str(),
+                ),
+                (
+                    "component_relation_source_id",
+                    mapping.component_relation_source_id.as_str(),
+                ),
+                (
+                    "component_relation_target_id",
+                    mapping.component_relation_target_id.as_str(),
+                ),
+            ] {
+                require_stable_id(errors, id, &format!("{item_context}.{name}"));
+            }
         }
         if !hoc_stage_signatures
             .insert((stage.higher_order_construct_id.as_str(), stage.stage_number))
@@ -3283,6 +4385,26 @@ fn validate_general_sem_results_v1(
             if relation.source_id == relation.target_id {
                 errors.push(format!(
                     "{relation_context} requires distinct source_id and target_id"
+                ));
+            }
+            if relation.parameter_id.is_some() != relation.kind.is_some() {
+                errors.push(format!(
+                    "{relation_context}.parameter_id and kind must be present or absent together"
+                ));
+            }
+            if let Some(parameter_id) = &relation.parameter_id {
+                require_stable_id(
+                    errors,
+                    parameter_id,
+                    &format!("{relation_context}.parameter_id"),
+                );
+            }
+            if relation
+                .collinearity_vif
+                .is_some_and(|value| !value.is_finite() || value <= 0.0)
+            {
+                errors.push(format!(
+                    "{relation_context}.collinearity_vif must be finite and positive"
                 ));
             }
             validate_general_sem_estimate(
@@ -4114,6 +5236,7 @@ pub fn canonical_result_document_from_legacy_tables(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::RecipeV4CompilerTarget;
 
     fn capability_reference() -> CapabilityCellReferenceV2 {
         CapabilityCellReferenceV2 {
@@ -4366,6 +5489,8 @@ mod tests {
                 moderator_value: 1.0,
                 value: effect_value(0.42),
             }],
+            conditional_indirect_effects: Vec::new(),
+            moderated_mediation_indices: Vec::new(),
             interaction_plots: vec![CanonicalInteractionPlotResultV1 {
                 plot_id: "interaction_plot_1".to_string(),
                 trace: general_sem_trace(),
@@ -4427,6 +5552,10 @@ mod tests {
                     kind: CanonicalHocStageKindV1::LowerOrderScoreEstimation,
                     input_construct_ids: vec!["construct_a".to_string(), "construct_b".to_string()],
                     output_variable_ids: vec!["score_a".to_string(), "score_b".to_string()],
+                    approach: None,
+                    measurement_type: None,
+                    generated_variable_mappings: Vec::new(),
+                    receipt: None,
                     relation_estimates: Vec::new(),
                 },
                 CanonicalHocStageResultV1 {
@@ -4437,14 +5566,22 @@ mod tests {
                     kind: CanonicalHocStageKindV1::HigherOrderEstimation,
                     input_construct_ids: vec!["score_a".to_string(), "score_b".to_string()],
                     output_variable_ids: vec!["hoc_ab".to_string()],
+                    approach: None,
+                    measurement_type: None,
+                    generated_variable_mappings: Vec::new(),
+                    receipt: None,
                     relation_estimates: vec![CanonicalHocRelationEstimateV1 {
                         relation_id: "relation_hoc_1".to_string(),
+                        parameter_id: None,
                         source_id: "hoc_ab".to_string(),
                         target_id: "construct_y".to_string(),
+                        kind: None,
                         value: effect_value(0.31),
+                        collinearity_vif: None,
                     }],
                 },
             ],
+            higher_order_inference_receipt: None,
             cbsem_parameters: Vec::new(),
             cbsem_fit: vec![CanonicalCbsemFitResultV1 {
                 fit_id: "cbsem_fit_1".to_string(),
@@ -4631,6 +5768,7 @@ mod tests {
         results.inference_receipt = Some(CanonicalGeneralSemInferenceReceiptV1 {
             kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
             capability_cell: secondary_capability_reference(),
+            capability_dependencies: Vec::new(),
             method_version: GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1.to_string(),
             resampling_operation_version: GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1
                 .to_string(),
@@ -4707,6 +5845,7 @@ mod tests {
         results.inference_receipt = Some(CanonicalGeneralSemInferenceReceiptV1 {
             kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
             capability_cell: crate::pls_general_multiple_moderation_bootstrap_capability_cell_v1(),
+            capability_dependencies: Vec::new(),
             method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
                 .to_string(),
             resampling_operation_version:
@@ -4751,6 +5890,135 @@ mod tests {
         document
     }
 
+    fn general_sem_moderated_mediation_inference_document_fixture() -> CanonicalResultDocumentV2 {
+        let mut document = general_sem_moderation_inference_document_fixture();
+        let supplemental_cell =
+            crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+        let results = document.general_sem_results.as_mut().unwrap();
+        results.joint_stage_structural_coefficients.push(
+            CanonicalJointStageStructuralCoefficientResultV1 {
+                relation_id: "relation_m_y".into(),
+                parameter_id: "parameter_m_y".into(),
+                trace: results.interaction_effects[0].trace.clone(),
+                source_id: "construct_y".into(),
+                target_id: "construct_z".into(),
+                role: CanonicalStructuralRelationRoleV1::Structural,
+                estimate: effect_value(0.5),
+                stage: CanonicalStructuralEstimateStageV1::JointStageTwo,
+                method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1.into(),
+            },
+        );
+        results
+            .joint_stage_structural_coefficients
+            .sort_by(|left, right| left.relation_id.cmp(&right.relation_id));
+
+        let target_id = "sem_moderated_mediation_target_v1_fixture";
+        let estimand_id = "estimand:selected_x_m_y";
+        let ordered_relation_ids = vec!["relation_focal_1".into(), "relation_m_y".into()];
+        let derived_trace = CanonicalGeneralSemResultTraceV1 {
+            model_id: document.provenance.model_id.clone(),
+            capability_cell: supplemental_cell.clone(),
+        };
+        results.conditional_indirect_effects = [-1.0, 0.0, 1.0]
+            .into_iter()
+            .enumerate()
+            .map(|(probe_value_index, moderator_value)| {
+                CanonicalConditionalIndirectEffectResultV1 {
+                    effect_id: crate::conditional_indirect_effect_identity_v1(
+                        target_id,
+                        probe_value_index as u32,
+                    ),
+                    target_id: target_id.into(),
+                    estimand_id: estimand_id.into(),
+                    trace: derived_trace.clone(),
+                    moderated_stage: CanonicalModeratedMediationStageV1::FirstStage,
+                    interaction_id: "interaction_1".into(),
+                    x_id: "construct_x".into(),
+                    mediator_id: "construct_y".into(),
+                    y_id: "construct_z".into(),
+                    moderator_id: "moderator_m".into(),
+                    ordered_relation_ids: ordered_relation_ids.clone(),
+                    probe_value_index: probe_value_index as u32,
+                    moderator_value,
+                    value: inferred_effect_value((0.4 + 0.4 * moderator_value) * 0.5),
+                }
+            })
+            .collect();
+        results
+            .conditional_indirect_effects
+            .sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+        results.moderated_mediation_indices = vec![CanonicalModeratedMediationIndexResultV1 {
+            effect_id: crate::moderated_mediation_index_identity_v1(target_id),
+            target_id: target_id.into(),
+            estimand_id: estimand_id.into(),
+            trace: derived_trace,
+            moderated_stage: CanonicalModeratedMediationStageV1::FirstStage,
+            interaction_id: "interaction_1".into(),
+            x_id: "construct_x".into(),
+            mediator_id: "construct_y".into(),
+            y_id: "construct_z".into(),
+            moderator_id: "moderator_m".into(),
+            ordered_relation_ids,
+            value: inferred_effect_value(0.2),
+        }];
+
+        let mut effect_ids = results
+            .interaction_effects
+            .iter()
+            .map(|effect| effect.effect_id.clone())
+            .chain(
+                results
+                    .conditional_indirect_effects
+                    .iter()
+                    .map(|effect| effect.effect_id.clone()),
+            )
+            .chain(
+                results
+                    .moderated_mediation_indices
+                    .iter()
+                    .map(|effect| effect.effect_id.clone()),
+            )
+            .collect::<Vec<_>>();
+        effect_ids.sort();
+        let effect_identities = canonical_general_sem_effect_identities_v1(results)
+            .into_iter()
+            .filter(|identity| {
+                matches!(
+                    identity,
+                    CanonicalGeneralSemEffectIdentityV1::InteractionScientificRescaledGamma { .. }
+                        | CanonicalGeneralSemEffectIdentityV1::ConditionalIndirect { .. }
+                        | CanonicalGeneralSemEffectIdentityV1::ModeratedMediationIndex { .. }
+                )
+            })
+            .collect::<Vec<_>>();
+        let receipt = results.inference_receipt.as_mut().unwrap();
+        receipt.capability_cell = supplemental_cell.clone();
+        receipt.capability_dependencies = vec![
+            RecipeV4CompilerTarget::PlsPlanV2.capability_cell(),
+            crate::pls_general_multiple_moderation_point_capability_cell_v1(),
+        ];
+        receipt
+            .capability_dependencies
+            .sort_by_key(capability_cell_reference_identity_v2);
+        receipt.method_version =
+            GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1.into();
+        receipt.resampling_operation_version =
+            GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1.into();
+        receipt.effect_ids = effect_ids;
+        receipt.effect_identity_set_sha256 =
+            general_sem_effect_identity_set_sha256_v1(&effect_identities);
+
+        let cells = document.capability_cells.as_mut().unwrap();
+        cells.retain(|cell| {
+            cell != &crate::pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+        });
+        cells.push(RecipeV4CompilerTarget::PlsPlanV2.capability_cell());
+        cells.push(supplemental_cell);
+        cells.sort_by_key(capability_cell_reference_identity_v2);
+        cells.dedup();
+        document
+    }
+
     #[test]
     fn valid_microcase_passes() {
         let validation = validate_canonical_result_document_v2(&document_fixture());
@@ -4775,6 +6043,109 @@ mod tests {
         let decoded: CanonicalResultDocumentV2 = serde_json::from_value(value).unwrap();
         assert_eq!(decoded, document);
         assert!(decoded.general_sem_results.is_none());
+    }
+
+    #[test]
+    fn moderated_mediation_canonical_collections_are_additive_and_identity_bound() {
+        let historical = serde_json::to_value(general_sem_results_fixture()).unwrap();
+        assert!(historical.get("conditional_indirect_effects").is_none());
+        assert!(historical.get("moderated_mediation_indices").is_none());
+
+        let mut results = general_sem_results_fixture();
+        let target_id = "sem_moderated_mediation_target_v1_fixture";
+        let estimand_id = "estimand:selected_x_m_y";
+        let interaction_id = "interaction:m_by_w_to_y";
+        let relations = vec!["relation_x_m".to_string(), "relation_m_y".to_string()];
+        let trace = CanonicalGeneralSemResultTraceV1 {
+            model_id: "model-1".into(),
+            capability_cell:
+                crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1(),
+        };
+        results.conditional_indirect_effects = [-1.0, 0.0, 1.0]
+            .into_iter()
+            .enumerate()
+            .map(|(probe_value_index, moderator_value)| {
+                CanonicalConditionalIndirectEffectResultV1 {
+                    effect_id: crate::conditional_indirect_effect_identity_v1(
+                        target_id,
+                        probe_value_index as u32,
+                    ),
+                    target_id: target_id.into(),
+                    estimand_id: estimand_id.into(),
+                    trace: trace.clone(),
+                    moderated_stage: CanonicalModeratedMediationStageV1::SecondStage,
+                    interaction_id: interaction_id.into(),
+                    x_id: "construct:x".into(),
+                    mediator_id: "construct:m".into(),
+                    y_id: "construct:y".into(),
+                    moderator_id: "construct:w".into(),
+                    ordered_relation_ids: relations.clone(),
+                    probe_value_index: probe_value_index as u32,
+                    moderator_value,
+                    value: effect_value((0.4 + 0.2 * moderator_value) * 0.5),
+                }
+            })
+            .collect();
+        results
+            .conditional_indirect_effects
+            .sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+        results.moderated_mediation_indices = vec![CanonicalModeratedMediationIndexResultV1 {
+            effect_id: crate::moderated_mediation_index_identity_v1(target_id),
+            target_id: target_id.into(),
+            estimand_id: estimand_id.into(),
+            trace,
+            moderated_stage: CanonicalModeratedMediationStageV1::SecondStage,
+            interaction_id: interaction_id.into(),
+            x_id: "construct:x".into(),
+            mediator_id: "construct:m".into(),
+            y_id: "construct:y".into(),
+            moderator_id: "construct:w".into(),
+            ordered_relation_ids: relations,
+            value: effect_value(0.1),
+        }];
+
+        let encoded = serde_json::to_value(&results).unwrap();
+        assert_eq!(
+            encoded["conditional_indirect_effects"]
+                .as_array()
+                .unwrap()
+                .len(),
+            3
+        );
+        assert_eq!(
+            encoded["moderated_mediation_indices"]
+                .as_array()
+                .unwrap()
+                .len(),
+            1
+        );
+        assert_eq!(
+            serde_json::from_value::<CanonicalGeneralSemResultsV1>(encoded).unwrap(),
+            results
+        );
+        let identities = canonical_general_sem_effect_identities_v1(&results);
+        assert_eq!(
+            identities
+                .iter()
+                .filter(|identity| matches!(
+                    identity,
+                    CanonicalGeneralSemEffectIdentityV1::ConditionalIndirect { .. }
+                ))
+                .count(),
+            3
+        );
+        assert!(identities.iter().any(|identity| matches!(
+            identity,
+            CanonicalGeneralSemEffectIdentityV1::ModeratedMediationIndex { .. }
+        )));
+
+        let inference_wire =
+            serde_json::to_value(general_sem_inference_document_fixture()).unwrap();
+        assert!(
+            inference_wire["general_sem_results"]["inference_receipt"]
+                .get("capability_dependencies")
+                .is_none()
+        );
     }
 
     #[test]
@@ -5179,7 +6550,13 @@ mod tests {
             .higher_order_stages[1]
             .relation_estimates[0]
             .value = inferred_effect_value(0.31);
-        assert_gamma_only_error(&higher_order);
+        let errors = validate_canonical_result_document_v2(&higher_order).errors;
+        assert!(
+            errors.iter().any(|error| error.contains(
+                "higher_order_inference_receipt is required when higher-order relations contain inference"
+            )),
+            "{errors:?}"
+        );
     }
 
     #[test]
@@ -5206,6 +6583,45 @@ mod tests {
                 "missing {expected:?} in {errors:?}"
             );
         }
+    }
+
+    #[test]
+    fn moderated_mediation_receipt_and_five_target_formulas_fail_closed() {
+        let document = general_sem_moderated_mediation_inference_document_fixture();
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(validation.passed, "{:?}", validation.errors);
+
+        let mut formula_tamper = document.clone();
+        formula_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .conditional_indirect_effects[0]
+            .value
+            .estimate += 0.01;
+        assert!(
+            validate_canonical_result_document_v2(&formula_tamper)
+                .errors
+                .iter()
+                .any(|error| error.contains("contradicts the bounded formula"))
+        );
+
+        let mut dependency_tamper = document;
+        dependency_tamper
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .capability_dependencies
+            .pop();
+        assert!(
+            validate_canonical_result_document_v2(&dependency_tamper)
+                .errors
+                .iter()
+                .any(|error| error.contains("must exactly declare the base PLS"))
+        );
     }
 
     #[test]
@@ -5525,7 +6941,7 @@ mod tests {
         let validation = validate_canonical_result_document_v2(&document);
         assert!(!validation.passed);
         for expected in [
-            "stage_number contradicts its stage kind",
+            "stage_number, approach, and stage kind are inconsistent",
             "duplicates a higher-order construct stage",
             "chi_square must be finite and nonnegative",
             "chi_square_p_value must be finite and between 0 and 1",
@@ -5579,8 +6995,11 @@ mod tests {
             interaction_effects: Vec::new(),
             conditional_effect_probes: Vec::new(),
             conditional_effects: Vec::new(),
+            conditional_indirect_effects: Vec::new(),
+            moderated_mediation_indices: Vec::new(),
             interaction_plots: Vec::new(),
             higher_order_stages: Vec::new(),
+            higher_order_inference_receipt: None,
             cbsem_parameters: Vec::new(),
             cbsem_fit: Vec::new(),
             identification_diagnostics: Vec::new(),
@@ -5891,8 +7310,11 @@ mod tests {
             interaction_effects: Vec::new(),
             conditional_effect_probes: Vec::new(),
             conditional_effects: Vec::new(),
+            conditional_indirect_effects: Vec::new(),
+            moderated_mediation_indices: Vec::new(),
             interaction_plots: Vec::new(),
             higher_order_stages: Vec::new(),
+            higher_order_inference_receipt: None,
             cbsem_parameters: vec![CanonicalCbsemParameterResultV1 {
                 parameter_id: "parameter_loading_x1".into(),
                 trace: point_trace,

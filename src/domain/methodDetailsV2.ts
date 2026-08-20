@@ -121,7 +121,7 @@ const CAUTION_COPY: Readonly<Record<string, string>> = Object.freeze({
   "smartpls.plspredict": "Prediction targets are endogenous indicators; construct-score metrics are supplementary and saved-model comparison is not included.",
   "smartpls.cvpat": "CVPAT compares one fitted model with IA and LM benchmarks; it does not compare saved models.",
   "smartpls.ipma": "Performance uses 0–100 observed-range scaling of standardized composite scores; the target and unrelated constructs are omitted.",
-  "smartpls.higher_order_models": "This workflow supports one reflective–reflective disjoint two-stage construct; HOC bootstrap and permutation inference are not available.",
+  "smartpls.higher_order_models": "General SEM supports one non-nested HOC through the exact repeated, extended-repeated, embedded two-stage, and disjoint two-stage approach/type matrix. Hybrid, HOC interactions, multiple or nested HOCs, groups, weights, feedback, PLSc, and permutation remain excluded.",
   "smartpls.gsca": "Bootstrap inference is not part of the GSCA point-estimate workflow.",
   "smartpls.logistic_regression": "The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected variants are not included.",
   "smartpls.nca": "The workflow analyzes one observed condition/outcome pair and should not be interpreted as evidence of sufficiency.",

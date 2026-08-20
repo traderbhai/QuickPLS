@@ -600,14 +600,15 @@
       "quickpls_scope": "Bounded direct, total-indirect, and total-effect decomposition over directed paths in a supported recursive PLS model.",
       "quickpls_capability_ids": [
         "qpls3.pls.mediation",
-        "qpls3.pls.general_sem_multiple_mediation_bootstrap"
+        "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+        "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap"
       ],
       "implementation_evidence": [],
       "dependencies": [
         "smartpls.pls_algorithm",
         "smartpls.pls_bootstrapping"
       ],
-      "remaining_gap": "Create current method-scoped release evidence; causal identification, counterfactual mediation, moderated mediation, and cyclic paths remain excluded."
+      "remaining_gap": "Create independent qualification and packaged-release evidence for the bounded two-way moderated-mediation cell; causal identification, broader counterfactual mediation, and cyclic paths remain excluded."
     },
     {
       "id": "smartpls.nonlinear_relationships",
@@ -638,15 +639,17 @@
       "priority": "P0",
       "target_release": "current",
       "competitor_scope": true,
-      "quickpls_scope": "One bounded reflective-reflective disjoint two-stage higher-order construct with at least two measured lower-order components and one measured outcome.",
+      "quickpls_scope": "The historical Standard cell remains one reflective-reflective disjoint two-stage point HOC. General SEM adds one non-nested second-order HOC across the exact repeated, extended-repeated, embedded, and disjoint approach/HCM matrix with point and full-model case-bootstrap cells.",
       "quickpls_capability_ids": [
-        "qpls3.pls.higher_order_two_stage"
+        "qpls3.pls.higher_order_two_stage",
+        "qpls3.pls.general_sem_higher_order_point",
+        "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap"
       ],
       "implementation_evidence": [],
       "dependencies": [
         "smartpls.pls_algorithm"
       ],
-      "remaining_gap": "Refresh current-cohort source and packaged receipts after the coordinated binary is frozen; repeated-indicator, hybrid, formative, nested, multiple-HOC, incoming-HOC-path, and HOC resampling workflows remain excluded."
+      "remaining_gap": "Hybrid, nested or multiple HOCs, HOC interactions, feedback, groups, case weights, PLSc, matrix input, BCa, studentized inference, and permutation remain excluded."
     },
     {
       "id": "smartpls.endogeneity_gaussian_copulas",

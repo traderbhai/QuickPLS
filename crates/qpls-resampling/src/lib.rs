@@ -4178,6 +4178,19 @@ fn resample_model_dataset(
     resample_dataset_columns(dataset, &indicator_names, indices, is_cancelled)
 }
 
+/// Creates one raw indexed case-resample over an exact compiled source-column
+/// inventory. The caller owns the scientific target contract; this helper
+/// only performs deterministic Arrow row selection and preserves the bound
+/// dataset identity/fingerprint used by validated internal refits.
+pub fn resample_dataset_columns_v1(
+    dataset: &Dataset,
+    column_names: &[String],
+    indices: &[usize],
+    is_cancelled: impl Fn() -> bool + Sync,
+) -> Result<Dataset, EstimationError> {
+    resample_dataset_columns(dataset, column_names, indices, &is_cancelled)
+}
+
 fn resample_dataset_columns(
     dataset: &Dataset,
     column_names: &[String],

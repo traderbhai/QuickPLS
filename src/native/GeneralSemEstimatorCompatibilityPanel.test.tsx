@@ -81,7 +81,7 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
     expect(html).toContain('aria-atomic="true"');
     expect(html).toContain("PLS-SEM General v3: Experimental");
     expect(html).toContain("CB-SEM General v3: Blocked");
-    expect(html).toContain("PLS-SEM can compile this exact request in Experimental Labs.");
+    expect(html).toContain("PLS-SEM can compile this exact Registry-governed request.");
     expect(html).toContain("The compiler binds the proven PLS scoring plan to stable relation-path identities.");
     expect(html).toContain("Experimental Labs.</strong> This request passes the exact compiler-qualification cells listed above.");
     expect(html).toContain("Selecting it records an estimator preference only; it does not start native execution.");
@@ -130,7 +130,7 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
     />);
 
     expect(html).toContain("PLS-SEM General v3: Experimental");
-    expect(html).toContain("General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight.");
+    expect(html).toContain("General recursive PLS percentile case-bootstrap inference passes the bounded exact-cell compiler preflight.");
     expect(html).toContain("qpls3.pls.mediation (pls_mediation_v1)");
     expect(html).toContain("qpls3.pls.general_sem_multiple_mediation_bootstrap (general_sem_pls_full_model_case_bootstrap_v1)");
     expect(html).toContain("Runtime inference must carry a matching complete-model re-estimation receipt before publication.");
