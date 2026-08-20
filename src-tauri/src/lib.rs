@@ -38,7 +38,10 @@ use project_archive_v6_general_sem_bootstrap::{
     invalidate_general_sem_fresh_draft_authority_v1,
 };
 use project_archive_v6_general_sem_preflight::preflight_internal_general_sem_estimators_v1;
-use project_archive_v6_general_sem_revision::revise_internal_general_sem_execution_authority_v1;
+use project_archive_v6_general_sem_revision::{
+    revise_internal_general_sem_execution_authority_v1,
+    revise_internal_general_sem_execution_authority_v2,
+};
 use project_archive_v6_model_mutation::mutate_internal_project_archive_v6_model;
 use project_archive_v6_new_general_sem::create_internal_general_sem_project_archive_v6;
 use project_archive_v6_read::{
@@ -7329,6 +7332,7 @@ pub fn run() {
             create_internal_general_sem_project_archive_v6,
             bootstrap_internal_general_sem_project_archive_v6,
             revise_internal_general_sem_execution_authority_v1,
+            revise_internal_general_sem_execution_authority_v2,
             invalidate_general_sem_fresh_draft_authority_v1,
             preflight_internal_general_sem_estimators_v1,
             start_internal_labs_general_sem_pls_job_v1,

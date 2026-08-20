@@ -2,8 +2,10 @@
 
 use qpls_project::{
     GeneralSemExecutionAuthorityRevisionErrorV1, GeneralSemExecutionAuthorityRevisionReceiptV1,
-    GeneralSemExecutionAuthorityRevisionRequestV1, ProjectArchiveV6SaveCopyError,
+    GeneralSemExecutionAuthorityRevisionReceiptV2, GeneralSemExecutionAuthorityRevisionRequestV1,
+    GeneralSemExecutionAuthorityRevisionRequestV2, ProjectArchiveV6SaveCopyError,
     create_general_sem_execution_authority_revision_v1,
+    create_general_sem_execution_authority_revision_v2,
 };
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -20,6 +22,17 @@ pub(crate) struct GeneralSemExecutionAuthorityRevisionCommandRequestV1 {
     expected_source_archive_sha256: String,
     destination_archive_path: String,
     revision: GeneralSemExecutionAuthorityRevisionRequestV1,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct GeneralSemExecutionAuthorityRevisionCommandRequestV2 {
+    surface: String,
+    experimental_labs_enabled: bool,
+    source_archive_path: String,
+    expected_source_archive_sha256: String,
+    destination_archive_path: String,
+    revision: GeneralSemExecutionAuthorityRevisionRequestV2,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -39,6 +52,14 @@ pub(crate) struct GeneralSemExecutionAuthorityRevisionResultV1 {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct GeneralSemExecutionAuthorityRevisionResultV2 {
+    schema_version: u32,
+    persistence: &'static str,
+    receipt: GeneralSemExecutionAuthorityRevisionReceiptV2,
+}
+
+#[derive(Debug, Serialize)]
 #[serde(
     tag = "status",
     rename_all = "snake_case",
@@ -53,12 +74,41 @@ pub(crate) enum GeneralSemExecutionAuthorityRevisionOutcomeV1 {
     },
 }
 
+#[derive(Debug, Serialize)]
+#[serde(
+    tag = "status",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase"
+)]
+pub(crate) enum GeneralSemExecutionAuthorityRevisionOutcomeV2 {
+    Ok {
+        value: GeneralSemExecutionAuthorityRevisionResultV2,
+    },
+    Blocked {
+        diagnostic: GeneralSemExecutionAuthorityRevisionDiagnosticV1,
+    },
+}
+
 fn blocked(
     suffix: &str,
     message: impl Into<String>,
     corrective_action: impl Into<String>,
 ) -> GeneralSemExecutionAuthorityRevisionOutcomeV1 {
     GeneralSemExecutionAuthorityRevisionOutcomeV1::Blocked {
+        diagnostic: GeneralSemExecutionAuthorityRevisionDiagnosticV1 {
+            code: format!("{DIAGNOSTIC_PREFIX}.{suffix}"),
+            message: message.into(),
+            corrective_action: corrective_action.into(),
+        },
+    }
+}
+
+fn blocked_v2(
+    suffix: &str,
+    message: impl Into<String>,
+    corrective_action: impl Into<String>,
+) -> GeneralSemExecutionAuthorityRevisionOutcomeV2 {
+    GeneralSemExecutionAuthorityRevisionOutcomeV2::Blocked {
         diagnostic: GeneralSemExecutionAuthorityRevisionDiagnosticV1 {
             code: format!("{DIAGNOSTIC_PREFIX}.{suffix}"),
             message: message.into(),
@@ -120,6 +170,17 @@ fn map_revision_error(
             "Preserve the source unchanged and reopen a revision with valid version-1 lineage.",
         ),
     }
+}
+
+fn map_revision_error_v2(
+    error: GeneralSemExecutionAuthorityRevisionErrorV1,
+) -> GeneralSemExecutionAuthorityRevisionOutcomeV2 {
+    let GeneralSemExecutionAuthorityRevisionOutcomeV1::Blocked { diagnostic } =
+        map_revision_error(error)
+    else {
+        unreachable!("revision errors always map to a blocked outcome")
+    };
+    GeneralSemExecutionAuthorityRevisionOutcomeV2::Blocked { diagnostic }
 }
 
 fn map_publication_error(
@@ -240,6 +301,49 @@ fn revise(
     }
 }
 
+fn revise_v2(
+    request: GeneralSemExecutionAuthorityRevisionCommandRequestV2,
+) -> GeneralSemExecutionAuthorityRevisionOutcomeV2 {
+    if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
+        return blocked_v2(
+            "internal_labs_required",
+            "General SEM moderated-mediation path revision is available only through the internal Labs bridge.",
+            "Keep the product route disabled until the supplemental cell and revision-v2 workflow are promoted together.",
+        );
+    }
+    for (field, value) in [
+        ("sourceArchivePath", request.source_archive_path.as_str()),
+        (
+            "destinationArchivePath",
+            request.destination_archive_path.as_str(),
+        ),
+    ] {
+        if value.is_empty() || value.trim() != value {
+            return blocked_v2(
+                "path_invalid",
+                format!("{field} must be nonempty without surrounding whitespace."),
+                "Reinspect the source and choose a new absolute .qpls destination.",
+            );
+        }
+    }
+
+    match create_general_sem_execution_authority_revision_v2(
+        Path::new(&request.source_archive_path),
+        &request.expected_source_archive_sha256,
+        Path::new(&request.destination_archive_path),
+        request.revision,
+    ) {
+        Ok(receipt) => GeneralSemExecutionAuthorityRevisionOutcomeV2::Ok {
+            value: GeneralSemExecutionAuthorityRevisionResultV2 {
+                schema_version: 2,
+                persistence: "persisted_new_revision",
+                receipt,
+            },
+        },
+        Err(error) => map_revision_error_v2(error),
+    }
+}
+
 #[tauri::command]
 pub(crate) async fn revise_internal_general_sem_execution_authority_v1(
     request: GeneralSemExecutionAuthorityRevisionCommandRequestV1,
@@ -256,14 +360,32 @@ pub(crate) async fn revise_internal_general_sem_execution_authority_v1(
     )
 }
 
+/// Internal-only bridge. No product TypeScript route or Registry row admits
+/// this command until the supplemental cell is promoted.
+#[tauri::command]
+pub(crate) async fn revise_internal_general_sem_execution_authority_v2(
+    request: GeneralSemExecutionAuthorityRevisionCommandRequestV2,
+) -> Result<GeneralSemExecutionAuthorityRevisionOutcomeV2, String> {
+    Ok(
+        match tauri::async_runtime::spawn_blocking(move || revise_v2(request)).await {
+            Ok(outcome) => outcome,
+            Err(_) => blocked_v2(
+                "worker_failed",
+                "The General SEM revision-v2 worker stopped before returning an outcome.",
+                "Keep the source unchanged and retry with a new destination filename.",
+            ),
+        },
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use qpls_project::{
         GeneralSemExecutionAuthorityRevisionIdentityV1,
-        GeneralSemExecutionAuthorityRevisionIntentV1, GeneralSemExecutionAuthoritySourcePinV1,
-        GeneralSemRevisionGenerationV1, GeneralSemRevisionHierarchyPolicyV1,
-        GeneralSemRevisionInteractionMethodV1,
+        GeneralSemExecutionAuthorityRevisionIntentV1, GeneralSemExecutionAuthorityRevisionIntentV2,
+        GeneralSemExecutionAuthoritySourcePinV1, GeneralSemRevisionGenerationV1,
+        GeneralSemRevisionHierarchyPolicyV1, GeneralSemRevisionInteractionMethodV1,
     };
     use uuid::Uuid;
 
@@ -307,6 +429,46 @@ mod tests {
         assert!(matches!(
             outcome,
             GeneralSemExecutionAuthorityRevisionOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code.ends_with("internal_labs_required")
+        ));
+    }
+
+    #[test]
+    fn revision_v2_internal_gate_blocks_before_any_path_access() {
+        let outcome = revise_v2(GeneralSemExecutionAuthorityRevisionCommandRequestV2 {
+            surface: "standard".into(),
+            experimental_labs_enabled: false,
+            source_archive_path: "not-a-path".into(),
+            expected_source_archive_sha256: "x".into(),
+            destination_archive_path: "not-a-path".into(),
+            revision: GeneralSemExecutionAuthorityRevisionRequestV2 {
+                source: GeneralSemExecutionAuthoritySourcePinV1 {
+                    project_id: Uuid::from_u128(10),
+                    model_id: "model:source".into(),
+                    model_document_sha256: "a".repeat(64),
+                    model_scientific_sha256: "b".repeat(64),
+                    recipe_id: Uuid::from_u128(11),
+                    recipe_document_sha256: "c".repeat(64),
+                },
+                revision: GeneralSemExecutionAuthorityRevisionIdentityV1 {
+                    project_id: Uuid::from_u128(12),
+                    project_name: "Revision v2".into(),
+                    created_at: chrono::Utc::now(),
+                    model_id: "model:revision-v2".into(),
+                    model_name: "Revision v2".into(),
+                    recipe_id: Uuid::from_u128(13),
+                },
+                intent: GeneralSemExecutionAuthorityRevisionIntentV2::SelectTwoWayModeratedMediationPath {
+                    intent_version: 2,
+                    sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+                    estimand_id: "path:one".into(),
+                    ordered_relation_ids: ["relation:x-m".into(), "relation:m-y".into()],
+                },
+            },
+        });
+        assert!(matches!(
+            outcome,
+            GeneralSemExecutionAuthorityRevisionOutcomeV2::Blocked { diagnostic }
                 if diagnostic.code.ends_with("internal_labs_required")
         ));
     }
