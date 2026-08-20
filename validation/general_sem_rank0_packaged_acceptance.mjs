@@ -417,10 +417,11 @@ async function saveAndActivate(page, python, projectPath) {
 }
 
 async function inferenceSettings(page) {
+  const bootstrap = await page.locator("#nd-general-sem-bootstrap").isChecked();
   return {
-    bootstrap: await page.locator("#nd-general-sem-bootstrap").isChecked(),
-    bootstrapSamples: await page.locator("#nd-general-sem-bootstrap-samples").inputValue(),
-    confidence: await page.locator("#nd-general-sem-confidence").inputValue(),
+    bootstrap,
+    bootstrapSamples: bootstrap ? await page.locator("#nd-general-sem-bootstrap-samples").inputValue() : null,
+    confidence: bootstrap ? await page.locator("#nd-general-sem-confidence").inputValue() : null,
     seed: await page.locator("#nd-general-sem-seed").inputValue(),
     workers: await page.locator("#nd-general-sem-workers").inputValue(),
   };
