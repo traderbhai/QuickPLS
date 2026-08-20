@@ -307,8 +307,8 @@ fn revise_v2(
     if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
         return blocked_v2(
             "internal_labs_required",
-            "General SEM moderated-mediation path revision is available only through the internal Labs bridge.",
-            "Keep the product route disabled until the supplemental cell and revision-v2 workflow are promoted together.",
+            "General SEM moderated-mediation path revision is available only through the opt-in Labs bridge.",
+            "Enable Experimental Labs and retry from the exact Registry-authorized General SEM project authority.",
         );
     }
     for (field, value) in [
@@ -360,8 +360,7 @@ pub(crate) async fn revise_internal_general_sem_execution_authority_v1(
     )
 }
 
-/// Internal-only bridge. No product TypeScript route or Registry row admits
-/// this command until the supplemental cell is promoted.
+/// Labs-only bridge for the exact Registry-authorized revision-v2 product route.
 #[tauri::command]
 pub(crate) async fn revise_internal_general_sem_execution_authority_v2(
     request: GeneralSemExecutionAuthorityRevisionCommandRequestV2,

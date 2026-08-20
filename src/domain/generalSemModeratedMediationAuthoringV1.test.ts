@@ -189,15 +189,35 @@ describe("General SEM moderated-mediation authoring v1", () => {
     );
   });
 
-  it("keeps the supplemental cell out of the product Registry", () => {
+  it("binds the supplemental cell to the exact opt-in Labs Registry authority", () => {
     expect(GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1).toEqual({
       registry_schema_version: 2,
       capability_id: "smartpls.mediation",
       cell_id: "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
       capability_version: "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
     });
-    expect(capabilityRegistryV2.quickPlsCell(
+    const matches = capabilityRegistryV2.quickPlsCell(
       GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1.cell_id,
-    )).toEqual([]);
+    );
+    expect(matches).toHaveLength(1);
+    expect(matches[0]).toMatchObject({
+      row: { capability_id: "smartpls.mediation" },
+      cell: {
+        capability_version: "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+        coverage_state: "partial",
+        evidence_state: "engine_only",
+        surface: "labs",
+      },
+    });
+    expect(capabilityRegistryV2.availability(
+      GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1.capability_id,
+      GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1.cell_id,
+      false,
+    ).selectable).toBe(false);
+    expect(capabilityRegistryV2.availability(
+      GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1.capability_id,
+      GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1.cell_id,
+      true,
+    ).selectable).toBe(true);
   });
 });

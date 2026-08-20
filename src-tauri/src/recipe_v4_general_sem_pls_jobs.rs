@@ -16,7 +16,6 @@ use qpls_core::{
     CapabilityRegistryV2, GeneralSemInferenceV1, MissingDataPolicyV4, ObservedScaleV4,
     SemCapabilityDecisionStatusV1, SemDataBindingV4, SemModelV4, SemVariableV4,
     compile_general_sem_pls_recipe_v1,
-    compile_general_sem_pls_recipe_with_internal_capability_admission_v1,
     pls_general_recursive_effects_capability_cell_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1,
     preflight_general_sem_pls_v1, sha256_serialized,
@@ -641,14 +640,7 @@ fn validate_exact_capability_and_data(
     })?;
     let moderated_mediation_cell =
         pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
-    let exact_internal_moderated_mediation_admission = request.capability_cell
-        == moderated_mediation_cell
-        && decision.diagnostics().len() == 1
-        && decision.diagnostics()[0].code()
-            == "sem.capability.pls.two_way_moderated_mediation_supplemental_capability_not_admitted";
-    if decision.status() == SemCapabilityDecisionStatusV1::Blocked
-        && !exact_internal_moderated_mediation_admission
-    {
+    if decision.status() == SemCapabilityDecisionStatusV1::Blocked {
         let issues = decision
             .diagnostics()
             .iter()
@@ -671,24 +663,16 @@ fn validate_exact_capability_and_data(
     }
 
     validate_dataset_predicate(&resolved.dataset, &resolved.model)?;
-    let artifact = if exact_internal_moderated_mediation_admission {
-        compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
-            &resolved.recipe,
-            Some(&resolved.model),
-            moderated_mediation_cell.clone(),
-        )
-    } else {
-        compile_general_sem_pls_recipe_v1(&resolved.recipe, Some(&resolved.model))
-    }
-    .map_err(|error| {
-        failure(
-            InternalLabsGeneralSemPlsFailureStageV1::Compilation,
-            "recipeId",
-            "general_sem_pls.compilation_failed",
-            format!("The resident General SEM recipe could not compile: {error}"),
-            "Correct the resident model/config and create a new General SEM project archive.",
-        )
-    })?;
+    let artifact = compile_general_sem_pls_recipe_v1(&resolved.recipe, Some(&resolved.model))
+        .map_err(|error| {
+            failure(
+                InternalLabsGeneralSemPlsFailureStageV1::Compilation,
+                "recipeId",
+                "general_sem_pls.compilation_failed",
+                format!("The resident General SEM recipe could not compile: {error}"),
+                "Correct the resident model/config and create a new General SEM project archive.",
+            )
+        })?;
     let has_interactions = !artifact.plan().two_way_interactions().is_empty();
     let has_moderated_mediation = artifact
         .plan()
@@ -737,46 +721,43 @@ fn validate_exact_capability_and_data(
             "Use the exact General SEM mediation point/bootstrap cell or simultaneous two-way moderation point/supplemental-bootstrap Labs cell selected by preflight.",
         ));
     }
-    if has_moderated_mediation {
-        if artifact.supplemental_capability_admission() != Some(&moderated_mediation_cell)
-            || request.capability_cell != moderated_mediation_cell
-        {
-            return Err(failure(
-                InternalLabsGeneralSemPlsFailureStageV1::Capability,
-                "capabilityCell",
-                "general_sem_pls.moderated_mediation_internal_admission_mismatch",
-                "The bounded combined bootstrap lacks its exact explicit internal supplemental-cell admission.",
-                "Keep the Registry and product UI unchanged; supply the exact internal compiled supplemental authority only through this archive-bound job.",
-            ));
-        }
-    } else {
-        let registry = CapabilityRegistryV2::embedded().map_err(|error| {
-            failure(
-                InternalLabsGeneralSemPlsFailureStageV1::Capability,
-                "capabilityCell",
-                "general_sem_pls.capability_registry_invalid",
-                format!("Capability Registry V2 is invalid: {error}"),
-                "Keep the archive unchanged and repair the embedded registry before execution.",
-            )
-        })?;
-        let matching_cells = registry
-            .option_cells()
-            .filter(|cell| {
-                cell.capability_id == expected_cell.capability_id
-                    && cell.cell_id == expected_cell.cell_id
-                    && cell.capability_version == expected_cell.capability_version
-            })
-            .collect::<Vec<_>>();
-        if !matches!(matching_cells.as_slice(), [cell] if cell.labs_available() || cell.standard_available())
-        {
-            return Err(failure(
-                InternalLabsGeneralSemPlsFailureStageV1::Capability,
-                "capabilityCell",
-                "general_sem_pls.capability_unavailable",
-                "The exact General SEM option cell is not uniquely available in Labs or Standard.",
-                "Repair Capability Registry V2 before running this recipe.",
-            ));
-        }
+    if has_moderated_mediation
+        && artifact.supplemental_capability_admission() != Some(&moderated_mediation_cell)
+    {
+        return Err(failure(
+            InternalLabsGeneralSemPlsFailureStageV1::Capability,
+            "capabilityCell",
+            "general_sem_pls.moderated_mediation_registry_admission_mismatch",
+            "The bounded combined bootstrap lacks its exact Registry-derived supplemental-cell admission.",
+            "Keep the archive unchanged and repair the exact Labs Registry cell before retrying.",
+        ));
+    }
+    let registry = CapabilityRegistryV2::embedded().map_err(|error| {
+        failure(
+            InternalLabsGeneralSemPlsFailureStageV1::Capability,
+            "capabilityCell",
+            "general_sem_pls.capability_registry_invalid",
+            format!("Capability Registry V2 is invalid: {error}"),
+            "Keep the archive unchanged and repair the embedded registry before execution.",
+        )
+    })?;
+    let matching_cells = registry
+        .option_cells()
+        .filter(|cell| {
+            cell.capability_id == expected_cell.capability_id
+                && cell.cell_id == expected_cell.cell_id
+                && cell.capability_version == expected_cell.capability_version
+        })
+        .collect::<Vec<_>>();
+    if !matches!(matching_cells.as_slice(), [cell] if cell.labs_available() || cell.standard_available())
+    {
+        return Err(failure(
+            InternalLabsGeneralSemPlsFailureStageV1::Capability,
+            "capabilityCell",
+            "general_sem_pls.capability_unavailable",
+            "The exact General SEM option cell is not uniquely available in Labs or Standard.",
+            "Repair Capability Registry V2 before running this recipe.",
+        ));
     }
 
     let found = artifact.plan().topology().specific_directed_paths().len();
@@ -2660,7 +2641,7 @@ mod tests {
     }
 
     #[test]
-    fn moderated_mediation_native_admission_requires_the_exact_internal_supplemental_cell() {
+    fn moderated_mediation_native_admission_requires_the_exact_registry_supplemental_cell() {
         let published = published_fixture_from(
             moderated_mediation_fixture(true),
             "general-sem-moderated-mediation-admission.qpls",
@@ -2682,7 +2663,7 @@ mod tests {
             general_sem_multiple_moderation_bootstrap_capability_cell_v1();
         let failure =
             validate_exact_capability_and_data(&gamma_only_fallback, &resolved).unwrap_err();
-        assert_eq!(failure.code, "general_sem_pls.preflight_blocked");
+        assert_eq!(failure.code, "general_sem_pls.capability_cell_mismatch");
     }
 
     #[test]

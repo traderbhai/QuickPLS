@@ -465,6 +465,9 @@ describe("General SEM native workspace accessibility", () => {
       interactionPlotPointCount: 15,
       bootstrapResamplesRequested: null,
       bootstrapResamplesUsable: null,
+      conditionalIndirectCount: 0,
+      moderatedMediationIndexCount: 0,
+      combinedModeratedMediation: false,
     });
     const inferred = structuredClone(canonical) as unknown as CanonicalResultDocumentV2;
     inferred.general_sem_results!.interaction_effects![0]!.scientific_rescaled_gamma = {
@@ -489,6 +492,7 @@ describe("General SEM native workspace accessibility", () => {
       gammaInferenceCount: 2,
       bootstrapResamplesRequested: 500,
       bootstrapResamplesUsable: 492,
+      combinedModeratedMediation: false,
     });
     expect(generalSemCanonicalModerationInventoryV1(null)).toBeNull();
     expect(selectGeneralSemDisplayedDocumentV1(canonical, null, false, true)).toBe(canonical);

@@ -600,14 +600,15 @@
       "quickpls_scope": "Bounded direct, total-indirect, and total-effect decomposition over directed paths in a supported recursive PLS model.",
       "quickpls_capability_ids": [
         "qpls3.pls.mediation",
-        "qpls3.pls.general_sem_multiple_mediation_bootstrap"
+        "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+        "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap"
       ],
       "implementation_evidence": [],
       "dependencies": [
         "smartpls.pls_algorithm",
         "smartpls.pls_bootstrapping"
       ],
-      "remaining_gap": "Create current method-scoped release evidence; causal identification, counterfactual mediation, moderated mediation, and cyclic paths remain excluded."
+      "remaining_gap": "Create independent qualification and packaged-release evidence for the bounded two-way moderated-mediation cell; causal identification, broader counterfactual mediation, and cyclic paths remain excluded."
     },
     {
       "id": "smartpls.nonlinear_relationships",

@@ -19,7 +19,6 @@ use qpls_core::{
     SemDerivedTermV4, SemModelV4, SemParameterTargetV4, SemParameterV4, SemRelationV4,
     SemVariableV4, StructuralRelationRoleV4, capability_cell_reference_identity_v2,
     compile_general_sem_pls_recipe_v1,
-    compile_general_sem_pls_recipe_with_internal_capability_admission_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1, sha256_serialized,
     specific_directed_path_identity_v1,
 };
@@ -318,8 +317,8 @@ pub fn create_general_sem_execution_authority_revision_v1(
 
 /// Forks the exact resident model and RecipeV4 authority, selects one already-
 /// authored two-relation SpecificPath, and publishes a new schema-6 archive.
-/// The supplemental capability remains an explicit internal admission: this
-/// function does not consult or mutate Registry V2.
+/// Compilation derives the supplemental cell from immutable Registry V2; the
+/// revision transaction never mutates Registry state or the source archive.
 pub fn create_general_sem_execution_authority_revision_v2(
     source: &Path,
     expected_source_archive_sha256: &str,
@@ -603,11 +602,7 @@ fn create_general_sem_execution_authority_revision_windows_v2(
 
     let supplemental_capability_cell =
         pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
-    let compiled = compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
-        &revised_recipe,
-        Some(&revised_model),
-        supplemental_capability_cell.clone(),
-    )?;
+    let compiled = compile_general_sem_pls_recipe_v1(&revised_recipe, Some(&revised_model))?;
     let compiled_target = compiled
         .plan()
         .two_way_moderated_mediation_target()
@@ -979,7 +974,7 @@ fn validate_compiled_revision_v2(
         || target.ordered_relation_ids() != ordered_relation_ids
     {
         return Err(GeneralSemExecutionAuthorityRevisionErrorV1::UnsupportedIntent(
-            "compiled moderated-mediation target does not match the exact internal admission and selected SpecificPath"
+            "compiled moderated-mediation target does not match the exact Registry admission and selected SpecificPath"
                 .into(),
         ));
     }
@@ -1061,11 +1056,7 @@ fn validate_source_authority(
         let lineage: GeneralSemExecutionAuthorityRevisionLineageV2 =
             serde_json::from_value(value.clone())?;
         let supplemental = pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
-        let compiled = compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
-            recipe,
-            Some(model),
-            supplemental.clone(),
-        )?;
+        let compiled = compile_general_sem_pls_recipe_v1(recipe, Some(model))?;
         let target = compiled
             .plan()
             .two_way_moderated_mediation_target()
@@ -2307,12 +2298,8 @@ mod tests {
                         && scientific_sha256 == &receipt.resident_model_scientific_sha256
                 ));
                 let recompiled =
-                    compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
-                        revised_recipe,
-                        Some(revised_model),
-                        receipt.supplemental_capability_cell.clone(),
-                    )
-                    .unwrap();
+                    compile_general_sem_pls_recipe_v1(revised_recipe, Some(revised_model))
+                        .unwrap();
                 assert_eq!(recompiled.compiler_version(), receipt.compiler_version);
                 assert_eq!(
                     recompiled.capability_cell(),

@@ -41,7 +41,6 @@ use qpls_core::{
     RecipeV4CompilerTarget, SemDerivedTermV4, SemEndpointV4, SemModelV4, SemModelV4ValidationError,
     SemParameterTargetV4, SemVariableV4, compile_analysis_recipe_v4,
     compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1, compile_general_sem_pls_recipe_v1,
-    compile_general_sem_pls_recipe_with_internal_capability_admission_v1,
     confirm_legacy_recipe_estimand_v4, convert_legacy_basic_model_v4, sha256_serialized,
 };
 use qpls_data::DatasetDescriptor;
@@ -1194,16 +1193,7 @@ fn validate_general_sem_result_authority_v1(
         .inference_receipt
         .as_ref()
         .is_some_and(|receipt| receipt.capability_cell == moderated_mediation_cell);
-    let artifact = if is_moderated_mediation {
-        compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
-            recipe,
-            Some(model),
-            moderated_mediation_cell,
-        )
-    } else {
-        compile_general_sem_pls_recipe_v1(recipe, Some(model))
-    }
-    .map_err(|error| {
+    let artifact = compile_general_sem_pls_recipe_v1(recipe, Some(model)).map_err(|error| {
         invalid_general_sem_authority(format!(
             "resident General SEM Recipe-v4 recompilation failed: {error}"
         ))
@@ -2069,7 +2059,7 @@ fn validate_general_sem_pls_moderated_mediation_document_v1(
         || !receipt.complete_model_reestimated_per_replicate
     {
         return Err(invalid_general_sem_authority(
-            "the combined receipt differs from its exact internal admission, three-cell dependencies, or deterministic recompilation",
+            "the combined receipt differs from its exact Registry admission, three-cell dependencies, or deterministic recompilation",
         ));
     }
     let mut expected_document_cells = vec![base.clone(), point.clone(), supplemental.clone()];

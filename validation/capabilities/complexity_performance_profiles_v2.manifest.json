@@ -7,11 +7,11 @@
     "path": "validation/capabilities/capability_registry_v2.json",
     "registry_schema_version": 2,
     "registry_version": "2.4.0",
-    "registry_sha256": "9f3f73d526e4e58b67015aa8e277a698ff3369bc3ec3303250dcc84ecd7ed015",
+    "registry_sha256": "3c7c8974e8e8ef62a7a6d5f20b5a450f57cec46159a29a8f72588783079cc118",
     "selection": "active_option_cells",
     "expected_active_row_count": 43,
-    "expected_active_option_cell_count": 49,
-    "derived_reference_set_sha256": "67ce375151239f90447720bcfcca582bb1b6b437a1e1b918c959175b2db3955a"
+    "expected_active_option_cell_count": 50,
+    "derived_reference_set_sha256": "989e2bb276d509dfed85549292c642b9169bf8a4674150fd96484cdb76bab664"
   },
   "hardware_profiles": [
     {

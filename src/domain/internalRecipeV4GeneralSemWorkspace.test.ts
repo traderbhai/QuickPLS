@@ -36,7 +36,11 @@ import {
   type GeneralSemPlsJobSnapshotV1,
   type GeneralSemProjectBootstrapReceiptV1,
 } from "./internalRecipeV4GeneralSemWorkspace";
-import { preflightGeneralSemPlsV1 } from "./generalSemCapabilityPreflightV1";
+import {
+  GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1,
+  preflightGeneralSemPlsV1,
+  specificDirectedPathIdentityV1,
+} from "./generalSemCapabilityPreflightV1";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "./internalProjectArchiveV6Read";
 import { convertLegacyBasicModelV4, type SemModelV4 } from "./semModelV4";
 import { sha256HexBytesV1, sha256HexUtf8V1 } from "./sha256V1";
@@ -877,6 +881,53 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       ).capabilityCell).toStrictEqual(GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1);
     },
   );
+
+  it("routes the exact selected two-relation moderated-mediation path through its Registry Labs cell", () => {
+    const model = convertLegacyBasicModelV4({
+      id: "model:general-sem",
+      name: "First-stage moderated mediation",
+      constructs: ["x", "m", "y", "w"].map((id) => ({
+        id,
+        name: id.toUpperCase(),
+        short_name: id.toUpperCase(),
+        mode: "reflective" as const,
+        indicators: [`${id}1`, `${id}2`],
+      })),
+      paths: [
+        { source: "x", target: "m" },
+        { source: "w", target: "m" },
+        { source: "m", target: "y" },
+      ],
+    }, "pls_composite");
+    addTwoWayInteraction(model, "interaction:x:w:m", "construct:x", "construct:w", "construct:m");
+    const first = model.relations.find((relation) => relation.kind === "structural"
+      && relation.source === "construct:x" && relation.target === "construct:m");
+    const second = model.relations.find((relation) => relation.kind === "structural"
+      && relation.source === "construct:m" && relation.target === "construct:y");
+    if (!first || !second) throw new Error("Expected exact X to M to Y path");
+    const orderedRelationIds = [first.id, second.id] as const;
+    const config = generalSemConfigFromEngineV1({
+      ...defaultGeneralSemPlsEngineOptionsV1(),
+      inference: "percentile_case_bootstrap",
+    });
+    config.requested_effect_estimands.push({
+      kind: "specific_path",
+      estimand_id: specificDirectedPathIdentityV1(orderedRelationIds),
+      ordered_relation_ids: [...orderedRelationIds],
+    });
+    const decision = preflightGeneralSemPlsV1(model, config);
+    const selected = selectGeneralSemPlsExecutionCapabilityV1({ model, config, decision });
+
+    expect(decision.status).toBe("experimental");
+    expect(selected).toMatchObject({
+      kind: "two_way_moderated_mediation_bootstrap",
+      capabilityCell: GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1,
+      interactionIds: ["interaction:x:w:m"],
+      focalRelationIds: [first.id],
+    });
+    expect(generalSemJobRequestFromReceiptV1(receipt(), model, config, decision).capabilityCell)
+      .toStrictEqual(GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1);
+  });
 
   it("blocks stale native capability authority before job start without retiring interaction bootstrap", () => {
     const model = multipleModerationModel("same_focal");

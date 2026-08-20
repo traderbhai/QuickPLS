@@ -64,7 +64,7 @@ function fixture() {
 }
 
 describe("NativeGeneralSemModeratedMediationPanel", () => {
-  it("renders the selected stage, locked probes, and exact five targets for internal preview", () => {
+  it("renders the selected stage, locked probes, and exact five targets for the Labs route", () => {
     const { model, config } = fixture();
     const html = renderToStaticMarkup(<NativeGeneralSemModeratedMediationPanel
       connected
@@ -93,5 +93,28 @@ describe("NativeGeneralSemModeratedMediationPanel", () => {
     expect(html).toContain("hidden");
     expect(html).toContain("moderated-mediation-unavailable");
     expect(html).not.toContain("Save path as new model + Recipe revision");
+  });
+
+  it("renders a blocked recovery state without enabling another revision write", () => {
+    const { model, config } = fixture();
+    const html = renderToStaticMarkup(<NativeGeneralSemModeratedMediationPanel
+      connected
+      model={model}
+      config={config}
+      revisionBlocked
+      revisionBlockedReason="Reopen the exact clean source before retrying."
+      revisionStatusMessage="The saved destination was not activated."
+      revisionFailure={{
+        code: "schema6_general_sem_revision_v2.activation_failed_source_restored",
+        message: "QuickPLS restored the source authority.",
+        correctiveAction: "Open the saved revision explicitly when ready.",
+      }}
+      onSaveAsRevision={vi.fn()}
+    />);
+
+    expect(html).toContain("QuickPLS restored the source authority.");
+    expect(html).toContain("The saved destination was not activated.");
+    expect(html).toContain("Reopen the exact clean source before retrying.");
+    expect(html).toContain("disabled");
   });
 });

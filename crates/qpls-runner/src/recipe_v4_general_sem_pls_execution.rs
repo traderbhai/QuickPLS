@@ -2035,7 +2035,7 @@ mod tests {
         LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig, ModelSpec,
         SemDataBindingV4, SemDerivedTermV4, SemParameterTargetV4, SemParameterV4, SemRelationV4,
         SemVariableV4, StructuralPath, StructuralRelationRoleV4, compile_general_sem_pls_recipe_v1,
-        compile_general_sem_pls_recipe_with_internal_capability_admission_v1, compile_pls_plan_v3,
+        compile_pls_plan_v3,
         confirm_legacy_recipe_estimand_v4, convert_legacy_basic_model_v4,
         migrate_analysis_recipe_to_v4_pending,
     };
@@ -2859,7 +2859,7 @@ mod tests {
     }
 
     #[test]
-    fn internal_exact_admission_routes_one_combined_moderated_mediation_bootstrap() {
+    fn registry_exact_admission_routes_one_combined_moderated_mediation_bootstrap() {
         let (dataset, mut recipe, mut model, _) = moderation_execution_fixture(true);
         model.derived_terms.retain(|term| {
             !matches!(
@@ -2940,20 +2940,13 @@ mod tests {
             ..GeneralSemConfigV1::default()
         });
         recipe.ensure_valid().unwrap();
-        assert!(matches!(
-            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
-            Err(
-                GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationSupplementalCapabilityNotAdmitted
-            )
-        ));
         let supplemental =
             qpls_core::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
-        let artifact = compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
-            &recipe,
-            Some(&model),
-            supplemental.clone(),
-        )
-        .unwrap();
+        let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+        assert_eq!(
+            artifact.supplemental_capability_admission(),
+            Some(&supplemental)
+        );
         let result = run_compiled_general_sem_pls_recipe_v1(
             &dataset,
             &recipe,

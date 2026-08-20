@@ -145,7 +145,7 @@ pub enum GeneralSemPlsRecipeCompilationErrorV1 {
     )]
     ModeratedMediationNotYetExecutable,
     #[error(
-        "the exact two-way moderated-mediation supplemental capability cell was not explicitly admitted"
+        "the exact two-way moderated-mediation supplemental capability cell was not authorized by Registry V2 or exact replay admission"
     )]
     ModeratedMediationSupplementalCapabilityNotAdmitted,
     #[error("a supplemental capability admission is not valid for this General SEM PLS plan")]
@@ -217,10 +217,9 @@ pub fn compile_general_sem_pls_recipe_v1(
     compile_general_sem_pls_recipe_with_admission_v1(recipe, resolved_model, None)
 }
 
-/// Internal runtime/test admission path for an exact supplemental cell that is
-/// intentionally not present in Registry V2 yet. The supplied identity is
-/// embedded into the compiled artifact and validated on every replay; no
-/// Registry, gamma-only, or inferred fallback can authorize this plan.
+/// Exact admission override retained for deterministic replay and focused
+/// contract tests. Production compilation derives the same supplemental cell
+/// only from the embedded Registry V2 Labs/Standard authority.
 pub fn compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
     recipe: &AnalysisRecipeV4,
     resolved_model: Option<&SemModelV4>,
@@ -246,6 +245,11 @@ fn compile_general_sem_pls_recipe_with_admission_v1(
     let model = resolved_model_from_recipe(recipe, resolved_model)?;
     let plan = compile_pls_plan_v3(model, config)?;
     ensure_interaction_compilation_scope(config, &plan)?;
+    let supplemental_capability_admission = if supplemental_capability_admission.is_none() {
+        registry_authorized_moderated_mediation_cell_v1(&plan)?
+    } else {
+        supplemental_capability_admission
+    };
     ensure_capabilities_available(config, &plan, supplemental_capability_admission.as_ref())?;
 
     let target = RecipeV4CompilerTarget::PlsPlanV2;
@@ -530,6 +534,7 @@ fn ensure_capabilities_available(
                     GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationSupplementalCapabilityNotAdmitted,
                 );
             }
+            expected_cells.push(target.bootstrap_capability_cell().clone());
         } else {
             if supplemental_capability_admission.is_some() {
                 return Err(
@@ -562,6 +567,28 @@ fn ensure_capabilities_available(
         }
     }
     Ok(())
+}
+
+fn registry_authorized_moderated_mediation_cell_v1(
+    plan: &CompiledPlsPlanV3,
+) -> Result<Option<CapabilityCellReferenceV2>, GeneralSemPlsRecipeCompilationErrorV1> {
+    let Some(target) = plan.two_way_moderated_mediation_target() else {
+        return Ok(None);
+    };
+    let expected = target.bootstrap_capability_cell();
+    let registry = CapabilityRegistryV2::embedded().map_err(|error| {
+        GeneralSemPlsRecipeCompilationErrorV1::CapabilityRegistry(error.to_string())
+    })?;
+    let matches = registry
+        .option_cells()
+        .filter(|cell| {
+            cell.capability_id == expected.capability_id
+                && cell.cell_id == expected.cell_id
+                && cell.capability_version == expected.capability_version
+                && (cell.standard_available() || cell.labs_available())
+        })
+        .count();
+    Ok((matches == 1).then(|| expected.clone()))
 }
 
 fn capability_cell_for_plan(plan: &CompiledPlsPlanV3) -> CapabilityCellReferenceV2 {
@@ -1091,7 +1118,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_moderated_mediation_recipe_requires_exact_internal_supplemental_admission() {
+    fn exact_moderated_mediation_recipe_derives_exact_registry_supplemental_admission() {
         let (mut recipe, mut model) = recipe_and_model();
         add_compiler_interaction(
             &mut model,
@@ -1132,11 +1159,13 @@ mod tests {
         let plan =
             compile_pls_plan_v3(&model, recipe.general_sem_config.as_ref().unwrap()).unwrap();
         assert!(plan.two_way_moderated_mediation_target().is_some());
+        let registry_artifact =
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+        let exact_cell =
+            crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
         assert_eq!(
-            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
-            Err(
-                GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationSupplementalCapabilityNotAdmitted
-            )
+            registry_artifact.supplemental_capability_admission(),
+            Some(&exact_cell)
         );
         assert_eq!(
             compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
@@ -1148,8 +1177,6 @@ mod tests {
                 GeneralSemPlsRecipeCompilationErrorV1::ModeratedMediationSupplementalCapabilityNotAdmitted
             )
         );
-        let exact_cell =
-            crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
         let artifact = compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
             &recipe,
             Some(&model),

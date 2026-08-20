@@ -11,6 +11,14 @@ export interface NativeGeneralSemModeratedMediationPanelProps {
   readonly model: SemModelV4;
   readonly config: GeneralSemConfigV1;
   readonly revisionPending?: boolean;
+  readonly revisionBlocked?: boolean;
+  readonly revisionBlockedReason?: string | undefined;
+  readonly revisionStatusMessage?: string | null;
+  readonly revisionFailure?: {
+    readonly code: string;
+    readonly message: string;
+    readonly correctiveAction: string;
+  } | null;
   readonly onSaveAsRevision?: (
     selection: GeneralSemModeratedMediationSelectionReadyV1,
   ) => void | Promise<void>;
@@ -25,6 +33,10 @@ export function NativeGeneralSemModeratedMediationPanel({
   model,
   config,
   revisionPending = false,
+  revisionBlocked = false,
+  revisionBlockedReason,
+  revisionStatusMessage = null,
+  revisionFailure = null,
   onSaveAsRevision,
 }: NativeGeneralSemModeratedMediationPanelProps) {
   const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
@@ -50,7 +62,7 @@ export function NativeGeneralSemModeratedMediationPanel({
       <select
         id="nd-general-sem-moderated-mediation-path"
         value={selection.selectedPathId ?? ""}
-        disabled={revisionPending}
+        disabled={revisionPending || revisionBlocked}
         onChange={(event) => setSelectedPathId(event.target.value || null)}
       >
         <option value="">Select one path…</option>
@@ -85,19 +97,26 @@ export function NativeGeneralSemModeratedMediationPanel({
       </p>)}
     </div> : null}
 
+    {revisionFailure ? <div className="nd-form-error" role="alert">
+      <p><strong>{revisionFailure.message}</strong> {revisionFailure.correctiveAction} <code>{revisionFailure.code}</code></p>
+    </div> : null}
+
     <button
       type="button"
       className="primary"
-      disabled={selection.status !== "ready" || revisionPending || !onSaveAsRevision}
+      disabled={selection.status !== "ready" || revisionPending || revisionBlocked || !onSaveAsRevision}
+      title={revisionBlocked ? revisionBlockedReason : undefined}
       onClick={() => {
         if (selection.status === "ready") void onSaveAsRevision?.(selection);
       }}
     >
       {revisionPending ? "Saving revision…" : "Save path as new model + Recipe revision…"}
     </button>
+    {revisionBlocked && revisionBlockedReason ? <p className="nd-dialog-note" role="note">{revisionBlockedReason}</p> : null}
     {selection.status === "ready" ? <p role="status">
       Ready to save {pathLabel(selection.selectedPath)} as a new source-preserving revision. The current archive remains unchanged.
     </p> : null}
+    {revisionStatusMessage ? <p role="status" aria-live="polite" aria-atomic="true">{revisionStatusMessage}</p> : null}
   </section>;
 }
 

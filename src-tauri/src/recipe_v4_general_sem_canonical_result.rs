@@ -22,7 +22,6 @@ use qpls_core::{
     GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1,
     RecipeV4CompilerTarget, SemModelV4, SemParameterV4, StructuralRelationRoleV4,
     canonical_general_sem_effect_identities_v1, compile_general_sem_pls_recipe_v1,
-    compile_general_sem_pls_recipe_with_internal_capability_admission_v1,
     general_sem_effect_identity_set_sha256_v1, pls_general_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_point_capability_cell_v1,
@@ -671,16 +670,7 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
     let moderated_mediation_bootstrap = result.moderated_mediation_bootstrap_inference();
     let moderation_artifact = interaction_point
         .map(|interactions| {
-            let artifact = if moderated_mediation_bootstrap.is_some() {
-                compile_general_sem_pls_recipe_with_internal_capability_admission_v1(
-                    recipe,
-                    Some(model),
-                    pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1(),
-                )
-            } else {
-                compile_general_sem_pls_recipe_v1(recipe, Some(model))
-            }
-            .map_err(|error| {
+            let artifact = compile_general_sem_pls_recipe_v1(recipe, Some(model)).map_err(|error| {
                 vec![format!("General SEM moderation recompilation failed: {error}")]
             })?;
             let moderation_cell = general_sem_multiple_moderation_point_capability_cell_v1();
@@ -740,7 +730,7 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
                     )
                 {
                     return Err(vec![
-                        "General SEM moderated-mediation result lacks its exact internal compiler/config authority"
+                        "General SEM moderated-mediation result lacks its exact Registry-derived compiler/config authority"
                             .into(),
                     ]);
                 }

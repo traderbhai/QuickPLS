@@ -1,4 +1,5 @@
 use crate::{
+    CapabilityRegistryV2,
     CompiledCbsemExecutionDispositionV3, CompiledCbsemStructuralFormV3,
     CompiledPlsInteractionV3Error, CompiledPlsPlanV3, CompiledPlsPlanV3Error,
     CompiledPlsTwoWayModeratedMediationTargetErrorV1, GeneralSemBootstrapIntervalV1,
@@ -24,8 +25,12 @@ pub fn preflight_general_sem_pls_v1(
         .derived_terms
         .iter()
         .any(|term| matches!(term, SemDerivedTermV4::InteractionV2 { .. }));
-    let requests_moderated_mediation =
-        has_interactions && !config.requested_effect_estimands.is_empty();
+    let requests_moderated_mediation = has_interactions
+        && matches!(
+            config.inference,
+            GeneralSemInferenceV1::CaseBootstrap { .. }
+        )
+        && !config.requested_effect_estimands.is_empty();
     let capability_cells = pls_cells(has_interactions, config)?;
     let mut evidence = vec![SemCapabilityEvidenceV1::new(
         "compiler:recipe_v4_to_compiled_pls_plan_v3_v1",
@@ -58,8 +63,8 @@ pub fn preflight_general_sem_pls_v1(
     ) {
         if requests_moderated_mediation {
             evidence.push(SemCapabilityEvidenceV1::new(
-                "capability_contract:smartpls.mediation:qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap:general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
-                "The supplemental conditional-indirect/index capability identity is frozen, but it is not advertised in Capability Registry V2 until its combined bootstrap executor is connected.",
+                "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap:general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+                "Capability Registry V2 exposes the exact one-path, one-interaction, five-target full-model case-bootstrap combination in Experimental Labs.",
             )?);
         } else if has_interactions {
             evidence.push(SemCapabilityEvidenceV1::new(
@@ -148,7 +153,11 @@ pub fn preflight_general_sem_pls_v1(
                         "General SEM simultaneous two-way moderation point estimation passes the Experimental Labs compiler preflight."
                     }
                     GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                        "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                        if requests_moderated_mediation {
+                            "General SEM two-way moderated-mediation five-target percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                        } else {
+                            "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                        }
                     }
                 }
             } else {
@@ -171,7 +180,11 @@ pub fn preflight_general_sem_pls_v1(
                     "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
                 }
                 GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                    "The point moderation cell remains the primary artifact authority and the supplemental Labs cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
+                    if requests_moderated_mediation {
+                        "The point moderation cell remains primary while the Registry-authorized conditional-process Labs cell adds scientific gamma, fixed -1/0/+1 conditional indirect effects, and the index of moderated mediation from one shared full-model replicate ledger. Runtime validation remains authoritative before publication."
+                    } else {
+                        "The point moderation cell remains the primary artifact authority and the supplemental Labs cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
+                    }
                 }
             }
         } else {
@@ -417,16 +430,34 @@ fn interaction_scope_diagnostics(
         return Ok(Vec::new());
     }
     let mut diagnostics = Vec::new();
-    if plan.two_way_moderated_mediation_target().is_some() {
-        diagnostics.push(SemCapabilityDiagnosticV1::new(
-            "sem.capability.pls.two_way_moderated_mediation_supplemental_capability_not_admitted",
-            SemCapabilityDiagnosticSeverityV1::Error,
-            None,
-            "The exact combined five-target bootstrap runner is implemented, but its supplemental capability cell is not admitted through the product Registry yet.",
-            vec![
-                "Keep the authored model and selected path unchanged; ordinary execution remains fail-closed until the exact supplemental cell is registered and qualified.".into(),
-            ],
-        )?);
+    if let Some(target) = plan.two_way_moderated_mediation_target() {
+        let registry_authorized = CapabilityRegistryV2::embedded()
+            .ok()
+            .map(|registry| {
+                registry
+                    .option_cells()
+                    .filter(|cell| {
+                        cell.capability_id == target.bootstrap_capability_cell().capability_id
+                            && cell.cell_id == target.bootstrap_capability_cell().cell_id
+                            && cell.capability_version
+                                == target.bootstrap_capability_cell().capability_version
+                            && (cell.labs_available() || cell.standard_available())
+                    })
+                    .count()
+                    == 1
+            })
+            .unwrap_or(false);
+        if !registry_authorized {
+            diagnostics.push(SemCapabilityDiagnosticV1::new(
+                "sem.capability.pls.two_way_moderated_mediation_registry_cell_unavailable",
+                SemCapabilityDiagnosticSeverityV1::Error,
+                None,
+                "The exact combined five-target bootstrap cell is not uniquely available in Capability Registry V2.",
+                vec![
+                    "Keep the authored model and selected path unchanged; restore the exact Labs Registry authority before calculating.".into(),
+                ],
+            )?);
+        }
         return Ok(diagnostics);
     }
     if !config.requested_effect_estimands.is_empty() {
@@ -1135,7 +1166,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_two_way_moderated_mediation_is_compiled_but_explicitly_not_connected() {
+    fn exact_two_way_moderated_mediation_is_registry_authorized_in_labs() {
         let mut model = multiple_mediation_model();
         add_preflight_interaction(
             &mut model,
@@ -1176,7 +1207,7 @@ mod tests {
         let scientific_before = model.scientific_sha256().unwrap();
 
         let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
-        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Experimental);
         assert_eq!(model.scientific_sha256().unwrap(), scientific_before);
         assert!(decision.capability_cells().iter().any(|cell| {
             cell.capability_id() == "smartpls.moderation"
@@ -1188,9 +1219,10 @@ mod tests {
                 && cell.capability_version()
                     == "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1"
         }));
-        assert!(decision.diagnostics().iter().any(|diagnostic| {
-            diagnostic.code()
-                == "sem.capability.pls.two_way_moderated_mediation_supplemental_capability_not_admitted"
+        assert!(decision.evidence().iter().any(|evidence| {
+            evidence.evidence_id().contains(
+                "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
+            )
         }));
 
         config.inference = GeneralSemInferenceV1::None;

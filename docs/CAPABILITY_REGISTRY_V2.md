@@ -98,14 +98,14 @@ Evidence is a separate internal axis:
 
 These labels are governance data, not customer copy.
 
-The authoritative inventory contains 51 option cells: 49 active and two
-legacy. Their baseline coverage counts are 0 full, 38 partial, 11 absent, and
+The authoritative inventory contains 52 option cells: 50 active and two
+legacy. Their baseline coverage counts are 0 full, 39 partial, 11 absent, and
 2 intentionally excluded. The different cell count is expected because the
 sample-size/power, moderation, mediation, and permutation catalogue rows contain
 separately governed option cells. The frozen 45-row counts above remain the conservative
 compatibility projection used by historical reports.
 
-Option-cell evidence is 16 absent, four engine-only, two archive-qualified,
+Option-cell evidence is 16 absent, five engine-only, two archive-qualified,
 zero native-qualified, and 29 release-qualified. Row evidence is 16 absent,
 three engine-only, zero archive-qualified, zero native-qualified, and 26
 release-qualified; the row projection remains conservative when independently
@@ -119,6 +119,16 @@ is `validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest
 the capability-cell contract remains an exact predicate and product-boundary
 reference, not a substitute for source-bound method evidence. Both cells stay
 opt-in Labs until their independent full-PLS and release gates are complete.
+
+The exact two-way moderated-mediation bootstrap cell is also engine-only and
+Labs-only. It admits one selected two-relation `X -> M -> Y` path, one
+first-stage or second-stage two-way interaction, fixed standardized moderator
+probes at `-1/0/+1`, and one shared full-model case-bootstrap ledger for gamma,
+three conditional indirect effects, and the index of moderated mediation. Its
+source-preserving revision-v2 workflow, native job, canonical tables, generic
+XLSX table export, append, and strict schema-6 reopen are connected; its cell
+manifest remains non-promotable until independent numerical, packaged-Windows,
+cross-format export, accessibility, and performance evidence is accepted.
 
 ## Coverage and lifecycle rules
 
