@@ -27,17 +27,21 @@ use super::{
 use chrono::{DateTime, Utc};
 use qpls_core::{
     AnalysisMethod, AnalysisRecipe, AnalysisRecipeModelBindingV4, AnalysisRecipeV4,
-    AnalysisRecipeV4Error, CanonicalGeneralSemBootstrapIntervalV1,
-    CanonicalGeneralSemInferenceTailV1, CbsemBootstrapAlgorithm, CbsemBootstrapInterval,
-    CbsemBootstrapTestTail, CbsemEstimator, CbsemInput, CbsemModelType,
-    CompiledCbsemParameterStatusV2, CompiledRecipePlanV4, GENERAL_SEM_EFFECTS_V1_METHOD_VERSION,
-    GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1, GeneralSemBootstrapIntervalV1,
-    GeneralSemInferenceTailV1, GeneralSemInferenceV1, LegacyBasicModelConversionErrorV4,
-    LegacyBasicModelInterpretationV4, LegacyDisplayCovarianceV4, MethodConfig, ModelSpec,
-    PLS_ALGORITHM_CAPABILITY_ID, PLS_ALGORITHM_CAPABILITY_VERSION, PLS_ALGORITHM_CELL_ID,
-    PLS_NONLINEAR_EFFECTS_CAPABILITY_ID, PLS_NONLINEAR_EFFECTS_CAPABILITY_VERSION,
-    PLS_NONLINEAR_EFFECTS_CELL_ID, RecipeV4CompilerTarget, SemDerivedTermV4, SemEndpointV4,
-    SemModelV4, SemModelV4ValidationError, SemParameterTargetV4, SemVariableV4,
+    AnalysisRecipeV4Error, CBSEM_GENERAL_SEM_ML_CAPABILITY_VERSION_V1,
+    CBSEM_RECURSIVE_SEM_BOOTSTRAP_METHOD_VERSION_V1, CanonicalCbsemEndpointV1,
+    CanonicalCbsemParameterRoleV1, CanonicalCbsemParameterStateV1, CanonicalCbsemParameterTargetV1,
+    CanonicalGeneralSemBootstrapIntervalV1, CanonicalGeneralSemInferenceTailV1,
+    CbsemBootstrapAlgorithm, CbsemBootstrapInterval, CbsemBootstrapTestTail, CbsemEstimator,
+    CbsemInput, CbsemModelType, CompiledCbsemParameterStatusV2, CompiledRecipePlanV4,
+    GENERAL_SEM_EFFECTS_V1_METHOD_VERSION, GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+    GeneralSemBootstrapIntervalV1, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
+    LegacyBasicModelConversionErrorV4, LegacyBasicModelInterpretationV4, LegacyDisplayCovarianceV4,
+    MethodConfig, ModelSpec, PLS_ALGORITHM_CAPABILITY_ID, PLS_ALGORITHM_CAPABILITY_VERSION,
+    PLS_ALGORITHM_CELL_ID, PLS_NONLINEAR_EFFECTS_CAPABILITY_ID,
+    PLS_NONLINEAR_EFFECTS_CAPABILITY_VERSION, PLS_NONLINEAR_EFFECTS_CELL_ID,
+    RecipeV4CompilerTarget, SemDerivedTermV4, SemEndpointV4, SemModelV4, SemModelV4ValidationError,
+    SemParameterTargetV4, SemVariableV4, canonical_cbsem_general_sem_tables_v1,
+    cbsem_general_sem_ml_capability_cell_v1, cbsem_recursive_sem_bootstrap_capability_cell_v1,
     compile_analysis_recipe_v4, compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1,
     compile_general_sem_pls_recipe_v1, confirm_legacy_recipe_estimand_v4,
     convert_legacy_basic_model_v4, sha256_serialized,
@@ -777,7 +781,13 @@ impl ProjectArchiveDocumentV6 {
                             canonical.provenance.dataset_id
                         ))
                     })?;
-                validate_general_sem_result_authority_v1(canonical, recipe, model, dataset)?;
+                if is_exact_recipe_v4_general_sem_cbsem_result(canonical) {
+                    validate_general_sem_cbsem_result_authority_v1(
+                        canonical, recipe, model, dataset,
+                    )?;
+                } else {
+                    validate_general_sem_result_authority_v1(canonical, recipe, model, dataset)?;
+                }
             }
             if is_exact_recipe_v4_cbsem_result(canonical) {
                 let is_score_lm_current = matches!(
@@ -1147,6 +1157,521 @@ impl ProjectArchiveDocumentV6 {
 
 fn invalid_general_sem_authority(message: impl Into<String>) -> ProjectArchiveV6Error {
     ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message.into())
+}
+
+const CBSEM_GENERAL_SEM_POINT_EXECUTION_ADAPTER_VERSION_V1: &str =
+    "compiled_recipe_v4_cbsem_plan_v3_point_execution_v1";
+const CBSEM_GENERAL_SEM_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1: &str =
+    "compiled_recipe_v4_cbsem_plan_v3_recursive_sem_case_bootstrap_execution_v1";
+
+fn is_exact_recipe_v4_general_sem_cbsem_result(document: &CanonicalResultDocumentV2) -> bool {
+    let cell = &document.provenance.capability_cell;
+    cell == &project_capability_cell_v2(&cbsem_general_sem_ml_capability_cell_v1())
+        || cell == &project_capability_cell_v2(&cbsem_recursive_sem_bootstrap_capability_cell_v1())
+}
+
+/// Recompiles the private V3 authority from schema-6 residents and reconciles
+/// every persisted typed identity and deterministic presentation table. This
+/// is deliberately separate from the qualified V2 CB-SEM validator so the
+/// established CFA/CB identities and evidence remain untouched.
+fn validate_general_sem_cbsem_result_authority_v1(
+    document: &CanonicalResultDocumentV2,
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+    dataset: &DatasetDescriptor,
+) -> Result<(), ProjectArchiveV6Error> {
+    let results = document.general_sem_results.as_ref().ok_or_else(|| {
+        invalid_general_sem_authority("CB-SEM General SEM validation requires typed results")
+    })?;
+    if results.inference_receipt.is_some()
+        || !results.specific_indirect_effects.is_empty()
+        || !results.aggregate_effects.is_empty()
+        || !results.joint_stage_structural_coefficients.is_empty()
+        || !results.interaction_effects.is_empty()
+        || !results.conditional_effect_probes.is_empty()
+        || !results.conditional_effects.is_empty()
+        || !results.interaction_plots.is_empty()
+        || !results.higher_order_stages.is_empty()
+        || results.cbsem_parameters.is_empty()
+        || results.cbsem_fit.len() != 1
+        || results.identification_diagnostics.is_empty()
+    {
+        return Err(invalid_general_sem_authority(
+            "CB-SEM General SEM typed payload is missing point authority or contains a foreign estimator section",
+        ));
+    }
+    let config = recipe.general_sem_config.as_ref().ok_or_else(|| {
+        invalid_general_sem_authority("resident CB-SEM recipe omits GeneralSemConfigV1")
+    })?;
+    let (primary_cell, expected_method, expected_engine, is_bootstrap, seed, workers) = match config
+        .inference
+    {
+        GeneralSemInferenceV1::None => (
+            cbsem_general_sem_ml_capability_cell_v1(),
+            CBSEM_GENERAL_SEM_ML_CAPABILITY_VERSION_V1,
+            CBSEM_GENERAL_SEM_POINT_EXECUTION_ADAPTER_VERSION_V1,
+            false,
+            None,
+            1_i64,
+        ),
+        GeneralSemInferenceV1::CaseBootstrap { seed, .. } => (
+            cbsem_recursive_sem_bootstrap_capability_cell_v1(),
+            CBSEM_RECURSIVE_SEM_BOOTSTRAP_METHOD_VERSION_V1,
+            CBSEM_GENERAL_SEM_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+            true,
+            i64::try_from(seed).ok(),
+            i64::try_from(recipe.settings.workers)
+                .map_err(|_| invalid_general_sem_authority("resident worker count exceeds i64"))?,
+        ),
+    };
+    if is_bootstrap && seed.is_none() {
+        return Err(invalid_general_sem_authority(
+            "resident recursive-bootstrap seed exceeds canonical provenance range",
+        ));
+    }
+    let artifact = compile_analysis_recipe_v4(
+        recipe,
+        Some(model),
+        RecipeV4CompilerTarget::CbsemPlanV3,
+        primary_cell.clone(),
+    )
+    .map_err(|error| {
+        invalid_general_sem_authority(format!(
+            "resident CB-SEM General SEM V3 recompilation failed: {error}"
+        ))
+    })?;
+    let CompiledRecipePlanV4::CbsemPlanV3 { plan } = artifact.plan() else {
+        return Err(invalid_general_sem_authority(
+            "resident CB-SEM V3 compilation returned another target",
+        ));
+    };
+    let expected_cells = plan
+        .capability_cells()
+        .iter()
+        .map(project_capability_cell_v2)
+        .collect::<Vec<_>>();
+    let model_digest = model
+        .scientific_sha256()
+        .map_err(|error| invalid_general_sem_authority(error.to_string()))?;
+    if document.provenance.recipe_id != recipe.id.to_string()
+        || document.provenance.recipe_digest != artifact.receipt().recipe_analytical_sha256()
+        || document.provenance.model_id != model.id
+        || document.provenance.model_digest != model_digest
+        || document.provenance.dataset_id != dataset.id.to_string()
+        || document.provenance.dataset_id != plan.base_plan().input().dataset_id()
+        || document.provenance.dataset_fingerprint != dataset.fingerprint.0
+        || document.provenance.dataset_fingerprint != recipe.dataset_fingerprint
+        || document.provenance.capability_cell != project_capability_cell_v2(&primary_cell)
+        || document.provenance.method_version != expected_method
+        || document.provenance.engine_version != expected_engine
+        || document.provenance.seed != seed
+        || document.provenance.workers != workers
+        || document.capability_cells.as_deref() != Some(expected_cells.as_slice())
+    {
+        return Err(invalid_general_sem_authority(
+            "CB-SEM General SEM provenance or capability set differs from the resident V3 compilation",
+        ));
+    }
+
+    validate_general_sem_cbsem_parameter_authority_v1(results, plan, model)?;
+    let fit = &results.cbsem_fit[0];
+    if fit.fit_id != "cbsem_fit:ml"
+        || fit.trace.model_id != model.id
+        || fit.trace.capability_cell != cbsem_general_sem_ml_capability_cell_v1()
+    {
+        return Err(invalid_general_sem_authority(
+            "canonical CB-SEM fit row carries a foreign identity or trace",
+        ));
+    }
+    validate_general_sem_cbsem_identification_authority_v1(results, plan, model)?;
+    validate_general_sem_cbsem_bootstrap_authority_v1(
+        results,
+        recipe,
+        dataset,
+        &artifact,
+        plan,
+        is_bootstrap,
+    )?;
+
+    let expected_tables = serde_json::from_value::<Vec<CanonicalResultTableV2>>(
+        serde_json::to_value(canonical_cbsem_general_sem_tables_v1(results)).map_err(|error| {
+            invalid_general_sem_authority(format!(
+                "CB-SEM General SEM table projection failed: {error}"
+            ))
+        })?,
+    )
+    .map_err(|error| {
+        invalid_general_sem_authority(format!(
+            "CB-SEM General SEM projected table wire conversion failed: {error}"
+        ))
+    })?;
+    if document.tables != expected_tables
+        || !document.charts.is_empty()
+        || !document.notices.is_empty()
+        || document.exclusions.len() != 1
+        || document.exclusions[0].id != "bounded_cbsem_general_sem_v1"
+    {
+        return Err(invalid_general_sem_authority(
+            "CB-SEM General SEM tables, charts, notices, or bounded-scope declaration differ from the typed authority",
+        ));
+    }
+    validate_general_sem_cbsem_sections_v1(document, is_bootstrap)?;
+    Ok(())
+}
+
+fn validate_general_sem_cbsem_parameter_authority_v1(
+    results: &qpls_core::CanonicalGeneralSemResultsV1,
+    plan: &qpls_core::CompiledCbsemPlanV3,
+    model: &SemModelV4,
+) -> Result<(), ProjectArchiveV6Error> {
+    if results.cbsem_parameters.len() != plan.parameters().len()
+        || results
+            .cbsem_parameters
+            .iter()
+            .map(|row| row.parameter_id.as_str())
+            .ne(plan.parameters().iter().map(|row| row.id()))
+        || plan.parameter_table_authority().ordered_parameter_ids()
+            != results
+                .cbsem_parameters
+                .iter()
+                .map(|row| row.parameter_id.clone())
+                .collect::<Vec<_>>()
+    {
+        return Err(invalid_general_sem_authority(
+            "canonical parameter inventory differs from the complete resident V3 parameter table",
+        ));
+    }
+    let point_cell = cbsem_general_sem_ml_capability_cell_v1();
+    for (persisted, compiled) in results.cbsem_parameters.iter().zip(plan.parameters()) {
+        if persisted.trace.model_id != model.id
+            || persisted.trace.capability_cell != point_cell
+            || !canonical_cbsem_parameter_target_matches_v1(
+                persisted.role,
+                &persisted.target,
+                compiled.target(),
+            )
+            || !canonical_cbsem_parameter_state_matches_v1(
+                &persisted.state,
+                compiled.specification(),
+            )
+        {
+            return Err(invalid_general_sem_authority(format!(
+                "canonical parameter {} differs from its resident target, state, role, or trace",
+                persisted.parameter_id
+            )));
+        }
+        let mut relation_ids = model
+            .relations
+            .iter()
+            .filter(|relation| relation.parameter() == compiled.id())
+            .map(|relation| relation.id())
+            .collect::<Vec<_>>();
+        relation_ids.sort_unstable();
+        let expected_relation = match relation_ids.as_slice() {
+            [] => None,
+            [relation_id] => Some(*relation_id),
+            _ => {
+                return Err(invalid_general_sem_authority(format!(
+                    "resident parameter {} is bound to multiple relations",
+                    compiled.id()
+                )));
+            }
+        };
+        if persisted.relation_id.as_deref() != expected_relation {
+            return Err(invalid_general_sem_authority(format!(
+                "canonical parameter {} carries a foreign relation identity",
+                persisted.parameter_id
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn canonical_cbsem_parameter_target_matches_v1(
+    role: CanonicalCbsemParameterRoleV1,
+    persisted: &CanonicalCbsemParameterTargetV1,
+    compiled: &SemParameterTargetV4,
+) -> bool {
+    match (role, persisted, compiled) {
+        (
+            CanonicalCbsemParameterRoleV1::Loading,
+            CanonicalCbsemParameterTargetV1::Loading {
+                factor_id,
+                indicator_id,
+            },
+            SemParameterTargetV4::Loading {
+                construct,
+                indicator,
+            },
+        ) => factor_id == construct && indicator_id == indicator,
+        (
+            CanonicalCbsemParameterRoleV1::Regression,
+            CanonicalCbsemParameterTargetV1::Regression {
+                source_id,
+                target_id,
+            },
+            SemParameterTargetV4::Regression { source, target },
+        ) => source_id == source && target_id == target,
+        (
+            CanonicalCbsemParameterRoleV1::Variance,
+            CanonicalCbsemParameterTargetV1::Variance { endpoint },
+            SemParameterTargetV4::Variance { endpoint: compiled },
+        ) => canonical_cbsem_endpoint_matches_v1(endpoint, compiled),
+        (
+            CanonicalCbsemParameterRoleV1::Covariance,
+            CanonicalCbsemParameterTargetV1::Covariance { left, right },
+            SemParameterTargetV4::Covariance {
+                left: compiled_left,
+                right: compiled_right,
+            },
+        ) => {
+            canonical_cbsem_endpoint_matches_v1(left, compiled_left)
+                && canonical_cbsem_endpoint_matches_v1(right, compiled_right)
+        }
+        _ => false,
+    }
+}
+
+fn canonical_cbsem_endpoint_matches_v1(
+    persisted: &CanonicalCbsemEndpointV1,
+    compiled: &SemEndpointV4,
+) -> bool {
+    matches!(
+        (persisted, compiled),
+        (
+            CanonicalCbsemEndpointV1::Variable { variable_id: left },
+            SemEndpointV4::Variable(right),
+        ) | (
+            CanonicalCbsemEndpointV1::Residual { variable_id: left },
+            SemEndpointV4::ResidualOf(right),
+        ) | (
+            CanonicalCbsemEndpointV1::Disturbance { variable_id: left },
+            SemEndpointV4::DisturbanceOf(right),
+        ) if left == right
+    )
+}
+
+fn canonical_cbsem_parameter_state_matches_v1(
+    persisted: &CanonicalCbsemParameterStateV1,
+    compiled: &CompiledCbsemParameterStatusV2,
+) -> bool {
+    match (persisted, compiled) {
+        (
+            CanonicalCbsemParameterStateV1::Fixed { value: persisted },
+            CompiledCbsemParameterStatusV2::Fixed { value: compiled },
+        ) => persisted.to_bits() == compiled.to_bits(),
+        (
+            CanonicalCbsemParameterStateV1::Free {
+                equality_label: persisted_label,
+                lower: persisted_lower,
+                upper: persisted_upper,
+            },
+            CompiledCbsemParameterStatusV2::Free {
+                equality_label: compiled_label,
+                lower: compiled_lower,
+                upper: compiled_upper,
+                ..
+            },
+        ) => {
+            persisted_label == compiled_label
+                && persisted_lower.map(f64::to_bits) == compiled_lower.map(f64::to_bits)
+                && persisted_upper.map(f64::to_bits) == compiled_upper.map(f64::to_bits)
+        }
+        _ => false,
+    }
+}
+
+fn validate_general_sem_cbsem_identification_authority_v1(
+    results: &qpls_core::CanonicalGeneralSemResultsV1,
+    plan: &qpls_core::CompiledCbsemPlanV3,
+    model: &SemModelV4,
+) -> Result<(), ProjectArchiveV6Error> {
+    let point_cell = cbsem_general_sem_ml_capability_cell_v1();
+    let model_rows = results
+        .identification_diagnostics
+        .iter()
+        .filter(|row| row.scope == qpls_core::CanonicalIdentificationScopeV1::Model)
+        .collect::<Vec<_>>();
+    if !matches!(model_rows.as_slice(), [row]
+        if row.diagnostic_id == "cbsem_identification:model"
+            && row.subject_id == model.id
+            && row.status == qpls_core::CanonicalIdentificationStatusV1::Provisional
+            && row.code == "local_identification_evidence_only"
+            && row.trace.capability_cell == point_cell)
+    {
+        return Err(invalid_general_sem_authority(
+            "canonical model-identification evidence differs from the resident V3 plan",
+        ));
+    }
+    let expected_factors = plan
+        .identification_evidence()
+        .factor_scale_restrictions()
+        .iter()
+        .map(|restriction| {
+            let (factor, code) = match restriction {
+                qpls_core::CompiledCbsemFactorScaleRestrictionV3::MarkerLoading {
+                    factor_id,
+                    ..
+                } => (factor_id.as_str(), "marker_loading_scale"),
+                qpls_core::CompiledCbsemFactorScaleRestrictionV3::FixedVariance {
+                    factor_id,
+                    ..
+                } => (factor_id.as_str(), "fixed_variance_scale"),
+                qpls_core::CompiledCbsemFactorScaleRestrictionV3::EffectsCoding {
+                    factor_id,
+                    ..
+                } => (factor_id.as_str(), "effects_coding_scale"),
+            };
+            (factor, code)
+        })
+        .collect::<BTreeMap<_, _>>();
+    let persisted_factors = results
+        .identification_diagnostics
+        .iter()
+        .filter(|row| row.scope == qpls_core::CanonicalIdentificationScopeV1::Variable)
+        .map(|row| (row.subject_id.as_str(), row))
+        .collect::<BTreeMap<_, _>>();
+    if expected_factors.len() != persisted_factors.len()
+        || expected_factors.iter().any(|(factor, code)| {
+            persisted_factors.get(factor).is_none_or(|row| {
+                row.diagnostic_id != format!("cbsem_identification:factor:{factor}")
+                    || row.status != qpls_core::CanonicalIdentificationStatusV1::Identified
+                    || row.code != *code
+                    || row.trace.model_id != model.id
+                    || row.trace.capability_cell != point_cell
+            })
+        })
+    {
+        return Err(invalid_general_sem_authority(
+            "canonical factor-scale diagnostics differ from the resident V3 identification evidence",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_general_sem_cbsem_bootstrap_authority_v1(
+    results: &qpls_core::CanonicalGeneralSemResultsV1,
+    recipe: &AnalysisRecipeV4,
+    dataset: &DatasetDescriptor,
+    artifact: &qpls_core::CompiledAnalysisRecipeV4,
+    plan: &qpls_core::CompiledCbsemPlanV3,
+    is_bootstrap: bool,
+) -> Result<(), ProjectArchiveV6Error> {
+    if !is_bootstrap {
+        if results.cbsem_bootstrap_receipt.is_some()
+            || !results.cbsem_bootstrap_inference.is_empty()
+        {
+            return Err(invalid_general_sem_authority(
+                "point-only CB-SEM General SEM result contains bootstrap authority",
+            ));
+        }
+        return Ok(());
+    }
+    let receipt = results.cbsem_bootstrap_receipt.as_ref().ok_or_else(|| {
+        invalid_general_sem_authority("recursive-bootstrap result omits its typed receipt")
+    })?;
+    let GeneralSemInferenceV1::CaseBootstrap {
+        resamples,
+        seed,
+        confidence_level,
+        ..
+    } = recipe
+        .general_sem_config
+        .as_ref()
+        .expect("caller established GeneralSemConfigV1")
+        .inference
+    else {
+        unreachable!("caller established recursive-bootstrap inference")
+    };
+    if receipt.capability_cell != cbsem_recursive_sem_bootstrap_capability_cell_v1()
+        || receipt.compiled_plan_sha256 != artifact.receipt().plan_sha256()
+        || receipt.base_plan_sha256 != plan.base_plan_sha256()
+        || receipt.model_scientific_sha256 != plan.scientific_sha256()
+        || receipt.general_sem_config_sha256 != plan.general_sem_config_sha256()
+        || receipt.recipe_analytical_sha256 != artifact.receipt().recipe_analytical_sha256()
+        || receipt.source_dataset_fingerprint != dataset.fingerprint.0
+        || receipt.resamples_requested != resamples
+        || receipt.seed != seed.to_string()
+        || receipt.confidence_level.to_bits() != confidence_level.to_bits()
+        || usize::try_from(receipt.workers).ok() != Some(recipe.settings.workers)
+        || !receipt.complete_model_reestimated_per_replicate
+    {
+        return Err(invalid_general_sem_authority(
+            "recursive-bootstrap receipt differs from the resident V3 plan, recipe, model, dataset, or scheduler request",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_general_sem_cbsem_sections_v1(
+    document: &CanonicalResultDocumentV2,
+    is_bootstrap: bool,
+) -> Result<(), ProjectArchiveV6Error> {
+    let expected_section_ids = if is_bootstrap {
+        vec!["cbsem_general_sem_point", "cbsem_recursive_sem_bootstrap"]
+    } else {
+        vec!["cbsem_general_sem_point"]
+    };
+    if document
+        .sections
+        .iter()
+        .map(|section| section.id.as_str())
+        .ne(expected_section_ids.iter().copied())
+        || document.presentation.default_section_id.as_deref()
+            != expected_section_ids.last().copied()
+        || document.presentation.default_table_id.as_deref()
+            != Some(if is_bootstrap {
+                qpls_core::CBSEM_RECURSIVE_SEM_BOOTSTRAP_INFERENCE_TABLE_ID_V1
+            } else {
+                qpls_core::CBSEM_GENERAL_SEM_PARAMETERS_TABLE_ID_V1
+            })
+        || document.presentation.precision != 4
+        || document.presentation.missing_value_label != "—"
+    {
+        return Err(invalid_general_sem_authority(
+            "CB-SEM General SEM section or presentation authority drifted",
+        ));
+    }
+    let expected_table_ids = document
+        .tables
+        .iter()
+        .map(|table| table.id.as_str())
+        .collect::<Vec<_>>();
+    let point = &document.sections[0];
+    if point
+        .table_ids
+        .iter()
+        .map(String::as_str)
+        .ne(expected_table_ids[..3].iter().copied())
+        || !point.chart_ids.is_empty()
+        || point.capability_cells.as_deref()
+            != Some(&[project_capability_cell_v2(
+                &cbsem_general_sem_ml_capability_cell_v1(),
+            )])
+    {
+        return Err(invalid_general_sem_authority(
+            "CB-SEM General SEM point section differs from its deterministic table/cell inventory",
+        ));
+    }
+    if is_bootstrap {
+        let bootstrap = &document.sections[1];
+        if bootstrap
+            .table_ids
+            .iter()
+            .map(String::as_str)
+            .ne(expected_table_ids[3..].iter().copied())
+            || !bootstrap.chart_ids.is_empty()
+            || bootstrap.capability_cells.as_deref()
+                != Some(&[project_capability_cell_v2(
+                    &cbsem_recursive_sem_bootstrap_capability_cell_v1(),
+                )])
+        {
+            return Err(invalid_general_sem_authority(
+                "CB-SEM recursive-bootstrap section differs from its deterministic table/cell inventory",
+            ));
+        }
+    }
+    Ok(())
 }
 
 // qpls-project cannot depend on qpls-runner without reversing the runtime
@@ -11214,6 +11739,18 @@ mod tests {
             Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
                 if message.contains("bootstrap settings")
         ));
+    }
+
+    #[test]
+    fn cbsem_general_sem_private_adapter_identities_match_reopen_authority() {
+        assert_eq!(
+            CBSEM_GENERAL_SEM_POINT_EXECUTION_ADAPTER_VERSION_V1,
+            qpls_runner::internal_cbsem_general_sem_execution::INTERNAL_CBSEM_GENERAL_SEM_POINT_ADAPTER_VERSION_V1
+        );
+        assert_eq!(
+            CBSEM_GENERAL_SEM_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+            qpls_runner::internal_cbsem_general_sem_execution::INTERNAL_CBSEM_GENERAL_SEM_BOOTSTRAP_ADAPTER_VERSION_V1
+        );
     }
 
     #[test]

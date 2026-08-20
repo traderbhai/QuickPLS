@@ -49,18 +49,18 @@ const MAXIMUM_RETAINED_GENERAL_SEM_JOBS: usize = 255;
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct InternalLabsGeneralSemPlsJobRequestV1 {
-    surface: String,
-    experimental_labs_enabled: bool,
-    archive_path: String,
-    expected_archive_sha256: String,
-    project_id: String,
-    dataset_id: String,
-    dataset_fingerprint: String,
-    model_id: String,
-    model_scientific_sha256: String,
-    recipe_id: String,
-    recipe_document_sha256: String,
-    capability_cell: CapabilityCellReferenceV2,
+    pub(crate) surface: String,
+    pub(crate) experimental_labs_enabled: bool,
+    pub(crate) archive_path: String,
+    pub(crate) expected_archive_sha256: String,
+    pub(crate) project_id: String,
+    pub(crate) dataset_id: String,
+    pub(crate) dataset_fingerprint: String,
+    pub(crate) model_id: String,
+    pub(crate) model_scientific_sha256: String,
+    pub(crate) recipe_id: String,
+    pub(crate) recipe_document_sha256: String,
+    pub(crate) capability_cell: CapabilityCellReferenceV2,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -111,7 +111,7 @@ pub(crate) struct InternalLabsGeneralSemPlsFailureV1 {
     stage: InternalLabsGeneralSemPlsFailureStageV1,
     subject: String,
     code: String,
-    message: String,
+    pub(crate) message: String,
     corrective_action: String,
     issues: Vec<InternalLabsGeneralSemPlsIssueV1>,
 }
@@ -153,15 +153,15 @@ impl InternalLabsGeneralSemPlsJobSnapshotV1 {
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct GeneralSemArchiveIdentityV1 {
-    archive_path: String,
-    archive_sha256: String,
-    project_id: String,
-    dataset_id: String,
-    dataset_fingerprint: String,
-    model_id: String,
-    model_scientific_sha256: String,
-    recipe_id: String,
-    recipe_document_sha256: String,
+    pub(crate) archive_path: String,
+    pub(crate) archive_sha256: String,
+    pub(crate) project_id: String,
+    pub(crate) dataset_id: String,
+    pub(crate) dataset_fingerprint: String,
+    pub(crate) model_id: String,
+    pub(crate) model_scientific_sha256: String,
+    pub(crate) recipe_id: String,
+    pub(crate) recipe_document_sha256: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -185,12 +185,12 @@ pub(crate) struct DesktopGeneralSemPlsJobsV1(
     Arc<Mutex<HashMap<Uuid, InternalLabsGeneralSemPlsJobV1>>>,
 );
 
-struct ResolvedGeneralSemArchiveV1 {
-    archive_identity: GeneralSemArchiveIdentityV1,
-    document: ProjectArchiveDocumentV6,
-    dataset: Dataset,
-    model: SemModelV4,
-    recipe: AnalysisRecipeV4,
+pub(crate) struct ResolvedGeneralSemArchiveV1 {
+    pub(crate) archive_identity: GeneralSemArchiveIdentityV1,
+    pub(crate) document: ProjectArchiveDocumentV6,
+    pub(crate) dataset: Dataset,
+    pub(crate) model: SemModelV4,
+    pub(crate) recipe: AnalysisRecipeV4,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -433,7 +433,7 @@ fn archive_read_failure(_: std::io::Error) -> InternalLabsGeneralSemPlsFailureV1
     )
 }
 
-fn resolve_archive_authority(
+pub(crate) fn resolve_archive_authority(
     request: &InternalLabsGeneralSemPlsJobRequestV1,
 ) -> Result<ResolvedGeneralSemArchiveV1, InternalLabsGeneralSemPlsFailureV1> {
     validate_access(request)?;
@@ -842,7 +842,7 @@ fn data_predicate_failure(message: impl Into<String>) -> InternalLabsGeneralSemP
     )
 }
 
-fn verify_archive_identity(
+pub(crate) fn verify_archive_identity(
     identity: &GeneralSemArchiveIdentityV1,
 ) -> Result<(), InternalLabsGeneralSemPlsFailureV1> {
     let mut file = open_regular_non_reparse_archive(Path::new(&identity.archive_path))?;

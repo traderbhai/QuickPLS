@@ -16,6 +16,10 @@ mod recipe_v4_canonical_result;
 mod recipe_v4_cbsem_canonical_result;
 mod recipe_v4_cbsem_execution;
 mod recipe_v4_general_sem_canonical_result;
+#[allow(dead_code)]
+mod recipe_v4_general_sem_cbsem_canonical_result;
+#[allow(dead_code)]
+mod recipe_v4_general_sem_cbsem_jobs;
 mod recipe_v4_general_sem_pls_jobs;
 mod recipe_v4_jobs;
 mod sample_projects;

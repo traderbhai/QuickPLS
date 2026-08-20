@@ -4,6 +4,8 @@ mod recipe_v4_cbsem_execution;
 mod recipe_v4_cbsem_general_sem_bootstrap_execution;
 #[allow(dead_code)]
 mod recipe_v4_cbsem_general_sem_point_execution;
+#[doc(hidden)]
+pub mod internal_cbsem_general_sem_execution;
 mod recipe_v4_cbsem_product_indicator_execution;
 mod recipe_v4_general_sem_pls_execution;
 mod recipe_v4_pls_execution;

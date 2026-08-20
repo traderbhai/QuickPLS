@@ -222,6 +222,30 @@ pub(crate) fn reserve_general_sem_pls_admission(
     )
 }
 
+/// Uses the same shared admission pool for the private CB-SEM V3 candidate.
+/// The separate name keeps diagnostics method-specific without creating a
+/// second scheduler or worker-budget authority.
+pub(crate) fn reserve_general_sem_cbsem_admission(
+    job_id: Uuid,
+    worker_demand: usize,
+    standard_jobs: Arc<Mutex<HashMap<Uuid, DesktopJob>>>,
+    job_state: DesktopRecipeV4Jobs,
+) -> Result<PlsModelComparisonAdmissionReservationV1, InternalRecipeV4ExecutionFailureV1> {
+    let cpu_budget = std::thread::available_parallelism()
+        .map(usize::from)
+        .unwrap_or(1);
+    reserve_internal_recipe_v4_admission_with_cpu_budget(
+        job_id,
+        standard_jobs,
+        job_state,
+        cpu_budget,
+        worker_demand,
+        "general_sem_cbsem_v3",
+        "CB-SEM General SEM V3 analysis",
+        "Wait for another analysis to finish or reduce the CB-SEM recipe worker count.",
+    )
+}
+
 fn reserve_pls_model_comparison_admission_with_cpu_budget(
     job_id: Uuid,
     standard_jobs: Arc<Mutex<HashMap<Uuid, DesktopJob>>>,
